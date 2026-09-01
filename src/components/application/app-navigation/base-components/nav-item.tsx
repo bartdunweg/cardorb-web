@@ -40,7 +40,7 @@ export const NavItemBase = ({ current, type, badge, href, icon: Icon, children, 
             aria-hidden="true"
             className={cx(
                 "mr-2 size-5 shrink-0 text-fg-quaternary transition-inherit-all group-hover/item:text-fg-quaternary_hover",
-                current && "text-fg-quaternary_hover",
+                current && "text-fg-brand-primary",
             )}
         />
     );

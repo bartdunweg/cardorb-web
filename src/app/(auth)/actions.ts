@@ -21,7 +21,7 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
     const { error } = await supabase.auth.signInWithPassword(parsed.data);
     if (error) return { error: error.message };
 
-    redirect("/");
+    redirect("/dashboard");
 }
 
 export async function signUp(_prev: AuthState, formData: FormData): Promise<AuthState> {
@@ -33,7 +33,7 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
     if (error) return { error: error.message };
 
     // Email confirmation off → a session is returned, so go straight in.
-    if (data.session) redirect("/");
+    if (data.session) redirect("/dashboard");
 
     return { success: "Account created. Check your email to confirm, then sign in." };
 }
@@ -41,5 +41,5 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
 export async function signOut() {
     const supabase = await createClient();
     await supabase.auth.signOut();
-    redirect("/login");
+    redirect("/");
 }

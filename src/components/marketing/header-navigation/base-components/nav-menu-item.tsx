@@ -6,16 +6,27 @@ import { isReactComponent } from "@/utils/is-react-component";
 
 interface NavMenuItemLinkProps {
     href: string;
-    icon?: FC<{ className?: string }> | ReactNode;
-    iconClassName?: string;
-    className?: string;
     title: string;
     subtitle?: string;
+    icon?: FC<{ className?: string }> | ReactNode;
+    className?: string;
+    iconClassName?: string;
+    textContainerClassName?: string;
     badge?: ReactNode;
     actionsContent?: ReactNode;
 }
 
-export const NavMenuItemLink = ({ href, icon: Icon, iconClassName, title, badge, subtitle, className, actionsContent }: NavMenuItemLinkProps) => (
+export const NavMenuItemLink = ({
+    href,
+    icon: Icon,
+    iconClassName,
+    title,
+    badge,
+    subtitle,
+    className,
+    textContainerClassName,
+    actionsContent,
+}: NavMenuItemLinkProps) => (
     <a
         href={href}
         className={cx(
@@ -24,12 +35,12 @@ export const NavMenuItemLink = ({ href, icon: Icon, iconClassName, title, badge,
         )}
     >
         {isValidElement(Icon) && Icon}
-        {isReactComponent(Icon) && <Icon className={cx("mt-0.5 size-4 shrink-0 stroke-[2.3px] text-fg-brand-primary", iconClassName)} />}
+        {isReactComponent(Icon) && <Icon className={cx("size-5 shrink-0 text-fg-brand-primary", iconClassName)} />}
 
         <div className="flex flex-col gap-3">
-            <div className="flex flex-col gap-0.5">
-                <div className="flex items-center gap-2">
-                    <span className="text-md font-semibold text-primary">{title}</span>
+            <div className={cx("flex flex-col gap-1", textContainerClassName)}>
+                <div className="flex max-h-5 items-center gap-1.5">
+                    <span className="text-sm font-semibold text-primary">{title}</span>
                     {badge}
                 </div>
 

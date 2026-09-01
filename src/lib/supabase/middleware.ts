@@ -1,11 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
-const PUBLIC_PREFIXES = ["/login", "/signup", "/auth"];
+// Public by default (landing, login, signup). Only these prefixes require a session.
+const PROTECTED_PREFIXES = ["/dashboard"];
 
 /**
- * Refresh the Supabase session on every request and gate access. Unauthenticated users are
- * redirected to /login, except on public auth routes.
+ * Refresh the Supabase session on every request and gate access. The site is public by default;
+ * only routes under PROTECTED_PREFIXES redirect unauthenticated users to /login.
  */
 export async function updateSession(request: NextRequest) {
     // Before Supabase env is configured, let requests through so the app still runs.
@@ -34,9 +35,9 @@ export async function updateSession(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     const { pathname } = request.nextUrl;
-    const isPublic = PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+    const isProtected = PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
-    if (!user && !isPublic) {
+    if (!user && isProtected) {
         const url = request.nextUrl.clone();
         url.pathname = "/login";
         return NextResponse.redirect(url);

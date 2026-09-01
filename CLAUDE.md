@@ -144,5 +144,7 @@ here — one list, one place.
 - Rules that apply now: @CONVENTIONS.md — the only binding source, and the whole of it.
 - Current state: @STATE.md
 - Why a rule reads the way it does: `git log -p CONVENTIONS.md`. There is no archive.
+- Untitled UI component conventions (reference): `docs/untitledui.md` — import naming, `cx()`, compound
+  patterns. The Untitled UI MCP is the live source; use it first for components and icons.
 
 <!-- PRODUCT:END -->

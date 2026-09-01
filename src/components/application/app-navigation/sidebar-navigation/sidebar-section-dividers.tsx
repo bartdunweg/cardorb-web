@@ -1,8 +1,9 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { SearchLg } from "@untitledui/icons";
+import Link from "next/link";
 import { Input } from "@/components/base/input/input";
-import { UntitledLogo } from "@/components/foundations/logo/untitledui-logo";
 import { MobileNavigationHeader } from "../base-components/mobile-header";
 import { NavAccountCard } from "../base-components/nav-account-card";
 import { NavList } from "../base-components/nav-list";
@@ -13,9 +14,24 @@ interface SidebarNavigationSectionDividersProps {
     activeUrl?: string;
     /** List of items to display. */
     items: (NavItemType | NavItemDividerType)[];
+    /** Content rendered at the bottom. When set, it replaces the default account card. */
+    footer?: ReactNode;
+    /** Action rendered top-right, next to the logo. */
+    headerAction?: ReactNode;
+    /** Hide the mobile hamburger header (e.g. when a bottom tab bar is used instead). */
+    hideMobileHeader?: boolean;
+    /** Replaces the default search inputs (e.g. a button that opens a command palette). */
+    search?: ReactNode;
 }
 
-export const SidebarNavigationSectionDividers = ({ activeUrl, items }: SidebarNavigationSectionDividersProps) => {
+export const SidebarNavigationSectionDividers = ({
+    activeUrl,
+    items,
+    footer,
+    headerAction,
+    hideMobileHeader,
+    search,
+}: SidebarNavigationSectionDividersProps) => {
     const MAIN_SIDEBAR_WIDTH = 276;
 
     const content = (
@@ -28,27 +44,34 @@ export const SidebarNavigationSectionDividers = ({ activeUrl, items }: SidebarNa
             className="flex h-full w-full max-w-full flex-col justify-between overflow-auto bg-primary pt-4 shadow-xs ring-secondary ring-inset lg:w-(--width) lg:rounded-xl lg:pt-5 lg:ring-1"
         >
             <div className="flex flex-col gap-5 px-4 lg:px-5">
-                <UntitledLogo className="h-6" />
+                <div className="flex items-center justify-between gap-2">
+                    <Link href="/" className="text-lg font-semibold text-primary transition hover:opacity-70">
+                        Cardorb
+                    </Link>
+                    {headerAction}
+                </div>
 
-                {/* Mobile search input */}
-                <Input size="md" aria-label="Search" placeholder="Search" icon={SearchLg} className="md:hidden" />
+                {search ?? (
+                    <>
+                        {/* Mobile search input */}
+                        <Input size="md" aria-label="Search" placeholder="Search" icon={SearchLg} className="md:hidden" />
 
-                {/* Desktop search input */}
-                <Input shortcut size="sm" aria-label="Search" placeholder="Search" icon={SearchLg} className="max-md:hidden" />
+                        {/* Desktop search input */}
+                        <Input shortcut size="sm" aria-label="Search" placeholder="Search" icon={SearchLg} className="max-md:hidden" />
+                    </>
+                )}
             </div>
 
             <NavList activeUrl={activeUrl} items={items} />
 
-            <div className="mt-auto flex flex-col gap-5 px-2 py-4 lg:gap-6 lg:px-4 lg:py-4">
-                <NavAccountCard />
-            </div>
+            <div className="mt-auto flex flex-col gap-5 px-2 py-4 lg:gap-6 lg:px-4 lg:py-4">{footer ?? <NavAccountCard />}</div>
         </aside>
     );
 
     return (
         <>
             {/* Mobile header navigation */}
-            <MobileNavigationHeader>{content}</MobileNavigationHeader>
+            {!hideMobileHeader && <MobileNavigationHeader>{content}</MobileNavigationHeader>}
 
             {/* Desktop sidebar navigation */}
             <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:py-1 lg:pl-1">{content}</div>

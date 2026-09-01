@@ -1,0 +1,13 @@
+{
+    "extraKnownMarketplaces": {
+        "meridian": {
+            "source": { "source": "github", "repo": "strakzat/meridian" }
+        }
+    },
+    "enabledPlugins": {
+        "meridian@meridian": true,
+        "meridian-design@meridian": true,
+        "meridian-web@meridian": true,
+        "interface-details@meridian": true
+    }
+}

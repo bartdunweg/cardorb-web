@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
-import { signOut } from "@/app/(auth)/actions";
-import { ThemeToggle } from "@/components/app/theme-toggle";
-import { Button } from "@/components/base/buttons/button";
+import { AppSidebar } from "@/components/app/app-sidebar";
+import { CommandSearchProvider } from "@/components/app/command-search";
+import { MobileTabBar } from "@/components/app/mobile-nav";
+import { getMyCollections } from "@/lib/collections";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -12,20 +13,28 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
     if (!user) redirect("/login");
 
+    const { data: profile } = await supabase.from("profiles").select("display_name, username, avatar_url").eq("id", user.id).maybeSingle();
+
+    const account = {
+        name: profile?.display_name || profile?.username || user.email?.split("@")[0] || "Account",
+        email: user.email ?? "",
+        avatarUrl: profile?.avatar_url ?? null,
+    };
+
+    // Collections feed the sidebar's expandable Collections item.
+    const { collections } = await getMyCollections();
+
     return (
-        <div className="min-h-dvh bg-primary">
-            <header className="flex items-center justify-between border-b border-secondary px-6 py-3">
-                <span className="text-lg font-semibold text-primary">Cardorb</span>
-                <div className="flex items-center gap-2">
-                    <ThemeToggle />
-                    <form action={signOut}>
-                        <Button type="submit" color="secondary" size="sm">
-                            Sign out
-                        </Button>
-                    </form>
+        <CommandSearchProvider>
+            <div className="flex min-h-dvh flex-col bg-primary">
+                <div className="flex flex-1 flex-col lg:flex-row">
+                    <AppSidebar account={account} collections={collections.map((c) => ({ id: c.id, name: c.name }))} />
+                    <main className="flex min-w-0 flex-1 flex-col">
+                        <div className="mx-auto flex w-full max-w-container flex-1 flex-col px-4 py-6 pb-24 sm:px-6 sm:py-8 lg:pb-8">{children}</div>
+                    </main>
                 </div>
-            </header>
-            <main className="mx-auto w-full max-w-container px-6 py-8">{children}</main>
-        </div>
+                <MobileTabBar account={account} />
+            </div>
+        </CommandSearchProvider>
     );
 }

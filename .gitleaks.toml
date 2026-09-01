@@ -5,9 +5,13 @@
 useDefault = true
 
 [allowlist]
-description = "Generated build output and dependencies (not committed)"
+description = "Generated build output, dependencies, and gitignored local env files (not committed)"
 paths = [
   '''\.next/''',
   '''node_modules/''',
   '''pnpm-lock\.yaml''',
+  # .env.local (and .env*.local) are gitignored and hold real dev secrets by design (R-SEC-001).
+  # git cannot commit them, so a scan here is a false positive; tracked/source files stay scanned.
+  '''\.env$''',
+  '''\.env(\.[^/]*)?\.local$''',
 ]

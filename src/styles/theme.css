@@ -5,6 +5,9 @@
     --font-mono: ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
     /* FONT SIZE */
+    --text-xxs: calc(var(--spacing) * 2.5);
+    --text-xxs--line-height: calc(var(--spacing) * 4);
+
     --text-xs: calc(var(--spacing) * 3);
     --text-xs--line-height: calc(var(--spacing) * 4.5);
 

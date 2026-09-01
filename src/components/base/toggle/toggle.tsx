@@ -62,6 +62,9 @@ export const ToggleBase = ({ className, isHovered, isDisabled, isFocusVisible, i
                 }}
                 className={cx(
                     "rounded-full bg-fg-white shadow-sm",
+                    // Brand-solid is near-white in dark mode, so a selected track is white — flip the
+                    // knob to black there or it disappears (white knob on white track).
+                    isSelected && "dark:bg-black",
 
                     slim && "shadow-xs",
                     slim && "border border-toggle-border",

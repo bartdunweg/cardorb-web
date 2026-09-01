@@ -1,3 +1,4 @@
+import strakzatUi from "@strakzat/eslint-config-ui";
 import coreWebVitals from "eslint-config-next/core-web-vitals";
 import typescript from "eslint-config-next/typescript";
 
@@ -22,6 +23,9 @@ const eslintConfig = [
     },
     ...coreWebVitals,
     ...typescript,
+    // Strakzat design-token + jsx-a11y (WCAG 2.2 AA) rules, as errors. Hosted variant: Next's
+    // config already registers jsx-a11y, and flat config refuses two plugins under one name.
+    ...strakzatUi.configs.strictHosted,
 ];
 
 export default eslintConfig;

@@ -157,21 +157,8 @@ else
   skip "conventions" "no CONVENTIONS.md — run apply-standards"
 fi
 
-# Is this project still running the current standard?
-#
-# Nothing else asks. The instruction block in CLAUDE.md is generated, and a project drifts from it
-# the moment the standard changes — quietly, because every build check stays green. dev-standards
-# itself sat two releases behind its own standard for exactly this reason, with nothing looking.
-#
-# Skipping when the checkout is absent is deliberate, and it does not set a failure: a CI runner or
-# a second machine has no reason to carry the standards repo, and a project is not unhealthy
-# because of where it is being built.
-standards_root="${DEV_STANDARDS_HOME:-$HOME/.local/share/dev-standards}"
-if [[ -x "$standards_root/scripts/check-standards.sh" ]]; then
-  run "standards" "$standards_root/scripts/check-standards.sh" .
-else
-  skip "standards" "no dev-standards checkout at $standards_root, so drift was not checked"
-fi
+# The dev-standards drift check was removed: this project uses Meridian now, whose ESLint config
+# (@strakzat/eslint-config-ui) enforces the half that matters. The conventions check above stays.
 
 # ------------------------------------------------------------------------------------------
 # A failure outranks a skip: if anything is really broken, that is the answer, and the skips are
