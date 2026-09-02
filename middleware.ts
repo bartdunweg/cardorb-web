@@ -6,6 +6,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-    // Run on all routes except static assets and image files.
-    matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
+    // Run on all routes except static assets, image files and /api. Everything under /api/v1 is
+    // rewritten to the previous Cardorb app (see vercel.json), so a session refresh there is wasted.
+    matcher: ["/((?!_next/static|_next/image|favicon.ico|api/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
 };

@@ -1,0 +1,11 @@
+{
+    "$schema": "https://openapi.vercel.sh/vercel.json",
+    "framework": "nextjs",
+    "installCommand": "pnpm install --frozen-lockfile",
+    "rewrites": [
+        {
+            "source": "/api/v1/:path*",
+            "destination": "https://api.cardorb.com/api/v1/:path*"
+        }
+    ]
+}

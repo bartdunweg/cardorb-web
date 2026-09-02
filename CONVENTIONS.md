@@ -28,6 +28,8 @@ last-reviewed: 2026-08-31
 | R-DATA-002 | A card is either owned (the collection) or on the wishlist: `owned = false` implies `wishlist = true`. Collection views and stats filter `wishlist = false`; the wishlist filters `wishlist = true`. `markOwned` flips a card from wishlist to collection. | reviewed | Not owned means not in the collection — the owner's model; a not-owned card must live on the wishlist, nowhere else. |
 | R-SEC-002 | Every "current user's data" query filters explicitly on `user_id = auth.uid()`, and every write scopes `.eq("user_id", user.id)` and checks a row changed. Never rely on RLS alone. | reviewed | The cards SELECT policy also exposes public profiles' rows, so an unscoped query leaks another user's cards into "my collection" and writes no-op silently. |
 
+| R-DEPLOY-001 | `/api/v1/*` is not implemented here: `vercel.json` rewrites it to `https://api.cardorb.com`, the previous Cardorb app. Do not add routes under `/api/v1` until that app is retired. | enforced — vercel.json rewrite; middleware.ts excludes `/api/` | The iOS app and bartdunweg.com read `cardorb.com/api/v1`, and cardorb.com now points at this app; the rewrite keeps them working. |
+
 **Where a rule and the code disagree**, the rule is dead or the code is wrong. Do not decide
 that alone and do not settle it in conversation — add it to `## Open` in `STATE.md`, which is
 the list the owner actually reads.
