@@ -21,8 +21,9 @@ const SHOWN = 100;
 
 // The owned collection behind a public profile. The API publishes rarity and ownership of each copy
 // and nothing personal (R-API-002 there), so nothing here has to be hidden.
-export async function getPublicCards(username: string): Promise<{ cards: PublicCard[]; total: number }> {
+export async function getPublicCards(username: string): Promise<{ cards: PublicCard[]; total: number; sets: number }> {
     const { sets } = await api<{ sets: PublicSet[] }>(`/public/${encodeURIComponent(username)}/collection`, { auth: false });
     const cards = publicCardsFromSets(sets);
-    return { cards: cards.slice(0, SHOWN), total: cards.length };
+    const ownedSets = sets.filter((set) => set.cards.some((card) => card.variants.some((v) => v.owned))).length;
+    return { cards: cards.slice(0, SHOWN), total: cards.length, sets: ownedSets };
 }
