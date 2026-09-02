@@ -111,48 +111,40 @@ export const cardFromItem = (item: CardItem): Card => ({
     wishlist: !item.owned,
 });
 
-// ── GET /v1/public/{username}/collection ───────────────────────────────────────────────────
+// ── GET /v1/public/{username}/cards ───────────────────────────────────────────────────────
 
 export type PublicCard = Pick<Card, "id" | "name" | "set_name" | "number" | "rarity" | "gen" | "types" | "quantity" | "finish" | "image_url" | "tcg_id">;
 
-type PublicVariant = { rarity: string | null; owned: boolean };
-type PublicOwnedCard = {
+/** One card on a public profile with how many copies the owner holds. Nothing private (R-API-002 there). */
+export type PublicItem = {
     key: string;
     name: string;
     number: string;
-    type: string | null;
+    set: string;
+    setTitle: string;
+    rarity: string | null;
     gen: string | null;
+    type: string | null;
     image: string | null;
+    speciesId: number | null;
     tcgId: string | null;
-    variants: PublicVariant[];
+    copies: number;
 };
-export type PublicSet = { name: string; title: string; cards: PublicOwnedCard[] };
 
-/** One entry per owned copy, in set order. A wish is not shown on a public page. */
-export function publicCardsFromSets(sets: PublicSet[]): PublicCard[] {
-    const out: PublicCard[] = [];
-    for (const set of sets) {
-        for (const card of set.cards) {
-            card.variants.forEach((v, i) => {
-                if (!v.owned) return;
-                out.push({
-                    id: `${card.key}:${i}`,
-                    name: card.name,
-                    set_name: set.title || set.name || null,
-                    number: card.number || null,
-                    rarity: v.rarity,
-                    gen: card.gen,
-                    types: card.type ? [card.type] : null,
-                    quantity: null,
-                    finish: null,
-                    image_url: absoluteImage(card.image),
-                    tcg_id: card.tcgId,
-                });
-            });
-        }
-    }
-    return out;
-}
+/** One tile per card; the copies held are its quantity. A wish never reaches this route. */
+export const publicCardFromItem = (item: PublicItem): PublicCard => ({
+    id: item.key,
+    name: item.name,
+    set_name: item.setTitle || item.set || null,
+    number: item.number || null,
+    rarity: item.rarity,
+    gen: item.gen,
+    types: item.type ? [item.type] : null,
+    quantity: item.copies,
+    finish: null,
+    image_url: absoluteImage(item.image),
+    tcg_id: item.tcgId,
+});
 
 // ── GET /v1/pokedex ───────────────────────────────────────────────────────────────────────
 
