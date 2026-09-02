@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { absoluteImage, cardFromItem, pokemonCardFromBrowse, priceForCopy, publicCardsFromSets, slotsFromEntries } from "./api-shapes";
+import { absoluteImage, cardFromItem, pokemonCardFromBrowse, priceForCopy, publicCardFromItem, slotsFromEntries } from "./api-shapes";
 
 describe("absoluteImage", () => {
     it("resolves a relative picture on the API's host and leaves an absolute one alone", () => {
@@ -70,35 +70,24 @@ describe("priceForCopy", () => {
     });
 });
 
-describe("publicCardsFromSets", () => {
-    it("shows one entry per owned copy and never a wish", () => {
-        const cards = publicCardsFromSets([
-            {
-                name: "base1",
-                title: "Base Set",
-                cards: [
-                    {
-                        key: "k",
-                        name: "Pikachu",
-                        number: "58",
-                        type: null,
-                        gen: null,
-                        image: null,
-                        tcgId: null,
-                        variants: [
-                            { rarity: "Common", owned: true },
-                            { rarity: "Common", owned: false },
-                            { rarity: "Holo", owned: true },
-                        ],
-                    },
-                ],
-            },
-        ]);
-        expect(cards.map((c) => [c.id, c.rarity])).toEqual([
-            ["k:0", "Common"],
-            ["k:2", "Holo"],
-        ]);
-        expect(cards[0]).toMatchObject({ set_name: "Base Set", quantity: null, finish: null });
+describe("publicCardFromItem", () => {
+    it("makes one tile per card, with the copies as its quantity and the set's title as its set", () => {
+        const card = publicCardFromItem({
+            key: "Base Set-58",
+            name: "Pikachu",
+            number: "58",
+            set: "base1",
+            setTitle: "Base Set",
+            rarity: "Common",
+            gen: null,
+            type: "Lightning",
+            image: "/api/cover?url=x",
+            speciesId: 25,
+            tcgId: "base1-58",
+            copies: 3,
+        });
+        expect(card).toMatchObject({ id: "Base Set-58", set_name: "Base Set", quantity: 3, types: ["Lightning"], finish: null, tcg_id: "base1-58" });
+        expect(card.image_url).toMatch(/^https:\/\/.*\/api\/cover\?url=x$/);
     });
 });
 

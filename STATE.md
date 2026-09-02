@@ -22,6 +22,14 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **The public page reads the paged route (#29).** `/user/[username]` asks
+  `GET /v1/public/<username>/cards?limit=100`, thirty kilobytes instead of the whole collection's
+  nine hundred; `publicCardFromItem()` in `api-shapes.ts` makes the tile. The set count on the
+  profile line comes from the same answer (`sets`, added in cardorb-api#147). That API PR also
+  stops a TCGdex outage from being cached as "no pictures" for a day, which is what emptied the
+  newest set's tiles on 2026-09-02. Left alone on purpose: JS on first load is 228 KB Brotli, of
+  which 40 KB is the polyfill only old browsers download and ~150 KB is React, Next and React
+  Aria under Untitled UI — nothing to cut without leaving the kit.
 - **Four small things a user meets.** Deleting a folder asks first and says the cards stay. The
   name asked at sign-up travels as user metadata and, when a session comes back, is set on the
   profile straight away. Favorites, Wishlist, a folder and the public profile page on `?page=`
@@ -52,7 +60,7 @@ which also says what is already yours), Settings (avatar through the API), publi
   revalidates the layout. `src/app/(app)/dashboard/loading.tsx` shows the outline of a grid while a
   page still fetches. Not measured with a session; the first signed-in visit after deploy is the
   check that a write shows up on the next screen. Still open: JS on first load is 228 KB Brotli
-  against a 150 KB budget.
+  against a 150 KB budget (settled in #29's note above).
 - **"Forgot password?" on `/login`** leads to `/forgot-password`: one email field, and
   `requestPasswordReset` calls Supabase's `resetPasswordForEmail`. The answer is the same for a
   known and an unknown address. The link in the email lands on `/auth/confirm` like every other.

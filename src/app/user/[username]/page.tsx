@@ -4,11 +4,9 @@ import { notFound } from "next/navigation";
 import { CardsPagination, pageFromParam } from "@/components/app/cards-pagination";
 import { PublicCardsView } from "@/components/app/public-cards-view";
 import { Avatar } from "@/components/base/avatar/avatar";
-import { getPublicCards, getPublicProfile } from "@/lib/public-profile";
+import { PUBLIC_PAGE_SIZE, getPublicCards, getPublicProfile } from "@/lib/public-profile";
 
 type Params = { params: Promise<{ username: string }>; searchParams: Promise<{ page?: string }> };
-
-const PAGE_SIZE = 100;
 
 export async function generateMetadata({ params, searchParams }: Params): Promise<Metadata> {
     const { username } = await params;
@@ -33,11 +31,9 @@ export default async function PublicProfilePage({ params, searchParams }: Params
     const profile = await getPublicProfile(decodeURIComponent(username));
     if (!profile) notFound();
 
-    const { cards: all, sets } = await getPublicCards(decodeURIComponent(username));
-    const total = all.length;
     const page = pageFromParam((await searchParams).page);
-    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-    const cards = all.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    const { cards, total, sets } = await getPublicCards(decodeURIComponent(username), page);
+    const totalPages = Math.max(1, Math.ceil(total / PUBLIC_PAGE_SIZE));
     const base = `/user/${encodeURIComponent(username)}`;
     const name = profile.display_name || profile.username || "Collection";
     // The handle sits under a display name, as a profile page does; with no display name it is the name.
