@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { CardDetailSlideout } from "@/components/app/card-detail-slideout";
 import { CardsGrid } from "@/components/app/cards-grid";
-import type { Card } from "@/lib/cards";
+import type { PublicCard } from "@/lib/cards";
 
 // Public, read-only card grid: tap a card for a read-only detail (no editing, no personal fields).
-export function PublicCardsView({ cards }: { cards: Card[] }) {
-    const [selected, setSelected] = useState<Card | null>(null);
+export function PublicCardsView({ cards }: { cards: PublicCard[] }) {
+    const [selected, setSelected] = useState<PublicCard | null>(null);
 
     return (
         <div className="flex flex-col gap-4">
