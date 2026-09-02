@@ -1,6 +1,7 @@
 import { Plus } from "@untitledui/icons";
 import { AddCardModal } from "@/components/app/add-card-modal";
 import { AppEmptyState } from "@/components/app/app-empty-state";
+import { CardsPagination, pageFromParam } from "@/components/app/cards-pagination";
 import { CardsSearch } from "@/components/app/cards-search";
 import { CardsView } from "@/components/app/cards-view";
 import { Button } from "@/components/base/buttons/button";
@@ -10,7 +11,7 @@ const PAGE_SIZE = 100;
 
 export default async function CardsPage({ searchParams }: { searchParams: Promise<{ q?: string; page?: string }> }) {
     const { q, page: pageParam } = await searchParams;
-    const page = Math.max(1, Number(pageParam) || 1);
+    const page = pageFromParam(pageParam);
     const { cards, total } = await getMyCards({ limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE, q });
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -58,20 +59,7 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
                     <>
                         <CardsView cards={cards} />
 
-                        <div className="flex items-center justify-between gap-3">
-                            <p className="text-sm text-tertiary">{totalPages > 1 ? `Page ${page} of ${totalPages}` : ""}</p>
-
-                            {totalPages > 1 ? (
-                                <div className="flex gap-2">
-                                    <Button color="secondary" size="sm" {...(page > 1 ? { href: pageHref(page - 1) } : { isDisabled: true })}>
-                                        Previous
-                                    </Button>
-                                    <Button color="secondary" size="sm" {...(page < totalPages ? { href: pageHref(page + 1) } : { isDisabled: true })}>
-                                        Next
-                                    </Button>
-                                </div>
-                            ) : null}
-                        </div>
+                        <CardsPagination page={page} totalPages={totalPages} hrefFor={pageHref} />
                     </>
                 )}
             </div>
