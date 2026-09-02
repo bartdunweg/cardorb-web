@@ -22,6 +22,13 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **Mobbin pattern check** over every page (Bart wants this as a standing check, see memory). Three
+  PRs came out of it: the market price carries the name's weight on the tile and sits under the
+  title in the panel; the public profile shows display name, handle and "cards · sets"; the
+  Pokédex has a progress bar and the Cards count sits by the search. Settings, forgot-password and
+  Home already follow their references. Still open from the check: sort and set/rarity filters on
+  Cards, which need parameters on `GET /v1/cards` first.
+- Local dev runs on port 3112 now; the portfolio project's dev server sits on 3111.
 - **Card pictures through the image optimizer, and the functions in Dublin (#21).** A performance
   review found the pictures came straight from `assets.tcgdex.net` — one server in France, no CDN,
   unreachable that day — and the functions ran in `iad1` while the API sits in `dub1`. Every card
