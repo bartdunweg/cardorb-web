@@ -20,38 +20,45 @@ bartdunweg.com keep working through it.
 
 ## Last session
 
-- `/privacy` and `/terms` shipped on Untitled UI's legal-pages/01 template, content ported from the
-  previous app and corrected for this one. The iOS app links to them.
-- The www → apex redirect lives in `next.config.mjs`; the `vercel.json` version never fired.
-- Vercel projects were renamed by the owner: new app `cardorb`, previous app `cardorb-api`.
-- Went live: PR #2 merged, production build green, `cardorb.com` + `www` moved from project
-  `cardorb` to `cardorb-web`. Checked: landing 200, `/dashboard` redirects to login, `/api/v1`
-  answers the same body through `cardorb.com` and `api.cardorb.com`, `/api/v1/collection` 401
-  without a token. `www` now redirects to the apex from `vercel.json`.
-- Meridian setup from `/meridian:start`: `CLAUDE.md` rewritten in the Meridian format (85 lines,
-  domain terms and two principles from the owner's interview), `AGENTS.md` reduced to a pointer,
-  `.claude/settings.json` lists the installed plugins (`interfaces`, `elements-of-style`,
-  `emil-skills`; the old `interface-details` name matched nothing). Lint was already strict.
-- Linked this directory and the GitHub repo to the existing (empty) Vercel project `cardorb-web`.
-- Added `vercel.json`: framework `nextjs`, `pnpm install --frozen-lockfile`, and a rewrite of
-  `/api/v1/*` to `https://api.cardorb.com/api/v1/*`. New rule **R-DEPLOY-001** records why.
-- `middleware.ts` no longer runs on `/api/`: nothing there needs a Supabase session.
-- Attached `api.cardorb.com` to the old `cardorb` Vercel project. Its `.vercel.app` address sits
-  behind Vercel SSO (`all_except_custom_domains`), so the proxy needs a custom domain there.
-- README gained a "Deploying" section listing the four production env vars, including `NPM_RC`
-  for the private `@strakzat` package.
-- `./scripts/verify.sh` green.
+- Four review agents (conventions, security, project setup, performance/SEO) audited the repo.
+  The blocking half shipped as six PRs (#7–#13): Next.js 16.3.4 (0 audit findings), the public
+  profile selects public card columns only (`PublicCard`), collection list/delete/move scoped on
+  the user (R-SEC-002), three dead controls removed and the empty Cards page given its action,
+  dialog titles / `aria-current` / live regions / a labelled favourite star, and password change
+  that proves the current password plus a bounded avatar upload.
+- Lesson recorded in the merge loop: gate a merge on the GitHub `check`, not on `--fail-fast`,
+  because the Vercel preview check is red by design (no `NPM_RC` for previews). One lockfile
+  mismatch reached main for a few minutes (#10 fixed it); the live site never changed.
 
 ## Next
 
-- `NPM_RC` is set for Production only; PR previews fail at install until it is added for Preview.
-- Point the iOS app at `https://api.cardorb.com/api/v1` directly (in `bartdunweg/cardorb-ios`),
-  so the rewrite can eventually go.
-- Parked from earlier: iOS-style mobile page header (4 open questions), 13 promo cards without
-  art, wishlist count on Home / add-to-wishlist from a card's detail.
+Backlog from the review, ranked. Each is one PR.
+
+- Landing page: move the signed-in redirect into the middleware so `/` prerenders (LCP 3.1 s → ~2.3 s).
+- `robots.ts`, `sitemap.ts`, an `opengraph-image`, own titles for `/login` and `/signup`, and drop the
+  doubled " · Cardorb" on `/user/[username]`.
+- Card images through `next/image` with `remotePatterns` for `images.pokemontcg.io` (165 KB PNG per
+  thumbnail today; a 100-card grid is ~16 MB).
+- Untitled UI kit: 190 of 252 vendored files are unreferenced and keep recharts, motion, embla,
+  qr-code-styling and input-otp alive (~38 MB). Policy: keep what is imported, re-fetch through the
+  MCP when needed. Write it as a line under R-STRUCT-001, then one deletion PR.
+- First tests in `src/lib` (`formatDate`, the `.or()` search escaping, the pokemontcg client with a
+  mocked fetch), then drop `--passWithNoTests`.
+- Small: `POKEMONTCG_API_KEY` and `SUPABASE_SERVICE_ROLE_KEY` in `.env.example`; `.gitignore`
+  `.env` / `.env.*` / `!.env.example`; GitHub description + topics; README to the documentation
+  template; delete or document `scripts/backfill-*.mjs`; one `useDebouncedSearch` hook for the four
+  copies; confirmation before deleting a collection; pagination on favorites/wishlist/collection
+  detail/public profile (all cap at 100 while showing the full count); the signup "Name" field is
+  never read.
+- Parked from earlier: iOS-style mobile page header (4 open questions), 13 promo cards without art,
+  wishlist count on Home.
 
 ## Open
 
-- `cardorb.com` will show a different product with real accounts where a single-passcode site
-  used to be; the old app stays reachable only through `api.cardorb.com`.
-- Untitled UI PRO license + Supabase service-role key were pasted in chat earlier — rotate if you care.
+- Supabase-side controls the repo cannot show: the `cards` SELECT policy (does the anon role read
+  private columns of public profiles' rows?), `avatars` bucket `allowed_mime_types` /
+  `file_size_limit` and a path-per-user storage policy, "secure password change" in Auth settings.
+  Worth a `docs/schema.md` or the SQL itself so a reviewer can verify R-SEC-002.
+- `NPM_RC` is set for Production only; PR previews on Vercel fail at install until it is added for
+  Preview. Harmless, but every PR shows a red Vercel check.
+- Rotate the Supabase service-role key that was once pasted in chat.
