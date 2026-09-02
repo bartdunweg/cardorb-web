@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import { markOwned } from "@/app/(app)/dashboard/cards/actions";
 import { listCollections, setCardCollection } from "@/app/(app)/dashboard/collections/actions";
+import { CardImage } from "@/components/app/card-image";
 import { FavoriteStar } from "@/components/app/favorite-star";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Button } from "@/components/base/buttons/button";
@@ -87,8 +88,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
 
                     <SlideoutMenu.Content>
                         {card?.image_url ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={card.image_url} alt={card.name} className="mx-auto w-48 rounded-xl" />
+                            <div className="relative mx-auto aspect-[63/88] w-48 overflow-hidden rounded-xl">
+                                <CardImage src={card.image_url} alt={card.name} sizes="192px" className="object-contain" priority />
+                            </div>
                         ) : (
                             <div className="mx-auto flex aspect-[63/88] w-48 flex-col items-center justify-center gap-1 rounded-xl bg-quaternary p-4 text-center">
                                 <span className="text-sm font-medium text-secondary">{card?.name}</span>

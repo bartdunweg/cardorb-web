@@ -6,6 +6,7 @@ import { Check, Plus, SearchLg } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import { type PokemonCard, addCard, searchPokemon } from "@/app/(app)/dashboard/cards/actions";
+import { CardImage } from "@/components/app/card-image";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Button } from "@/components/base/buttons/button";
@@ -107,12 +108,9 @@ export function AddCardModal({ defaultTarget = "collection", trigger }: { defaul
                                             const st = status[keyFor(card)];
                                             return (
                                                 <div key={card.id} className="flex items-center gap-3 rounded-lg p-2 hover:bg-secondary">
-                                                    {card.image ? (
-                                                        // eslint-disable-next-line @next/next/no-img-element
-                                                        <img src={card.image} alt="" className="h-16 w-auto shrink-0 rounded" loading="lazy" />
-                                                    ) : (
-                                                        <div className="h-16 w-11 shrink-0 rounded bg-quaternary" />
-                                                    )}
+                                                    <div className="relative h-16 w-11 shrink-0 overflow-hidden rounded bg-quaternary">
+                                                        {card.image ? <CardImage src={card.image} alt="" sizes="44px" className="object-cover" /> : null}
+                                                    </div>
                                                     <div className="flex min-w-0 flex-1 flex-col">
                                                         <span className="truncate text-sm font-medium text-primary">{card.name}</span>
                                                         <span className="truncate text-xs text-tertiary">

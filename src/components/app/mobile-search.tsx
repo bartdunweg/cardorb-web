@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { SearchLg } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { type CardHit, searchMyCards } from "@/app/(app)/dashboard/cards/actions";
+import { CardImage } from "@/components/app/card-image";
 import { Input } from "@/components/base/input/input";
 
 // Full-page collection search for mobile (a route, not a modal).
@@ -51,12 +52,9 @@ export function MobileSearch() {
                             onClick={() => router.push(`/dashboard/cards?q=${encodeURIComponent(card.name)}`)}
                             className="flex items-center gap-3 rounded-lg p-2 text-left hover:bg-secondary"
                         >
-                            {card.image_url ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img src={card.image_url} alt="" className="h-14 w-auto shrink-0 rounded" loading="lazy" />
-                            ) : (
-                                <div className="h-14 w-10 shrink-0 rounded bg-quaternary" />
-                            )}
+                            <div className="relative h-14 w-10 shrink-0 overflow-hidden rounded bg-quaternary">
+                                {card.image_url ? <CardImage src={card.image_url} alt="" sizes="40px" className="object-cover" /> : null}
+                            </div>
                             <div className="flex min-w-0 flex-1 flex-col">
                                 <span className="truncate text-sm font-medium text-primary">{card.name}</span>
                                 <span className="truncate text-xs text-tertiary">

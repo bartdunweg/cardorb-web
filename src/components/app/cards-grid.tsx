@@ -1,5 +1,6 @@
 "use client";
 
+import { CardImage } from "@/components/app/card-image";
 import { FavoriteStar } from "@/components/app/favorite-star";
 import type { PublicCard } from "@/lib/cards";
 import { formatPrice } from "@/lib/format";
@@ -23,10 +24,14 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                     onClick={() => onSelect(card)}
                     className="flex cursor-pointer flex-col gap-2 rounded-xl p-2 text-left outline-focus-ring transition hover:bg-secondary focus-visible:outline-2"
                 >
-                    <div className="aspect-[63/88] w-full overflow-hidden rounded-lg bg-quaternary">
+                    <div className="relative aspect-[63/88] w-full overflow-hidden rounded-lg bg-quaternary">
                         {card.image_url ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={card.image_url} alt="" className="h-full w-full object-contain" loading="lazy" />
+                            <CardImage
+                                src={card.image_url}
+                                alt=""
+                                sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 213px"
+                                className="object-contain"
+                            />
                         ) : (
                             // No art in our source (e.g. some promos) — show the name so the tile still reads as a card.
                             <div className="flex h-full w-full flex-col items-center justify-center gap-1 p-3 text-center">

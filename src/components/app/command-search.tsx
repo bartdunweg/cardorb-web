@@ -6,6 +6,7 @@ import { SearchLg } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import { type PokemonCard, addCard, searchPokemon } from "@/app/(app)/dashboard/cards/actions";
+import { CardImage } from "@/components/app/card-image";
 import { CommandMenu, type CommandMenuGroupType } from "@/components/application/command-menus/command-menu";
 import { Button } from "@/components/base/buttons/button";
 import { formatDate } from "@/lib/format";
@@ -46,8 +47,9 @@ function CardPreview({ card, status, onAdd }: { card: PokemonCard; status: AddSt
     return (
         <div className="flex w-full flex-col gap-4 overflow-y-auto border-secondary p-6 max-md:border-t md:max-h-[70vh] md:w-90 md:border-l">
             {card.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={card.image} alt={card.name} className="mx-auto w-40 rounded-xl" />
+                <div className="relative mx-auto aspect-[63/88] w-40 overflow-hidden rounded-xl">
+                    <CardImage src={card.image} alt={card.name} sizes="160px" className="object-contain" priority />
+                </div>
             ) : (
                 <div className="mx-auto h-56 w-40 rounded-xl bg-quaternary" />
             )}

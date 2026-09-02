@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "@untitledui/icons";
 import Link from "next/link";
+import { CardImage } from "@/components/app/card-image";
 import type { DexCard } from "@/lib/pokedex";
 
 // One Pokédex slot holding several owned cards: a horizontal scroll-snap slider. Swipe on
@@ -19,10 +20,14 @@ export function DexSlider({ number, cards }: { number: number; cards: DexCard[] 
         <div className="group relative aspect-3/4 overflow-hidden rounded-md ring-1 ring-secondary ring-inset">
             <div ref={ref} className="flex size-full snap-x snap-mandatory [scrollbar-width:none] overflow-x-auto [&::-webkit-scrollbar]:hidden">
                 {cards.map((card) => (
-                    <Link key={card.id} href={`/dashboard/cards?q=${encodeURIComponent(card.name)}`} className="size-full shrink-0 snap-start">
+                    <Link key={card.id} href={`/dashboard/cards?q=${encodeURIComponent(card.name)}`} className="relative size-full shrink-0 snap-start">
                         {card.imageUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={card.imageUrl} alt={card.name} className="size-full object-cover" loading="lazy" />
+                            <CardImage
+                                src={card.imageUrl}
+                                alt={card.name}
+                                sizes="(max-width: 640px) 25vw, (max-width: 768px) 17vw, (max-width: 1024px) 13vw, (max-width: 1280px) 10vw, 107px"
+                                className="object-cover"
+                            />
                         ) : (
                             <div className="flex size-full items-center justify-center bg-quaternary p-1 text-center text-xxs text-quaternary">{card.name}</div>
                         )}

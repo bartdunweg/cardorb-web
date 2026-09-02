@@ -1,5 +1,6 @@
 "use client";
 
+import { CardImage } from "@/components/app/card-image";
 import { FavoriteStar } from "@/components/app/favorite-star";
 import type { Card } from "@/lib/cards";
 import { formatPrice } from "@/lib/format";
@@ -29,8 +30,9 @@ export function CardsTable({ cards, onSelect }: { cards: Card[]; onSelect: (card
                                     className="flex cursor-pointer items-center gap-3 text-left outline-focus-ring focus-visible:outline-2 focus-visible:-outline-offset-2"
                                 >
                                     {card.image_url ? (
-                                        // eslint-disable-next-line @next/next/no-img-element
-                                        <img src={card.image_url} alt="" className="h-10 w-auto shrink-0 rounded" loading="lazy" />
+                                        <div className="relative h-10 w-7 shrink-0 overflow-hidden rounded bg-quaternary">
+                                            <CardImage src={card.image_url} alt="" sizes="28px" className="object-cover" />
+                                        </div>
                                     ) : (
                                         <div className="h-10 w-7 shrink-0 rounded bg-quaternary" />
                                     )}

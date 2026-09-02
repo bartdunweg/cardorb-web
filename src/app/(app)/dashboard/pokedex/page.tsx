@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CardImage } from "@/components/app/card-image";
 import { DexSlider } from "@/components/app/dex-slider";
 import { NATIONAL_DEX_MAX, getPokedex } from "@/lib/pokedex";
 
@@ -34,10 +35,14 @@ export default async function PokedexPage() {
                     const card = slot.cards[0];
                     return (
                         <div key={slot.number} className="relative aspect-3/4 overflow-hidden rounded-md ring-1 ring-secondary ring-inset">
-                            <Link href={`/dashboard/cards?q=${encodeURIComponent(card.name)}`} className="block size-full">
+                            <Link href={`/dashboard/cards?q=${encodeURIComponent(card.name)}`} className="relative block size-full">
                                 {card.imageUrl ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={card.imageUrl} alt={card.name} className="size-full object-cover" loading="lazy" />
+                                    <CardImage
+                                        src={card.imageUrl}
+                                        alt={card.name}
+                                        sizes="(max-width: 640px) 25vw, (max-width: 768px) 17vw, (max-width: 1024px) 13vw, (max-width: 1280px) 10vw, 107px"
+                                        className="object-cover"
+                                    />
                                 ) : (
                                     <div className="flex size-full items-center justify-center bg-quaternary p-1 text-center text-xxs text-quaternary">
                                         {card.name}
