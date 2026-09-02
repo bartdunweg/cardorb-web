@@ -22,6 +22,14 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **Card pictures through the image optimizer, and the functions in Dublin (#21).** A performance
+  review found the pictures came straight from `assets.tcgdex.net` — one server in France, no CDN,
+  unreachable that day — and the functions ran in `iad1` while the API sits in `dub1`. Every card
+  `<img>` is now `CardImage` (`src/components/app/card-image.tsx`) over `next/image`, with the
+  allowed hosts in `next.config.mjs`; `vercel.json` pins `regions: ["dub1"]`. One thumbnail went
+  from 176 KB PNG to 23 KB WebP. Still open from that review, in order: the layout's three
+  sequential API calls (profile, folders, stats) cached per user; `loading.tsx` per dashboard route
+  so the shell streams before the cards; JS on first load is 228 KB Brotli against a 150 KB budget.
 - **"Forgot password?" on `/login`** leads to `/forgot-password`: one email field, and
   `requestPasswordReset` calls Supabase's `resetPasswordForEmail`. The answer is the same for a
   known and an unknown address. The link in the email lands on `/auth/confirm` like every other.
@@ -52,8 +60,6 @@ Backlog from the review, ranked. Each is one PR.
 - Landing page: move the signed-in redirect into the middleware so `/` prerenders (LCP 3.1 s → ~2.3 s).
 - `robots.ts`, `sitemap.ts`, an `opengraph-image`, own titles for `/login` and `/signup`, and drop the
   doubled " · Cardorb" on `/user/[username]`.
-- Card images through `next/image` with `remotePatterns` for `images.pokemontcg.io` (165 KB PNG per
-  thumbnail today; a 100-card grid is ~16 MB).
 - Untitled UI kit: 190 of 252 vendored files are unreferenced and keep recharts, motion, embla,
   qr-code-styling and input-otp alive (~38 MB). Policy: keep what is imported, re-fetch through the
   MCP when needed. Write it as a line under R-STRUCT-001, then one deletion PR.
