@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { LegalPage } from "@/components/app/legal-page";
 
 /**
@@ -17,11 +16,14 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
     return (
-        <LegalPage title="Privacy policy" updated={UPDATED}>
+        <LegalPage
+            title="Privacy policy"
+            intro="What Cardorb stores about you, why, who else sees it, and what you can do about it. One policy for the website and the iOS app."
+            updated={UPDATED}
+        >
             <p>
-                Cardorb is a tool for keeping track of a Pokémon card collection. This policy explains what it stores, why, who else sees it, and what you can
-                do about it. It covers both the website at cardorb.com and the Cardorb app for iPhone and iPad. They are one service, sharing one account and
-                one database. Where the two genuinely differ, it says so.
+                Cardorb is a tool for keeping track of a Pokémon card collection. The website at cardorb.com and the Cardorb app for iPhone and iPad are one
+                service, sharing one account and one database. Where the two genuinely differ, this policy says so.
             </p>
 
             <h2>Who is responsible</h2>
@@ -132,10 +134,6 @@ export default function PrivacyPage() {
             <p>
                 If this policy changes in a way that matters, you will be told before the change takes effect. The date at the top of this page always reflects
                 the version you are reading.
-            </p>
-
-            <p>
-                <Link href="/terms">Terms of use</Link> · <Link href="/">Back to Cardorb</Link>
             </p>
         </LegalPage>
     );

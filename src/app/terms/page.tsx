@@ -17,7 +17,11 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
     return (
-        <LegalPage title="Terms of use" updated={UPDATED}>
+        <LegalPage
+            title="Terms of use"
+            intro="The terms you use Cardorb under: what it is, what is promised, and what is not. Short on purpose."
+            updated={UPDATED}
+        >
             <p>
                 These are the terms you use Cardorb under: the website at cardorb.com and the Cardorb app for iPhone and iPad. They are short on purpose. How
                 your data is handled is a separate document: the <Link href="/privacy">privacy policy</Link>.
@@ -141,10 +145,6 @@ export default function TermsPage() {
             <h2>Contact</h2>
             <p>
                 Anything at all: <a href="mailto:hello@bartdunweg.com">hello@bartdunweg.com</a>.
-            </p>
-
-            <p>
-                <Link href="/privacy">Privacy policy</Link> · <Link href="/">Back to Cardorb</Link>
             </p>
         </LegalPage>
     );
