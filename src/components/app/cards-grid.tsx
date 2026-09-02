@@ -2,10 +2,18 @@
 
 import { FavoriteStar } from "@/components/app/favorite-star";
 import type { PublicCard } from "@/lib/cards";
+import { formatPrice } from "@/lib/format";
 
 // Presentational grid of card thumbnails. Selection is owned by CardsView. Generic over the card
-// shape so the public profile can pass `PublicCard`; the favourite star only shows when the field exists.
-export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null }>({ cards, onSelect }: { cards: T[]; onSelect: (card: T) => void }) {
+// shape so the public profile can pass `PublicCard`; the favourite star and the price only show when
+// the field exists, so a public page never carries a price.
+export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null; price?: number | null }>({
+    cards,
+    onSelect,
+}: {
+    cards: T[];
+    onSelect: (card: T) => void;
+}) {
     return (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {cards.map((card) => (
@@ -35,6 +43,7 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null 
                         <span className="truncate text-xs text-tertiary">
                             {[card.set_name, card.number ? `#${card.number}` : null].filter(Boolean).join(" · ")}
                         </span>
+                        {card.price != null ? <span className="text-xs text-secondary tabular-nums">{formatPrice(card.price)}</span> : null}
                     </div>
                 </button>
             ))}

@@ -15,3 +15,10 @@ export function formatDate(value: string | Date | null | undefined): string {
 
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
+
+const euros = new Intl.NumberFormat("en-US", { style: "currency", currency: "EUR" });
+
+// Formats a Cardmarket price as "€12.50"; nothing when there is no price to show.
+export function formatPrice(value: number | null | undefined): string {
+    return value == null ? "" : euros.format(value);
+}

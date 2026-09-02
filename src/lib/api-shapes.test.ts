@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { absoluteImage, cardFromItem, pokemonCardFromBrowse, publicCardsFromSets, slotsFromEntries } from "./api-shapes";
+import { absoluteImage, cardFromItem, pokemonCardFromBrowse, priceForCopy, publicCardsFromSets, slotsFromEntries } from "./api-shapes";
 
 describe("absoluteImage", () => {
     it("resolves a relative picture on the API's host and leaves an absolute one alone", () => {
@@ -35,10 +35,11 @@ describe("cardFromItem", () => {
             isFavorite: true,
             acquiredAt: null,
             collectionId: "f",
-            price: null,
+            price: { low: 1, market: 4, avg30: 5, nm: { low: 3, mid: 6, high: 9 } },
             priceHolo: null,
         });
         expect(card).toMatchObject({
+            price: 6,
             set_name: "Base Set",
             types: ["Lightning"],
             is_favorite: true,
@@ -47,6 +48,25 @@ describe("cardFromItem", () => {
             collection_id: "f",
             image_url: "https://api.cardorb.com/api/cover?url=p",
         });
+    });
+});
+
+describe("priceForCopy", () => {
+    const price = { low: 1, market: 4, avg30: 5, nm: { low: 3, mid: 6, high: 9 } };
+    const holo = { low: 10, market: 40, avg30: 50, nm: { low: 30, mid: 60, high: 90 } };
+
+    it("shows the Near Mint midpoint, and falls back to the market price", () => {
+        expect(priceForCopy({ finish: null, price, priceHolo: null })).toBe(6);
+        expect(priceForCopy({ finish: null, price: { ...price, nm: null }, priceHolo: null })).toBe(4);
+        expect(priceForCopy({ finish: null, price: { low: 1, market: null, avg30: null, nm: null }, priceHolo: null })).toBeNull();
+        expect(priceForCopy({ finish: null, price: null, priceHolo: null })).toBeNull();
+    });
+
+    it("prices a holo or reverse-holo copy as a holo, unless the holo price is missing", () => {
+        expect(priceForCopy({ finish: "holo", price, priceHolo: holo })).toBe(60);
+        expect(priceForCopy({ finish: "reverse-holo", price, priceHolo: holo })).toBe(60);
+        expect(priceForCopy({ finish: "normal", price, priceHolo: holo })).toBe(6);
+        expect(priceForCopy({ finish: "holo", price, priceHolo: null })).toBe(6);
     });
 });
 

@@ -22,6 +22,11 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **Prices on the cards.** `priceForCopy` in `src/lib/api-shapes.ts` picks one number per copy from
+  the API's `price`/`priceHolo` (the Near Mint midpoint, else the market price; a holo or
+  reverse-holo copy takes the holo price) and `formatPrice` writes it as `€12.50`. Shown on the grid
+  tile, as a "Price" column in the table and as a "Price" row in the detail panel. The public
+  profile still carries no price: its routes never send one.
 - **The API reference lives here now**, at `/docs/api`: `src/lib/api-reference.ts` reads the
   contract from `https://api.cardorb.com/openapi.yaml` (fetched once an hour) and the page draws
   it in the legal-page shell, which gained an optional version line and an "API" footer link.
@@ -37,8 +42,8 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 Backlog from the review, ranked. Each is one PR.
 
-- Prices on the cards: the API carries `price` and `priceHolo` on every copy now; nothing here
-  shows them yet.
+- A "Collection value" tile on Home needs a `value` on `GET /v1/stats` in `cardorb-api`; summing a
+  page of 100 here would lie about a collection of 1,936.
 - The `wishlist` and `pokedex_numbers` columns on `cards` are no longer written or read by
   anything; a migration that drops them belongs in `cardorb-api`, which owns the schema.
 - A "Forgot password?" link on `/login` that calls `resetPasswordForEmail`; today only the iOS app
