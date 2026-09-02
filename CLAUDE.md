@@ -9,7 +9,8 @@ exist so other collectors can join later.
 
 - Next.js 16 (App Router) + React 19 + TypeScript, pnpm, Node 24 (`.nvmrc`)
 - Tailwind v4 + Untitled UI PRO (vendored in `src/components`)
-- Supabase (Postgres + auth, email and password), zod at every boundary
+- The Card Orb API (`bartdunweg/cardorb-api`, api.cardorb.com) for cards, folders and profiles;
+  Supabase (auth, email and password) for the session only; zod at every boundary
 - Deployed on Vercel: `main` is production at https://cardorb.com, every PR gets a preview
 
 ## Commands
@@ -30,7 +31,7 @@ src/
 ├── app/            # routes: (auth) login/signup, (app)/dashboard/*, user/[username]
 ├── components/app/ # our own shared components — the only lint-policed UI dir
 ├── components/…    # vendored Untitled UI kit (base, application, marketing, foundations)
-├── lib/            # Supabase clients, data access, public-profile queries
+├── lib/            # api.ts (the API client), api-shapes.ts (its answers → what screens render), Supabase auth clients
 └── styles/         # globals.css, theme.css (tokens), typography.css
 ```
 
@@ -65,10 +66,10 @@ Project-specific rules with an ID (R-DATA-002, R-SEC-002, …) live in `CONVENTI
 
 ## Principles
 
-- **API bridge** — `/api/v1/*` is not implemented here; `vercel.json` rewrites it to
-  `api.cardorb.com`, the previous Cardorb app. The iOS app and bartdunweg.com read that API
-  from `cardorb.com`, which now points at this app; the old Vercel project stays until they are
-  repointed.
+- **One road to the cards** — this app reads and writes cards, folders and profiles through the
+  Card Orb API (`src/lib/api.ts`, R-DATA-003), the same API the iOS app uses, so both see the
+  same pictures, prices and features. `/api/v1/*` on cardorb.com is a `vercel.json` rewrite to
+  that API for bartdunweg.com.
 
 ## Language
 

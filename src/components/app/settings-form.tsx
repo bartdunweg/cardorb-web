@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { useRef, useState } from "react";
 import { Monitor04, Moon01, Sun } from "@untitledui/icons";
 import { useTheme } from "next-themes";
-import { updateAvatar, updatePassword, updateProfile } from "@/app/(app)/dashboard/settings/actions";
+import { removeAvatar, updatePassword, updateProfile, uploadAvatar } from "@/app/(app)/dashboard/settings/actions";
 import { signOut } from "@/app/(auth)/actions";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
@@ -12,8 +12,6 @@ import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { Toggle } from "@/components/base/toggle/toggle";
 import type { Profile } from "@/lib/profile";
-import { createClient } from "@/lib/supabase/client";
-import { cx } from "@/utils/cx";
 
 type Msg = { type: "ok" | "err"; text: string } | null;
 
@@ -29,7 +27,7 @@ function Section({ title, description, children }: { title: string; description?
     );
 }
 
-const AVATAR_TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/gif": "gif", "image/webp": "webp" };
+const AVATAR_TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
 
 function StatusText({ msg }: { msg: Msg }) {
@@ -58,55 +56,45 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
         if (fileRef.current) fileRef.current.value = "";
         if (!file) return;
 
-        setUploading(true);
-        setProfileMsg(null);
-        const supabase = createClient();
-        const {
-            data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) {
-            setUploading(false);
-            setProfileMsg({ type: "err", text: "Not signed in." });
-            return;
-        }
-
-        // The bucket is public, so what goes in must be an image and small: the type from the
-        // browser, not the filename, and a cap that keeps a profile picture a profile picture.
-        const ext = AVATAR_TYPES[file.type];
-        if (!ext) {
-            setUploading(false);
-            setProfileMsg({ type: "err", text: "Use a JPG, PNG, GIF or WebP image." });
+        // The type from the browser, not the filename, and a cap that keeps a profile picture a
+        // profile picture. The API checks both again and stores the image.
+        if (!AVATAR_TYPES[file.type]) {
+            setProfileMsg({ type: "err", text: "Use a JPG, PNG or WebP image." });
             return;
         }
         if (file.size > AVATAR_MAX_BYTES) {
-            setUploading(false);
             setProfileMsg({ type: "err", text: "Keep the image under 2 MB." });
             return;
         }
-        const path = `${user.id}/avatar.${ext}`;
-        const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true, contentType: file.type });
-        if (upErr) {
+
+        setUploading(true);
+        setProfileMsg(null);
+        const image = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result));
+            reader.onerror = () => reject(reader.error);
+            reader.readAsDataURL(file);
+        }).catch(() => null);
+        if (!image) {
             setUploading(false);
-            setProfileMsg({ type: "err", text: upErr.message });
+            setProfileMsg({ type: "err", text: "That file could not be read." });
             return;
         }
 
-        const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
-        const url = `${pub.publicUrl}?v=${Date.now()}`;
-        const res = await updateAvatar(url);
+        const res = await uploadAvatar(image);
         setUploading(false);
         if (res.ok) {
-            setAvatarUrl(url);
+            setAvatarUrl(res.avatarUrl ?? "");
             setProfileMsg({ type: "ok", text: "Avatar updated." });
         } else {
             setProfileMsg({ type: "err", text: res.error });
         }
     };
 
-    const removeAvatar = async () => {
+    const onRemoveAvatar = async () => {
         setUploading(true);
         setProfileMsg(null);
-        const res = await updateAvatar(null);
+        const res = await removeAvatar();
         setUploading(false);
         if (res.ok) {
             setAvatarUrl("");
@@ -130,7 +118,7 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
     const saveProfile = async () => {
         setSavingProfile(true);
         setProfileMsg(null);
-        const res = await updateProfile({ display_name: displayName, username, avatar_url: avatarUrl, is_public: isPublic });
+        const res = await updateProfile({ display_name: displayName, username, is_public: isPublic });
         setSavingProfile(false);
         setProfileMsg(res.ok ? { type: "ok", text: "Saved." } : { type: "err", text: res.error });
     };
@@ -170,12 +158,12 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
                                 Upload
                             </Button>
                             {avatarUrl ? (
-                                <Button size="sm" color="secondary-destructive" onClick={removeAvatar} isDisabled={uploading}>
+                                <Button size="sm" color="secondary-destructive" onClick={onRemoveAvatar} isDisabled={uploading}>
                                     Remove
                                 </Button>
                             ) : null}
                         </div>
-                        <p className="text-xs text-tertiary">JPG, PNG or GIF.</p>
+                        <p className="text-xs text-tertiary">JPG, PNG or WebP.</p>
                     </div>
                     <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" onChange={onPickFile} className="hidden" />
                 </div>

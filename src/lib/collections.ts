@@ -1,44 +1,25 @@
-import { createClient } from "@/lib/supabase/server";
+import { cache } from "react";
+import { api } from "@/lib/api";
+import { getStats } from "@/lib/cards";
 
 export type CollectionSummary = { id: string; name: string; count: number };
 
-// The user's collections with per-collection card counts, plus the favorites count. RLS-scoped.
+type Folder = { id: string; name: string; createdAt: string; count: number };
+
+// The API calls them folders — "collection" is the whole of what you own there — and the
+// screens keep calling them collections. Read once per request: the layout and the page both ask.
+const folders = cache(async () => (await api<{ folders: Folder[] }>("/folders")).folders);
+
 export async function getMyCollections(): Promise<{ collections: CollectionSummary[]; favoritesCount: number; wishlistCount: number }> {
-    const supabase = await createClient();
-
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return { collections: [], favoritesCount: 0, wishlistCount: 0 };
-
-    const [cols, assigned, fav, wish] = await Promise.all([
-        supabase.from("collections").select("id, name").eq("user_id", user.id).order("created_at", { ascending: true }),
-        supabase.from("cards").select("collection_id").eq("user_id", user.id).eq("wishlist", false).not("collection_id", "is", null),
-        supabase.from("cards").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("wishlist", false).eq("is_favorite", true),
-        supabase.from("cards").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("wishlist", true),
-    ]);
-
-    const counts = new Map<string, number>();
-    for (const row of (assigned.data ?? []) as { collection_id: string | null }[]) {
-        if (row.collection_id) counts.set(row.collection_id, (counts.get(row.collection_id) ?? 0) + 1);
-    }
-
-    const collections = ((cols.data ?? []) as { id: string; name: string }[]).map((c) => ({
-        id: c.id,
-        name: c.name,
-        count: counts.get(c.id) ?? 0,
-    }));
-
-    return { collections, favoritesCount: fav.count ?? 0, wishlistCount: wish.count ?? 0 };
+    const [list, stats] = await Promise.all([folders(), getStats()]);
+    return {
+        collections: list.map((f) => ({ id: f.id, name: f.name, count: f.count })),
+        favoritesCount: stats.favorites,
+        wishlistCount: stats.wishlist,
+    };
 }
 
 export async function getCollection(id: string): Promise<{ id: string; name: string } | null> {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return null;
-
-    const { data } = await supabase.from("collections").select("id, name").eq("user_id", user.id).eq("id", id).maybeSingle();
-    return (data as { id: string; name: string } | null) ?? null;
+    const found = (await folders()).find((f) => f.id === id);
+    return found ? { id: found.id, name: found.name } : null;
 }

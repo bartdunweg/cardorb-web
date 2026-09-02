@@ -1,0 +1,21 @@
+"$schema" = "https://conductor.build/schemas/settings.repo.schema.json"
+
+[scripts]
+# pnpm is the package manager (pnpm-lock.yaml + packageManager field). Install runs the
+# allow-listed native builds (sharp, unrs-resolver) from pnpm-workspace.yaml.
+setup = "pnpm install"
+# Each local workspace gets its own port range and Supabase is hosted (no shared local
+# stack), so workspaces can run side by side.
+run_mode = "concurrent"
+
+# Next.js dev server on the workspace's allocated port. CONDUCTOR_PORT is local-only.
+[scripts.run.dev]
+command = "pnpm dev --port $CONDUCTOR_PORT"
+default = true
+icon = "play"
+available_in = ["local"]
+
+# Vitest in watch mode. No port needed, so it runs locally and in the cloud.
+[scripts.run.test]
+command = "pnpm vitest --watch"
+icon = "test-tube"

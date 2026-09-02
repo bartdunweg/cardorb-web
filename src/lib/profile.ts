@@ -1,21 +1,12 @@
-import { createClient } from "@/lib/supabase/server";
+import { cache } from "react";
+import { api } from "@/lib/api";
+import { type OwnProfile, type Profile, profileFromOwn } from "@/lib/api-shapes";
 
-export type Profile = {
-    display_name: string | null;
-    username: string;
-    avatar_url: string | null;
-    is_public: boolean;
-};
+export type { Profile } from "@/lib/api-shapes";
 
-// The signed-in user's profile plus their auth email. RLS (profiles_read) scopes this to the user.
-export async function getMyProfile(): Promise<{ profile: Profile | null; email: string | null }> {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return { profile: null, email: null };
-
-    const { data } = await supabase.from("profiles").select("display_name, username, avatar_url, is_public").eq("id", user.id).single();
-
-    return { profile: (data as Profile) ?? null, email: user.email ?? null };
-}
+// The signed-in person's profile and email, from the API. Once per request: the layout asks on
+// every screen and Settings asks again.
+export const getMyProfile = cache(async (): Promise<{ profile: Profile | null; email: string | null }> => {
+    const own = await api<OwnProfile>("/profile");
+    return { profile: profileFromOwn(own), email: own.email };
+});
