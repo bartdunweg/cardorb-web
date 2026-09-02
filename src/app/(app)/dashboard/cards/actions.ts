@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { ApiError, api } from "@/lib/api";
+import { ApiError, api, forgetMe } from "@/lib/api";
 import { type BrowseCard, type PokemonCard, pokemonCardFromBrowse } from "@/lib/api-shapes";
 import { getMyCards } from "@/lib/cards";
 
@@ -71,6 +71,7 @@ export async function addCard(input: PokemonCard, target: "collection" | "wishli
         return failed(err);
     }
 
+    await forgetMe();
     revalidatePath("/dashboard", "layout");
     return { ok: true };
 }
@@ -86,6 +87,7 @@ export async function markOwned(cardId: string): Promise<Result> {
         return failed(err);
     }
 
+    await forgetMe();
     revalidatePath("/dashboard", "layout");
     return { ok: true };
 }

@@ -1,5 +1,4 @@
-import { cache } from "react";
-import { api } from "@/lib/api";
+import { api, remembered } from "@/lib/api";
 import { getStats } from "@/lib/cards";
 
 export type CollectionSummary = { id: string; name: string; count: number };
@@ -7,8 +6,8 @@ export type CollectionSummary = { id: string; name: string; count: number };
 type Folder = { id: string; name: string; createdAt: string; count: number };
 
 // The API calls them folders — "collection" is the whole of what you own there — and the
-// screens keep calling them collections. Read once per request: the layout and the page both ask.
-const folders = cache(async () => (await api<{ folders: Folder[] }>("/folders")).folders);
+// screens keep calling them collections. Remembered a minute: the layout asks on every screen.
+const folders = () => remembered("folders", async (token) => (await api<{ folders: Folder[] }>("/folders", { token })).folders);
 
 export async function getMyCollections(): Promise<{ collections: CollectionSummary[]; favoritesCount: number; wishlistCount: number }> {
     const [list, stats] = await Promise.all([folders(), getStats()]);

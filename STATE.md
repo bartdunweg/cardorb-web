@@ -22,6 +22,12 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **The signed-in screens feel quick again.** The profile, folders and numbers the layout asks
+  the API for on every screen are remembered a minute per person (`remembered()` in
+  `src/lib/api.ts`, keyed by user, tagged `user:<id>`) and forgotten after every write this app
+  makes (`forgetMe()`), so its own changes show within a click and the iOS app's within a
+  minute. The layout's two reads run side by side. `dashboard/loading.tsx` shows the sidebar
+  and a spinner while a screen's data is on the way.
 - **Mobbin pattern check** over every page (Bart wants this as a standing check, see memory). Three
   PRs came out of it: the market price carries the name's weight on the tile and sits under the
   title in the panel; the public profile shows display name, handle and "cards · sets"; the

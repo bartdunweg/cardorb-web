@@ -9,9 +9,10 @@ import { getMyProfile } from "@/lib/profile";
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
     // The middleware already sent a signed-out visitor to /login; this is the API saying the
     // session it was handed is not good enough, which comes to the same door.
-    let me;
+    let me, folders;
     try {
-        me = await getMyProfile();
+        // Side by side: neither needs the other, and each is a round trip.
+        [me, folders] = await Promise.all([getMyProfile(), getMyCollections()]);
     } catch (err) {
         if (err instanceof ApiError && err.status === 401) redirect("/login");
         throw err;
@@ -24,7 +25,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     };
 
     // Collections feed the sidebar's expandable Collections item.
-    const { collections } = await getMyCollections();
+    const { collections } = folders;
 
     return (
         <CommandSearchProvider>
