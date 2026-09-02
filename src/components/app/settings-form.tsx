@@ -27,7 +27,7 @@ function Section({ title, description, children }: { title: string; description?
     );
 }
 
-const AVATAR_TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/gif": "gif", "image/webp": "webp" };
+const AVATAR_TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
 
 function StatusText({ msg }: { msg: Msg }) {
@@ -163,7 +163,7 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
                                 </Button>
                             ) : null}
                         </div>
-                        <p className="text-xs text-tertiary">JPG, PNG or GIF.</p>
+                        <p className="text-xs text-tertiary">JPG, PNG or WebP.</p>
                     </div>
                     <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" onChange={onPickFile} className="hidden" />
                 </div>
