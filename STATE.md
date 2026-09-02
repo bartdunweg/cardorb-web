@@ -22,6 +22,10 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **The API reference lives here now**, at `/docs/api`: `src/lib/api-reference.ts` reads the
+  contract from `https://api.cardorb.com/openapi.yaml` (fetched once an hour) and the page draws
+  it in the legal-page shell, which gained an optional version line and an "API" footer link.
+  `api.cardorb.com/` redirects here.
 - **The web app moved onto the API.** `lib/cards.ts`, `collections.ts`, `profile.ts`,
   `public-profile.ts`, `pokedex.ts` and every server action call `api.cardorb.com`; `pokemontcg.ts`
   is gone (the API matches a card against three catalogues and picks the picture and the price).
@@ -33,9 +37,6 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 Backlog from the review, ranked. Each is one PR.
 
-- The API reference at `/docs/api`, in this site's theme, read at build time from
-  `https://api.cardorb.com/openapi.yaml`; then `api.cardorb.com/` points here. The previous
-  renderer is in `cardorb-api` at `40cc85d`, `src/app/docs/api/`.
 - Prices on the cards: the API carries `price` and `priceHolo` on every copy now; nothing here
   shows them yet.
 - The `wishlist` and `pokedex_numbers` columns on `cards` are no longer written or read by

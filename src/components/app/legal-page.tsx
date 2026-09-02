@@ -8,19 +8,23 @@ import { SectionDivider } from "@/components/shared-assets/section-divider";
  *
  * Untitled UI's legal-pages/01 template (centred header with the date, a rich-text column,
  * a section divider, a footer) with the landing page's minimal top bar instead of the marketing
- * header, and a footer without the newsletter form the site does not have.
+ * header, and a footer without the newsletter form the site does not have. The API reference
+ * uses the same shell with a version line where the date would be.
  */
 export function LegalPage({
     title,
     intro,
     updated,
+    eyebrow,
     children,
 }: {
     title: string;
     /** One sentence under the title, in the header. */
     intro: string;
     /** One value, two readers: the visible line and <time dateTime>, so they cannot disagree. */
-    updated: { iso: string; human: string };
+    updated?: { iso: string; human: string };
+    /** The small line above the title when there is no date: a version, for instance. */
+    eyebrow?: ReactNode;
     children: ReactNode;
 }) {
     return (
@@ -36,7 +40,13 @@ export function LegalPage({
                     <div className="mx-auto max-w-container px-4 md:px-8">
                         <div className="mx-auto flex w-full max-w-3xl flex-col items-center text-center">
                             <span className="text-sm font-semibold text-brand-secondary md:text-md">
-                                Current as of <time dateTime={updated.iso}>{updated.human}</time>
+                                {updated ? (
+                                    <>
+                                        Current as of <time dateTime={updated.iso}>{updated.human}</time>
+                                    </>
+                                ) : (
+                                    eyebrow
+                                )}
                             </span>
                             <h1 className="mt-3 text-display-md font-semibold text-primary md:text-display-lg">{title}</h1>
                             <p className="mt-4 text-lg text-tertiary md:mt-6 md:text-xl">{intro}</p>
@@ -58,11 +68,12 @@ export function LegalPage({
                     <div className="flex flex-col gap-8 md:items-center">
                         <span className="text-lg font-semibold text-primary">Cardorb</span>
                         <nav aria-label="Footer">
-                            <ul className="grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-[repeat(3,max-content)]">
+                            <ul className="grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-[repeat(4,max-content)]">
                                 {[
                                     { title: "Home", href: "/" },
                                     { title: "Privacy", href: "/privacy" },
                                     { title: "Terms", href: "/terms" },
+                                    { title: "API", href: "/docs/api" },
                                 ].map((item) => (
                                     <li key={item.title}>
                                         <Button color="link-gray" size="md" href={item.href} className="max-h-5">
