@@ -13,12 +13,17 @@ Supabase connected (project `fprjroupecdhosfdrqhv`), RLS-scoped `cards`/`collect
 imported cards. Live features: public landing, protected app shell, Home, Cards, Collections,
 Favorites, Wishlist, Pokédex, command-palette search, Settings, public profile at `/user/[username]`.
 
-**Live at https://cardorb.com** on Vercel project `cardorb-web`, `main` is production. `/api/v1`
+**Live at https://cardorb.com** on Vercel project `cardorb` (the previous app is `cardorb-api`),
+`main` is production. `/api/v1`
 is proxied to the previous app on `api.cardorb.com` (R-DEPLOY-001); the iOS client and
 bartdunweg.com keep working through it.
 
 ## Last session
 
+- `/privacy` and `/terms` shipped on Untitled UI's legal-pages/01 template, content ported from the
+  previous app and corrected for this one. The iOS app links to them.
+- The www → apex redirect lives in `next.config.mjs`; the `vercel.json` version never fired.
+- Vercel projects were renamed by the owner: new app `cardorb`, previous app `cardorb-api`.
 - Went live: PR #2 merged, production build green, `cardorb.com` + `www` moved from project
   `cardorb` to `cardorb-web`. Checked: landing 200, `/dashboard` redirects to login, `/api/v1`
   answers the same body through `cardorb.com` and `api.cardorb.com`, `/api/v1/collection` 401
@@ -39,7 +44,6 @@ bartdunweg.com keep working through it.
 
 ## Next
 
-- Owner: sign in on https://cardorb.com once to confirm the Supabase redirect URLs are right.
 - `NPM_RC` is set for Production only; PR previews fail at install until it is added for Preview.
 - Point the iOS app at `https://api.cardorb.com/api/v1` directly (in `bartdunweg/cardorb-ios`),
   so the rewrite can eventually go.
