@@ -10,9 +10,15 @@ type Params = { params: Promise<{ username: string }> };
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
     const { username } = await params;
     const profile = await getPublicProfile(decodeURIComponent(username));
-    if (!profile) return { title: "Collection not found · Cardorb" };
+    if (!profile) return { title: "Collection not found", robots: { index: false } };
     const name = profile.display_name || profile.username || "Collection";
-    return { title: `${name} · Cardorb`, description: `${name}'s trading card collection on Cardorb.` };
+    const description = `${name}'s Pokémon card collection on Cardorb.`;
+    return {
+        title: name,
+        description,
+        alternates: { canonical: `/user/${encodeURIComponent(username)}` },
+        openGraph: { title: `${name}'s collection`, description, url: `/user/${encodeURIComponent(username)}`, images: ["/opengraph-image"] },
+    };
 }
 
 export default async function PublicProfilePage({ params }: Params) {

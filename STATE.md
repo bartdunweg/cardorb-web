@@ -22,13 +22,18 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **The landing prerenders and the public pages carry their metadata.** The signed-in redirect on
+  `/`, `/login` and `/signup` lives in the middleware now, so `page.tsx` at the root touches no
+  session and builds static. `robots.ts`, `sitemap.ts` (the six public pages) and a generated
+  `opengraph-image`; own titles and descriptions for `/login` and `/signup`; a canonical on every
+  public page; the profile page gets its own OG title and the brand only once. Preview deploys
+  carry `noindex`. Dev port is 3210: the portfolio project's server took 3111 and 3112.
 - **Mobbin pattern check** over every page (Bart wants this as a standing check, see memory). Three
   PRs came out of it: the market price carries the name's weight on the tile and sits under the
   title in the panel; the public profile shows display name, handle and "cards · sets"; the
   Pokédex has a progress bar and the Cards count sits by the search. Settings, forgot-password and
   Home already follow their references. Still open from the check: sort and set/rarity filters on
   Cards, which need parameters on `GET /v1/cards` first.
-- Local dev runs on port 3112 now; the portfolio project's dev server sits on 3111.
 - **Card pictures through the image optimizer, and the functions in Dublin (#21).** A performance
   review found the pictures came straight from `assets.tcgdex.net` — one server in France, no CDN,
   unreachable that day — and the functions ran in `iad1` while the API sits in `dub1`. Every card
@@ -69,9 +74,6 @@ Backlog from the review, ranked. Each is one PR.
   page of 100 here would lie about a collection of 1,936.
 - The `wishlist` and `pokedex_numbers` columns on `cards` are no longer written or read by
   anything; a migration that drops them belongs in `cardorb-api`, which owns the schema.
-- Landing page: move the signed-in redirect into the middleware so `/` prerenders (LCP 3.1 s → ~2.3 s).
-- `robots.ts`, `sitemap.ts`, an `opengraph-image`, own titles for `/login` and `/signup`, and drop the
-  doubled " · Cardorb" on `/user/[username]`.
 - Untitled UI kit: 190 of 252 vendored files are unreferenced and keep recharts, motion, embla,
   qr-code-styling and input-otp alive (~38 MB). Policy: keep what is imported, re-fetch through the
   MCP when needed. Write it as a line under R-STRUCT-001, then one deletion PR.

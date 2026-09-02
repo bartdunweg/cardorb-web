@@ -3,6 +3,9 @@ import { type NextRequest, NextResponse } from "next/server";
 
 // Public by default (landing, login, signup). Only these prefixes require a session.
 const PROTECTED_PREFIXES = ["/dashboard"];
+// A signed-in person has no use for these; they go to the dashboard. Deciding it here keeps the
+// landing page free of any session lookup, so it prerenders.
+const ENTRY_PATHS = ["/", "/login", "/signup"];
 
 /**
  * Refresh the Supabase session on every request and gate access. The site is public by default;
@@ -40,6 +43,13 @@ export async function updateSession(request: NextRequest) {
     if (!user && isProtected) {
         const url = request.nextUrl.clone();
         url.pathname = "/login";
+        return NextResponse.redirect(url);
+    }
+
+    if (user && ENTRY_PATHS.includes(pathname)) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/dashboard";
+        url.search = "";
         return NextResponse.redirect(url);
     }
 
