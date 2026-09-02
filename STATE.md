@@ -61,10 +61,12 @@ Backlog from the review, ranked. Each is one PR.
 
 ## Open
 
-- Supabase-side controls the repo cannot show: the `cards` SELECT policy (does the anon role read
-  private columns of public profiles' rows?), `avatars` bucket `allowed_mime_types` /
-  `file_size_limit` and a path-per-user storage policy, "secure password change" in Auth settings.
-  Worth a `docs/schema.md` or the SQL itself so a reviewer can verify R-SEC-002.
+- Supabase side is recorded in `docs/supabase.md`: anon holds column-level SELECT on the public
+  card columns only, the `avatars` bucket has type and size limits, the SECURITY DEFINER functions
+  are not callable by anon. Still a dashboard click: leaked password protection.
+- The first signup after 2026-09-02 verifies that revoking EXECUTE on `handle_new_user()` did not
+  break the profile trigger; if it did, `grant execute on function public.handle_new_user() to
+  authenticated` restores it.
 - `NPM_RC` is set for Production only; PR previews on Vercel fail at install until it is added for
   Preview. Harmless, but every PR shows a red Vercel check.
 - Rotate the Supabase service-role key that was once pasted in chat.
