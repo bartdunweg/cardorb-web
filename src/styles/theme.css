@@ -126,7 +126,8 @@
 
     /* Brand is a grayscale ladder: near-black in light, near-white in dark. It reuses the
        neutral ramp so the whole brand-tinted UI (buttons, links, focus, utility) is monochrome.
-       Change these to a real hue later to introduce a colored brand. */
+       Deliberate, not a placeholder: the cards are the colour and the interface stays out of
+       their way. Do not introduce an accent hue. */
     --color-brand-50: var(--color-neutral-50);
     --color-brand-100: var(--color-neutral-100);
     --color-brand-200: var(--color-neutral-200);

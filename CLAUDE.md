@@ -69,8 +69,6 @@ Project-specific rules with an ID (R-DATA-002, R-SEC-002, …) live in `CONVENTI
   `api.cardorb.com`, the previous Cardorb app. The iOS app and bartdunweg.com read that API
   from `cardorb.com`, which now points at this app; the old Vercel project stays until they are
   repointed.
-- **Grayscale brand** — the brand ramp maps onto the neutral ramp and there is no accent colour.
-  The cards are the colour; the interface stays out of their way.
 
 ## Language
 
