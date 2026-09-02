@@ -12,7 +12,7 @@ import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-m
 import { Button } from "@/components/base/buttons/button";
 import { NativeSelect } from "@/components/base/select/select-native";
 import type { Card, PublicCard } from "@/lib/cards";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatPrice } from "@/lib/format";
 
 function DetailRow({ label, value }: { label: string; value: ReactNode }) {
     return (
@@ -130,7 +130,8 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                             <DetailRow label="Finish" value={card?.finish} />
                             {/* Personal fields stay off the public read-only view. */}
                             {mine && <DetailRow label="Owned" value={mine.owned ? "Yes" : "No"} />}
-                            {mine && <DetailRow label="Purchase price" value={mine.purchase_price != null ? mine.purchase_price : null} />}
+                            {mine && <DetailRow label="Price" value={mine.price != null ? formatPrice(mine.price) : null} />}
+                            {mine && <DetailRow label="Purchase price" value={mine.purchase_price != null ? formatPrice(mine.purchase_price) : null} />}
                             {mine && <DetailRow label="Purchase date" value={mine.purchase_date ? formatDate(mine.purchase_date) : null} />}
                             {mine && <DetailRow label="Acquired" value={mine.acquired_at ? formatDate(mine.acquired_at) : null} />}
                         </dl>

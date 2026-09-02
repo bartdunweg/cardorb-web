@@ -13,7 +13,15 @@ export const absoluteImage = (image: string | null | undefined): string | null =
 
 // ── GET /v1/cards ─────────────────────────────────────────────────────────────────────────
 
-export type ApiPrice = { value: number; currency: string; [key: string]: unknown };
+/** One card's Cardmarket price, in euros. `nm.mid` is the number the grid shows. */
+export type ApiPrice = {
+    low: number | null;
+    market: number | null;
+    avg30: number | null;
+    nm: { low: number; mid: number; high: number } | null;
+};
+
+export type Finish = "normal" | "reverse-holo" | "holo";
 
 export type CardItem = {
     id: string;
@@ -29,7 +37,7 @@ export type CardItem = {
     speciesId: number | null;
     tcgId: string | null;
     owned: boolean;
-    finish: string | null;
+    finish: Finish | null;
     quantity: number;
     condition: string | null;
     grade: string | null;
@@ -61,11 +69,22 @@ export type Card = {
     purchase_date: string | null;
     acquired_at: string | null;
     notes: string | null;
+    /** What one copy trades at today, in euros; null when Cardmarket has no number. */
+    price: number | null;
     image_url: string | null;
     tcg_id: string | null;
     collection_id: string | null;
     wishlist: boolean | null;
 };
+
+/**
+ * The one number a copy is worth. A holo or reverse-holo copy takes the holo price when there is
+ * one; the Near Mint midpoint is preferred, the market price is the fallback.
+ */
+export function priceForCopy({ finish, price, priceHolo }: Pick<CardItem, "finish" | "price" | "priceHolo">): number | null {
+    const chosen = (finish === "holo" || finish === "reverse-holo" ? priceHolo : null) ?? price;
+    return chosen?.nm?.mid ?? chosen?.market ?? null;
+}
 
 export const cardFromItem = (item: CardItem): Card => ({
     id: item.id,
@@ -85,6 +104,7 @@ export const cardFromItem = (item: CardItem): Card => ({
     purchase_date: item.purchaseDate,
     acquired_at: item.acquiredAt,
     notes: item.notes,
+    price: priceForCopy(item),
     image_url: absoluteImage(item.image),
     tcg_id: item.tcgId,
     collection_id: item.collectionId,
