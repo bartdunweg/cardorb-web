@@ -23,7 +23,7 @@ export default function NotFound() {
                         <Button color="secondary" size="xl" iconLeading={ArrowLeft} onClick={() => router.back()}>
                             Go back
                         </Button>
-                        <Button size="xl" onClick={() => router.back()}>
+                        <Button size="xl" href="/">
                             Take me home
                         </Button>
                     </div>
