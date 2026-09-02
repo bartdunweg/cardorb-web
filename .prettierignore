@@ -1,0 +1,15 @@
+# Generated / vendored — never reformat
+pnpm-lock.yaml
+node_modules
+.next
+out
+build
+next-env.d.ts
+.github/last-sync-commit
+
+# Standards docs: generated regions are maintained by /apply-standards, not Prettier
+CLAUDE.md
+AGENTS.md
+CONVENTIONS.md
+STATE.md
+README.md

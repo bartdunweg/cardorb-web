@@ -1,0 +1,17 @@
+# Extend gitleaks' default ruleset, but skip generated / vendored paths that are never
+# committed. Next.js writes ephemeral preview-mode keys into .next/ on every build; those
+# are not real secrets and .next/ is gitignored.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Generated build output, dependencies, and gitignored local env files (not committed)"
+paths = [
+  '''\.next/''',
+  '''node_modules/''',
+  '''pnpm-lock\.yaml''',
+  # .env.local (and .env*.local) are gitignored and hold real dev secrets by design (R-SEC-001).
+  # git cannot commit them, so a scan here is a false positive; tracked/source files stay scanned.
+  '''\.env$''',
+  '''\.env(\.[^/]*)?\.local$''',
+]

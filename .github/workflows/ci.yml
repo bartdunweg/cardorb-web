@@ -1,0 +1,41 @@
+name: CI
+on: [pull_request]
+
+permissions:
+    contents: read
+
+jobs:
+    check:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - uses: actions/checkout@v4
+            - uses: pnpm/action-setup@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version-file: .nvmrc
+                  cache: pnpm
+
+            # Credential for the @strakzat scope, in the runner's own npmrc (never the repo's).
+            #
+            # A PAT, not the per-run GITHUB_TOKEN: that token is scoped to this repository, which
+            # lives in a personal account, so GitHub Packages answers 403 for a package owned by
+            # the strakzat org. Measured: `permission_denied` with the token accepted, not missing.
+            - name: Authenticate to GitHub Packages
+              run: npm config set //npm.pkg.github.com/:_authToken "$PACKAGES_TOKEN" --location=user
+              env:
+                  PACKAGES_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
+
+            - run: pnpm install --frozen-lockfile
+
+            # gitleaks is not preinstalled on the runner; without it verify.sh reports the secrets
+            # stage as skipped. Pinned so the same commit scans the same way twice.
+            - name: Install gitleaks
+              env:
+                  GITLEAKS_VERSION: 8.30.1
+              run: |
+                  curl -sSfL \
+                    "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+                    | tar -xz -C /usr/local/bin gitleaks
+
+            - run: ./scripts/verify.sh

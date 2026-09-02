@@ -1,0 +1,218 @@
+"use client";
+
+import type { ReactNode } from "react";
+import { useRef, useState } from "react";
+import { Monitor04, Moon01, Sun } from "@untitledui/icons";
+import { useTheme } from "next-themes";
+import { updateAvatar, updatePassword, updateProfile } from "@/app/(app)/dashboard/settings/actions";
+import { signOut } from "@/app/(auth)/actions";
+import { Avatar } from "@/components/base/avatar/avatar";
+import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
+import { Button } from "@/components/base/buttons/button";
+import { Input } from "@/components/base/input/input";
+import { Toggle } from "@/components/base/toggle/toggle";
+import type { Profile } from "@/lib/profile";
+import { createClient } from "@/lib/supabase/client";
+import { cx } from "@/utils/cx";
+
+type Msg = { type: "ok" | "err"; text: string } | null;
+
+function Section({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
+    return (
+        <section className="flex flex-col gap-4 rounded-xl bg-primary p-5 ring-1 ring-secondary ring-inset">
+            <div className="flex flex-col gap-0.5">
+                <h2 className="text-md font-semibold text-primary">{title}</h2>
+                {description ? <p className="text-sm text-tertiary">{description}</p> : null}
+            </div>
+            {children}
+        </section>
+    );
+}
+
+function StatusText({ msg }: { msg: Msg }) {
+    if (!msg) return null;
+    return <p className={cx("text-sm", msg.type === "ok" ? "text-success-primary" : "text-error-primary")}>{msg.text}</p>;
+}
+
+export function SettingsForm({ profile, email }: { profile: Profile; email: string | null }) {
+    const [displayName, setDisplayName] = useState(profile.display_name ?? "");
+    const [username, setUsername] = useState(profile.username);
+    const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url ?? "");
+    const [isPublic, setIsPublic] = useState(profile.is_public);
+    const [savingProfile, setSavingProfile] = useState(false);
+    const [profileMsg, setProfileMsg] = useState<Msg>(null);
+    const [uploading, setUploading] = useState(false);
+    const fileRef = useRef<HTMLInputElement>(null);
+
+    const onPickFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (fileRef.current) fileRef.current.value = "";
+        if (!file) return;
+
+        setUploading(true);
+        setProfileMsg(null);
+        const supabase = createClient();
+        const {
+            data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
+            setUploading(false);
+            setProfileMsg({ type: "err", text: "Not signed in." });
+            return;
+        }
+
+        const ext = (file.name.split(".").pop() || "png").toLowerCase();
+        const path = `${user.id}/avatar.${ext}`;
+        const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true, contentType: file.type });
+        if (upErr) {
+            setUploading(false);
+            setProfileMsg({ type: "err", text: upErr.message });
+            return;
+        }
+
+        const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+        const url = `${pub.publicUrl}?v=${Date.now()}`;
+        const res = await updateAvatar(url);
+        setUploading(false);
+        if (res.ok) {
+            setAvatarUrl(url);
+            setProfileMsg({ type: "ok", text: "Avatar updated." });
+        } else {
+            setProfileMsg({ type: "err", text: res.error });
+        }
+    };
+
+    const removeAvatar = async () => {
+        setUploading(true);
+        setProfileMsg(null);
+        const res = await updateAvatar(null);
+        setUploading(false);
+        if (res.ok) {
+            setAvatarUrl("");
+            setProfileMsg({ type: "ok", text: "Avatar removed." });
+        } else {
+            setProfileMsg({ type: "err", text: res.error });
+        }
+    };
+
+    const [pw, setPw] = useState("");
+    const [pw2, setPw2] = useState("");
+    const [savingPw, setSavingPw] = useState(false);
+    const [pwMsg, setPwMsg] = useState<Msg>(null);
+
+    const { theme, setTheme } = useTheme();
+    // next-themes is undefined on the server and first client render alike, so "system" shows on
+    // both until it resolves after hydration — no mount flag, no mismatch.
+    const currentTheme = theme ?? "system";
+
+    const saveProfile = async () => {
+        setSavingProfile(true);
+        setProfileMsg(null);
+        const res = await updateProfile({ display_name: displayName, username, avatar_url: avatarUrl, is_public: isPublic });
+        setSavingProfile(false);
+        setProfileMsg(res.ok ? { type: "ok", text: "Saved." } : { type: "err", text: res.error });
+    };
+
+    const savePassword = async () => {
+        if (pw !== pw2) {
+            setPwMsg({ type: "err", text: "Passwords don't match." });
+            return;
+        }
+        setSavingPw(true);
+        setPwMsg(null);
+        const res = await updatePassword(pw);
+        setSavingPw(false);
+        if (res.ok) {
+            setPw("");
+            setPw2("");
+            setPwMsg({ type: "ok", text: "Password updated." });
+        } else {
+            setPwMsg({ type: "err", text: res.error });
+        }
+    };
+
+    return (
+        <div className="flex max-w-2xl flex-col gap-6">
+            <div className="flex flex-col gap-1">
+                <h1 className="text-display-xs font-semibold text-primary">Settings</h1>
+                <p className="text-md text-tertiary">Manage your account and preferences.</p>
+            </div>
+
+            <Section title="Profile" description="This is how you appear in Cardorb.">
+                <div className="flex items-center gap-4">
+                    <Avatar src={avatarUrl || undefined} alt={displayName || username} size="xl" />
+                    <div className="flex flex-col gap-2">
+                        <div className="flex gap-2">
+                            <Button size="sm" color="secondary" onClick={() => fileRef.current?.click()} isLoading={uploading}>
+                                Upload
+                            </Button>
+                            {avatarUrl ? (
+                                <Button size="sm" color="secondary-destructive" onClick={removeAvatar} isDisabled={uploading}>
+                                    Remove
+                                </Button>
+                            ) : null}
+                        </div>
+                        <p className="text-xs text-tertiary">JPG, PNG or GIF.</p>
+                    </div>
+                    <input ref={fileRef} type="file" accept="image/*" onChange={onPickFile} className="hidden" />
+                </div>
+                <Input label="Display name" value={displayName} onChange={setDisplayName} placeholder="Your name" />
+                <Input label="Username" value={username} onChange={setUsername} hint="Letters, numbers and underscores." />
+                <Toggle label="Public collection" hint="When on, anyone can view your collection." isSelected={isPublic} onChange={setIsPublic} />
+                {isPublic && username ? (
+                    <Button href={`/user/${username}`} color="link-color" size="sm" className="self-start">
+                        View your public page
+                    </Button>
+                ) : null}
+                <StatusText msg={profileMsg} />
+                <div>
+                    <Button onClick={saveProfile} isLoading={savingProfile}>
+                        Save changes
+                    </Button>
+                </div>
+            </Section>
+
+            <Section title="Appearance" description="Choose how Cardorb looks.">
+                <ButtonGroup
+                    selectionMode="single"
+                    disallowEmptySelection
+                    selectedKeys={new Set([currentTheme])}
+                    onSelectionChange={(keys) => {
+                        const key = [...keys][0];
+                        if (key) setTheme(String(key));
+                    }}
+                >
+                    <ButtonGroupItem id="light" iconLeading={Sun}>
+                        Light
+                    </ButtonGroupItem>
+                    <ButtonGroupItem id="dark" iconLeading={Moon01}>
+                        Dark
+                    </ButtonGroupItem>
+                    <ButtonGroupItem id="system" iconLeading={Monitor04}>
+                        System
+                    </ButtonGroupItem>
+                </ButtonGroup>
+            </Section>
+
+            <Section title="Password" description="Set a new password for your account.">
+                <Input label="New password" type="password" value={pw} onChange={setPw} placeholder="••••••••" />
+                <Input label="Confirm new password" type="password" value={pw2} onChange={setPw2} placeholder="••••••••" />
+                <StatusText msg={pwMsg} />
+                <div>
+                    <Button onClick={savePassword} isLoading={savingPw}>
+                        Update password
+                    </Button>
+                </div>
+            </Section>
+
+            <Section title="Account">
+                <Input label="Email" value={email ?? ""} isDisabled />
+                <form action={signOut}>
+                    <Button type="submit" color="secondary-destructive">
+                        Sign out
+                    </Button>
+                </form>
+            </Section>
+        </div>
+    );
+}
