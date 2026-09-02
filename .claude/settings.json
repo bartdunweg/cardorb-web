@@ -8,6 +8,12 @@
         "meridian@meridian": true,
         "meridian-design@meridian": true,
         "meridian-web@meridian": true,
-        "interface-details@meridian": true
+        "meridian-ios@meridian": false,
+        "meridian-android@meridian": false,
+        "interfaces@meridian": true,
+        "elements-of-style@meridian": true,
+        "vercel@meridian": true,
+        "emil-skills@meridian": true,
+        "superpowers@meridian": true
     }
 }

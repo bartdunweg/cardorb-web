@@ -13,12 +13,20 @@ Supabase connected (project `fprjroupecdhosfdrqhv`), RLS-scoped `cards`/`collect
 imported cards. Live features: public landing, protected app shell, Home, Cards, Collections,
 Favorites, Wishlist, Pokédex, command-palette search, Settings, public profile at `/user/[username]`.
 
-Deployment is being set up: branch `bartdunweg/vercel-setup` links the repo to Vercel project
-`cardorb-web` and moves `cardorb.com` here, with `/api/v1` proxied to the previous app on
-`api.cardorb.com` so the iOS client and bartdunweg.com keep working.
+**Live at https://cardorb.com** on Vercel project `cardorb-web`, `main` is production. `/api/v1`
+is proxied to the previous app on `api.cardorb.com` (R-DEPLOY-001); the iOS client and
+bartdunweg.com keep working through it.
 
 ## Last session
 
+- Went live: PR #2 merged, production build green, `cardorb.com` + `www` moved from project
+  `cardorb` to `cardorb-web`. Checked: landing 200, `/dashboard` redirects to login, `/api/v1`
+  answers the same body through `cardorb.com` and `api.cardorb.com`, `/api/v1/collection` 401
+  without a token. `www` now redirects to the apex from `vercel.json`.
+- Meridian setup from `/meridian:start`: `CLAUDE.md` rewritten in the Meridian format (85 lines,
+  domain terms and two principles from the owner's interview), `AGENTS.md` reduced to a pointer,
+  `.claude/settings.json` lists the installed plugins (`interfaces`, `elements-of-style`,
+  `emil-skills`; the old `interface-details` name matched nothing). Lint was already strict.
 - Linked this directory and the GitHub repo to the existing (empty) Vercel project `cardorb-web`.
 - Added `vercel.json`: framework `nextjs`, `pnpm install --frozen-lockfile`, and a rewrite of
   `/api/v1/*` to `https://api.cardorb.com/api/v1/*`. New rule **R-DEPLOY-001** records why.
@@ -31,11 +39,8 @@ Deployment is being set up: branch `bartdunweg/vercel-setup` links the repo to V
 
 ## Next
 
-- **Owner steps before the first deploy:** Cloudflare `A api.cardorb.com 76.76.21.21` (DNS only);
-  the four env vars on the Vercel project (README → Deploying); Supabase redirect URLs.
-- Then: preview deploy, check sign-in and the Cards page, move `cardorb.com` + `www` from project
-  `cardorb` to `cardorb-web` (`vercel domains add cardorb.com cardorb-web`), confirm
-  `https://cardorb.com/api/v1/public/bartdunweg/latest-pull` still answers 200.
+- Owner: sign in on https://cardorb.com once to confirm the Supabase redirect URLs are right.
+- `NPM_RC` is set for Production only; PR previews fail at install until it is added for Preview.
 - Point the iOS app at `https://api.cardorb.com/api/v1` directly (in `bartdunweg/cardorb-ios`),
   so the rewrite can eventually go.
 - Parked from earlier: iOS-style mobile page header (4 open questions), 13 promo cards without
