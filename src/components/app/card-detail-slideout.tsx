@@ -84,6 +84,12 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                             {card?.name}
                         </AriaHeading>
                         <p className="text-sm text-tertiary">{[card?.set_name, card?.number ? `#${card.number}` : null].filter(Boolean).join(" · ") || "—"}</p>
+                        {/* The price sits under the title, where a product panel puts it, not among the attributes. */}
+                        {mine?.price != null ? (
+                            <p className="text-md font-semibold text-primary tabular-nums">
+                                {formatPrice(mine.price)} <span className="text-sm font-normal text-tertiary">market price</span>
+                            </p>
+                        ) : null}
                     </SlideoutMenu.Header>
 
                     <SlideoutMenu.Content>
@@ -132,7 +138,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                             <DetailRow label="Finish" value={card?.finish} />
                             {/* Personal fields stay off the public read-only view. */}
                             {mine && <DetailRow label="Owned" value={mine.owned ? "Yes" : "No"} />}
-                            {mine && <DetailRow label="Price" value={mine.price != null ? formatPrice(mine.price) : null} />}
                             {mine && <DetailRow label="Purchase price" value={mine.purchase_price != null ? formatPrice(mine.purchase_price) : null} />}
                             {mine && <DetailRow label="Purchase date" value={mine.purchase_date ? formatDate(mine.purchase_date) : null} />}
                             {mine && <DetailRow label="Acquired" value={mine.acquired_at ? formatDate(mine.acquired_at) : null} />}

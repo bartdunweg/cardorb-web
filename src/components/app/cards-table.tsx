@@ -16,7 +16,7 @@ export function CardsTable({ cards, onSelect }: { cards: Card[]; onSelect: (card
                         <th className="px-4 py-3 font-medium">Set</th>
                         <th className="px-4 py-3 font-medium">Number</th>
                         <th className="px-4 py-3 font-medium">Rarity</th>
-                        <th className="px-4 py-3 text-right font-medium">Price</th>
+                        <th className="px-4 py-3 text-right font-medium">Market price</th>
                         <th className="px-4 py-3 text-right font-medium">Qty</th>
                     </tr>
                 </thead>
@@ -45,7 +45,9 @@ export function CardsTable({ cards, onSelect }: { cards: Card[]; onSelect: (card
                             <td className="px-4 py-3 text-tertiary">{card.set_name ?? "—"}</td>
                             <td className="px-4 py-3 text-tertiary">{card.number ?? "—"}</td>
                             <td className="px-4 py-3 text-tertiary">{card.rarity ?? "—"}</td>
-                            <td className="px-4 py-3 text-right text-tertiary tabular-nums">{card.price != null ? formatPrice(card.price) : "—"}</td>
+                            <td className="px-4 py-3 text-right font-medium tabular-nums">
+                                {card.price != null ? formatPrice(card.price) : <span className="text-tertiary">—</span>}
+                            </td>
                             <td className="px-4 py-3 text-right tabular-nums">{card.quantity ?? 1}</td>
                         </tr>
                     ))}
