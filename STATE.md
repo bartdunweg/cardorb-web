@@ -22,6 +22,12 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **Empty states without the kit's module.** `AppEmptyState` draws the "lg" empty state itself:
+  the kit's `EmptyState` imports every file-type icon for a variant nobody uses, and that put
+  60 KB (gzip) of SVG on every page that can be empty. Measured from the client-reference
+  manifests: Cards 201 → 159 KB gzip, Wishlist the same; Home stays 132, the landing 38. The
+  budget of 150 KB is a marketing-site bar; the dashboard shell (sidebar, command menu, dropdowns,
+  all react-aria) is 132 of it, and the rest of Cards is the add-card modal and the detail panel.
 - **The public page reads the paged route (#29).** `/user/[username]` asks
   `GET /v1/public/<username>/cards?limit=100`, thirty kilobytes instead of the whole collection's
   nine hundred; `publicCardFromItem()` in `api-shapes.ts` makes the tile. The set count on the
