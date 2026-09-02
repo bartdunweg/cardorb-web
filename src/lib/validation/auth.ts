@@ -7,3 +7,8 @@ export const credentialsSchema = z.object({
 });
 
 export type Credentials = z.infer<typeof credentialsSchema>;
+
+/** A password on its own, for the page a recovery link lands on. Same floor as sign-up. */
+export const newPasswordSchema = z.object({
+    password: z.string().min(8, "Use at least 8 characters.").max(72, "Use at most 72 characters."),
+});

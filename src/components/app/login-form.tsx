@@ -7,7 +7,7 @@ import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 
 // Clean, single-column sign-in: the form centered in the viewport, no marketing panel.
-export const LoginForm = () => {
+export const LoginForm = ({ notice }: { notice?: string }) => {
     const [state, formAction, pending] = useActionState<AuthState, FormData>(signIn, undefined);
 
     return (
@@ -23,6 +23,12 @@ export const LoginForm = () => {
                             <p className="text-md text-tertiary">Welcome back. Enter your details.</p>
                         </div>
                     </div>
+
+                    {notice && (
+                        <output className="text-sm text-tertiary">
+                            {notice}
+                        </output>
+                    )}
 
                     <form action={formAction} className="flex flex-col gap-6">
                         <div className="flex flex-col gap-5">

@@ -20,20 +20,26 @@ bartdunweg.com keep working through it.
 
 ## Last session
 
-- Four review agents (conventions, security, project setup, performance/SEO) audited the repo.
-  The blocking half shipped as six PRs (#7–#13): Next.js 16.3.4 (0 audit findings), the public
-  profile selects public card columns only (`PublicCard`), collection list/delete/move scoped on
-  the user (R-SEC-002), three dead controls removed and the empty Cards page given its action,
-  dialog titles / `aria-current` / live regions / a labelled favourite star, and password change
-  that proves the current password plus a bounded avatar upload.
-- Lesson recorded in the merge loop: gate a merge on the GitHub `check`, not on `--fail-fast`,
-  because the Vercel preview check is red by design (no `NPM_RC` for previews). One lockfile
-  mismatch reached main for a few minutes (#10 fixed it); the live site never changed.
+- **Auth email links land here now.** One Supabase project serves the website, the iOS app and the
+  API, and every auth email links to `{{ .SiteURL }}/auth/confirm` — a route of the previous app,
+  which was removed from `cardorb-api` the same day cardorb.com moved here. `src/app/auth/confirm`
+  verifies the token and lands by link type (`src/lib/auth-redirect.ts`, tested): recovery on the
+  new `/reset-password` page, which sets a password without asking for the old one; an address
+  change on Settings; a sign-up on the dashboard. The templates' `next=` values name the old
+  app's routes and are ignored on purpose. `/login?error=` shows why a link failed.
+- Previous: four review agents audited the repo; the blocking half shipped as six PRs (#7–#13).
+  Lesson kept: gate a merge on the GitHub `check`, not on `--fail-fast` — the Vercel preview check
+  is red by design (no `NPM_RC` for previews).
 
 ## Next
 
 Backlog from the review, ranked. Each is one PR.
 
+- The API reference at `/docs/api`, in this site's theme, read at build time from
+  `https://api.cardorb.com/openapi.yaml`; then `api.cardorb.com/` points here. The previous
+  renderer is in `cardorb-api` at `40cc85d`, `src/app/docs/api/`.
+- A "Forgot password?" link on `/login` that calls `resetPasswordForEmail`; today only the iOS app
+  and the API can send that email.
 - Landing page: move the signed-in redirect into the middleware so `/` prerenders (LCP 3.1 s → ~2.3 s).
 - `robots.ts`, `sitemap.ts`, an `opengraph-image`, own titles for `/login` and `/signup`, and drop the
   doubled " · Cardorb" on `/user/[username]`.
