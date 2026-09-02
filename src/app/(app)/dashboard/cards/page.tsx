@@ -40,7 +40,15 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
 
             <div className="flex flex-1 flex-col gap-4">
                 <div className="flex items-center justify-between gap-3">
-                    <CardsSearch initialValue={q ?? ""} />
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                        <CardsSearch initialValue={q ?? ""} />
+                        {/* The count sits by the search, where a catalogue puts it, so a filter's effect is visible at once. */}
+                        {total > 0 ? (
+                            <p className="hidden shrink-0 text-sm text-tertiary tabular-nums sm:block">
+                                {q ? `${total.toLocaleString("en-US")} match${total === 1 ? "" : "es"}` : `${total.toLocaleString("en-US")} cards`}
+                            </p>
+                        ) : null}
+                    </div>
                     <AddCardModal />
                 </div>
 
@@ -51,10 +59,7 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
                         <CardsView cards={cards} />
 
                         <div className="flex items-center justify-between gap-3">
-                            <p className="text-sm text-tertiary">
-                                {q ? `${total.toLocaleString("en-US")} match${total === 1 ? "" : "es"}` : `${total.toLocaleString("en-US")} cards`}
-                                {totalPages > 1 ? ` · page ${page} of ${totalPages}` : ""}
-                            </p>
+                            <p className="text-sm text-tertiary">{totalPages > 1 ? `Page ${page} of ${totalPages}` : ""}</p>
 
                             {totalPages > 1 ? (
                                 <div className="flex gap-2">
