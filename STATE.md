@@ -22,6 +22,13 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **Mobbin pattern check** over every page (Bart wants this as a standing check, see memory). Three
+  PRs came out of it: the market price carries the name's weight on the tile and sits under the
+  title in the panel; the public profile shows display name, handle and "cards · sets"; the
+  Pokédex has a progress bar and the Cards count sits by the search. Settings, forgot-password and
+  Home already follow their references. Still open from the check: sort and set/rarity filters on
+  Cards, which need parameters on `GET /v1/cards` first.
+- Local dev runs on port 3112 now; the portfolio project's dev server sits on 3111.
 - **"Forgot password?" on `/login`** leads to `/forgot-password`: one email field, and
   `requestPasswordReset` calls Supabase's `resetPasswordForEmail`. The answer is the same for a
   known and an unknown address. The link in the email lands on `/auth/confirm` like every other.

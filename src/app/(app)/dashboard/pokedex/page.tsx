@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { DexSlider } from "@/components/app/dex-slider";
+import { ProgressBarBase } from "@/components/base/progress-indicators/progress-indicators";
 import { NATIONAL_DEX_MAX, getPokedex } from "@/lib/pokedex";
 
 export default async function PokedexPage() {
@@ -12,6 +13,8 @@ export default async function PokedexPage() {
                 <p className="text-md text-tertiary">
                     {caughtNumbers.toLocaleString("en-US")} of {NATIONAL_DEX_MAX.toLocaleString("en-US")} Pokémon · {totalCards.toLocaleString("en-US")} cards
                 </p>
+                {/* The count above is the accessible name; the bar makes the same number visible at a glance. */}
+                <ProgressBarBase value={caughtNumbers} max={NATIONAL_DEX_MAX} className="mt-2 max-w-md" aria-label="Pokédex completion" />
             </div>
 
             <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12">
