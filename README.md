@@ -19,7 +19,7 @@ See `CLAUDE.md` for project instructions, `CONVENTIONS.md` for the rules that ap
 
 ## Deploying
 
-The app runs on Vercel, project `cardorb-web` in the `bartdunweg` team, connected to this
+The app runs on Vercel, project `cardorb` in the `bartdunweg` team, connected to this
 GitHub repository: every pull request gets a preview URL and `main` is production at
 https://cardorb.com. `vercel.json` sets the framework and install command.
 
@@ -40,5 +40,5 @@ The Supabase project must list `https://cardorb.com/**` and
 or sign-in on the deployed site fails.
 
 `/api/v1/*` is not served by this app. `vercel.json` rewrites it to `https://api.cardorb.com`,
-where the previous Cardorb app still runs, because the iOS app and bartdunweg.com read that API
+where the previous Cardorb app still runs (Vercel project `cardorb-api`), because the iOS app and bartdunweg.com read that API
 from `cardorb.com` (see R-DEPLOY-001 in `CONVENTIONS.md`).
