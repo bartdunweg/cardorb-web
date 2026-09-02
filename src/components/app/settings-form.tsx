@@ -29,6 +29,9 @@ function Section({ title, description, children }: { title: string; description?
     );
 }
 
+const AVATAR_TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/gif": "gif", "image/webp": "webp" };
+const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
+
 function StatusText({ msg }: { msg: Msg }) {
     if (!msg) return null;
     return <p className={cx("text-sm", msg.type === "ok" ? "text-success-primary" : "text-error-primary")}>{msg.text}</p>;
@@ -61,7 +64,19 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
             return;
         }
 
-        const ext = (file.name.split(".").pop() || "png").toLowerCase();
+        // The bucket is public, so what goes in must be an image and small: the type from the
+        // browser, not the filename, and a cap that keeps a profile picture a profile picture.
+        const ext = AVATAR_TYPES[file.type];
+        if (!ext) {
+            setUploading(false);
+            setProfileMsg({ type: "err", text: "Use a JPG, PNG, GIF or WebP image." });
+            return;
+        }
+        if (file.size > AVATAR_MAX_BYTES) {
+            setUploading(false);
+            setProfileMsg({ type: "err", text: "Keep the image under 2 MB." });
+            return;
+        }
         const path = `${user.id}/avatar.${ext}`;
         const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true, contentType: file.type });
         if (upErr) {
@@ -95,6 +110,7 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
         }
     };
 
+    const [pwCurrent, setPwCurrent] = useState("");
     const [pw, setPw] = useState("");
     const [pw2, setPw2] = useState("");
     const [savingPw, setSavingPw] = useState(false);
@@ -120,9 +136,10 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
         }
         setSavingPw(true);
         setPwMsg(null);
-        const res = await updatePassword(pw);
+        const res = await updatePassword(pwCurrent, pw);
         setSavingPw(false);
         if (res.ok) {
+            setPwCurrent("");
             setPw("");
             setPw2("");
             setPwMsg({ type: "ok", text: "Password updated." });
@@ -154,7 +171,7 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
                         </div>
                         <p className="text-xs text-tertiary">JPG, PNG or GIF.</p>
                     </div>
-                    <input ref={fileRef} type="file" accept="image/*" onChange={onPickFile} className="hidden" />
+                    <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" onChange={onPickFile} className="hidden" />
                 </div>
                 <Input label="Display name" value={displayName} onChange={setDisplayName} placeholder="Your name" />
                 <Input label="Username" value={username} onChange={setUsername} hint="Letters, numbers and underscores." />
@@ -195,8 +212,16 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
             </Section>
 
             <Section title="Password" description="Set a new password for your account.">
-                <Input label="New password" type="password" value={pw} onChange={setPw} placeholder="••••••••" />
-                <Input label="Confirm new password" type="password" value={pw2} onChange={setPw2} placeholder="••••••••" />
+                <Input
+                    label="Current password"
+                    type="password"
+                    value={pwCurrent}
+                    onChange={setPwCurrent}
+                    placeholder="••••••••"
+                    autoComplete="current-password"
+                />
+                <Input label="New password" type="password" value={pw} onChange={setPw} placeholder="••••••••" autoComplete="new-password" />
+                <Input label="Confirm new password" type="password" value={pw2} onChange={setPw2} placeholder="••••••••" autoComplete="new-password" />
                 <StatusText msg={pwMsg} />
                 <div>
                     <Button onClick={savePassword} isLoading={savingPw}>
