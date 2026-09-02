@@ -39,6 +39,11 @@ export const LoginForm = ({ notice }: { notice?: string }) => {
                                 placeholder="••••••••••••"
                                 inputClassName="placeholder:text-placeholder/50"
                             />
+                            <div className="flex justify-end">
+                                <Button href="/forgot-password" color="link-color" size="md">
+                                    Forgot password?
+                                </Button>
+                            </div>
                         </div>
 
                         {state && "error" in state && (

@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { credentialsSchema, newPasswordSchema } from "@/lib/validation/auth";
+import { credentialsSchema, emailSchema, newPasswordSchema } from "@/lib/validation/auth";
 
 export type AuthState = { error: string } | { success: string } | undefined;
 
@@ -57,6 +57,26 @@ export async function setNewPassword(_prev: AuthState, formData: FormData): Prom
     if (error) return { error: error.message };
 
     redirect("/dashboard");
+}
+
+/**
+ * Sends the recovery email. The answer is the same whether or not the address has an account,
+ * so the form cannot be used to find out which addresses do. The link in the email lands on
+ * /auth/confirm, like every other auth email.
+ */
+export async function requestPasswordReset(_prev: AuthState, formData: FormData): Promise<AuthState> {
+    const parsed = emailSchema.safeParse({ email: formData.get("email") });
+    if (!parsed.success) return { error: parsed.error.issues[0].message };
+
+    const supabase = await createClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email);
+    if (error) {
+        // A rate limit or an outage is worth saying; an unknown address is not.
+        console.error("Requesting a password reset failed:", error.message);
+        return { error: "That did not go through. Try again in a minute." };
+    }
+
+    return { success: "If that email has an account, a link is on its way." };
 }
 
 export async function signOut() {

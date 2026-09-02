@@ -12,3 +12,8 @@ export type Credentials = z.infer<typeof credentialsSchema>;
 export const newPasswordSchema = z.object({
     password: z.string().min(8, "Use at least 8 characters.").max(72, "Use at most 72 characters."),
 });
+
+/** An address on its own, for asking for a password-reset link. */
+export const emailSchema = z.object({
+    email: z.string().trim().email("Enter a valid email address."),
+});

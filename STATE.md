@@ -22,6 +22,9 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **"Forgot password?" on `/login`** leads to `/forgot-password`: one email field, and
+  `requestPasswordReset` calls Supabase's `resetPasswordForEmail`. The answer is the same for a
+  known and an unknown address. The link in the email lands on `/auth/confirm` like every other.
 - **Prices on the cards.** `priceForCopy` in `src/lib/api-shapes.ts` picks one number per copy from
   the API's `price`/`priceHolo` (the Near Mint midpoint, else the market price; a holo or
   reverse-holo copy takes the holo price) and `formatPrice` writes it as `€12.50`. Shown on the grid
@@ -46,8 +49,6 @@ Backlog from the review, ranked. Each is one PR.
   page of 100 here would lie about a collection of 1,936.
 - The `wishlist` and `pokedex_numbers` columns on `cards` are no longer written or read by
   anything; a migration that drops them belongs in `cardorb-api`, which owns the schema.
-- A "Forgot password?" link on `/login` that calls `resetPasswordForEmail`; today only the iOS app
-  and the API can send that email.
 - Landing page: move the signed-in redirect into the middleware so `/` prerenders (LCP 3.1 s → ~2.3 s).
 - `robots.ts`, `sitemap.ts`, an `opengraph-image`, own titles for `/login` and `/signup`, and drop the
   doubled " · Cardorb" on `/user/[username]`.
@@ -75,6 +76,5 @@ Backlog from the review, ranked. Each is one PR.
 - The first signup after 2026-09-02 verifies that revoking EXECUTE on `handle_new_user()` did not
   break the profile trigger; if it did, `grant execute on function public.handle_new_user() to
   authenticated` restores it.
-- `NPM_RC` is set for Production only; PR previews on Vercel fail at install until it is added for
-  Preview. Harmless, but every PR shows a red Vercel check.
+- The Vercel preview check went green on #19; the `NPM_RC` note for Preview is resolved.
 - Rotate the Supabase service-role key that was once pasted in chat.
