@@ -48,8 +48,12 @@ export const SignupForm = () => {
                             </TextField>
                         </div>
 
-                        {state && "error" in state && <p className="text-sm text-error-primary">{state.error}</p>}
-                        {state && "success" in state && <p className="text-sm text-success-primary">{state.success}</p>}
+                        {state && "error" in state && (
+                            <p role="alert" className="text-sm text-error-primary">
+                                {state.error}
+                            </p>
+                        )}
+                        {state && "success" in state && <output className="text-sm text-success-primary">{state.success}</output>}
 
                         <Button type="submit" size="lg" isDisabled={pending}>
                             {pending ? "Creating account…" : "Get started"}

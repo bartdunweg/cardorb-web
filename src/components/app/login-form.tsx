@@ -39,7 +39,11 @@ export const LoginForm = () => {
                             />
                         </div>
 
-                        {state && "error" in state && <p className="text-sm text-error-primary">{state.error}</p>}
+                        {state && "error" in state && (
+                            <p role="alert" className="text-sm text-error-primary">
+                                {state.error}
+                            </p>
+                        )}
 
                         <Button type="submit" size="lg" isDisabled={pending}>
                             {pending ? "Signing in…" : "Sign in"}

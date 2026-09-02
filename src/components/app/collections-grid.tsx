@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Folder, Heart, Plus, Star01 } from "@untitledui/icons";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Heading as AriaHeading } from "react-aria-components";
 import { createCollection } from "@/app/(app)/dashboard/collections/actions";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
@@ -59,9 +60,15 @@ function CreateCollectionModal({ children }: { children: ReactNode }) {
                     <Dialog>
                         {({ close }) => (
                             <div className="flex w-full max-w-sm flex-col gap-4 rounded-2xl bg-primary p-6 shadow-xl ring-1 ring-secondary">
-                                <h2 className="text-lg font-semibold text-primary">New collection</h2>
+                                <AriaHeading slot="title" className="text-lg font-semibold text-primary">
+                                    New collection
+                                </AriaHeading>
                                 <Input label="Name" value={name} onChange={setName} placeholder="e.g. Charizards" />
-                                {error ? <p className="text-sm text-error-primary">{error}</p> : null}
+                                {error ? (
+                                    <p role="alert" className="text-sm text-error-primary">
+                                        {error}
+                                    </p>
+                                ) : null}
                                 <div className="flex justify-end gap-2">
                                     <Button color="secondary" onClick={close}>
                                         Cancel
