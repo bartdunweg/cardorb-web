@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Check, Plus, SearchLg } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
@@ -13,6 +13,7 @@ import { Button } from "@/components/base/buttons/button";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { CloseButton } from "@/components/base/buttons/close-button";
 import { Input } from "@/components/base/input/input";
+import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 
 type Target = "collection" | "wishlist";
 
@@ -20,30 +21,8 @@ export function AddCardModal({ defaultTarget = "collection", trigger }: { defaul
     const router = useRouter();
     const [target, setTarget] = useState<Target>(defaultTarget);
     const [query, setQuery] = useState("");
-    const [results, setResults] = useState<PokemonCard[]>([]);
-    const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState<Record<string, "adding" | "done">>({});
-    const reqId = useRef(0);
-
-    useEffect(() => {
-        const term = query.trim();
-        const id = ++reqId.current;
-        // All state changes live inside the debounce timer, so none run synchronously in the effect.
-        const t = setTimeout(async () => {
-            if (term.length < 2) {
-                setResults([]);
-                setLoading(false);
-                return;
-            }
-            setLoading(true);
-            const found = await searchPokemon(term);
-            if (id === reqId.current) {
-                setResults(found);
-                setLoading(false);
-            }
-        }, 300);
-        return () => clearTimeout(t);
-    }, [query]);
+    const { results, loading } = useDebouncedSearch<PokemonCard>(query, searchPokemon, { minLength: 2, delay: 300 });
 
     // Status is keyed by target + card so the same card can be added to both places.
     const keyFor = (card: PokemonCard) => `${target}:${card.id}`;

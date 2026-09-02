@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Check, Plus, SearchLg, Trash01 } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
@@ -10,35 +10,14 @@ import { CardImage } from "@/components/app/card-image";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
+import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 
 export function CollectionDetailActions({ collectionId }: { collectionId: string }) {
     const router = useRouter();
 
     const [query, setQuery] = useState("");
-    const [results, setResults] = useState<CardHit[]>([]);
-    const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState<Record<string, "adding" | "done">>({});
-    const reqId = useRef(0);
-
-    useEffect(() => {
-        const term = query.trim();
-        const id = ++reqId.current;
-        // All state changes live inside the debounce timer, so none run synchronously in the effect.
-        const t = setTimeout(async () => {
-            if (term.length < 1) {
-                setResults([]);
-                setLoading(false);
-                return;
-            }
-            setLoading(true);
-            const found = await searchMyCards(term);
-            if (id === reqId.current) {
-                setResults(found);
-                setLoading(false);
-            }
-        }, 250);
-        return () => clearTimeout(t);
-    }, [query]);
+    const { results, loading } = useDebouncedSearch<CardHit>(query, searchMyCards, { minLength: 1, delay: 250 });
 
     const add = async (card: CardHit) => {
         setStatus((s) => ({ ...s, [card.id]: "adding" }));

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { createContext, useContext, useRef, useState } from "react";
+import { createContext, useContext, useState } from "react";
 import { SearchLg } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
@@ -9,6 +9,7 @@ import { type PokemonCard, addCard, searchPokemon } from "@/app/(app)/dashboard/
 import { CardImage } from "@/components/app/card-image";
 import { CommandMenu, type CommandMenuGroupType } from "@/components/application/command-menus/command-menu";
 import { Button } from "@/components/base/buttons/button";
+import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import { formatDate } from "@/lib/format";
 import { cx } from "@/utils/cx";
 
@@ -87,21 +88,8 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
     const [inputValue, setInputValue] = useState("");
-    const [hits, setHits] = useState<PokemonCard[]>([]);
+    const { results: hits } = useDebouncedSearch<PokemonCard>(inputValue, searchPokemon, { minLength: 2, delay: 300 });
     const [status, setStatus] = useState<Record<string, AddStatus>>({});
-    const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-
-    const onInputChange = (value: string) => {
-        setInputValue(value);
-        clearTimeout(timer.current);
-        if (value.trim().length < 2) {
-            setHits([]);
-            return;
-        }
-        timer.current = setTimeout(async () => {
-            setHits(await searchPokemon(value));
-        }, 300);
-    };
 
     const add = async (card: PokemonCard) => {
         setStatus((s) => ({ ...s, [card.id]: "adding" }));
@@ -144,14 +132,12 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
                 isOpen={isOpen}
                 onOpenChange={(o) => {
                     setIsOpen(o);
-                    if (!o) {
-                        setInputValue("");
-                        setHits([]);
-                    }
+                    // An empty term clears the hits through the hook.
+                    if (!o) setInputValue("");
                 }}
                 filter={false}
                 inputValue={inputValue}
-                onInputChange={onInputChange}
+                onInputChange={setInputValue}
                 items={groups}
                 placeholder="Search a card"
                 shortcut={null}
