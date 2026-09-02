@@ -22,6 +22,12 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **The kit holds what is imported.** 200 of 252 vendored Untitled UI files were reachable from
+  nothing (computed from the import graph out of `src/app`, `src/components/app`, `src/providers`
+  and `src/lib`) and they kept seven dependencies alive: `motion`, `recharts`,
+  `embla-carousel-react`, `qr-code-styling`, `input-otp`, `@untitledui/file-icons`,
+  `@react-aria/utils`. Gone, with the policy written under R-STRUCT-001: only what is imported
+  stays, a component needed later comes back through the Untitled UI MCP.
 - **Empty states without the kit's module.** `AppEmptyState` draws the "lg" empty state itself:
   the kit's `EmptyState` imports every file-type icon for a variant nobody uses, and that put
   60 KB (gzip) of SVG on every page that can be empty. Measured from the client-reference
@@ -94,9 +100,6 @@ Backlog from the review, ranked. Each is one PR.
   page of 100 here would lie about a collection of 1,936.
 - The `wishlist` and `pokedex_numbers` columns on `cards` are no longer written or read by
   anything; a migration that drops them belongs in `cardorb-api`, which owns the schema.
-- Untitled UI kit: 190 of 252 vendored files are unreferenced and keep recharts, motion, embla,
-  qr-code-styling and input-otp alive (~38 MB). Policy: keep what is imported, re-fetch through the
-  MCP when needed. Write it as a line under R-STRUCT-001, then one deletion PR.
 - First tests in `src/lib` (`formatDate`, the `.or()` search escaping, the pokemontcg client with a
   mocked fetch), then drop `--passWithNoTests`.
 - Small: GitHub description + topics; README to the documentation template; one
