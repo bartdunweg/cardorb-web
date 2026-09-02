@@ -22,6 +22,10 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **One `useDebouncedSearch`** (`src/hooks`, tested with fake timers) replaces the four copies of
+  "wait for the typing to pause, ask once, ignore a late answer" in the add-card modal, the
+  folder's add-cards dialog, the mobile search and the command palette. Same minimum lengths and
+  delays as before. `cards-search` is a different thing (it pushes `?q=` to the URL) and stays.
 - **The kit holds what is imported.** 200 of 252 vendored Untitled UI files were reachable from
   nothing (computed from the import graph out of `src/app`, `src/components/app`, `src/providers`
   and `src/lib`) and they kept seven dependencies alive: `motion`, `recharts`,
@@ -102,8 +106,7 @@ Backlog from the review, ranked. Each is one PR.
   anything; a migration that drops them belongs in `cardorb-api`, which owns the schema.
 - First tests in `src/lib` (`formatDate`, the `.or()` search escaping, the pokemontcg client with a
   mocked fetch), then drop `--passWithNoTests`.
-- Small: GitHub description + topics; README to the documentation template; one
-  `useDebouncedSearch` hook for the four copies.
+- Small: README to the documentation template.
 - Parked from earlier: iOS-style mobile page header (4 open questions), 13 promo cards without art,
   wishlist count on Home.
 

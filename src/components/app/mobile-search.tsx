@@ -1,39 +1,18 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { SearchLg } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { type CardHit, searchMyCards } from "@/app/(app)/dashboard/cards/actions";
 import { CardImage } from "@/components/app/card-image";
 import { Input } from "@/components/base/input/input";
+import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 
 // Full-page collection search for mobile (a route, not a modal).
 export function MobileSearch() {
     const router = useRouter();
     const [query, setQuery] = useState("");
-    const [results, setResults] = useState<CardHit[]>([]);
-    const [loading, setLoading] = useState(false);
-    const reqId = useRef(0);
-
-    useEffect(() => {
-        const term = query.trim();
-        const id = ++reqId.current;
-        // All state changes live inside the debounce timer, so none run synchronously in the effect.
-        const t = setTimeout(async () => {
-            if (term.length < 1) {
-                setResults([]);
-                setLoading(false);
-                return;
-            }
-            setLoading(true);
-            const found = await searchMyCards(term);
-            if (id === reqId.current) {
-                setResults(found);
-                setLoading(false);
-            }
-        }, 250);
-        return () => clearTimeout(t);
-    }, [query]);
+    const { results, loading } = useDebouncedSearch<CardHit>(query, searchMyCards, { minLength: 1, delay: 250 });
 
     return (
         <div className="flex flex-col gap-4">
