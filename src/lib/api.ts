@@ -29,16 +29,21 @@ type Init = {
     params?: Params;
     /** false for the three unkeyed public routes; they are also cached for five minutes. */
     auth?: boolean;
+    /** A token resolved earlier, for a call made inside a cache scope where `cookies()` is refused. */
+    token?: string;
 };
 
-/** The session's access token, once per request. Null when nobody is signed in. */
-export const accessToken = cache(async (): Promise<string | null> => {
+/** Who is signed in and the token that proves it, once per request. Null when nobody is. */
+export const session = cache(async (): Promise<{ userId: string; token: string } | null> => {
     const supabase = await createClient();
     const {
-        data: { session },
+        data: { session: s },
     } = await supabase.auth.getSession();
-    return session?.access_token ?? null;
+    return s ? { userId: s.user.id, token: s.access_token } : null;
 });
+
+/** The session's access token, once per request. Null when nobody is signed in. */
+export const accessToken = async (): Promise<string | null> => (await session())?.token ?? null;
 
 export async function api<T>(path: string, init: Init = {}): Promise<T> {
     const url = new URL(`${API_URL}${path}`);
@@ -49,7 +54,7 @@ export async function api<T>(path: string, init: Init = {}): Promise<T> {
     const headers: Record<string, string> = { accept: "application/json" };
     const withAuth = init.auth !== false;
     if (withAuth) {
-        const token = await accessToken();
+        const token = init.token ?? (await accessToken());
         if (!token) throw new ApiError(401, "Sign in to see this.");
         headers.authorization = `Bearer ${token}`;
     }

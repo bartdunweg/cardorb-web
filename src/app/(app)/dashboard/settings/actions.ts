@@ -1,9 +1,9 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { ApiError, api } from "@/lib/api";
 import { createClient } from "@/lib/supabase/server";
+import { forgetMine } from "@/lib/user-cache";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -37,7 +37,7 @@ export async function updateProfile(input: unknown): Promise<ActionResult> {
         return failed(err);
     }
 
-    revalidatePath("/dashboard", "layout");
+    await forgetMine();
     return { ok: true };
 }
 
@@ -52,7 +52,7 @@ export async function uploadAvatar(image: string): Promise<ActionResult & { avat
 
     try {
         const { avatarUrl } = await api<{ avatarUrl: string }>("/profile/avatar", { method: "POST", body: { image: parsed.data } });
-        revalidatePath("/dashboard", "layout");
+        await forgetMine();
         return { ok: true, avatarUrl };
     } catch (err) {
         return failed(err);
@@ -65,7 +65,7 @@ export async function removeAvatar(): Promise<ActionResult> {
     } catch (err) {
         return failed(err);
     }
-    revalidatePath("/dashboard", "layout");
+    await forgetMine();
     return { ok: true };
 }
 

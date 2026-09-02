@@ -1,10 +1,10 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { ApiError, api } from "@/lib/api";
 import { type BrowseCard, type PokemonCard, pokemonCardFromBrowse } from "@/lib/api-shapes";
 import { getMyCards } from "@/lib/cards";
+import { forgetMine } from "@/lib/user-cache";
 
 export type { PokemonCard } from "@/lib/api-shapes";
 
@@ -71,7 +71,7 @@ export async function addCard(input: PokemonCard, target: "collection" | "wishli
         return failed(err);
     }
 
-    revalidatePath("/dashboard", "layout");
+    await forgetMine();
     return { ok: true };
 }
 
@@ -86,6 +86,6 @@ export async function markOwned(cardId: string): Promise<Result> {
         return failed(err);
     }
 
-    revalidatePath("/dashboard", "layout");
+    await forgetMine();
     return { ok: true };
 }
