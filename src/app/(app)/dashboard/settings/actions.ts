@@ -6,6 +6,15 @@ import { createClient } from "@/lib/supabase/server";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
+// An avatar lives in this project's public `avatars` bucket and nowhere else. Anything else is a
+// URL every visitor of a public profile would be made to fetch.
+const AVATAR_PREFIX = `${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""}/storage/v1/object/public/avatars/`;
+const avatarUrlSchema = z
+    .string()
+    .trim()
+    .url("Enter a valid URL.")
+    .refine((u) => u.startsWith(AVATAR_PREFIX), "The avatar must be an uploaded image.");
+
 const profileSchema = z.object({
     display_name: z.string().trim().max(80),
     username: z
@@ -14,7 +23,7 @@ const profileSchema = z.object({
         .min(3, "Username must be at least 3 characters.")
         .max(30)
         .regex(/^[a-zA-Z0-9_]+$/, "Use letters, numbers and underscores only."),
-    avatar_url: z.union([z.string().trim().url("Enter a valid URL."), z.literal("")]),
+    avatar_url: z.union([avatarUrlSchema, z.literal("")]),
     is_public: z.boolean(),
 });
 
@@ -46,7 +55,7 @@ export async function updateProfile(input: unknown): Promise<ActionResult> {
 }
 
 export async function updateAvatar(url: string | null): Promise<ActionResult> {
-    const parsed = z.union([z.string().url(), z.null()]).safeParse(url);
+    const parsed = z.union([avatarUrlSchema, z.null()]).safeParse(url);
     if (!parsed.success) return { ok: false, error: "Invalid image URL." };
 
     const supabase = await createClient();
@@ -62,12 +71,27 @@ export async function updateAvatar(url: string | null): Promise<ActionResult> {
     return { ok: true };
 }
 
-export async function updatePassword(password: string): Promise<ActionResult> {
-    const parsed = z.string().min(8, "Password must be at least 8 characters.").max(72).safeParse(password);
+// Changing the password proves the current one first. A session alone is not enough: a stolen
+// cookie would otherwise turn into a permanent takeover.
+export async function updatePassword(currentPassword: string, password: string): Promise<ActionResult> {
+    const parsed = z
+        .object({
+            currentPassword: z.string().min(1, "Enter your current password."),
+            password: z.string().min(8, "Password must be at least 8 characters.").max(72),
+        })
+        .safeParse({ currentPassword, password });
     if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
     const supabase = await createClient();
-    const { error } = await supabase.auth.updateUser({ password: parsed.data });
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
+    if (!user?.email) return { ok: false, error: "Not signed in." };
+
+    const { error: authError } = await supabase.auth.signInWithPassword({ email: user.email, password: parsed.data.currentPassword });
+    if (authError) return { ok: false, error: "Current password is incorrect." };
+
+    const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
     if (error) return { ok: false, error: error.message };
 
     return { ok: true };
