@@ -7,18 +7,5 @@
             "source": "/api/v1/:path*",
             "destination": "https://api.cardorb.com/api/v1/:path*"
         }
-    ],
-    "redirects": [
-        {
-            "source": "/:path*",
-            "has": [
-                {
-                    "type": "host",
-                    "value": "www.cardorb.com"
-                }
-            ],
-            "destination": "https://cardorb.com/:path*",
-            "permanent": true
-        }
     ]
 }
