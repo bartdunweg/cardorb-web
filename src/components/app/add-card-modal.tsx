@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { Check, Plus, SearchLg } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
+import { Heading as AriaHeading } from "react-aria-components";
 import { type PokemonCard, addCard, searchPokemon } from "@/app/(app)/dashboard/cards/actions";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
@@ -73,7 +74,9 @@ export function AddCardModal({ defaultTarget = "collection", trigger }: { defaul
                             <div className="relative flex max-h-[80vh] w-full max-w-xl flex-col gap-4 rounded-2xl bg-primary p-6 shadow-xl ring-1 ring-secondary">
                                 <div className="flex items-start justify-between gap-4">
                                     <div className="flex flex-col gap-0.5">
-                                        <h2 className="text-lg font-semibold text-primary">Add a card</h2>
+                                        <AriaHeading slot="title" className="text-lg font-semibold text-primary">
+                                            Add a card
+                                        </AriaHeading>
                                         <p className="text-sm text-tertiary">Search the Pokémon card database.</p>
                                     </div>
                                     <CloseButton onClick={close} size="sm" className="-mt-1 -mr-1" />

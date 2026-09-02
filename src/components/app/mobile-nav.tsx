@@ -25,6 +25,7 @@ export function MobileTabBar({ account }: { account: Account }) {
             <Link
                 key={tab.href}
                 href={tab.href}
+                aria-current={active ? "page" : undefined}
                 className={cx(
                     "flex flex-1 flex-col items-center gap-1 rounded-full py-2 text-xxs font-medium transition",
                     active ? "bg-secondary text-primary" : "text-tertiary",
@@ -37,12 +38,16 @@ export function MobileTabBar({ account }: { account: Account }) {
     };
 
     return (
-        <nav className="fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex items-stretch justify-around gap-1 rounded-full border border-secondary bg-primary p-1 shadow-lg lg:hidden">
+        <nav
+            aria-label="Primary"
+            className="fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex items-stretch justify-around gap-1 rounded-full border border-secondary bg-primary p-1 shadow-lg lg:hidden"
+        >
             {renderTab(tabs[0])}
             {renderTab(tabs[1])}
 
             <Link
                 href="/dashboard/search"
+                aria-current={pathname.startsWith("/dashboard/search") ? "page" : undefined}
                 className={cx(
                     "flex flex-1 flex-col items-center gap-1 rounded-full py-2 text-xxs font-medium transition",
                     pathname.startsWith("/dashboard/search") ? "bg-secondary text-primary" : "text-tertiary",
@@ -56,6 +61,7 @@ export function MobileTabBar({ account }: { account: Account }) {
 
             <Link
                 href="/dashboard/settings"
+                aria-current={pathname.startsWith("/dashboard/settings") ? "page" : undefined}
                 className={cx(
                     "flex flex-1 flex-col items-center gap-1 rounded-full py-2 text-xxs font-medium transition",
                     pathname.startsWith("/dashboard/settings") ? "bg-secondary text-primary" : "text-tertiary",

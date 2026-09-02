@@ -1,5 +1,6 @@
 "use client";
 
+import { FavoriteStar } from "@/components/app/favorite-star";
 import type { PublicCard } from "@/lib/cards";
 
 // Presentational grid of card thumbnails. Selection is owned by CardsView. Generic over the card
@@ -28,7 +29,7 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null 
                     </div>
                     <div className="flex flex-col">
                         <span className="truncate text-sm font-medium text-primary">
-                            {card.is_favorite ? <span className="mr-1 text-tertiary">★</span> : null}
+                            {card.is_favorite ? <FavoriteStar /> : null}
                             {card.name}
                         </span>
                         <span className="truncate text-xs text-tertiary">

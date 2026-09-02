@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, Plus, SearchLg, Trash01 } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
+import { Heading as AriaHeading } from "react-aria-components";
 import { type CardHit, searchMyCards } from "@/app/(app)/dashboard/cards/actions";
 import { deleteCollection, setCardCollection } from "@/app/(app)/dashboard/collections/actions";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
@@ -69,7 +70,9 @@ export function CollectionDetailActions({ collectionId }: { collectionId: string
                     <Modal className="max-w-xl">
                         <Dialog>
                             <div className="flex max-h-[80vh] w-full max-w-xl flex-col gap-4 rounded-2xl bg-primary p-6 shadow-xl ring-1 ring-secondary">
-                                <h2 className="text-lg font-semibold text-primary">Add cards to this collection</h2>
+                                <AriaHeading slot="title" className="text-lg font-semibold text-primary">
+                                    Add cards to this collection
+                                </AriaHeading>
                                 <Input aria-label="Search your cards" icon={SearchLg} placeholder="Search your cards…" value={query} onChange={setQuery} />
                                 <div className="flex min-h-40 flex-col gap-1 overflow-y-auto">
                                     {loading && <p className="px-1 py-6 text-center text-sm text-tertiary">Searching…</p>}

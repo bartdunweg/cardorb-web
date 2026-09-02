@@ -4,8 +4,10 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { ArrowRight } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
+import { Heading as AriaHeading } from "react-aria-components";
 import { markOwned } from "@/app/(app)/dashboard/cards/actions";
 import { listCollections, setCardCollection } from "@/app/(app)/dashboard/collections/actions";
+import { FavoriteStar } from "@/components/app/favorite-star";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Button } from "@/components/base/buttons/button";
 import { NativeSelect } from "@/components/base/select/select-native";
@@ -76,10 +78,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
             {({ close }) => (
                 <>
                     <SlideoutMenu.Header onClose={close}>
-                        <h2 className="text-lg font-semibold text-primary">
-                            {mine?.is_favorite ? <span className="mr-1 text-tertiary">★</span> : null}
+                        <AriaHeading slot="title" className="text-lg font-semibold text-primary">
+                            {mine?.is_favorite ? <FavoriteStar /> : null}
                             {card?.name}
-                        </h2>
+                        </AriaHeading>
                         <p className="text-sm text-tertiary">{[card?.set_name, card?.number ? `#${card.number}` : null].filter(Boolean).join(" · ") || "—"}</p>
                     </SlideoutMenu.Header>
 
@@ -100,7 +102,11 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                     <Button size="md" iconTrailing={ArrowRight} onClick={onMoveToCollection} isLoading={moving}>
                                         Move to collection
                                     </Button>
-                                    {moveError ? <p className="text-sm text-error-primary">{moveError}</p> : null}
+                                    {moveError ? (
+                                        <p role="alert" className="text-sm text-error-primary">
+                                            {moveError}
+                                        </p>
+                                    ) : null}
                                 </div>
                             ) : (
                                 <div className="flex flex-col gap-1.5">

@@ -34,7 +34,13 @@ const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
 
 function StatusText({ msg }: { msg: Msg }) {
     if (!msg) return null;
-    return <p className={cx("text-sm", msg.type === "ok" ? "text-success-primary" : "text-error-primary")}>{msg.text}</p>;
+    // <output> carries the status role natively; an error is an alert so it interrupts.
+    if (msg.type === "ok") return <output className="text-sm text-success-primary">{msg.text}</output>;
+    return (
+        <p role="alert" className="text-sm text-error-primary">
+            {msg.text}
+        </p>
+    );
 }
 
 export function SettingsForm({ profile, email }: { profile: Profile; email: string | null }) {

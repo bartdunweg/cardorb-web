@@ -1,5 +1,6 @@
 "use client";
 
+import { FavoriteStar } from "@/components/app/favorite-star";
 import type { Card } from "@/lib/cards";
 
 // Presentational table. Selection (and the detail slideout) is owned by CardsView.
@@ -32,7 +33,7 @@ export function CardsTable({ cards, onSelect }: { cards: Card[]; onSelect: (card
                                         <div className="h-10 w-7 shrink-0 rounded bg-quaternary" />
                                     )}
                                     <span>
-                                        {card.is_favorite ? <span className="mr-1 text-tertiary">★</span> : null}
+                                        {card.is_favorite ? <FavoriteStar /> : null}
                                         {card.name}
                                     </span>
                                 </button>
