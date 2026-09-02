@@ -76,7 +76,7 @@ export async function requestPasswordReset(_prev: AuthState, formData: FormData)
         return { error: "That did not go through. Try again in a minute." };
     }
 
-    return { success: "If that email has an account, a link is on its way. Check your inbox." };
+    return { success: "If that email has an account, a link is on its way." };
 }
 
 export async function signOut() {
