@@ -23,9 +23,16 @@ export async function createCollection(name: string): Promise<CollectionResult> 
     return { ok: true, id: (data as { id: string }).id };
 }
 
+// The signed-in user's collections, for the slideout's "move to" select. Scoped on user_id
+// (R-SEC-002): the collections SELECT policy is not the only thing standing between users.
 export async function listCollections(): Promise<{ id: string; name: string }[]> {
     const supabase = await createClient();
-    const { data } = await supabase.from("collections").select("id, name").order("created_at", { ascending: true });
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return [];
+
+    const { data } = await supabase.from("collections").select("id, name").eq("user_id", user.id).order("created_at", { ascending: true });
     return (data as { id: string; name: string }[] | null) ?? [];
 }
 
@@ -34,8 +41,16 @@ export async function deleteCollection(id: string): Promise<CollectionResult> {
     if (!parsed.success) return { ok: false, error: "Invalid collection." };
 
     const supabase = await createClient();
-    const { error } = await supabase.from("collections").delete().eq("id", parsed.data);
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { ok: false, error: "Not signed in." };
+
+    // Scoped on user_id and checked for a changed row (R-SEC-002): a foreign id must be a "not
+    // found", never a silent no-op and never someone else's folder gone.
+    const { data, error } = await supabase.from("collections").delete().eq("id", parsed.data).eq("user_id", user.id).select("id");
     if (error) return { ok: false, error: error.message };
+    if (!data?.length) return { ok: false, error: "Collection not found." };
 
     revalidatePath("/dashboard/collections");
     return { ok: true };
@@ -51,6 +66,13 @@ export async function setCardCollection(cardId: string, collectionId: string | n
         data: { user },
     } = await supabase.auth.getUser();
     if (!user) return { ok: false, error: "Not signed in." };
+
+    // The target collection has to be the caller's own; otherwise a card could be filed into a
+    // folder that belongs to someone else.
+    if (parsed.data.collectionId) {
+        const { data: owned } = await supabase.from("collections").select("id").eq("id", parsed.data.collectionId).eq("user_id", user.id).maybeSingle();
+        if (!owned) return { ok: false, error: "Collection not found." };
+    }
 
     const { data, error } = await supabase
         .from("cards")
