@@ -9,27 +9,25 @@ Rewrite it in place. This file has no history worth keeping; the history is in g
 ## Now
 
 Trading card management web app on Next.js 16 + React 19 + Tailwind 4 + Untitled UI (PRO).
-Supabase connected (project `fprjroupecdhosfdrqhv`), RLS-scoped `cards`/`collections` with ~1960
-imported cards. Live features: public landing, protected app shell, Home, Cards, Collections,
-Favorites, Wishlist, Pokédex, command-palette search, Settings, public profile at `/user/[username]`.
+**Live at https://cardorb.com** on Vercel project `cardorb`, `main` is production.
 
-**Live at https://cardorb.com** on Vercel project `cardorb` (the previous app is `cardorb-api`),
-`main` is production. `/api/v1`
-is proxied to the previous app on `api.cardorb.com` (R-DEPLOY-001); the iOS client and
-bartdunweg.com keep working through it.
+**Since 2026-09-02 this app reads and writes cards, folders and profiles through the Card Orb API**
+(`bartdunweg/cardorb-api`, api.cardorb.com), the same API the iOS app uses (R-DATA-003). Supabase
+is touched directly for auth and the session only; the same project signs both, so the session's
+access token is the API's bearer. `src/lib/api.ts` is the client, `src/lib/api-shapes.ts` turns
+the API's answers into what the screens already render (tested). `scripts/verify.sh` fails on a
+`.from("` outside `src/lib/supabase/`. Live: landing, app shell, Home, Cards, Collections
+(folders in the API), Favorites, Wishlist, Pokédex, command-palette search (the API's catalogue,
+which also says what is already yours), Settings (avatar through the API), public profile.
 
 ## Last session
 
-- **Auth email links land here now.** One Supabase project serves the website, the iOS app and the
-  API, and every auth email links to `{{ .SiteURL }}/auth/confirm` — a route of the previous app,
-  which was removed from `cardorb-api` the same day cardorb.com moved here. `src/app/auth/confirm`
-  verifies the token and lands by link type (`src/lib/auth-redirect.ts`, tested): recovery on the
-  new `/reset-password` page, which sets a password without asking for the old one; an address
-  change on Settings; a sign-up on the dashboard. The templates' `next=` values name the old
-  app's routes and are ignored on purpose. `/login?error=` shows why a link failed.
-- Previous: four review agents audited the repo; the blocking half shipped as six PRs (#7–#13).
-  Lesson kept: gate a merge on the GitHub `check`, not on `--fail-fast` — the Vercel preview check
-  is red by design (no `NPM_RC` for previews).
+- **The web app moved onto the API.** `lib/cards.ts`, `collections.ts`, `profile.ts`,
+  `public-profile.ts`, `pokedex.ts` and every server action call `api.cardorb.com`; `pokemontcg.ts`
+  is gone (the API matches a card against three catalogues and picks the picture and the price).
+  Adding a card sends name, set and number; the API does the rest. The Pokédex comes from the
+  catalogues rather than a stored number. The public page reads the three unkeyed public routes.
+- Earlier the same day: `/auth/confirm` and `/reset-password` (#15), where every auth email lands.
 
 ## Next
 
@@ -38,6 +36,10 @@ Backlog from the review, ranked. Each is one PR.
 - The API reference at `/docs/api`, in this site's theme, read at build time from
   `https://api.cardorb.com/openapi.yaml`; then `api.cardorb.com/` points here. The previous
   renderer is in `cardorb-api` at `40cc85d`, `src/app/docs/api/`.
+- Prices on the cards: the API carries `price` and `priceHolo` on every copy now; nothing here
+  shows them yet.
+- The `wishlist` and `pokedex_numbers` columns on `cards` are no longer written or read by
+  anything; a migration that drops them belongs in `cardorb-api`, which owns the schema.
 - A "Forgot password?" link on `/login` that calls `resetPasswordForEmail`; today only the iOS app
   and the API can send that email.
 - Landing page: move the signed-in redirect into the middleware so `/` prerenders (LCP 3.1 s → ~2.3 s).

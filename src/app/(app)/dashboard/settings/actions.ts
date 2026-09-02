@@ -2,18 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { ApiError, api } from "@/lib/api";
 import { createClient } from "@/lib/supabase/server";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
-// An avatar lives in this project's public `avatars` bucket and nowhere else. Anything else is a
-// URL every visitor of a public profile would be made to fetch.
-const AVATAR_PREFIX = `${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""}/storage/v1/object/public/avatars/`;
-const avatarUrlSchema = z
-    .string()
-    .trim()
-    .url("Enter a valid URL.")
-    .refine((u) => u.startsWith(AVATAR_PREFIX), "The avatar must be an uploaded image.");
+const failed = (err: unknown): { ok: false; error: string } => ({
+    ok: false,
+    error: err instanceof ApiError ? err.message : "Something went wrong. Try again.",
+});
 
 const profileSchema = z.object({
     display_name: z.string().trim().max(80),
@@ -23,51 +20,52 @@ const profileSchema = z.object({
         .min(3, "Username must be at least 3 characters.")
         .max(30)
         .regex(/^[a-zA-Z0-9_]+$/, "Use letters, numbers and underscores only."),
-    avatar_url: z.union([avatarUrlSchema, z.literal("")]),
     is_public: z.boolean(),
 });
 
+// The profile goes through the API: the name and the public flag in one call, the username in its
+// own, because the API claims a username as a separate, checked step.
 export async function updateProfile(input: unknown): Promise<ActionResult> {
     const parsed = profileSchema.safeParse(input);
     if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return { ok: false, error: "Not signed in." };
-
     const p = parsed.data;
-    const { error } = await supabase
-        .from("profiles")
-        .update({
-            display_name: p.display_name || null,
-            username: p.username,
-            avatar_url: p.avatar_url || null,
-            is_public: p.is_public,
-        })
-        .eq("id", user.id);
+    try {
+        await api("/profile", { method: "PATCH", body: { displayName: p.display_name, isPublic: p.is_public } });
+        await api("/username", { method: "POST", body: { username: p.username } });
+    } catch (err) {
+        return failed(err);
+    }
 
-    if (error) return { ok: false, error: error.code === "23505" ? "That username is already taken." : error.message };
-
-    revalidatePath("/dashboard/settings");
+    revalidatePath("/dashboard", "layout");
     return { ok: true };
 }
 
-export async function updateAvatar(url: string | null): Promise<ActionResult> {
-    const parsed = z.union([avatarUrlSchema, z.null()]).safeParse(url);
-    if (!parsed.success) return { ok: false, error: "Invalid image URL." };
+// An image as a data URL, at most 2 MB decoded; the API stores it and answers with the address.
+export async function uploadAvatar(image: string): Promise<ActionResult & { avatarUrl?: string }> {
+    const parsed = z
+        .string()
+        .regex(/^data:image\/(png|jpeg|webp);base64,/, "Use a JPG, PNG or WebP image.")
+        .max(4_000_000, "Keep the image under 2 MB.")
+        .safeParse(image);
+    if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return { ok: false, error: "Not signed in." };
+    try {
+        const { avatarUrl } = await api<{ avatarUrl: string }>("/profile/avatar", { method: "POST", body: { image: parsed.data } });
+        revalidatePath("/dashboard", "layout");
+        return { ok: true, avatarUrl };
+    } catch (err) {
+        return failed(err);
+    }
+}
 
-    const { error } = await supabase.from("profiles").update({ avatar_url: parsed.data }).eq("id", user.id);
-    if (error) return { ok: false, error: error.message };
-
-    revalidatePath("/dashboard/settings");
+export async function removeAvatar(): Promise<ActionResult> {
+    try {
+        await api("/profile/avatar", { method: "DELETE" });
+    } catch (err) {
+        return failed(err);
+    }
+    revalidatePath("/dashboard", "layout");
     return { ok: true };
 }
 

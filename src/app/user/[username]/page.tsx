@@ -20,7 +20,7 @@ export default async function PublicProfilePage({ params }: Params) {
     const profile = await getPublicProfile(decodeURIComponent(username));
     if (!profile) notFound();
 
-    const { cards, total } = await getPublicCards(profile.id);
+    const { cards, total } = await getPublicCards(decodeURIComponent(username));
     const name = profile.display_name || profile.username || "Collection";
 
     return (

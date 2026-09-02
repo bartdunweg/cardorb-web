@@ -104,6 +104,18 @@ fi
 # A rule row is any table row that is not the header and not the separator. Matching on `^| R-`
 # would make a malformed ID invisible to the check that exists to catch it.
 # shellcheck disable=SC2329  # invoked indirectly, through `conventions` below.
+# R-DATA-003: the database is touched directly for auth only. A `.from(` outside the Supabase
+# client folder is a table read or write that should have gone through src/lib/api.ts.
+direct_db() {
+  local hits
+  hits="$(grep -rn --include='*.ts' --include='*.tsx' '\.from("' src | grep -v '^src/lib/supabase/' || true)"
+  if [[ -n "$hits" ]]; then
+    printf 'Direct database access outside src/lib/supabase/ (R-DATA-003):\n%s\n' "$hits"
+    return 1
+  fi
+}
+run "no-direct-db" direct_db
+
 rule_rows() {
   grep '^| ' CONVENTIONS.md | grep -v '^| ID | Rule |' | grep -v '^|[- |]*$' || true
 }

@@ -1,36 +1,28 @@
-import { PUBLIC_CARD_COLUMNS, type PublicCard } from "@/lib/cards";
-import { createClient } from "@/lib/supabase/server";
+import { ApiError, api } from "@/lib/api";
+import { type PublicCard, type PublicSet, publicCardsFromSets } from "@/lib/api-shapes";
 
-export type PublicProfile = { id: string; display_name: string | null; username: string | null; avatar_url: string | null };
+export type PublicProfile = { display_name: string | null; username: string | null; avatar_url: string | null };
 
-// Looks up a public profile by username. Returns null when it doesn't exist or isn't public —
-// RLS also enforces this (profiles are only readable when `is_public` or your own row).
+// The public face of a profile, or null when there is none by that name or it is not public.
+// Unkeyed: the API's three public routes serve exactly this page and carry no prices.
 export async function getPublicProfile(username: string): Promise<PublicProfile | null> {
-    const supabase = await createClient();
-    const { data } = await supabase
-        .from("profiles")
-        .select("id, display_name, username, avatar_url")
-        .eq("username", username)
-        .eq("is_public", true)
-        .maybeSingle();
-    return (data as PublicProfile | null) ?? null;
+    try {
+        const p = await api<{ username: string; displayName: string | null; avatarUrl: string | null }>(`/public/${encodeURIComponent(username)}/profile`, {
+            auth: false,
+        });
+        return { display_name: p.displayName, username: p.username, avatar_url: p.avatarUrl };
+    } catch (err) {
+        if (err instanceof ApiError && err.status === 404) return null;
+        throw err;
+    }
 }
 
-// The owned collection of a given user, for the public profile page. Scoped by user_id; RLS still
-// gates it (only a public profile's cards are readable by an anonymous visitor). Selects the public
-// columns only: whatever this returns ends up in the page payload of an anonymous visitor, so the
-// owner's prices, dates, notes and grades must never be in it, hidden in the UI or not.
-export async function getPublicCards(userId: string): Promise<{ cards: PublicCard[]; total: number }> {
-    const supabase = await createClient();
-    const { data, count, error } = await supabase
-        .from("cards")
-        .select(PUBLIC_CARD_COLUMNS, { count: "exact" })
-        .eq("user_id", userId)
-        .eq("owned", true)
-        .eq("wishlist", false)
-        .order("set_name", { ascending: true, nullsFirst: false })
-        .order("number", { ascending: true, nullsFirst: false })
-        .limit(100);
-    if (error) throw error;
-    return { cards: (data ?? []) as PublicCard[], total: count ?? 0 };
+const SHOWN = 100;
+
+// The owned collection behind a public profile. The API publishes rarity and ownership of each copy
+// and nothing personal (R-API-002 there), so nothing here has to be hidden.
+export async function getPublicCards(username: string): Promise<{ cards: PublicCard[]; total: number }> {
+    const { sets } = await api<{ sets: PublicSet[] }>(`/public/${encodeURIComponent(username)}/collection`, { auth: false });
+    const cards = publicCardsFromSets(sets);
+    return { cards: cards.slice(0, SHOWN), total: cards.length };
 }

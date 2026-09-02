@@ -2,23 +2,25 @@ import { redirect } from "next/navigation";
 import { AppSidebar } from "@/components/app/app-sidebar";
 import { CommandSearchProvider } from "@/components/app/command-search";
 import { MobileTabBar } from "@/components/app/mobile-nav";
+import { ApiError } from "@/lib/api";
 import { getMyCollections } from "@/lib/collections";
-import { createClient } from "@/lib/supabase/server";
+import { getMyProfile } from "@/lib/profile";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) redirect("/login");
-
-    const { data: profile } = await supabase.from("profiles").select("display_name, username, avatar_url").eq("id", user.id).maybeSingle();
+    // The middleware already sent a signed-out visitor to /login; this is the API saying the
+    // session it was handed is not good enough, which comes to the same door.
+    let me;
+    try {
+        me = await getMyProfile();
+    } catch (err) {
+        if (err instanceof ApiError && err.status === 401) redirect("/login");
+        throw err;
+    }
 
     const account = {
-        name: profile?.display_name || profile?.username || user.email?.split("@")[0] || "Account",
-        email: user.email ?? "",
-        avatarUrl: profile?.avatar_url ?? null,
+        name: me.profile?.display_name || me.profile?.username || me.email?.split("@")[0] || "Account",
+        email: me.email ?? "",
+        avatarUrl: me.profile?.avatar_url ?? null,
     };
 
     // Collections feed the sidebar's expandable Collections item.
