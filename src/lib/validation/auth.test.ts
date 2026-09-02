@@ -8,3 +8,11 @@ describe("emailSchema", () => {
         expect(emailSchema.safeParse({ email: "" }).success).toBe(false);
     });
 });
+
+describe("signupSchema", () => {
+    it("wants a name beside the credentials, trimmed", async () => {
+        const { signupSchema } = await import("./auth");
+        expect(signupSchema.parse({ name: " Bart ", email: "bart@example.com", password: "12345678" }).name).toBe("Bart");
+        expect(signupSchema.safeParse({ name: "  ", email: "bart@example.com", password: "12345678" }).success).toBe(false);
+    });
+});

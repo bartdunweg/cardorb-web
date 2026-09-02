@@ -115,9 +115,35 @@ export function CollectionDetailActions({ collectionId }: { collectionId: string
                 </ModalOverlay>
             </DialogTrigger>
 
-            <Button color="secondary-destructive" iconLeading={Trash01} onClick={del} isLoading={deleting}>
-                Delete
-            </Button>
+            <DialogTrigger>
+                <Button color="secondary-destructive" iconLeading={Trash01}>
+                    Delete
+                </Button>
+                <ModalOverlay>
+                    <Modal className="max-w-sm">
+                        <Dialog>
+                            {({ close }) => (
+                                <div className="flex w-full max-w-sm flex-col gap-4 rounded-2xl bg-primary p-6 shadow-xl ring-1 ring-secondary">
+                                    <AriaHeading slot="title" className="text-lg font-semibold text-primary">
+                                        Delete this collection?
+                                    </AriaHeading>
+                                    <p className="text-sm text-tertiary">
+                                        The cards stay in your collection. Only this folder goes, and it cannot be brought back.
+                                    </p>
+                                    <div className="flex justify-end gap-2">
+                                        <Button color="secondary" onClick={close}>
+                                            Cancel
+                                        </Button>
+                                        <Button color="primary-destructive" onClick={del} isLoading={deleting}>
+                                            Delete
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+                        </Dialog>
+                    </Modal>
+                </ModalOverlay>
+            </DialogTrigger>
         </div>
     );
 }

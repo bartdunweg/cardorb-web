@@ -17,15 +17,15 @@ export async function getPublicProfile(username: string): Promise<PublicProfile 
     }
 }
 
-const SHOWN = 100;
+export const PUBLIC_PAGE_SIZE = 100;
 
-// The first hundred owned cards behind a public profile, with the totals behind them. The paged
-// route rather than the whole collection: a hundred tiles need thirty kilobytes, not nine hundred.
-// The API publishes nothing personal on it (R-API-002 there), so nothing here has to be hidden.
-export async function getPublicCards(username: string): Promise<{ cards: PublicCard[]; total: number; sets: number }> {
+// One page of the owned cards behind a public profile, with the totals behind it. The paged route
+// rather than the whole collection: a hundred tiles need thirty kilobytes, not nine hundred. The
+// API publishes nothing personal on it (R-API-002 there), so nothing here has to be hidden.
+export async function getPublicCards(username: string, page = 1): Promise<{ cards: PublicCard[]; total: number; sets: number }> {
     const { cards, total, sets } = await api<{ cards: PublicItem[]; total: number; sets: number }>(`/public/${encodeURIComponent(username)}/cards`, {
         auth: false,
-        params: { limit: SHOWN },
+        params: { limit: PUBLIC_PAGE_SIZE, offset: (page - 1) * PUBLIC_PAGE_SIZE },
     });
     return { cards: cards.map(publicCardFromItem), total, sets };
 }

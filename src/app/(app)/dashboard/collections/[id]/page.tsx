@@ -1,16 +1,21 @@
 import { notFound } from "next/navigation";
 import { AppEmptyState } from "@/components/app/app-empty-state";
+import { CardsPagination, pageFromParam } from "@/components/app/cards-pagination";
 import { CardsView } from "@/components/app/cards-view";
 import { CollectionDetailActions } from "@/components/app/collection-detail-actions";
 import { getMyCards } from "@/lib/cards";
 import { getCollection } from "@/lib/collections";
 
-export default async function CollectionDetailPage({ params }: { params: Promise<{ id: string }> }) {
+const PAGE_SIZE = 100;
+
+export default async function CollectionDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ page?: string }> }) {
     const { id } = await params;
     const collection = await getCollection(id);
     if (!collection) notFound();
 
-    const { cards, total } = await getMyCards({ collectionId: id, limit: 100 });
+    const page = pageFromParam((await searchParams).page);
+    const { cards, total } = await getMyCards({ collectionId: id, limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE });
+    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
     return (
         <div className="flex flex-1 flex-col gap-6">
@@ -24,10 +29,17 @@ export default async function CollectionDetailPage({ params }: { params: Promise
                 <CollectionDetailActions collectionId={id} />
             </div>
 
-            {cards.length === 0 ? (
+            {total === 0 ? (
                 <AppEmptyState icon="folder" title="No cards in this collection" description="Use “Add cards” to fill it." />
             ) : (
-                <CardsView cards={cards} />
+                <>
+                    <CardsView cards={cards} />
+                    <CardsPagination
+                        page={page}
+                        totalPages={totalPages}
+                        hrefFor={(n) => (n > 1 ? `/dashboard/collections/${id}?page=${n}` : `/dashboard/collections/${id}`)}
+                    />
+                </>
             )}
         </div>
     );

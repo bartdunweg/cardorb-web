@@ -12,6 +12,8 @@ const inter = Inter({
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const description =
+    "Keep track of your Pokémon card collection: the cards you own, sorted into collections, a wishlist, a Pokédex of what you hold, and a public page to show it.";
 
 export const metadata: Metadata = {
     metadataBase: new URL(siteUrl),
@@ -19,14 +21,16 @@ export const metadata: Metadata = {
         default: "Cardorb",
         template: "%s · Cardorb",
     },
-    description: "Manage and organize your trading card collections.",
+    description,
     openGraph: {
         title: "Cardorb",
-        description: "Manage and organize your trading card collections.",
-        url: siteUrl,
+        description,
         siteName: "Cardorb",
         type: "website",
     },
+    twitter: { card: "summary_large_image" },
+    // A preview deploy is not the site; keep it out of the index.
+    robots: process.env.VERCEL_ENV && process.env.VERCEL_ENV !== "production" ? { index: false, follow: false } : undefined,
 };
 
 export const viewport: Viewport = {

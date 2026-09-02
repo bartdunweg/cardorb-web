@@ -4,8 +4,8 @@
         {
             "name": "dev",
             "runtimeExecutable": "pnpm",
-            "runtimeArgs": ["dev", "--port", "3112"],
-            "port": 3112
+            "runtimeArgs": ["dev", "--port", "3210"],
+            "port": 3210
         }
     ]
 }

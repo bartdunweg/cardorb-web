@@ -30,13 +30,24 @@ which also says what is already yours), Settings (avatar through the API), publi
   newest set's tiles on 2026-09-02. Left alone on purpose: JS on first load is 228 KB Brotli, of
   which 40 KB is the polyfill only old browsers download and ~150 KB is React, Next and React
   Aria under Untitled UI — nothing to cut without leaving the kit.
+- **Four small things a user meets.** Deleting a folder asks first and says the cards stay. The
+  name asked at sign-up travels as user metadata and, when a session comes back, is set on the
+  profile straight away. Favorites, Wishlist, a folder and the public profile page on `?page=`
+  through one `CardsPagination`, the same as Cards; the profile's canonical names its page. The
+  three `scripts/backfill-*.mjs` are gone: they wrote to the database directly, against
+  R-DATA-003, for columns nothing reads any more.
+- **The landing prerenders and the public pages carry their metadata.** The signed-in redirect on
+  `/`, `/login` and `/signup` lives in the middleware now, so `page.tsx` at the root touches no
+  session and builds static. `robots.ts`, `sitemap.ts` (the six public pages) and a generated
+  `opengraph-image`; own titles and descriptions for `/login` and `/signup`; a canonical on every
+  public page; the profile page gets its own OG title and the brand only once. Preview deploys
+  carry `noindex`. Dev port is 3210: the portfolio project's server took 3111 and 3112.
 - **Mobbin pattern check** over every page (Bart wants this as a standing check, see memory). Three
   PRs came out of it: the market price carries the name's weight on the tile and sits under the
   title in the panel; the public profile shows display name, handle and "cards · sets"; the
   Pokédex has a progress bar and the Cards count sits by the search. Settings, forgot-password and
   Home already follow their references. Still open from the check: sort and set/rarity filters on
   Cards, which need parameters on `GET /v1/cards` first.
-- Local dev runs on port 3112 now; the portfolio project's dev server sits on 3111.
 - **Card pictures through the image optimizer, and the functions in Dublin (#21).** A performance
   review found the pictures came straight from `assets.tcgdex.net` — one server in France, no CDN,
   unreachable that day — and the functions ran in `iad1` while the API sits in `dub1`. Every card
@@ -77,20 +88,13 @@ Backlog from the review, ranked. Each is one PR.
   page of 100 here would lie about a collection of 1,936.
 - The `wishlist` and `pokedex_numbers` columns on `cards` are no longer written or read by
   anything; a migration that drops them belongs in `cardorb-api`, which owns the schema.
-- Landing page: move the signed-in redirect into the middleware so `/` prerenders (LCP 3.1 s → ~2.3 s).
-- `robots.ts`, `sitemap.ts`, an `opengraph-image`, own titles for `/login` and `/signup`, and drop the
-  doubled " · Cardorb" on `/user/[username]`.
 - Untitled UI kit: 190 of 252 vendored files are unreferenced and keep recharts, motion, embla,
   qr-code-styling and input-otp alive (~38 MB). Policy: keep what is imported, re-fetch through the
   MCP when needed. Write it as a line under R-STRUCT-001, then one deletion PR.
 - First tests in `src/lib` (`formatDate`, the `.or()` search escaping, the pokemontcg client with a
   mocked fetch), then drop `--passWithNoTests`.
-- Small: `POKEMONTCG_API_KEY` and `SUPABASE_SERVICE_ROLE_KEY` in `.env.example`; `.gitignore`
-  `.env` / `.env.*` / `!.env.example`; GitHub description + topics; README to the documentation
-  template; delete or document `scripts/backfill-*.mjs`; one `useDebouncedSearch` hook for the four
-  copies; confirmation before deleting a collection; pagination on favorites/wishlist/collection
-  detail/public profile (all cap at 100 while showing the full count); the signup "Name" field is
-  never read.
+- Small: GitHub description + topics; README to the documentation template; one
+  `useDebouncedSearch` hook for the four copies.
 - Parked from earlier: iOS-style mobile page header (4 open questions), 13 promo cards without art,
   wishlist count on Home.
 
