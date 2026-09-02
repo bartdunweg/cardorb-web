@@ -27,9 +27,14 @@ which also says what is already yours), Settings (avatar through the API), publi
   unreachable that day — and the functions ran in `iad1` while the API sits in `dub1`. Every card
   `<img>` is now `CardImage` (`src/components/app/card-image.tsx`) over `next/image`, with the
   allowed hosts in `next.config.mjs`; `vercel.json` pins `regions: ["dub1"]`. One thumbnail went
-  from 176 KB PNG to 23 KB WebP. Still open from that review, in order: the layout's three
-  sequential API calls (profile, folders, stats) cached per user; `loading.tsx` per dashboard route
-  so the shell streams before the cards; JS on first load is 228 KB Brotli against a 150 KB budget.
+  from 176 KB PNG to 23 KB WebP.
+- **The layout's answers are kept per person (#26).** Profile, folders and stats go through
+  `perUser()` in `src/lib/user-cache.ts`: five minutes under one tag per user id, and every
+  server action that writes calls `forgetMine()`, which drops the tag with `updateTag` and
+  revalidates the layout. `src/app/(app)/dashboard/loading.tsx` shows the outline of a grid while a
+  page still fetches. Not measured with a session; the first signed-in visit after deploy is the
+  check that a write shows up on the next screen. Still open: JS on first load is 228 KB Brotli
+  against a 150 KB budget.
 - **"Forgot password?" on `/login`** leads to `/forgot-password`: one email field, and
   `requestPasswordReset` calls Supabase's `resetPasswordForEmail`. The answer is the same for a
   known and an unknown address. The link in the email lands on `/auth/confirm` like every other.

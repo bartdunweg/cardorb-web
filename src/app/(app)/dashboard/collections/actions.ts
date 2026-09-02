@@ -1,8 +1,8 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { ApiError, api } from "@/lib/api";
+import { forgetMine } from "@/lib/user-cache";
 
 export type CollectionResult = { ok: true; id?: string } | { ok: false; error: string };
 
@@ -18,7 +18,7 @@ export async function createCollection(name: string): Promise<CollectionResult> 
 
     try {
         const { folder } = await api<{ folder: { id: string } }>("/folders", { method: "POST", body: { name: parsed.data } });
-        revalidatePath("/dashboard", "layout");
+        await forgetMine();
         return { ok: true, id: folder.id };
     } catch (err) {
         return failed(err);
@@ -45,7 +45,7 @@ export async function deleteCollection(id: string): Promise<CollectionResult> {
         return failed(err);
     }
 
-    revalidatePath("/dashboard", "layout");
+    await forgetMine();
     return { ok: true };
 }
 
@@ -60,6 +60,6 @@ export async function setCardCollection(cardId: string, collectionId: string | n
         return failed(err);
     }
 
-    revalidatePath("/dashboard", "layout");
+    await forgetMine();
     return { ok: true };
 }

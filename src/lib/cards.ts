@@ -1,6 +1,6 @@
-import { cache } from "react";
 import { api } from "@/lib/api";
 import { type Card, type CardItem, cardFromItem } from "@/lib/api-shapes";
+import { perUser } from "@/lib/user-cache";
 
 export type { Card, PublicCard } from "@/lib/api-shapes";
 
@@ -34,8 +34,8 @@ export type CardStats = { owned: number; wishlist: number; favorites: number };
 
 export type ApiStats = { cards: number; copies: number; wishlist: number; favorites: number; sets: number };
 
-// Once per request: the layout and a page may both ask.
-export const getStats = cache(async () => (await api<{ stats: ApiStats }>("/stats")).stats);
+// Kept five minutes per person: the layout and a page both ask, and every write drops the cache.
+export const getStats = () => perUser("stats", async (token) => (await api<{ stats: ApiStats }>("/stats", { token })).stats);
 
 // The dashboard's numbers. "Owned" counts cards (rows), as the page always has.
 export async function getCardStats(): Promise<CardStats> {
