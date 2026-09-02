@@ -4,7 +4,6 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { type AuthState, signIn } from "@/app/(auth)/actions";
 import { Button } from "@/components/base/buttons/button";
-import { Checkbox } from "@/components/base/checkbox/checkbox";
 import { Input } from "@/components/base/input/input";
 
 // Clean, single-column sign-in: the form centered in the viewport, no marketing panel.
@@ -21,7 +20,7 @@ export const LoginForm = () => {
                         </Link>
                         <div className="flex flex-col gap-2 md:gap-3">
                             <h1 className="text-xl font-semibold text-primary md:text-display-xs">Log in</h1>
-                            <p className="text-md text-tertiary">Welcome back! Please enter your details.</p>
+                            <p className="text-md text-tertiary">Welcome back. Enter your details.</p>
                         </div>
                     </div>
 
@@ -38,14 +37,6 @@ export const LoginForm = () => {
                                 placeholder="••••••••••••"
                                 inputClassName="placeholder:text-placeholder/50"
                             />
-                        </div>
-
-                        <div className="flex items-center">
-                            <Checkbox label="Remember for 30 days" name="remember" />
-
-                            <Button color="link-color" size="md" href="#" className="ml-auto">
-                                Forgot password
-                            </Button>
                         </div>
 
                         {state && "error" in state && <p className="text-sm text-error-primary">{state.error}</p>}

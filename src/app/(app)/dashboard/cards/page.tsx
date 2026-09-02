@@ -1,8 +1,8 @@
+import { Plus } from "@untitledui/icons";
 import { AddCardModal } from "@/components/app/add-card-modal";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CardsSearch } from "@/components/app/cards-search";
 import { CardsView } from "@/components/app/cards-view";
-import { CollectionsEmptyState } from "@/components/app/collections-empty-state";
 import { Button } from "@/components/base/buttons/button";
 import { getMyCards } from "@/lib/cards";
 
@@ -14,12 +14,12 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
     const { cards, total } = await getMyCards({ limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE, q });
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-    // No cards at all (and no active search) → empty state.
+    // No cards at all (and no active search) → empty state with the one action that gets you out of it.
     if (!q && total === 0) {
         return (
-            <div className="flex flex-1 items-center justify-center">
-                <CollectionsEmptyState />
-            </div>
+            <AppEmptyState icon="plus" title="No cards yet" description="Add your first card to start your collection">
+                <AddCardModal trigger={<Button iconLeading={Plus}>Add card</Button>} />
+            </AppEmptyState>
         );
     }
 
