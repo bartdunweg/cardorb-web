@@ -1,9 +1,10 @@
 "use client";
 
-import type { Card } from "@/lib/cards";
+import type { PublicCard } from "@/lib/cards";
 
-// Presentational grid of card thumbnails. Selection is owned by CardsView.
-export function CardsGrid({ cards, onSelect }: { cards: Card[]; onSelect: (card: Card) => void }) {
+// Presentational grid of card thumbnails. Selection is owned by CardsView. Generic over the card
+// shape so the public profile can pass `PublicCard`; the favourite star only shows when the field exists.
+export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null }>({ cards, onSelect }: { cards: T[]; onSelect: (card: T) => void }) {
     return (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {cards.map((card) => (

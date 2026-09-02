@@ -9,7 +9,7 @@ import { listCollections, setCardCollection } from "@/app/(app)/dashboard/collec
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Button } from "@/components/base/buttons/button";
 import { NativeSelect } from "@/components/base/select/select-native";
-import type { Card } from "@/lib/cards";
+import type { Card, PublicCard } from "@/lib/cards";
 import { formatDate } from "@/lib/format";
 
 function DetailRow({ label, value }: { label: string; value: ReactNode }) {
@@ -21,8 +21,12 @@ function DetailRow({ label, value }: { label: string; value: ReactNode }) {
     );
 }
 
-export function CardDetailSlideout({ card, onClose, readOnly = false }: { card: Card | null; onClose: () => void; readOnly?: boolean }) {
+type Props = { card: Card | null; onClose: () => void; readOnly?: false } | { card: PublicCard | null; onClose: () => void; readOnly: true };
+
+export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
     const router = useRouter();
+    // The owner's fields exist only on the editable view; the public view never receives them.
+    const mine = readOnly ? null : (card as Card | null);
     const [collections, setCollections] = useState<{ id: string; name: string }[]>([]);
     const [collectionId, setCollectionId] = useState<string>("");
     const [moving, setMoving] = useState(false);
@@ -37,7 +41,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: { card: 
     const [syncedCardId, setSyncedCardId] = useState(card?.id);
     if (card?.id !== syncedCardId) {
         setSyncedCardId(card?.id);
-        setCollectionId(card?.collection_id ?? "");
+        setCollectionId(mine?.collection_id ?? "");
     }
 
     const onCollectionChange = async (value: string) => {
@@ -73,7 +77,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: { card: 
                 <>
                     <SlideoutMenu.Header onClose={close}>
                         <h2 className="text-lg font-semibold text-primary">
-                            {card?.is_favorite ? <span className="mr-1 text-tertiary">★</span> : null}
+                            {mine?.is_favorite ? <span className="mr-1 text-tertiary">★</span> : null}
                             {card?.name}
                         </h2>
                         <p className="text-sm text-tertiary">{[card?.set_name, card?.number ? `#${card.number}` : null].filter(Boolean).join(" · ") || "—"}</p>
@@ -91,7 +95,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: { card: 
                         )}
 
                         {!readOnly &&
-                            (card?.wishlist ? (
+                            (mine?.wishlist ? (
                                 <div className="flex flex-col gap-1.5">
                                     <Button size="md" iconTrailing={ArrowRight} onClick={onMoveToCollection} isLoading={moving}>
                                         Move to collection
@@ -115,20 +119,20 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: { card: 
                             <DetailRow label="Generation" value={card?.gen} />
                             <DetailRow label="Types" value={card?.types?.length ? card.types.join(", ") : null} />
                             <DetailRow label="Quantity" value={card?.quantity ?? 1} />
-                            <DetailRow label="Condition" value={card?.condition} />
-                            <DetailRow label="Grade" value={card?.grade} />
+                            {mine && <DetailRow label="Condition" value={mine.condition} />}
+                            {mine && <DetailRow label="Grade" value={mine.grade} />}
                             <DetailRow label="Finish" value={card?.finish} />
                             {/* Personal fields stay off the public read-only view. */}
-                            {!readOnly && <DetailRow label="Owned" value={card?.owned ? "Yes" : "No"} />}
-                            {!readOnly && <DetailRow label="Purchase price" value={card?.purchase_price != null ? card.purchase_price : null} />}
-                            {!readOnly && <DetailRow label="Purchase date" value={card?.purchase_date ? formatDate(card.purchase_date) : null} />}
-                            {!readOnly && <DetailRow label="Acquired" value={card?.acquired_at ? formatDate(card.acquired_at) : null} />}
+                            {mine && <DetailRow label="Owned" value={mine.owned ? "Yes" : "No"} />}
+                            {mine && <DetailRow label="Purchase price" value={mine.purchase_price != null ? mine.purchase_price : null} />}
+                            {mine && <DetailRow label="Purchase date" value={mine.purchase_date ? formatDate(mine.purchase_date) : null} />}
+                            {mine && <DetailRow label="Acquired" value={mine.acquired_at ? formatDate(mine.acquired_at) : null} />}
                         </dl>
 
-                        {!readOnly && card?.notes ? (
+                        {mine?.notes ? (
                             <div className="flex flex-col gap-1 border-t border-secondary pt-4">
                                 <p className="text-sm text-tertiary">Notes</p>
-                                <p className="text-sm text-primary">{card.notes}</p>
+                                <p className="text-sm text-primary">{mine.notes}</p>
                             </div>
                         ) : null}
                     </SlideoutMenu.Content>

@@ -24,6 +24,12 @@ export type Card = {
     wishlist: boolean | null;
 };
 
+/** What a public profile may show of a card: identity and art, nothing personal. The full `Card`
+ *  adds what the owner recorded (price, dates, notes, condition, grade, favourite, wishlist). */
+export type PublicCard = Pick<Card, "id" | "name" | "set_name" | "number" | "rarity" | "gen" | "types" | "quantity" | "finish" | "image_url" | "tcg_id">;
+
+export const PUBLIC_CARD_COLUMNS = "id, name, set_name, number, rarity, gen, types, quantity, finish, image_url, tcg_id";
+
 export const CARD_COLUMNS =
     "id, name, set_name, number, rarity, gen, types, quantity, owned, is_favorite, condition, grade, finish, purchase_price, purchase_date, acquired_at, notes, image_url, tcg_id, collection_id, wishlist";
 

@@ -1,4 +1,4 @@
-import { CARD_COLUMNS, type Card } from "@/lib/cards";
+import { PUBLIC_CARD_COLUMNS, type PublicCard } from "@/lib/cards";
 import { createClient } from "@/lib/supabase/server";
 
 export type PublicProfile = { id: string; display_name: string | null; username: string | null; avatar_url: string | null };
@@ -17,12 +17,14 @@ export async function getPublicProfile(username: string): Promise<PublicProfile 
 }
 
 // The owned collection of a given user, for the public profile page. Scoped by user_id; RLS still
-// gates it (only a public profile's cards are readable by an anonymous visitor).
-export async function getPublicCards(userId: string): Promise<{ cards: Card[]; total: number }> {
+// gates it (only a public profile's cards are readable by an anonymous visitor). Selects the public
+// columns only: whatever this returns ends up in the page payload of an anonymous visitor, so the
+// owner's prices, dates, notes and grades must never be in it, hidden in the UI or not.
+export async function getPublicCards(userId: string): Promise<{ cards: PublicCard[]; total: number }> {
     const supabase = await createClient();
     const { data, count, error } = await supabase
         .from("cards")
-        .select(CARD_COLUMNS, { count: "exact" })
+        .select(PUBLIC_CARD_COLUMNS, { count: "exact" })
         .eq("user_id", userId)
         .eq("owned", true)
         .eq("wishlist", false)
@@ -30,5 +32,5 @@ export async function getPublicCards(userId: string): Promise<{ cards: Card[]; t
         .order("number", { ascending: true, nullsFirst: false })
         .limit(100);
     if (error) throw error;
-    return { cards: (data ?? []) as Card[], total: count ?? 0 };
+    return { cards: (data ?? []) as PublicCard[], total: count ?? 0 };
 }
