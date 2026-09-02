@@ -24,11 +24,7 @@ export const LoginForm = ({ notice }: { notice?: string }) => {
                         </div>
                     </div>
 
-                    {notice && (
-                        <output className="text-sm text-tertiary">
-                            {notice}
-                        </output>
-                    )}
+                    {notice && <output className="text-sm text-tertiary">{notice}</output>}
 
                     <form action={formAction} className="flex flex-col gap-6">
                         <div className="flex flex-col gap-5">
