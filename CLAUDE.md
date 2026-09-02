@@ -1,150 +1,85 @@
-<!-- STANDARDS:BEGIN v0.27.0 — generated from dev-standards. Do not edit by hand. -->
+# Cardorb
 
-## Language
+A web app for keeping track of a Pokémon card collection: which cards you own, sorted into
+collections, a wishlist, a Pokédex view of which Pokémon you hold cards of, and a public
+profile page that shows your collection to others. The owner is the one user today; accounts
+exist so other collectors can join later.
 
-- **YOU MUST write everything that lands on disk in English** — files, folder names, commit
-  messages, code comments, documentation, PR and issue text. Read any language, write English.
-- **Answer in the language the user writes in** — the chat only; every file you write is English.
-- **Explain simply, in bullets.** Short, common words and one idea per sentence — write as if the
-  reader is smart but new to the topic. Say the consequence first, then the thing.
-- **Never invent a word for something.** No metaphors of your own making, no house vocabulary,
-  no shorthand borrowed from this repository's files. Use the ordinary word, even if it is
-  longer. A term the reader has not met needs its meaning in the same sentence, every time —
-  not the first time only. Default to bullets and small tables over prose.
-- The product's user-facing copy may be in any language; everything internal is English.
+## Stack
 
-## How you close a response
-
-**Every response ends with a summary block. Nothing comes after it**, so the user never scrolls
-up to find out what happened.
-
-- **Heading and contents in the language you are answering in.**
-- Point-by-point, scannable. No prose paragraphs.
-- When something changed, include a two-column before/after table.
-- Assumptions and open questions go inside this block, not scattered through the answer.
-
-## How you operate
-
-- **Ask about the what and the how; decide only the trivial.** Where there is a real choice —
-  what to build, or the approach, structure, or library for it — say plainly what you mean to do,
-  then ask first: a few short multiple-choice questions, up front, and the same at each plan and
-  each real change; defining it through questions is faster and builds better. Decide silently
-  only what has no real alternative — formatting, an obvious name — then note it and report it.
-  Always stop for destructive or irreversible operations, real money, or production.
-- **Batch, never interrupt.** One upfront batch or a checkpoint, never scattered
-  mid-task; anything you did not ask, you decided — record it in the closing summary.
-- **Reach for subagents on purpose.** Before a broad search, a sweep across many files, or two
-  jobs that do not depend on each other, ask which agent fits and dispatch it — in parallel where
-  they share no state. Name the agent and the skill it should run, in one line, then send it.
-  Waiting to be asked is the failure; a single known file is the only case that stays inline.
-- **Look backwards only when you are the one starting.** Deciding yourself to change existing
-  code? First find out why it is the way it is — `git log -S` on the line, and the rule in
-  `CONVENTIONS.md` if one covers it. Asked directly for something? Build it; do not go digging
-  for why it was once done differently.
-
-## Rules
-
-- **`CONVENTIONS.md` holds the rules that apply now.** It is the only binding source, and it is
-  a living file: a rule is rewritten or deleted the moment it stops being true. There is no
-  archive of past rules, and nothing outside this file may be quoted as binding.
-- **A request outranks a rule.** Where the request departs from one, say so in one sentence —
-  *this departs from R-STRUCT-001* — and then carry it out. No investigation, no alternatives.
-- **Past reasoning lives in git.** `git log -p CONVENTIONS.md` shows when a rule changed and why.
-  That is the whole history mechanism, and it is deliberately not in the read path.
-- **If the new approach becomes the norm, update the rule** at the end, in the summary.
-- **A rule the code structurally ignores is a bug in one of the two.** Never decide which alone:
-  add it to `## Open` in `STATE.md`.
-
-## Memory system
-
-This repo keeps its own memory. **IMPORTANT: you maintain it as part of doing the work.**
-
-| Trigger | Action |
-|---|---|
-| User reacts, criticises, or states a preference | Use the `record-rule` workflow before acting |
-| A real choice is made, or a norm needs writing down | Use the `record-rule` workflow |
-| A rule stops being true | Rewrite it or delete it. Never leave it standing as history |
-| A user-visible change ships | An entry in the changelog naming what is different for the reader — and refresh any outward-facing text it makes stale: README opening, repository description and topics. Outward text is derived from what is already public, never from `STATE.md` or a brief. A project that ships no user-visible releases has no changelog, and that is correct — do not create one |
-| Session starts on an existing project | Run `catch-up` — `STATE.md` here, then every sibling worktree's, then unmerged branches |
-| Session ends | Run `handoff`, unannounced. A sibling workspace can only read what you wrote down |
-| A build or code change is complete | Run `scripts/verify.sh`, then `build-quality` |
-
-**Definition of Done:** `scripts/verify.sh` exits 0 + changelog entry if user-visible + a rule
-written, updated or deleted where the work settled one + `STATE.md` updated + a `build-quality`
-report for this project's platform, where every domain carries evidence or is reported
-`not measured` + every written artefact in English + a closing summary block listing the
-assumptions.
-
-**A `pass` without evidence is not a pass.** Report `not measured` instead and say what would
-have produced the evidence. A task without a memory write is not done.
-
-**`Visibility` decides how freely memory is written.** Where it is `private`, write bluntly.
-Where it is `public` or `may become public`, write nothing you would not publish on this
-project's own website — git history is public the moment the repository is, so there is no
-later redaction. Record the shape instead: *the budget ceiling was reached*, not the figure.
-
-## Rules that are easy to get wrong
-
-- A rule carries one sentence of *why*. If the why does not fit in one sentence, the rule is wrong.
-- Never invent a reason. Where the evidence is silent, write `Why: unknown` and leave it there.
-- Creating new shared files is fine; **editing an existing shared file is the one case
-  where you flag it first**, because a parallel worktree is probably editing it too.
-- Before choosing a skill, an agent, a library, or an MCP, read
-  `~/.local/share/dev-standards/references/`: `skill-routing.md` says which skills a request
-  should wake and `standard-agents.md` names the agents you may send, plus libraries and MCPs.
-- On React or Tailwind work, search Untitled UI (MCP) before writing a component or icon; Context7 if it is down.
-
-<!-- STANDARDS:END -->
-
-<!-- PRODUCT:BEGIN — product-specific. Edit freely; never overwritten by /apply-standards. -->
-
-# cardorb-web
-
-A trading card management web app — browse, organize, and manage trading card
-collections. Built on Next.js (App Router) with Untitled UI React components.
-
-- Profile: prototype
-- Platform: web
-- Stage: experiment
-- Users: none yet
-- Visibility: private
-
-`Platform` decides which quality domains `build-quality` applies and which baseline it reads.
-`Visibility` decides how freely the memory system may write; when it cannot be determined it is
-`may become public`, because a repository's visibility is usually decided later, by someone who
-was not there when the rules were written. Neither is decoration.
+- Next.js 16 (App Router) + React 19 + TypeScript, pnpm, Node 24 (`.nvmrc`)
+- Tailwind v4 + Untitled UI PRO (vendored in `src/components`)
+- Supabase (Postgres + auth, email and password), zod at every boundary
+- Deployed on Vercel: `main` is production at https://cardorb.com, every PR gets a preview
 
 ## Commands
 
-- Verify everything: `./scripts/verify.sh` ← the one an agent should reach for
-- Install: `pnpm install`
-- Dev: `pnpm dev` (Next.js + Turbopack, http://localhost:3000)
-- Build: `pnpm build`
-- Test: none yet — no test runner set up.
-- Lint: `pnpm lint` (Prettier check); `pnpm format` to fix
-- Typecheck: `pnpm typecheck` (`tsc --noEmit`)
+| Command | Does |
+|---|---|
+| `./scripts/verify.sh` | The whole gate: secrets, typecheck, lint, test, build, conventions |
+| `pnpm dev` | Dev server on http://localhost:3000 |
+| `pnpm build` | Production build |
+| `pnpm lint` | ESLint (`@strakzat/eslint-config-ui` strict) + Prettier check |
+| `pnpm typecheck` | `tsc --noEmit` |
+| `pnpm test` | Vitest |
 
-## Architecture
+## Structure
 
-- `src/app/` — Next.js App Router routes, layouts, pages
-- `src/components/` — Untitled UI React components (base / application / marketing / shared-assets / foundations)
-- `src/hooks/`, `src/providers/`, `src/utils/` — shared hooks, context providers, helpers (`cx`, etc.)
-- `src/styles/` — `globals.css`, `theme.css` (Untitled UI design tokens), `typography.css`
-- Card data + auth: planned via Supabase (not wired yet).
+```
+src/
+├── app/            # routes: (auth) login/signup, (app)/dashboard/*, user/[username]
+├── components/app/ # our own shared components — the only lint-policed UI dir
+├── components/…    # vendored Untitled UI kit (base, application, marketing, foundations)
+├── lib/            # Supabase clients, data access, public-profile queries
+└── styles/         # globals.css, theme.css (tokens), typography.css
+```
 
-(3–6 lines maximum. Point at files; do not describe them.)
+Absolute imports through `@/`. Untitled UI import and composition conventions: `docs/untitledui.md`.
 
-## Product-specific rules
+## How the skills relate
 
-They live in `CONVENTIONS.md`, numbered and with their enforcement stated. Do not repeat them
-here — one list, one place.
+Pinned skills from other authors lead on craft. Meridian's skills state this
+studio's difference and name who owns the rest; where one disagrees with an
+external, the Meridian skill's own list of house calls decides.
 
-## Where things live
+Process is Meridian's. Apply a standard while you write and say nothing about it;
+review once, at the commit or the pull request, with a verdict and its evidence.
+A skill that asks for a review, a plan or a brainstorm at another moment defers
+to this.
 
-- Rules that apply now: @CONVENTIONS.md — the only binding source, and the whole of it.
-- Current state: @STATE.md
-- Why a rule reads the way it does: `git log -p CONVENTIONS.md`. There is no archive.
-- Untitled UI component conventions (reference): `docs/untitledui.md` — import naming, `cx()`, compound
-  patterns. The Untitled UI MCP is the live source; use it first for components and icons.
+## Domain
 
-<!-- PRODUCT:END -->
+- **Collection** — two meanings: everything you own, and a folder you create yourself to
+  group cards. The `collections` table is the folders; "the collection" in copy is the owned set.
+- **Owned / wishlist** — mutually exclusive. A card you do not own is on the wishlist, nowhere
+  else. Collection views and stats exclude wishlist cards.
+- **Favorite** — a flag on a card you own. Not a folder.
+- **Pokédex slot** — one Pokémon (dex number 1–1025) with every card you own of it; grey when
+  you own none. A card can belong to several slots (tag teams).
+- **Card** — one printing from pokemontcg.io, identified by its id. Not the Pokémon.
+- **Public profile** — `/user/[username]`, the owned collection without prices or notes.
+  Only shown when the profile is set to public.
+
+Project-specific rules with an ID (R-DATA-002, R-SEC-002, …) live in `CONVENTIONS.md`, which
+`scripts/verify.sh` checks. Where the work stands: `STATE.md`.
+
+## Principles
+
+- **API bridge** — `/api/v1/*` is not implemented here; `vercel.json` rewrites it to
+  `api.cardorb.com`, the previous Cardorb app. The iOS app and bartdunweg.com read that API
+  from `cardorb.com`, which now points at this app; the old Vercel project stays until they are
+  repointed.
+- **Grayscale brand** — the brand ramp maps onto the neutral ramp and there is no accent colour.
+  The cards are the colour; the interface stays out of their way.
+
+## Language
+
+Interface language is English. Strings live in the components themselves; there is no
+translation file. Everything on disk is English; answer the owner in the language they write in.
+
+## Watch out for
+
+- Every "my data" query filters on `user_id` explicitly (R-SEC-002): the cards SELECT policy
+  also exposes public profiles' rows, so an unscoped query shows another user's cards.
+- `NPM_RC` on Vercel and `PACKAGES_TOKEN` in GitHub Actions carry the token for the private
+  `@strakzat` package; without them `pnpm install` fails on the runner.

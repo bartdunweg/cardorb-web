@@ -19,6 +19,10 @@ Deployment is being set up: branch `bartdunweg/vercel-setup` links the repo to V
 
 ## Last session
 
+- Meridian setup from `/meridian:start`: `CLAUDE.md` rewritten in the Meridian format (85 lines,
+  domain terms and two principles from the owner's interview), `AGENTS.md` reduced to a pointer,
+  `.claude/settings.json` lists the installed plugins (`interfaces`, `elements-of-style`,
+  `emil-skills`; the old `interface-details` name matched nothing). Lint was already strict.
 - Linked this directory and the GitHub repo to the existing (empty) Vercel project `cardorb-web`.
 - Added `vercel.json`: framework `nextjs`, `pnpm install --frozen-lockfile`, and a rewrite of
   `/api/v1/*` to `https://api.cardorb.com/api/v1/*`. New rule **R-DEPLOY-001** records why.
