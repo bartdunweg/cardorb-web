@@ -172,7 +172,8 @@ export const InputBase = ({
                     aria-label="Toggle password visibility"
                     onClick={() => setIsPasswordVisible(!isPasswordVisible)}
                     className={cx(
-                        "absolute flex cursor-pointer items-center justify-center text-fg-quaternary transition duration-100 ease-linear hover:text-fg-quaternary_hover focus:text-fg-quaternary_hover focus:outline-hidden",
+                        // min 24px box for the hit area (WCAG 2.5.8); the icon inside keeps its size.
+                        "absolute flex min-h-6 min-w-6 cursor-pointer items-center justify-center text-fg-quaternary transition duration-100 ease-linear hover:text-fg-quaternary_hover focus:text-fg-quaternary_hover focus:outline-hidden",
                         sizes[inputSize].iconTrailing,
                     )}
                 >

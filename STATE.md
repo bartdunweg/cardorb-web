@@ -22,6 +22,12 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **Lighthouse on the live site** (mobile, 3 September 2026): landing 98, login 97, public
+  profile 87 with LCP 4.0 s. From it: a `<main>` landmark on the landing and the auth screens, a
+  24 px hit area on the password toggle, and the first row of card tiles fetched with priority.
+  Left as they are: the avatar from Supabase storage is served with a one-hour cache (their
+  header), and the optimizer's thumbnails could compress harder (`quality`), each worth ~100 KB
+  on the profile page.
 - **Three review agents over today's diff** (conventions, security, design and copy) and the PRs
   from them: a new search starts on page one, the panel's folder select checks the answer, no
   Supabase env closes the dashboard instead of opening it; four response headers; copy that

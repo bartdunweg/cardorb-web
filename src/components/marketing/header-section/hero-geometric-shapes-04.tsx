@@ -31,7 +31,7 @@ export const HeroGeometricShapes04 = () => {
                 </Link>
             </header>
 
-            <section className="relative flex flex-1 items-center py-16">
+            <main className="relative flex flex-1 items-center py-16">
                 <div className="mx-auto w-full max-w-container px-4 md:px-8">
                     <div className="mx-auto flex max-w-5xl flex-col md:items-center md:text-center">
                         <h1 className="mt-4 text-display-md font-medium text-primary md:text-display-lg lg:text-display-xl">
@@ -50,7 +50,7 @@ export const HeroGeometricShapes04 = () => {
                         </div>
                     </div>
                 </div>
-            </section>
+            </main>
         </div>
     );
 };
