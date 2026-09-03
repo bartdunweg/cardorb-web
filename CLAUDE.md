@@ -57,7 +57,7 @@ to this.
 - **Favorite** — a flag on a card you own. Not a folder.
 - **Pokédex slot** — one Pokémon (dex number 1–1025) with every card you own of it; grey when
   you own none. A card can belong to several slots (tag teams).
-- **Card** — one printing from pokemontcg.io, identified by its id. Not the Pokémon.
+- **Card** — one printing, as the Card Orb API identifies it from its catalogues (TCGdex first). Not the Pokémon.
 - **Public profile** — `/user/[username]`, the owned collection without prices or notes.
   Only shown when the profile is set to public.
 

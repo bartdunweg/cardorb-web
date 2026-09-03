@@ -1,19 +1,14 @@
 {
     "extraKnownMarketplaces": {
         "meridian": {
-            "source": { "source": "github", "repo": "strakzat/meridian" }
+            "source": {
+                "source": "github",
+                "repo": "strakzat/meridian"
+            }
         }
     },
     "enabledPlugins": {
-        "meridian@meridian": true,
-        "meridian-design@meridian": true,
-        "meridian-web@meridian": true,
         "meridian-ios@meridian": false,
-        "meridian-android@meridian": false,
-        "interfaces@meridian": true,
-        "elements-of-style@meridian": true,
-        "vercel@meridian": true,
-        "emil-skills@meridian": true,
-        "superpowers@meridian": true
+        "meridian-android@meridian": false
     }
 }
