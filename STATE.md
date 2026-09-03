@@ -22,6 +22,14 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **Home shows the collection's value over time.** `src/components/app/value-chart.tsx` draws
+  the nightly readings from `GET /v1/value-history` (`src/lib/value-history.ts`, kept per person
+  like the stats) as one line in hand-drawn SVG — a chart library would weigh more than the rest of
+  Home — with a hover and keyboard layer, a tooltip per reading, and the same numbers under "Show
+  as table". The axis spans the readings rather than starting at zero, or a month's movement is
+  a flat line. The arithmetic is `src/lib/value-chart-math.ts`, tested. Checked at desktop and
+  375 px, light and dark, with a throwaway route that is not committed. Fewer than two readings
+  shows a sentence instead of a line.
 - **R-SEC-002 moved to `cardorb-api`.** It said every "my data" query filters on `user_id`; this
   app has made no database query since R-DATA-003, so the rule and the "Watch out for" line that
   repeated it are gone here. The API, which runs those queries, carries it as its own rule now.
