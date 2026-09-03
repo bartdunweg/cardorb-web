@@ -1,20 +1,29 @@
 import { notFound } from "next/navigation";
 import { AppEmptyState } from "@/components/app/app-empty-state";
-import { CardsPagination, pageFromParam } from "@/components/app/cards-pagination";
+import { CardsPagination } from "@/components/app/cards-pagination";
+import { CardsSort } from "@/components/app/cards-sort";
 import { CardsView } from "@/components/app/cards-view";
 import { CollectionDetailActions } from "@/components/app/collection-detail-actions";
 import { getMyCards } from "@/lib/cards";
 import { getCollection } from "@/lib/collections";
+import { listHref, readListQuery } from "@/lib/list-query";
 
 const PAGE_SIZE = 100;
 
-export default async function CollectionDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ page?: string }> }) {
+export default async function CollectionDetailPage({
+    params,
+    searchParams,
+}: {
+    params: Promise<{ id: string }>;
+    searchParams: Promise<{ page?: string; sort?: string }>;
+}) {
     const { id } = await params;
     const collection = await getCollection(id);
     if (!collection) notFound();
 
-    const page = pageFromParam((await searchParams).page);
-    const { cards, total } = await getMyCards({ collectionId: id, limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE });
+    const query = readListQuery(await searchParams);
+    const { page, sort, order } = query;
+    const { cards, total } = await getMyCards({ collectionId: id, limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE, sort, order });
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
     return (
@@ -26,7 +35,10 @@ export default async function CollectionDetailPage({ params, searchParams }: { p
                         {total.toLocaleString("en-US")} card{total === 1 ? "" : "s"}
                     </p>
                 </div>
-                <CollectionDetailActions collectionId={id} />
+                <div className="flex items-center gap-3">
+                    <CardsSort query={query} />
+                    <CollectionDetailActions collectionId={id} />
+                </div>
             </div>
 
             {total === 0 ? (

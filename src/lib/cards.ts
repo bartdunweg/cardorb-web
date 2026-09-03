@@ -13,7 +13,18 @@ export async function getMyCards({
     collectionId,
     favoritesOnly,
     wishlist = false,
-}: { limit?: number; offset?: number; q?: string; collectionId?: string; favoritesOnly?: boolean; wishlist?: boolean } = {}): Promise<{
+    sort,
+    order,
+}: {
+    limit?: number;
+    offset?: number;
+    q?: string;
+    collectionId?: string;
+    favoritesOnly?: boolean;
+    wishlist?: boolean;
+    sort?: "name" | "price" | "added";
+    order?: "asc" | "desc";
+} = {}): Promise<{
     cards: Card[];
     total: number;
 }> {
@@ -23,6 +34,8 @@ export async function getMyCards({
             owned: !wishlist,
             favorite: favoritesOnly ? true : undefined,
             collection: collectionId,
+            sort,
+            order,
             limit,
             offset,
         },
