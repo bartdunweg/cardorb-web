@@ -22,6 +22,11 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **Home shows what the collection is worth (#38, cardorb-api#149/#150).** `GET /v1/stats`
+  carries `value` (euros, printing by printing, over the whole collection) and `unpriced`; the
+  fourth tile on Home shows the amount and, only when it applies, how many copies have no price.
+  cardorb-api#149 merged with a red check by mistake — a failed force-push left the test fix
+  behind — and #150 is that fix; the route code was right throughout.
 - **README on the documentation template (#34)**, and the GitHub About box in the house style:
   no technology in the description or the topics. `scripts/verify.sh` now fails on a tracked
   Finder copy (`name 2.ts`): six had reached main on 2 September 2026, all byte-identical to
@@ -109,10 +114,6 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 Backlog from the review, ranked. Each is one PR.
 
-- A "Collection value" tile on Home needs a `value` on `GET /v1/stats` in `cardorb-api`; summing a
-  page of 100 here would lie about a collection of 1,936.
-- The `wishlist` and `pokedex_numbers` columns on `cards` are no longer written or read by
-  anything; a migration that drops them belongs in `cardorb-api`, which owns the schema.
 - First tests in `src/lib` (`formatDate`, the `.or()` search escaping, the pokemontcg client with a
   mocked fetch), then drop `--passWithNoTests`.
 - Parked from earlier: iOS-style mobile page header (4 open questions), 13 promo cards without art,
