@@ -6,6 +6,7 @@ import { CardsPagination } from "@/components/app/cards-pagination";
 import { CardsSearch } from "@/components/app/cards-search";
 import { CardsSort } from "@/components/app/cards-sort";
 import { CardsView } from "@/components/app/cards-view";
+import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/base/buttons/button";
 import { getMyCards } from "@/lib/cards";
 import { getFacets } from "@/lib/facets";
@@ -40,10 +41,7 @@ export default async function CardsPage({
 
     return (
         <div className="flex flex-1 flex-col gap-6">
-            <div className="flex flex-col gap-1">
-                <h1 className="text-display-xs font-semibold text-primary">All cards</h1>
-                <p className="text-md text-tertiary">Browse and filter your whole collection.</p>
-            </div>
+            <PageHeader title="All cards" subtitle="Browse and filter your whole collection." />
 
             <div className="flex flex-1 flex-col gap-4">
                 <div className="flex items-center justify-between gap-3">
