@@ -46,11 +46,7 @@ export default async function CollectionDetailPage({
             ) : (
                 <>
                     <CardsView cards={cards} />
-                    <CardsPagination
-                        page={page}
-                        totalPages={totalPages}
-                        hrefFor={(n) => (n > 1 ? `/dashboard/collections/${id}?page=${n}` : `/dashboard/collections/${id}`)}
-                    />
+                    <CardsPagination page={page} totalPages={totalPages} hrefFor={(n) => listHref(`/dashboard/collections/${id}`, query, { page: n })} />
                 </>
             )}
         </div>

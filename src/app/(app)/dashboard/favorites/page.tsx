@@ -30,7 +30,7 @@ export default async function FavoritesPage({ searchParams }: { searchParams: Pr
                 <CardsSort query={query} />
             </div>
             <CardsView cards={cards} />
-            <CardsPagination page={page} totalPages={totalPages} hrefFor={(n) => (n > 1 ? `/dashboard/favorites?page=${n}` : "/dashboard/favorites")} />
+            <CardsPagination page={page} totalPages={totalPages} hrefFor={(n) => listHref("/dashboard/favorites", query, { page: n })} />
         </div>
     );
 }
