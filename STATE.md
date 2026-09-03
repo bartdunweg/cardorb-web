@@ -114,8 +114,6 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 Backlog from the review, ranked. Each is one PR.
 
-- First tests in `src/lib` (`formatDate`, the `.or()` search escaping, the pokemontcg client with a
-  mocked fetch), then drop `--passWithNoTests`.
 - Parked from earlier: iOS-style mobile page header (4 open questions), 13 promo cards without art,
   wishlist count on Home.
 
