@@ -22,7 +22,7 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
-- **A page header that behaves like a phone screen (#43).** `src/components/app/page-header.tsx`
+- **A page header that behaves like a phone screen (#46).** `src/components/app/page-header.tsx`
   on the seven dashboard pages with a title: on a phone a bar stays at the top with Back to the
   parent page (Collections, Cards or Home) on the left, and once the large title scrolls out the
   bar shows it small in the centre. The tab bar stays. From `lg` up nothing changes. Bart's four
