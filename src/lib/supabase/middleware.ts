@@ -12,8 +12,16 @@ const ENTRY_PATHS = ["/", "/login", "/signup"];
  * only routes under PROTECTED_PREFIXES redirect unauthenticated users to /login.
  */
 export async function updateSession(request: NextRequest) {
-    // Before Supabase env is configured, let requests through so the app still runs.
+    // Without Supabase env there is no session to check. The public pages still serve; the
+    // protected part closes rather than opens, so a misconfigured deploy cannot show a dashboard.
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+        const { pathname } = request.nextUrl;
+        if (PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
+            const url = request.nextUrl.clone();
+            url.pathname = "/login";
+            url.search = "";
+            return NextResponse.redirect(url);
+        }
         return NextResponse.next({ request });
     }
 

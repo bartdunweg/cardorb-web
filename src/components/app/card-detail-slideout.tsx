@@ -47,11 +47,20 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
         setCollectionId(mine?.collection_id ?? "");
     }
 
+    const [collectionError, setCollectionError] = useState<string | null>(null);
     const onCollectionChange = async (value: string) => {
         if (!card) return;
+        const before = collectionId;
         setCollectionId(value);
-        await setCardCollection(card.id, value || null);
-        router.refresh();
+        setCollectionError(null);
+        const res = await setCardCollection(card.id, value || null);
+        if (res.ok) {
+            router.refresh();
+        } else {
+            // The select must not keep showing a folder the card never moved to.
+            setCollectionId(before);
+            setCollectionError(res.error);
+        }
     };
 
     const onMoveToCollection = async () => {
@@ -125,6 +134,11 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                         onChange={(event) => onCollectionChange(event.target.value)}
                                         options={[{ label: "None", value: "" }, ...collections.map((c) => ({ label: c.name, value: c.id }))]}
                                     />
+                                    {collectionError ? (
+                                        <p role="alert" className="text-sm text-error-primary">
+                                            {collectionError}
+                                        </p>
+                                    ) : null}
                                 </div>
                             ))}
 
