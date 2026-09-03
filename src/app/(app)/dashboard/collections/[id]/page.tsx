@@ -4,6 +4,7 @@ import { CardsPagination } from "@/components/app/cards-pagination";
 import { CardsSort } from "@/components/app/cards-sort";
 import { CardsView } from "@/components/app/cards-view";
 import { CollectionDetailActions } from "@/components/app/collection-detail-actions";
+import { PageHeader } from "@/components/app/page-header";
 import { getMyCards } from "@/lib/cards";
 import { getCollection } from "@/lib/collections";
 import { listHref, readListQuery } from "@/lib/list-query";
@@ -28,18 +29,17 @@ export default async function CollectionDetailPage({
 
     return (
         <div className="flex flex-1 flex-col gap-6">
-            <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
-                <div className="flex flex-col gap-1">
-                    <h1 className="text-display-xs font-semibold text-primary">{collection.name}</h1>
-                    <p className="text-md text-tertiary">
-                        {total.toLocaleString("en-US")} card{total === 1 ? "" : "s"}
-                    </p>
-                </div>
-                <div className="flex items-center gap-3">
-                    <CardsSort query={query} />
-                    <CollectionDetailActions collectionId={id} />
-                </div>
-            </div>
+            <PageHeader
+                title={collection.name}
+                subtitle={`${total.toLocaleString("en-US")} card${total === 1 ? "" : "s"}`}
+                back={{ href: "/dashboard/collections", label: "Collections" }}
+                actions={
+                    <>
+                        <CardsSort query={query} />
+                        <CollectionDetailActions collectionId={id} />
+                    </>
+                }
+            />
 
             {total === 0 ? (
                 <AppEmptyState icon="folder" title="No cards in this collection" description="Use “Add cards” to fill it." />

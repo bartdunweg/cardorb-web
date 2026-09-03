@@ -22,6 +22,12 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **A page header that behaves like a phone screen (#43).** `src/components/app/page-header.tsx`
+  on the seven dashboard pages with a title: on a phone a bar stays at the top with Back to the
+  parent page (Collections, Cards or Home) on the left, and once the large title scrolls out the
+  bar shows it small in the centre. The tab bar stays. From `lg` up nothing changes. Bart's four
+  answers: large title that hands over on scroll; every page where it makes sense; keep the tab bar;
+  Back goes to the parent. Checked on a 375-px viewport with a throwaway route, not committed.
 - **Supabase, through its connection (cardorb-api#153).** The revoke of 2026-09-02 had also taken
   EXECUTE on `handle_new_user()` from `supabase_auth_admin`, the role the `auth.users` trigger runs
   as, so every signup since would have failed at the trigger; nobody signed up in between. One grant
@@ -125,8 +131,8 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 Backlog from the review, ranked. Each is one PR.
 
-- Parked from earlier: iOS-style mobile page header (4 open questions), wishlist count on Home.
-  The "13 promo cards without art" are down to one, Ancient Mew (Miscellaneous Promos #001).
+- One promo card without art: Ancient Mew (Miscellaneous Promos #001). The "wishlist count on
+  Home" note is stale — Home has had a Wishlist tile since the stats page existed.
 
 ## Open
 

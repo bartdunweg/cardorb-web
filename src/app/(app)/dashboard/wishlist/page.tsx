@@ -3,6 +3,7 @@ import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CardsPagination } from "@/components/app/cards-pagination";
 import { CardsSort } from "@/components/app/cards-sort";
 import { CardsView } from "@/components/app/cards-view";
+import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/base/buttons/button";
 import { getMyCards } from "@/lib/cards";
 import { listHref, readListQuery } from "@/lib/list-query";
@@ -25,16 +26,17 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
 
     return (
         <div className="flex flex-col gap-6">
-            <div className="flex items-start justify-between gap-3">
-                <div className="flex flex-col gap-1">
-                    <h1 className="text-display-xs font-semibold text-primary">Wishlist</h1>
-                    <p className="text-md text-tertiary">Cards you want but don’t own yet.</p>
-                </div>
-                <div className="flex items-center gap-3">
-                    <CardsSort query={query} />
-                    <AddCardModal defaultTarget="wishlist" />
-                </div>
-            </div>
+            <PageHeader
+                title="Wishlist"
+                subtitle="Cards you want but don’t own yet."
+                back={{ href: "/dashboard/cards", label: "Cards" }}
+                actions={
+                    <>
+                        <CardsSort query={query} />
+                        <AddCardModal defaultTarget="wishlist" />
+                    </>
+                }
+            />
 
             <div className="flex flex-col gap-4">
                 <CardsView cards={cards} />

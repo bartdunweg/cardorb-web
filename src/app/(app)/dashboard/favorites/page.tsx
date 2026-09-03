@@ -2,6 +2,7 @@ import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CardsPagination } from "@/components/app/cards-pagination";
 import { CardsSort } from "@/components/app/cards-sort";
 import { CardsView } from "@/components/app/cards-view";
+import { PageHeader } from "@/components/app/page-header";
 import { getMyCards } from "@/lib/cards";
 import { listHref, readListQuery } from "@/lib/list-query";
 
@@ -20,12 +21,11 @@ export default async function FavoritesPage({ searchParams }: { searchParams: Pr
 
     return (
         <div className="flex flex-col gap-6">
-            <div className="flex flex-col gap-1">
-                <h1 className="text-display-xs font-semibold text-primary">Favorites</h1>
-                <p className="text-md text-tertiary">
-                    {total.toLocaleString("en-US")} starred card{total === 1 ? "" : "s"}
-                </p>
-            </div>
+            <PageHeader
+                title="Favorites"
+                subtitle={`${total.toLocaleString("en-US")} starred card${total === 1 ? "" : "s"}`}
+                back={{ href: "/dashboard/cards", label: "Cards" }}
+            />
             <div className="flex justify-end">
                 <CardsSort query={query} />
             </div>
