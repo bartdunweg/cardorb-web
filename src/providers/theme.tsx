@@ -2,9 +2,10 @@
 
 import { ThemeProvider } from "next-themes";
 
-export function Theme({ children }: { children: React.ReactNode }) {
+/** `nonce` signs next-themes' inline script on a page whose CSP names one; the public pages pass none. */
+export function Theme({ children, nonce }: { children: React.ReactNode; nonce?: string }) {
     return (
-        <ThemeProvider attribute="class" value={{ light: "light-mode", dark: "dark-mode" }} enableSystem>
+        <ThemeProvider attribute="class" value={{ light: "light-mode", dark: "dark-mode" }} enableSystem nonce={nonce}>
             {children}
         </ThemeProvider>
     );
