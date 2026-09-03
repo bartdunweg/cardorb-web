@@ -25,10 +25,8 @@ export default async function FavoritesPage({ searchParams }: { searchParams: Pr
                 title="Favorites"
                 subtitle={`${total.toLocaleString("en-US")} starred card${total === 1 ? "" : "s"}`}
                 back={{ href: "/dashboard/cards", label: "Cards" }}
+                actions={<CardsSort query={query} />}
             />
-            <div className="flex justify-end">
-                <CardsSort query={query} />
-            </div>
             <CardsView cards={cards} />
             <CardsPagination page={page} totalPages={totalPages} hrefFor={(n) => listHref("/dashboard/favorites", query, { page: n })} />
         </div>

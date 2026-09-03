@@ -28,7 +28,7 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
         <div className="flex flex-col gap-6">
             <PageHeader
                 title="Wishlist"
-                subtitle="Cards you want but don’t own yet."
+                subtitle={`${total.toLocaleString("en-US")} card${total === 1 ? "" : "s"} you want but don’t own yet`}
                 back={{ href: "/dashboard/cards", label: "Cards" }}
                 actions={
                     <>
@@ -38,15 +38,8 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
                 }
             />
 
-            <div className="flex flex-col gap-4">
-                <CardsView cards={cards} />
-                <div className="flex flex-col gap-3">
-                    <p className="text-sm text-tertiary">
-                        {total.toLocaleString("en-US")} card{total === 1 ? "" : "s"}
-                    </p>
-                    <CardsPagination page={page} totalPages={totalPages} hrefFor={(n) => listHref("/dashboard/wishlist", query, { page: n })} />
-                </div>
-            </div>
+            <CardsView cards={cards} />
+            <CardsPagination page={page} totalPages={totalPages} hrefFor={(n) => listHref("/dashboard/wishlist", query, { page: n })} />
         </div>
     );
 }

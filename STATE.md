@@ -22,6 +22,16 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **Three review agents over today's diff** (conventions, security, design and copy) and the PRs
+  from them: a new search starts on page one, the panel's folder select checks the answer, no
+  Supabase env closes the dashboard instead of opening it; four response headers; copy that
+  agrees with itself (Log in, Mark as owned, empty states); every list page carries its count in
+  the header line and Sort in the header's actions; each page shape has its own loading outline
+  (`src/components/app/skeletons.tsx`). Not taken up: a nonce-based `script-src`, and whether a
+  starred wishlist card belongs on Favorites (CLAUDE.md says a favourite is a card you own).
+- **`~/Documents` is synced by iCloud Drive** (Desktop & Documents). That is where the
+  `name 2.ts` copies come from, in the working tree and inside `.next` and `node_modules`; the
+  gate refuses tracked ones. Moving `Projects` out of `~/Documents` ends it.
 - **Home shows the collection's value over time.** `src/components/app/value-chart.tsx` draws
   the nightly readings from `GET /v1/value-history` (`src/lib/value-history.ts`, kept per person
   like the stats) as one line in hand-drawn SVG — a chart library would weigh more than the rest of
