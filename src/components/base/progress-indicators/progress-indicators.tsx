@@ -1,5 +1,6 @@
 "use client";
 
+// Changed from the kit: ProgressBarBase takes an aria-label (#25). A re-fetch through the Untitled UI CLI or MCP overwrites this; re-apply it.
 import { cx } from "@/utils/cx";
 
 export interface ProgressBarProps {

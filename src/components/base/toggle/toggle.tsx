@@ -1,5 +1,6 @@
 "use client";
 
+// Changed from the kit: the selected knob is black in dark mode, where the track is white. A re-fetch through the Untitled UI CLI or MCP overwrites this; re-apply it.
 import type { ReactNode } from "react";
 import type { SwitchProps as AriaSwitchProps } from "react-aria-components";
 import { Switch as AriaSwitch } from "react-aria-components";
