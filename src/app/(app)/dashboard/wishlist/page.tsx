@@ -18,7 +18,7 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
 
     if (total === 0) {
         return (
-            <AppEmptyState icon="heart" title="Your wishlist is empty" description="Add cards you’re looking for but don’t own yet.">
+            <AppEmptyState icon="heart" title="Your wishlist is empty" description="Add cards you’re looking for but don’t own yet">
                 <AddCardModal defaultTarget="wishlist" trigger={<Button>Add to wishlist</Button>} />
             </AppEmptyState>
         );

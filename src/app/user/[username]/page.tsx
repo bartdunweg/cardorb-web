@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CardsPagination, pageFromParam } from "@/components/app/cards-pagination";
 import { PublicCardsView } from "@/components/app/public-cards-view";
 import { Avatar } from "@/components/base/avatar/avatar";
@@ -61,7 +62,7 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                 </div>
 
                 {cards.length === 0 ? (
-                    <p className="flex flex-1 items-center justify-center py-16 text-center text-sm text-tertiary">This collection is empty.</p>
+                    <AppEmptyState icon="folder" title="This collection is empty" description="Nothing has been added to it yet" />
                 ) : (
                     <>
                         <PublicCardsView cards={cards} />

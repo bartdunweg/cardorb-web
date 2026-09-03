@@ -16,7 +16,7 @@ export default async function FavoritesPage({ searchParams }: { searchParams: Pr
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
     if (total === 0) {
-        return <AppEmptyState icon="star" title="No favorites yet" description="Star a card to keep it here for quick access." />;
+        return <AppEmptyState icon="star" title="No favorites yet" description="Star a card to keep it here for quick access" />;
     }
 
     return (
