@@ -34,8 +34,11 @@ folder. The client check in `settings-form.tsx` mirrors this; the bucket is the 
 ## Functions
 
 `handle_new_user()` and `rls_auto_enable()` are trigger functions with `SECURITY DEFINER`; EXECUTE is
-revoked from `public`, `anon` and `authenticated`. `claim_username(citext)` is callable by
-`authenticated` only.
+revoked from `public`, `anon` and `authenticated`. `handle_new_user()` is granted to
+`supabase_auth_admin`, the role the `auth.users` trigger runs as — without it no signup completes
+(found 2026-09-03; cardorb-api#153). `claim_username(citext)` is callable by `authenticated` only.
+
+Every policy reads `auth.uid()` as `(select auth.uid())`, once per query (cardorb-api#153).
 
 ## Auth settings still to flip in the dashboard
 

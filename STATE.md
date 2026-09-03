@@ -22,6 +22,12 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **Supabase, through its connection (cardorb-api#153).** The revoke of 2026-09-02 had also taken
+  EXECUTE on `handle_new_user()` from `supabase_auth_admin`, the role the `auth.users` trigger runs
+  as, so every signup since would have failed at the trigger; nobody signed up in between. One grant
+  to that role, applied. Same PR: every RLS policy reads `auth.uid()` once per query instead of per
+  row, and `collections.user_id` and `imports.user_id` got the index the advisor asked for.
+  Advisors after: performance clean; security still names leaked password protection (dashboard).
 - **Home shows what the collection is worth (#38, cardorb-api#149/#150).** `GET /v1/stats`
   carries `value` (euros, printing by printing, over the whole collection) and `unpriced`; the
   fourth tile on Home shows the amount and, only when it applies, how many copies have no price.
@@ -114,16 +120,13 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 Backlog from the review, ranked. Each is one PR.
 
-- Parked from earlier: iOS-style mobile page header (4 open questions), 13 promo cards without art,
-  wishlist count on Home.
+- Parked from earlier: iOS-style mobile page header (4 open questions), wishlist count on Home.
+  The "13 promo cards without art" are down to one, Ancient Mew (Miscellaneous Promos #001).
 
 ## Open
 
 - Supabase side is recorded in `docs/supabase.md`: anon holds column-level SELECT on the public
   card columns only, the `avatars` bucket has type and size limits, the SECURITY DEFINER functions
   are not callable by anon. Still a dashboard click: leaked password protection.
-- The first signup after 2026-09-02 verifies that revoking EXECUTE on `handle_new_user()` did not
-  break the profile trigger; if it did, `grant execute on function public.handle_new_user() to
-  authenticated` restores it.
 - The Vercel preview check went green on #19; the `NPM_RC` note for Preview is resolved.
 - Rotate the Supabase service-role key that was once pasted in chat.
