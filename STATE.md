@@ -22,6 +22,9 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **R-SEC-002 moved to `cardorb-api`.** It said every "my data" query filters on `user_id`; this
+  app has made no database query since R-DATA-003, so the rule and the "Watch out for" line that
+  repeated it are gone here. The API, which runs those queries, carries it as its own rule now.
 - **A page header that behaves like a phone screen (#46).** `src/components/app/page-header.tsx`
   on the seven dashboard pages with a title: on a phone a bar stays at the top with Back to the
   parent page (Collections, Cards or Home) on the left, and once the large title scrolls out the
@@ -139,11 +142,6 @@ Backlog from the review, ranked. Each is one PR.
 
 ## Open
 
-- R-SEC-002 (every "my data" query filters on `user_id`) describes database queries this app no
-  longer makes: since R-DATA-003 every read and write goes through the API, and `verify.sh` fails
-  on a `.from(` outside the Supabase auth folder. The rule and the "Watch out for" line in
-  CLAUDE.md that repeats it are either dead or belong to `cardorb-api`. Not decided alone; found
-  by `/meridian:sync-project` on 3 September 2026.
 - Supabase side is recorded in `docs/supabase.md`: anon holds column-level SELECT on the public
   card columns only, the `avatars` bucket has type and size limits, the SECURITY DEFINER functions
   are not callable by anon. Still a dashboard click: leaked password protection.
