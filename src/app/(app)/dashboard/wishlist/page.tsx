@@ -42,7 +42,7 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
                     <p className="text-sm text-tertiary">
                         {total.toLocaleString("en-US")} card{total === 1 ? "" : "s"}
                     </p>
-                    <CardsPagination page={page} totalPages={totalPages} hrefFor={(n) => (n > 1 ? `/dashboard/wishlist?page=${n}` : "/dashboard/wishlist")} />
+                    <CardsPagination page={page} totalPages={totalPages} hrefFor={(n) => listHref("/dashboard/wishlist", query, { page: n })} />
                 </div>
             </div>
         </div>
