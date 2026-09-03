@@ -11,7 +11,7 @@ export const ResetPasswordForm = () => {
     const [state, formAction, pending] = useActionState<AuthState, FormData>(setNewPassword, undefined);
 
     return (
-        <section className="flex min-h-dvh flex-col bg-primary">
+        <main className="flex min-h-dvh flex-col bg-primary">
             <div className="flex flex-1 items-center justify-center px-4 py-12 md:px-8">
                 <div className="flex w-full flex-col gap-8 sm:max-w-90">
                     <div className="flex flex-col items-center gap-6 text-center">
@@ -49,6 +49,6 @@ export const ResetPasswordForm = () => {
                     </form>
                 </div>
             </div>
-        </section>
+        </main>
     );
 };

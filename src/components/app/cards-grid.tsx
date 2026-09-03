@@ -8,6 +8,9 @@ import { formatPrice } from "@/lib/format";
 // Presentational grid of card thumbnails. Selection is owned by CardsView. Generic over the card
 // shape so the public profile can pass `PublicCard`; the favourite star and the price only show when
 // the field exists, so a public page never carries a price.
+/** Tiles that are on screen at load on any width: the widest grid shows six per row. */
+const FIRST_ROW = 6;
+
 export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null; price?: number | null }>({
     cards,
     onSelect,
@@ -17,7 +20,7 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
 }) {
     return (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {cards.map((card) => (
+            {cards.map((card, i) => (
                 <button
                     key={card.id}
                     type="button"
@@ -31,6 +34,8 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                                 alt=""
                                 sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 213px"
                                 className="object-contain"
+                                // The first row is on screen at load and one of it is the largest paint; it must not wait for lazy loading.
+                                priority={i < FIRST_ROW}
                             />
                         ) : (
                             // No art in our source (e.g. some promos) — show the name so the tile still reads as a card.
