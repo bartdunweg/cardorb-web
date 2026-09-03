@@ -41,24 +41,24 @@ export default async function CardsPage({
 
     return (
         <div className="flex flex-1 flex-col gap-6">
-            <PageHeader title="All cards" subtitle="Browse and filter your whole collection." />
-
-            <div className="flex flex-1 flex-col gap-4">
-                <div className="flex items-center justify-between gap-3">
-                    <div className="flex min-w-0 flex-1 items-center gap-3">
-                        <CardsSearch initialValue={q ?? ""} />
-                        {/* The count sits by the search, where a catalogue puts it, so a filter's effect is visible at once. */}
-                        {total > 0 ? (
-                            <p className="hidden shrink-0 text-sm text-tertiary tabular-nums sm:block">
-                                {q ? `${total.toLocaleString("en-US")} match${total === 1 ? "" : "es"}` : `${total.toLocaleString("en-US")} cards`}
-                            </p>
-                        ) : null}
-                    </div>
-                    <div className="flex items-center gap-3">
+            {/* The count is the header's line, as on every list page, so a search or filter shows its effect where the eye already is. */}
+            <PageHeader
+                title="All cards"
+                subtitle={
+                    narrowed
+                        ? `${total.toLocaleString("en-US")} match${total === 1 ? "" : "es"}`
+                        : `${total.toLocaleString("en-US")} card${total === 1 ? "" : "s"}`
+                }
+                actions={
+                    <>
                         <CardsSort query={query} />
                         <AddCardModal />
-                    </div>
-                </div>
+                    </>
+                }
+            />
+
+            <div className="flex flex-1 flex-col gap-4">
+                <CardsSearch initialValue={q ?? ""} />
                 <CardsFilters query={query} facets={facets} />
 
                 {total === 0 ? (
