@@ -22,6 +22,11 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **A "Sort" menu on every card list** (Cards, Favorites, Wishlist, a folder): set order, name,
+  price both ways, newest or oldest first, through `sort=`/`order=` on `GET /v1/cards`
+  (cardorb-api#151). The choice lives in the URL (`src/lib/list-query.ts`, tested), so a sorted
+  page is a link. Set and rarity filters are the next PR; they need a list of sets, which the
+  grouped collection can give.
 - **Home shows what the collection is worth (#38, cardorb-api#149/#150).** `GET /v1/stats`
   carries `value` (euros, printing by printing, over the whole collection) and `unpriced`; the
   fourth tile on Home shows the amount and, only when it applies, how many copies have no price.
