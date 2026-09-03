@@ -8,7 +8,8 @@ import { listHref, readListQuery } from "@/lib/list-query";
 
 const PAGE_SIZE = 100;
 
-// Smart page: cards with is_favorite = true (owned or wishlist both count via getMyCards default).
+// Starred cards you own. A favourite is a flag on a card in the collection (CLAUDE.md), so this asks the
+// API for owned copies only; a wish cannot carry a star here.
 export default async function FavoritesPage({ searchParams }: { searchParams: Promise<{ page?: string; sort?: string }> }) {
     const query = readListQuery(await searchParams);
     const { page, sort, order } = query;
