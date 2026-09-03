@@ -22,6 +22,10 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **README on the documentation template (#34)**, and the GitHub About box in the house style:
+  no technology in the description or the topics. `scripts/verify.sh` now fails on a tracked
+  Finder copy (`name 2.ts`): six had reached main on 2 September 2026, all byte-identical to
+  their originals; removed.
 - **Time limits on every outbound call (#35, cardorb-api#148).** `src/lib/api.ts` gives the API
   thirty seconds; the API gives each catalogue eight. Before, a server that accepted the
   connection and never answered — TCGdex on 2026-09-02 — held a page until Vercel's five-minute
@@ -111,7 +115,6 @@ Backlog from the review, ranked. Each is one PR.
   anything; a migration that drops them belongs in `cardorb-api`, which owns the schema.
 - First tests in `src/lib` (`formatDate`, the `.or()` search escaping, the pokemontcg client with a
   mocked fetch), then drop `--passWithNoTests`.
-- Small: README to the documentation template.
 - Parked from earlier: iOS-style mobile page header (4 open questions), 13 promo cards without art,
   wishlist count on Home.
 
