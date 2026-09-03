@@ -2,33 +2,37 @@
 
 import { CardImage } from "@/components/app/card-image";
 import { FavoriteStar } from "@/components/app/favorite-star";
+import { Table, TableCard } from "@/components/application/table/table";
 import type { Card } from "@/lib/cards";
 import { formatPrice } from "@/lib/format";
 
-// Presentational table. Selection (and the detail slideout) is owned by CardsView.
+// Presentational table on the kit's Table. A row is the action: press or Enter opens the card;
+// selection (and the detail slideout) is owned by CardsView.
 export function CardsTable({ cards, onSelect }: { cards: Card[]; onSelect: (card: Card) => void }) {
+    const byId = new Map(cards.map((card) => [card.id, card]));
+
     return (
-        <div className="overflow-x-auto rounded-xl ring-1 ring-secondary ring-inset">
-            <table className="w-full text-left text-sm">
-                <thead className="border-b border-secondary bg-secondary text-tertiary">
-                    <tr>
-                        <th className="px-4 py-3 font-medium">Name</th>
-                        <th className="px-4 py-3 font-medium">Set</th>
-                        <th className="px-4 py-3 font-medium">Number</th>
-                        <th className="px-4 py-3 font-medium">Rarity</th>
-                        <th className="px-4 py-3 text-right font-medium">Market price</th>
-                        <th className="px-4 py-3 text-right font-medium">Quantity</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {cards.map((card) => (
-                        <tr key={card.id} className="border-b border-secondary text-primary last:border-0 hover:bg-secondary">
-                            <td className="px-4 py-3 font-medium">
-                                <button
-                                    type="button"
-                                    onClick={() => onSelect(card)}
-                                    className="flex cursor-pointer items-center gap-3 text-left outline-focus-ring focus-visible:outline-2 focus-visible:-outline-offset-2"
-                                >
+        <TableCard.Root size="sm">
+            <Table
+                aria-label="Cards"
+                onRowAction={(key) => {
+                    const card = byId.get(String(key));
+                    if (card) onSelect(card);
+                }}
+            >
+                <Table.Header>
+                    <Table.Head id="name" label="Name" isRowHeader />
+                    <Table.Head id="set" label="Set" />
+                    <Table.Head id="number" label="Number" />
+                    <Table.Head id="rarity" label="Rarity" />
+                    <Table.Head id="price" label="Market price" className="text-right" />
+                    <Table.Head id="quantity" label="Quantity" className="text-right" />
+                </Table.Header>
+                <Table.Body items={cards}>
+                    {(card) => (
+                        <Table.Row id={card.id} className="cursor-pointer">
+                            <Table.Cell className="font-medium text-primary">
+                                <div className="flex items-center gap-3">
                                     {card.image_url ? (
                                         <div className="relative h-10 w-7 shrink-0 overflow-hidden rounded bg-quaternary">
                                             <CardImage src={card.image_url} alt="" sizes="28px" className="object-cover" />
@@ -40,19 +44,19 @@ export function CardsTable({ cards, onSelect }: { cards: Card[]; onSelect: (card
                                         {card.is_favorite ? <FavoriteStar /> : null}
                                         {card.name}
                                     </span>
-                                </button>
-                            </td>
-                            <td className="px-4 py-3 text-tertiary">{card.set_name ?? "—"}</td>
-                            <td className="px-4 py-3 text-tertiary">{card.number ?? "—"}</td>
-                            <td className="px-4 py-3 text-tertiary">{card.rarity ?? "—"}</td>
-                            <td className="px-4 py-3 text-right font-medium tabular-nums">
+                                </div>
+                            </Table.Cell>
+                            <Table.Cell>{card.set_name ?? "—"}</Table.Cell>
+                            <Table.Cell>{card.number ?? "—"}</Table.Cell>
+                            <Table.Cell>{card.rarity ?? "—"}</Table.Cell>
+                            <Table.Cell className="text-right font-medium text-primary tabular-nums">
                                 {card.price != null ? formatPrice(card.price) : <span className="text-tertiary">—</span>}
-                            </td>
-                            <td className="px-4 py-3 text-right tabular-nums">{card.quantity ?? 1}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
+                            </Table.Cell>
+                            <Table.Cell className="text-right text-primary tabular-nums">{card.quantity ?? 1}</Table.Cell>
+                        </Table.Row>
+                    )}
+                </Table.Body>
+            </Table>
+        </TableCard.Root>
     );
 }

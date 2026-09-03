@@ -1,5 +1,6 @@
 "use client";
 
+// Changed from the kit: the password toggle has a 24 px hit area (#57). A re-fetch through the Untitled UI CLI or MCP overwrites this; re-apply it.
 import { type ComponentType, type HTMLAttributes, type ReactNode, type Ref, createContext, useContext, useState } from "react";
 import { Eye, EyeOff, HelpCircle, InfoCircle } from "@untitledui/icons";
 import type { InputProps as AriaInputProps, TextFieldProps as AriaTextFieldProps } from "react-aria-components";
