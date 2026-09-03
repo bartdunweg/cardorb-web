@@ -139,13 +139,9 @@ Backlog from the review, ranked. Each is one PR.
 
 ## Open
 
-- R-SEC-002 (every "my data" query filters on `user_id`) describes database queries this app no
-  longer makes: since R-DATA-003 every read and write goes through the API, and `verify.sh` fails
-  on a `.from(` outside the Supabase auth folder. The rule and the "Watch out for" line in
-  CLAUDE.md that repeats it are either dead or belong to `cardorb-api`. Not decided alone; found
-  by `/meridian:sync-project` on 3 September 2026.
 - Supabase side is recorded in `docs/supabase.md`: anon holds column-level SELECT on the public
   card columns only, the `avatars` bucket has type and size limits, the SECURITY DEFINER functions
-  are not callable by anon. Still a dashboard click: leaked password protection.
-- The Vercel preview check went green on #19; the `NPM_RC` note for Preview is resolved.
-- Rotate the Supabase service-role key that was once pasted in chat.
+  are not callable by anon. The advisor still lists few MFA options and `citext` in `public`;
+  neither is on the list.
+- Rotate the Supabase service-role key that was once pasted in chat: Project Settings → API →
+  Reset next to `service_role`, then the API's Vercel env. The web app never uses it.
