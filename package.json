@@ -10,7 +10,7 @@
         "typecheck": "tsc --noEmit",
         "lint": "eslint . && prettier --check .",
         "format": "prettier --write .",
-        "test": "vitest run --passWithNoTests"
+        "test": "vitest run"
     },
     "dependencies": {
         "@internationalized/date": "^3.12.3",
