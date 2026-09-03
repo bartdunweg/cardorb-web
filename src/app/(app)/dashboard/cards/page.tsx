@@ -1,18 +1,20 @@
 import { Plus } from "@untitledui/icons";
 import { AddCardModal } from "@/components/app/add-card-modal";
 import { AppEmptyState } from "@/components/app/app-empty-state";
-import { CardsPagination, pageFromParam } from "@/components/app/cards-pagination";
+import { CardsPagination } from "@/components/app/cards-pagination";
 import { CardsSearch } from "@/components/app/cards-search";
+import { CardsSort } from "@/components/app/cards-sort";
 import { CardsView } from "@/components/app/cards-view";
 import { Button } from "@/components/base/buttons/button";
 import { getMyCards } from "@/lib/cards";
+import { listHref, readListQuery } from "@/lib/list-query";
 
 const PAGE_SIZE = 100;
 
-export default async function CardsPage({ searchParams }: { searchParams: Promise<{ q?: string; page?: string }> }) {
-    const { q, page: pageParam } = await searchParams;
-    const page = pageFromParam(pageParam);
-    const { cards, total } = await getMyCards({ limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE, q });
+export default async function CardsPage({ searchParams }: { searchParams: Promise<{ q?: string; page?: string; sort?: string }> }) {
+    const query = readListQuery(await searchParams);
+    const { page, q, sort, order } = query;
+    const { cards, total } = await getMyCards({ limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE, q, sort, order });
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
     // No cards at all (and no active search) → empty state with the one action that gets you out of it.
@@ -24,13 +26,7 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
         );
     }
 
-    const pageHref = (n: number) => {
-        const p = new URLSearchParams();
-        if (q) p.set("q", q);
-        if (n > 1) p.set("page", String(n));
-        const s = p.toString();
-        return s ? `/dashboard/cards?${s}` : "/dashboard/cards";
-    };
+    const pageHref = (n: number) => listHref("/dashboard/cards", query, { page: n });
 
     return (
         <div className="flex flex-1 flex-col gap-6">
@@ -50,7 +46,10 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
                             </p>
                         ) : null}
                     </div>
-                    <AddCardModal />
+                    <div className="flex items-center gap-3">
+                        <CardsSort query={query} />
+                        <AddCardModal />
+                    </div>
                 </div>
 
                 {total === 0 ? (
