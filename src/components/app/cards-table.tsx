@@ -17,7 +17,7 @@ export function CardsTable({ cards, onSelect }: { cards: Card[]; onSelect: (card
                         <th className="px-4 py-3 font-medium">Number</th>
                         <th className="px-4 py-3 font-medium">Rarity</th>
                         <th className="px-4 py-3 text-right font-medium">Market price</th>
-                        <th className="px-4 py-3 text-right font-medium">Qty</th>
+                        <th className="px-4 py-3 text-right font-medium">Quantity</th>
                     </tr>
                 </thead>
                 <tbody>

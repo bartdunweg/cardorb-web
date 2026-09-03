@@ -53,7 +53,7 @@ export const LoginForm = ({ notice }: { notice?: string }) => {
                         )}
 
                         <Button type="submit" size="lg" isDisabled={pending}>
-                            {pending ? "Signing in…" : "Sign in"}
+                            {pending ? "Logging in…" : "Log in"}
                         </Button>
                     </form>
 

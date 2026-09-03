@@ -5,6 +5,8 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 // The share card: the name and the hero's one line, large enough to read in a chat preview.
+// Colours are literal hex, not theme tokens: ImageResponse renders through Satori, which reads no
+// CSS variables, and the picture is one static PNG with no light or dark side.
 export default function OpenGraphImage() {
     return new ImageResponse(
         <div

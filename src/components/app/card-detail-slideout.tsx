@@ -117,7 +117,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                             (mine?.wishlist ? (
                                 <div className="flex flex-col gap-1.5">
                                     <Button size="md" iconTrailing={ArrowRight} onClick={onMoveToCollection} isLoading={moving}>
-                                        Move to collection
+                                        Mark as owned
                                     </Button>
                                     {moveError ? (
                                         <p role="alert" className="text-sm text-error-primary">

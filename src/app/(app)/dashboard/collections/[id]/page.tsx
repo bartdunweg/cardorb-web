@@ -42,7 +42,7 @@ export default async function CollectionDetailPage({
             />
 
             {total === 0 ? (
-                <AppEmptyState icon="folder" title="No cards in this collection" description="Use “Add cards” to fill it." />
+                <AppEmptyState icon="folder" title="No cards in this collection" description="Use “Add cards” to fill it" />
             ) : (
                 <>
                     <CardsView cards={cards} />

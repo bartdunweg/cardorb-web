@@ -49,7 +49,12 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                             {[card.set_name, card.number ? `#${card.number}` : null].filter(Boolean).join(" · ")}
                         </span>
                         {/* The market price carries the weight of the name, as a marketplace tile does; the set line stays quiet. */}
-                        {card.price != null ? <span className="mt-0.5 text-sm font-medium text-primary tabular-nums">{formatPrice(card.price)}</span> : null}
+                        {card.price != null ? (
+                            <span className="mt-0.5 text-sm font-medium text-primary tabular-nums">
+                                <span className="sr-only">Market price </span>
+                                {formatPrice(card.price)}
+                            </span>
+                        ) : null}
                     </div>
                 </button>
             ))}
