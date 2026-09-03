@@ -22,6 +22,9 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **R-SEC-002 moved to `cardorb-api`.** It said every "my data" query filters on `user_id`; this
+  app has made no database query since R-DATA-003, so the rule and the "Watch out for" line that
+  repeated it are gone here. The API, which runs those queries, carries it as its own rule now.
 - **A page header that behaves like a phone screen (#46).** `src/components/app/page-header.tsx`
   on the seven dashboard pages with a title: on a phone a bar stays at the top with Back to the
   parent page (Collections, Cards or Home) on the left, and once the large title scrolls out the

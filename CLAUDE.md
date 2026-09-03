@@ -61,7 +61,7 @@ to this.
 - **Public profile** — `/user/[username]`, the owned collection without prices or notes.
   Only shown when the profile is set to public.
 
-Project-specific rules with an ID (R-DATA-002, R-SEC-002, …) live in `CONVENTIONS.md`, which
+Project-specific rules with an ID (R-DATA-002, R-DATA-003, …) live in `CONVENTIONS.md`, which
 `scripts/verify.sh` checks. Where the work stands: `STATE.md`.
 
 ## Principles
