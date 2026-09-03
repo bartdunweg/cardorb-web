@@ -78,7 +78,5 @@ translation file. Everything on disk is English; answer the owner in the languag
 
 ## Watch out for
 
-- Every "my data" query filters on `user_id` explicitly (R-SEC-002): the cards SELECT policy
-  also exposes public profiles' rows, so an unscoped query shows another user's cards.
 - `NPM_RC` on Vercel and `PACKAGES_TOKEN` in GitHub Actions carry the token for the private
   `@strakzat` package; without them `pnpm install` fails on the runner.

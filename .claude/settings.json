@@ -1,4 +1,8 @@
 {
+    "enabledPlugins": {
+        "meridian-ios@meridian": false,
+        "meridian-android@meridian": false
+    },
     "extraKnownMarketplaces": {
         "meridian": {
             "source": {
@@ -6,9 +10,5 @@
                 "repo": "strakzat/meridian"
             }
         }
-    },
-    "enabledPlugins": {
-        "meridian-ios@meridian": false,
-        "meridian-android@meridian": false
     }
 }
