@@ -28,6 +28,10 @@ which also says what is already yours), Settings (avatar through the API), publi
   bar shows it small in the centre. The tab bar stays. From `lg` up nothing changes. Bart's four
   answers: large title that hands over on scroll; every page where it makes sense; keep the tab bar;
   Back goes to the parent. Checked on a 375-px viewport with a throwaway route, not committed.
+- **Set and rarity filters on Cards.** Two menus under the search, "All sets" and "All rarities"
+  on top, a "Clear filters" link while one is on. The lists come from the grouped collection
+  (`src/lib/facets.ts`, pure part tested), kept five minutes per person like the layout's reads.
+  The choice lives in the URL beside the sort (`set=`, `rarity=`, the API matches them whole).
 - **Supabase, through its connection (cardorb-api#153).** The revoke of 2026-09-02 had also taken
   EXECUTE on `handle_new_user()` from `supabase_auth_admin`, the role the `auth.users` trigger runs
   as, so every signup since would have failed at the trigger; nobody signed up in between. One grant
@@ -37,8 +41,7 @@ which also says what is already yours), Settings (avatar through the API), publi
 - **A "Sort" menu on every card list** (Cards, Favorites, Wishlist, a folder): set order, name,
   price both ways, newest or oldest first, through `sort=`/`order=` on `GET /v1/cards`
   (cardorb-api#151). The choice lives in the URL (`src/lib/list-query.ts`, tested), so a sorted
-  page is a link. Set and rarity filters are the next PR; they need a list of sets, which the
-  grouped collection can give.
+  page is a link.
 - **Home shows what the collection is worth (#38, cardorb-api#149/#150).** `GET /v1/stats`
   carries `value` (euros, printing by printing, over the whole collection) and `unpriced`; the
   fourth tile on Home shows the amount and, only when it applies, how many copies have no price.

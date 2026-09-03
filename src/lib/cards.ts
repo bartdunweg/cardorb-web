@@ -15,6 +15,8 @@ export async function getMyCards({
     wishlist = false,
     sort,
     order,
+    set,
+    rarity,
 }: {
     limit?: number;
     offset?: number;
@@ -24,6 +26,8 @@ export async function getMyCards({
     wishlist?: boolean;
     sort?: "name" | "price" | "added";
     order?: "asc" | "desc";
+    set?: string;
+    rarity?: string;
 } = {}): Promise<{
     cards: Card[];
     total: number;
@@ -36,6 +40,8 @@ export async function getMyCards({
             collection: collectionId,
             sort,
             order,
+            set,
+            rarity,
             limit,
             offset,
         },
