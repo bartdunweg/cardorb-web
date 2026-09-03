@@ -17,6 +17,8 @@ export function CardsSearch({ initialValue = "" }: { initialValue?: string }) {
             const params = new URLSearchParams(searchParams.toString());
             if (value.trim()) params.set("q", value.trim());
             else params.delete("q");
+            // A new term is a new result set; page 3 of the old one is nowhere in it.
+            params.delete("page");
             const qs = params.toString();
             router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
         }, 250);
