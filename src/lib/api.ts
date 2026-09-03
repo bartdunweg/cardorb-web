@@ -11,6 +11,15 @@ import { createClient } from "@/lib/supabase/server";
  */
 export const API_URL = (process.env.CARDORB_API_URL ?? "https://api.cardorb.com/v1").replace(/\/$/, "");
 
+/**
+ * How long one call to the API may take. fetch() has no limit of its own, so an API that accepts
+ * the connection and never answers would hold the page until Vercel's five-minute limit. Thirty
+ * seconds is longer than the API's slowest honest answer — a cold rebuild of a large collection —
+ * and shorter than anyone waits for a page. A timeout throws like any other failure, so a page
+ * shows its error rather than a spinner.
+ */
+export const API_TIMEOUT_MS = 30_000;
+
 export class ApiError extends Error {
     constructor(
         public readonly status: number,
@@ -64,6 +73,7 @@ export async function api<T>(path: string, init: Init = {}): Promise<T> {
         method: init.method ?? "GET",
         headers,
         body: init.body !== undefined ? JSON.stringify(init.body) : undefined,
+        signal: AbortSignal.timeout(API_TIMEOUT_MS),
         ...(withAuth ? { cache: "no-store" } : { next: { revalidate: 300 } }),
     });
 
