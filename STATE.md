@@ -22,6 +22,11 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **Time limits on every outbound call (#35, cardorb-api#148).** `src/lib/api.ts` gives the API
+  thirty seconds; the API gives each catalogue eight. Before, a server that accepted the
+  connection and never answered — TCGdex on 2026-09-02 — held a page until Vercel's five-minute
+  limit. The performance review's list is now closed; what remains of it is the check a signed-in
+  visit gives the per-person cache (#26).
 - **One `useDebouncedSearch`** (`src/hooks`, tested with fake timers) replaces the four copies of
   "wait for the typing to pause, ask once, ignore a late answer" in the add-card modal, the
   folder's add-cards dialog, the mobile search and the command palette. Same minimum lengths and
