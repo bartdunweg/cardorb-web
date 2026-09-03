@@ -116,6 +116,19 @@ direct_db() {
 }
 run "no-direct-db" direct_db
 
+# shellcheck disable=SC2329  # invoked indirectly, through `run` below.
+# Finder makes "name 2.ts" beside a file it could not overwrite; two of them reached a commit on
+# 2026-09-02. A tracked file whose name ends in a space and a number is one of those, never ours.
+finder_copies() {
+  local hits
+  hits="$(git ls-files | grep -E ' [0-9]+\.[A-Za-z0-9]+$' || true)"
+  if [[ -n "$hits" ]]; then
+    printf 'Finder duplicate tracked (delete it, the original is beside it):\n%s\n' "$hits"
+    return 1
+  fi
+}
+run "no-finder-copies" finder_copies
+
 rule_rows() {
   grep '^| ' CONVENTIONS.md | grep -v '^| ID | Rule |' | grep -v '^|[- |]*$' || true
 }
