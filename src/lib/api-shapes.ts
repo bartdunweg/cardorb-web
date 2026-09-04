@@ -233,20 +233,52 @@ export type SetCard = {
     id: string;
     number: string;
     name: string;
+    /** As the catalogue names the set; what a new collection row is filed under. */
+    setName: string;
+    rarity: string | null;
+    types: string[];
     imageUrl: string | null;
     owned: boolean;
     wishlist: boolean;
     quantity: number;
+    /** Every collection row this card matched: owned copies and wishes alike. */
+    itemIds: string[];
 };
 
 export const setCardFromBrowse = (c: BrowseCard): SetCard => ({
     id: c.id,
     number: c.number,
     name: c.name,
+    setName: c.setName,
+    rarity: c.rarity,
+    types: c.types,
     imageUrl: absoluteImage(c.image),
     owned: c.owned,
     wishlist: c.wishlist,
     quantity: c.quantity,
+    itemIds: c.itemIds,
+});
+
+/** The shape the add action takes, from a set tile. */
+export const pokemonCardFromSetCard = (c: SetCard): PokemonCard => ({
+    id: c.id,
+    name: c.name,
+    set: c.setName,
+    number: c.number,
+    rarity: c.rarity,
+    image: c.imageUrl,
+    supertype: null,
+    subtypes: null,
+    hp: null,
+    types: c.types.length ? c.types : null,
+    artist: null,
+    series: null,
+    releaseDate: null,
+    setPrintedTotal: null,
+    flavorText: null,
+    nationalPokedexNumbers: null,
+    owned: c.owned,
+    wishlist: c.wishlist,
 });
 
 // ── GET /v1/catalog/search ────────────────────────────────────────────────────────────────

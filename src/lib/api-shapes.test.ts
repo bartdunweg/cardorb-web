@@ -4,6 +4,7 @@ import {
     absoluteImage,
     cardFromItem,
     pokemonCardFromBrowse,
+    pokemonCardFromSetCard,
     priceForCopy,
     publicCardFromItem,
     seriesFromSets,
@@ -198,6 +199,37 @@ describe("setCardFromBrowse", () => {
                 quantity: 2,
                 itemIds: ["row"],
             }),
-        ).toEqual({ id: "sv1-1", number: "1", name: "Sprigatito", imageUrl: "https://api.cardorb.com/p.png", owned: true, wishlist: false, quantity: 2 });
+        ).toEqual({
+            id: "sv1-1",
+            number: "1",
+            name: "Sprigatito",
+            setName: "Scarlet & Violet",
+            rarity: "Common",
+            types: ["Grass"],
+            imageUrl: "https://api.cardorb.com/p.png",
+            owned: true,
+            wishlist: false,
+            quantity: 2,
+            itemIds: ["row"],
+        });
+    });
+});
+
+describe("pokemonCardFromSetCard", () => {
+    it("carries what the add action validates: name, set, number, rarity, types", () => {
+        const card = pokemonCardFromSetCard({
+            id: "sv1-1",
+            number: "1",
+            name: "Sprigatito",
+            setName: "Scarlet & Violet",
+            rarity: null,
+            types: [],
+            imageUrl: null,
+            owned: false,
+            wishlist: false,
+            quantity: 0,
+            itemIds: [],
+        });
+        expect(card).toMatchObject({ id: "sv1-1", name: "Sprigatito", set: "Scarlet & Violet", number: "1", rarity: null, types: null, owned: false });
     });
 });

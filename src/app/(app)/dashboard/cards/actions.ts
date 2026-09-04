@@ -76,6 +76,37 @@ export async function addCard(input: PokemonCard, target: "collection" | "wishli
     return { ok: true };
 }
 
+// Sets how many of one copy are held. The API refuses 0: a card you no longer hold is removed.
+export async function setCopies(cardId: string, quantity: number): Promise<Result> {
+    const parsed = z.object({ cardId: z.string().uuid(), quantity: z.number().int().min(1).max(999) }).safeParse({ cardId, quantity });
+    if (!parsed.success) return { ok: false, error: "Invalid card." };
+
+    try {
+        await api(`/collection/items/${parsed.data.cardId}`, { method: "PATCH", body: { quantity: parsed.data.quantity } });
+    } catch (err) {
+        return failed(err);
+    }
+
+    await forgetMine();
+    return { ok: true };
+}
+
+// Removes one row: an owned copy or a wish. The API wants a JSON content type on a delete, so
+// the body is an empty object.
+export async function removeCard(cardId: string): Promise<Result> {
+    const parsed = z.string().uuid().safeParse(cardId);
+    if (!parsed.success) return { ok: false, error: "Invalid card." };
+
+    try {
+        await api(`/collection/items/${parsed.data}`, { method: "DELETE", body: {} });
+    } catch (err) {
+        return failed(err);
+    }
+
+    await forgetMine();
+    return { ok: true };
+}
+
 // Moves a wishlist card into the owned collection (the person acquired it).
 export async function markOwned(cardId: string): Promise<Result> {
     const parsed = z.string().uuid().safeParse(cardId);
