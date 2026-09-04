@@ -3,7 +3,9 @@ import { extendTailwindMerge } from "tailwind-merge";
 const twMerge = extendTailwindMerge({
     extend: {
         theme: {
-            text: ["display-xs", "display-sm", "display-md", "display-lg", "display-xl", "display-2xl"],
+            // Every font size the theme adds. One missing here is read as a colour and dropped
+            // when a text colour follows it: `text-xxxs` lost to `text-primary` in the tab bar.
+            text: ["xxxs", "xxs", "display-xs", "display-sm", "display-md", "display-lg", "display-xl", "display-2xl"],
         },
     },
 });

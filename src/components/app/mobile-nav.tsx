@@ -27,11 +27,11 @@ export function MobileTabBar({ account }: { account: Account }) {
                 href={tab.href}
                 aria-current={active ? "page" : undefined}
                 className={cx(
-                    "flex flex-1 flex-col items-center gap-1 rounded-full py-2 text-xxxs font-medium transition",
+                    "flex flex-1 flex-col items-center gap-0.5 rounded-full py-1 text-xxxs font-medium transition",
                     active ? "bg-secondary text-primary" : "text-tertiary",
                 )}
             >
-                <Icon className={cx("size-5", active ? "text-fg-brand-primary" : "text-fg-quaternary")} />
+                <Icon className={cx("size-4", active ? "text-fg-brand-primary" : "text-fg-quaternary")} />
                 {tab.label}
             </Link>
         );
@@ -40,7 +40,7 @@ export function MobileTabBar({ account }: { account: Account }) {
     return (
         <nav
             aria-label="Primary"
-            className="fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex items-stretch justify-around gap-1 rounded-full border border-secondary bg-primary p-1 shadow-lg lg:hidden"
+            className="fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex items-stretch justify-around gap-1 rounded-full border border-secondary bg-primary p-0.5 shadow-lg lg:hidden"
         >
             {renderTab(tabs[0])}
             {renderTab(tabs[1])}
@@ -49,11 +49,11 @@ export function MobileTabBar({ account }: { account: Account }) {
                 href="/dashboard/search"
                 aria-current={pathname.startsWith("/dashboard/search") ? "page" : undefined}
                 className={cx(
-                    "flex flex-1 flex-col items-center gap-1 rounded-full py-2 text-xxxs font-medium transition",
+                    "flex flex-1 flex-col items-center gap-0.5 rounded-full py-1 text-xxxs font-medium transition",
                     pathname.startsWith("/dashboard/search") ? "bg-secondary text-primary" : "text-tertiary",
                 )}
             >
-                <SearchLg className={cx("size-5", pathname.startsWith("/dashboard/search") ? "text-fg-brand-primary" : "text-fg-quaternary")} />
+                <SearchLg className={cx("size-4", pathname.startsWith("/dashboard/search") ? "text-fg-brand-primary" : "text-fg-quaternary")} />
                 Search
             </Link>
 
@@ -63,11 +63,11 @@ export function MobileTabBar({ account }: { account: Account }) {
                 href="/dashboard/settings"
                 aria-current={pathname.startsWith("/dashboard/settings") ? "page" : undefined}
                 className={cx(
-                    "flex flex-1 flex-col items-center gap-1 rounded-full py-2 text-xxxs font-medium transition",
+                    "flex flex-1 flex-col items-center gap-0.5 rounded-full py-1 text-xxxs font-medium transition",
                     pathname.startsWith("/dashboard/settings") ? "bg-secondary text-primary" : "text-tertiary",
                 )}
             >
-                <Avatar size="xs" src={account.avatarUrl ?? undefined} alt={account.name} className="size-5" />
+                <Avatar size="xs" src={account.avatarUrl ?? undefined} alt={account.name} className="size-4" />
                 Profile
             </Link>
         </nav>
