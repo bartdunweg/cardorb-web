@@ -5,8 +5,17 @@ import { SearchLg } from "@untitledui/icons";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/base/input/input";
 
-// Filters the collection by pushing a debounced `?q=` to the URL; the server page re-queries.
-export function CardsSearch({ initialValue = "" }: { initialValue?: string }) {
+// Filters a card list by pushing a debounced `?q=` to the URL; the server page re-queries. The
+// same box serves the owner's Cards page and a public profile; only the words differ.
+export function CardsSearch({
+    initialValue = "",
+    label = "Search your cards",
+    placeholder = "Search your collection",
+}: {
+    initialValue?: string;
+    label?: string;
+    placeholder?: string;
+}) {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -26,14 +35,5 @@ export function CardsSearch({ initialValue = "" }: { initialValue?: string }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [value]);
 
-    return (
-        <Input
-            aria-label="Search your cards"
-            icon={SearchLg}
-            placeholder="Search your collection"
-            value={value}
-            onChange={setValue}
-            className="w-full max-w-80"
-        />
-    );
+    return <Input aria-label={label} icon={SearchLg} placeholder={placeholder} value={value} onChange={setValue} className="w-full max-w-80" />;
 }

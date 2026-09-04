@@ -1,20 +1,23 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppEmptyState } from "@/components/app/app-empty-state";
-import { CardsPagination, pageFromParam } from "@/components/app/cards-pagination";
+import { CardsPagination } from "@/components/app/cards-pagination";
+import { CardsSearch } from "@/components/app/cards-search";
 import { PublicCardsView } from "@/components/app/public-cards-view";
 import { PublicTopBar } from "@/components/app/public-top-bar";
 import { Avatar } from "@/components/base/avatar/avatar";
+import { listHref, readListQuery } from "@/lib/list-query";
 import { getViewer } from "@/lib/profile";
 import { PUBLIC_PAGE_SIZE, getPublicCards, getPublicProfile } from "@/lib/public-profile";
 
-type Params = { params: Promise<{ username: string }>; searchParams: Promise<{ page?: string }> };
+type Params = { params: Promise<{ username: string }>; searchParams: Promise<{ page?: string; q?: string }> };
 
 export async function generateMetadata({ params, searchParams }: Params): Promise<Metadata> {
     const { username } = await params;
-    const page = pageFromParam((await searchParams).page);
+    const { page } = readListQuery(await searchParams);
     const base = `/user/${encodeURIComponent(username)}`;
     // Each page names itself: a shared or indexed second page must not collapse onto the first.
+    // A search is not a page of its own: its canonical is the list it searched.
     const canonical = page > 1 ? `${base}?page=${page}` : base;
     const profile = await getPublicProfile(decodeURIComponent(username));
     if (!profile) return { title: "Collection not found", robots: { index: false } };
@@ -33,16 +36,19 @@ export default async function PublicProfilePage({ params, searchParams }: Params
     const profile = await getPublicProfile(decodeURIComponent(username));
     if (!profile) notFound();
 
-    const page = pageFromParam((await searchParams).page);
-    const [{ cards, total, sets }, viewer] = await Promise.all([getPublicCards(decodeURIComponent(username), page), getViewer()]);
+    const query = readListQuery(await searchParams);
+    const { page, q } = query;
+    const [{ cards, total, sets }, viewer] = await Promise.all([getPublicCards(decodeURIComponent(username), { page, q }), getViewer()]);
     const totalPages = Math.max(1, Math.ceil(total / PUBLIC_PAGE_SIZE));
     const base = `/user/${encodeURIComponent(username)}`;
     const name = profile.display_name || profile.username || "Collection";
     // The handle sits under a display name, as a profile page does; with no display name it is the name.
     const handle = profile.display_name && profile.username ? `@${profile.username}` : null;
-    const counts = [`${total.toLocaleString("en-US")} card${total === 1 ? "" : "s"}`, `${sets.toLocaleString("en-US")} set${sets === 1 ? "" : "s"}`].join(
-        " · ",
-    );
+    // With a search on, the count is what matched; the set count still spans the whole collection.
+    const counts = [
+        q ? `${total.toLocaleString("en-US")} match${total === 1 ? "" : "es"}` : `${total.toLocaleString("en-US")} card${total === 1 ? "" : "s"}`,
+        `${sets.toLocaleString("en-US")} set${sets === 1 ? "" : "s"}`,
+    ].join(" · ");
 
     return (
         <div className="flex min-h-dvh flex-col bg-primary">
@@ -58,13 +64,20 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                     </div>
                 </div>
 
-                {cards.length === 0 ? (
+                {cards.length === 0 && !q ? (
                     <AppEmptyState icon="folder" title="This collection is empty" description="Nothing has been added to it yet" />
                 ) : (
-                    <>
-                        <PublicCardsView cards={cards} />
-                        <CardsPagination page={page} totalPages={totalPages} hrefFor={(n) => (n > 1 ? `${base}?page=${n}` : base)} />
-                    </>
+                    <div className="flex flex-1 flex-col gap-4">
+                        <CardsSearch initialValue={q ?? ""} label="Search this collection" placeholder="Search this collection" />
+                        {cards.length === 0 ? (
+                            <AppEmptyState icon="search" title="No cards found" description={`No cards match “${q}”. Try a different name or set.`} />
+                        ) : (
+                            <>
+                                <PublicCardsView cards={cards} />
+                                <CardsPagination page={page} totalPages={totalPages} hrefFor={(n) => listHref(base, query, { page: n })} />
+                            </>
+                        )}
+                    </div>
                 )}
             </main>
         </div>
