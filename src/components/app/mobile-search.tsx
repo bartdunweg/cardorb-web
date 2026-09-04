@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { SearchLg } from "@untitledui/icons";
+import { Scan, SearchLg } from "@untitledui/icons";
 import { Heading as AriaHeading } from "react-aria-components";
 import { type CardHit, searchMyCards } from "@/app/(app)/dashboard/cards/actions";
 import { CardDetailSlideout } from "@/components/app/card-detail-slideout";
@@ -17,14 +17,24 @@ export function MobileSearchSheet() {
     const [open, setOpen] = useState(false);
 
     return (
-        <div className="lg:hidden">
+        <div className="relative lg:hidden">
             <button
                 type="button"
                 onClick={() => setOpen(true)}
-                className="flex w-full cursor-pointer items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm text-tertiary shadow-xs ring-1 ring-primary outline-focus-ring ring-inset hover:bg-secondary focus-visible:outline-2"
+                className="flex w-full cursor-pointer items-center gap-2 rounded-full bg-primary py-2 pr-12 pl-3 text-sm text-tertiary shadow-xs ring-1 ring-primary outline-focus-ring ring-inset hover:bg-secondary focus-visible:outline-2"
             >
                 <SearchLg className="size-5 text-fg-quaternary" />
                 <span className="flex-1 text-left">Search your collection</span>
+            </button>
+            {/* Scan sits at the bar's right end, its own control beside the search rather than inside it
+                (a button in a button is not HTML). There is no scanner yet: the button is the place for one. */}
+            <button
+                type="button"
+                aria-label="Scan a card"
+                aria-disabled="true"
+                className="absolute top-1/2 right-1.5 flex size-7 -translate-y-1/2 items-center justify-center rounded-full bg-secondary text-fg-quaternary outline-focus-ring hover:bg-tertiary focus-visible:outline-2"
+            >
+                <Scan className="size-4" />
             </button>
             <SlideoutMenu isDismissable isOpen={open} onOpenChange={setOpen}>
                 {({ close }) => <CollectionSearch onClose={close} />}

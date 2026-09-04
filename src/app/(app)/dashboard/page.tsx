@@ -10,8 +10,7 @@ export default async function DashboardPage() {
 
     return (
         <div className="flex flex-col gap-6">
-            <PageHeader title="Home" subtitle="An overview of your collection." />
-            <MobileSearchSheet />
+            <PageHeader title="Home" subtitle="An overview of your collection." above={<MobileSearchSheet />} />
             <CardsStats stats={stats} />
 
             <section className="flex flex-col gap-4 rounded-xl bg-primary px-4 py-5 shadow-xs ring-1 ring-secondary ring-inset md:px-5">
