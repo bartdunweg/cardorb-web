@@ -7,12 +7,14 @@ import { type CardHit, searchMyCards } from "@/app/(app)/dashboard/cards/actions
 import { CardImage } from "@/components/app/card-image";
 import { Input } from "@/components/base/input/input";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
+import { cx } from "@/utils/cx";
 
 // Full-page collection search for mobile (a route, not a modal).
 export function MobileSearch() {
     const router = useRouter();
     const [query, setQuery] = useState("");
     const { results, loading } = useDebouncedSearch<CardHit>(query, searchMyCards, { minLength: 1, delay: 250 });
+    const searchState = loading ? "Searching…" : query.trim().length >= 1 && results.length === 0 ? "No cards found." : "";
 
     return (
         <div className="flex flex-col gap-4">
@@ -21,8 +23,10 @@ export function MobileSearch() {
             <Input aria-label="Search your collection" icon={SearchLg} placeholder="Search by name or set…" value={query} onChange={setQuery} />
 
             <div className="flex flex-col gap-1">
-                {loading && <p className="px-1 py-6 text-center text-sm text-tertiary">Searching…</p>}
-                {!loading && query.trim().length >= 1 && results.length === 0 && <p className="px-1 py-6 text-center text-sm text-tertiary">No cards found.</p>}
+                {/* One live region, always mounted, so a screen reader hears the state change. */}
+                <output aria-live="polite" className={cx("text-center text-sm text-tertiary", searchState ? "px-1 py-6" : "sr-only")}>
+                    {searchState}
+                </output>
                 {!loading &&
                     results.map((card) => (
                         <button

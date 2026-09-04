@@ -31,10 +31,24 @@ export const SignupForm = () => {
 
                     <form action={formAction} className="flex flex-col gap-6">
                         <div className="flex flex-col gap-5">
-                            <Input isRequired hideRequiredIndicator label="Email" type="email" name="email" placeholder="Enter your email" size="lg" />
+                            <Input
+                                isRequired
+                                hideRequiredIndicator
+                                label="Email"
+                                type="email"
+                                name="email"
+                                autoComplete="email"
+                                placeholder="Enter your email"
+                                size="lg"
+                            />
                             <TextField isRequired size="lg" name="password" value={password} onChange={setPassword} minLength={8}>
                                 <Label isRequired={false}>Password</Label>
-                                <InputBase type="password" placeholder="••••••••••••" inputClassName="placeholder:text-placeholder/50" />
+                                <InputBase
+                                    type="password"
+                                    autoComplete="new-password"
+                                    placeholder="••••••••••••"
+                                    inputClassName="placeholder:text-placeholder/50"
+                                />
                                 <HintText className="flex items-center gap-1">
                                     <CheckCircle
                                         className={cx(
