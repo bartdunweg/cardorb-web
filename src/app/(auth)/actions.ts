@@ -1,9 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { api } from "@/lib/api";
 import { createClient } from "@/lib/supabase/server";
-import { credentialsSchema, emailSchema, newPasswordSchema, signupSchema } from "@/lib/validation/auth";
+import { usernameFromEmail } from "@/lib/username";
+import { credentialsSchema, emailSchema, newPasswordSchema } from "@/lib/validation/auth";
 
 export type AuthState = { error: string } | { success: string } | undefined;
 
@@ -26,25 +26,23 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
 }
 
 export async function signUp(_prev: AuthState, formData: FormData): Promise<AuthState> {
-    const parsed = signupSchema.safeParse({ name: formData.get("name"), email: formData.get("email"), password: formData.get("password") });
+    const parsed = parseCredentials(formData);
     if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-    const { name, email, password } = parsed.data;
+    const { email, password } = parsed.data;
     const supabase = await createClient();
-    // The name travels as user metadata, so it is on the account whatever creates the profile.
-    const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { display_name: name } } });
+    // Sign-up asks for no name. The profile still needs a username from its first moment (it is
+    // the name in /user/<name>), so one is drawn from the email and travels as user metadata; the
+    // database trigger writes it with the account. The display name stays empty until Settings.
+    const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { username: usernameFromEmail(email) } },
+    });
     if (error) return { error: error.message };
 
-    // Email confirmation off → a session is returned, so go straight in. With a session the
-    // profile exists and can carry the name now; without one it waits for the first sign-in.
-    if (data.session) {
-        try {
-            await api("/profile", { method: "PATCH", body: { displayName: name } });
-        } catch (err) {
-            console.error("Setting the display name after sign-up failed:", err instanceof Error ? err.message : err);
-        }
-        redirect("/dashboard");
-    }
+    // Email confirmation off → a session is returned, so go straight in.
+    if (data.session) redirect("/dashboard");
 
     return { success: "Account created. Check your email to confirm, then sign in." };
 }
