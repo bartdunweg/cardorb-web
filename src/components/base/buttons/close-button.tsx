@@ -1,5 +1,7 @@
 "use client";
 
+// Changed from the kit: round, like every Button since shape="pill" became the default. A re-fetch
+// through the Untitled UI CLI or MCP overwrites this; re-apply it.
 import { X as CloseIcon } from "@untitledui/icons";
 import { Button as AriaButton, type ButtonProps as AriaButtonProps } from "react-aria-components";
 import { cx } from "@/utils/cx";
@@ -29,7 +31,7 @@ export const CloseButton = ({ label, className, size = "sm", theme = "light", ..
             aria-label={label || "Close"}
             className={(state) =>
                 cx(
-                    "flex cursor-pointer items-center justify-center rounded-lg p-2 transition duration-100 ease-linear focus:outline-hidden",
+                    "flex cursor-pointer items-center justify-center rounded-full p-2 transition duration-100 ease-linear focus:outline-hidden",
                     sizes[size].root,
                     themes[theme],
                     typeof className === "function" ? className(state) : className,

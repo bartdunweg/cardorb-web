@@ -1,5 +1,7 @@
 "use client";
 
+// Changed from the kit: round, like every Button since shape="pill" became the default. A re-fetch
+// through the Untitled UI CLI or MCP overwrites this; re-apply it.
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, DetailedHTMLProps, FC, ReactNode } from "react";
 import { isValidElement } from "react";
 import type { Placement } from "react-aria";
@@ -92,7 +94,7 @@ export const ButtonUtility = ({
             aria-label={tooltip}
             {...props}
             className={cx(
-                "group relative inline-flex h-max cursor-pointer items-center justify-center rounded-md p-1.5 outline-focus-ring transition duration-100 ease-linear focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+                "group relative inline-flex h-max cursor-pointer items-center justify-center rounded-full p-1.5 outline-focus-ring transition duration-100 ease-linear focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
                 styles[color],
 
                 // Icon styles
