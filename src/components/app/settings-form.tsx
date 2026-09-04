@@ -168,7 +168,7 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
                     <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" onChange={onPickFile} className="hidden" />
                 </div>
                 <Input label="Display name" value={displayName} onChange={setDisplayName} placeholder="Your name" />
-                <Input label="Username" value={username} onChange={setUsername} hint="Letters, numbers and underscores." />
+                <Input label="Username" value={username} onChange={setUsername} hint="Lowercase letters, numbers and hyphens." />
                 <Toggle label="Public collection" hint="When on, anyone can view your collection." isSelected={isPublic} onChange={setIsPublic} />
                 {isPublic && username ? (
                     <Button href={`/user/${username}`} color="link-color" size="sm" className="self-start">
