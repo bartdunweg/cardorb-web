@@ -1,5 +1,6 @@
 "use client";
 
+// Changed from the kit: a `shape` prop. Every button is a pill unless it says `shape="rect"`.
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, DetailedHTMLProps, FC, ReactNode } from "react";
 import React, { isValidElement } from "react";
 import type { ButtonProps as AriaButtonProps, LinkProps as AriaLinkProps } from "react-aria-components";
@@ -151,6 +152,8 @@ export interface CommonProps {
     noTextPadding?: boolean;
     /** When true, keeps the text visible during loading state */
     showTextWhileLoading?: boolean;
+    /** Fully round by default; `rect` keeps the kit's corner radius. Links have no shape. */
+    shape?: "pill" | "rect";
 }
 
 /**
@@ -183,6 +186,7 @@ export const Button = ({
     isDisabled: disabled,
     isLoading: loading,
     showTextWhileLoading,
+    shape = "pill",
     ...otherProps
 }: Props) => {
     const href = "href" in otherProps ? otherProps.href : undefined;
@@ -221,6 +225,7 @@ export const Button = ({
                 styles.sizes[size].root,
                 styles.colors[color].root,
                 isLinkType && styles.sizes[size].linkRoot,
+                shape === "pill" && !isLinkType && "rounded-full before:rounded-full",
                 (loading || (href && (disabled || loading))) && "pointer-events-none",
                 // If in `loading` state, hide everything except the loading icon (and text if `showTextWhileLoading` is true).
                 loading && (showTextWhileLoading ? "[&>*:not([data-icon=loading]):not([data-text])]:hidden" : "[&>*:not([data-icon=loading])]:invisible"),

@@ -37,7 +37,7 @@ export const HeroGeometricShapes04 = () => {
                             Browse, organize, and manage every card in one place.
                         </p>
                         <div className="mt-8 flex w-full flex-col items-stretch sm:w-auto md:mt-12">
-                            <Button href="/signup" size="xl" className="rounded-full before:rounded-full">
+                            <Button href="/signup" size="xl">
                                 Get started
                             </Button>
                         </div>
