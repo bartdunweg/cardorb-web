@@ -18,6 +18,11 @@ const nextConfig = {
         // Next 16 allows only the qualities listed here. 60 for card thumbnails, where a scan of
         // a scan gains nothing above it; 75 stays the default.
         qualities: [60, 75],
+        // The widths a srcset may name. The default list runs to 3840 px, and a grid of a hundred
+        // tiles wrote fifteen candidates each: 300 KB of HTML on a public profile. No picture here
+        // draws wider than a 213 px tile, so 1080 px covers a 3x screen with room to spare.
+        deviceSizes: [640, 750, 828, 1080],
+        imageSizes: [64, 96, 128, 256, 384],
     },
     experimental: {
         optimizePackageImports: ["@untitledui/icons"],
