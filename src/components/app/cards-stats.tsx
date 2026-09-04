@@ -23,7 +23,7 @@ const StatCard = ({
     icon: FC<{ className?: string }>;
     className?: string;
 }) => (
-    <div className={cx("rounded-xl bg-primary shadow-xs ring-1 ring-secondary ring-inset", className)}>
+    <div className={cx("rounded-xl bg-primary shadow-border", className)}>
         <div className="flex flex-col gap-4 px-4 py-5 md:gap-5 md:px-5">
             <FeaturedIcon color="gray" theme="modern-neue" icon={icon} size="lg" />
             <div className="flex flex-col gap-2">

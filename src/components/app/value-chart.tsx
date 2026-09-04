@@ -167,7 +167,7 @@ export function ValueChart({ snapshots }: { snapshots: ValueSnapshot[] }) {
                 {current ? (
                     <output
                         aria-live="polite"
-                        className="pointer-events-none absolute top-2 flex flex-col gap-0.5 rounded-lg bg-primary px-3 py-2 text-xs shadow-lg ring-1 ring-secondary ring-inset"
+                        className="pointer-events-none absolute top-2 flex flex-col gap-0.5 rounded-lg bg-primary px-3 py-2 text-xs shadow-lg"
                         style={{ left: tooltipLeft, right: tooltipRight }}
                     >
                         <span className="font-medium text-secondary">{dayYear.format(dateOf(current))}</span>
