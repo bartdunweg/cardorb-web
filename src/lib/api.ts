@@ -43,13 +43,23 @@ type Init = {
     token?: string;
 };
 
-/** Who is signed in and the token that proves it, once per request. Null when nobody is. */
+/**
+ * Who is signed in and the token that proves it, once per request. Null when nobody is.
+ *
+ * getClaims() verifies the token's signature locally (ES256, the key set cached per process) the
+ * way the middleware does; getSession() only decodes the cookie. The public profile runs this for
+ * every visitor and keys a shared cache on the id, so a cookie that merely claims an id must not
+ * count. The token itself comes from getSession() afterwards: getClaims() has refreshed it by then.
+ */
 export const session = cache(async (): Promise<{ userId: string; token: string } | null> => {
     const supabase = await createClient();
+    const { data: claims } = await timed("session getClaims", () => supabase.auth.getClaims());
+    const userId = claims?.claims.sub;
+    if (!userId) return null;
     const {
         data: { session: s },
-    } = await timed("session getSession", () => supabase.auth.getSession());
-    return s ? { userId: s.user.id, token: s.access_token } : null;
+    } = await supabase.auth.getSession();
+    return s ? { userId, token: s.access_token } : null;
 });
 
 /** The session's access token, once per request. Null when nobody is signed in. */
