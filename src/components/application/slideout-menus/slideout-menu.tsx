@@ -57,7 +57,7 @@ export const Dialog = (props: DialogProps) => (
         aria-label="Slideout menu"
         {...props}
         className={cx(
-            "relative flex size-full max-h-[85dvh] flex-col items-start gap-6 overflow-y-auto rounded-t-2xl glass-thick pb-[env(safe-area-inset-bottom)] ring-1 ring-secondary_alt outline-hidden sm:max-h-full sm:rounded-none sm:pb-0",
+            "relative flex size-full max-h-[85dvh] flex-col items-start gap-6 overflow-y-auto rounded-t-2xl glass-thick pb-[env(safe-area-inset-bottom)] outline-hidden sm:max-h-full sm:rounded-none sm:pb-0",
             props.className,
         )}
     />

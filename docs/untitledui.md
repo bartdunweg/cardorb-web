@@ -181,6 +181,10 @@ Do not stack two glass surfaces; a popover over the tab bar stays `bg-primary`. 
 `bg-primary/90 backdrop-blur` by hand: that is a second material with no name. A user who set
 "reduce transparency" gets the plain page surface from the utility itself.
 
+An elevated surface takes `shadow-*` alone, never a ring as well: the scale's first layer is the
+rim, and a ring on top draws two rims a shade apart. A surface flush with the page (the sidebar)
+takes `ring-glass` and no shadow.
+
 ### Polish
 
 Small rules that compound. They live in tokens and utilities, so a new screen gets them by using the
