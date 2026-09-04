@@ -79,8 +79,8 @@ importers:
         version: 4.4.3
     devDependencies:
       '@strakzat/eslint-config-ui':
-        specifier: ^0.3.0
-        version: 0.3.0(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0))
+        specifier: ^0.4.0
+        version: 0.4.0(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0))
       '@testing-library/jest-dom':
         specifier: ^7.0.1
         version: 7.0.1(@testing-library/dom@10.4.1)(vitest@4.1.11(@types/node@25.9.5)(jsdom@30.0.1)(vite@8.2.2(@types/node@25.9.5)(jiti@2.7.0)(yaml@2.9.0)))
@@ -793,8 +793,8 @@ packages:
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
-  '@strakzat/eslint-config-ui@0.3.0':
-    resolution: {integrity: sha512-3mrypbqMBcVs1k52gKIFGOjnlDT+8/G8gS7ZrUuiM0qQ8vS1BrOH6XyBPcMcUQ9oMKO1OnzEuToN0JHd88GnoQ==, tarball: https://npm.pkg.github.com/download/@strakzat/eslint-config-ui/0.3.0/4f2910c3b9ba9d2a1d5d9bc5a5d6b3523d13ad17}
+  '@strakzat/eslint-config-ui@0.4.0':
+    resolution: {integrity: sha512-je522MswHhdtUfe6sJaO+R8f+9nsoaWe490aFVBix+XeHMWghTzZMtw1vuUSeJ/ZspUU9MsFf4GQohBNTk8xug==}
     engines: {node: '>=20'}
     peerDependencies:
       eslint: ^9.0.0 || ^10.0.0
@@ -3661,7 +3661,7 @@ snapshots:
 
   '@standard-schema/spec@1.1.0': {}
 
-  '@strakzat/eslint-config-ui@0.3.0(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0))':
+  '@strakzat/eslint-config-ui@0.4.0(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0))':
     dependencies:
       eslint: 9.39.5(jiti@2.7.0)(supports-color@7.2.0)
       eslint-plugin-jsx-a11y: 6.10.2(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0))

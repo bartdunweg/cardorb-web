@@ -22,6 +22,12 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **`@strakzat/eslint-config-ui` comes from npm now** (0.4.0, public, MIT; strakzat/meridian#39).
+  No `.npmrc`, no `NPM_RC` on Vercel, no `PACKAGES_TOKEN` in CI: the private GitHub Packages
+  registry wanted a token even to read, and a preview build that changed the lockfile failed on
+  it. `pnpm-workspace.yaml` exempts the version from pnpm's day-old rule. vitest and Prettier skip
+  `.claude/**` like ESLint does.
+
 - **A public profile can be searched, filtered and sorted** like the owner's Cards page: `q`,
   set, rarity, and set order or name (a public page has no price and no date). The API's public
   cards route took the keys and answers with `facets` over the whole collection, one spelling
@@ -37,9 +43,8 @@ which also says what is already yours), Settings (avatar through the API), publi
   Paldea Evolved #227 Illustration rare. Corrected in the database by hand: the app has no field
   for a card's set or number. The API's collection cache is an hour; a direct database change
   shows after that.
-- **Open:** #68 (the theme boot script by hash, next-themes gone) waits on `NPM_RC` for Preview
-  on Vercel: a preview build that changes the lockfile fetches `@strakzat` metadata and gets a
-  401 without it. Ancient Mew (Miscellaneous Promos #001) has no scan in any catalogue; it
+- **Open:** #68 (the theme boot script by hash, next-themes gone) merges once the lint package
+  comes from npm, which is what unblocks a preview build that changes the lockfile. Ancient Mew (Miscellaneous Promos #001) has no scan in any catalogue; it
   needs one of the owner's own under the API's `public/artwork`.
 
 - **Every kit Button is a pill** (`shape="pill"` default, `shape="rect"` by hand), and so are

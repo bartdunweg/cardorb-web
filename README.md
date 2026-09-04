@@ -9,8 +9,6 @@ https://cardorb.com; cards, folders and profiles come from the Card Orb API
 ## Requirements
 
 - Node 24 (see `.nvmrc`) and pnpm
-- A GitHub token with `read:packages`, because `@strakzat/eslint-config-ui` is a private package on
-  GitHub Packages. Put it in `~/.npmrc` as `//npm.pkg.github.com/:_authToken=<token>`.
 - Access to the Vercel project `cardorb` (team `bartdunweg`) for the environment values
 
 ## Getting it running
@@ -34,7 +32,6 @@ cards are the API's.
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | yes | Supabase project, Settings → API (the public anon key) |
 | `NEXT_PUBLIC_SITE_URL` | no | `https://cardorb.com` in production; defaults to `http://localhost:3000` |
 | `CARDORB_API_URL` | no | Defaults to `https://api.cardorb.com/v1`; point it at a local checkout of `cardorb-api` to develop both |
-| `NPM_RC` | Vercel only | `//npm.pkg.github.com/:_authToken=<token with read:packages>`; without it `pnpm install` fails on Vercel |
 
 Supabase is used for sign-in and the session only. The session's access token is the API's bearer,
 so one Supabase project serves the website, the iOS app and the API.

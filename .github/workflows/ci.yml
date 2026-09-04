@@ -16,16 +16,7 @@ jobs:
                   node-version-file: .nvmrc
                   cache: pnpm
 
-            # Credential for the @strakzat scope, in the runner's own npmrc (never the repo's).
-            #
-            # A PAT, not the per-run GITHUB_TOKEN: that token is scoped to this repository, which
-            # lives in a personal account, so GitHub Packages answers 403 for a package owned by
-            # the strakzat org. Measured: `permission_denied` with the token accepted, not missing.
-            - name: Authenticate to GitHub Packages
-              run: npm config set //npm.pkg.github.com/:_authToken "$PACKAGES_TOKEN" --location=user
-              env:
-                  PACKAGES_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
-
+            # @strakzat/eslint-config-ui is public on npm: no registry, no token.
             - run: pnpm install --frozen-lockfile
 
             # gitleaks is not preinstalled on the runner; without it verify.sh reports the secrets
