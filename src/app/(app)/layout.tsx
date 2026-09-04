@@ -5,23 +5,24 @@ import { MobileTabBar } from "@/components/app/mobile-nav";
 import { ApiError } from "@/lib/api";
 import { getMyCollections } from "@/lib/collections";
 import { accountFrom, getMyProfile } from "@/lib/profile";
-import { timed } from "@/lib/timing";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-    // The middleware already sent a signed-out visitor to /login; this is the API saying the
+    // The profile and the folders are independent reads of an API in another region, and after
+    // every write both miss the cache: asked together, the layout waits for the slower one rather
+    // than the sum. Each read logs its own timing line (perUser, then the API call on a miss).
+    //
+    // The middleware already sent a signed-out visitor to /login; a 401 here is the API saying the
     // session it was handed is not good enough, which comes to the same door.
     let me;
+    let collections;
     try {
-        me = await timed("layout profile", getMyProfile);
+        [me, { collections }] = await Promise.all([getMyProfile(), getMyCollections()]);
     } catch (err) {
         if (err instanceof ApiError && err.status === 401) redirect("/login");
         throw err;
     }
 
     const account = accountFrom(me);
-
-    // Collections feed the sidebar's expandable Collections item.
-    const { collections } = await timed("layout folders and stats", getMyCollections);
 
     return (
         <CommandSearchProvider>
