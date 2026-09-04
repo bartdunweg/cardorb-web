@@ -42,7 +42,8 @@ function StatusText({ msg }: { msg: Msg }) {
     );
 }
 
-export function SettingsForm({ profile, email }: { profile: Profile; email: string | null }) {
+// `heading` replaces the Settings title: the You page puts the account there instead.
+export function SettingsForm({ profile, email, heading }: { profile: Profile; email: string | null; heading?: ReactNode }) {
     const [displayName, setDisplayName] = useState(profile.display_name ?? "");
     const [username, setUsername] = useState(profile.username);
     const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url ?? "");
@@ -145,10 +146,12 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
 
     return (
         <div className="flex max-w-2xl flex-col gap-6">
-            <div className="flex flex-col gap-1">
-                <h1 className="text-display-xs font-semibold text-primary">Settings</h1>
-                <p className="text-md text-tertiary">Manage your account and preferences.</p>
-            </div>
+            {heading ?? (
+                <div className="flex flex-col gap-1">
+                    <h1 className="text-display-xs font-semibold text-primary">Settings</h1>
+                    <p className="text-md text-tertiary">Manage your account and preferences.</p>
+                </div>
+            )}
 
             <Section title="Profile" description="This is how you appear in Cardorb.">
                 <div className="flex items-center gap-4">

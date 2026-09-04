@@ -7,6 +7,7 @@ import { CardsPagination } from "@/components/app/cards-pagination";
 import { CardsSearch } from "@/components/app/cards-search";
 import { CardsSort } from "@/components/app/cards-sort";
 import { CardsView } from "@/components/app/cards-view";
+import { FiltersSheet } from "@/components/app/filters-sheet";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/base/buttons/button";
 import { getMyCards } from "@/lib/cards";
@@ -64,10 +65,10 @@ export default async function CardsPage({
     }
 
     const toolbar = (
-        <>
-            <CardsSearch initialValue={q ?? ""} className="w-full sm:w-64" />
+        <FiltersSheet active={[q, query.set, query.rarity].filter(Boolean).length}>
+            <CardsSearch initialValue={q ?? ""} className="w-full lg:w-64" />
             <CardsFilters query={query} facets={facets} />
-        </>
+        </FiltersSheet>
     );
 
     return (

@@ -84,7 +84,14 @@ export function AddCardModal({ defaultTarget = "collection", trigger }: { defaul
                                     <ButtonGroupItem id="wishlist">Wishlist</ButtonGroupItem>
                                 </ButtonGroup>
 
-                                <Input aria-label="Search cards" icon={SearchLg} placeholder="Search by name…" value={query} onChange={setQuery} />
+                                <Input
+                                    aria-label="Search cards"
+                                    icon={SearchLg}
+                                    placeholder="Search by name…"
+                                    value={query}
+                                    onChange={setQuery}
+                                    wrapperClassName="rounded-full"
+                                />
 
                                 <div className="flex min-h-40 flex-col gap-1 overflow-y-auto">
                                     {/* One live region, always mounted, so a screen reader hears the state change. */}

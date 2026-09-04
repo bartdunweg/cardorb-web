@@ -58,7 +58,14 @@ export function CollectionDetailActions({ collectionId }: { collectionId: string
                                 <AriaHeading slot="title" className="text-lg font-semibold text-primary">
                                     Add cards to this collection
                                 </AriaHeading>
-                                <Input aria-label="Search your cards" icon={SearchLg} placeholder="Search your cards…" value={query} onChange={setQuery} />
+                                <Input
+                                    aria-label="Search your cards"
+                                    icon={SearchLg}
+                                    placeholder="Search your cards…"
+                                    value={query}
+                                    onChange={setQuery}
+                                    wrapperClassName="rounded-full"
+                                />
                                 <div className="flex min-h-40 flex-col gap-1 overflow-y-auto">
                                     {/* One live region, always mounted, so a screen reader hears the state change. */}
                                     <output aria-live="polite" className={cx("text-center text-sm text-tertiary", searchState ? "px-1 py-6" : "sr-only")}>

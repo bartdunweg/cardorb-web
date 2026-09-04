@@ -165,7 +165,8 @@ export const CommandDialog = ({ className, dialogClassName, children, ...combobo
             isDismissable
             className={(state) =>
                 cx(
-                    "fixed inset-0 z-50 flex min-h-full items-start justify-center overflow-y-auto bg-overlay/70 p-4 text-center backdrop-blur md:pt-16 xl:pt-[clamp(64px,10vh,243px)]",
+                    // Centred on the screen, not hung from the top: the palette is the page's focus while it is open.
+                    "fixed inset-0 z-50 flex min-h-full items-center justify-center overflow-y-auto bg-overlay/70 p-4 text-center backdrop-blur",
                     state.isEntering && "duration-300 ease-out animate-in fade-in",
                     state.isExiting && "duration-200 ease-in animate-out fade-out",
                     typeof className === "function" ? className(state) : className,

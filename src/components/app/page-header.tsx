@@ -58,7 +58,13 @@ export function PageHeader({
         <>
             <div
                 className={cx(
-                    "sticky top-0 z-30 -mx-4 -mt-6 mb-2 grid h-12 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center glass px-2 sm:-mx-6 sm:-mt-8 lg:hidden",
+                    "sticky top-0 z-30 -mx-4 -mt-4 grid h-12 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-2 sm:-mx-6 sm:-mt-8 lg:hidden",
+                    // The glass comes with the collapse (or with Back); over the uncollapsed title it would only blur it.
+                    (collapsed || back) && "glass",
+                    // Without Back the bar has nothing to show until the title collapses into it, so it lies over
+                    // the first 48 px and lets taps through: the page's first content starts 16 px from the top.
+                    back ? "mb-2" : "-mb-12",
+                    !back && !collapsed && "pointer-events-none",
                     // Where content meets the bar: a fade from the page surface to nothing under the bar's edge,
                     // not a rule. It appears with the collapse and goes when the title is back.
                     "after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-4 after:bg-linear-to-b after:from-bg-primary after:to-transparent after:transition-opacity after:duration-150 after:ease-out",

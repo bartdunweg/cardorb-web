@@ -6,6 +6,7 @@ import { CardsFilters } from "@/components/app/cards-filters";
 import { CardsPagination } from "@/components/app/cards-pagination";
 import { CardsSearch } from "@/components/app/cards-search";
 import { CardsSort } from "@/components/app/cards-sort";
+import { FiltersSheet } from "@/components/app/filters-sheet";
 import { PublicCardsView } from "@/components/app/public-cards-view";
 import { PublicTopBar } from "@/components/app/public-top-bar";
 import { Avatar } from "@/components/base/avatar/avatar";
@@ -84,14 +85,16 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                     <div className="flex flex-1 flex-col gap-4">
                         {/* One row: search, the two filters, the sort. It wraps on a narrow screen. */}
                         <div className="flex flex-wrap items-center gap-2">
-                            <CardsSearch
-                                initialValue={q ?? ""}
-                                label="Search this collection"
-                                placeholder="Search this collection"
-                                className="w-full sm:w-72"
-                            />
-                            <CardsFilters query={query} facets={facets} />
-                            <CardsSort query={query} options={PUBLIC_SORT_OPTIONS} />
+                            <FiltersSheet active={[q, query.set, query.rarity].filter(Boolean).length}>
+                                <CardsSearch
+                                    initialValue={q ?? ""}
+                                    label="Search this collection"
+                                    placeholder="Search this collection"
+                                    className="w-full lg:w-72"
+                                />
+                                <CardsFilters query={query} facets={facets} />
+                                <CardsSort query={query} options={PUBLIC_SORT_OPTIONS} />
+                            </FiltersSheet>
                         </div>
                         {cards.length === 0 ? (
                             <AppEmptyState

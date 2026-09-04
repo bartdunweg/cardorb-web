@@ -1,16 +1,27 @@
-import { PageHeader } from "@/components/app/page-header";
-import { YouMenu } from "@/components/app/you-menu";
+import { SettingsForm } from "@/components/app/settings-form";
+import { AvatarLabelGroup } from "@/components/base/avatar/avatar-label-group";
 import { accountFrom, getMyProfile } from "@/lib/profile";
 
-// The fifth tab on a phone: the account and what the tab bar has no room for. On desktop the
-// sidebar carries all of it, so this page is only linked from the tab bar.
+// The fifth tab on a phone: the account at the top, the settings under it, Sign out at the end.
+// On desktop the sidebar's account menu and the Settings page carry the same.
 export default async function YouPage() {
     // The same read the layout made: one per name per request, so no second call.
     const me = await getMyProfile();
+    const account = accountFrom(me);
+
+    if (!me.profile) {
+        return <p className="text-sm text-tertiary">Could not load your profile. Please try again.</p>;
+    }
+
     return (
-        <div className="flex flex-1 flex-col gap-6">
-            <PageHeader title="You" />
-            <YouMenu account={accountFrom(me)} />
-        </div>
+        <SettingsForm
+            profile={me.profile}
+            email={me.email}
+            heading={
+                <h1>
+                    <AvatarLabelGroup size="lg" src={account.avatarUrl ?? undefined} alt="" title={account.name} subtitle={account.email} />
+                </h1>
+            }
+        />
     );
 }

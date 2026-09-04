@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Scan, SearchLg } from "@untitledui/icons";
 import { Heading as AriaHeading } from "react-aria-components";
 import { type CardHit, searchMyCards } from "@/app/(app)/dashboard/cards/actions";
@@ -47,6 +47,9 @@ export function MobileSearchSheet() {
 function CollectionSearch({ onClose }: { onClose: () => void }) {
     const [query, setQuery] = useState("");
     const [selected, setSelected] = useState<CardHit | null>(null);
+    const field = useRef<HTMLInputElement>(null);
+    // The sheet exists to type into: the tap on Search lands the caret in the field.
+    useEffect(() => field.current?.focus(), []);
     const { results, loading } = useDebouncedSearch<CardHit>(query, searchMyCards, { minLength: 1, delay: 250 });
     const searchState = loading ? "Searching…" : query.trim().length >= 1 && results.length === 0 ? "No cards found." : "";
 
@@ -56,7 +59,15 @@ function CollectionSearch({ onClose }: { onClose: () => void }) {
                 <AriaHeading slot="title" className="text-lg font-semibold text-primary">
                     Search
                 </AriaHeading>
-                <Input aria-label="Search your collection" icon={SearchLg} placeholder="Search by name or set…" value={query} onChange={setQuery} autoFocus />
+                <Input
+                    aria-label="Search your collection"
+                    icon={SearchLg}
+                    placeholder="Search by name or set…"
+                    value={query}
+                    onChange={setQuery}
+                    ref={field}
+                    wrapperClassName="rounded-full"
+                />
             </SlideoutMenu.Header>
             <SlideoutMenu.Content className="gap-1 pb-4">
                 {/* One live region, always mounted, so a screen reader hears the state change. */}
