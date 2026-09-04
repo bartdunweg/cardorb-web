@@ -14,6 +14,10 @@ export const SORT_OPTIONS = [
 ] as const;
 
 export type SortKey = (typeof SORT_OPTIONS)[number]["value"];
+export type SortOption = (typeof SORT_OPTIONS)[number];
+
+/** What a public collection can be sorted by: it carries no price and no date. */
+export const PUBLIC_SORT_OPTIONS = SORT_OPTIONS.filter((o) => o.sort === undefined || o.sort === "name");
 export type ApiSort = "name" | "price" | "added";
 export type ApiOrder = "asc" | "desc";
 
@@ -44,6 +48,12 @@ export function readListQuery(params: { page?: string; sort?: string; q?: string
         set: text(params.set),
         rarity: text(params.rarity),
     };
+}
+
+/** A public list's URL: as the owner's, except a sort the public route refuses falls back to set order. */
+export function readPublicListQuery(params: Parameters<typeof readListQuery>[0]): ListQuery {
+    const query = readListQuery(params);
+    return PUBLIC_SORT_OPTIONS.some((o) => o.value === query.sortKey) ? query : { ...query, sortKey: "set", sort: undefined, order: undefined };
 }
 
 /** The same list with some of it changed; defaults stay out of the URL so the plain path stays plain. */
