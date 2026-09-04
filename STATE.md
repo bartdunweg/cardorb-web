@@ -22,6 +22,26 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **A public profile can be searched, filtered and sorted** like the owner's Cards page: `q`,
+  set, rarity, and set order or name (a public page has no price and no date). The API's public
+  cards route took the keys and answers with `facets` over the whole collection, one spelling
+  per rarity (cardorb-api#159, #160). Search, filters and sort share one row; on Cards, search
+  and filters do (#69, #70, #72). The default sort is called "Newest set first", which is what
+  the API has always done (#71).
+- **The proxy lives in `src/proxy.ts`.** `middleware.ts` at the root ran in production only:
+  with the app under `src/`, the dev server looks beside it. Now every local check sees the
+  nonce policy on `/login`. The public pages' `frame-ancestors` rule is set there too, since a
+  header from `next.config.mjs` replaced the proxy's in development. ESLint skips `.claude/**`,
+  where Claude Code keeps worktrees of other branches inside the checkout (#73).
+- **Flamigo** was filed as Paldean Fates #211 (Shiny rare) since the import; the owner has the
+  Paldea Evolved #227 Illustration rare. Corrected in the database by hand: the app has no field
+  for a card's set or number. The API's collection cache is an hour; a direct database change
+  shows after that.
+- **Open:** #68 (the theme boot script by hash, next-themes gone) waits on `NPM_RC` for Preview
+  on Vercel: a preview build that changes the lockfile fetches `@strakzat` metadata and gets a
+  401 without it. Ancient Mew (Miscellaneous Promos #001) has no scan in any catalogue; it
+  needs one of the owner's own under the API's `public/artwork`.
+
 - **Every kit Button is a pill** (`shape="pill"` default, `shape="rect"` by hand), and so are
   `ButtonUtility` and `CloseButton`; the marker line at the top of each changed kit file says so
   (#61, #66).
@@ -185,8 +205,8 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 Backlog from the review, ranked. Each is one PR.
 
-- One promo card without art: Ancient Mew (Miscellaneous Promos #001). The "wishlist count on
-  Home" note is stale — Home has had a Wishlist tile since the stats page existed.
+- Ancient Mew (Miscellaneous Promos #001) has no scan anywhere; a scan of the owner's own copy
+  goes under the API's `public/artwork` with a lookup by tcgId in the resolver.
 
 ## Open
 
