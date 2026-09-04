@@ -22,6 +22,20 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **Every kit Button is a pill** (`shape="pill"` default, `shape="rect"` by hand), and so are
+  `ButtonUtility` and `CloseButton`; the marker line at the top of each changed kit file says so
+  (#61, #66).
+- **Sign-up asks for an email and a password.** `usernameFromEmail` gives the profile its
+  username from the first moment (local part, database shape, four random characters); the
+  display name waits for Settings. Settings validates a username as the database does: lowercase,
+  digits, hyphens (#62, #63).
+- **The public profile is lighter**: the avatar goes through the image optimizer (a 90 KB PNG
+  became 1.5 KB AVIF), card thumbnails are AVIF at quality 60. Lighthouse mobile, warm: 93, LCP
+  3.2 → 2.7 s, 989 → 612 KiB. The first request after a deploy is slow while the optimizer
+  encodes (#64).
+- **A signed-in person sees their account menu on a public profile**, through `getViewer()` and
+  the shared `PublicTopBar` (#65).
+
 - **The public pages share one top bar** (`src/components/app/public-top-bar.tsx`): wordmark,
   Sign in, Get started as pills; the hero keeps one Get started; the landing has a one-row footer
   with Privacy and Terms. The API reference is not linked from the landing, since the API serves
