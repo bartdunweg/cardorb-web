@@ -1,20 +1,22 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppEmptyState } from "@/components/app/app-empty-state";
+import { CardsFilters } from "@/components/app/cards-filters";
 import { CardsPagination } from "@/components/app/cards-pagination";
 import { CardsSearch } from "@/components/app/cards-search";
+import { CardsSort } from "@/components/app/cards-sort";
 import { PublicCardsView } from "@/components/app/public-cards-view";
 import { PublicTopBar } from "@/components/app/public-top-bar";
 import { Avatar } from "@/components/base/avatar/avatar";
-import { listHref, readListQuery } from "@/lib/list-query";
+import { PUBLIC_SORT_OPTIONS, listHref, readPublicListQuery } from "@/lib/list-query";
 import { getViewer } from "@/lib/profile";
 import { PUBLIC_PAGE_SIZE, getPublicCards, getPublicProfile } from "@/lib/public-profile";
 
-type Params = { params: Promise<{ username: string }>; searchParams: Promise<{ page?: string; q?: string }> };
+type Params = { params: Promise<{ username: string }>; searchParams: Promise<{ page?: string; q?: string; sort?: string; set?: string; rarity?: string }> };
 
 export async function generateMetadata({ params, searchParams }: Params): Promise<Metadata> {
     const { username } = await params;
-    const { page } = readListQuery(await searchParams);
+    const { page } = readPublicListQuery(await searchParams);
     const base = `/user/${encodeURIComponent(username)}`;
     // Each page names itself: a shared or indexed second page must not collapse onto the first.
     // A search is not a page of its own: its canonical is the list it searched.
@@ -36,17 +38,18 @@ export default async function PublicProfilePage({ params, searchParams }: Params
     const profile = await getPublicProfile(decodeURIComponent(username));
     if (!profile) notFound();
 
-    const query = readListQuery(await searchParams);
+    const query = readPublicListQuery(await searchParams);
     const { page, q } = query;
-    const [{ cards, total, sets }, viewer] = await Promise.all([getPublicCards(decodeURIComponent(username), { page, q }), getViewer()]);
+    const narrowed = Boolean(q || query.set || query.rarity);
+    const [{ cards, total, sets, facets }, viewer] = await Promise.all([getPublicCards(decodeURIComponent(username), query), getViewer()]);
     const totalPages = Math.max(1, Math.ceil(total / PUBLIC_PAGE_SIZE));
     const base = `/user/${encodeURIComponent(username)}`;
     const name = profile.display_name || profile.username || "Collection";
     // The handle sits under a display name, as a profile page does; with no display name it is the name.
     const handle = profile.display_name && profile.username ? `@${profile.username}` : null;
-    // With a search on, the count is what matched; the set count still spans the whole collection.
+    // With a search or a filter on, the count is what matched; the set count still spans the whole collection.
     const counts = [
-        q ? `${total.toLocaleString("en-US")} match${total === 1 ? "" : "es"}` : `${total.toLocaleString("en-US")} card${total === 1 ? "" : "s"}`,
+        narrowed ? `${total.toLocaleString("en-US")} match${total === 1 ? "" : "es"}` : `${total.toLocaleString("en-US")} card${total === 1 ? "" : "s"}`,
         `${sets.toLocaleString("en-US")} set${sets === 1 ? "" : "s"}`,
     ].join(" · ");
 
@@ -64,13 +67,25 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                     </div>
                 </div>
 
-                {cards.length === 0 && !q ? (
+                {cards.length === 0 && !narrowed ? (
                     <AppEmptyState icon="folder" title="This collection is empty" description="Nothing has been added to it yet" />
                 ) : (
                     <div className="flex flex-1 flex-col gap-4">
-                        <CardsSearch initialValue={q ?? ""} label="Search this collection" placeholder="Search this collection" />
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                            <CardsSearch initialValue={q ?? ""} label="Search this collection" placeholder="Search this collection" />
+                            <CardsSort query={query} options={PUBLIC_SORT_OPTIONS} />
+                        </div>
+                        <CardsFilters query={query} facets={facets} />
                         {cards.length === 0 ? (
-                            <AppEmptyState icon="search" title="No cards found" description={`No cards match “${q}”. Try a different name or set.`} />
+                            <AppEmptyState
+                                icon="search"
+                                title="No cards found"
+                                description={
+                                    q
+                                        ? `No cards match “${q}”. Try a different name or set.`
+                                        : "Nothing in that set or rarity. Clear a filter to widen the list."
+                                }
+                            />
                         ) : (
                             <>
                                 <PublicCardsView cards={cards} />

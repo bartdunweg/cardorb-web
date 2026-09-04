@@ -1,5 +1,7 @@
 import { ApiError, api } from "@/lib/api";
 import { type PublicCard, type PublicItem, publicCardFromItem } from "@/lib/api-shapes";
+import type { Facets } from "@/lib/facets";
+import type { ListQuery } from "@/lib/list-query";
 
 export type PublicProfile = { display_name: string | null; username: string | null; avatar_url: string | null };
 
@@ -19,17 +21,16 @@ export async function getPublicProfile(username: string): Promise<PublicProfile 
 
 export const PUBLIC_PAGE_SIZE = 100;
 
-// One page of the owned cards behind a public profile, with the totals behind it, narrowed by a
-// search on name or set when `q` is given. The paged route rather than the whole collection: a
-// hundred tiles need thirty kilobytes, not nine hundred. The API publishes nothing personal on it
-// (R-API-002 there), so nothing here has to be hidden.
-export async function getPublicCards(
-    username: string,
-    { page = 1, q }: { page?: number; q?: string } = {},
-): Promise<{ cards: PublicCard[]; total: number; sets: number }> {
-    const { cards, total, sets } = await api<{ cards: PublicItem[]; total: number; sets: number }>(`/public/${encodeURIComponent(username)}/cards`, {
-        auth: false,
-        params: { q, limit: PUBLIC_PAGE_SIZE, offset: (page - 1) * PUBLIC_PAGE_SIZE },
-    });
-    return { cards: cards.map(publicCardFromItem), total, sets };
+export type PublicCardsPage = { cards: PublicCard[]; total: number; sets: number; facets: Facets };
+
+// One page of the owned cards behind a public profile, narrowed and sorted as the URL says, with
+// the totals and the facets over the whole collection behind it. The paged route rather than the
+// whole collection: a hundred tiles need thirty kilobytes, not nine hundred. The API publishes
+// nothing personal on it (R-API-002 there), so nothing here has to be hidden.
+export async function getPublicCards(username: string, { page, q, set, rarity, sort, order }: ListQuery): Promise<PublicCardsPage> {
+    const { cards, total, sets, facets } = await api<{ cards: PublicItem[]; total: number; sets: number; facets: Facets }>(
+        `/public/${encodeURIComponent(username)}/cards`,
+        { auth: false, params: { q, set, rarity, sort, order, limit: PUBLIC_PAGE_SIZE, offset: (page - 1) * PUBLIC_PAGE_SIZE } },
+    );
+    return { cards: cards.map(publicCardFromItem), total, sets, facets };
 }

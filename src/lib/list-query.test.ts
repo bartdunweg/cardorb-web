@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { listHref, readListQuery } from "./list-query";
+import { listHref, readListQuery, readPublicListQuery } from "./list-query";
 
 describe("readListQuery", () => {
     it("reads page and sort, and falls back to set order and page one for anything else", () => {
@@ -32,5 +32,12 @@ describe("set and rarity", () => {
         expect(listHref("/dashboard/cards", q, { page: 2 })).toBe("/dashboard/cards?sort=name&set=Jungle&rarity=Rare&page=2");
         expect(listHref("/dashboard/cards", q, { set: undefined, page: 1 })).toBe("/dashboard/cards?sort=name&rarity=Rare");
         expect(readListQuery({ set: "  " }).set).toBeUndefined();
+    });
+});
+
+describe("readPublicListQuery", () => {
+    it("keeps name order and drops a price or date sort back to set order", () => {
+        expect(readPublicListQuery({ sort: "name", q: "mew" })).toMatchObject({ sortKey: "name", sort: "name", q: "mew" });
+        expect(readPublicListQuery({ sort: "price-desc", set: "jungle" })).toMatchObject({ sortKey: "set", sort: undefined, order: undefined, set: "jungle" });
     });
 });
