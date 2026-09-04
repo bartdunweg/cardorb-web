@@ -22,6 +22,11 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **A set page is a checklist.** Every tile is a menu: a card you lack goes to the collection or
+  the wishlist, a wished card is "Got it" or removed, an owned card gains or loses a copy or is
+  removed, and each opens its place in Cards or Wishlist. Copies are offered only when the card is
+  one collection row; two printings are managed in Cards. New actions `setCopies` and `removeCard`
+  in `cards/actions.ts`; the item DELETE needs a JSON content type, so it sends `{}`.
 - **A Sets page** (`/dashboard/sets`) shows every set the catalogue knows, grouped by series, with
   how much of each is in the binder; a set opens as a grid of all its cards, yours in colour, the
   missing ones grey (`GET /catalog/sets`, `GET /catalog/sets/:id`, `src/lib/sets.ts`). The API
