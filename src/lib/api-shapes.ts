@@ -166,6 +166,90 @@ export function slotsFromEntries(entries: DexEntry[]): { slots: DexSlot[]; caugh
     return { slots, caughtNumbers, totalCards };
 }
 
+// ── GET /v1/catalog/sets ──────────────────────────────────────────────────────────────────
+
+/** One set as the API lists it, with the viewer's own counts folded in. Newest set first. */
+export type CatalogueSet = {
+    id: string;
+    name: string;
+    series: string;
+    /** "YYYY/MM/DD", as pokemontcg.io writes it. */
+    releaseDate: string | null;
+    /** Every card in the set, secret rares included. */
+    total: number;
+    /** The number printed on the cards; a set of 207 may print "165". */
+    printedTotal: number | null;
+    logo: string | null;
+    symbol: string | null;
+    /** Copies held, not distinct cards: two Pikachu count twice (cardorb-api counts quantity). */
+    ownedCount: number;
+    wishlistCount: number;
+};
+
+export type SetSummary = {
+    id: string;
+    name: string;
+    series: string;
+    releaseDate: string | null;
+    logoUrl: string | null;
+    symbolUrl: string | null;
+    /** Capped at `total`: the API counts copies, and "230 of 207" reads as a bug, not a binder. */
+    owned: number;
+    total: number;
+    complete: boolean;
+};
+
+export type SetSeries = { name: string; sets: SetSummary[] };
+
+/** The shelf, one row per series in the order the API lists sets, plus the counts the header shows. */
+export function seriesFromSets(sets: CatalogueSet[]): { series: SetSeries[]; complete: number; started: number; totalSets: number } {
+    const bySeries = new Map<string, SetSummary[]>();
+    let complete = 0;
+    let started = 0;
+    for (const set of sets) {
+        const owned = Math.min(set.ownedCount, set.total);
+        const summary: SetSummary = {
+            id: set.id,
+            name: set.name,
+            series: set.series,
+            releaseDate: set.releaseDate,
+            logoUrl: absoluteImage(set.logo),
+            symbolUrl: absoluteImage(set.symbol),
+            owned,
+            total: set.total,
+            complete: set.total > 0 && owned >= set.total,
+        };
+        if (summary.complete) complete += 1;
+        if (owned > 0) started += 1;
+        bySeries.set(set.series, [...(bySeries.get(set.series) ?? []), summary]);
+    }
+    const series = [...bySeries.entries()].map(([name, list]) => ({ name, sets: list }));
+    return { series, complete, started, totalSets: sets.length };
+}
+
+// ── GET /v1/catalog/sets/:setId ───────────────────────────────────────────────────────────
+
+/** One tile on a set page: the card as the catalogue knows it, and whether it is in the binder. */
+export type SetCard = {
+    id: string;
+    number: string;
+    name: string;
+    imageUrl: string | null;
+    owned: boolean;
+    wishlist: boolean;
+    quantity: number;
+};
+
+export const setCardFromBrowse = (c: BrowseCard): SetCard => ({
+    id: c.id,
+    number: c.number,
+    name: c.name,
+    imageUrl: absoluteImage(c.image),
+    owned: c.owned,
+    wishlist: c.wishlist,
+    quantity: c.quantity,
+});
+
 // ── GET /v1/catalog/search ────────────────────────────────────────────────────────────────
 
 export type BrowseCard = {

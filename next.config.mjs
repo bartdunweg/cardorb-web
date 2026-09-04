@@ -6,6 +6,7 @@ const nextConfig = {
         remotePatterns: [
             { protocol: "https", hostname: "assets.tcgdex.net" },
             { protocol: "https", hostname: "images.pokemontcg.io" },
+            { protocol: "https", hostname: "images.scrydex.com" },
             { protocol: "https", hostname: "limitlesstcg.nyc3.cdn.digitaloceanspaces.com" },
             { protocol: "https", hostname: "api.cardorb.com" },
             // Avatars live in Supabase storage, which serves them as uploaded (a 90 KB PNG for a

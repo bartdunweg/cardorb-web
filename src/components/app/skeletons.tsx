@@ -81,3 +81,36 @@ export function FoldersSkeleton() {
         </div>
     );
 }
+
+/** The sets shelf: a series heading, then rows of logo, name and bar. */
+export function SetsSkeleton() {
+    return (
+        <>
+            <Block className="-mt-4 h-2 max-w-md" />
+            {Array.from({ length: 2 }, (_, s) => (
+                <div key={s} className="flex flex-col gap-3">
+                    <Block className="h-5 w-32" />
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                        {Array.from({ length: 6 }, (_, i) => (
+                            <Block key={i} className="h-20 rounded-xl" />
+                        ))}
+                    </div>
+                </div>
+            ))}
+        </>
+    );
+}
+
+/** One set: the bar under the count, then card tiles in the set grid's columns. */
+export function SetSkeleton() {
+    return (
+        <>
+            <Block className="-mt-4 h-2 max-w-md" />
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
+                {Array.from({ length: 40 }, (_, i) => (
+                    <div key={i} className="aspect-[63/88] rounded-md bg-secondary" />
+                ))}
+            </div>
+        </>
+    );
+}
