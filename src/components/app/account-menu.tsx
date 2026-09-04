@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronSelectorVertical, LogOut01, Moon01, Settings01, User01 } from "@untitledui/icons";
+import { ChevronSelectorVertical, LogOut01, Moon01, Settings01 } from "@untitledui/icons";
 import { Button as AriaButton } from "react-aria-components";
 import { signOut } from "@/app/(auth)/actions";
 import { Avatar } from "@/components/base/avatar/avatar";
@@ -11,7 +11,7 @@ import { cx } from "@/utils/cx";
 
 type Account = { name: string; email: string; avatarUrl: string | null };
 
-// Account card that opens a dropdown with Profile/Settings, a real dark-mode Toggle, and Sign out.
+// Account card that opens a dropdown with Settings, a real dark-mode Toggle, and Sign out.
 // `compact` renders just the avatar as trigger (for the mobile top bar).
 export function AccountMenu({ account, compact }: { account: Account; compact?: boolean }) {
     return (
@@ -57,7 +57,7 @@ export function AccountMenu({ account, compact }: { account: Account; compact?: 
     );
 }
 
-// The account's own entries: Profile, Settings, the dark-mode toggle, Sign out. Rendered inside a
+// The account's own entries: Settings (which is where the profile lives), the dark-mode toggle, Sign out. Rendered inside a
 // Dropdown.Menu, here and at the end of the mobile tab bar's More menu.
 export function AccountMenuItems() {
     const { resolvedTheme, setTheme } = useTheme();
@@ -67,9 +67,6 @@ export function AccountMenuItems() {
 
     return (
         <>
-            <Dropdown.Item icon={User01} href="/dashboard/settings">
-                Profile
-            </Dropdown.Item>
             <Dropdown.Item icon={Settings01} href="/dashboard/settings">
                 Settings
             </Dropdown.Item>

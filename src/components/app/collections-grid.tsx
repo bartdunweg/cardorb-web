@@ -109,7 +109,7 @@ export function CollectionsGrid({
                 <div className="flex flex-col gap-4">
                     <div className="flex justify-end">
                         <CreateCollectionModal>
-                            <Button iconLeading={Plus} aria-label="New collection" size="lg" className="rounded-full" />
+                            <Button iconLeading={Plus}>New collection</Button>
                         </CreateCollectionModal>
                     </div>
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
