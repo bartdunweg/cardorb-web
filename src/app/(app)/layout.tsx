@@ -7,6 +7,7 @@ import { ApiError } from "@/lib/api";
 import { getMyCollections } from "@/lib/collections";
 import { nonceFrom } from "@/lib/csp";
 import { accountFrom, getMyProfile } from "@/lib/profile";
+import { timed } from "@/lib/timing";
 import { Theme } from "@/providers/theme";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -15,7 +16,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     // session it was handed is not good enough, which comes to the same door.
     let me;
     try {
-        me = await getMyProfile();
+        me = await timed("layout profile", getMyProfile);
     } catch (err) {
         if (err instanceof ApiError && err.status === 401) redirect("/login");
         throw err;
@@ -24,7 +25,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     const account = accountFrom(me);
 
     // Collections feed the sidebar's expandable Collections item.
-    const { collections } = await getMyCollections();
+    const { collections } = await timed("layout folders and stats", getMyCollections);
 
     return (
         <Theme nonce={nonce}>
