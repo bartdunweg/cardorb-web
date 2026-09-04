@@ -25,9 +25,9 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                     key={card.id}
                     type="button"
                     onClick={() => onSelect(card)}
-                    className="flex cursor-pointer flex-col gap-2 rounded-xl p-2 text-left outline-focus-ring transition hover:bg-secondary focus-visible:outline-2"
+                    className="flex pressable cursor-pointer flex-col gap-2 rounded-xl p-2 text-left outline-focus-ring transition-colors hover:bg-secondary focus-visible:outline-2"
                 >
-                    <div className="relative aspect-[63/88] w-full overflow-hidden rounded-lg bg-quaternary">
+                    <div className="relative aspect-[63/88] w-full overflow-hidden rounded-lg bg-quaternary ring-1 ring-image ring-inset">
                         {card.image_url ? (
                             <CardImage
                                 src={card.image_url}

@@ -103,7 +103,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
 
                     <SlideoutMenu.Content>
                         {card?.image_url ? (
-                            <div className="relative mx-auto aspect-[63/88] w-48 overflow-hidden rounded-xl">
+                            <div className="relative mx-auto aspect-[63/88] w-48 overflow-hidden rounded-xl ring-1 ring-image ring-inset">
                                 <CardImage src={card.image_url} alt={card.name} sizes="192px" className="object-contain" priority />
                             </div>
                         ) : (

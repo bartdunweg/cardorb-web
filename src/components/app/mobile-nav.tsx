@@ -14,7 +14,7 @@ const tabs = [
     { label: "Collections", href: "/dashboard/collections", icon: Folder, match: (p: string) => p.startsWith("/dashboard/collections") },
 ];
 
-const tabClass = "flex flex-1 flex-col items-center gap-1 rounded-full py-1 text-xs/4 font-medium transition";
+const tabClass = "pressable flex flex-1 flex-col items-center gap-1 rounded-full py-1 text-xs/4 font-medium transition-colors duration-150";
 
 // Bottom tab bar for mobile: three destinations and You, the account's page, in one pill. Search
 // lives at the top of Home. Its side

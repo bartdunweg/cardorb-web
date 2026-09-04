@@ -21,7 +21,7 @@ export function MobileSearchSheet() {
             <button
                 type="button"
                 onClick={() => setOpen(true)}
-                className="flex w-full cursor-pointer items-center gap-2 rounded-full bg-primary py-2 pr-12 pl-3 text-sm text-tertiary shadow-xs ring-1 ring-primary outline-focus-ring ring-inset hover:bg-secondary focus-visible:outline-2"
+                className="flex w-full pressable cursor-pointer items-center gap-2 rounded-full bg-primary py-2 pr-12 pl-3 text-sm text-tertiary shadow-xs ring-1 ring-primary outline-focus-ring ring-inset hover:bg-secondary focus-visible:outline-2"
             >
                 <SearchLg className="size-5 text-fg-quaternary" />
                 <span className="flex-1 text-left">Search your collection</span>
@@ -80,9 +80,9 @@ function CollectionSearch({ onClose }: { onClose: () => void }) {
                             key={card.id}
                             type="button"
                             onClick={() => setSelected(card)}
-                            className="flex items-center gap-3 rounded-lg p-2 text-left hover:bg-secondary"
+                            className="flex pressable items-center gap-3 rounded-lg p-2 text-left transition-colors hover:bg-secondary"
                         >
-                            <div className="relative h-14 w-10 shrink-0 overflow-hidden rounded bg-quaternary">
+                            <div className="relative h-14 w-10 shrink-0 overflow-hidden rounded bg-quaternary ring-1 ring-image ring-inset">
                                 {card.image_url ? <CardImage src={card.image_url} alt="" sizes="40px" className="object-cover" /> : null}
                             </div>
                             <div className="flex min-w-0 flex-1 flex-col">

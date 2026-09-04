@@ -321,6 +321,8 @@
     --color-text-brand-secondary_hover: var(--color-brand-800);
 
     /* BORDER COLORS */
+    /* The edge of a picture: pure black or white at 10%, never a tinted neutral, which reads as dirt on the image. */
+    --color-border-image: oklch(0 0 0 / 0.1);
     /* The bright edge of a glass surface: light catching the material. */
     --color-border-glass: color-mix(in oklab, var(--color-neutral-950) 8%, transparent);
     --color-border-primary: var(--color-neutral-300);
@@ -473,6 +475,8 @@
     /* BORDER PROPERTY COLORS */
     --border-color-glass: var(--color-border-glass);
     --ring-color-glass: var(--color-border-glass);
+    --border-color-image: var(--color-border-image);
+    --ring-color-image: var(--color-border-image);
     --border-color-primary: var(--color-border-primary);
     --border-color-secondary: var(--color-border-secondary);
     --border-color-secondary_alt: var(--color-border-secondary_alt);
@@ -691,6 +695,7 @@
         --color-text-error-primary_hover: var(--color-red-300);
         --color-text-brand-secondary_hover: var(--color-neutral-200);
 
+        --color-border-image: oklch(1 0 0 / 0.1);
         --color-border-glass: color-mix(in oklab, var(--color-white) 12%, transparent);
         --color-border-secondary: var(--color-neutral-700);
         --color-border-error_subtle: var(--color-red-500);

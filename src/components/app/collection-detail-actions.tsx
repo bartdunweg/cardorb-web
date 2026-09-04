@@ -76,7 +76,7 @@ export function CollectionDetailActions({ collectionId }: { collectionId: string
                                             const st = status[card.id];
                                             return (
                                                 <div key={card.id} className="flex items-center gap-3 rounded-lg p-2 hover:bg-secondary">
-                                                    <div className="relative h-14 w-10 shrink-0 overflow-hidden rounded bg-quaternary">
+                                                    <div className="relative h-14 w-10 shrink-0 overflow-hidden rounded bg-quaternary ring-1 ring-image ring-inset">
                                                         {card.image_url ? (
                                                             <CardImage src={card.image_url} alt="" sizes="40px" className="object-cover" />
                                                         ) : null}

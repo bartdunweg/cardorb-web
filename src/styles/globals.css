@@ -37,6 +37,22 @@
     }
 }
 
+/* Pressable: scale 0.96 on press, so a tap is answered before anything else happens. 0.96, not
+   less: below 0.95 it reads as exaggerated. Buttons, tabs and tappable cards all carry it. */
+@utility pressable {
+    transition-property: scale;
+    transition-duration: 160ms;
+    transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+
+    &:active {
+        scale: 0.96;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        transition-duration: 0ms;
+    }
+}
+
 @utility transition-inherit-all {
     transition-property: inherit;
     transition-duration: inherit;

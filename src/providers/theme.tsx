@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useSyncExternalStore } from "react";
+import { createContext, useContext, useEffect, useRef, useSyncExternalStore } from "react";
 import { DARK_CLASS, STORAGE_KEY, SYSTEM_QUERY, type Theme, isTheme } from "@/lib/theme-script";
 
 /**
@@ -61,10 +61,25 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const system = useSyncExternalStore(subscribeSystem, readSystem, undefinedOnServer);
     const resolvedTheme = theme && system ? (theme === "system" ? system : theme) : undefined;
 
+    const applied = useRef<Resolved | undefined>(undefined);
     useEffect(() => {
         if (!resolvedTheme) return;
-        document.documentElement.classList.toggle(DARK_CLASS, resolvedTheme === "dark");
-        document.documentElement.style.colorScheme = resolvedTheme;
+        const root = document.documentElement;
+        // A switch after the first paint would fire every colour transition on the page at once and
+        // smear. Transitions go off for the swap, one reflow pins it, and they return on the next frame.
+        const swap = applied.current !== undefined && applied.current !== resolvedTheme;
+        const still = swap ? document.createElement("style") : null;
+        if (still) {
+            still.textContent = "*,*::before,*::after{transition:none !important}";
+            document.head.appendChild(still);
+        }
+        root.classList.toggle(DARK_CLASS, resolvedTheme === "dark");
+        root.style.colorScheme = resolvedTheme;
+        applied.current = resolvedTheme;
+        if (still) {
+            void root.offsetHeight;
+            requestAnimationFrame(() => still.remove());
+        }
     }, [resolvedTheme]);
 
     return <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme }}>{children}</ThemeContext.Provider>;

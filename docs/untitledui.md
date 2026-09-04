@@ -181,6 +181,21 @@ Do not stack two glass surfaces; a popover over the tab bar stays `bg-primary`. 
 `bg-primary/90 backdrop-blur` by hand: that is a second material with no name. A user who set
 "reduce transparency" gets the plain page surface from the utility itself.
 
+### Polish
+
+Small rules that compound. They live in tokens and utilities, so a new screen gets them by using the
+existing pieces, not by remembering them.
+
+- `pressable` — scale 0.96 on press, 160 ms, `cubic-bezier(0.2, 0, 0, 1)`. On every Button, the tab
+  bar's tabs, tappable cards and the search bars. Off under "reduce motion".
+- `ring-image` — a 1 px edge on every picture: black 10% in light, white 10% in dark, never a
+  tinted grey. With `ring-1 ring-inset` on the image's wrapper.
+- Transitions name their properties: `transition-colors`, `transition-opacity`, never bare
+  `transition`. A property that is not changing must not be waiting.
+- Exits are faster than enters: a sheet comes in at 300 ms and leaves in 200.
+- A theme switch pins transitions for one frame, so the page snaps to the other theme instead of
+  crossfading element by element. See `src/providers/theme.tsx`.
+
 ### Style Organization
 
 ```typescript

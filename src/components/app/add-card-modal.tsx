@@ -103,7 +103,7 @@ export function AddCardModal({ defaultTarget = "collection", trigger }: { defaul
                                             const st = status[keyFor(card)];
                                             return (
                                                 <div key={card.id} className="flex items-center gap-3 rounded-lg p-2 hover:bg-secondary">
-                                                    <div className="relative h-16 w-11 shrink-0 overflow-hidden rounded bg-quaternary">
+                                                    <div className="relative h-16 w-11 shrink-0 overflow-hidden rounded bg-quaternary ring-1 ring-image ring-inset">
                                                         {card.image ? <CardImage src={card.image} alt="" sizes="44px" className="object-cover" /> : null}
                                                     </div>
                                                     <div className="flex min-w-0 flex-1 flex-col">
