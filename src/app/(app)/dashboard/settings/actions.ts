@@ -14,12 +14,13 @@ const failed = (err: unknown): { ok: false; error: string } => ({
 
 const profileSchema = z.object({
     display_name: z.string().trim().max(80),
+    // The database's username_shape, which the API applies after lower-casing: a letter or digit
+    // first, then letters, digits and hyphens, 2 to 30 in all. No underscores.
     username: z
         .string()
         .trim()
-        .min(3, "Username must be at least 3 characters.")
-        .max(30)
-        .regex(/^[a-zA-Z0-9_]+$/, "Use letters, numbers and underscores only."),
+        .toLowerCase()
+        .regex(/^[a-z0-9][a-z0-9-]{1,29}$/, "Use 2 to 30 lowercase letters, numbers and hyphens, starting with a letter or number."),
     is_public: z.boolean(),
 });
 
