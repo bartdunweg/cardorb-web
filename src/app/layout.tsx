@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { BOOT_SCRIPT } from "@/lib/theme-script";
 import { RouteProvider } from "@/providers/router-provider";
+import { ThemeProvider } from "@/providers/theme";
 import "@/styles/globals.css";
 import { cx } from "@/utils/cx";
 
@@ -47,8 +49,15 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en" suppressHydrationWarning>
+            <head>
+                {/* Sets the theme class before first paint. A Server Component emits it once, in place;
+                    the CSP names its hash, so it needs no nonce and the static pages stay static. */}
+                <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
+            </head>
             <body className={cx(inter.variable, "bg-primary antialiased")}>
-                <RouteProvider>{children}</RouteProvider>
+                <RouteProvider>
+                    <ThemeProvider>{children}</ThemeProvider>
+                </RouteProvider>
             </body>
         </html>
     );

@@ -3,7 +3,6 @@
 import type { ReactNode } from "react";
 import { useRef, useState } from "react";
 import { Monitor04, Moon01, Sun } from "@untitledui/icons";
-import { useTheme } from "next-themes";
 import { removeAvatar, updatePassword, updateProfile, uploadAvatar } from "@/app/(app)/dashboard/settings/actions";
 import { signOut } from "@/app/(auth)/actions";
 import { Avatar } from "@/components/base/avatar/avatar";
@@ -12,6 +11,8 @@ import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { Toggle } from "@/components/base/toggle/toggle";
 import type { Profile } from "@/lib/profile";
+import { isTheme } from "@/lib/theme-script";
+import { useTheme } from "@/providers/theme";
 
 type Msg = { type: "ok" | "err"; text: string } | null;
 
@@ -111,7 +112,7 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
     const [pwMsg, setPwMsg] = useState<Msg>(null);
 
     const { theme, setTheme } = useTheme();
-    // next-themes is undefined on the server and first client render alike, so "system" shows on
+    // The theme is undefined on the server and first client render alike, so "system" shows on
     // both until it resolves after hydration — no mount flag, no mismatch.
     const currentTheme = theme ?? "system";
 
@@ -190,7 +191,7 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
                     selectedKeys={new Set([currentTheme])}
                     onSelectionChange={(keys) => {
                         const key = [...keys][0];
-                        if (key) setTheme(String(key));
+                        if (isTheme(key)) setTheme(key);
                     }}
                 >
                     <ButtonGroupItem id="light" iconLeading={Sun}>
