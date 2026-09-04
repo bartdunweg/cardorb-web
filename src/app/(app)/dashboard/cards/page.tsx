@@ -1,4 +1,5 @@
 import { Plus } from "@untitledui/icons";
+import { cookies } from "next/headers";
 import { AddCardModal } from "@/components/app/add-card-modal";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CardsFilters } from "@/components/app/cards-filters";
@@ -9,6 +10,7 @@ import { CardsView } from "@/components/app/cards-view";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/base/buttons/button";
 import { getMyCards } from "@/lib/cards";
+import { CARDS_VIEW_COOKIE, parseCardsView } from "@/lib/cards-view";
 import { listHref, readListQuery } from "@/lib/list-query";
 
 const PAGE_SIZE = 100;
@@ -23,6 +25,7 @@ export default async function CardsPage({
     const narrowed = Boolean(q || set || rarity);
     // One read: the page carries the facets over the whole collection, so no second call for the menus.
     const { cards, total, facets } = await getMyCards({ limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE, q, sort, order, set, rarity });
+    const view = parseCardsView((await cookies()).get(CARDS_VIEW_COOKIE)?.value);
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
     // No cards at all (and no active search) → empty state with the one action that gets you out of it.
@@ -71,7 +74,7 @@ export default async function CardsPage({
                     />
                 ) : (
                     <>
-                        <CardsView cards={cards} />
+                        <CardsView cards={cards} initialView={view} />
 
                         <CardsPagination page={page} totalPages={totalPages} hrefFor={pageHref} />
                     </>

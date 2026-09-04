@@ -1,41 +1,26 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import { Grid01, Rows01 } from "@untitledui/icons";
 import { CardDetailSlideout } from "@/components/app/card-detail-slideout";
 import { CardsGrid } from "@/components/app/cards-grid";
 import { CardsTable } from "@/components/app/cards-table";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import type { Card } from "@/lib/cards";
+import { CARDS_VIEW_COOKIE, type CardsViewMode } from "@/lib/cards-view";
 
-type View = "table" | "grid";
+const ONE_YEAR = 60 * 60 * 24 * 365;
 
-const VIEW_EVENT = "cards-view-change";
-
-// Persisted view preference read through useSyncExternalStore: the server snapshot is "table", so
-// hydration matches, then it resolves to the stored value — no setState-in-effect, no mismatch.
-function useStoredView(): [View, (next: View) => void] {
-    const view = useSyncExternalStore(
-        (onChange) => {
-            window.addEventListener(VIEW_EVENT, onChange);
-            return () => window.removeEventListener(VIEW_EVENT, onChange);
-        },
-        () => (localStorage.getItem("cards-view") === "grid" ? "grid" : "table"),
-        () => "table" as View,
-    );
-
-    const setView = (next: View) => {
-        localStorage.setItem("cards-view", next);
-        window.dispatchEvent(new Event(VIEW_EVENT));
-    };
-
-    return [view, setView];
-}
-
-// Wraps the card list with a table/grid view toggle and the shared detail slideout.
-export function CardsView({ cards }: { cards: Card[] }) {
-    const [view, changeView] = useStoredView();
+// Wraps the card list with a table/grid view toggle and the shared detail slideout. The page reads
+// the choice from the cookie and hands it in, so the HTML already shows the chosen view.
+export function CardsView({ cards, initialView }: { cards: Card[]; initialView: CardsViewMode }) {
+    const [view, setView] = useState(initialView);
     const [selected, setSelected] = useState<Card | null>(null);
+
+    const changeView = (next: CardsViewMode) => {
+        setView(next);
+        document.cookie = `${CARDS_VIEW_COOKIE}=${next}; path=/dashboard; max-age=${ONE_YEAR}; samesite=lax`;
+    };
 
     return (
         <div className="flex flex-col gap-4">

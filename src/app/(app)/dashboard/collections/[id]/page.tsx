@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CardsPagination } from "@/components/app/cards-pagination";
@@ -6,6 +7,7 @@ import { CardsView } from "@/components/app/cards-view";
 import { CollectionDetailActions } from "@/components/app/collection-detail-actions";
 import { PageHeader } from "@/components/app/page-header";
 import { getMyCards } from "@/lib/cards";
+import { CARDS_VIEW_COOKIE, parseCardsView } from "@/lib/cards-view";
 import { getCollection } from "@/lib/collections";
 import { listHref, readListQuery } from "@/lib/list-query";
 
@@ -25,6 +27,7 @@ export default async function CollectionDetailPage({
     const query = readListQuery(await searchParams);
     const { page, sort, order } = query;
     const { cards, total } = await getMyCards({ collectionId: id, limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE, sort, order });
+    const view = parseCardsView((await cookies()).get(CARDS_VIEW_COOKIE)?.value);
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
     return (
@@ -45,7 +48,7 @@ export default async function CollectionDetailPage({
                 <AppEmptyState icon="folder" title="No cards in this collection" description="Use “Add cards” to fill it" />
             ) : (
                 <>
-                    <CardsView cards={cards} />
+                    <CardsView cards={cards} initialView={view} />
                     <CardsPagination page={page} totalPages={totalPages} hrefFor={(n) => listHref(`/dashboard/collections/${id}`, query, { page: n })} />
                 </>
             )}
