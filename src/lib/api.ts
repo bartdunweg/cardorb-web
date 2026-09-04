@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { timed } from "@/lib/timing";
 
 /**
  * The one way this app reads or writes cards, folders and profiles: the Card Orb API at
@@ -47,7 +48,7 @@ export const session = cache(async (): Promise<{ userId: string; token: string }
     const supabase = await createClient();
     const {
         data: { session: s },
-    } = await supabase.auth.getSession();
+    } = await timed("session getSession", () => supabase.auth.getSession());
     return s ? { userId: s.user.id, token: s.access_token } : null;
 });
 
@@ -69,13 +70,15 @@ export async function api<T>(path: string, init: Init = {}): Promise<T> {
     }
     if (init.body !== undefined) headers["content-type"] = "application/json";
 
-    const res = await fetch(url, {
-        method: init.method ?? "GET",
-        headers,
-        body: init.body !== undefined ? JSON.stringify(init.body) : undefined,
-        signal: AbortSignal.timeout(API_TIMEOUT_MS),
-        ...(withAuth ? { cache: "no-store" } : { next: { revalidate: 300 } }),
-    });
+    const res = await timed(`api ${init.method ?? "GET"} ${path}`, () =>
+        fetch(url, {
+            method: init.method ?? "GET",
+            headers,
+            body: init.body !== undefined ? JSON.stringify(init.body) : undefined,
+            signal: AbortSignal.timeout(API_TIMEOUT_MS),
+            ...(withAuth ? { cache: "no-store" } : { next: { revalidate: 300 } }),
+        }),
+    );
 
     const json: unknown = await res.json().catch(() => null);
     if (!res.ok) {

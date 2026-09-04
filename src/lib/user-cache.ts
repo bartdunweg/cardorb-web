@@ -1,5 +1,6 @@
 import { revalidatePath, unstable_cache, updateTag } from "next/cache";
 import { ApiError, session } from "@/lib/api";
+import { elapsed, logTiming } from "@/lib/timing";
 
 /**
  * The signed-in person's slow-moving data, kept across requests.
@@ -27,7 +28,21 @@ export const userTag = (userId: string) => `user:${userId}`;
 export async function perUser<T>(name: string, load: (token: string) => Promise<T>): Promise<T> {
     const s = await session();
     if (!s) throw new ApiError(401, "Sign in to see this.");
-    return unstable_cache(() => load(s.token), [name, s.userId], { revalidate: FIVE_MINUTES, tags: [userTag(s.userId)] })();
+    // A miss runs `load` (its API call logs its own line); a hit is one read from the cache.
+    let ran = false;
+    const start = performance.now();
+    try {
+        return await unstable_cache(
+            () => {
+                ran = true;
+                return load(s.token);
+            },
+            [name, s.userId],
+            { revalidate: FIVE_MINUTES, tags: [userTag(s.userId)] },
+        )();
+    } finally {
+        logTiming(`cache ${name}`, elapsed(start), ran ? "miss" : "hit");
+    }
 }
 
 /**

@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
+import { elapsed, logTiming } from "@/lib/timing";
 
 // Public by default (landing, login, signup). Only these prefixes require a session.
 const PROTECTED_PREFIXES = ["/dashboard"];
@@ -41,9 +42,15 @@ export async function updateSession(request: NextRequest) {
     });
 
     // IMPORTANT: getUser() must run to refresh the token; do not add logic between this and the response.
+    const started = performance.now();
     const {
         data: { user },
     } = await supabase.auth.getUser();
+    const authMs = elapsed(started);
+    logTiming("middleware getUser", authMs, request.nextUrl.pathname);
+    // Visible in the browser's Network panel under Timing, so the person who feels a slow page
+    // can see how much of it was the session check.
+    supabaseResponse.headers.set("server-timing", `auth;dur=${authMs}`);
 
     const { pathname } = request.nextUrl;
     const isProtected = PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
