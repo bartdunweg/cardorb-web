@@ -5,7 +5,7 @@
 
 /** One entry per menu option; the API takes `sort` and `order` apart. */
 export const SORT_OPTIONS = [
-    { value: "set", label: "Set order", sort: undefined, order: undefined },
+    { value: "set", label: "Newest set first", sort: undefined, order: undefined },
     { value: "name", label: "Name", sort: "name", order: undefined },
     { value: "price-desc", label: "Price, high to low", sort: "price", order: "desc" },
     { value: "price-asc", label: "Price, low to high", sort: "price", order: "asc" },
