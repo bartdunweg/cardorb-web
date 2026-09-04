@@ -4,6 +4,9 @@ import { perUser } from "@/lib/user-cache";
 
 export type { Card, PublicCard } from "@/lib/api-shapes";
 
+/** What a filter menu offers: the sets you hold a card of, in set order, and the rarities, A to Z. */
+export type Facets = { sets: { name: string; title: string }[]; rarities: string[] };
+
 // One page of the signed-in person's cards, from the API (R-DATA-003). `wishlist` picks the
 // wishlist (`owned=false`) over the collection; the API sorts by set, then number.
 export async function getMyCards({
@@ -31,8 +34,10 @@ export async function getMyCards({
 } = {}): Promise<{
     cards: Card[];
     total: number;
+    /** The sets and rarities held, over the whole collection whatever the filters: what the two menus offer. */
+    facets: Facets;
 }> {
-    const { cards, total } = await api<{ cards: CardItem[]; total: number }>("/cards", {
+    const { cards, total, facets } = await api<{ cards: CardItem[]; total: number; facets: Facets }>("/cards", {
         params: {
             q: q?.trim() || undefined,
             owned: !wishlist,
@@ -46,7 +51,7 @@ export async function getMyCards({
             offset,
         },
     });
-    return { cards: cards.map(cardFromItem), total };
+    return { cards: cards.map(cardFromItem), total, facets };
 }
 
 export type CardStats = {
