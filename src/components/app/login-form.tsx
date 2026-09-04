@@ -19,7 +19,7 @@ export const LoginForm = ({ notice }: { notice?: string }) => {
                             Cardorb
                         </Link>
                         <div className="flex flex-col gap-2 md:gap-3">
-                            <h1 className="text-xl font-semibold text-primary md:text-display-xs">Log in</h1>
+                            <h1 className="text-xl font-semibold text-primary md:text-display-xs">Sign in</h1>
                             <p className="text-md text-tertiary">Welcome back. Enter your details.</p>
                         </div>
                     </div>
@@ -53,7 +53,7 @@ export const LoginForm = ({ notice }: { notice?: string }) => {
                         )}
 
                         <Button type="submit" size="lg" isDisabled={pending}>
-                            {pending ? "Logging in…" : "Log in"}
+                            {pending ? "Signing in…" : "Sign in"}
                         </Button>
                     </form>
 

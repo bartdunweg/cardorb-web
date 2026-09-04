@@ -63,7 +63,7 @@ export const SignupForm = () => {
                     <div className="flex justify-center gap-1 text-center">
                         <span className="text-sm text-tertiary">Already have an account?</span>
                         <Button href="/login" color="link-color" size="md">
-                            Log in
+                            Sign in
                         </Button>
                     </div>
                 </div>

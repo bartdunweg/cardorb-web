@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
+import { PublicTopBar } from "@/components/app/public-top-bar";
 import { Button } from "@/components/base/buttons/button";
 
 // Public landing hero for Cardorb. Based on Untitled UI's hero-geometric-shapes-04, with the
-// heavy marketing Header/nav replaced by a Sign in / Get started pair in the top bar; the hero
-// carries one call to action, Get started, so the two never compete.
+// heavy marketing Header/nav replaced by the shared PublicTopBar; the hero carries one call to
+// action, Get started, so it never competes with the bar's pair.
 export const HeroGeometricShapes04 = () => {
     return (
         <div className="relative flex min-h-dvh flex-col overflow-hidden bg-primary">
@@ -25,20 +25,7 @@ export const HeroGeometricShapes04 = () => {
                 className="pointer-events-none absolute top-0 left-1/2 z-0 max-w-none -translate-x-1/2 md:hidden dark:brightness-[0.2]"
             />
 
-            {/* Minimal top bar */}
-            <header className="relative z-10 mx-auto flex w-full max-w-container items-center justify-between px-4 py-5 md:px-8">
-                <Link href="/" className="text-lg font-semibold text-primary transition hover:opacity-70">
-                    Cardorb
-                </Link>
-                <nav aria-label="Account" className="flex items-center gap-2">
-                    <Button href="/login" color="tertiary" size="md">
-                        Sign in
-                    </Button>
-                    <Button href="/signup" size="md">
-                        Get started
-                    </Button>
-                </nav>
-            </header>
+            <PublicTopBar />
 
             <main className="relative flex flex-1 items-center py-16">
                 <div className="mx-auto w-full max-w-container px-4 md:px-8">
@@ -58,7 +45,8 @@ export const HeroGeometricShapes04 = () => {
                 </div>
             </main>
 
-            {/* One-row footer: the other public pages, and who runs the site. */}
+            {/* One-row footer: the legal pages and who runs the site. The API reference is not linked
+                here: the API serves only our own apps, and a visitor cannot get a key. */}
             <footer className="relative z-10 mx-auto flex w-full max-w-container flex-col-reverse items-center gap-4 px-4 py-6 sm:flex-row sm:justify-between md:px-8">
                 <p className="text-sm text-quaternary">© {new Date().getFullYear()} BADU Ventures B.V.</p>
                 <nav aria-label="Footer">
@@ -66,7 +54,6 @@ export const HeroGeometricShapes04 = () => {
                         {[
                             { title: "Privacy", href: "/privacy" },
                             { title: "Terms", href: "/terms" },
-                            { title: "API", href: "/docs/api" },
                         ].map((item) => (
                             <li key={item.title}>
                                 <Button color="link-gray" size="md" href={item.href} className="max-h-5">
