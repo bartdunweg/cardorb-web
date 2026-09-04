@@ -89,7 +89,8 @@ export function PageHeader({
 
             {above ? <div className="mb-6">{above}</div> : null}
 
-            <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+            {/* Actions sit beside the title when they fit (a plus on a phone) and wrap under it when they do not. */}
+            <div className="flex flex-row flex-wrap items-start justify-between gap-3">
                 <div className="flex min-w-0 flex-col gap-1">
                     <h1 ref={sentinel} className="text-display-xs font-semibold text-primary">
                         {title}

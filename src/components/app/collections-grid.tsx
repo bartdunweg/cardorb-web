@@ -50,6 +50,22 @@ function FolderCard({
     );
 }
 
+// Beside the page title: a plus on a phone, the words from sm up. Both open the dialog below.
+export function NewCollectionButton() {
+    return (
+        <>
+            <CreateCollectionModal>
+                <Button iconLeading={Plus} aria-label="New collection" className="sm:hidden" />
+            </CreateCollectionModal>
+            <CreateCollectionModal>
+                <Button iconLeading={Plus} className="max-sm:hidden">
+                    New collection
+                </Button>
+            </CreateCollectionModal>
+        </>
+    );
+}
+
 // The create-collection dialog, opened by whatever trigger is passed as children.
 function CreateCollectionModal({ children }: { children: ReactNode }) {
     const router = useRouter();
@@ -127,24 +143,21 @@ export function CollectionsGrid({
             </div>
 
             {hasCollections ? (
-                <div className="flex flex-col gap-4">
-                    <div className="flex justify-end">
-                        <CreateCollectionModal>
-                            <Button iconLeading={Plus}>New collection</Button>
-                        </CreateCollectionModal>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                        {collections.map((c) => (
-                            <FolderCard key={c.id} href={`/dashboard/collections/${c.id}`} icon={Folder} name={c.name} count={c.count} />
-                        ))}
-                    </div>
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                    {collections.map((c) => (
+                        <FolderCard key={c.id} href={`/dashboard/collections/${c.id}`} icon={Folder} name={c.name} count={c.count} />
+                    ))}
                 </div>
             ) : (
-                <AppEmptyState icon="folder" title="No collections yet" description="Group your cards into folders you can jump to from the sidebar.">
-                    <CreateCollectionModal>
-                        <Button iconLeading={Plus}>Create collection</Button>
-                    </CreateCollectionModal>
-                </AppEmptyState>
+                // On a phone the hub above is the page and the plus beside the title is the way in; the
+                // empty state would only push the tab bar's worth of nothing under three tiles.
+                <div className="hidden lg:contents">
+                    <AppEmptyState icon="folder" title="No collections yet" description="Group your cards into folders you can jump to from the sidebar.">
+                        <CreateCollectionModal>
+                            <Button iconLeading={Plus}>Create collection</Button>
+                        </CreateCollectionModal>
+                    </AppEmptyState>
+                </div>
             )}
         </div>
     );

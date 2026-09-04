@@ -1,4 +1,4 @@
-import { CollectionsGrid } from "@/components/app/collections-grid";
+import { CollectionsGrid, NewCollectionButton } from "@/components/app/collections-grid";
 import { PageHeader } from "@/components/app/page-header";
 import { getMyCollections } from "@/lib/collections";
 
@@ -7,7 +7,7 @@ export default async function CollectionsPage() {
 
     return (
         <div className="flex flex-1 flex-col gap-6">
-            <PageHeader title="Collections" subtitle="Organize your cards into folders." />
+            <PageHeader title="Collections" subtitle="Organize your cards into folders." actions={<NewCollectionButton />} />
             <CollectionsGrid collections={collections} favoritesCount={favoritesCount} wishlistCount={wishlistCount} />
         </div>
     );
