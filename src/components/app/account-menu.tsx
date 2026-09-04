@@ -1,12 +1,12 @@
 "use client";
 
 import { ChevronSelectorVertical, LogOut01, Moon01, Settings01, User01 } from "@untitledui/icons";
-import { useTheme } from "next-themes";
 import { Button as AriaButton } from "react-aria-components";
 import { signOut } from "@/app/(auth)/actions";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { AvatarLabelGroup } from "@/components/base/avatar/avatar-label-group";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
+import { useTheme } from "@/providers/theme";
 import { cx } from "@/utils/cx";
 
 type Account = { name: string; email: string; avatarUrl: string | null };
@@ -15,7 +15,7 @@ type Account = { name: string; email: string; avatarUrl: string | null };
 // `compact` renders just the avatar as trigger (for the mobile top bar).
 export function AccountMenu({ account, compact }: { account: Account; compact?: boolean }) {
     const { resolvedTheme, setTheme } = useTheme();
-    // next-themes returns undefined on the server and the first client render alike, so reading it
+    // The theme is undefined on the server and the first client render alike, so reading it
     // directly matches on both and resolves after hydration — no mount flag, no mismatch.
     const isDark = resolvedTheme === "dark";
 

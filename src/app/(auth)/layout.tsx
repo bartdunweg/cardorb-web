@@ -1,9 +1,8 @@
-import { headers } from "next/headers";
-import { nonceFrom } from "@/lib/csp";
-import { Theme } from "@/providers/theme";
+// The auth pages draw their own full-screen layout. This one only pins them to per-request
+// rendering: the middleware sets a nonce policy on these paths, and Next signs its own scripts
+// with that nonce only when it renders the page for the request, never in a prerender.
+export const dynamic = "force-dynamic";
 
-// Auth pages render their own full-screen layout; this one only brings the theme, signed with
-// the nonce the middleware minted for this request.
-export default async function AuthLayout({ children }: { children: React.ReactNode }) {
-    return <Theme nonce={nonceFrom(await headers())}>{children}</Theme>;
+export default function AuthLayout({ children }: { children: React.ReactNode }) {
+    return children;
 }

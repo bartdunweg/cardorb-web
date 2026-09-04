@@ -1,5 +1,5 @@
 import { type NextRequest } from "next/server";
-import { NONCE_HEADER, cspFor, needsNonce } from "@/lib/csp";
+import { cspFor, needsNonce } from "@/lib/csp";
 import { updateSession } from "@/lib/supabase/middleware";
 
 // Next 16's proxy (the file it used to call middleware), in src/ because that is where the dev
@@ -13,11 +13,10 @@ export async function proxy(request: NextRequest) {
         return response;
     }
 
-    // One nonce per request. On the request it reaches the page (Theme) and Next's own scripts,
-    // which read the policy from the request headers; on the response the browser enforces it.
+    // One nonce per request. On the request Next's own scripts find the policy and sign
+    // themselves with the nonce; on the response the browser enforces it.
     const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
     const csp = cspFor(nonce);
-    request.headers.set(NONCE_HEADER, nonce);
     request.headers.set("content-security-policy", csp);
     const response = await updateSession(request);
     response.headers.set("content-security-policy", csp);
