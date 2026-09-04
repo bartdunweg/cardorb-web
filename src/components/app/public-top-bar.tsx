@@ -12,10 +12,10 @@ export function PublicTopBar() {
                 Cardorb
             </Link>
             <nav aria-label="Account" className="flex items-center gap-2">
-                <Button href="/login" color="tertiary" size="md" className="rounded-full before:rounded-full">
+                <Button href="/login" color="tertiary" size="md">
                     Sign in
                 </Button>
-                <Button href="/signup" size="md" className="rounded-full before:rounded-full">
+                <Button href="/signup" size="md">
                     Get started
                 </Button>
             </nav>
