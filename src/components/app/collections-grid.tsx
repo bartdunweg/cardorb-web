@@ -2,7 +2,7 @@
 
 import type { FC, ReactNode } from "react";
 import { useState } from "react";
-import { Folder, Heart, Plus, Star01 } from "@untitledui/icons";
+import { Folder, Grid01, Heart, Plus, Star01 } from "@untitledui/icons";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
@@ -14,7 +14,8 @@ import { Input } from "@/components/base/input/input";
 import { FeaturedIcon } from "@/components/foundations/featured-icon/featured-icon";
 import type { CollectionSummary } from "@/lib/collections";
 
-function FolderCard({ href, icon, name, count }: { href: string; icon: FC<{ className?: string }>; name: string; count: number }) {
+// A tile with a count, or with a line of its own for a view that is not a pile of cards.
+function FolderCard({ href, icon, name, count, detail }: { href: string; icon: FC<{ className?: string }>; name: string; count?: number; detail?: string }) {
     return (
         <Link
             href={href}
@@ -23,9 +24,7 @@ function FolderCard({ href, icon, name, count }: { href: string; icon: FC<{ clas
             <FeaturedIcon color="gray" theme="modern-neue" size="lg" icon={icon} />
             <div className="flex flex-col">
                 <span className="truncate text-sm font-semibold text-primary">{name}</span>
-                <span className="text-sm text-tertiary">
-                    {count} card{count === 1 ? "" : "s"}
-                </span>
+                <span className="text-sm text-tertiary">{detail ?? `${count} card${count === 1 ? "" : "s"}`}</span>
             </div>
         </Link>
     );
@@ -99,10 +98,11 @@ export function CollectionsGrid({
 
     return (
         <div className="flex flex-1 flex-col gap-6">
-            {/* Mobile hub: Favorites + Wishlist. On desktop these are sidebar items instead. */}
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:hidden">
+            {/* Mobile hub: Favorites, Wishlist and the Pokédex. On desktop these are sidebar items instead; the tab bar has no room for them. */}
+            <div className="grid grid-cols-3 gap-4 lg:hidden">
                 <FolderCard href="/dashboard/favorites" icon={Star01} name="Favorites" count={favoritesCount} />
                 <FolderCard href="/dashboard/wishlist" icon={Heart} name="Wishlist" count={wishlistCount} />
+                <FolderCard href="/dashboard/pokedex" icon={Grid01} name="Pokédex" detail="Cards by Pokémon" />
             </div>
 
             {hasCollections ? (
