@@ -4,7 +4,8 @@ import Link from "next/link";
 import { Button } from "@/components/base/buttons/button";
 
 // Public landing hero for Cardorb. Based on Untitled UI's hero-geometric-shapes-04, with the
-// heavy marketing Header/nav removed and copy + CTAs pointed at our auth routes.
+// heavy marketing Header/nav replaced by a Sign in / Get started pair in the top bar; the hero
+// carries one call to action, Get started, so the two never compete.
 export const HeroGeometricShapes04 = () => {
     return (
         <div className="relative flex min-h-dvh flex-col overflow-hidden bg-primary">
@@ -29,6 +30,14 @@ export const HeroGeometricShapes04 = () => {
                 <Link href="/" className="text-lg font-semibold text-primary transition hover:opacity-70">
                     Cardorb
                 </Link>
+                <nav aria-label="Account" className="flex items-center gap-2">
+                    <Button href="/login" color="tertiary" size="md">
+                        Sign in
+                    </Button>
+                    <Button href="/signup" size="md">
+                        Get started
+                    </Button>
+                </nav>
             </header>
 
             <main className="relative flex flex-1 items-center py-16">
@@ -40,10 +49,7 @@ export const HeroGeometricShapes04 = () => {
                         <p className="mt-4 max-w-120 text-lg text-balance text-tertiary md:mt-6 md:text-xl">
                             Browse, organize, and manage every card in one place.
                         </p>
-                        <div className="mt-8 flex w-full flex-col-reverse items-stretch gap-3 sm:w-auto sm:flex-row sm:items-start md:mt-12">
-                            <Button href="/login" color="secondary" size="xl">
-                                Sign in
-                            </Button>
+                        <div className="mt-8 flex w-full flex-col items-stretch sm:w-auto md:mt-12">
                             <Button href="/signup" size="xl">
                                 Get started
                             </Button>
@@ -51,6 +57,26 @@ export const HeroGeometricShapes04 = () => {
                     </div>
                 </div>
             </main>
+
+            {/* One-row footer: the other public pages, and who runs the site. */}
+            <footer className="relative z-10 mx-auto flex w-full max-w-container flex-col-reverse items-center gap-4 px-4 py-6 sm:flex-row sm:justify-between md:px-8">
+                <p className="text-sm text-quaternary">© {new Date().getFullYear()} BADU Ventures B.V.</p>
+                <nav aria-label="Footer">
+                    <ul className="flex items-center gap-6">
+                        {[
+                            { title: "Privacy", href: "/privacy" },
+                            { title: "Terms", href: "/terms" },
+                            { title: "API", href: "/docs/api" },
+                        ].map((item) => (
+                            <li key={item.title}>
+                                <Button color="link-gray" size="md" href={item.href} className="max-h-5">
+                                    {item.title}
+                                </Button>
+                            </li>
+                        ))}
+                    </ul>
+                </nav>
+            </footer>
         </div>
     );
 };
