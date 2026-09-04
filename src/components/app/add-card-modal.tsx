@@ -60,7 +60,7 @@ export function AddCardModal({ defaultTarget = "collection", trigger }: { defaul
                 <Modal className="max-w-xl">
                     <Dialog>
                         {({ close }) => (
-                            <div className="relative flex max-h-[80vh] w-full max-w-xl flex-col gap-4 rounded-2xl bg-primary p-6 shadow-xl ring-1 ring-secondary">
+                            <div className="relative flex max-h-[80vh] w-full max-w-xl flex-col gap-4 rounded-2xl glass-thick p-6 shadow-xl ring-1 ring-secondary">
                                 <div className="flex items-start justify-between gap-4">
                                     <div className="flex flex-col gap-0.5">
                                         <AriaHeading slot="title" className="text-lg font-semibold text-primary">

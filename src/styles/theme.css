@@ -356,9 +356,11 @@
     --color-fg-brand-secondary_hover: var(--color-brand-600);
 
     /* BACKGROUND COLORS */
-    /* Glass: the page surface at 72%, for chrome that content scrolls under (the `glass` utility
-       adds the blur). Derived from bg-primary, so it follows the theme on its own. */
-    --color-bg-glass: color-mix(in oklab, var(--color-bg-primary) 72%, transparent);
+    /* Glass, two weights, both derived from bg-primary so they follow the theme on their own. Thin
+       is for bars content scrolls under; thick is for a sheet, dialog or popover that holds content
+       of its own. The `glass` and `glass-thick` utilities add the blur. */
+    --color-bg-glass: color-mix(in oklab, var(--color-bg-primary) 64%, transparent);
+    --color-bg-glass-thick: color-mix(in oklab, var(--color-bg-primary) 84%, transparent);
     --color-bg-primary: var(--color-white);
     --color-bg-tertiary: var(--color-neutral-100);
     --color-bg-brand-primary: var(--color-brand-50);
@@ -414,6 +416,7 @@
 
     /* BACKGROUND PROPERTY COLORS */
     --background-color-glass: var(--color-bg-glass);
+    --background-color-glass-thick: var(--color-bg-glass-thick);
     --background-color-primary: var(--color-bg-primary);
     --background-color-tertiary: var(--color-bg-tertiary);
     --background-color-brand-primary: var(--color-bg-brand-primary);

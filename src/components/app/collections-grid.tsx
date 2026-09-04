@@ -78,7 +78,7 @@ function CreateCollectionModal({ children }: { children: ReactNode }) {
                 <Modal className="max-w-sm">
                     <Dialog>
                         {({ close }) => (
-                            <div className="flex w-full max-w-sm flex-col gap-4 rounded-2xl bg-primary p-6 shadow-xl ring-1 ring-secondary">
+                            <div className="flex w-full max-w-sm flex-col gap-4 rounded-2xl glass-thick p-6 shadow-xl ring-1 ring-secondary">
                                 <AriaHeading slot="title" className="text-lg font-semibold text-primary">
                                     New collection
                                 </AriaHeading>

@@ -177,7 +177,7 @@ export const CommandDialog = ({ className, dialogClassName, children, ...combobo
                 <AriaModal
                     className={(state) =>
                         cx(
-                            "flex max-h-full w-160 flex-col overflow-hidden rounded-xl bg-primary text-left align-middle shadow-xl",
+                            "flex max-h-full w-160 flex-col overflow-hidden rounded-xl glass-thick text-left align-middle shadow-xl",
                             state.isEntering && "duration-300 ease-out animate-in zoom-in-95",
                             state.isExiting && "duration-200 ease-in animate-out zoom-out-95",
                             typeof dialogClassName === "function" ? dialogClassName(state) : dialogClassName,

@@ -37,6 +37,20 @@
     }
 }
 
+/* Thick glass: a sheet, dialog or popover. Bigger surfaces read as thicker, so more of the page
+   surface and a deeper blur; what is behind still shows as light, not as shapes. */
+@utility glass-thick {
+    background-color: var(--color-bg-glass-thick);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    backdrop-filter: blur(40px) saturate(180%);
+
+    @media (prefers-reduced-transparency: reduce) {
+        background-color: var(--color-bg-primary);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+    }
+}
+
 /* Pressable: scale 0.96 on press, so a tap is answered before anything else happens. 0.96, not
    less: below 0.95 it reads as exaggerated. Buttons, tabs and tappable cards all carry it. */
 @utility pressable {
