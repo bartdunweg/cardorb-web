@@ -71,11 +71,17 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                     <AppEmptyState icon="folder" title="This collection is empty" description="Nothing has been added to it yet" />
                 ) : (
                     <div className="flex flex-1 flex-col gap-4">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                            <CardsSearch initialValue={q ?? ""} label="Search this collection" placeholder="Search this collection" />
+                        {/* One row: search, the two filters, the sort. It wraps on a narrow screen. */}
+                        <div className="flex flex-wrap items-center gap-2">
+                            <CardsSearch
+                                initialValue={q ?? ""}
+                                label="Search this collection"
+                                placeholder="Search this collection"
+                                className="w-full sm:w-72"
+                            />
+                            <CardsFilters query={query} facets={facets} />
                             <CardsSort query={query} options={PUBLIC_SORT_OPTIONS} />
                         </div>
-                        <CardsFilters query={query} facets={facets} />
                         {cards.length === 0 ? (
                             <AppEmptyState
                                 icon="search"

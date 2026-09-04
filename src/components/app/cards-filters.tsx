@@ -6,9 +6,10 @@ import { NativeSelect } from "@/components/base/select/select-native";
 import type { Facets } from "@/lib/facets";
 import { type ListQuery, listHref } from "@/lib/list-query";
 
-// Two menus under the search: one set, one rarity, each with "All" on top. A choice goes into
+// Two menus beside the search: one set, one rarity, each with "All" on top. A choice goes into
 // the URL (page back to one) and the server page asks the API; the API matches a set or a
 // rarity whole. "Clear filters" shows only while one is on, so the row stays quiet otherwise.
+// Renders its pieces into the caller's row (`display: contents`), so one row holds them all.
 export function CardsFilters({ query, facets }: { query: ListQuery; facets: Facets }) {
     const router = useRouter();
     const pathname = usePathname();
@@ -16,7 +17,7 @@ export function CardsFilters({ query, facets }: { query: ListQuery; facets: Face
     const active = Boolean(query.set || query.rarity);
 
     return (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="contents">
             <NativeSelect
                 aria-label="Set"
                 size="sm"
