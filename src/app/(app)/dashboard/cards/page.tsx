@@ -9,7 +9,6 @@ import { CardsView } from "@/components/app/cards-view";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/base/buttons/button";
 import { getMyCards } from "@/lib/cards";
-import { getFacets } from "@/lib/facets";
 import { listHref, readListQuery } from "@/lib/list-query";
 
 const PAGE_SIZE = 100;
@@ -22,10 +21,8 @@ export default async function CardsPage({
     const query = readListQuery(await searchParams);
     const { page, q, sort, order, set, rarity } = query;
     const narrowed = Boolean(q || set || rarity);
-    const [{ cards, total }, facets] = await Promise.all([
-        getMyCards({ limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE, q, sort, order, set, rarity }),
-        getFacets(),
-    ]);
+    // One read: the page carries the facets over the whole collection, so no second call for the menus.
+    const { cards, total, facets } = await getMyCards({ limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE, q, sort, order, set, rarity });
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
     // No cards at all (and no active search) → empty state with the one action that gets you out of it.

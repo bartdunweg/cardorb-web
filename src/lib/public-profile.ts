@@ -1,6 +1,6 @@
 import { ApiError, api } from "@/lib/api";
 import { type PublicCard, type PublicItem, publicCardFromItem } from "@/lib/api-shapes";
-import type { Facets } from "@/lib/facets";
+import type { Facets } from "@/lib/cards";
 import type { ListQuery } from "@/lib/list-query";
 
 export type PublicProfile = { display_name: string | null; username: string | null; avatar_url: string | null };

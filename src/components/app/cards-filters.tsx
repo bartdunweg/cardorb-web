@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/base/buttons/button";
 import { NativeSelect } from "@/components/base/select/select-native";
-import type { Facets } from "@/lib/facets";
+import type { Facets } from "@/lib/cards";
 import { type ListQuery, listHref } from "@/lib/list-query";
 
 // Two menus beside the search: one set, one rarity, each with "All" on top. A choice goes into
