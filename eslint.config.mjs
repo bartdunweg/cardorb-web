@@ -9,6 +9,8 @@ const eslintConfig = [
         // lint-police — keeping it out keeps the dev loop fast and the signal about our code.
         // Our own components live in src/components/app and stay linted.
         ignores: [
+            // Claude Code worktrees live under .claude/ inside the checkout; they are other branches, not this one.
+            ".claude/**",
             ".next/**",
             "node_modules/**",
             "src/components/base/**",
