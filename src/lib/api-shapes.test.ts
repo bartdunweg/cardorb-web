@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { absoluteImage, cardFromItem, pokemonCardFromBrowse, priceForCopy, publicCardFromItem, slotsFromEntries } from "./api-shapes";
+import {
+    type CatalogueSet,
+    absoluteImage,
+    cardFromItem,
+    pokemonCardFromBrowse,
+    priceForCopy,
+    publicCardFromItem,
+    seriesFromSets,
+    setCardFromBrowse,
+    slotsFromEntries,
+} from "./api-shapes";
 
 describe("absoluteImage", () => {
     it("resolves a relative picture on the API's host and leaves an absolute one alone", () => {
@@ -121,5 +131,72 @@ describe("pokemonCardFromBrowse", () => {
             itemIds: ["row"],
         });
         expect(c).toMatchObject({ set: "Scarlet & Violet", types: null, hp: null, owned: true });
+    });
+});
+
+describe("seriesFromSets", () => {
+    const set = (over: Partial<CatalogueSet>): CatalogueSet => ({
+        id: "x",
+        name: "Set",
+        series: "Scarlet & Violet",
+        releaseDate: "2024/01/01",
+        total: 100,
+        printedTotal: 90,
+        logo: null,
+        symbol: null,
+        ownedCount: 0,
+        wishlistCount: 0,
+        ...over,
+    });
+
+    it("groups sets by series in the order the API gives them", () => {
+        const { series } = seriesFromSets([
+            set({ id: "sv2", series: "Scarlet & Violet" }),
+            set({ id: "swsh1", series: "Sword & Shield" }),
+            set({ id: "sv1", series: "Scarlet & Violet" }),
+        ]);
+        expect(series.map((s) => s.name)).toEqual(["Scarlet & Violet", "Sword & Shield"]);
+        expect(series[0].sets.map((s) => s.id)).toEqual(["sv2", "sv1"]);
+    });
+
+    it("caps the owned count at the set's size, since the API counts copies", () => {
+        const { series } = seriesFromSets([set({ id: "a", total: 10, ownedCount: 14 })]);
+        expect(series[0].sets[0]).toMatchObject({ owned: 10, total: 10, complete: true });
+    });
+
+    it("counts complete and started sets", () => {
+        const { complete, started, totalSets } = seriesFromSets([
+            set({ id: "a", total: 10, ownedCount: 10 }),
+            set({ id: "b", total: 10, ownedCount: 3 }),
+            set({ id: "c", total: 10, ownedCount: 0 }),
+        ]);
+        expect({ complete, started, totalSets }).toEqual({ complete: 1, started: 2, totalSets: 3 });
+    });
+
+    it("resolves a relative logo on the API's host", () => {
+        const { series } = seriesFromSets([set({ logo: "/api/cover?url=l" })]);
+        expect(series[0].sets[0].logoUrl).toBe("https://api.cardorb.com/api/cover?url=l");
+    });
+});
+
+describe("setCardFromBrowse", () => {
+    it("keeps the number, the picture and how many are held", () => {
+        expect(
+            setCardFromBrowse({
+                id: "sv1-1",
+                number: "1",
+                name: "Sprigatito",
+                setName: "Scarlet & Violet",
+                image: "/p.png",
+                imageHigh: null,
+                rarity: "Common",
+                types: ["Grass"],
+                series: "Scarlet & Violet",
+                owned: true,
+                wishlist: false,
+                quantity: 2,
+                itemIds: ["row"],
+            }),
+        ).toEqual({ id: "sv1-1", number: "1", name: "Sprigatito", imageUrl: "https://api.cardorb.com/p.png", owned: true, wishlist: false, quantity: 2 });
     });
 });

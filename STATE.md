@@ -17,11 +17,16 @@ is touched directly for auth and the session only; the same project signs both, 
 access token is the API's bearer. `src/lib/api.ts` is the client, `src/lib/api-shapes.ts` turns
 the API's answers into what the screens already render (tested). `scripts/verify.sh` fails on a
 `.from("` outside `src/lib/supabase/`. Live: landing, app shell, Home, Cards, Collections
-(folders in the API), Favorites, Wishlist, Pokédex, command-palette search (the API's catalogue,
+(folders in the API), Favorites, Wishlist, Pokédex, Sets, command-palette search (the API's catalogue,
 which also says what is already yours), Settings (avatar through the API), public profile.
 
 ## Last session
 
+- **A Sets page** (`/dashboard/sets`) shows every set the catalogue knows, grouped by series, with
+  how much of each is in the binder; a set opens as a grid of all its cards, yours in colour, the
+  missing ones grey (`GET /catalog/sets`, `GET /catalog/sets/:id`, `src/lib/sets.ts`). The list's
+  count is capped at the set's size because the API counts copies there, not distinct cards
+  (https://github.com/bartdunweg/cardorb-api/issues/162). Set logos come from images.scrydex.com, now an allowed image host.
 - **next-themes is gone.** React 19 logged "Encountered a script tag while rendering React
   component" on every page: the package renders its boot script inside a component. Now
   `src/lib/theme-script.ts` holds the script as a string literal, the root layout emits it once

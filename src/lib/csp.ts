@@ -19,8 +19,8 @@ import { BOOT_SCRIPT_HASH } from "@/lib/theme-script";
  * keep it so: a new page under (app) or (auth) fails the test until it is named here.
  */
 export const NONCE_ROUTES: RegExp[] = [
-    /^\/dashboard(\/(cards|collections|favorites|pokedex|search|settings|wishlist))?$/,
-    /^\/dashboard\/collections\/[^/]+$/,
+    /^\/dashboard(\/(cards|collections|favorites|pokedex|search|sets|settings|wishlist))?$/,
+    /^\/dashboard\/(collections|sets)\/[^/]+$/,
     /^\/(login|signup|forgot-password|reset-password)$/,
 ];
 
@@ -31,6 +31,7 @@ const IMAGE_HOSTS = [
     "https://api.cardorb.com",
     "https://assets.tcgdex.net",
     "https://images.pokemontcg.io",
+    "https://images.scrydex.com",
     "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com",
 ];
 

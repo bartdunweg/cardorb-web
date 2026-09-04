@@ -23,7 +23,13 @@ import Image from "next/image";
  * browser is sent to the original URL instead, so a slow source costs one retry, never the card.
  */
 
-const OPTIMISED_HOSTS = new Set(["assets.tcgdex.net", "images.pokemontcg.io", "limitlesstcg.nyc3.cdn.digitaloceanspaces.com", "api.cardorb.com"]);
+const OPTIMISED_HOSTS = new Set([
+    "assets.tcgdex.net",
+    "images.pokemontcg.io",
+    "images.scrydex.com",
+    "limitlesstcg.nyc3.cdn.digitaloceanspaces.com",
+    "api.cardorb.com",
+]);
 
 function isOptimised(src: string): boolean {
     try {

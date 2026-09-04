@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Folder, Heart, Plus, SearchLg, Star01 } from "@untitledui/icons";
+import { BookOpen01, Folder, Heart, Plus, SearchLg, Star01 } from "@untitledui/icons";
 import { FeaturedIcon } from "@/components/foundations/featured-icon/featured-icon";
 import { BackgroundPattern } from "@/components/shared-assets/background-patterns";
 
@@ -11,7 +11,7 @@ import { BackgroundPattern } from "@/components/shared-assets/background-pattern
 //
 // Client component: a Server Component cannot hand an icon function across the boundary, so the
 // icon is chosen here by name.
-const ICONS = { folder: Folder, heart: Heart, plus: Plus, search: SearchLg, star: Star01 } as const;
+const ICONS = { book: BookOpen01, folder: Folder, heart: Heart, plus: Plus, search: SearchLg, star: Star01 } as const;
 
 export function AppEmptyState({ icon, title, description, children }: { icon: keyof typeof ICONS; title: string; description: string; children?: ReactNode }) {
     const Icon = ICONS[icon];

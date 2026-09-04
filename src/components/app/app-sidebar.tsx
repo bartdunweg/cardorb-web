@@ -1,6 +1,6 @@
 "use client";
 
-import { Folder, Grid01, Heart, HomeLine, Rows01, Star01 } from "@untitledui/icons";
+import { BookOpen01, Folder, Grid01, Heart, HomeLine, Rows01, Star01 } from "@untitledui/icons";
 import { usePathname } from "next/navigation";
 import { AccountMenu } from "@/components/app/account-menu";
 import { SidebarSearchTrigger } from "@/components/app/command-search";
@@ -19,6 +19,7 @@ export function AppSidebar({ account, collections }: { account: Account; collect
         { label: "Home", href: "/dashboard", icon: HomeLine },
         { label: "Cards", href: "/dashboard/cards", icon: Rows01 },
         { label: "Pokédex", href: "/dashboard/pokedex", icon: Grid01 },
+        { label: "Sets", href: "/dashboard/sets", icon: BookOpen01 },
         {
             label: "Collections",
             href: "/dashboard/collections",
