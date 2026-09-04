@@ -116,8 +116,8 @@ which also says what is already yours), Settings (avatar through the API), publi
   answers: large title that hands over on scroll; every page where it makes sense; keep the tab bar;
   Back goes to the parent. Checked on a 375-px viewport with a throwaway route, not committed.
 - **Set and rarity filters on Cards.** Two menus under the search, "All sets" and "All rarities"
-  on top, a "Clear filters" link while one is on. The lists come from the grouped collection
-  (`src/lib/facets.ts`, pure part tested), kept five minutes per person like the layout's reads.
+  on top, a "Clear filters" link while one is on. The lists came from the grouped collection
+  (`src/lib/facets.ts`) until #78; now the API's `/cards` answer carries them as `facets`.
   The choice lives in the URL beside the sort (`set=`, `rarity=`, the API matches them whole).
 - **Supabase, through its connection (cardorb-api#153).** The revoke of 2026-09-02 had also taken
   EXECUTE on `handle_new_user()` from `supabase_auth_admin`, the role the `auth.users` trigger runs
@@ -226,6 +226,16 @@ Backlog from the review, ranked. Each is one PR.
 
 ## Open
 
+- **A revoked session stays open on the web for up to an hour (#79).** The middleware and the
+  API both verify the token locally with `getClaims`, so a sign-out everywhere from the iOS app,
+  a ban or a password change is felt on the next token refresh, not the next page; the access
+  token lives 3600 s by Supabase's default. Accepted for the 70 to 360 ms `getUser` cost per page.
+  To shorten the window: lower the JWT expiry in the Supabase project (Auth → Sessions), which
+  both apps follow without a change.
+- **API answers are cast, not parsed.** `api<T>()` returns `json as T`; the mappers in
+  `api-shapes.ts` pick fields but no zod schema checks an answer, though CLAUDE.md says zod at
+  every boundary. The one field that has bitten (`facets`) has a default. A zod pass per route is
+  the honest fix; until then a drifted API field reaches the mapper unchecked.
 - Supabase side is recorded in `docs/supabase.md`: anon holds column-level SELECT on the public
   card columns only, the `avatars` bucket has type and size limits, the SECURITY DEFINER functions
   are not callable by anon. The advisor still lists few MFA options and `citext` in `public`;
