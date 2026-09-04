@@ -55,7 +55,7 @@ export function PageHeader({
         <>
             <div
                 className={cx(
-                    "sticky top-0 z-30 -mx-4 -mt-6 mb-2 grid h-12 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center bg-primary/90 px-2 backdrop-blur sm:-mx-6 sm:-mt-8 lg:hidden",
+                    "sticky top-0 z-30 -mx-4 -mt-6 mb-2 grid h-12 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center glass px-2 sm:-mx-6 sm:-mt-8 lg:hidden",
                     "border-b transition-[border-color] duration-150 ease-out",
                     collapsed ? "border-secondary" : "border-transparent",
                 )}

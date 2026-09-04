@@ -165,6 +165,22 @@ To change the main brand color across the entire application:
 
 The color scale automatically adapts to both light and dark modes through the CSS variable system.
 
+### Materials
+
+One material, `glass`, for chrome that content scrolls under: the phone tab bar and page bar, the
+desktop sidebar. It is a utility in `globals.css` over two tokens in `theme.css`:
+
+- `bg-glass` — the page surface at 72%, derived from `bg-primary`, so it follows light and dark
+- `border-glass` / `ring-glass` — the bright edge, black 8% in light, white 12% in dark
+
+```tsx
+<nav className="rounded-full border border-glass glass shadow-lg">…</nav>
+```
+
+Do not stack two glass surfaces; a popover over the tab bar stays `bg-primary`. Do not write
+`bg-primary/90 backdrop-blur` by hand: that is a second material with no name. A user who set
+"reduce transparency" gets the plain page surface from the utility itself.
+
 ### Style Organization
 
 ```typescript

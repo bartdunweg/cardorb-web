@@ -22,6 +22,21 @@
     scrollbar-width: none; /* Firefox */
 }
 
+/* Glass: the material for chrome that content scrolls under (tab bar, sidebar, the phone's page
+   bar). Background from the bg-glass token, so it follows the theme; pair it with border-glass or
+   ring-glass for the edge. Someone who asked for less transparency gets the plain page surface. */
+@utility glass {
+    background-color: var(--color-bg-glass);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+
+    @media (prefers-reduced-transparency: reduce) {
+        background-color: var(--color-bg-primary);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+    }
+}
+
 @utility transition-inherit-all {
     transition-property: inherit;
     transition-duration: inherit;

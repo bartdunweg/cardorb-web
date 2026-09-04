@@ -321,6 +321,8 @@
     --color-text-brand-secondary_hover: var(--color-brand-800);
 
     /* BORDER COLORS */
+    /* The bright edge of a glass surface: light catching the material. */
+    --color-border-glass: color-mix(in oklab, var(--color-neutral-950) 8%, transparent);
     --color-border-primary: var(--color-neutral-300);
     --color-border-secondary: var(--color-neutral-200);
     --color-border-secondary_alt: rgb(0 0 0 / 0.1);
@@ -352,6 +354,9 @@
     --color-fg-brand-secondary_hover: var(--color-brand-600);
 
     /* BACKGROUND COLORS */
+    /* Glass: the page surface at 72%, for chrome that content scrolls under (the `glass` utility
+       adds the blur). Derived from bg-primary, so it follows the theme on its own. */
+    --color-bg-glass: color-mix(in oklab, var(--color-bg-primary) 72%, transparent);
     --color-bg-primary: var(--color-white);
     --color-bg-tertiary: var(--color-neutral-100);
     --color-bg-brand-primary: var(--color-brand-50);
@@ -406,6 +411,7 @@
     --color-tooltip-supporting-text: var(--color-neutral-300);
 
     /* BACKGROUND PROPERTY COLORS */
+    --background-color-glass: var(--color-bg-glass);
     --background-color-primary: var(--color-bg-primary);
     --background-color-tertiary: var(--color-bg-tertiary);
     --background-color-brand-primary: var(--color-bg-brand-primary);
@@ -465,6 +471,8 @@
     --text-color-tooltip-supporting-text: var(--color-tooltip-supporting-text);
 
     /* BORDER PROPERTY COLORS */
+    --border-color-glass: var(--color-border-glass);
+    --ring-color-glass: var(--color-border-glass);
     --border-color-primary: var(--color-border-primary);
     --border-color-secondary: var(--color-border-secondary);
     --border-color-secondary_alt: var(--color-border-secondary_alt);
@@ -683,6 +691,7 @@
         --color-text-error-primary_hover: var(--color-red-300);
         --color-text-brand-secondary_hover: var(--color-neutral-200);
 
+        --color-border-glass: color-mix(in oklab, var(--color-white) 12%, transparent);
         --color-border-secondary: var(--color-neutral-700);
         --color-border-error_subtle: var(--color-red-500);
         --color-border-primary: var(--color-neutral-600);
