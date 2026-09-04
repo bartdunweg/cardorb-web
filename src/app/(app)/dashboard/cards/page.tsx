@@ -58,8 +58,11 @@ export default async function CardsPage({
             />
 
             <div className="flex flex-1 flex-col gap-4">
-                <CardsSearch initialValue={q ?? ""} />
-                <CardsFilters query={query} facets={facets} />
+                {/* One row: search and the two filters; the sort sits in the header's actions. */}
+                <div className="flex flex-wrap items-center gap-2">
+                    <CardsSearch initialValue={q ?? ""} className="w-full sm:w-64" />
+                    <CardsFilters query={query} facets={facets} />
+                </div>
 
                 {total === 0 ? (
                     <AppEmptyState

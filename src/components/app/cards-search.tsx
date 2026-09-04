@@ -11,10 +11,12 @@ export function CardsSearch({
     initialValue = "",
     label = "Search your cards",
     placeholder = "Search your collection",
+    className = "w-full max-w-80",
 }: {
     initialValue?: string;
     label?: string;
     placeholder?: string;
+    className?: string;
 }) {
     const router = useRouter();
     const pathname = usePathname();
@@ -35,5 +37,5 @@ export function CardsSearch({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [value]);
 
-    return <Input aria-label={label} icon={SearchLg} placeholder={placeholder} value={value} onChange={setValue} className="w-full max-w-80" />;
+    return <Input aria-label={label} icon={SearchLg} placeholder={placeholder} value={value} onChange={setValue} className={className} />;
 }
