@@ -66,8 +66,8 @@ export default async function CardsPage({
 
     const toolbar = (
         <FiltersSheet active={[q, query.set, query.rarity].filter(Boolean).length}>
-            <CardsSearch initialValue={q ?? ""} className="w-full lg:w-64" />
-            <CardsFilters query={query} facets={facets} />
+            <CardsSearch key="search" initialValue={q ?? ""} className="w-full lg:w-64" />
+            <CardsFilters key="filters" query={query} facets={facets} />
         </FiltersSheet>
     );
 

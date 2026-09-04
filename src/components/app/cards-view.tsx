@@ -27,7 +27,8 @@ export function CardsView({ cards, initialView, toolbar }: { cards: Card[]; init
     return (
         <div className="flex flex-col gap-4">
             <div className="flex flex-wrap items-center gap-2">
-                {toolbar}
+                {/* In its own box: an element that crossed the server boundary, in a list with local ones, trips the key check. */}
+                <div className="contents">{toolbar}</div>
                 <ButtonGroup
                     className="ml-auto"
                     size="sm"

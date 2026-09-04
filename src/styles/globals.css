@@ -113,38 +113,43 @@ input[type="search"]::-webkit-search-cancel-button {
     outline: none;
 }
 
-/* Hairline borders. On a 2x screen a 1px border is two device pixels and reads heavy next to
-   the type; half a CSS pixel is one device pixel, the line iOS draws. A 1x screen cannot draw
-   half a pixel, so there the utilities keep their 1px and stay visible. Covers the two ways
-   Untitled UI draws an edge: the border utilities and the ring-1 box-shadow on inputs. */
+/* Hairline: the width of every rim. One device pixel: 1px on a 1x screen, half a CSS pixel on 2x,
+   where a full pixel is two device pixels and reads heavy next to the type. The border utilities,
+   ring-1, divide-y and the 1px layer in every shadow read it. */
+:root {
+    --hairline: 1px;
+}
 @media (min-resolution: 2dppx) {
-    @layer utilities {
-        .border {
-            border-width: 0.5px;
-        }
-        .border-x {
-            border-inline-width: 0.5px;
-        }
-        .border-y {
-            border-block-width: 0.5px;
-        }
-        .border-t {
-            border-top-width: 0.5px;
-        }
-        .border-r {
-            border-right-width: 0.5px;
-        }
-        .border-b {
-            border-bottom-width: 0.5px;
-        }
-        .border-l {
-            border-left-width: 0.5px;
-        }
-        :where(.divide-y > :not(:last-child)) {
-            border-bottom-width: 0.5px;
-        }
-        .ring-1 {
-            --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(0.5px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
-        }
+    :root {
+        --hairline: 0.5px;
+    }
+}
+@layer utilities {
+    .border {
+        border-width: var(--hairline);
+    }
+    .border-x {
+        border-inline-width: var(--hairline);
+    }
+    .border-y {
+        border-block-width: var(--hairline);
+    }
+    .border-t {
+        border-top-width: var(--hairline);
+    }
+    .border-r {
+        border-right-width: var(--hairline);
+    }
+    .border-b {
+        border-bottom-width: var(--hairline);
+    }
+    .border-l {
+        border-left-width: var(--hairline);
+    }
+    :where(.divide-y > :not(:last-child)) {
+        border-bottom-width: var(--hairline);
+    }
+    .ring-1 {
+        --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(var(--hairline) + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
     }
 }

@@ -87,13 +87,14 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                         <div className="flex flex-wrap items-center gap-2">
                             <FiltersSheet active={[q, query.set, query.rarity].filter(Boolean).length}>
                                 <CardsSearch
+                                    key="search"
                                     initialValue={q ?? ""}
                                     label="Search this collection"
                                     placeholder="Search this collection"
                                     className="w-full lg:w-72"
                                 />
-                                <CardsFilters query={query} facets={facets} />
-                                <CardsSort query={query} options={PUBLIC_SORT_OPTIONS} />
+                                <CardsFilters key="filters" query={query} facets={facets} />
+                                <CardsSort key="sort" query={query} options={PUBLIC_SORT_OPTIONS} />
                             </FiltersSheet>
                         </div>
                         {cards.length === 0 ? (

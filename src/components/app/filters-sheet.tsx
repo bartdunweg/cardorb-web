@@ -1,6 +1,6 @@
 "use client";
 
-import { Children, type ReactNode, useState } from "react";
+import { type ReactNode, useState } from "react";
 import { FilterLines } from "@untitledui/icons";
 import { Heading as AriaHeading } from "react-aria-components";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
@@ -12,12 +12,10 @@ import { Button } from "@/components/base/buttons/button";
 // narrowed list says why. The controls apply as they change; Done only closes the sheet.
 export function FiltersSheet({ active = 0, children }: { active?: number; children: ReactNode }) {
     const [open, setOpen] = useState(false);
-    // The controls come from a server page as a plain array; keyed here, so rendering them twice is quiet.
-    const controls = Children.toArray(children);
 
     return (
         <>
-            <div className="hidden lg:contents">{controls}</div>
+            <div className="hidden lg:contents">{children}</div>
             <div className="lg:hidden">
                 <Button color="secondary" size="sm" iconLeading={FilterLines} onClick={() => setOpen(true)}>
                     Filters
@@ -35,7 +33,7 @@ export function FiltersSheet({ active = 0, children }: { active?: number; childr
                                     Filters
                                 </AriaHeading>
                             </SlideoutMenu.Header>
-                            <SlideoutMenu.Content className="gap-3 pb-4 *:w-full [&_select]:w-full">{controls}</SlideoutMenu.Content>
+                            <SlideoutMenu.Content className="gap-3 pb-4 *:w-full [&_select]:w-full">{children}</SlideoutMenu.Content>
                             <SlideoutMenu.Footer className="flex justify-end">
                                 <Button color="primary" size="sm" onClick={close}>
                                     Done
