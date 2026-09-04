@@ -1,10 +1,27 @@
 "use client";
 
+// Changed from the kit: the picture is a next/image, so an avatar from Supabase storage (served
+// as uploaded, no-cache) is resized to the circle it fills and cached by the optimizer. A re-fetch
+// through the Untitled UI CLI or MCP overwrites this; re-apply it.
 import { type FC, type ReactNode, useState } from "react";
 import { User01 } from "@untitledui/icons";
+import Image from "next/image";
 import { cx } from "@/utils/cx";
 import { AvatarOnlineIndicator, VerifiedTick } from "./base-components";
 import { AvatarCount } from "./base-components/avatar-count";
+
+/** The circle's side per size, in CSS pixels: what the optimizer is asked for (twice, on a 2x screen). */
+const PIXELS = { xs: 24, sm: 32, md: 40, lg: 48, xl: 56, "2xl": 64 } as const;
+
+/** Mirrors the avatar pattern in next.config.mjs; a picture from anywhere else goes direct. */
+function isOptimisedAvatar(src: string): boolean {
+    try {
+        const url = new URL(src);
+        return url.hostname.endsWith(".supabase.co") && url.pathname.startsWith("/storage/v1/object/public/avatars/");
+    } catch {
+        return false;
+    }
+}
 
 export interface AvatarProps {
     size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
@@ -99,8 +116,21 @@ export const Avatar = ({
     const canShowImage = src && !isFailed;
 
     const renderMainContent = () => {
-        if (canShowImage) {
-            return <img data-avatar-img className="size-full object-cover" src={src} alt={alt} onError={() => setIsFailed(true)} />;
+        if (src && !isFailed) {
+            const px = PIXELS[size];
+            return (
+                <Image
+                    data-avatar-img
+                    className="size-full object-cover"
+                    src={src}
+                    alt={alt ?? ""}
+                    width={px}
+                    height={px}
+                    sizes={`${px}px`}
+                    unoptimized={!isOptimisedAvatar(src)}
+                    onError={() => setIsFailed(true)}
+                />
+            );
         }
 
         if (initials) {

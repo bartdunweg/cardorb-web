@@ -16,6 +16,9 @@ import Image from "next/image";
  * Fills its parent, which must be `relative` with a set aspect ratio (a card is 63 × 88), so
  * the box exists before the picture lands and nothing jumps.
  *
+ * Quality 60: the source is a scan of a printed card, and at the sizes drawn here 60 is not
+ * told apart from 75 while the file is a third smaller (next.config.mjs lists the qualities).
+ *
  * If the optimizer cannot get the file — the catalogue not answering when it first asks — the
  * browser is sent to the original URL instead, so a slow source costs one retry, never the card.
  */
@@ -55,6 +58,7 @@ export function CardImage({
             sizes={sizes}
             className={className}
             priority={priority}
+            quality={60}
             unoptimized={direct || !isOptimised(src)}
             onError={() => setDirect(true)}
         />
