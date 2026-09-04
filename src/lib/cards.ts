@@ -37,7 +37,7 @@ export async function getMyCards({
     /** The sets and rarities held, over the whole collection whatever the filters: what the two menus offer. */
     facets: Facets;
 }> {
-    const { cards, total, facets } = await api<{ cards: CardItem[]; total: number; facets: Facets }>("/cards", {
+    const { cards, total, facets } = await api<{ cards: CardItem[]; total: number; facets?: Facets }>("/cards", {
         params: {
             q: q?.trim() || undefined,
             owned: !wishlist,
@@ -51,7 +51,9 @@ export async function getMyCards({
             offset,
         },
     });
-    return { cards: cards.map(cardFromItem), total, facets };
+    // The API has carried facets since its #161, the same day as this read; an older deploy or a
+    // rollback answers without them. Empty menus then, not a Cards page that throws on facets.sets.
+    return { cards: cards.map(cardFromItem), total, facets: facets ?? { sets: [], rarities: [] } };
 }
 
 export type CardStats = {
