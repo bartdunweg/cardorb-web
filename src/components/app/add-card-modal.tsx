@@ -10,7 +10,6 @@ import { CardImage } from "@/components/app/card-image";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Button } from "@/components/base/buttons/button";
-import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { CloseButton } from "@/components/base/buttons/close-button";
 import { Input } from "@/components/base/input/input";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
@@ -50,7 +49,12 @@ export function AddCardModal({ defaultTarget = "collection", trigger }: { defaul
 
     return (
         <DialogTrigger>
-            {trigger ?? <ButtonUtility icon={Plus} aria-label="Add card" color="secondary" className="rounded-full" />}
+            {/* The app's main action says what it does; a grey circle with a plus did not. */}
+            {trigger ?? (
+                <Button iconLeading={Plus} size="md">
+                    Add card
+                </Button>
+            )}
 
             <ModalOverlay>
                 <Modal className="max-w-xl">

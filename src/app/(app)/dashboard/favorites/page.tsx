@@ -19,18 +19,28 @@ export default async function FavoritesPage({ searchParams }: { searchParams: Pr
     const view = parseCardsView((await cookies()).get(CARDS_VIEW_COOKIE)?.value);
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
+    // The header stays on an empty page: it is the page's title, and on a phone it carries Back.
+    const header = (
+        <PageHeader
+            title="Favorites"
+            subtitle={`${total.toLocaleString("en-US")} starred card${total === 1 ? "" : "s"}`}
+            back={{ href: "/dashboard/cards", label: "Cards" }}
+            actions={total > 0 ? <CardsSort query={query} /> : undefined}
+        />
+    );
+
     if (total === 0) {
-        return <AppEmptyState icon="star" title="No favorites yet" description="Star a card to keep it here for quick access" />;
+        return (
+            <div className="flex flex-1 flex-col gap-6">
+                {header}
+                <AppEmptyState icon="star" title="No favorites yet" description="Star a card to keep it here for quick access" />
+            </div>
+        );
     }
 
     return (
         <div className="flex flex-col gap-6">
-            <PageHeader
-                title="Favorites"
-                subtitle={`${total.toLocaleString("en-US")} starred card${total === 1 ? "" : "s"}`}
-                back={{ href: "/dashboard/cards", label: "Cards" }}
-                actions={<CardsSort query={query} />}
-            />
+            {header}
             <CardsView cards={cards} initialView={view} />
             <CardsPagination page={page} totalPages={totalPages} hrefFor={(n) => listHref("/dashboard/favorites", query, { page: n })} />
         </div>

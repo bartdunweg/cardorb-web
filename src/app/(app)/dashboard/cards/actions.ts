@@ -3,12 +3,13 @@
 import { z } from "zod";
 import { ApiError, api } from "@/lib/api";
 import { type BrowseCard, type PokemonCard, pokemonCardFromBrowse } from "@/lib/api-shapes";
-import { getMyCards } from "@/lib/cards";
+import { type Card, getMyCards } from "@/lib/cards";
 import { forgetMine } from "@/lib/user-cache";
 
 export type { PokemonCard } from "@/lib/api-shapes";
 
-export type CardHit = { id: string; name: string; set_name: string | null; number: string | null; image_url: string | null };
+/** A hit in your own collection is the whole card, so a tap on it can open the card rather than a search for its name. */
+export type CardHit = Card;
 
 type Result = { ok: true } | { ok: false; error: string };
 
@@ -23,7 +24,7 @@ export async function searchMyCards(query: string): Promise<CardHit[]> {
     if (!parsed.success) return [];
 
     const { cards } = await getMyCards({ q: parsed.data, limit: 20 });
-    return cards.map((c) => ({ id: c.id, name: c.name, set_name: c.set_name, number: c.number, image_url: c.image_url }));
+    return cards;
 }
 
 // Searches the catalogue through the API, which also says whether each hit is already yours.

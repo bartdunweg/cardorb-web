@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { SearchLg } from "@untitledui/icons";
-import { useRouter } from "next/navigation";
 import { type CardHit, searchMyCards } from "@/app/(app)/dashboard/cards/actions";
+import { CardDetailSlideout } from "@/components/app/card-detail-slideout";
 import { CardImage } from "@/components/app/card-image";
 import { Input } from "@/components/base/input/input";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
@@ -11,8 +11,8 @@ import { cx } from "@/utils/cx";
 
 // Full-page collection search for mobile (a route, not a modal).
 export function MobileSearch() {
-    const router = useRouter();
     const [query, setQuery] = useState("");
+    const [selected, setSelected] = useState<CardHit | null>(null);
     const { results, loading } = useDebouncedSearch<CardHit>(query, searchMyCards, { minLength: 1, delay: 250 });
     const searchState = loading ? "Searching…" : query.trim().length >= 1 && results.length === 0 ? "No cards found." : "";
 
@@ -32,7 +32,7 @@ export function MobileSearch() {
                         <button
                             key={card.id}
                             type="button"
-                            onClick={() => router.push(`/dashboard/cards?q=${encodeURIComponent(card.name)}`)}
+                            onClick={() => setSelected(card)}
                             className="flex items-center gap-3 rounded-lg p-2 text-left hover:bg-secondary"
                         >
                             <div className="relative h-14 w-10 shrink-0 overflow-hidden rounded bg-quaternary">
@@ -47,6 +47,8 @@ export function MobileSearch() {
                         </button>
                     ))}
             </div>
+
+            <CardDetailSlideout card={selected} onClose={() => setSelected(null)} />
         </div>
     );
 }
