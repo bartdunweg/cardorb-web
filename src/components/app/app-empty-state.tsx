@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { BookOpen01, Folder, Heart, Plus, SearchLg, Star01 } from "@untitledui/icons";
 import { FeaturedIcon } from "@/components/foundations/featured-icon/featured-icon";
-import { BackgroundPattern } from "@/components/shared-assets/background-patterns";
+import { Circle } from "@/components/shared-assets/background-patterns/circle";
 
 // The kit's EmptyState in the "lg" size, drawn here without the kit. The kit's module imports
 // every file-type icon for its FileTypeIcon variant, which put 60 KB (gzip) of SVG on every page
@@ -20,7 +20,7 @@ export function AppEmptyState({ icon, title, description, children }: { icon: ke
         <div className="flex flex-1 items-center justify-center">
             <div className="mx-auto flex w-full max-w-lg flex-col items-center justify-center">
                 <div className="relative mb-5">
-                    <BackgroundPattern size="md" pattern="circle" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                    <Circle size="md" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                     <FeaturedIcon icon={Icon} color="gray" theme="modern" size="xl" className="relative z-10" />
                 </div>
                 <div className="z-10 mb-8 flex w-full max-w-88 flex-col items-center justify-center gap-2">
