@@ -25,6 +25,7 @@ export function PageHeader({
     title,
     subtitle,
     back,
+    trailing,
     actions,
     children,
 }: {
@@ -33,6 +34,8 @@ export function PageHeader({
     subtitle?: ReactNode;
     /** The parent page, for the bar's Back. Left out on a page the tab bar reaches. */
     back?: { href: string; label: string };
+    /** The right end of the phone bar, opposite Back: the account on Home. */
+    trailing?: ReactNode;
     /** Whatever acts on this page, beside the title from `sm` up and under it on a narrow screen. */
     actions?: ReactNode;
     /** Anything else that belongs with the title, like a progress bar. */
@@ -81,7 +84,7 @@ export function PageHeader({
                 >
                     {title}
                 </span>
-                <div />
+                <div className="flex justify-end">{trailing}</div>
             </div>
 
             <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">

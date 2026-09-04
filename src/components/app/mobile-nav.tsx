@@ -28,61 +28,57 @@ const more = [
 
 const tabClass = "flex flex-1 flex-col items-center gap-0.5 rounded-full py-1 text-xs/4 font-medium transition";
 
-// Bottom bar for mobile: four tabs in a pill, and the account as a circle beside it. The circle
-// opens the rest of the sidebar and the account's own entries, so a phone reaches all of it.
-export function MobileTabBar({ account }: { account: Account }) {
+// Bottom tab bar for mobile: four destinations in a pill. The rest of the sidebar is behind
+// MobileAccountMenu, at the top right of Home.
+export function MobileTabBar() {
     const pathname = usePathname();
-    const moreActive = [...more.map((m) => m.href), "/dashboard/settings"].some((href) => pathname.startsWith(href));
 
     return (
-        <div className="fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex items-stretch gap-2 lg:hidden">
-            <nav
-                aria-label="Primary"
-                className="flex flex-1 items-stretch justify-around gap-1 rounded-full border border-secondary bg-primary p-0.5 shadow-lg"
-            >
-                {tabs.map((tab) => {
-                    const active = tab.match(pathname);
-                    const Icon = tab.icon;
-                    return (
-                        <Link
-                            key={tab.href}
-                            href={tab.href}
-                            aria-current={active ? "page" : undefined}
-                            className={cx(tabClass, active ? "bg-secondary text-primary" : "text-tertiary")}
-                        >
-                            <Icon className={cx("size-4", active ? "text-fg-brand-primary" : "text-fg-quaternary")} />
-                            {tab.label}
-                        </Link>
-                    );
-                })}
-            </nav>
+        <nav
+            aria-label="Primary"
+            className="fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex items-stretch justify-around gap-1 rounded-full border border-secondary bg-primary p-0.5 shadow-lg lg:hidden"
+        >
+            {tabs.map((tab) => {
+                const active = tab.match(pathname);
+                const Icon = tab.icon;
+                return (
+                    <Link
+                        key={tab.href}
+                        href={tab.href}
+                        aria-current={active ? "page" : undefined}
+                        className={cx(tabClass, active ? "bg-secondary text-primary" : "text-tertiary")}
+                    >
+                        <Icon className={cx("size-4", active ? "text-fg-brand-primary" : "text-fg-quaternary")} />
+                        {tab.label}
+                    </Link>
+                );
+            })}
+        </nav>
+    );
+}
 
-            <Dropdown.Root>
-                <AriaButton
-                    aria-label="More"
-                    className={({ isFocusVisible }) =>
-                        cx(
-                            // size-12 is the bar's height: 42 px of tab, 4 px of padding, 2 px of border.
-                            "flex size-12 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border bg-primary shadow-lg outline-offset-2 outline-focus-ring",
-                            moreActive ? "border-brand" : "border-secondary",
-                            isFocusVisible && "outline-2",
-                        )
-                    }
-                >
-                    <Avatar size="lg" src={account.avatarUrl ?? undefined} alt="" />
-                </AriaButton>
-                <Dropdown.Popover placement="top end" offset={12}>
-                    <Dropdown.Menu>
-                        {more.map((item) => (
-                            <Dropdown.Item key={item.href} icon={item.icon} href={item.href}>
-                                {item.label}
-                            </Dropdown.Item>
-                        ))}
-                        <Dropdown.Separator />
-                        <AccountMenuItems />
-                    </Dropdown.Menu>
-                </Dropdown.Popover>
-            </Dropdown.Root>
-        </div>
+// The account as a circle, for the phone bar at the top of Home. Opens what the sidebar has and
+// the tab bar does not, then the account's own entries, so a phone reaches all of it.
+export function MobileAccountMenu({ account }: { account: Account }) {
+    return (
+        <Dropdown.Root>
+            <AriaButton
+                aria-label="More"
+                className={({ isFocusVisible }) => cx("cursor-pointer rounded-full outline-offset-2 outline-focus-ring", isFocusVisible && "outline-2")}
+            >
+                <Avatar size="sm" src={account.avatarUrl ?? undefined} alt="" />
+            </AriaButton>
+            <Dropdown.Popover placement="bottom end" offset={8}>
+                <Dropdown.Menu>
+                    {more.map((item) => (
+                        <Dropdown.Item key={item.href} icon={item.icon} href={item.href}>
+                            {item.label}
+                        </Dropdown.Item>
+                    ))}
+                    <Dropdown.Separator />
+                    <AccountMenuItems />
+                </Dropdown.Menu>
+            </Dropdown.Popover>
+        </Dropdown.Root>
     );
 }
