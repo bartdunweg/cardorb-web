@@ -13,13 +13,33 @@ import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { FeaturedIcon } from "@/components/foundations/featured-icon/featured-icon";
 import type { CollectionSummary } from "@/lib/collections";
+import { cx } from "@/utils/cx";
 
 // A tile with a count, or with a line of its own for a view that is not a pile of cards.
-function FolderCard({ href, icon, name, count, detail }: { href: string; icon: FC<{ className?: string }>; name: string; count?: number; detail?: string }) {
+// `row` puts the icon beside the text instead of above it: for a tile that spans a phone's width,
+// where a stacked icon would leave the right two thirds empty.
+function FolderCard({
+    href,
+    icon,
+    name,
+    count,
+    detail,
+    row = false,
+}: {
+    href: string;
+    icon: FC<{ className?: string }>;
+    name: string;
+    count?: number;
+    detail?: string;
+    row?: boolean;
+}) {
     return (
         <Link
             href={href}
-            className="flex flex-col gap-3 rounded-xl bg-primary p-4 ring-1 ring-secondary outline-focus-ring transition ring-inset hover:bg-secondary focus-visible:outline-2"
+            className={cx(
+                "flex pressable gap-3 rounded-xl bg-primary p-4 shadow-border outline-focus-ring transition-[color,background-color,box-shadow] hover:bg-secondary hover:shadow-border_hover focus-visible:outline-2",
+                row ? "flex-row items-center xs:flex-col xs:items-stretch" : "flex-col",
+            )}
         >
             <FeaturedIcon color="gray" theme="modern-neue" size="lg" icon={icon} />
             <div className="flex flex-col">
@@ -27,6 +47,22 @@ function FolderCard({ href, icon, name, count, detail }: { href: string; icon: F
                 <span className="text-sm text-tertiary">{detail ?? `${count} card${count === 1 ? "" : "s"}`}</span>
             </div>
         </Link>
+    );
+}
+
+// Beside the page title: a plus on a phone, the words from sm up. Both open the dialog below.
+export function NewCollectionButton() {
+    return (
+        <>
+            <CreateCollectionModal>
+                <Button iconLeading={Plus} aria-label="New collection" className="sm:hidden" />
+            </CreateCollectionModal>
+            <CreateCollectionModal>
+                <Button iconLeading={Plus} className="max-sm:hidden">
+                    New collection
+                </Button>
+            </CreateCollectionModal>
+        </>
     );
 }
 
@@ -58,7 +94,7 @@ function CreateCollectionModal({ children }: { children: ReactNode }) {
                 <Modal className="max-w-sm">
                     <Dialog>
                         {({ close }) => (
-                            <div className="flex w-full max-w-sm flex-col gap-4 rounded-2xl bg-primary p-6 shadow-xl ring-1 ring-secondary">
+                            <div className="flex w-full max-w-sm flex-col gap-4 rounded-2xl glass-thick p-6 shadow-xl ring-1 ring-secondary">
                                 <AriaHeading slot="title" className="text-lg font-semibold text-primary">
                                     New collection
                                 </AriaHeading>
@@ -98,32 +134,30 @@ export function CollectionsGrid({
 
     return (
         <div className="flex flex-1 flex-col gap-6">
-            {/* Mobile hub: Favorites, Wishlist and the Pokédex. On desktop these are sidebar items instead; the tab bar has no room for them. */}
-            <div className="grid grid-cols-3 gap-4 lg:hidden">
-                <FolderCard href="/dashboard/favorites" icon={Star01} name="Favorites" count={favoritesCount} />
-                <FolderCard href="/dashboard/wishlist" icon={Heart} name="Wishlist" count={wishlistCount} />
-                <FolderCard href="/dashboard/pokedex" icon={Grid01} name="Pokédex" detail="Cards by Pokémon" />
+            {/* Mobile hub: Favorites, Wishlist and the Pokédex. On desktop these are sidebar items instead; the tab bar has no room
+                for them. On a phone the three stack, icon beside the name. */}
+            <div className="grid grid-cols-1 gap-4 xs:grid-cols-3 lg:hidden">
+                <FolderCard href="/dashboard/favorites" icon={Star01} name="Favorites" count={favoritesCount} row />
+                <FolderCard href="/dashboard/wishlist" icon={Heart} name="Wishlist" count={wishlistCount} row />
+                <FolderCard href="/dashboard/pokedex" icon={Grid01} name="Pokédex" detail="Cards by Pokémon" row />
             </div>
 
             {hasCollections ? (
-                <div className="flex flex-col gap-4">
-                    <div className="flex justify-end">
-                        <CreateCollectionModal>
-                            <Button iconLeading={Plus}>New collection</Button>
-                        </CreateCollectionModal>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                        {collections.map((c) => (
-                            <FolderCard key={c.id} href={`/dashboard/collections/${c.id}`} icon={Folder} name={c.name} count={c.count} />
-                        ))}
-                    </div>
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                    {collections.map((c) => (
+                        <FolderCard key={c.id} href={`/dashboard/collections/${c.id}`} icon={Folder} name={c.name} count={c.count} />
+                    ))}
                 </div>
             ) : (
-                <AppEmptyState icon="folder" title="No collections yet" description="Group your cards into folders you can jump to from the sidebar.">
-                    <CreateCollectionModal>
-                        <Button iconLeading={Plus}>Create collection</Button>
-                    </CreateCollectionModal>
-                </AppEmptyState>
+                // On a phone the hub above is the page and the plus beside the title is the way in; the
+                // empty state would only push the tab bar's worth of nothing under three tiles.
+                <div className="hidden lg:contents">
+                    <AppEmptyState icon="folder" title="No collections yet" description="Group your cards into folders you can jump to from the sidebar.">
+                        <CreateCollectionModal>
+                            <Button iconLeading={Plus}>Create collection</Button>
+                        </CreateCollectionModal>
+                    </AppEmptyState>
+                </div>
             )}
         </div>
     );

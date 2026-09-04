@@ -2,7 +2,7 @@
 
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { ChevronLeft } from "@untitledui/icons";
-import Link from "next/link";
+import { Button } from "@/components/base/buttons/button";
 import { cx } from "@/utils/cx";
 
 /**
@@ -25,8 +25,8 @@ export function PageHeader({
     title,
     subtitle,
     back,
-    trailing,
     actions,
+    above,
     children,
 }: {
     title: string;
@@ -34,10 +34,10 @@ export function PageHeader({
     subtitle?: ReactNode;
     /** The parent page, for the bar's Back. Left out on a page the tab bar reaches. */
     back?: { href: string; label: string };
-    /** The right end of the phone bar, opposite Back: the account on Home. */
-    trailing?: ReactNode;
     /** Whatever acts on this page, beside the title from `sm` up and under it on a narrow screen. */
     actions?: ReactNode;
+    /** Above the title, under the sticky bar: Home's search on a phone. */
+    above?: ReactNode;
     /** Anything else that belongs with the title, like a progress bar. */
     children?: ReactNode;
 }) {
@@ -58,21 +58,21 @@ export function PageHeader({
         <>
             <div
                 className={cx(
-                    "sticky top-0 z-30 -mx-4 -mt-6 mb-2 grid h-12 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center bg-primary/90 px-2 backdrop-blur sm:-mx-6 sm:-mt-8 lg:hidden",
-                    "border-b transition-[border-color] duration-150 ease-out",
-                    collapsed ? "border-secondary" : "border-transparent",
+                    "sticky top-0 z-30 -mx-4 -mt-4 grid h-12 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-2 sm:-mx-6 sm:-mt-8 lg:hidden",
+                    // The glass comes with the collapse (or with Back); over the uncollapsed title it would only blur it.
+                    (collapsed || back) && "glass",
+                    // Without Back the bar has nothing to show until the title collapses into it, so it lies over
+                    // the first 48 px and lets taps through: the page's first content starts 16 px from the top.
+                    back ? "mb-2" : "-mb-12",
+                    !back && !collapsed && "pointer-events-none",
+                    // Where content meets the bar: a fade from the page surface to nothing under the bar's edge,
+                    // not a rule. It appears with the collapse and goes when the title is back.
+                    "after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-4 after:bg-linear-to-b after:from-bg-primary after:to-transparent after:transition-opacity after:duration-150 after:ease-out",
+                    collapsed ? "after:opacity-100" : "after:opacity-0",
                 )}
             >
                 <div className="flex justify-start">
-                    {back ? (
-                        <Link
-                            href={back.href}
-                            className="flex items-center gap-0.5 rounded-md py-1 pr-2 pl-1 text-sm font-medium text-secondary outline-focus-ring hover:text-primary focus-visible:outline-2"
-                        >
-                            <ChevronLeft className="size-5" aria-hidden="true" />
-                            {back.label}
-                        </Link>
-                    ) : null}
+                    {back ? <Button href={back.href} color="secondary" size="sm" iconLeading={ChevronLeft} aria-label={`Back to ${back.label}`} /> : null}
                 </div>
                 {/* The same words as the h1 below, so a screen reader hears the title once. */}
                 <span
@@ -84,10 +84,13 @@ export function PageHeader({
                 >
                     {title}
                 </span>
-                <div className="flex justify-end">{trailing}</div>
+                <div />
             </div>
 
-            <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+            {above ? <div className="mb-6">{above}</div> : null}
+
+            {/* Actions sit beside the title when they fit (a plus on a phone) and wrap under it when they do not. */}
+            <div className="flex flex-row flex-wrap items-start justify-between gap-3">
                 <div className="flex min-w-0 flex-col gap-1">
                     <h1 ref={sentinel} className="text-display-xs font-semibold text-primary">
                         {title}

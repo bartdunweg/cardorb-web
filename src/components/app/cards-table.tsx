@@ -34,7 +34,7 @@ export function CardsTable({ cards, onSelect }: { cards: Card[]; onSelect: (card
                             <Table.Cell className="font-medium text-primary">
                                 <div className="flex items-center gap-3">
                                     {card.image_url ? (
-                                        <div className="relative h-10 w-7 shrink-0 overflow-hidden rounded bg-quaternary">
+                                        <div className="relative h-10 w-7 shrink-0 overflow-hidden rounded bg-quaternary ring-1 ring-image ring-inset">
                                             <CardImage src={card.image_url} alt="" sizes="28px" className="object-cover" />
                                         </div>
                                     ) : (

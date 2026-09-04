@@ -54,11 +54,18 @@ export function CollectionDetailActions({ collectionId }: { collectionId: string
                 <ModalOverlay>
                     <Modal className="max-w-xl">
                         <Dialog>
-                            <div className="flex max-h-[80vh] w-full max-w-xl flex-col gap-4 rounded-2xl bg-primary p-6 shadow-xl ring-1 ring-secondary">
+                            <div className="flex max-h-[80vh] w-full max-w-xl flex-col gap-4 rounded-2xl glass-thick p-6 shadow-xl ring-1 ring-secondary">
                                 <AriaHeading slot="title" className="text-lg font-semibold text-primary">
                                     Add cards to this collection
                                 </AriaHeading>
-                                <Input aria-label="Search your cards" icon={SearchLg} placeholder="Search your cards…" value={query} onChange={setQuery} />
+                                <Input
+                                    aria-label="Search your cards"
+                                    icon={SearchLg}
+                                    placeholder="Search your cards…"
+                                    value={query}
+                                    onChange={setQuery}
+                                    wrapperClassName="rounded-full"
+                                />
                                 <div className="flex min-h-40 flex-col gap-1 overflow-y-auto">
                                     {/* One live region, always mounted, so a screen reader hears the state change. */}
                                     <output aria-live="polite" className={cx("text-center text-sm text-tertiary", searchState ? "px-1 py-6" : "sr-only")}>
@@ -69,7 +76,7 @@ export function CollectionDetailActions({ collectionId }: { collectionId: string
                                             const st = status[card.id];
                                             return (
                                                 <div key={card.id} className="flex items-center gap-3 rounded-lg p-2 hover:bg-secondary">
-                                                    <div className="relative h-14 w-10 shrink-0 overflow-hidden rounded bg-quaternary">
+                                                    <div className="relative h-14 w-10 shrink-0 overflow-hidden rounded bg-quaternary ring-1 ring-image ring-inset">
                                                         {card.image_url ? (
                                                             <CardImage src={card.image_url} alt="" sizes="40px" className="object-cover" />
                                                         ) : null}
@@ -109,7 +116,7 @@ export function CollectionDetailActions({ collectionId }: { collectionId: string
                     <Modal className="max-w-sm">
                         <Dialog>
                             {({ close }) => (
-                                <div className="flex w-full max-w-sm flex-col gap-4 rounded-2xl bg-primary p-6 shadow-xl ring-1 ring-secondary">
+                                <div className="flex w-full max-w-sm flex-col gap-4 rounded-2xl glass-thick p-6 shadow-xl ring-1 ring-secondary">
                                     <AriaHeading slot="title" className="text-lg font-semibold text-primary">
                                         Delete this collection?
                                     </AriaHeading>

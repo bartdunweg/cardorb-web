@@ -165,6 +165,56 @@ To change the main brand color across the entire application:
 
 The color scale automatically adapts to both light and dark modes through the CSS variable system.
 
+### Materials
+
+One material in two weights, utilities in `globals.css` over tokens in `theme.css`:
+
+- `glass` — thin, for chrome that content scrolls under: the phone tab bar and page bar.
+  `bg-glass` is the page surface at 64% with a 20 px blur.
+- `glass-thick` — for a surface that holds content of its own: the desktop sidebar, a sheet, a
+  dialog, a popover, the search palette. `bg-glass-thick` is the page surface at 84% with a 40 px
+  blur.
+- `border-glass` / `ring-glass` — the bright edge, black 8% in light, white 12% in dark, for a
+  glass surface that carries no shadow.
+
+Both derive from `bg-primary`, so they follow light and dark on their own.
+
+```tsx
+<nav className="rounded-full glass shadow-lg">…</nav>
+```
+
+Do not stack two thin surfaces; a popover over a bar is thick, never a second thin. Do not write
+`bg-primary/90 backdrop-blur` by hand: that is a second material with no name. A user who set
+"reduce transparency" gets the plain page surface from the utility itself.
+
+### Elevation
+
+Depth is a shadow, structure is a border. A card, tile or panel takes `shadow-border` (hover:
+`shadow-border_hover`); a divider, a table edge and an input keep their border or ring. The scale
+`shadow-xs` to `shadow-xl` is three layers (a 1 px ring, a lift, an ambient spread) and switches
+with the theme: in dark the ring is white and the lift deeper, since a black shadow on a dark
+surface is invisible. The values are the `--elevation-*` variables in `theme.css`; the `--shadow-*`
+tokens point at them because Tailwind inlines any shadow it can parse.
+
+An elevated surface takes `shadow-*` alone, never a ring as well: the scale's first layer is the
+rim, and a ring on top draws two rims a shade apart. The sidebar is a floating panel like the tab
+bar: thick glass and `shadow-lg`.
+
+### Polish
+
+Small rules that compound. They live in tokens and utilities, so a new screen gets them by using the
+existing pieces, not by remembering them.
+
+- `pressable` — scale 0.96 on press, 160 ms, `cubic-bezier(0.2, 0, 0, 1)`. On every Button, the tab
+  bar's tabs, tappable cards and the search bars. Off under "reduce motion".
+- `ring-image` — a 1 px edge on every picture: black 10% in light, white 10% in dark, never a
+  tinted grey. With `ring-1 ring-inset` on the image's wrapper.
+- Transitions name their properties: `transition-colors`, `transition-opacity`, never bare
+  `transition`. A property that is not changing must not be waiting.
+- Exits are faster than enters: a sheet comes in at 300 ms and leaves in 200.
+- A theme switch pins transitions for one frame, so the page snaps to the other theme instead of
+  crossfading element by element. See `src/providers/theme.tsx`.
+
 ### Style Organization
 
 ```typescript

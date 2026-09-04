@@ -66,15 +66,22 @@
     --radius-full: 9999px;
 
     /* SHADOW */
-    --shadow-xs: 0px 1px 2px rgba(0, 0, 0, 0.05);
-    --shadow-sm: 0px 1px 3px rgba(0, 0, 0, 0.1), 0px 1px 2px -1px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0px 4px 6px -1px rgba(0, 0, 0, 0.1), 0px 2px 4px -2px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0px 12px 16px -4px rgba(0, 0, 0, 0.08), 0px 4px 6px -2px rgba(0, 0, 0, 0.03), 0px 2px 2px -1px rgba(0, 0, 0, 0.04);
-    --shadow-xl: 0px 20px 24px -4px rgba(0, 0, 0, 0.08), 0px 8px 8px -4px rgba(0, 0, 0, 0.03), 0px 3px 3px -1.5px rgba(0, 0, 0, 0.04);
+    /* The scale reads elevation values set per theme below (Tailwind inlines a shadow it can parse,
+       so a var() is the only way the dark values reach the utilities). Three layers each: a 1px
+       ring, a short lift, an ambient spread. In dark a black shadow is invisible, so the ring turns
+       white and the lift goes deeper. */
+    --shadow-xs: var(--elevation-xs);
+    --shadow-sm: var(--elevation-sm);
+    --shadow-md: var(--elevation-md);
+    --shadow-lg: var(--elevation-lg);
+    --shadow-xl: var(--elevation-xl);
+    /* A card's edge: depth, not structure. Dividers, tables and inputs keep their borders. */
+    --shadow-border: var(--elevation-border);
+    --shadow-border_hover: var(--elevation-border-hover);
     --shadow-2xl: 0px 24px 48px -12px rgba(0, 0, 0, 0.18), 0px 4px 4px -2px rgba(0, 0, 0, 0.04);
     --shadow-3xl: 0px 32px 64px -12px rgba(0, 0, 0, 0.14), 0px 5px 5px -2.5px rgba(0, 0, 0, 0.04);
 
-    --shadow-skeuomorphic: 0px 0px 0px 1px rgba(0, 0, 0, 0.18) inset, 0px -2px 0px 0px rgba(0, 0, 0, 0.05) inset;
+    --shadow-skeuomorphic: 0px 0px 0px var(--hairline) rgba(0, 0, 0, 0.18) inset, 0px -2px 0px 0px rgba(0, 0, 0, 0.05) inset;
     --shadow-xs-skeuomorphic: var(--shadow-skeuomorphic), var(--shadow-xs);
 
     --shadow-modern-mockup-inner-lg: 0px 0px 3.765px 1.255px rgba(10, 13, 18, 0.08) inset, 0px 0px 2.51px 1.255px rgba(10, 13, 18, 0.03) inset;
@@ -321,6 +328,10 @@
     --color-text-brand-secondary_hover: var(--color-brand-800);
 
     /* BORDER COLORS */
+    /* The edge of a picture: pure black or white at 10%, never a tinted neutral, which reads as dirt on the image. */
+    --color-border-image: oklch(0 0 0 / 0.1);
+    /* The bright edge of a glass surface: light catching the material. */
+    --color-border-glass: color-mix(in oklab, var(--color-neutral-950) 8%, transparent);
     --color-border-primary: var(--color-neutral-300);
     --color-border-secondary: var(--color-neutral-200);
     --color-border-secondary_alt: rgb(0 0 0 / 0.1);
@@ -352,6 +363,11 @@
     --color-fg-brand-secondary_hover: var(--color-brand-600);
 
     /* BACKGROUND COLORS */
+    /* Glass, two weights, both derived from bg-primary so they follow the theme on their own. Thin
+       is for bars content scrolls under; thick is for a sheet, dialog or popover that holds content
+       of its own. The `glass` and `glass-thick` utilities add the blur. */
+    --color-bg-glass: color-mix(in oklab, var(--color-bg-primary) 64%, transparent);
+    --color-bg-glass-thick: color-mix(in oklab, var(--color-bg-primary) 84%, transparent);
     --color-bg-primary: var(--color-white);
     --color-bg-tertiary: var(--color-neutral-100);
     --color-bg-brand-primary: var(--color-brand-50);
@@ -406,6 +422,8 @@
     --color-tooltip-supporting-text: var(--color-neutral-300);
 
     /* BACKGROUND PROPERTY COLORS */
+    --background-color-glass: var(--color-bg-glass);
+    --background-color-glass-thick: var(--color-bg-glass-thick);
     --background-color-primary: var(--color-bg-primary);
     --background-color-tertiary: var(--color-bg-tertiary);
     --background-color-brand-primary: var(--color-bg-brand-primary);
@@ -465,6 +483,10 @@
     --text-color-tooltip-supporting-text: var(--color-tooltip-supporting-text);
 
     /* BORDER PROPERTY COLORS */
+    --border-color-glass: var(--color-border-glass);
+    --ring-color-glass: var(--color-border-glass);
+    --border-color-image: var(--color-border-image);
+    --ring-color-image: var(--color-border-image);
     --border-color-primary: var(--color-border-primary);
     --border-color-secondary: var(--color-border-secondary);
     --border-color-secondary_alt: var(--color-border-secondary_alt);
@@ -502,9 +524,34 @@
 }
 
 @layer base {
+    /* ELEVATION: light */
+    :root {
+        --elevation-border: 0px 0px 0px var(--hairline) oklch(0 0 0 / 0.06), 0px 1px 2px -1px oklch(0 0 0 / 0.06), 0px 2px 4px 0px oklch(0 0 0 / 0.04);
+        --elevation-border-hover: 0px 0px 0px var(--hairline) oklch(0 0 0 / 0.08), 0px 1px 2px -1px oklch(0 0 0 / 0.08), 0px 2px 4px 0px oklch(0 0 0 / 0.06);
+        --elevation-xs: 0px 0px 0px var(--hairline) oklch(0 0 0 / 0.05), 0px 1px 2px 0px oklch(0 0 0 / 0.05);
+        --elevation-sm: 0px 0px 0px var(--hairline) oklch(0 0 0 / 0.06), 0px 1px 3px 0px oklch(0 0 0 / 0.08), 0px 1px 2px -1px oklch(0 0 0 / 0.08);
+        --elevation-md: 0px 0px 0px var(--hairline) oklch(0 0 0 / 0.06), 0px 4px 6px -1px oklch(0 0 0 / 0.08), 0px 2px 4px -2px oklch(0 0 0 / 0.06);
+        --elevation-lg:
+            0px 0px 0px var(--hairline) oklch(0 0 0 / 0.06), 0px 12px 16px -4px oklch(0 0 0 / 0.1), 0px 4px 6px -2px oklch(0 0 0 / 0.04),
+            0px 2px 2px -1px oklch(0 0 0 / 0.04);
+        --elevation-xl:
+            0px 0px 0px var(--hairline) oklch(0 0 0 / 0.06), 0px 20px 24px -4px oklch(0 0 0 / 0.12), 0px 8px 8px -4px oklch(0 0 0 / 0.04),
+            0px 3px 3px -1.5px oklch(0 0 0 / 0.04);
+    }
+
     /* DARK MODE VARIABLES */
 
     .dark-mode {
+        /* ELEVATION: dark. A white ring carries the edge; the lift is deeper because it has to
+           read against a surface that is already dark. */
+        --elevation-border: 0px 0px 0px var(--hairline) oklch(1 0 0 / 0.08);
+        --elevation-border-hover: 0px 0px 0px var(--hairline) oklch(1 0 0 / 0.13);
+        --elevation-xs: 0px 0px 0px var(--hairline) oklch(1 0 0 / 0.08);
+        --elevation-sm: 0px 0px 0px var(--hairline) oklch(1 0 0 / 0.08), 0px 1px 3px 0px oklch(0 0 0 / 0.3);
+        --elevation-md: 0px 0px 0px var(--hairline) oklch(1 0 0 / 0.1), 0px 4px 6px -1px oklch(0 0 0 / 0.4), 0px 2px 4px -2px oklch(0 0 0 / 0.3);
+        --elevation-lg: 0px 0px 0px var(--hairline) oklch(1 0 0 / 0.1), 0px 12px 16px -4px oklch(0 0 0 / 0.5), 0px 4px 6px -2px oklch(0 0 0 / 0.3);
+        --elevation-xl: 0px 0px 0px var(--hairline) oklch(1 0 0 / 0.12), 0px 20px 24px -4px oklch(0 0 0 / 0.6), 0px 8px 8px -4px oklch(0 0 0 / 0.3);
+
         --color-alpha-white: rgb(12 14 18);
         --color-alpha-black: rgb(255 255 255);
 
@@ -669,7 +716,7 @@
         --color-text-secondary_hover: var(--color-neutral-200);
         --color-text-tertiary_hover: var(--color-neutral-300);
         --color-text-brand-secondary: var(--color-neutral-300);
-        --color-text-placeholder: var(--color-neutral-500);
+        --color-text-placeholder: var(--color-neutral-400);
         --color-text-brand-tertiary: var(--color-neutral-400);
         --color-text-editor-icon-fg: var(--color-neutral-400);
         --color-text-editor-icon-fg_active: var(--color-white);
@@ -683,14 +730,16 @@
         --color-text-error-primary_hover: var(--color-red-300);
         --color-text-brand-secondary_hover: var(--color-neutral-200);
 
-        --color-border-secondary: var(--color-neutral-800);
+        --color-border-image: oklch(1 0 0 / 0.1);
+        --color-border-glass: color-mix(in oklab, var(--color-white) 12%, transparent);
+        --color-border-secondary: var(--color-neutral-700);
         --color-border-error_subtle: var(--color-red-500);
-        --color-border-primary: var(--color-neutral-700);
+        --color-border-primary: var(--color-neutral-600);
         --color-border-brand: var(--color-brand-400);
         --color-border-error: var(--color-red-400);
-        --color-border-tertiary: var(--color-neutral-800);
-        --color-border-brand_alt: var(--color-neutral-700);
-        --color-border-secondary_alt: var(--color-neutral-800);
+        --color-border-tertiary: var(--color-neutral-700);
+        --color-border-brand_alt: var(--color-neutral-600);
+        --color-border-secondary_alt: var(--color-neutral-700);
 
         --color-fg-secondary: var(--color-neutral-300);
         --color-fg-warning-primary: var(--color-yellow-500);
@@ -701,8 +750,8 @@
         --color-fg-primary: var(--color-white);
         --color-fg-brand-secondary: var(--color-brand-500);
         --color-fg-brand-primary: var(--color-brand-500);
-        --color-fg-quaternary: var(--color-neutral-600);
-        --color-fg-quaternary_hover: var(--color-neutral-500);
+        --color-fg-quaternary: var(--color-neutral-500);
+        --color-fg-quaternary_hover: var(--color-neutral-400);
         --color-fg-error-primary: var(--color-red-500);
         --color-fg-warning-secondary: var(--color-yellow-400);
         --color-fg-error-secondary: var(--color-red-400);
@@ -712,8 +761,11 @@
         --color-fg-brand-secondary_alt: var(--color-neutral-600);
         --color-fg-brand-secondary_hover: var(--color-neutral-500);
 
-        --color-bg-primary: var(--color-neutral-950);
-        --color-bg-tertiary: var(--color-neutral-800);
+        /* Dark surfaces sit one ramp step above Untitled UI's stock (950/900/800): near-black #0a0a0a
+           reads as OLED black, and cards vanished into it. Borders, hover, overlay, placeholder
+           and the quaternary icon shift with them so every pair keeps its contrast. */
+        --color-bg-primary: var(--color-neutral-900);
+        --color-bg-tertiary: var(--color-neutral-700);
         --color-bg-brand-primary: var(--color-brand-500);
         --color-bg-error-secondary: var(--color-red-600);
         --color-bg-warning-primary: var(--color-yellow-950);
@@ -725,18 +777,18 @@
         --color-bg-error-solid: var(--color-red-600);
         --color-bg-warning-solid: var(--color-yellow-600);
         --color-bg-success-solid: var(--color-green-600);
-        --color-bg-secondary_hover: var(--color-neutral-800);
-        --color-bg-primary_hover: var(--color-neutral-900);
-        --color-bg-active: var(--color-neutral-800);
+        --color-bg-secondary_hover: var(--color-neutral-700);
+        --color-bg-primary_hover: var(--color-neutral-800);
+        --color-bg-active: var(--color-neutral-700);
         --color-bg-brand-solid_hover: var(--color-brand-200);
         --color-bg-error-primary: var(--color-red-950);
         --color-bg-brand-secondary: var(--color-brand-600);
-        --color-bg-secondary: var(--color-neutral-900);
-        --color-bg-quaternary: var(--color-neutral-700);
+        --color-bg-secondary: var(--color-neutral-800);
+        --color-bg-quaternary: var(--color-neutral-600);
         --color-bg-primary_alt: var(--color-bg-secondary);
         --color-bg-brand-primary_alt: var(--color-bg-secondary);
         --color-bg-secondary_alt: var(--color-bg-primary);
-        --color-bg-overlay: var(--color-neutral-800);
+        --color-bg-overlay: var(--color-neutral-700);
         --color-bg-brand-section: var(--color-bg-secondary);
         --color-bg-brand-section_subtle: var(--color-bg-primary);
         --color-bg-primary-solid: var(--color-bg-secondary);

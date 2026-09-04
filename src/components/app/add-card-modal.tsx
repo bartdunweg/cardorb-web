@@ -60,7 +60,7 @@ export function AddCardModal({ defaultTarget = "collection", trigger }: { defaul
                 <Modal className="max-w-xl">
                     <Dialog>
                         {({ close }) => (
-                            <div className="relative flex max-h-[80vh] w-full max-w-xl flex-col gap-4 rounded-2xl bg-primary p-6 shadow-xl ring-1 ring-secondary">
+                            <div className="relative flex max-h-[80vh] w-full max-w-xl flex-col gap-4 rounded-2xl glass-thick p-6 shadow-xl ring-1 ring-secondary">
                                 <div className="flex items-start justify-between gap-4">
                                     <div className="flex flex-col gap-0.5">
                                         <AriaHeading slot="title" className="text-lg font-semibold text-primary">
@@ -84,7 +84,14 @@ export function AddCardModal({ defaultTarget = "collection", trigger }: { defaul
                                     <ButtonGroupItem id="wishlist">Wishlist</ButtonGroupItem>
                                 </ButtonGroup>
 
-                                <Input aria-label="Search cards" icon={SearchLg} placeholder="Search by name…" value={query} onChange={setQuery} />
+                                <Input
+                                    aria-label="Search cards"
+                                    icon={SearchLg}
+                                    placeholder="Search by name…"
+                                    value={query}
+                                    onChange={setQuery}
+                                    wrapperClassName="rounded-full"
+                                />
 
                                 <div className="flex min-h-40 flex-col gap-1 overflow-y-auto">
                                     {/* One live region, always mounted, so a screen reader hears the state change. */}
@@ -96,7 +103,7 @@ export function AddCardModal({ defaultTarget = "collection", trigger }: { defaul
                                             const st = status[keyFor(card)];
                                             return (
                                                 <div key={card.id} className="flex items-center gap-3 rounded-lg p-2 hover:bg-secondary">
-                                                    <div className="relative h-16 w-11 shrink-0 overflow-hidden rounded bg-quaternary">
+                                                    <div className="relative h-16 w-11 shrink-0 overflow-hidden rounded bg-quaternary ring-1 ring-image ring-inset">
                                                         {card.image ? <CardImage src={card.image} alt="" sizes="44px" className="object-cover" /> : null}
                                                     </div>
                                                     <div className="flex min-w-0 flex-1 flex-col">

@@ -18,9 +18,10 @@ export const ModalOverlay = (props: ModalOverlayProps) => {
             {...props}
             className={(state) =>
                 cx(
-                    "fixed inset-0 flex min-h-dvh w-full items-center justify-end bg-overlay/70 pl-6 outline-hidden ease-linear md:pl-10",
+                    // A bottom sheet on a phone, a drawer from the right from sm up.
+                    "fixed inset-0 z-50 flex min-h-dvh w-full items-end justify-center bg-overlay/70 outline-hidden ease-linear sm:items-center sm:justify-end sm:pl-6 md:pl-10",
                     state.isEntering && "duration-300 animate-in fade-in",
-                    state.isExiting && "duration-500 animate-out fade-out",
+                    state.isExiting && "duration-200 animate-out fade-out",
                     typeof props.className === "function" ? props.className(state) : props.className,
                 )
             }
@@ -36,9 +37,11 @@ export const Modal = (props: ModalProps) => (
         {...props}
         className={(state) =>
             cx(
-                "inset-y-0 right-0 h-full w-full max-w-100 shadow-xl transition",
-                state.isEntering && "duration-300 animate-in slide-in-from-right",
-                state.isExiting && "duration-500 animate-out slide-out-to-right",
+                "w-full shadow-xl transition sm:inset-y-0 sm:right-0 sm:h-full sm:max-w-100",
+                // The sheet enters and leaves through the bottom edge, the drawer through the right one.
+                state.isEntering && "duration-300 animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:slide-in-from-right",
+                // Out faster than in: the user has decided; the interface answers.
+                state.isExiting && "duration-200 animate-out slide-out-to-bottom sm:slide-out-to-bottom-0 sm:slide-out-to-right",
                 typeof props.className === "function" ? props.className(state) : props.className,
             )
         }
@@ -54,7 +57,7 @@ export const Dialog = (props: DialogProps) => (
         aria-label="Slideout menu"
         {...props}
         className={cx(
-            "relative flex size-full flex-col items-start gap-6 overflow-y-auto bg-primary ring-1 ring-secondary_alt outline-hidden",
+            "relative flex size-full max-h-[85dvh] flex-col items-start gap-6 overflow-y-auto rounded-t-2xl glass-thick pb-[env(safe-area-inset-bottom)] outline-hidden sm:max-h-full sm:rounded-none sm:pb-0",
             props.className,
         )}
     />

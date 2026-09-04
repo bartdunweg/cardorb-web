@@ -40,7 +40,7 @@ export function HomeSkeleton() {
         <>
             <div className="flex flex-col gap-x-6 gap-y-5 md:flex-row md:flex-wrap">
                 {Array.from({ length: 4 }, (_, i) => (
-                    <div key={i} className="flex flex-1 flex-col gap-5 rounded-xl px-4 py-5 ring-1 ring-secondary ring-inset md:min-w-[240px] md:px-5">
+                    <div key={i} className="flex flex-1 flex-col gap-5 rounded-xl px-4 py-5 shadow-border md:min-w-[240px] md:px-5">
                         <Block className="size-12 rounded-lg" />
                         <div className="flex flex-col gap-2">
                             <Block className="h-4 w-20" />
@@ -49,7 +49,7 @@ export function HomeSkeleton() {
                     </div>
                 ))}
             </div>
-            <div className="flex flex-col gap-4 rounded-xl px-4 py-5 ring-1 ring-secondary ring-inset md:px-5">
+            <div className="flex flex-col gap-4 rounded-xl px-4 py-5 shadow-border md:px-5">
                 <Block className="h-4 w-48" />
                 <Block className="h-56 w-full" />
             </div>

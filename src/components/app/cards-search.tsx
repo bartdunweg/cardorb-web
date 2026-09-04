@@ -37,5 +37,15 @@ export function CardsSearch({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [value]);
 
-    return <Input aria-label={label} icon={SearchLg} placeholder={placeholder} value={value} onChange={setValue} className={className} />;
+    return (
+        <Input
+            aria-label={label}
+            icon={SearchLg}
+            placeholder={placeholder}
+            value={value}
+            onChange={setValue}
+            className={className}
+            wrapperClassName="rounded-full"
+        />
+    );
 }

@@ -7,6 +7,7 @@ import { CardsPagination } from "@/components/app/cards-pagination";
 import { CardsSearch } from "@/components/app/cards-search";
 import { CardsSort } from "@/components/app/cards-sort";
 import { CardsView } from "@/components/app/cards-view";
+import { FiltersSheet } from "@/components/app/filters-sheet";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/base/buttons/button";
 import { getMyCards } from "@/lib/cards";
@@ -63,16 +64,21 @@ export default async function CardsPage({
         );
     }
 
+    const toolbar = (
+        <FiltersSheet active={[q, query.set, query.rarity].filter(Boolean).length}>
+            <CardsSearch key="search" initialValue={q ?? ""} className="w-full lg:w-64" />
+            <CardsFilters key="filters" query={query} facets={facets} />
+        </FiltersSheet>
+    );
+
     return (
         <div className="flex flex-1 flex-col gap-6">
             {header}
 
             <div className="flex flex-1 flex-col gap-4">
-                {/* One row: search and the two filters; the sort sits in the header's actions. */}
-                <div className="flex flex-wrap items-center gap-2">
-                    <CardsSearch initialValue={q ?? ""} className="w-full sm:w-64" />
-                    <CardsFilters query={query} facets={facets} />
-                </div>
+                {/* One row: search, the two filters and, when there is a list, the view toggle at the right end;
+                    the sort sits in the header's actions. */}
+                {total === 0 ? <div className="flex flex-wrap items-center gap-2">{toolbar}</div> : null}
 
                 {total === 0 ? (
                     <AppEmptyState
@@ -84,7 +90,7 @@ export default async function CardsPage({
                     />
                 ) : (
                     <>
-                        <CardsView cards={cards} initialView={view} />
+                        <CardsView cards={cards} initialView={view} toolbar={toolbar} />
 
                         <CardsPagination page={page} totalPages={totalPages} hrefFor={pageHref} />
                     </>

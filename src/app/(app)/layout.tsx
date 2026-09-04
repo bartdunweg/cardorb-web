@@ -30,14 +30,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     return (
         <RouteProvider>
             <CommandSearchProvider>
-                <div className="flex min-h-dvh flex-col bg-primary">
+                {/* overflow-x-clip: a decoration wider than a phone (the empty state's rings) must not widen the page, or the fixed tab bar drifts off the screen. */}
+                <div className="flex min-h-dvh flex-col overflow-x-clip bg-primary">
                     <div className="flex flex-1 flex-col lg:flex-row">
                         <AppSidebar account={account} collections={collections} />
                         <main className="flex min-w-0 flex-1 flex-col">
-                            <div className="mx-auto flex w-full max-w-container flex-1 flex-col px-4 py-6 pb-24 sm:px-6 sm:py-8 lg:pb-8">{children}</div>
+                            <div className="mx-auto flex w-full max-w-container flex-1 flex-col px-4 pt-4 pb-24 sm:px-6 sm:py-8 lg:pb-8">{children}</div>
                         </main>
                     </div>
-                    <MobileTabBar />
+                    <MobileTabBar account={account} />
                 </div>
             </CommandSearchProvider>
         </RouteProvider>
