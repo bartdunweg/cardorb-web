@@ -1,4 +1,3 @@
-import { Plus } from "@untitledui/icons";
 import { cookies } from "next/headers";
 import { AddCardModal } from "@/components/app/add-card-modal";
 import { AppEmptyState } from "@/components/app/app-empty-state";
@@ -9,7 +8,6 @@ import { CardsSort } from "@/components/app/cards-sort";
 import { CardsView } from "@/components/app/cards-view";
 import { FiltersSheet } from "@/components/app/filters-sheet";
 import { PageHeader } from "@/components/app/page-header";
-import { Button } from "@/components/base/buttons/button";
 import { getMyCards } from "@/lib/cards";
 import { CARDS_VIEW_COOKIE, parseCardsView } from "@/lib/cards-view";
 import { listHref, readListQuery } from "@/lib/list-query";
@@ -44,8 +42,14 @@ export default async function CardsPage({
             actions={
                 empty ? undefined : (
                     <>
-                        <CardsSort query={query} />
-                        <AddCardModal />
+                        {/* On a phone the sort sits in the filter row and Add card is a plus beside the title. */}
+                        <CardsSort query={query} className="max-lg:hidden" />
+                        <div className="lg:hidden">
+                            <AddCardModal compact />
+                        </div>
+                        <div className="max-lg:hidden">
+                            <AddCardModal />
+                        </div>
                     </>
                 )
             }
@@ -58,17 +62,20 @@ export default async function CardsPage({
             <div className="flex flex-1 flex-col gap-6">
                 {header}
                 <AppEmptyState icon="plus" title="No cards yet" description="Add your first card to start your collection">
-                    <AddCardModal trigger={<Button iconLeading={Plus}>Add card</Button>} />
+                    <AddCardModal />
                 </AppEmptyState>
             </div>
         );
     }
 
     const toolbar = (
-        <FiltersSheet active={[q, query.set, query.rarity].filter(Boolean).length}>
-            <CardsSearch key="search" initialValue={q ?? ""} className="w-full lg:w-64" />
-            <CardsFilters key="filters" query={query} facets={facets} />
-        </FiltersSheet>
+        <>
+            <FiltersSheet key="filters" active={[q, query.set, query.rarity].filter(Boolean).length}>
+                <CardsSearch key="search" initialValue={q ?? ""} className="w-full lg:w-64" />
+                <CardsFilters key="filters" query={query} facets={facets} />
+            </FiltersSheet>
+            <CardsSort key="sort" query={query} className="lg:hidden" />
+        </>
     );
 
     return (

@@ -172,7 +172,7 @@ One material in two weights, utilities in `globals.css` over tokens in `theme.cs
 - `glass` — thin, for chrome that content scrolls under: the phone tab bar and page bar.
   `bg-glass` is the page surface at 64% with a 20 px blur.
 - `glass-thick` — for a surface that holds content of its own: the desktop sidebar, a sheet, a
-  dialog, a popover, the search palette. `bg-glass-thick` is the page surface at 84% with a 40 px
+  dialog, a popover, the search palette. `bg-glass-thick` is the page surface at 92% with a 40 px
   blur.
 - `border-glass` / `ring-glass` — the bright edge, black 8% in light, white 12% in dark, for a
   glass surface that carries no shadow.

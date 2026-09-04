@@ -24,7 +24,7 @@ export function MobileSearchSheet() {
                 className="flex w-full pressable cursor-pointer items-center gap-2 rounded-full bg-primary py-2 pr-12 pl-3 text-sm text-tertiary shadow-xs ring-1 ring-primary outline-focus-ring ring-inset hover:bg-secondary focus-visible:outline-2"
             >
                 <SearchLg className="size-5 text-fg-quaternary" />
-                <span className="flex-1 text-left">Search your collection</span>
+                <span className="flex-1 text-left">Search a card</span>
             </button>
             {/* Scan sits at the bar's right end, its own control beside the search rather than inside it
                 (a button in a button is not HTML). There is no scanner yet: the button is the place for one. */}
@@ -60,9 +60,9 @@ function CollectionSearch({ onClose }: { onClose: () => void }) {
                     Search
                 </AriaHeading>
                 <Input
-                    aria-label="Search your collection"
+                    aria-label="Search a card"
                     icon={SearchLg}
-                    placeholder="Search by name or set…"
+                    placeholder="Search a card…"
                     value={query}
                     onChange={setQuery}
                     ref={field}
