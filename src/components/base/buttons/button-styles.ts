@@ -3,6 +3,7 @@
 import { sortCx } from "@/utils/cx";
 
 export const styles = sortCx({
+    // An icon in a button takes the label's colour: one colour per button, no second grey for the glyph.
     common: {
         root: [
             "group relative inline-flex h-max pressable cursor-pointer items-center justify-center whitespace-nowrap outline-brand transition-[color,background-color,box-shadow,scale] duration-100 ease-linear before:absolute focus-visible:outline-2 focus-visible:outline-offset-2",
@@ -56,21 +57,18 @@ export const styles = sortCx({
                 // Inner border gradient
                 "before:absolute before:inset-px before:border before:border-white/12 before:mask-b-from-0% dark:before:border-black/12",
                 // Icon styles
-                "*:data-icon:text-white/60 hover:*:data-icon:text-white/70 dark:*:data-icon:text-black/60 dark:hover:*:data-icon:text-black/70",
             ].join(" "),
         },
         secondary: {
             root: [
                 "bg-primary text-secondary shadow-xs-skeuomorphic ring-1 ring-primary ring-inset hover:bg-primary_hover hover:text-secondary_hover data-loading:bg-primary_hover",
                 // Icon styles
-                "*:data-icon:text-fg-quaternary hover:*:data-icon:text-fg-quaternary_hover",
             ].join(" "),
         },
         tertiary: {
             root: [
                 "text-tertiary hover:bg-primary_hover hover:text-tertiary_hover data-loading:bg-primary_hover",
                 // Icon styles
-                "*:data-icon:text-fg-quaternary hover:*:data-icon:text-fg-quaternary_hover",
             ].join(" "),
         },
         "link-color": {
@@ -79,7 +77,6 @@ export const styles = sortCx({
                 // Inner text underline
                 "*:data-text:underline *:data-text:decoration-transparent hover:*:data-text:decoration-fg-brand-secondary_alt",
                 // Icon styles
-                "*:data-icon:text-fg-brand-secondary_alt hover:*:data-icon:text-fg-brand-secondary_hover",
             ].join(" "),
         },
         "link-gray": {
@@ -88,7 +85,6 @@ export const styles = sortCx({
                 // Inner text underline
                 "*:data-text:underline *:data-text:decoration-transparent hover:*:data-text:decoration-fg-quaternary",
                 // Icon styles
-                "*:data-icon:text-fg-quaternary hover:*:data-icon:text-fg-quaternary_hover",
             ].join(" "),
         },
         "primary-destructive": {
@@ -97,21 +93,18 @@ export const styles = sortCx({
                 // Inner border gradient
                 "before:absolute before:inset-px before:border before:border-white/12 before:mask-b-from-0%",
                 // Icon styles
-                "*:data-icon:text-white/60 hover:*:data-icon:text-white/70",
             ].join(" "),
         },
         "secondary-destructive": {
             root: [
                 "bg-primary text-error-primary shadow-xs-skeuomorphic ring-1 ring-error_subtle outline-error ring-inset hover:bg-error-primary hover:text-error-primary_hover data-loading:bg-error-primary",
                 // Icon styles
-                "*:data-icon:text-fg-error-secondary hover:*:data-icon:text-fg-error-primary",
             ].join(" "),
         },
         "tertiary-destructive": {
             root: [
                 "text-error-primary outline-error hover:bg-error-primary hover:text-error-primary_hover data-loading:bg-error-primary",
                 // Icon styles
-                "*:data-icon:text-fg-error-secondary hover:*:data-icon:text-fg-error-primary",
             ].join(" "),
         },
         "link-destructive": {
@@ -120,7 +113,6 @@ export const styles = sortCx({
                 // Inner text underline
                 "*:data-text:underline *:data-text:decoration-transparent *:data-text:underline-offset-2 hover:*:data-text:decoration-current",
                 // Icon styles
-                "*:data-icon:text-fg-error-secondary hover:*:data-icon:text-fg-error-primary",
             ].join(" "),
         },
     },

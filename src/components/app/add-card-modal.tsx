@@ -20,7 +20,13 @@ type Target = "collection" | "wishlist";
 // The button's visible text; also its accessible name, with the card's name after it.
 const addLabel = (st: string | undefined) => (st === "done" ? "Added" : st === "adding" ? "Adding…" : "Add");
 
-export function AddCardModal({ defaultTarget = "collection", trigger }: { defaultTarget?: Target; trigger?: ReactNode } = {}) {
+// `compact` makes the default trigger a plus alone, for beside a page title on a phone. An icon is a
+// function, so a server page cannot hand one to this client component; it asks for the shape instead.
+export function AddCardModal({
+    defaultTarget = "collection",
+    trigger,
+    compact = false,
+}: { defaultTarget?: Target; trigger?: ReactNode; compact?: boolean } = {}) {
     const router = useRouter();
     const [target, setTarget] = useState<Target>(defaultTarget);
     const [query, setQuery] = useState("");
@@ -50,11 +56,14 @@ export function AddCardModal({ defaultTarget = "collection", trigger }: { defaul
     return (
         <DialogTrigger>
             {/* The app's main action says what it does; a grey circle with a plus did not. */}
-            {trigger ?? (
-                <Button iconLeading={Plus} size="md">
-                    Add card
-                </Button>
-            )}
+            {trigger ??
+                (compact ? (
+                    <Button iconLeading={Plus} size="md" aria-label="Add card" />
+                ) : (
+                    <Button iconLeading={Plus} size="md">
+                        Add card
+                    </Button>
+                ))}
 
             <ModalOverlay>
                 <Modal className="max-w-xl">

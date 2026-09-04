@@ -87,7 +87,8 @@ export function PageHeader({
                 <div />
             </div>
 
-            {above ? <div className="mb-6">{above}</div> : null}
+            {/* Above the title, 8 px from the top: the search on Home sits higher than a page's first content. */}
+            {above ? <div className="-mt-2 mb-6">{above}</div> : null}
 
             {/* Actions sit beside the title when they fit (a plus on a phone) and wrap under it when they do not. */}
             <div className="flex flex-row flex-wrap items-start justify-between gap-3">
