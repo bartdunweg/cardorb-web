@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { BOOT_SCRIPT } from "@/lib/theme-script";
-import { RouteProvider } from "@/providers/router-provider";
 import { ThemeProvider } from "@/providers/theme";
 import "@/styles/globals.css";
 import { cx } from "@/utils/cx";
@@ -55,9 +54,9 @@ export default function RootLayout({
                 <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
             </head>
             <body className={cx(inter.variable, "bg-primary antialiased")}>
-                <RouteProvider>
-                    <ThemeProvider>{children}</ThemeProvider>
-                </RouteProvider>
+                {/* No RouteProvider here: the public pages are static text with plain links, and the
+                    provider's react-aria dependency belongs to the signed-in and auth layouts. */}
+                <ThemeProvider>{children}</ThemeProvider>
             </body>
         </html>
     );

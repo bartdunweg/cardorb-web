@@ -5,6 +5,7 @@ import { MobileTabBar } from "@/components/app/mobile-nav";
 import { ApiError } from "@/lib/api";
 import { getMyCollections } from "@/lib/collections";
 import { accountFrom, getMyProfile } from "@/lib/profile";
+import { RouteProvider } from "@/providers/router-provider";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
     // The profile and the folders are independent reads of an API in another region, and after
@@ -25,16 +26,18 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     const account = accountFrom(me);
 
     return (
-        <CommandSearchProvider>
-            <div className="flex min-h-dvh flex-col bg-primary">
-                <div className="flex flex-1 flex-col lg:flex-row">
-                    <AppSidebar account={account} collections={collections.map((c) => ({ id: c.id, name: c.name }))} />
-                    <main className="flex min-w-0 flex-1 flex-col">
-                        <div className="mx-auto flex w-full max-w-container flex-1 flex-col px-4 py-6 pb-24 sm:px-6 sm:py-8 lg:pb-8">{children}</div>
-                    </main>
+        <RouteProvider>
+            <CommandSearchProvider>
+                <div className="flex min-h-dvh flex-col bg-primary">
+                    <div className="flex flex-1 flex-col lg:flex-row">
+                        <AppSidebar account={account} collections={collections.map((c) => ({ id: c.id, name: c.name }))} />
+                        <main className="flex min-w-0 flex-1 flex-col">
+                            <div className="mx-auto flex w-full max-w-container flex-1 flex-col px-4 py-6 pb-24 sm:px-6 sm:py-8 lg:pb-8">{children}</div>
+                        </main>
+                    </div>
+                    <MobileTabBar account={account} />
                 </div>
-                <MobileTabBar account={account} />
-            </div>
-        </CommandSearchProvider>
+            </CommandSearchProvider>
+        </RouteProvider>
     );
 }

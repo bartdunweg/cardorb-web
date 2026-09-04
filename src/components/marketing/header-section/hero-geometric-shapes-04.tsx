@@ -1,10 +1,9 @@
-"use client";
-
+import { LinkButton } from "@/components/app/link-button";
 import { PublicTopBar } from "@/components/app/public-top-bar";
-import { Button } from "@/components/base/buttons/button";
 
 // Public landing hero for Cardorb. Based on Untitled UI's hero-geometric-shapes-04, with the
-// heavy marketing Header/nav replaced by the shared PublicTopBar; the hero carries one call to
+// heavy marketing Header/nav replaced by the shared PublicTopBar and its buttons by plain links, so
+// the page ships no react-aria; the hero carries one call to
 // action, Get started, so it never competes with the bar's pair.
 export const HeroGeometricShapes04 = () => {
     return (
@@ -37,9 +36,9 @@ export const HeroGeometricShapes04 = () => {
                             Browse, organize, and manage every card in one place.
                         </p>
                         <div className="mt-8 flex w-full flex-col items-stretch sm:w-auto md:mt-12">
-                            <Button href="/signup" size="xl">
+                            <LinkButton href="/signup" size="xl">
                                 Get started
-                            </Button>
+                            </LinkButton>
                         </div>
                     </div>
                 </div>
@@ -56,9 +55,9 @@ export const HeroGeometricShapes04 = () => {
                             { title: "Terms", href: "/terms" },
                         ].map((item) => (
                             <li key={item.title}>
-                                <Button color="link-gray" size="md" href={item.href} className="min-h-6">
+                                <LinkButton color="link-gray" size="md" href={item.href} className="min-h-6">
                                     {item.title}
-                                </Button>
+                                </LinkButton>
                             </li>
                         ))}
                     </ul>

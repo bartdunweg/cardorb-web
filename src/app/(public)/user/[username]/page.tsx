@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { AccountMenu } from "@/components/app/account-menu";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CardsFilters } from "@/components/app/cards-filters";
 import { CardsPagination } from "@/components/app/cards-pagination";
@@ -11,6 +12,7 @@ import { Avatar } from "@/components/base/avatar/avatar";
 import { PUBLIC_SORT_OPTIONS, listHref, readPublicListQuery } from "@/lib/list-query";
 import { getViewer } from "@/lib/profile";
 import { PUBLIC_PAGE_SIZE, getPublicCards, getPublicProfile } from "@/lib/public-profile";
+import { RouteProvider } from "@/providers/router-provider";
 
 type Params = { params: Promise<{ username: string }>; searchParams: Promise<{ page?: string; q?: string; sort?: string; set?: string; rarity?: string }> };
 
@@ -55,7 +57,16 @@ export default async function PublicProfilePage({ params, searchParams }: Params
 
     return (
         <div className="flex min-h-dvh flex-col bg-primary">
-            <PublicTopBar account={viewer} />
+            {/* The menu's items are react-aria links; the provider hands them the app router. */}
+            <PublicTopBar
+                menu={
+                    viewer ? (
+                        <RouteProvider>
+                            <AccountMenu account={viewer} compact />
+                        </RouteProvider>
+                    ) : undefined
+                }
+            />
 
             <main className="mx-auto flex w-full max-w-container flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
                 <div className="flex items-center gap-4">

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
+import { LinkButton } from "@/components/app/link-button";
 import { PublicTopBar } from "@/components/app/public-top-bar";
-import { Button } from "@/components/base/buttons/button";
 import { SectionDivider } from "@/components/shared-assets/section-divider";
 
 /**
@@ -72,9 +72,9 @@ export function LegalPage({
                                     { title: "API", href: "/docs/api" },
                                 ].map((item) => (
                                     <li key={item.title}>
-                                        <Button color="link-gray" size="md" href={item.href} className="min-h-6">
+                                        <LinkButton color="link-gray" size="md" href={item.href} className="min-h-6">
                                             {item.title}
-                                        </Button>
+                                        </LinkButton>
                                     </li>
                                 ))}
                             </ul>
