@@ -35,7 +35,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                             <div className="mx-auto flex w-full max-w-container flex-1 flex-col px-4 py-6 pb-24 sm:px-6 sm:py-8 lg:pb-8">{children}</div>
                         </main>
                     </div>
-                    <MobileTabBar />
+                    <MobileTabBar account={account} />
                 </div>
             </CommandSearchProvider>
         </RouteProvider>

@@ -98,8 +98,9 @@ export function CollectionsGrid({
 
     return (
         <div className="flex flex-1 flex-col gap-6">
-            {/* Mobile hub: Favorites, Wishlist and the Pokédex. On desktop these are sidebar items instead; the tab bar has no room for them. */}
-            <div className="grid grid-cols-3 gap-4 lg:hidden">
+            {/* Mobile hub: Favorites, Wishlist and the Pokédex. On desktop these are sidebar items instead; the tab bar has no room
+                for them. On a phone the three stack, so each keeps its name and count on one line. */}
+            <div className="grid grid-cols-1 gap-4 xs:grid-cols-3 lg:hidden">
                 <FolderCard href="/dashboard/favorites" icon={Star01} name="Favorites" count={favoritesCount} />
                 <FolderCard href="/dashboard/wishlist" icon={Heart} name="Wishlist" count={wishlistCount} />
                 <FolderCard href="/dashboard/pokedex" icon={Grid01} name="Pokédex" detail="Cards by Pokémon" />

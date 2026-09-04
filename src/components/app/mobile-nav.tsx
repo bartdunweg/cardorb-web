@@ -26,12 +26,13 @@ const more = [
     { label: "Wishlist", href: "/dashboard/wishlist", icon: Heart },
 ];
 
-const tabClass = "flex flex-1 flex-col items-center gap-0.5 rounded-full py-1 text-xs/4 font-medium transition";
+const tabClass = "flex flex-1 flex-col items-center gap-1 rounded-full py-1 text-xs/4 font-medium transition";
 
-// Bottom tab bar for mobile: four destinations in a pill. The rest of the sidebar is behind
-// MobileAccountMenu, at the top right of Home.
-export function MobileTabBar() {
+// Bottom tab bar for mobile: four destinations and the account, You, in one pill. You opens what
+// the sidebar has and the tabs do not, then the account's own entries, so a phone reaches all of it.
+export function MobileTabBar({ account }: { account: Account }) {
     const pathname = usePathname();
+    const youActive = [...more.map((m) => m.href), "/dashboard/settings"].some((href) => pathname.startsWith(href));
 
     return (
         <nav
@@ -48,37 +49,38 @@ export function MobileTabBar() {
                         aria-current={active ? "page" : undefined}
                         className={cx(tabClass, active ? "bg-secondary text-primary" : "text-tertiary")}
                     >
-                        <Icon className={cx("size-4", active ? "text-fg-brand-primary" : "text-fg-quaternary")} />
+                        <Icon className={cx("size-5", active ? "text-fg-brand-primary" : "text-fg-quaternary")} />
                         {tab.label}
                     </Link>
                 );
             })}
+            <Dropdown.Root>
+                <AriaButton
+                    className={({ isFocusVisible }) =>
+                        cx(
+                            tabClass,
+                            "cursor-pointer -outline-offset-2 outline-focus-ring",
+                            youActive ? "bg-secondary text-primary" : "text-tertiary",
+                            isFocusVisible && "outline-2",
+                        )
+                    }
+                >
+                    {/* The avatar sits in the icon's 20 px, so the You tab is as tall as the other four. */}
+                    <Avatar size="xs" src={account.avatarUrl ?? undefined} alt="" className="size-5" />
+                    You
+                </AriaButton>
+                <Dropdown.Popover placement="top end" offset={12}>
+                    <Dropdown.Menu>
+                        {more.map((item) => (
+                            <Dropdown.Item key={item.href} icon={item.icon} href={item.href}>
+                                {item.label}
+                            </Dropdown.Item>
+                        ))}
+                        <Dropdown.Separator />
+                        <AccountMenuItems />
+                    </Dropdown.Menu>
+                </Dropdown.Popover>
+            </Dropdown.Root>
         </nav>
-    );
-}
-
-// The account as a circle, for the phone bar at the top of Home. Opens what the sidebar has and
-// the tab bar does not, then the account's own entries, so a phone reaches all of it.
-export function MobileAccountMenu({ account }: { account: Account }) {
-    return (
-        <Dropdown.Root>
-            <AriaButton
-                aria-label="More"
-                className={({ isFocusVisible }) => cx("cursor-pointer rounded-full outline-offset-2 outline-focus-ring", isFocusVisible && "outline-2")}
-            >
-                <Avatar size="sm" src={account.avatarUrl ?? undefined} alt="" />
-            </AriaButton>
-            <Dropdown.Popover placement="bottom end" offset={8}>
-                <Dropdown.Menu>
-                    {more.map((item) => (
-                        <Dropdown.Item key={item.href} icon={item.icon} href={item.href}>
-                            {item.label}
-                        </Dropdown.Item>
-                    ))}
-                    <Dropdown.Separator />
-                    <AccountMenuItems />
-                </Dropdown.Menu>
-            </Dropdown.Popover>
-        </Dropdown.Root>
     );
 }
