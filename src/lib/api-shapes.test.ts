@@ -159,9 +159,10 @@ describe("seriesFromSets", () => {
         expect(series[0].sets.map((s) => s.id)).toEqual(["sv2", "sv1"]);
     });
 
-    it("caps the owned count at the set's size, since the API counts copies", () => {
-        const { series } = seriesFromSets([set({ id: "a", total: 10, ownedCount: 14 })]);
+    it("passes the owned count through and calls a full set complete", () => {
+        const { series } = seriesFromSets([set({ id: "a", total: 10, ownedCount: 10 }), set({ id: "b", total: 10, ownedCount: 9 })]);
         expect(series[0].sets[0]).toMatchObject({ owned: 10, total: 10, complete: true });
+        expect(series[0].sets[1]).toMatchObject({ owned: 9, complete: false });
     });
 
     it("counts complete and started sets", () => {
