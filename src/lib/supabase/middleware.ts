@@ -41,13 +41,18 @@ export async function updateSession(request: NextRequest) {
         },
     });
 
-    // IMPORTANT: getUser() must run to refresh the token; do not add logic between this and the response.
+    // getClaims() rather than getUser(): getUser() asked the auth server on every page, 70 to
+    // 360 ms in front of each navigation, and on a warm cache that was the whole of a page's
+    // server time. getClaims() reads the session (refreshing it when expired, as getUser did)
+    // and verifies the token's signature locally against the project's published keys — the
+    // project signs with ES256, the key set is cached per process — and only falls back to the
+    // auth server for a token it cannot verify itself. The log line names the algorithm so a
+    // deploy shows which path it took. Do not add logic between this and the response.
     const started = performance.now();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    const { data: claims } = await supabase.auth.getClaims();
+    const user = claims?.claims.sub ? { id: claims.claims.sub } : null;
     const authMs = elapsed(started);
-    logTiming("middleware getUser", authMs, request.nextUrl.pathname);
+    logTiming("middleware getClaims", authMs, `${claims?.header.alg ?? "none"} ${request.nextUrl.pathname}`);
     // Visible in the browser's Network panel under Timing, so the person who feels a slow page
     // can see how much of it was the session check.
     supabaseResponse.headers.set("server-timing", `auth;dur=${authMs}`);
