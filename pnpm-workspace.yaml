@@ -4,6 +4,11 @@
 allowBuilds:
     sharp: true
     unrs-resolver: true
+# pnpm 11 holds back any package published less than a day ago (minimumReleaseAge). Our own lint
+# package is exempt: we publish it and install it the same hour. Drop the entry once 0.4.0 is a
+# day old, or leave it; it names one exact version.
+minimumReleaseAgeExclude:
+    - "@strakzat/eslint-config-ui@0.4.0"
 onlyBuiltDependencies:
     - sharp
     - unrs-resolver

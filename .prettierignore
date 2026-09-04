@@ -16,3 +16,6 @@ README.md
 
 # The Supabase CLI writes its link state here; it is not ours to format.
 supabase/.temp/
+
+# Claude Code worktrees of other branches, inside the checkout.
+.claude/

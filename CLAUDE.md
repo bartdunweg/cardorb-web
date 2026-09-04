@@ -78,5 +78,6 @@ translation file. Everything on disk is English; answer the owner in the languag
 
 ## Watch out for
 
-- `NPM_RC` on Vercel and `PACKAGES_TOKEN` in GitHub Actions carry the token for the private
-  `@strakzat` package; without them `pnpm install` fails on the runner.
+- `@strakzat/eslint-config-ui` is public on npm since 0.4.0. A `~/.npmrc` that still maps the
+  `@strakzat` scope to GitHub Packages makes `pnpm install` ask that registry, which wants a
+  token even to read; remove the line.
