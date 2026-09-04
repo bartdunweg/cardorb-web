@@ -6,7 +6,7 @@ import { MobileTabBar } from "@/components/app/mobile-nav";
 import { ApiError } from "@/lib/api";
 import { getMyCollections } from "@/lib/collections";
 import { nonceFrom } from "@/lib/csp";
-import { getMyProfile } from "@/lib/profile";
+import { accountFrom, getMyProfile } from "@/lib/profile";
 import { Theme } from "@/providers/theme";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -21,11 +21,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         throw err;
     }
 
-    const account = {
-        name: me.profile?.display_name || me.profile?.username || me.email?.split("@")[0] || "Account",
-        email: me.email ?? "",
-        avatarUrl: me.profile?.avatar_url ?? null,
-    };
+    const account = accountFrom(me);
 
     // Collections feed the sidebar's expandable Collections item.
     const { collections } = await getMyCollections();
