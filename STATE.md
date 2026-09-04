@@ -27,6 +27,10 @@ which also says what is already yours), Settings (avatar through the API), publi
   removed, and each opens its place in Cards or Wishlist. Copies are offered only when the card is
   one collection row; two printings are managed in Cards. New actions `setCopies` and `removeCard`
   in `cards/actions.ts`; the item DELETE needs a JSON content type, so it sends `{}`.
+- **The app frame survives a folder read that fails.** The layout asks for the folder names only
+  (`getMyFolders`), no longer the stats of the whole collection, and draws the sidebar without
+  folders when that read fails; a 401 still goes to /login. On 2026-09-04 a TCGdex outage made
+  every collection read a 503 and this one read took every screen down with it.
 - **A Sets page** (`/dashboard/sets`) shows every set the catalogue knows, grouped by series, with
   how much of each is in the binder; a set opens as a grid of all its cards, yours in colour, the
   missing ones grey (`GET /catalog/sets`, `GET /catalog/sets/:id`, `src/lib/sets.ts`). The API

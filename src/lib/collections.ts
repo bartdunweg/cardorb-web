@@ -1,4 +1,4 @@
-import { api } from "@/lib/api";
+import { ApiError, api } from "@/lib/api";
 import { getStats } from "@/lib/cards";
 import { perUser } from "@/lib/user-cache";
 
@@ -18,6 +18,21 @@ export async function getMyCollections(): Promise<{ collections: CollectionSumma
         favoritesCount: stats.favorites,
         wishlistCount: stats.wishlist,
     };
+}
+
+/**
+ * The folder names, for the sidebar. Fails soft: a sidebar without its folders is a poorer page,
+ * a thrown error is no page at all, and on 2026-09-04 a catalogue outage took every screen down
+ * through this one read. A 401 still throws: that is the session, not the folders.
+ */
+export async function getMyFolders(): Promise<{ id: string; name: string }[]> {
+    try {
+        return (await folders()).map((f) => ({ id: f.id, name: f.name }));
+    } catch (err) {
+        if (err instanceof ApiError && err.status === 401) throw err;
+        console.error("Folders unavailable, sidebar drawn without them:", err instanceof Error ? err.message : err);
+        return [];
+    }
 }
 
 export async function getCollection(id: string): Promise<{ id: string; name: string } | null> {
