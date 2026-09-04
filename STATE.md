@@ -24,9 +24,9 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 - **A Sets page** (`/dashboard/sets`) shows every set the catalogue knows, grouped by series, with
   how much of each is in the binder; a set opens as a grid of all its cards, yours in colour, the
-  missing ones grey (`GET /catalog/sets`, `GET /catalog/sets/:id`, `src/lib/sets.ts`). The list's
-  count is capped at the set's size because the API counts copies there, not distinct cards
-  (https://github.com/bartdunweg/cardorb-api/issues/162). Set logos come from images.scrydex.com, now an allowed image host.
+  missing ones grey (`GET /catalog/sets`, `GET /catalog/sets/:id`, `src/lib/sets.ts`). The API
+  counts distinct cards per set since cardorb-api#162, so the list shows its number as is. Set
+  logos come from images.scrydex.com, now an allowed image host.
 - **next-themes is gone.** React 19 logged "Encountered a script tag while rendering React
   component" on every page: the package renders its boot script inside a component. Now
   `src/lib/theme-script.ts` holds the script as a string literal, the root layout emits it once

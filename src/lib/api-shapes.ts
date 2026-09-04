@@ -181,7 +181,7 @@ export type CatalogueSet = {
     printedTotal: number | null;
     logo: string | null;
     symbol: string | null;
-    /** Copies held, not distinct cards: two Pikachu count twice (cardorb-api counts quantity). */
+    /** Distinct cards of the set held; never more than `total` (cardorb-api#162). */
     ownedCount: number;
     wishlistCount: number;
 };
@@ -193,7 +193,6 @@ export type SetSummary = {
     releaseDate: string | null;
     logoUrl: string | null;
     symbolUrl: string | null;
-    /** Capped at `total`: the API counts copies, and "230 of 207" reads as a bug, not a binder. */
     owned: number;
     total: number;
     complete: boolean;
@@ -207,7 +206,7 @@ export function seriesFromSets(sets: CatalogueSet[]): { series: SetSeries[]; com
     let complete = 0;
     let started = 0;
     for (const set of sets) {
-        const owned = Math.min(set.ownedCount, set.total);
+        const owned = set.ownedCount;
         const summary: SetSummary = {
             id: set.id,
             name: set.name,
