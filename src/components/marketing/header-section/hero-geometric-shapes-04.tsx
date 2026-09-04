@@ -56,7 +56,7 @@ export const HeroGeometricShapes04 = () => {
                             { title: "Terms", href: "/terms" },
                         ].map((item) => (
                             <li key={item.title}>
-                                <Button color="link-gray" size="md" href={item.href} className="max-h-5">
+                                <Button color="link-gray" size="md" href={item.href} className="min-h-6">
                                     {item.title}
                                 </Button>
                             </li>

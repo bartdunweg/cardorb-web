@@ -22,6 +22,16 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **The public pages share one top bar** (`src/components/app/public-top-bar.tsx`): wordmark,
+  Sign in, Get started as pills; the hero keeps one Get started; the landing has a one-row footer
+  with Privacy and Terms. The API reference is not linked from the landing, since the API serves
+  only our own apps. Sign in replaced Log in everywhere; `/login` stays (#59).
+- **The cards table is the kit's `Table`**, fetched through the Untitled UI MCP; the row is the
+  action. The three kit files this project changed (`input`, `progress-indicators`, `toggle`) say
+  so at the top: the CLI overwrites them on the next `add`, and did. R-UI-002 now names
+  `AppEmptyState` and why it exists (#58).
+- Footer links on the landing and the legal pages went from 20 to 24 px tall (WCAG 2.5.8).
+
 - **Lighthouse on the live site** (mobile, 3 September 2026): landing 98, login 97, public
   profile 87 with LCP 4.0 s. From it: a `<main>` landmark on the landing and the auth screens, a
   24 px hit area on the password toggle, and the first row of card tiles fetched with priority.
@@ -31,7 +41,7 @@ which also says what is already yours), Settings (avatar through the API), publi
 - **Three review agents over today's diff** (conventions, security, design and copy) and the PRs
   from them: a new search starts on page one, the panel's folder select checks the answer, no
   Supabase env closes the dashboard instead of opening it; four response headers; copy that
-  agrees with itself (Log in, Mark as owned, empty states); every list page carries its count in
+  agrees with itself (Sign in, Mark as owned, empty states); every list page carries its count in
   the header line and Sort in the header's actions; each page shape has its own loading outline
   (`src/components/app/skeletons.tsx`). Not taken up: a nonce-based `script-src`, and whether a
   starred wishlist card belongs on Favorites (CLAUDE.md says a favourite is a card you own).
