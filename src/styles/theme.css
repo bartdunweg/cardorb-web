@@ -5,9 +5,9 @@
     --font-mono: ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
     /* FONT SIZE */
-    /* 9 px: the label under a tab bar icon, and nothing smaller. */
-    --text-xxxs: calc(var(--spacing) * 2.25);
-    --text-xxxs--line-height: calc(var(--spacing) * 3);
+    /* 8 px: the label under a tab bar icon, and nothing smaller. */
+    --text-xxxs: calc(var(--spacing) * 2);
+    --text-xxxs--line-height: calc(var(--spacing) * 2.5);
 
     --text-xxs: calc(var(--spacing) * 2.5);
     --text-xxs--line-height: calc(var(--spacing) * 4);

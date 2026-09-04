@@ -28,9 +28,11 @@ export type PublicCardsPage = { cards: PublicCard[]; total: number; sets: number
 // whole collection: a hundred tiles need thirty kilobytes, not nine hundred. The API publishes
 // nothing personal on it (R-API-002 there), so nothing here has to be hidden.
 export async function getPublicCards(username: string, { page, q, set, rarity, sort, order }: ListQuery): Promise<PublicCardsPage> {
-    const { cards, total, sets, facets } = await api<{ cards: PublicItem[]; total: number; sets: number; facets: Facets }>(
+    const { cards, total, sets, facets } = await api<{ cards: PublicItem[]; total: number; sets: number; facets?: Facets }>(
         `/public/${encodeURIComponent(username)}/cards`,
         { auth: false, params: { q, set, rarity, sort, order, limit: PUBLIC_PAGE_SIZE, offset: (page - 1) * PUBLIC_PAGE_SIZE } },
     );
-    return { cards: cards.map(publicCardFromItem), total, sets, facets };
+    // This route is cached for five minutes (no session, so `revalidate`), and an answer cached before
+    // the API carried facets has none. Empty menus for those minutes, not a broken page.
+    return { cards: cards.map(publicCardFromItem), total, sets, facets: facets ?? { sets: [], rarities: [] } };
 }
