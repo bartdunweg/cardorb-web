@@ -3,8 +3,8 @@ import { LoginForm } from "@/components/app/login-form";
 
 export const metadata: Metadata = {
     alternates: { canonical: "/login" },
-    title: "Log in",
-    description: "Log in to Cardorb to see your Pokémon card collection, your wishlist and your Pokédex.",
+    title: "Sign in",
+    description: "Sign in to Cardorb to see your Pokémon card collection, your wishlist and your Pokédex.",
 };
 
 /**

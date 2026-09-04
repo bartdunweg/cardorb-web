@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CardsPagination, pageFromParam } from "@/components/app/cards-pagination";
 import { PublicCardsView } from "@/components/app/public-cards-view";
+import { PublicTopBar } from "@/components/app/public-top-bar";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { PUBLIC_PAGE_SIZE, getPublicCards, getPublicProfile } from "@/lib/public-profile";
 
@@ -45,11 +45,7 @@ export default async function PublicProfilePage({ params, searchParams }: Params
 
     return (
         <div className="flex min-h-dvh flex-col bg-primary">
-            <header className="mx-auto flex w-full max-w-container items-center justify-between px-4 py-5 sm:px-6 md:px-8">
-                <Link href="/" className="text-lg font-semibold text-primary transition hover:opacity-70">
-                    Cardorb
-                </Link>
-            </header>
+            <PublicTopBar />
 
             <main className="mx-auto flex w-full max-w-container flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
                 <div className="flex items-center gap-4">

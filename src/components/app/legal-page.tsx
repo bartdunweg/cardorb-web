@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
+import { PublicTopBar } from "@/components/app/public-top-bar";
 import { Button } from "@/components/base/buttons/button";
 import { SectionDivider } from "@/components/shared-assets/section-divider";
 
@@ -7,7 +7,7 @@ import { SectionDivider } from "@/components/shared-assets/section-divider";
  * The shell both legal documents render into: /privacy and /terms.
  *
  * Untitled UI's legal-pages/01 template (centred header with the date, a rich-text column,
- * a section divider, a footer) with the landing page's minimal top bar instead of the marketing
+ * a section divider, a footer) with the shared public top bar instead of the marketing
  * header, and a footer without the newsletter form the site does not have. The API reference
  * uses the same shell with a version line where the date would be.
  */
@@ -29,11 +29,7 @@ export function LegalPage({
 }) {
     return (
         <div className="bg-primary">
-            <header className="mx-auto flex w-full max-w-container items-center justify-between px-4 py-5 md:px-8">
-                <Link href="/" className="text-lg font-semibold text-primary transition hover:opacity-70">
-                    Cardorb
-                </Link>
-            </header>
+            <PublicTopBar />
 
             <main id="main-content">
                 <section className="bg-primary py-16 md:py-24">
