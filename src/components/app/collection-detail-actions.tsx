@@ -11,6 +11,10 @@ import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/applica
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
+import { cx } from "@/utils/cx";
+
+// The button's visible text; also its accessible name, with the card's name after it.
+const addLabel = (st: string | undefined) => (st === "done" ? "Added" : st === "adding" ? "Adding…" : "Add");
 
 export function CollectionDetailActions({ collectionId }: { collectionId: string }) {
     const router = useRouter();
@@ -18,6 +22,7 @@ export function CollectionDetailActions({ collectionId }: { collectionId: string
     const [query, setQuery] = useState("");
     const [status, setStatus] = useState<Record<string, "adding" | "done">>({});
     const { results, loading } = useDebouncedSearch<CardHit>(query, searchMyCards, { minLength: 1, delay: 250 });
+    const searchState = loading ? "Searching…" : query.trim().length >= 1 && results.length === 0 ? "No cards found." : "";
 
     const add = async (card: CardHit) => {
         setStatus((s) => ({ ...s, [card.id]: "adding" }));
@@ -55,10 +60,10 @@ export function CollectionDetailActions({ collectionId }: { collectionId: string
                                 </AriaHeading>
                                 <Input aria-label="Search your cards" icon={SearchLg} placeholder="Search your cards…" value={query} onChange={setQuery} />
                                 <div className="flex min-h-40 flex-col gap-1 overflow-y-auto">
-                                    {loading && <p className="px-1 py-6 text-center text-sm text-tertiary">Searching…</p>}
-                                    {!loading && query.trim().length >= 1 && results.length === 0 && (
-                                        <p className="px-1 py-6 text-center text-sm text-tertiary">No cards found.</p>
-                                    )}
+                                    {/* One live region, always mounted, so a screen reader hears the state change. */}
+                                    <output aria-live="polite" className={cx("text-center text-sm text-tertiary", searchState ? "px-1 py-6" : "sr-only")}>
+                                        {searchState}
+                                    </output>
                                     {!loading &&
                                         results.map((card) => {
                                             const st = status[card.id];
@@ -81,8 +86,10 @@ export function CollectionDetailActions({ collectionId }: { collectionId: string
                                                         isDisabled={!!st}
                                                         iconLeading={st === "done" ? Check : Plus}
                                                         onClick={() => add(card)}
+                                                        // A list of buttons all named "Add" is a list of nothing to a screen reader.
+                                                        aria-label={`${addLabel(st)} ${card.name}`}
                                                     >
-                                                        {st === "done" ? "Added" : st === "adding" ? "Adding…" : "Add"}
+                                                        {addLabel(st)}
                                                     </Button>
                                                 </div>
                                             );

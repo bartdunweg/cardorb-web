@@ -28,13 +28,23 @@ export const LoginForm = ({ notice }: { notice?: string }) => {
 
                     <form action={formAction} className="flex flex-col gap-6">
                         <div className="flex flex-col gap-5">
-                            <Input isRequired hideRequiredIndicator label="Email" type="email" name="email" placeholder="Enter your email" size="lg" />
+                            <Input
+                                isRequired
+                                hideRequiredIndicator
+                                label="Email"
+                                type="email"
+                                name="email"
+                                autoComplete="email"
+                                placeholder="Enter your email"
+                                size="lg"
+                            />
                             <Input
                                 isRequired
                                 hideRequiredIndicator
                                 label="Password"
                                 type="password"
                                 name="password"
+                                autoComplete="current-password"
                                 size="lg"
                                 placeholder="••••••••••••"
                                 inputClassName="placeholder:text-placeholder/50"
