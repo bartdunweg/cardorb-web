@@ -44,3 +44,6 @@ next-env.d.ts
 # Supabase CLI link state
 supabase/.temp/
 !.env.example
+
+# a log dump a session streams from Vercel while measuring
+.timing-logs.jsonl
