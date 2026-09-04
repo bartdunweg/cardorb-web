@@ -5,6 +5,7 @@ import { CardsPagination, pageFromParam } from "@/components/app/cards-paginatio
 import { PublicCardsView } from "@/components/app/public-cards-view";
 import { PublicTopBar } from "@/components/app/public-top-bar";
 import { Avatar } from "@/components/base/avatar/avatar";
+import { getViewer } from "@/lib/profile";
 import { PUBLIC_PAGE_SIZE, getPublicCards, getPublicProfile } from "@/lib/public-profile";
 
 type Params = { params: Promise<{ username: string }>; searchParams: Promise<{ page?: string }> };
@@ -33,7 +34,7 @@ export default async function PublicProfilePage({ params, searchParams }: Params
     if (!profile) notFound();
 
     const page = pageFromParam((await searchParams).page);
-    const { cards, total, sets } = await getPublicCards(decodeURIComponent(username), page);
+    const [{ cards, total, sets }, viewer] = await Promise.all([getPublicCards(decodeURIComponent(username), page), getViewer()]);
     const totalPages = Math.max(1, Math.ceil(total / PUBLIC_PAGE_SIZE));
     const base = `/user/${encodeURIComponent(username)}`;
     const name = profile.display_name || profile.username || "Collection";
@@ -45,7 +46,7 @@ export default async function PublicProfilePage({ params, searchParams }: Params
 
     return (
         <div className="flex min-h-dvh flex-col bg-primary">
-            <PublicTopBar />
+            <PublicTopBar account={viewer} />
 
             <main className="mx-auto flex w-full max-w-container flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
                 <div className="flex items-center gap-4">
