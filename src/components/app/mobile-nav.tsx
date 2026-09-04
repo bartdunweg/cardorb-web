@@ -27,7 +27,7 @@ export function MobileTabBar({ account }: { account: Account }) {
                 href={tab.href}
                 aria-current={active ? "page" : undefined}
                 className={cx(
-                    "flex flex-1 flex-col items-center gap-1 rounded-full py-2 text-xxs font-medium transition",
+                    "flex flex-1 flex-col items-center gap-1 rounded-full py-2 text-xxxs font-medium transition",
                     active ? "bg-secondary text-primary" : "text-tertiary",
                 )}
             >
@@ -49,7 +49,7 @@ export function MobileTabBar({ account }: { account: Account }) {
                 href="/dashboard/search"
                 aria-current={pathname.startsWith("/dashboard/search") ? "page" : undefined}
                 className={cx(
-                    "flex flex-1 flex-col items-center gap-1 rounded-full py-2 text-xxs font-medium transition",
+                    "flex flex-1 flex-col items-center gap-1 rounded-full py-2 text-xxxs font-medium transition",
                     pathname.startsWith("/dashboard/search") ? "bg-secondary text-primary" : "text-tertiary",
                 )}
             >
@@ -63,7 +63,7 @@ export function MobileTabBar({ account }: { account: Account }) {
                 href="/dashboard/settings"
                 aria-current={pathname.startsWith("/dashboard/settings") ? "page" : undefined}
                 className={cx(
-                    "flex flex-1 flex-col items-center gap-1 rounded-full py-2 text-xxs font-medium transition",
+                    "flex flex-1 flex-col items-center gap-1 rounded-full py-2 text-xxxs font-medium transition",
                     pathname.startsWith("/dashboard/settings") ? "bg-secondary text-primary" : "text-tertiary",
                 )}
             >
