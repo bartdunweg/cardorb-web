@@ -14,11 +14,6 @@ type Account = { name: string; email: string; avatarUrl: string | null };
 // Account card that opens a dropdown with Profile/Settings, a real dark-mode Toggle, and Sign out.
 // `compact` renders just the avatar as trigger (for the mobile top bar).
 export function AccountMenu({ account, compact }: { account: Account; compact?: boolean }) {
-    const { resolvedTheme, setTheme } = useTheme();
-    // The theme is undefined on the server and the first client render alike, so reading it
-    // directly matches on both and resolves after hydration — no mount flag, no mismatch.
-    const isDark = resolvedTheme === "dark";
-
     return (
         <Dropdown.Root>
             {compact ? (
@@ -55,33 +50,48 @@ export function AccountMenu({ account, compact }: { account: Account; compact?: 
 
             <Dropdown.Popover className="w-64">
                 <Dropdown.Menu>
-                    <Dropdown.Item icon={User01} href="/dashboard/settings">
-                        Profile
-                    </Dropdown.Item>
-                    <Dropdown.Item icon={Settings01} href="/dashboard/settings">
-                        Settings
-                    </Dropdown.Item>
-
-                    <Dropdown.Section
-                        selectionMode="multiple"
-                        selectedKeys={isDark ? new Set(["dark-mode"]) : new Set<string>()}
-                        onSelectionChange={(keys) => {
-                            const dark = keys === "all" || (keys instanceof Set && keys.has("dark-mode"));
-                            setTheme(dark ? "dark" : "light");
-                        }}
-                    >
-                        <Dropdown.Item id="dark-mode" icon={Moon01} selectionIndicator="toggle">
-                            Dark mode
-                        </Dropdown.Item>
-                    </Dropdown.Section>
-
-                    <Dropdown.Separator />
-
-                    <Dropdown.Item icon={LogOut01} onAction={() => void signOut()}>
-                        Sign out
-                    </Dropdown.Item>
+                    <AccountMenuItems />
                 </Dropdown.Menu>
             </Dropdown.Popover>
         </Dropdown.Root>
+    );
+}
+
+// The account's own entries: Profile, Settings, the dark-mode toggle, Sign out. Rendered inside a
+// Dropdown.Menu, here and at the end of the mobile tab bar's More menu.
+export function AccountMenuItems() {
+    const { resolvedTheme, setTheme } = useTheme();
+    // The theme is undefined on the server and the first client render alike, so reading it
+    // directly matches on both and resolves after hydration — no mount flag, no mismatch.
+    const isDark = resolvedTheme === "dark";
+
+    return (
+        <>
+            <Dropdown.Item icon={User01} href="/dashboard/settings">
+                Profile
+            </Dropdown.Item>
+            <Dropdown.Item icon={Settings01} href="/dashboard/settings">
+                Settings
+            </Dropdown.Item>
+
+            <Dropdown.Section
+                selectionMode="multiple"
+                selectedKeys={isDark ? new Set(["dark-mode"]) : new Set<string>()}
+                onSelectionChange={(keys) => {
+                    const dark = keys === "all" || (keys instanceof Set && keys.has("dark-mode"));
+                    setTheme(dark ? "dark" : "light");
+                }}
+            >
+                <Dropdown.Item id="dark-mode" icon={Moon01} selectionIndicator="toggle">
+                    Dark mode
+                </Dropdown.Item>
+            </Dropdown.Section>
+
+            <Dropdown.Separator />
+
+            <Dropdown.Item icon={LogOut01} onAction={() => void signOut()}>
+                Sign out
+            </Dropdown.Item>
+        </>
     );
 }

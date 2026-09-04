@@ -4,8 +4,8 @@ const twMerge = extendTailwindMerge({
     extend: {
         theme: {
             // Every font size the theme adds. One missing here is read as a colour and dropped
-            // when a text colour follows it: `text-xxxs` lost to `text-primary` in the tab bar.
-            text: ["xxxs", "xxs", "display-xs", "display-sm", "display-md", "display-lg", "display-xl", "display-2xl"],
+            // when a text colour follows it: the tab bar label once lost its size to `text-primary`.
+            text: ["xxs", "display-xs", "display-sm", "display-md", "display-lg", "display-xl", "display-2xl"],
         },
     },
 });
