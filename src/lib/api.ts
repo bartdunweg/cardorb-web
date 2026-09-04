@@ -70,17 +70,18 @@ export async function api<T>(path: string, init: Init = {}): Promise<T> {
     }
     if (init.body !== undefined) headers["content-type"] = "application/json";
 
-    const res = await timed(`api ${init.method ?? "GET"} ${path}`, () =>
-        fetch(url, {
+    // Timed to the last byte: a large answer costs more to receive and parse than to wait for.
+    const { res, json } = await timed(`api ${init.method ?? "GET"} ${path}`, async () => {
+        const res = await fetch(url, {
             method: init.method ?? "GET",
             headers,
             body: init.body !== undefined ? JSON.stringify(init.body) : undefined,
             signal: AbortSignal.timeout(API_TIMEOUT_MS),
             ...(withAuth ? { cache: "no-store" } : { next: { revalidate: 300 } }),
-        }),
-    );
-
-    const json: unknown = await res.json().catch(() => null);
+        });
+        const json: unknown = await res.json().catch(() => null);
+        return { res, json };
+    });
     if (!res.ok) {
         const message = (json as { error?: unknown } | null)?.error;
         throw new ApiError(res.status, typeof message === "string" ? message : `The API answered ${res.status}.`);

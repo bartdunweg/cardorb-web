@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { revalidatePath, unstable_cache, updateTag } from "next/cache";
 import { ApiError, session } from "@/lib/api";
 import { elapsed, logTiming } from "@/lib/timing";
@@ -24,8 +25,27 @@ const FIVE_MINUTES = 300;
 
 export const userTag = (userId: string) => `user:${userId}`;
 
-/** `load` gets the session's token; its answer is kept five minutes under this person's tag. */
-export async function perUser<T>(name: string, load: (token: string) => Promise<T>): Promise<T> {
+/** The reads in flight for this request, by name. React's `cache` keeps one map per request. */
+const inFlight = cache(() => new Map<string, Promise<unknown>>());
+
+/**
+ * `load` gets the session's token; its answer is kept five minutes under this person's tag.
+ *
+ * Also once per request: the layout and the page render at the same time and both ask for the
+ * stats, and on a miss the cache does not join the two — the log showed `/stats` fetched twice in
+ * one render. The second caller gets the first caller's promise, so a name is read once per
+ * request whatever the cache says.
+ */
+export function perUser<T>(name: string, load: (token: string) => Promise<T>): Promise<T> {
+    const reads = inFlight();
+    const started = reads.get(name);
+    if (started) return started as Promise<T>;
+    const read = perUserUncached(name, load);
+    reads.set(name, read);
+    return read;
+}
+
+async function perUserUncached<T>(name: string, load: (token: string) => Promise<T>): Promise<T> {
     const s = await session();
     if (!s) throw new ApiError(401, "Sign in to see this.");
     // A miss runs `load` (its API call logs its own line); a hit is one read from the cache.
@@ -53,5 +73,7 @@ export async function perUser<T>(name: string, load: (token: string) => Promise<
 export async function forgetMine(): Promise<void> {
     const s = await session();
     if (s) updateTag(userTag(s.userId));
+    // The render after this action runs in the same request; it must not get a read from before the write.
+    inFlight().clear();
     revalidatePath("/dashboard", "layout");
 }
