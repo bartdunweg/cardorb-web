@@ -6,14 +6,25 @@ import { BOOT_SCRIPT_HASH } from "@/lib/theme-script";
  * signs its own scripts with the nonce; the one inline script of ours, the theme boot script in
  * the root layout, is allowed by its hash instead, so it needs nothing per request.
  *
- * The public pages are not covered: they prerender, and a nonce is per request. They keep the
- * headers next.config.mjs sets for every path (no framing, nosniff, referrer, permissions).
+ * The public pages are not covered: they prerender, and a nonce is per request. They get
+ * `frame-ancestors 'none'` from the proxy, and every path, including the ones the proxy's matcher
+ * skips, gets X-Frame-Options from next.config.mjs.
  */
 
-/** The paths that render per request; the middleware mints a nonce only for these. */
-export const NONCE_PATHS = ["/dashboard", "/login", "/signup", "/forgot-password", "/reset-password"];
+/**
+ * The routes that render per request; the proxy mints a nonce only for these, and only for a path
+ * that is one of them. A path *under* one that is no route (/dashboard/nope, /login/anything) is
+ * served the prerendered 404 page, whose scripts carry no nonce; under a nonce policy they would be
+ * blocked and the page would never hydrate. So the list is exact, and csp.test.ts walks src/app to
+ * keep it so: a new page under (app) or (auth) fails the test until it is named here.
+ */
+export const NONCE_ROUTES: RegExp[] = [
+    /^\/dashboard(\/(cards|collections|favorites|pokedex|search|settings|wishlist))?$/,
+    /^\/dashboard\/collections\/[^/]+$/,
+    /^\/(login|signup|forgot-password|reset-password)$/,
+];
 
-export const needsNonce = (pathname: string): boolean => NONCE_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+export const needsNonce = (pathname: string): boolean => NONCE_ROUTES.some((route) => route.test(pathname));
 
 const IMAGE_HOSTS = [
     "https://*.supabase.co",

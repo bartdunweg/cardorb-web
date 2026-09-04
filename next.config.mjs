@@ -24,12 +24,15 @@ const nextConfig = {
     // Headers a browser honours without any script change. The Content-Security-Policy is not
     // here: src/proxy.ts sets it per request (a nonce policy on the signed-in and auth pages,
     // frame-ancestors alone elsewhere). In development a header set here replaces the
-    // middleware's, which hid the nonce policy from every local check.
+    // middleware's, which hid the nonce policy from every local check. X-Frame-Options says the
+    // same as frame-ancestors, and is here because the proxy's matcher skips images, /api and the
+    // 404 page served for them, which a CSP set only by the proxy left frameable.
     async headers() {
         return [
             {
                 source: "/:path*",
                 headers: [
+                    { key: "X-Frame-Options", value: "DENY" },
                     { key: "X-Content-Type-Options", value: "nosniff" },
                     { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
                     { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
