@@ -1,4 +1,5 @@
 import { CardsStats } from "@/components/app/cards-stats";
+import { MobileSearchSheet } from "@/components/app/mobile-search";
 import { PageHeader } from "@/components/app/page-header";
 import { ValueChart } from "@/components/app/value-chart";
 import { getCardStats } from "@/lib/cards";
@@ -10,6 +11,7 @@ export default async function DashboardPage() {
     return (
         <div className="flex flex-col gap-6">
             <PageHeader title="Home" subtitle="An overview of your collection." />
+            <MobileSearchSheet />
             <CardsStats stats={stats} />
 
             <section className="flex flex-col gap-4 rounded-xl bg-primary px-4 py-5 shadow-xs ring-1 ring-secondary ring-inset md:px-5">

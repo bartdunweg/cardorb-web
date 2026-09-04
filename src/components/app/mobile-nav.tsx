@@ -1,6 +1,6 @@
 "use client";
 
-import { Folder, HomeLine, Rows01, SearchLg } from "@untitledui/icons";
+import { Folder, HomeLine, Rows01 } from "@untitledui/icons";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Avatar } from "@/components/base/avatar/avatar";
@@ -11,13 +11,13 @@ type Account = { name: string; email: string; avatarUrl: string | null };
 const tabs = [
     { label: "Home", href: "/dashboard", icon: HomeLine, match: (p: string) => p === "/dashboard" },
     { label: "Cards", href: "/dashboard/cards", icon: Rows01, match: (p: string) => p.startsWith("/dashboard/cards") },
-    { label: "Search", href: "/dashboard/search", icon: SearchLg, match: (p: string) => p.startsWith("/dashboard/search") },
     { label: "Collections", href: "/dashboard/collections", icon: Folder, match: (p: string) => p.startsWith("/dashboard/collections") },
 ];
 
 const tabClass = "flex flex-1 flex-col items-center gap-1 rounded-full py-1 text-xs/4 font-medium transition";
 
-// Bottom tab bar for mobile: four destinations and You, the account's page, in one pill. Its side
+// Bottom tab bar for mobile: three destinations and You, the account's page, in one pill. Search
+// lives at the top of Home. Its side
 // inset matches the content's padding, so bar and page share an edge.
 export function MobileTabBar({ account }: { account: Account }) {
     const pathname = usePathname();
