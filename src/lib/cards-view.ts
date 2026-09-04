@@ -8,4 +8,5 @@ export const CARDS_VIEW_COOKIE = "cards-view";
 
 export type CardsViewMode = "table" | "grid";
 
-export const parseCardsView = (raw: string | undefined): CardsViewMode => (raw === "grid" ? "grid" : "table");
+// Grid until the cookie says table: the pictures are the collection, the table is the ledger.
+export const parseCardsView = (raw: string | undefined): CardsViewMode => (raw === "table" ? "table" : "grid");
