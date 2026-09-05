@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CardImage } from "@/components/app/card-image";
+import { MobileTopRow } from "@/components/app/mobile-top-row";
 import { PageHeader } from "@/components/app/page-header";
 import { ProgressBarBase } from "@/components/base/progress-indicators/progress-indicators";
 import { CatalogueUnavailable, type SetSummary, getSets } from "@/lib/sets";
@@ -27,7 +28,7 @@ export default async function SetsPage() {
     return (
         <div className="flex flex-col gap-8">
             {/* The title alone: how far the shelf is comes per set, on its tile, not as one number over all of them. */}
-            <PageHeader title="Browse" />
+            <PageHeader title="Browse" above={<MobileTopRow />} titleOnPhone={false} />
 
             {series.map((group) => (
                 <section key={group.name} aria-labelledby={`series-${slug(group.name)}`} className="flex flex-col gap-3">

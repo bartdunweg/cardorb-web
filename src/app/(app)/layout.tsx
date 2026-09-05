@@ -45,7 +45,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                             <div className="mx-auto flex w-full max-w-container flex-1 flex-col px-4 pt-4 pb-28 sm:px-6 sm:py-8 lg:pb-8">{children}</div>
                         </main>
                     </div>
-                    <MobileTabBar account={account} />
+                    <MobileTabBar />
                 </div>
             </CommandSearchProvider>
         </RouteProvider>
