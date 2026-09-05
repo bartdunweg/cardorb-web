@@ -22,14 +22,7 @@ export function AccountMenu({ account }: { account: Account }) {
                     )
                 }
             >
-                <AvatarLabelGroup
-                    size="md"
-                    src={account.avatarUrl ?? undefined}
-                    alt={account.name}
-                    title={account.name}
-                    subtitle={account.email}
-                    className="pr-8"
-                />
+                <AvatarLabelGroup size="md" src={account.avatarUrl ?? undefined} alt="" title={account.name} subtitle={account.email} className="pr-8" />
                 <div className="absolute top-2 right-2 flex size-7 items-center justify-center rounded-md">
                     <ChevronSelectorVertical className="size-4 shrink-0 text-fg-quaternary" />
                 </div>
@@ -44,8 +37,8 @@ export function AccountMenu({ account }: { account: Account }) {
     );
 }
 
-// The account's own entries: Settings (which is where the profile lives), the dark-mode toggle, Sign out. Rendered inside a
-// Dropdown.Menu, here and at the end of the mobile tab bar's More menu.
+// The account's own entries: the public profile, Settings (where the profile lives), the dark-mode
+// toggle, Sign out. Rendered inside a Dropdown.Menu here; the phone reaches them on the You page.
 export function AccountMenuItems({ publicUrl }: { publicUrl?: string | null } = {}) {
     const { resolvedTheme, setTheme } = useTheme();
     // The theme is undefined on the server and the first client render alike, so reading it

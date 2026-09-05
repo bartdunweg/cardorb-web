@@ -116,8 +116,8 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                 <>
                     <SlideoutMenu.Header onClose={close}>
                         <AriaHeading slot="title" className="text-lg font-semibold text-primary">
-                            {isStarred && mine ? <FavoriteStar /> : null}
                             {card?.name}
+                            {isStarred && mine ? <FavoriteStar /> : null}
                         </AriaHeading>
                         <p className="text-sm text-tertiary">{[card?.set_name, card?.number ? `#${card.number}` : null].filter(Boolean).join(" · ") || "—"}</p>
                         {/* A card you own can be starred: it then sits in Favorites, and the sheet says so. */}

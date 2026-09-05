@@ -20,6 +20,3 @@ export function CardsPagination({ page, totalPages, hrefFor }: { page: number; t
         </nav>
     );
 }
-
-/** The page number from `?page=`: 1 when missing or nonsense. */
-export const pageFromParam = (value: string | undefined): number => Math.max(1, Number(value) || 1);

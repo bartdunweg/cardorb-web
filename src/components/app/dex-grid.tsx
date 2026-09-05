@@ -56,7 +56,7 @@ function DexTile({ slot, linked }: { slot: NamedDexSlot; linked: boolean }) {
     if (held > 1) {
         return (
             <div className="flex flex-col gap-2">
-                <DexSlider cards={slot.cards} />
+                <DexSlider cards={slot.cards} linked={linked} />
                 {words}
             </div>
         );

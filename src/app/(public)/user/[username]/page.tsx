@@ -101,7 +101,7 @@ export default async function PublicProfilePage({ params, searchParams }: Params
             <main className="mx-auto flex w-full max-w-container flex-1 flex-col gap-8 px-4 py-6 sm:px-6 sm:py-8">
                 {/* Centred, as a profile page is read: the person first, then what they hold, then the ways to act on it. */}
                 <div className="flex flex-col items-center gap-3 text-center">
-                    <Avatar size="2xl" src={profile.avatar_url ?? undefined} alt={name} className="size-24" />
+                    <Avatar size="2xl" src={profile.avatar_url ?? undefined} alt="" className="size-24" />
                     <div className="flex flex-col items-center gap-1">
                         <h1 className="text-display-sm font-semibold text-primary">{name}</h1>
                         {handle ? <p className="text-md text-tertiary">{handle}</p> : null}

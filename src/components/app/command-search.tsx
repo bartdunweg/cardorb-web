@@ -33,7 +33,7 @@ export function SidebarSearchTrigger() {
 }
 
 // Renders the single command palette and provides open() to descendants. It searches the whole
-// Pokémon card database (pokemontcg) and lets you add a result to your collection.
+// Pokémon card database (the Card Orb API, TCGdex behind it) and lets you add a result to your collection.
 export function CommandSearchProvider({ children }: { children: ReactNode }) {
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
