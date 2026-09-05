@@ -103,6 +103,8 @@ export type FolderItem = {
     kind?: FolderKind;
     rule?: FolderRule | null;
     pokedex?: PokedexSetting | null;
+    /** Shown on the public profile, as a filter over the public cards. Absent from an API before #175. */
+    isPublic?: boolean;
 };
 
 export type Folder = {
@@ -113,11 +115,21 @@ export type Folder = {
     kind: FolderKind;
     rule: FolderRule | null;
     pokedex: PokedexSetting | null;
+    isPublic: boolean;
 };
 
 export function folderFromApi(f: FolderItem): Folder {
     const rule = f.rule ?? null;
-    return { id: f.id, name: f.name, createdAt: f.createdAt, count: f.count, kind: f.kind ?? (rule ? "rule" : "manual"), rule, pokedex: f.pokedex ?? null };
+    return {
+        id: f.id,
+        name: f.name,
+        createdAt: f.createdAt,
+        count: f.count,
+        kind: f.kind ?? (rule ? "rule" : "manual"),
+        rule,
+        pokedex: f.pokedex ?? null,
+        isPublic: f.isPublic ?? false,
+    };
 }
 
 export const cardFromItem = (item: CardItem): Card => ({

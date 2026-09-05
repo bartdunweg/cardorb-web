@@ -15,7 +15,7 @@ import { Toggle } from "@/components/base/toggle/toggle";
 import type { Facets } from "@/lib/cards";
 import { type FolderKind, type FolderRule, type PokedexSetting, ruleSummary } from "@/lib/folder-rule";
 
-type FolderShape = { id: string; name: string; kind: FolderKind; rule: FolderRule | null; pokedex: PokedexSetting | null };
+type FolderShape = { id: string; name: string; kind: FolderKind; rule: FolderRule | null; pokedex: PokedexSetting | null; isPublic: boolean };
 type FormProps = {
     mode: "create" | "edit";
     folder?: FolderShape;
@@ -55,6 +55,7 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
     const [asPokedex, setAsPokedex] = useState(!!folder?.pokedex);
     const [missing, setMissing] = useState(folder?.pokedex?.missing ?? true);
     const [dexShown, setDexShown] = useState(dexDraft(folder?.pokedex?.dex));
+    const [isPublic, setIsPublic] = useState(folder?.isPublic ?? false);
     const [sets, setSets] = useState<string[]>(folder?.rule?.sets ?? []);
     const [rarities, setRarities] = useState<string[]>(folder?.rule?.rarities ?? []);
     const [saving, setSaving] = useState(false);
@@ -86,8 +87,8 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
         setError(null);
         const res =
             mode === "create"
-                ? await createCollection(name, rule(), pokedex() ?? undefined)
-                : await updateCollection(folder!.id, { name, ...(kind === "rule" ? { rule: rule() } : {}), pokedex: pokedex() });
+                ? await createCollection(name, rule(), pokedex() ?? undefined, isPublic)
+                : await updateCollection(folder!.id, { name, ...(kind === "rule" ? { rule: rule() } : {}), pokedex: pokedex(), isPublic });
         setSaving(false);
         if (!res.ok) {
             setError(res.error);
@@ -214,6 +215,12 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
                     <Toggle label="Show the Pokémon I'm missing" isSelected={missing} onChange={setMissing} />
                 </>
             ) : null}
+            <Toggle
+                label="Show on my public profile"
+                hint="Visitors can narrow your public cards to it, while your profile is public."
+                isSelected={isPublic}
+                onChange={setIsPublic}
+            />
             {error ? (
                 <p role="alert" className="text-sm text-error-primary">
                     {error}

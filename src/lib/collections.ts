@@ -36,9 +36,9 @@ export async function getMyFolders(): Promise<{ id: string; name: string }[]> {
     }
 }
 
-export type CollectionDetail = { id: string; name: string; kind: FolderKind; rule: FolderRule | null; pokedex: PokedexSetting | null };
+export type CollectionDetail = { id: string; name: string; kind: FolderKind; rule: FolderRule | null; pokedex: PokedexSetting | null; isPublic: boolean };
 
 export async function getCollection(id: string): Promise<CollectionDetail | null> {
     const found = (await folders()).find((f) => f.id === id);
-    return found ? { id: found.id, name: found.name, kind: found.kind, rule: found.rule, pokedex: found.pokedex } : null;
+    return found ? { id: found.id, name: found.name, kind: found.kind, rule: found.rule, pokedex: found.pokedex, isPublic: found.isPublic } : null;
 }

@@ -29,10 +29,12 @@ export type ListQuery = {
     /** One set, as the API names it; the API matches it whole. */
     set: string | undefined;
     rarity: string | undefined;
+    /** A public profile's folder, by id; the owner's own lists carry the folder in the path instead. */
+    folder: string | undefined;
 };
 
 /** What a list page reads from its URL. */
-export type ListSearchParams = { page?: string; sort?: string; q?: string; set?: string; rarity?: string };
+export type ListSearchParams = { page?: string; sort?: string; q?: string; set?: string; rarity?: string; folder?: string };
 
 /** A search or a filter is on. */
 export const isNarrowed = (q: ListQuery): boolean => [q.q, q.set, q.rarity].some(Boolean);
@@ -40,7 +42,7 @@ export const isNarrowed = (q: ListQuery): boolean => [q.q, q.set, q.rarity].some
 const isSortKey = (v: unknown): v is SortKey => SORT_OPTIONS.some((o) => o.value === v);
 
 /** The list's URL, read forgivingly: nonsense means the default, never an error page. */
-export function readListQuery(params: { page?: string; sort?: string; q?: string; set?: string; rarity?: string }): ListQuery {
+export function readListQuery(params: ListSearchParams): ListQuery {
     const sortKey = isSortKey(params.sort) ? params.sort : "set";
     const option = SORT_OPTIONS.find((o) => o.value === sortKey)!;
     const text = (v: string | undefined) => v?.trim().slice(0, 100) || undefined;
@@ -52,6 +54,7 @@ export function readListQuery(params: { page?: string; sort?: string; q?: string
         q: text(params.q),
         set: text(params.set),
         rarity: text(params.rarity),
+        folder: text(params.folder),
     };
 }
 
@@ -62,10 +65,15 @@ export function readPublicListQuery(params: Parameters<typeof readListQuery>[0])
 }
 
 /** The same list with some of it changed; defaults stay out of the URL so the plain path stays plain. */
-export function listHref(pathname: string, current: ListQuery, patch: Partial<Pick<ListQuery, "page" | "sortKey" | "q" | "set" | "rarity">>): string {
+export function listHref(
+    pathname: string,
+    current: ListQuery,
+    patch: Partial<Pick<ListQuery, "page" | "sortKey" | "q" | "set" | "rarity" | "folder">>,
+): string {
     const q = "q" in patch ? patch.q : current.q;
     const set = "set" in patch ? patch.set : current.set;
     const rarity = "rarity" in patch ? patch.rarity : current.rarity;
+    const folder = "folder" in patch ? patch.folder : current.folder;
     const sortKey = patch.sortKey ?? current.sortKey;
     const page = patch.page ?? current.page;
     const p = new URLSearchParams();
@@ -73,6 +81,7 @@ export function listHref(pathname: string, current: ListQuery, patch: Partial<Pi
     if (sortKey !== "set") p.set("sort", sortKey);
     if (set) p.set("set", set);
     if (rarity) p.set("rarity", rarity);
+    if (folder) p.set("folder", folder);
     if (page > 1) p.set("page", String(page));
     const s = p.toString();
     return s ? `${pathname}?${s}` : pathname;

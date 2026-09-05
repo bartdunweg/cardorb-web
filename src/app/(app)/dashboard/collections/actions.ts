@@ -17,10 +17,10 @@ const nameSchema = z.string().trim().min(1, "Enter a name.").max(60);
 
 // Folders live in the API; every call is scoped to the caller there. With a rule the folder
 // fills itself from the cards you own; without one you file cards in it by hand.
-export async function createCollection(name: string, rule?: FolderRule, pokedex?: PokedexSetting): Promise<CollectionResult> {
+export async function createCollection(name: string, rule?: FolderRule, pokedex?: PokedexSetting, isPublic?: boolean): Promise<CollectionResult> {
     const parsed = z
-        .object({ name: nameSchema, rule: folderRuleSchema.optional(), pokedex: pokedexSettingSchema.optional() })
-        .safeParse({ name, rule, pokedex });
+        .object({ name: nameSchema, rule: folderRuleSchema.optional(), pokedex: pokedexSettingSchema.optional(), isPublic: z.boolean().optional() })
+        .safeParse({ name, rule, pokedex, isPublic });
     if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
     try {
@@ -30,6 +30,7 @@ export async function createCollection(name: string, rule?: FolderRule, pokedex?
                 name: parsed.data.name,
                 ...(parsed.data.rule ? { rule: parsed.data.rule } : {}),
                 ...(parsed.data.pokedex ? { pokedex: parsed.data.pokedex } : {}),
+                ...(parsed.data.isPublic ? { isPublic: true } : {}),
             },
         });
         await forgetMine();
@@ -40,10 +41,19 @@ export async function createCollection(name: string, rule?: FolderRule, pokedex?
 }
 
 // A folder's name or rule. The API keeps the kind: a folder filled by hand takes no rule.
-export async function updateCollection(id: string, patch: { name?: string; rule?: FolderRule; pokedex?: PokedexSetting | null }): Promise<CollectionResult> {
+export async function updateCollection(
+    id: string,
+    patch: { name?: string; rule?: FolderRule; pokedex?: PokedexSetting | null; isPublic?: boolean },
+): Promise<CollectionResult> {
     const parsed = z
-        .object({ id: z.string().uuid(), name: nameSchema.optional(), rule: folderRuleSchema.optional(), pokedex: pokedexSettingSchema.nullable().optional() })
-        .refine((p) => p.name !== undefined || p.rule !== undefined || p.pokedex !== undefined, "Nothing to change.")
+        .object({
+            id: z.string().uuid(),
+            name: nameSchema.optional(),
+            rule: folderRuleSchema.optional(),
+            pokedex: pokedexSettingSchema.nullable().optional(),
+            isPublic: z.boolean().optional(),
+        })
+        .refine((p) => p.name !== undefined || p.rule !== undefined || p.pokedex !== undefined || p.isPublic !== undefined, "Nothing to change.")
         .safeParse({ id, ...patch });
     if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
