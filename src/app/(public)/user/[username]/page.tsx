@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { AccountMenu } from "@/components/app/account-menu";
 import { AppEmptyState } from "@/components/app/app-empty-state";
+import { DashboardLink } from "@/components/app/dashboard-link";
 import { FolderBody } from "@/components/app/folder-body";
 import { LinkButton } from "@/components/app/link-button";
 import { PublicTopBar } from "@/components/app/public-top-bar";
@@ -13,7 +13,6 @@ import { type ListSearchParams, PUBLIC_SORT_OPTIONS, isNarrowed, listHref, readP
 import { getDexNames } from "@/lib/pokedex";
 import { getViewer } from "@/lib/profile";
 import { PUBLIC_PAGE_SIZE, getAllPublicCards, getPublicCards, getPublicFolders, getPublicProfile } from "@/lib/public-profile";
-import { RouteProvider } from "@/providers/router-provider";
 
 type Params = { params: Promise<{ username: string }>; searchParams: Promise<ListSearchParams> };
 
@@ -89,16 +88,8 @@ export default async function PublicProfilePage({ params, searchParams }: Params
 
     return (
         <div className="bg-page flex min-h-dvh flex-col">
-            {/* The menu's items are react-aria links; the provider hands them the app router. */}
-            <PublicTopBar
-                menu={
-                    viewer ? (
-                        <RouteProvider>
-                            <AccountMenu account={viewer} compact />
-                        </RouteProvider>
-                    ) : undefined
-                }
-            />
+            {/* Signed in: the way back to the dashboard, top right. A visitor gets the bar alone. */}
+            <PublicTopBar menu={viewer ? <DashboardLink account={viewer} /> : undefined} />
 
             <main className="mx-auto flex w-full max-w-container flex-1 flex-col gap-8 px-4 py-6 sm:px-6 sm:py-8">
                 {/* Centred, as a profile page is read: the person first, then what they hold, then the ways to act on it. */}
