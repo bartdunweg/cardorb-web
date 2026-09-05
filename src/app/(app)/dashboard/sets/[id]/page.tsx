@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { AppEmptyState } from "@/components/app/app-empty-state";
+import { CardImage } from "@/components/app/card-image";
 import { PageHeader } from "@/components/app/page-header";
 import { SetCardTile } from "@/components/app/set-card-tile";
 import { ProgressBarBase } from "@/components/base/progress-indicators/progress-indicators";
@@ -37,7 +38,19 @@ export default async function SetPage({ params }: { params: Promise<{ id: string
 
     return (
         <div className="flex flex-col gap-6">
-            <PageHeader title={set.name} subtitle={subtitle} back={{ href: "/dashboard/sets", label: "Sets" }}>
+            <PageHeader
+                title={set.name}
+                subtitle={subtitle}
+                back={{ href: "/dashboard/sets", label: "Sets" }}
+                // The set's logo over its name, as it is printed on the pack. Decoration: the h1 says which set.
+                above={
+                    set.logoUrl ? (
+                        <div className="relative h-14 w-48 max-w-full">
+                            <CardImage src={set.logoUrl} alt="" sizes="192px" className="object-contain object-left" />
+                        </div>
+                    ) : undefined
+                }
+            >
                 <ProgressBarBase value={set.owned} max={set.total || 1} className="mt-2 max-w-md" aria-label={`${set.name} completion`} />
             </PageHeader>
 
