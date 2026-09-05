@@ -109,7 +109,7 @@ export function PageHeader({
                         {subtitle ? <p className="text-md text-tertiary">{subtitle}</p> : null}
                         {children}
                     </div>
-                    {actions ? <div className="flex items-center gap-3">{actions}</div> : null}
+                    {actions ? <div className="flex items-center gap-3 self-stretch">{actions}</div> : null}
                 </div>
             </div>
         </div>

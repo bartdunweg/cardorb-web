@@ -33,7 +33,7 @@ export function ListSettingsDialog({ list, title, isPublic }: { list: "wishlist"
 
     return (
         <DialogTrigger>
-            <Button color="secondary" iconLeading={Settings01} aria-label={`${title} settings`} />
+            <Button color="secondary" size="md" iconLeading={Settings01} aria-label={`${title} settings`} />
             <ModalOverlay>
                 <Modal className="max-w-md">
                     <Dialog>

@@ -33,10 +33,10 @@ export function NewCollectionButton({ facets }: { facets: Facets }) {
     return (
         <>
             <FolderDialog mode="create" facets={facets}>
-                <Button iconLeading={Plus} aria-label="New folder" className="sm:hidden" />
+                <Button iconLeading={Plus} size="md" aria-label="New folder" className="sm:hidden" />
             </FolderDialog>
             <FolderDialog mode="create" facets={facets}>
-                <Button iconLeading={Plus} className="max-sm:hidden">
+                <Button iconLeading={Plus} size="md" className="max-sm:hidden">
                     New folder
                 </Button>
             </FolderDialog>
