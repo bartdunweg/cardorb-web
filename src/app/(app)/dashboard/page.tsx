@@ -1,5 +1,5 @@
 import { CardsStats } from "@/components/app/cards-stats";
-import { MobileTopRow } from "@/components/app/mobile-top-row";
+import { YouLink } from "@/components/app/mobile-top-row";
 import { PageHeader } from "@/components/app/page-header";
 import { ValueChart } from "@/components/app/value-chart";
 import { getCardStats } from "@/lib/cards";
@@ -10,7 +10,7 @@ export default async function DashboardPage() {
 
     return (
         <div className="flex flex-col gap-6">
-            <PageHeader title="Home" subtitle="An overview of your collection." above={<MobileTopRow search={false} />} />
+            <PageHeader title="Home" subtitle="An overview of your collection." actions={<YouLink />} />
             <CardsStats stats={stats} />
 
             <section
