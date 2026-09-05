@@ -94,7 +94,7 @@ export default async function PublicProfilePage({ params, searchParams }: Params
               .join(" · ");
 
     return (
-        <div className="bg-page flex min-h-dvh flex-col">
+        <div className="flex min-h-dvh flex-col bg-page">
             {/* Signed in: the way back to the dashboard, top right. A visitor gets the bar alone. */}
             <PublicTopBar menu={viewer ? <DashboardLink account={viewer} /> : undefined} />
 

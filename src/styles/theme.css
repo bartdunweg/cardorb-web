@@ -403,8 +403,8 @@
        neutral-50 could not be told from white on a phone), so the surfaces on it (tiles, inputs,
        the chart) read as white things lying on it. In dark the page is the
        darkest layer, the same as bg-primary; a lighter page there turns the surfaces into holes. */
-    /* Between the two greys: 100 reads as white beside a white tile, 200 is a wall. */
-    --color-bg-page: color-mix(in oklab, var(--color-neutral-100), var(--color-neutral-200));
+    /* Off-white, one step under a white tile: enough for the tile to read as a tile, not a wall. */
+    --color-bg-page: var(--color-neutral-50);
     /* What a flat tile (a card in a grid) turns into under the pointer: a surface on the page. */
     --color-bg-page-raised: var(--color-bg-primary);
     --color-bg-quaternary: var(--color-neutral-200);
@@ -444,6 +444,10 @@
     --background-color-glass: var(--color-bg-glass);
     --background-color-glass-thick: var(--color-bg-glass-thick);
     --background-color-primary: var(--color-bg-primary);
+    /* The page ground and what lies on it: `bg-page` and `bg-page-raised`. Without this line the
+       token exists but the class does not, and the page stays white. */
+    --background-color-page: var(--color-bg-page);
+    --background-color-page-raised: var(--color-bg-page-raised);
     --background-color-tertiary: var(--color-bg-tertiary);
     --background-color-brand-primary: var(--color-bg-brand-primary);
     --background-color-error-secondary: var(--color-bg-error-secondary);
