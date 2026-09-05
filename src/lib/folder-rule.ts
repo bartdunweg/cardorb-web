@@ -13,7 +13,33 @@ export type FolderRule = { dex?: DexRange; sets?: string[]; rarities?: string[] 
  * A folder shown as a Pokédex: its cards in the national order, one slot per Pokémon. `missing`
  * shows the slots the folder has no card of; `dex` is the range collected, all of it when absent.
  */
-export type PokedexSetting = { missing: boolean; dex?: DexRange; rarities?: string[] };
+export type PokedexSetting = { missing: boolean; dex?: DexRange; rarities?: string[]; kinds?: string[] };
+
+/**
+ * The kinds of card, read off the name's suffix: what a rarity cannot tell apart. A full-art V
+ * from Sword & Shield and a full-art ex from Scarlet & Violet are both "Ultra Rare"; the kind is
+ * what separates them. "Regular" is a card with no suffix at all.
+ */
+export const CARD_KINDS: { id: string; label: string; test: (name: string) => boolean }[] = [
+    { id: "regular", label: "Regular", test: () => false },
+    // Mega and Tag Team before the suffixes they end in: "M Charizard EX" is a Mega, not an EX.
+    { id: "mega", label: "Mega", test: (n) => /^M(ega)? /.test(n) },
+    { id: "tag-team", label: "Tag Team", test: (n) => /&/.test(n) && /\b(GX|ex)$/.test(n) },
+    { id: "ex", label: "ex", test: (n) => /\bex$/.test(n) },
+    { id: "EX", label: "EX", test: (n) => /\bEX$/.test(n) },
+    { id: "GX", label: "GX", test: (n) => /\bGX$/.test(n) },
+    { id: "V", label: "V", test: (n) => /\bV$/.test(n) },
+    { id: "VMAX", label: "VMAX", test: (n) => /\bVMAX$/.test(n) },
+    { id: "VSTAR", label: "VSTAR", test: (n) => /\bVSTAR$/.test(n) },
+    { id: "radiant", label: "Radiant", test: (n) => /^Radiant /.test(n) },
+    { id: "break", label: "BREAK", test: (n) => /\bBREAK$/.test(n) },
+];
+
+/** Which kind a card is, by its name; "regular" when no suffix names one. */
+export function kindOf(name: string): string {
+    const n = name.trim();
+    return CARD_KINDS.find((k) => k.id !== "regular" && k.test(n))?.id ?? "regular";
+}
 
 /**
  * The rarities that are a whole picture: the art fills the card. What a "full-art Pokédex" keeps.
@@ -48,7 +74,7 @@ export const dexRangeSchema = z
     .object({ from: z.number().int().min(1).max(NATIONAL_DEX_MAX), to: z.number().int().min(1).max(NATIONAL_DEX_MAX) })
     .refine((d) => d.from <= d.to, "The range runs backwards.");
 
-export const pokedexSettingSchema = z.object({ missing: z.boolean(), dex: dexRangeSchema.optional(), rarities: list.optional() });
+export const pokedexSettingSchema = z.object({ missing: z.boolean(), dex: dexRangeSchema.optional(), rarities: list.optional(), kinds: list.optional() });
 
 export const folderRuleSchema = z
     .object({

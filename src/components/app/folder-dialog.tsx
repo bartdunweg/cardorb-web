@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import { createCollection, loadFacets, updateCollection } from "@/app/(app)/dashboard/collections/actions";
 import { DexRangeFields, dexDraft, dexFromDraft } from "@/components/app/dex-range-fields";
+import { KindPicker } from "@/components/app/kind-picker";
 import { RarityPicker } from "@/components/app/rarity-picker";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { BadgeWithButton } from "@/components/base/badges/badges";
@@ -57,6 +58,7 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
     const [missing, setMissing] = useState(folder?.pokedex?.missing ?? true);
     const [dexShown, setDexShown] = useState(dexDraft(folder?.pokedex?.dex));
     const [dexRarities, setDexRarities] = useState<string[]>(folder?.pokedex?.rarities ?? []);
+    const [dexKinds, setDexKinds] = useState<string[]>(folder?.pokedex?.kinds ?? []);
     const [isPublic, setIsPublic] = useState(folder?.isPublic ?? false);
     const [sets, setSets] = useState<string[]>(folder?.rule?.sets ?? []);
     const [rarities, setRarities] = useState<string[]>(folder?.rule?.rarities ?? []);
@@ -81,7 +83,12 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
     const pokedex = (): PokedexSetting | null => {
         if (!asPokedex) return null;
         const range = dexFromDraft(dexShown);
-        return { missing, ...(range ? { dex: range } : {}), ...(dexRarities.length ? { rarities: dexRarities } : {}) };
+        return {
+            missing,
+            ...(range ? { dex: range } : {}),
+            ...(dexRarities.length ? { rarities: dexRarities } : {}),
+            ...(dexKinds.length ? { kinds: dexKinds } : {}),
+        };
     };
 
     const save = async (close: () => void) => {
@@ -215,7 +222,8 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
                 <>
                     <DexRangeFields label="Pokédex range" anyLabel="Every Pokémon" dex={dexShown} onChange={setDexShown} />
                     <Toggle label="Show the Pokémon I'm missing" isSelected={missing} onChange={setMissing} />
-                    <RarityPicker label="Cards that count" options={facets.rarities} selected={dexRarities} onChange={setDexRarities} />
+                    <RarityPicker label="Rarities that count" options={facets.rarities} selected={dexRarities} onChange={setDexRarities} />
+                    <KindPicker selected={dexKinds} onChange={setDexKinds} />
                 </>
             ) : null}
             <Toggle

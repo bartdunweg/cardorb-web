@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import { updateListPublic, updatePokedexSetting } from "@/app/(app)/dashboard/settings/actions";
 import { DexRangeFields, dexDraft, dexFromDraft } from "@/components/app/dex-range-fields";
+import { KindPicker } from "@/components/app/kind-picker";
 import { RarityPicker } from "@/components/app/rarity-picker";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { Button } from "@/components/base/buttons/button";
@@ -20,6 +21,7 @@ export function PokedexSettingsDialog({ setting, isPublic, facets }: { setting: 
     const [missing, setMissing] = useState(setting.missing);
     const [dex, setDex] = useState(dexDraft(setting.dex));
     const [rarities, setRarities] = useState<string[]>(setting.rarities ?? []);
+    const [kinds, setKinds] = useState<string[]>(setting.kinds ?? []);
     const [shown, setShown] = useState(isPublic);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -28,7 +30,12 @@ export function PokedexSettingsDialog({ setting, isPublic, facets }: { setting: 
         setSaving(true);
         setError(null);
         const range = dexFromDraft(dex);
-        const res = await updatePokedexSetting({ missing, ...(range ? { dex: range } : {}), ...(rarities.length ? { rarities } : {}) });
+        const res = await updatePokedexSetting({
+            missing,
+            ...(range ? { dex: range } : {}),
+            ...(rarities.length ? { rarities } : {}),
+            ...(kinds.length ? { kinds } : {}),
+        });
         const shownRes = res.ok && shown !== isPublic ? await updateListPublic({ list: "pokedex", shown }) : res;
         setSaving(false);
         if (!shownRes.ok) {
@@ -63,7 +70,8 @@ export function PokedexSettingsDialog({ setting, isPublic, facets }: { setting: 
                                     isSelected={missing}
                                     onChange={setMissing}
                                 />
-                                <RarityPicker label="Cards that count" options={facets.rarities} selected={rarities} onChange={setRarities} />
+                                <RarityPicker label="Rarities that count" options={facets.rarities} selected={rarities} onChange={setRarities} />
+                                <KindPicker selected={kinds} onChange={setKinds} />
                                 <Toggle
                                     label="Show on my public profile"
                                     hint="As a tab on your page, drawn the way you see it here. Only while your profile is public."

@@ -1,6 +1,6 @@
 import type { DexSlot } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
-import { type DexRange, NATIONAL_DEX_MAX, type PokedexSetting } from "@/lib/folder-rule";
+import { type DexRange, NATIONAL_DEX_MAX, type PokedexSetting, kindOf } from "@/lib/folder-rule";
 
 export type DexNames = Map<number, string>;
 export type NamedDexSlot = DexSlot & { name: string };
@@ -21,12 +21,15 @@ export function groupByDex(
     const range = setting.dex ?? { from: 1, to: NATIONAL_DEX_MAX };
     // Only the rarities the setting names, compared without case: the catalogue spells some two ways.
     const kept = setting.rarities ? new Set(setting.rarities.map((r) => r.toLowerCase())) : null;
+    // And only the kinds it names (V, ex, …), read off the name: what a rarity cannot tell apart.
+    const kinds = setting.kinds ? new Set(setting.kinds) : null;
     const bySlot = new Map<number, DexCardLike[]>();
     let counted = 0;
     for (const card of cards) {
         const id = card.species_id;
         if (id === null || id < range.from || id > range.to) continue;
         if (kept && !kept.has((card.rarity ?? "").toLowerCase())) continue;
+        if (kinds && !kinds.has(kindOf(card.name))) continue;
         counted += 1;
         const list = bySlot.get(id) ?? [];
         list.push(card);
