@@ -61,7 +61,17 @@ export function DexGrid({ slots, size = "md" }: { slots: NamedDexSlot[]; size?: 
 
 // The Pokédex body under the shared row: the View menu offers the size alone, a slot being
 // neither a grid tile nor a table row.
-export function DexView({ slots, initialSize = "md", toolbar }: { slots: NamedDexSlot[]; initialSize?: CardsSize; toolbar?: ReactNode }) {
+export function DexView({
+    slots,
+    initialSize = "md",
+    toolbar,
+    empty,
+}: {
+    slots: NamedDexSlot[];
+    initialSize?: CardsSize;
+    toolbar?: ReactNode;
+    empty?: ReactNode;
+}) {
     const [size, setSize] = useState(initialSize);
     return (
         <div className="flex flex-col gap-4">
@@ -69,7 +79,7 @@ export function DexView({ slots, initialSize = "md", toolbar }: { slots: NamedDe
                 <div className="contents">{toolbar}</div>
                 <ViewMenu view="grid" size={size} onView={() => {}} onSize={setSize} layouts={false} />
             </div>
-            <DexGrid slots={slots} size={size} />
+            {empty ?? <DexGrid slots={slots} size={size} />}
         </div>
     );
 }

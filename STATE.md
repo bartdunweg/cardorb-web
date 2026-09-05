@@ -22,6 +22,23 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **2026-09-05, one day, sixteen web PRs and five API PRs.** Dark mode one step above black,
+  hairline borders, glass chrome, five phone tabs with You as a page, sheets on a phone, dialogs
+  centred (#101, #103). Icons in buttons take the label's colour, thick glass is 92% (#103). The
+  collection is folders: All cards, Favorites, Pokédex and the ones you make, flat under one
+  heading, with New folder at its end; Home, Browse (sets) and Wishlist sit beside it (#104,
+  #106, #108, #109, #110). A folder can fill itself from a rule: dex range, sets, rarities
+  (#105; cardorb-api#166, #167). Every folder page has one shape: title, what it holds and is
+  worth, actions, one row (search, Filters, Sort, View), the list; Pokédex is a folder setting,
+  "Pokédex number" a sort (#111, #113, #114; cardorb-api#168). Controls draw one hairline ring,
+  surfaces a shadow (#115). A card can be starred from its sheet (#116). Home's search bar is
+  the larger pill with a scan button (#107). A review of the day found three blocking defects
+  in each repository, fixed in cardorb-api#169 and the PR after #116: the toolbar kept its
+  place in the tree, the New folder dialog forgets its last folder, rule chips and "In
+  folders" read set titles; a rule folder keeps its matches with `owned=false`, a folder body
+  may be 8 kB, the folder list flags a catalogue outage. Open: GitHub Actions is blocked on
+  billing, so merges go on the local gate; `UNTITLED_UI_TOKEN` is unset, so PRO filled icons
+  cannot be added; the light theme has not had a design pass.
 - **A set page is a checklist.** Every tile is a menu: a card you lack goes to the collection or
   the wishlist, a wished card is "Got it" or removed, an owned card gains or loses a copy or is
   removed, and each opens its place in Cards or Wishlist. Copies are offered only when the card is

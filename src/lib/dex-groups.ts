@@ -1,7 +1,6 @@
 import type { DexSlot } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
-import type { DexRange, PokedexSetting } from "@/lib/folder-rule";
-import { NATIONAL_DEX_MAX } from "@/lib/pokedex";
+import { type DexRange, NATIONAL_DEX_MAX, type PokedexSetting } from "@/lib/folder-rule";
 
 export type DexNames = Map<number, string>;
 export type NamedDexSlot = DexSlot & { name: string };

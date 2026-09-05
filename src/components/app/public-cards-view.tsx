@@ -9,7 +9,17 @@ import type { CardsSize } from "@/lib/cards-view";
 
 // Public, read-only card grid: tap a card for a read-only detail (no editing, no personal fields).
 // The View menu offers the size alone: a public card has no columns for a table.
-export function PublicCardsView({ cards, initialSize = "md", toolbar }: { cards: PublicCard[]; initialSize?: CardsSize; toolbar?: ReactNode }) {
+export function PublicCardsView({
+    cards,
+    initialSize = "md",
+    toolbar,
+    empty,
+}: {
+    cards: PublicCard[];
+    initialSize?: CardsSize;
+    toolbar?: ReactNode;
+    empty?: ReactNode;
+}) {
     const [size, setSize] = useState(initialSize);
     const [selected, setSelected] = useState<PublicCard | null>(null);
 
@@ -19,7 +29,7 @@ export function PublicCardsView({ cards, initialSize = "md", toolbar }: { cards:
                 <div className="contents">{toolbar}</div>
                 <ViewMenu view="grid" size={size} onView={() => {}} onSize={setSize} layouts={false} />
             </div>
-            <CardsGrid cards={cards} onSelect={setSelected} size={size} />
+            {empty ?? <CardsGrid cards={cards} onSelect={setSelected} size={size} />}
             <CardDetailSlideout card={selected} onClose={() => setSelected(null)} readOnly />
         </div>
     );

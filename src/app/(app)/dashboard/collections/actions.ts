@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { ApiError, api } from "@/lib/api";
+import { type Facets, getFacets } from "@/lib/cards";
 import { type FolderRule, type PokedexSetting, folderRuleSchema, pokedexSettingSchema } from "@/lib/folder-rule";
 import { forgetMine } from "@/lib/user-cache";
 
@@ -58,6 +59,17 @@ export async function updateCollection(id: string, patch: { name?: string; rule?
 }
 
 export type FolderChoice = { id: string; name: string; rule: FolderRule | null };
+
+// The sets and rarities you hold, for a rule's pickers and for reading a rule back. Asked when
+// a dialog or a card sheet opens, not by the frame on every screen. Fails soft: without them a
+// dialog is poorer, a thrown error is no dialog.
+export async function loadFacets(): Promise<Facets> {
+    try {
+        return await getFacets();
+    } catch {
+        return { sets: [], rarities: [] };
+    }
+}
 
 // Every folder with its rule, for the card sheet: the ones filled by hand are where a card can be
 // filed; the rule folders say, by their rule, whether they hold it.

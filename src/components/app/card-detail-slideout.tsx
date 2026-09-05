@@ -2,18 +2,19 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { ArrowRight, Star01 } from "@untitledui/icons";
+import { ArrowRight, Plus, Star01 } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import { markOwned, setFavorite } from "@/app/(app)/dashboard/cards/actions";
-import { type FolderChoice, listCollections, setCardCollection } from "@/app/(app)/dashboard/collections/actions";
+import { type FolderChoice, listCollections, loadFacets, setCardCollection } from "@/app/(app)/dashboard/collections/actions";
 import { CardImage } from "@/components/app/card-image";
 import { FavoriteStar } from "@/components/app/favorite-star";
+import { FolderDialog } from "@/components/app/folder-dialog";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { NativeSelect } from "@/components/base/select/select-native";
-import type { Card, PublicCard } from "@/lib/cards";
+import type { Card, Facets, PublicCard } from "@/lib/cards";
 import { matchesRule } from "@/lib/folder-rule";
 import { formatDate, formatPrice } from "@/lib/format";
 
@@ -33,6 +34,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
     // The owner's fields exist only on the editable view; the public view never receives them.
     const mine = readOnly ? null : (card as Card | null);
     const [collections, setCollections] = useState<FolderChoice[]>([]);
+    const [facets, setFacets] = useState<Facets | undefined>(undefined);
     const [collectionId, setCollectionId] = useState<string>("");
     const [moving, setMoving] = useState(false);
     // The star, kept here so a tap answers at once; the page re-reads the flag after the save.
@@ -52,7 +54,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
     const [moveError, setMoveError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!readOnly) listCollections().then(setCollections);
+        if (!readOnly) {
+            listCollections().then(setCollections);
+            loadFacets().then(setFacets);
+        }
     }, [readOnly]);
 
     // Reset the editable collection value when a different card opens — done during render (React's
@@ -65,6 +70,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
     }
 
     const [collectionError, setCollectionError] = useState<string | null>(null);
+    const manual = collections.filter((c) => !c.rule);
     const onCollectionChange = async (value: string) => {
         if (!card) return;
         const before = collectionId;
@@ -121,7 +127,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                 onClick={toggleStar}
                                 className="mt-2"
                             >
-                                {isStarred ? "Favorite" : "Add to favorites"}
+                                Favorite
                             </Button>
                         ) : null}
                         {/* The price sits under the title, where a product panel puts it, not among the attributes. */}
@@ -159,15 +165,30 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                             ) : (
                                 <div className="flex flex-col gap-1.5">
                                     <span className="text-sm font-medium text-secondary">Folder</span>
-                                    <NativeSelect
-                                        aria-label="Folder"
-                                        value={collectionId}
-                                        onChange={(event) => onCollectionChange(event.target.value)}
-                                        options={[
-                                            { label: "None", value: "" },
-                                            ...collections.filter((c) => !c.rule).map((c) => ({ label: c.name, value: c.id })),
-                                        ]}
-                                    />
+                                    {/* Only a folder filled by hand takes a card; a rule folder fills itself. With none yet, the
+                                        way to file this card is to make one, and the card goes straight into it. */}
+                                    {manual.length ? (
+                                        <NativeSelect
+                                            aria-label="Folder"
+                                            value={collectionId}
+                                            onChange={(event) => onCollectionChange(event.target.value)}
+                                            options={[{ label: "None", value: "" }, ...manual.map((c) => ({ label: c.name, value: c.id }))]}
+                                        />
+                                    ) : (
+                                        <p className="text-sm text-tertiary">No folder filled by hand yet. A rule folder fills itself.</p>
+                                    )}
+                                    <FolderDialog
+                                        mode="create"
+                                        onSaved={async (id) => {
+                                            const next = await listCollections();
+                                            setCollections(next);
+                                            if (id && next.some((c) => c.id === id && !c.rule)) onCollectionChange(id);
+                                        }}
+                                    >
+                                        <Button size="sm" color="secondary" iconLeading={Plus} className="self-start">
+                                            New folder
+                                        </Button>
+                                    </FolderDialog>
                                     {collectionError ? (
                                         <p role="alert" className="text-sm text-error-primary">
                                             {collectionError}
@@ -183,16 +204,16 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                 <span className="text-sm font-medium text-secondary">In folders</span>
                                 <ul className="flex flex-wrap gap-1.5" aria-label="In folders">
                                     {[
-                                        ...(isStarred ? ["Favorites"] : []),
-                                        ...collections.filter((c) => (c.rule ? matchesRule(mine, c.rule) : c.id === collectionId)).map((c) => c.name),
-                                    ].map((name) => (
-                                        <li key={name}>
+                                        ...(isStarred ? [{ id: "favorites", name: "Favorites" }] : []),
+                                        ...collections.filter((c) => (c.rule ? matchesRule(mine, c.rule, facets) : c.id === collectionId)),
+                                    ].map(({ id, name }) => (
+                                        <li key={id}>
                                             <Badge size="sm" color="gray" type="pill-color">
                                                 {name}
                                             </Badge>
                                         </li>
                                     ))}
-                                    {!isStarred && !collections.some((c) => (c.rule ? matchesRule(mine, c.rule) : c.id === collectionId)) ? (
+                                    {!isStarred && !collections.some((c) => (c.rule ? matchesRule(mine, c.rule, facets) : c.id === collectionId)) ? (
                                         <li className="text-sm text-quaternary">None yet</li>
                                     ) : null}
                                 </ul>

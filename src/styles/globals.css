@@ -62,8 +62,12 @@
         scale: 0.96;
     }
 
+    /* On the scale itself, not the duration: a Button's own transition utilities come later in
+       the sheet and would win over a duration set here. */
     @media (prefers-reduced-motion: reduce) {
-        transition-duration: 0ms;
+        &:active {
+            scale: none;
+        }
     }
 }
 
