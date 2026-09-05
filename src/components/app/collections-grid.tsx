@@ -9,33 +9,15 @@ import { Button } from "@/components/base/buttons/button";
 import { FeaturedIcon } from "@/components/foundations/featured-icon/featured-icon";
 import type { Facets } from "@/lib/cards";
 import type { CollectionSummary } from "@/lib/collections";
-import { cx } from "@/utils/cx";
 
-// A tile with a count, or with a line of its own for a view that is not a pile of cards.
-// `row` puts the icon beside the text instead of above it: for a tile that spans a phone's width,
-// where a stacked icon would leave the right two thirds empty.
-function FolderCard({
-    href,
-    icon,
-    name,
-    count,
-    detail,
-    row = false,
-}: {
-    href: string;
-    icon: FC<{ className?: string }>;
-    name: string;
-    count?: number;
-    detail?: string;
-    row?: boolean;
-}) {
+// A tile with a count, or with a line of its own for a view that is not a pile of cards. One
+// shape for every folder, the three that are always there and the ones you made, so the page
+// is one grid whatever the screen.
+function FolderCard({ href, icon, name, count, detail }: { href: string; icon: FC<{ className?: string }>; name: string; count?: number; detail?: string }) {
     return (
         <Link
             href={href}
-            className={cx(
-                "flex pressable gap-3 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary outline-focus-ring transition-[color,background-color,box-shadow] ring-inset hover:bg-secondary focus-visible:outline-2",
-                row ? "flex-row items-center xs:flex-col xs:items-stretch" : "flex-col",
-            )}
+            className="flex pressable flex-col gap-3 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary outline-focus-ring transition-[color,background-color,box-shadow] ring-inset hover:bg-secondary focus-visible:outline-2"
         >
             <FeaturedIcon color="gray" theme="modern-neue" size="lg" icon={icon} />
             <div className="flex flex-col">
@@ -77,29 +59,26 @@ export function CollectionsGrid({
 
     return (
         <div className="flex flex-1 flex-col gap-6">
-            {/* Three folders that are always there, above the ones you made: every card, the favorites (a flag on
-                a card) and the Pokédex (every Pokémon, with the slots you have no card of). None is a folder in the
-                data; all three are one to the eye. On desktop the sidebar is this list. */}
-            <div className="grid grid-cols-1 gap-4 xs:grid-cols-3 lg:grid-cols-4">
-                <FolderCard href="/dashboard/cards" icon={Rows01} name="All cards" count={ownedCount} row />
-                <FolderCard href="/dashboard/favorites" icon={Star01} name="Favorites" count={favoritesCount} row />
-                <FolderCard href="/dashboard/pokedex" icon={Folder} name="Pokédex" detail="Cards by Pokémon" row />
+            {/* One grid: the three folders that are always there (every card, the favorites, the Pokédex; none a
+                folder in the data, all three one to the eye), then the ones you made. On desktop the sidebar is
+                this list. */}
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                <FolderCard href="/dashboard/cards" icon={Rows01} name="All cards" count={ownedCount} />
+                <FolderCard href="/dashboard/favorites" icon={Star01} name="Favorites" count={favoritesCount} />
+                <FolderCard href="/dashboard/pokedex" icon={Folder} name="Pokédex" detail="Cards by Pokémon" />
+                {collections.map((c) => (
+                    <FolderCard
+                        key={c.id}
+                        href={`/dashboard/collections/${c.id}`}
+                        icon={c.kind === "rule" ? Dataflow03 : Folder}
+                        name={c.name}
+                        count={c.count}
+                        detail={c.kind === "rule" ? `${c.count} card${c.count === 1 ? "" : "s"} · by rule` : undefined}
+                    />
+                ))}
             </div>
 
-            {hasCollections ? (
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                    {collections.map((c) => (
-                        <FolderCard
-                            key={c.id}
-                            href={`/dashboard/collections/${c.id}`}
-                            icon={c.kind === "rule" ? Dataflow03 : Folder}
-                            name={c.name}
-                            count={c.count}
-                            detail={c.kind === "rule" ? `${c.count} card${c.count === 1 ? "" : "s"} · by rule` : undefined}
-                        />
-                    ))}
-                </div>
-            ) : (
+            {hasCollections ? null : (
                 // On a phone the hub above is the page and the plus beside the title is the way in; the
                 // empty state would only push the tab bar's worth of nothing under three tiles.
                 <div className="hidden lg:contents">
