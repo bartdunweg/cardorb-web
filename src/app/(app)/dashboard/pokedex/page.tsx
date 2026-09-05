@@ -1,7 +1,5 @@
-import { Suspense } from "react";
 import { AddCardModal } from "@/components/app/add-card-modal";
 import { AppEmptyState } from "@/components/app/app-empty-state";
-import { DexProgress } from "@/components/app/dex-progress";
 import { FolderPage } from "@/components/app/folder-page";
 import { PokedexSettingsDialog } from "@/components/app/pokedex-settings-dialog";
 import { type CardFilter, getAllMyCards, getFacets } from "@/lib/cards";
@@ -55,10 +53,6 @@ export default async function PokedexPage({ searchParams }: { searchParams: Prom
                 </AppEmptyState>
             }
             pokedex={{ dex }}
-        >
-            <Suspense fallback={null}>
-                <DexProgress dex={dex} label="Pokédex completion" />
-            </Suspense>
-        </FolderPage>
+        />
     );
 }

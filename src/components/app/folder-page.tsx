@@ -1,7 +1,7 @@
 import { type ReactNode, Suspense } from "react";
 import { FolderBody, type FolderBodyProps } from "@/components/app/folder-body";
 import { PageHeader } from "@/components/app/page-header";
-import { type Datapoints, datapointsLine, unpricedLine } from "@/lib/folder-datapoints";
+import { type Datapoints, datapointsLine } from "@/lib/folder-datapoints";
 
 // Every folder page, top to bottom: the title, what it holds (count and value), the folder's
 // actions where it has any, then the row and the list. One shape, so All cards, a folder of
@@ -37,9 +37,6 @@ export function FolderPage({
                 back={back}
                 actions={actions}
             >
-                <Suspense fallback={null}>
-                    <UnpricedText datapoints={datapoints} />
-                </Suspense>
                 {children}
             </PageHeader>
             <FolderBody {...body} />
@@ -49,9 +46,4 @@ export function FolderPage({
 
 async function DatapointsText({ datapoints }: { datapoints: Datapoints | Promise<Datapoints> }) {
     return <span className="inline-block arrive">{datapointsLine(await datapoints)}</span>;
-}
-
-async function UnpricedText({ datapoints }: { datapoints: Datapoints | Promise<Datapoints> }) {
-    const unpriced = unpricedLine(await datapoints);
-    return unpriced ? <p className="text-sm text-quaternary">{unpriced}</p> : null;
 }

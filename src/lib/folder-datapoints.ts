@@ -23,8 +23,3 @@ export function datapointsLine(d: Datapoints): string {
     if (d.value != null && d.total > 0) parts.push(formatPrice(d.value));
     return parts.join(" · ");
 }
-
-/** "12 without a price", or nothing when every copy has one. */
-export function unpricedLine(d: Datapoints): string | null {
-    return d.unpriced && d.unpriced > 0 ? `${n(d.unpriced)} without a price` : null;
-}

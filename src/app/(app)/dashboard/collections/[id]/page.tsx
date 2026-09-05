@@ -1,8 +1,6 @@
-import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CollectionDetailActions } from "@/components/app/collection-detail-actions";
-import { DexProgress } from "@/components/app/dex-progress";
 import { FolderPage } from "@/components/app/folder-page";
 import { Badge } from "@/components/base/badges/badges";
 import { type CardFilter, getAllMyCards, getFacets, getMyCards } from "@/lib/cards";
@@ -70,9 +68,6 @@ export default async function CollectionDetailPage({ params, searchParams }: { p
         return (
             <FolderPage {...common} datapoints={datapoints} pokedex={{ dex }}>
                 {chips}
-                <Suspense fallback={null}>
-                    <DexProgress dex={dex} label="Pokédex completion" />
-                </Suspense>
             </FolderPage>
         );
     }

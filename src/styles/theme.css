@@ -808,7 +808,9 @@
         --color-bg-error-primary: var(--color-red-950);
         --color-bg-brand-secondary: var(--color-brand-600);
         --color-bg-secondary: var(--color-neutral-800);
-        --color-bg-page: var(--color-bg-primary);
+        /* A step under the surfaces, as the light page is a step under white: a tile, the sidebar and
+           the tab bar lie on it rather than in it. */
+        --color-bg-page: var(--color-neutral-950);
         --color-bg-page-raised: var(--color-neutral-800);
         --color-bg-quaternary: var(--color-neutral-600);
         --color-bg-primary_alt: var(--color-bg-secondary);
