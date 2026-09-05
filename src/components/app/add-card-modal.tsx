@@ -20,13 +20,17 @@ type Target = "collection" | "wishlist";
 // The button's visible text; also its accessible name, with the card's name after it.
 const addLabel = (st: string | undefined) => (st === "done" ? "Added" : st === "adding" ? "Adding…" : "Add");
 
-// `compact` makes the default trigger a plus alone, for beside a page title on a phone. An icon is a
-// function, so a server page cannot hand one to this client component; it asks for the shape instead.
+// `compact` makes the default trigger a plus alone, for beside a page title on a phone; `label` gives
+// the default trigger other words. An icon is a function, so a server page cannot hand one to this
+// client component, not even inside a `trigger` element: an empty state's button once carried
+// `iconLeading={Plus}` across the boundary and every render of that page logged the serialisation
+// error. A page asks for the shape or the words instead, and this file draws the plus.
 export function AddCardModal({
     defaultTarget = "collection",
     trigger,
     compact = false,
-}: { defaultTarget?: Target; trigger?: ReactNode; compact?: boolean } = {}) {
+    label = "Add card",
+}: { defaultTarget?: Target; trigger?: ReactNode; compact?: boolean; label?: string } = {}) {
     const router = useRouter();
     const [target, setTarget] = useState<Target>(defaultTarget);
     const [query, setQuery] = useState("");
@@ -61,7 +65,7 @@ export function AddCardModal({
                     <Button iconLeading={Plus} size="md" aria-label="Add card" />
                 ) : (
                     <Button iconLeading={Plus} size="md">
-                        Add card
+                        {label}
                     </Button>
                 ))}
 
