@@ -20,6 +20,8 @@ export type CardFilter = {
     order?: "asc" | "desc";
     set?: string;
     rarity?: string;
+    /** true: copies with a price; false: the ones nothing prices. */
+    priced?: boolean;
 };
 
 /**
@@ -45,6 +47,7 @@ export async function getMyCards({
     order,
     set,
     rarity,
+    priced,
 }: CardFilter & { limit?: number; offset?: number } = {}): Promise<{
     cards: Card[];
     total: number;
@@ -67,6 +70,7 @@ export async function getMyCards({
                 order,
                 set,
                 rarity,
+                priced,
                 limit,
                 offset,
             },

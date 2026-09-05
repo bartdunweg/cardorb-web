@@ -19,8 +19,8 @@ import { getMyProfile } from "@/lib/profile";
 // progress bar take their places when the last page of cards is in.
 export default async function PokedexPage({ searchParams }: { searchParams: Promise<ListSearchParams> }) {
     const query = readListQuery(await searchParams);
-    const { q, sort, order, set, rarity } = query;
-    const filter: CardFilter = { q, sort, order, set, rarity };
+    const { q, sort, order, set, rarity, unpriced } = query;
+    const filter: CardFilter = { q, sort, order, set, rarity, ...(unpriced ? { priced: false } : {}) };
     const narrowed = isNarrowed(query);
     const [me, facets] = await Promise.all([getMyProfile(), getFacets()]);
     const setting = me.profile?.pokedex ?? DEFAULT_POKEDEX;

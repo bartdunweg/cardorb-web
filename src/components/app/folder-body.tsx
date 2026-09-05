@@ -57,7 +57,7 @@ export async function FolderBody(props: FolderBodyProps) {
     const toolbar = (
         <>
             <CardsSearch key="search" size="sm" initialValue={q ?? ""} label={searchLabel} placeholder={searchPlaceholder} className="w-full sm:w-64" />
-            <FiltersSheet key="filters" active={[query.set, query.rarity].filter(Boolean).length}>
+            <FiltersSheet key="filters" active={[query.set, query.rarity, query.unpriced].filter(Boolean).length}>
                 <CardsFilters key="set-rarity" query={query} facets={facets} />
             </FiltersSheet>
             <CardsSort key="sort" query={query} options={sortOptions} />

@@ -15,6 +15,7 @@ const Input = z.object({
     order: z.enum(["asc", "desc"]).optional(),
     set: z.string().max(100).optional(),
     rarity: z.string().max(100).optional(),
+    priced: z.boolean().optional(),
     offset: z.number().int().min(0).max(100_000),
 });
 

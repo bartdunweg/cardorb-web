@@ -9,8 +9,16 @@ describe("readListQuery", () => {
             sort: "added",
             order: "desc",
             q: "pika",
+            unpriced: false,
         });
-        expect(readListQuery({ page: "x", sort: "colour" })).toEqual({ page: 1, sortKey: "set", sort: undefined, order: undefined, q: undefined });
+        expect(readListQuery({ page: "x", sort: "colour" })).toEqual({
+            page: 1,
+            sortKey: "set",
+            sort: undefined,
+            order: undefined,
+            q: undefined,
+            unpriced: false,
+        });
         expect(readListQuery({})).toMatchObject({ page: 1, sortKey: "set" });
     });
 });

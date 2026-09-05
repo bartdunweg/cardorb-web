@@ -33,13 +33,15 @@ export type ListQuery = {
     folder: string | undefined;
     /** A public profile's wishlist instead of its collection. */
     list: "wishlist" | undefined;
+    /** Only the copies nothing prices: what the total leaves out. */
+    unpriced: boolean;
 };
 
 /** What a list page reads from its URL. */
-export type ListSearchParams = { page?: string; sort?: string; q?: string; set?: string; rarity?: string; folder?: string; list?: string };
+export type ListSearchParams = { page?: string; sort?: string; q?: string; set?: string; rarity?: string; folder?: string; list?: string; unpriced?: string };
 
 /** A search or a filter is on. */
-export const isNarrowed = (q: ListQuery): boolean => [q.q, q.set, q.rarity].some(Boolean);
+export const isNarrowed = (q: ListQuery): boolean => [q.q, q.set, q.rarity, q.unpriced].some(Boolean);
 
 const isSortKey = (v: unknown): v is SortKey => SORT_OPTIONS.some((o) => o.value === v);
 
@@ -58,6 +60,7 @@ export function readListQuery(params: ListSearchParams): ListQuery {
         rarity: text(params.rarity),
         folder: text(params.folder),
         list: params.list === "wishlist" ? "wishlist" : undefined,
+        unpriced: params.unpriced === "1",
     };
 }
 
@@ -71,13 +74,14 @@ export function readPublicListQuery(params: Parameters<typeof readListQuery>[0])
 export function listHref(
     pathname: string,
     current: ListQuery,
-    patch: Partial<Pick<ListQuery, "page" | "sortKey" | "q" | "set" | "rarity" | "folder" | "list">>,
+    patch: Partial<Pick<ListQuery, "page" | "sortKey" | "q" | "set" | "rarity" | "folder" | "list" | "unpriced">>,
 ): string {
     const q = "q" in patch ? patch.q : current.q;
     const set = "set" in patch ? patch.set : current.set;
     const rarity = "rarity" in patch ? patch.rarity : current.rarity;
     const folder = "folder" in patch ? patch.folder : current.folder;
     const list = "list" in patch ? patch.list : current.list;
+    const unpriced = "unpriced" in patch ? patch.unpriced : current.unpriced;
     const sortKey = patch.sortKey ?? current.sortKey;
     const page = patch.page ?? current.page;
     const p = new URLSearchParams();
@@ -87,6 +91,7 @@ export function listHref(
     if (rarity) p.set("rarity", rarity);
     if (folder) p.set("folder", folder);
     if (list) p.set("list", list);
+    if (unpriced) p.set("unpriced", "1");
     if (page > 1) p.set("page", String(page));
     const s = p.toString();
     return s ? `${pathname}?${s}` : pathname;
