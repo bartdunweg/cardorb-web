@@ -40,9 +40,9 @@ export function CardsTable({ cards, onSelect }: { cards: Card[]; onSelect: (card
                                     ) : (
                                         <div className="h-10 w-7 shrink-0 rounded bg-quaternary" />
                                     )}
-                                    <span>
-                                        {card.is_favorite ? <FavoriteStar /> : null}
+                                    <span className="flex items-center gap-1">
                                         {card.name}
+                                        {card.is_favorite ? <FavoriteStar /> : null}
                                     </span>
                                 </div>
                             </Table.Cell>

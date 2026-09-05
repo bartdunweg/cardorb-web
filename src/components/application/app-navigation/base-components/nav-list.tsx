@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { ChevronDown } from "@untitledui/icons";
 import { cx } from "@/utils/cx";
 import type { NavItemDividerType, NavItemType } from "../config";
@@ -52,13 +52,15 @@ const NavCollapsibleWithLink = ({ item, activeUrl }: { item: NavItemType; active
 interface NavListProps {
     /** URL of the currently active item. */
     activeUrl?: string;
+    /** More `<li>`s at the list's end, in the same list: the folders that stream in, and New folder. */
+    children?: ReactNode;
     /** Additional CSS classes to apply to the list. */
     className?: string;
     /** List of items to display. */
     items: (NavItemType | NavItemDividerType)[];
 }
 
-export const NavList = ({ activeUrl, items, className }: NavListProps) => {
+export const NavList = ({ activeUrl, items, className, children }: NavListProps) => {
     return (
         <ul className={cx("flex flex-col px-4 pt-5", className)}>
             {items.map((item, index) => {
@@ -87,6 +89,7 @@ export const NavList = ({ activeUrl, items, className }: NavListProps) => {
                     </li>
                 );
             })}
+            {children}
         </ul>
     );
 };

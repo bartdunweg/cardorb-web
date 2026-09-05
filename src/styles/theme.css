@@ -77,6 +77,8 @@
     /* The lift of lg without its rim, for a surface that draws its own hairline ring: the
        sidebar and the tab bar, whose edge is the same line as the search pill and the inputs. */
     --shadow-lift-lg: var(--elevation-lift-lg);
+    /* The lift of xs without its rim: a tile lying on the page, which draws the hairline itself. */
+    --shadow-lift-xs: var(--elevation-lift-xs);
     --shadow-xl: var(--elevation-xl);
     /* A card's edge: depth, not structure. Dividers, tables and inputs keep their borders. */
     --shadow-border: var(--elevation-border);
@@ -551,6 +553,7 @@
             0px 0px 0px var(--hairline) oklch(0 0 0 / 0.06), 0px 12px 16px -4px oklch(0 0 0 / 0.1), 0px 4px 6px -2px oklch(0 0 0 / 0.04),
             0px 2px 2px -1px oklch(0 0 0 / 0.04);
         --elevation-lift-lg: 0px 12px 16px -4px oklch(0 0 0 / 0.1), 0px 4px 6px -2px oklch(0 0 0 / 0.04), 0px 2px 2px -1px oklch(0 0 0 / 0.04);
+        --elevation-lift-xs: 0px 1px 2px 0px oklch(0 0 0 / 0.05);
         --elevation-xl:
             0px 0px 0px var(--hairline) oklch(0 0 0 / 0.06), 0px 20px 24px -4px oklch(0 0 0 / 0.12), 0px 8px 8px -4px oklch(0 0 0 / 0.04),
             0px 3px 3px -1.5px oklch(0 0 0 / 0.04);
@@ -568,6 +571,8 @@
         --elevation-md: 0px 0px 0px var(--hairline) oklch(1 0 0 / 0.1), 0px 4px 6px -1px oklch(0 0 0 / 0.4), 0px 2px 4px -2px oklch(0 0 0 / 0.3);
         --elevation-lg: 0px 0px 0px var(--hairline) oklch(1 0 0 / 0.1), 0px 12px 16px -4px oklch(0 0 0 / 0.5), 0px 4px 6px -2px oklch(0 0 0 / 0.3);
         --elevation-lift-lg: 0px 12px 16px -4px oklch(0 0 0 / 0.5), 0px 4px 6px -2px oklch(0 0 0 / 0.3);
+        /* Dark's xs is its rim alone; without it there is no lift to draw. */
+        --elevation-lift-xs: 0 0 #0000;
         --elevation-xl: 0px 0px 0px var(--hairline) oklch(1 0 0 / 0.12), 0px 20px 24px -4px oklch(0 0 0 / 0.6), 0px 8px 8px -4px oklch(0 0 0 / 0.3);
 
         --color-alpha-white: rgb(12 14 18);

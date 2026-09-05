@@ -47,8 +47,8 @@ export function AppSidebar({ account, collections }: { account: Promise<Account>
                     <Suspense fallback={<FolderRowsSkeleton />}>
                         <FolderRows collections={collections} activeUrl={pathname} />
                     </Suspense>
-                    {/* Drawn as a nav item, so it sits on the items' line: the same padding, icon size and type. */}
-                    <div className="px-4 pt-px">
+                    {/* An item like the others: the same padding, icon size and type, at the list's end. */}
+                    <li className="py-px">
                         <FolderDialog mode="create">
                             <AriaButton className="group relative flex max-h-9 w-full cursor-pointer items-center rounded-md bg-primary p-2 outline-focus-ring transition duration-100 ease-linear select-none hover:bg-primary_hover focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2">
                                 <Plus
@@ -60,7 +60,7 @@ export function AppSidebar({ account, collections }: { account: Promise<Account>
                                 </span>
                             </AriaButton>
                         </FolderDialog>
-                    </div>
+                    </li>
                 </>
             }
             footer={
@@ -72,23 +72,22 @@ export function AppSidebar({ account, collections }: { account: Promise<Account>
     );
 }
 
-// The folders you made, continuing the list above at the same padding and row height.
+// The folders you made: more items of the same list, at the same padding and row height.
 function FolderRows({ collections, activeUrl }: { collections: Promise<FolderLink[]>; activeUrl: string }) {
     const list = use(collections);
-    if (list.length === 0) return null;
     return (
-        <ul className="flex arrive flex-col px-4">
+        <>
             {list.map((c) => {
                 const href = `/dashboard/collections/${c.id}`;
                 return (
-                    <li key={c.id} className="py-px">
+                    <li key={c.id} className="arrive py-px">
                         <NavItemBase type="link" icon={Folder} href={href} current={activeUrl === href}>
                             {c.name}
                         </NavItemBase>
                     </li>
                 );
             })}
-        </ul>
+        </>
     );
 }
 

@@ -18,7 +18,7 @@ type Msg = { type: "ok" | "err"; text: string } | null;
 
 function Section({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
     return (
-        <section className="flex flex-col gap-4 rounded-xl bg-primary p-5 shadow-border">
+        <section className="flex flex-col gap-4 rounded-xl bg-primary p-5 shadow-lift-xs ring-1 ring-primary ring-inset">
             <div className="flex flex-col gap-0.5">
                 <h2 className="text-md font-semibold text-primary">{title}</h2>
                 {description ? <p className="text-sm text-tertiary">{description}</p> : null}

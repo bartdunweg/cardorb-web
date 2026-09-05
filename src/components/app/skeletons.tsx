@@ -42,7 +42,7 @@ export function HomeSkeleton() {
         <>
             <div className="flex flex-col gap-x-6 gap-y-5 md:flex-row md:flex-wrap">
                 {Array.from({ length: 4 }, (_, i) => (
-                    <div key={i} className="flex flex-1 flex-col gap-5 rounded-xl px-4 py-5 shadow-border md:min-w-[240px] md:px-5">
+                    <div key={i} className="flex flex-1 flex-col gap-5 rounded-xl px-4 py-5 ring-1 ring-primary ring-inset md:min-w-[240px] md:px-5">
                         <Block className="size-12 rounded-lg" />
                         <div className="flex flex-col gap-2">
                             <Block className="h-4 w-20" />
@@ -51,7 +51,7 @@ export function HomeSkeleton() {
                     </div>
                 ))}
             </div>
-            <div className="flex flex-col gap-4 rounded-xl px-4 py-5 shadow-border md:px-5">
+            <div className="flex flex-col gap-4 rounded-xl px-4 py-5 ring-1 ring-primary ring-inset md:px-5">
                 <Block className="h-4 w-48" />
                 <Block className="h-56 w-full" />
             </div>
@@ -113,17 +113,17 @@ export function SetSkeleton() {
     );
 }
 
-/** The sidebar's folder rows, two of them, at a nav item's height and padding. */
+/** The sidebar's folder rows, two of them, as items of the list at a nav item's height and padding. */
 export function FolderRowsSkeleton() {
     return (
-        <div className="flex flex-col px-4 motion-safe:animate-pulse" aria-hidden="true">
+        <>
             {[0, 1].map((i) => (
-                <div key={i} className="flex h-9 items-center gap-2 p-2">
+                <li key={i} className="flex h-9 items-center gap-2 p-2 motion-safe:animate-pulse" aria-hidden="true">
                     <Block className="size-5 shrink-0 rounded-sm" />
                     <Block className={i === 0 ? "h-3.5 w-24" : "h-3.5 w-16"} />
-                </div>
+                </li>
             ))}
-        </div>
+        </>
     );
 }
 

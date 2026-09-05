@@ -22,7 +22,7 @@ interface SidebarNavigationSectionDividersProps {
     hideMobileHeader?: boolean;
     /** Replaces the default search inputs (e.g. a button that opens a command palette). */
     search?: ReactNode;
-    /** Under the list: an action that belongs with the last section, like New folder. */
+    /** At the list's end, inside it: the folders that stream in and New folder, as `<li>`s. */
     afterItems?: ReactNode;
 }
 
@@ -67,8 +67,9 @@ export const SidebarNavigationSectionDividers = ({
                 )}
             </div>
 
-            <NavList activeUrl={activeUrl} items={items} />
-            {afterItems}
+            <NavList activeUrl={activeUrl} items={items}>
+                {afterItems}
+            </NavList>
 
             <div className="mt-auto flex flex-col gap-5 px-2 py-4 lg:gap-6 lg:px-4 lg:py-4">{footer ?? <NavAccountCard />}</div>
         </aside>

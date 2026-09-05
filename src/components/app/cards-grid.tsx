@@ -42,7 +42,7 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                     <button
                         type="button"
                         onClick={() => onSelect(card)}
-                        className="hover:bg-page-raised flex h-full w-full pressable cursor-pointer flex-col gap-2 rounded-2xl p-2 text-left outline-focus-ring transition-colors focus-visible:outline-2"
+                        className="flex h-full w-full pressable cursor-pointer flex-col gap-2 rounded-2xl bg-primary p-2 text-left shadow-lift-xs outline-focus-ring hover:bg-secondary focus-visible:outline-2"
                     >
                         <div className="relative aspect-[63/88] w-full overflow-hidden rounded-lg bg-quaternary ring-1 ring-image ring-inset">
                             {card.image_url ? (
@@ -63,9 +63,9 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                             )}
                         </div>
                         <div className="flex flex-col">
-                            <span className="truncate text-sm font-medium text-primary">
+                            <span className="flex items-center gap-1 text-sm font-medium text-primary">
+                                <span className="truncate">{card.name}</span>
                                 {card.is_favorite ? <FavoriteStar /> : null}
-                                {card.name}
                             </span>
                             <span className="truncate text-xs text-tertiary">
                                 {[card.set_name, card.number ? `#${card.number}` : null].filter(Boolean).join(" · ")}
