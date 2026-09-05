@@ -20,6 +20,7 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
     return (
         <FolderPage
             title="Wishlist"
+            subtitle="Cards you’re looking for but don’t own yet."
             datapoints={datapoints}
             // Beside the title whatever the list holds: the title is drawn before the count is known.
             // A plus alone: the page says Wishlist, the button need not repeat it.
