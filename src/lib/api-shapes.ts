@@ -179,6 +179,8 @@ export type PublicItem = {
     gen: string | null;
     type: string | null;
     image: string | null;
+    /** The larger scan; absent from an API before #179. */
+    imageHigh?: string | null;
     speciesId: number | null;
     tcgId: string | null;
     copies: number;
@@ -196,8 +198,7 @@ export const publicCardFromItem = (item: PublicItem): PublicCard => ({
     quantity: item.copies,
     finish: null,
     image_url: absoluteImage(item.image),
-    // The public route sends one size; the optimizer scales it up rather than leaving the tile empty.
-    image_high_url: null,
+    image_high_url: absoluteImage(item.imageHigh ?? null),
     tcg_id: item.tcgId,
 });
 
