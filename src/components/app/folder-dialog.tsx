@@ -13,7 +13,7 @@ import { Input } from "@/components/base/input/input";
 import { NativeSelect } from "@/components/base/select/select-native";
 import { Toggle } from "@/components/base/toggle/toggle";
 import type { Facets } from "@/lib/cards";
-import { type FolderKind, type FolderRule, type PokedexSetting, ruleSummary } from "@/lib/folder-rule";
+import { type FolderKind, type FolderRule, type PokedexSetting, isFullArt, ruleSummary, withFullArt } from "@/lib/folder-rule";
 
 type FolderShape = { id: string; name: string; kind: FolderKind; rule: FolderRule | null; pokedex: PokedexSetting | null; isPublic: boolean };
 type FormProps = {
@@ -55,6 +55,7 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
     const [asPokedex, setAsPokedex] = useState(!!folder?.pokedex);
     const [missing, setMissing] = useState(folder?.pokedex?.missing ?? true);
     const [dexShown, setDexShown] = useState(dexDraft(folder?.pokedex?.dex));
+    const [fullArt, setFullArt] = useState(folder?.pokedex ? isFullArt(folder.pokedex) : false);
     const [isPublic, setIsPublic] = useState(folder?.isPublic ?? false);
     const [sets, setSets] = useState<string[]>(folder?.rule?.sets ?? []);
     const [rarities, setRarities] = useState<string[]>(folder?.rule?.rarities ?? []);
@@ -79,7 +80,7 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
     const pokedex = (): PokedexSetting | null => {
         if (!asPokedex) return null;
         const range = dexFromDraft(dexShown);
-        return { missing, ...(range ? { dex: range } : {}) };
+        return withFullArt({ missing, ...(range ? { dex: range } : {}) }, fullArt);
     };
 
     const save = async (close: () => void) => {
@@ -213,6 +214,12 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
                 <>
                     <DexRangeFields label="Pokédex range" anyLabel="Every Pokémon" dex={dexShown} onChange={setDexShown} />
                     <Toggle label="Show the Pokémon I'm missing" isSelected={missing} onChange={setMissing} />
+                    <Toggle
+                        label="Full-art cards only"
+                        hint="Illustration rares, ultra and hyper rares fill the slots."
+                        isSelected={fullArt}
+                        onChange={setFullArt}
+                    />
                 </>
             ) : null}
             <Toggle
