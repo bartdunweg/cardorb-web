@@ -95,18 +95,18 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                     </div>
                 </div>
 
-                {folders.length > 0 ? (
+                {folders.length > 0 || profile.wishlist_public ? (
                     // The folders the owner shows, as chips that narrow the list; All cards first. A chip is a link,
                     // so a folder is a URL that can be shared, and the row keeps its place through a search.
                     <nav aria-label="Folders" className="flex flex-wrap gap-2">
                         {[{ id: null as string | null, name: "All cards", count: null as number | null }, ...folders].map((f) => {
-                            const current = (folder?.id ?? null) === f.id;
+                            const current = query.list === undefined && (folder?.id ?? null) === f.id;
                             return (
                                 // The kit's button as a link, primary for the one in view: the same pill and colours as
                                 // every other control, in both themes.
                                 <LinkButton
                                     key={f.id ?? "all"}
-                                    href={listHref(base, query, { folder: f.id ?? undefined, page: 1 })}
+                                    href={listHref(base, query, { folder: f.id ?? undefined, list: undefined, page: 1 })}
                                     size="sm"
                                     color={current ? "primary" : "secondary"}
                                     aria-current={current ? "page" : undefined}
@@ -116,6 +116,17 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                                 </LinkButton>
                             );
                         })}
+                        {profile.wishlist_public ? (
+                            // The wishlist is not a folder: the cards the owner is looking for, beside what they hold.
+                            <LinkButton
+                                href={listHref(base, query, { folder: undefined, list: "wishlist", page: 1 })}
+                                size="sm"
+                                color={query.list === "wishlist" ? "primary" : "secondary"}
+                                aria-current={query.list === "wishlist" ? "page" : undefined}
+                            >
+                                Wishlist
+                            </LinkButton>
+                        ) : null}
                     </nav>
                 ) : null}
 

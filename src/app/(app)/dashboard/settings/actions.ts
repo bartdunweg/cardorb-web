@@ -23,6 +23,7 @@ const profileSchema = z.object({
         .toLowerCase()
         .regex(/^[a-z0-9][a-z0-9-]{1,29}$/, "Use 2 to 30 lowercase letters, numbers and hyphens, starting with a letter or number."),
     is_public: z.boolean(),
+    wishlist_public: z.boolean(),
 });
 
 // The profile goes through the API: the name and the public flag in one call, the username in its
@@ -33,7 +34,7 @@ export async function updateProfile(input: unknown): Promise<ActionResult> {
 
     const p = parsed.data;
     try {
-        await api("/profile", { method: "PATCH", body: { displayName: p.display_name, isPublic: p.is_public } });
+        await api("/profile", { method: "PATCH", body: { displayName: p.display_name, isPublic: p.is_public, wishlistPublic: p.wishlist_public } });
         await api("/username", { method: "POST", body: { username: p.username } });
     } catch (err) {
         return failed(err);

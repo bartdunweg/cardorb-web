@@ -31,10 +31,12 @@ export type ListQuery = {
     rarity: string | undefined;
     /** A public profile's folder, by id; the owner's own lists carry the folder in the path instead. */
     folder: string | undefined;
+    /** A public profile's wishlist instead of its collection. */
+    list: "wishlist" | undefined;
 };
 
 /** What a list page reads from its URL. */
-export type ListSearchParams = { page?: string; sort?: string; q?: string; set?: string; rarity?: string; folder?: string };
+export type ListSearchParams = { page?: string; sort?: string; q?: string; set?: string; rarity?: string; folder?: string; list?: string };
 
 /** A search or a filter is on. */
 export const isNarrowed = (q: ListQuery): boolean => [q.q, q.set, q.rarity].some(Boolean);
@@ -55,6 +57,7 @@ export function readListQuery(params: ListSearchParams): ListQuery {
         set: text(params.set),
         rarity: text(params.rarity),
         folder: text(params.folder),
+        list: params.list === "wishlist" ? "wishlist" : undefined,
     };
 }
 
@@ -68,12 +71,13 @@ export function readPublicListQuery(params: Parameters<typeof readListQuery>[0])
 export function listHref(
     pathname: string,
     current: ListQuery,
-    patch: Partial<Pick<ListQuery, "page" | "sortKey" | "q" | "set" | "rarity" | "folder">>,
+    patch: Partial<Pick<ListQuery, "page" | "sortKey" | "q" | "set" | "rarity" | "folder" | "list">>,
 ): string {
     const q = "q" in patch ? patch.q : current.q;
     const set = "set" in patch ? patch.set : current.set;
     const rarity = "rarity" in patch ? patch.rarity : current.rarity;
     const folder = "folder" in patch ? patch.folder : current.folder;
+    const list = "list" in patch ? patch.list : current.list;
     const sortKey = patch.sortKey ?? current.sortKey;
     const page = patch.page ?? current.page;
     const p = new URLSearchParams();
@@ -82,6 +86,7 @@ export function listHref(
     if (set) p.set("set", set);
     if (rarity) p.set("rarity", rarity);
     if (folder) p.set("folder", folder);
+    if (list) p.set("list", list);
     if (page > 1) p.set("page", String(page));
     const s = p.toString();
     return s ? `${pathname}?${s}` : pathname;
