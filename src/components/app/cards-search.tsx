@@ -12,11 +12,14 @@ export function CardsSearch({
     label = "Search your cards",
     placeholder = "Search your collection",
     className = "w-full max-w-80",
+    size = "md",
 }: {
     initialValue?: string;
     label?: string;
     placeholder?: string;
     className?: string;
+    /** sm beside the sm menu buttons of a folder page's row. */
+    size?: "sm" | "md";
 }) {
     const router = useRouter();
     const pathname = usePathname();
@@ -45,6 +48,7 @@ export function CardsSearch({
             value={value}
             onChange={setValue}
             className={className}
+            size={size}
             wrapperClassName="rounded-full"
         />
     );

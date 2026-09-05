@@ -121,3 +121,18 @@ export async function markOwned(cardId: string): Promise<Result> {
     await forgetMine();
     return { ok: true };
 }
+
+// A star on a card you own. The API keeps the flag; the favorites list and the card sheet read it.
+export async function setFavorite(cardId: string, isFavorite: boolean): Promise<Result> {
+    const parsed = z.object({ cardId: z.string().uuid(), isFavorite: z.boolean() }).safeParse({ cardId, isFavorite });
+    if (!parsed.success) return { ok: false, error: "Invalid card." };
+
+    try {
+        await api(`/collection/items/${parsed.data.cardId}`, { method: "PATCH", body: { isFavorite: parsed.data.isFavorite } });
+    } catch (err) {
+        return failed(err);
+    }
+
+    await forgetMine();
+    return { ok: true };
+}
