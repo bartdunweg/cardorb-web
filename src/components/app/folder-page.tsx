@@ -1,7 +1,6 @@
 import { type ReactNode, Suspense } from "react";
 import { FolderBody, type FolderBodyProps } from "@/components/app/folder-body";
 import { PageHeader } from "@/components/app/page-header";
-import { LineSkeleton } from "@/components/app/skeletons";
 import { type Datapoints, datapointsLine, unpricedLine } from "@/lib/folder-datapoints";
 
 // Every folder page, top to bottom: the title, what it holds (count and value), the folder's
@@ -31,7 +30,7 @@ export function FolderPage({
             <PageHeader
                 title={title}
                 subtitle={
-                    <Suspense fallback={<LineSkeleton className="h-4 w-40" />}>
+                    <Suspense fallback={null}>
                         <DatapointsText datapoints={datapoints} />
                     </Suspense>
                 }

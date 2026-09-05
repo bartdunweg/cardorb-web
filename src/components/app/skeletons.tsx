@@ -10,10 +10,8 @@ export function SkeletonFrame({ children }: { children: React.ReactNode }) {
     return (
         <output aria-live="polite" className="flex flex-1 flex-col gap-6 motion-safe:animate-pulse">
             <span className="sr-only">Loading…</span>
-            <div className="flex flex-col gap-2" aria-hidden="true">
-                <Block className="h-7 w-40" />
-                <Block className="h-5 w-64" />
-            </div>
+            {/* No stand-in for the title or the row: those come with the page itself, a moment later; only
+                the cards, which come after that, are worth an outline. */}
             <div className="contents" aria-hidden="true">
                 {children}
             </div>
@@ -59,14 +57,9 @@ export function HomeSkeleton() {
     );
 }
 
-/** The Pokédex: the bar under the count, then the same tiles as a list of cards. */
+/** The Pokédex: the same tiles as a list of cards. */
 export function DexSkeleton() {
-    return (
-        <>
-            <Block className="-mt-4 h-2 max-w-md" />
-            <CardsSkeleton />
-        </>
-    );
+    return <CardsSkeleton />;
 }
 
 /** Folders: the tiles of the collections page. */
@@ -111,36 +104,4 @@ export function SetSkeleton() {
             </div>
         </>
     );
-}
-
-/** The sidebar's folder rows, two of them, as items of the list at a nav item's height and padding. */
-export function FolderRowsSkeleton() {
-    return (
-        <>
-            {[0, 1].map((i) => (
-                <li key={i} className="flex h-9 items-center gap-2 p-2 motion-safe:animate-pulse" aria-hidden="true">
-                    <Block className="size-5 shrink-0 rounded-sm" />
-                    <Block className={i === 0 ? "h-3.5 w-24" : "h-3.5 w-16"} />
-                </li>
-            ))}
-        </>
-    );
-}
-
-/** The account card at the sidebar's foot: a circle and two lines, in the card's own padding. */
-export function AccountCardSkeleton() {
-    return (
-        <div className="flex items-center gap-3 p-2 motion-safe:animate-pulse" aria-hidden="true">
-            <div className="size-10 shrink-0 rounded-full bg-quaternary" />
-            <div className="flex flex-col gap-1.5">
-                <Block className="h-3.5 w-24" />
-                <Block className="h-3 w-32" />
-            </div>
-        </div>
-    );
-}
-
-/** One line of text still on its way: the count and value under a folder's title. */
-export function LineSkeleton({ className = "h-4 w-40" }: { className?: string }) {
-    return <span aria-hidden="true" className={`inline-block rounded-md bg-quaternary align-middle motion-safe:animate-pulse ${className}`} />;
 }

@@ -214,12 +214,7 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
                 <>
                     <DexRangeFields label="Pokédex range" anyLabel="Every Pokémon" dex={dexShown} onChange={setDexShown} />
                     <Toggle label="Show the Pokémon I'm missing" isSelected={missing} onChange={setMissing} />
-                    <Toggle
-                        label="Full-art cards only"
-                        hint="Illustration, ultra and hyper rares fill the slots."
-                        isSelected={fullArt}
-                        onChange={setFullArt}
-                    />
+                    <Toggle label="Full-art cards only" hint="Illustration, ultra and hyper rares fill the slots." isSelected={fullArt} onChange={setFullArt} />
                 </>
             ) : null}
             <Toggle
