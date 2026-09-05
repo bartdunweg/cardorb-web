@@ -22,3 +22,11 @@ const euros = new Intl.NumberFormat("en-US", { style: "currency", currency: "EUR
 export function formatPrice(value: number | null | undefined): string {
     return value == null ? "" : euros.format(value);
 }
+
+const wholeEuros = new Intl.NumberFormat("en-US", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+
+// Formats what a collection or a folder is worth as "€45,240": a sum of hundreds of prices is
+// read to the euro, and the cents would only make it harder to read.
+export function formatValue(value: number | null | undefined): string {
+    return value == null ? "" : wholeEuros.format(value);
+}

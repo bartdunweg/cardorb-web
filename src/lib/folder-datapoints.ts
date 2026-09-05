@@ -1,4 +1,4 @@
-import { formatPrice } from "@/lib/format";
+import { formatValue } from "@/lib/format";
 
 /** What a folder page says under its title: how many cards it shows and what they are worth. */
 export type Datapoints = {
@@ -20,6 +20,6 @@ export function datapointsLine(d: Datapoints): string {
     const count = d.narrowed ? `${n(d.total)} match${d.total === 1 ? "" : "es"}` : `${n(d.total)} card${d.total === 1 ? "" : "s"}`;
     const parts = [count];
     if (d.caught) parts.unshift(`${n(d.caught.of)} of ${n(d.caught.total)} Pokémon`);
-    if (d.value != null && d.total > 0) parts.push(formatPrice(d.value));
+    if (d.value != null && d.total > 0) parts.push(formatValue(d.value));
     return parts.join(" · ");
 }

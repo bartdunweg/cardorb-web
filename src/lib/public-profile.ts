@@ -98,3 +98,10 @@ export async function getPublicFolders(username: string): Promise<PublicFolder[]
         throw err;
     }
 }
+
+// How many cards a public list holds, and nothing else: one item asked for, the total read off it.
+// For the line under the name, which counts the collection and the wishlist whatever list is open.
+export async function countPublicCards(username: string, list?: "wishlist" | "favorites" | "pokedex"): Promise<number> {
+    const { total } = await api<{ total: number }>(`/public/${encodeURIComponent(username)}/cards`, { auth: false, params: { list, limit: 1 } });
+    return total;
+}
