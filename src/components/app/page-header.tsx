@@ -102,7 +102,8 @@ export function PageHeader({
 
                 {/* Actions sit beside the title when they fit (a plus on a phone) and wrap under it when they do not. */}
                 <div className={cx("flex flex-row flex-wrap items-start justify-between gap-3", !titleOnPhone && "max-lg:sr-only")}>
-                    <div className="flex min-w-0 flex-col gap-1">
+                    {/* The words take what the actions leave, so a long subtitle wraps rather than pushing them under the title. */}
+                    <div className="flex min-w-0 flex-1 basis-48 flex-col gap-1">
                         <h1 ref={sentinel} className="text-display-xs font-semibold text-primary">
                             {title}
                         </h1>
