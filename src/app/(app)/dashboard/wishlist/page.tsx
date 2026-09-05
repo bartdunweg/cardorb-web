@@ -1,8 +1,10 @@
 import { AddCardModal } from "@/components/app/add-card-modal";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderPage } from "@/components/app/folder-page";
+import { WishlistSettingsDialog } from "@/components/app/wishlist-settings-dialog";
 import { type CardFilter, getFacets, getMyCards } from "@/lib/cards";
 import { type ListSearchParams, isNarrowed, readListQuery } from "@/lib/list-query";
+import { getMyProfile } from "@/lib/profile";
 
 // Cards you want but do not own. Outside the collection, so the API is asked for the wishes only.
 // The list itself is not awaited: see cards/page.tsx.
@@ -13,7 +15,7 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
     const narrowed = isNarrowed(query);
     const list = getMyCards(filter);
     const datapoints = list.then((r) => ({ total: r.total, narrowed, value: r.value, unpriced: r.unpriced }));
-    const facets = await getFacets();
+    const [facets, { profile }] = await Promise.all([getFacets(), getMyProfile()]);
 
     return (
         <FolderPage
@@ -21,7 +23,12 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
             datapoints={datapoints}
             // Beside the title whatever the list holds: the title is drawn before the count is known.
             // A plus alone: the page says Wishlist, the button need not repeat it.
-            actions={<AddCardModal defaultTarget="wishlist" compact />}
+            actions={
+                <>
+                    <WishlistSettingsDialog isPublic={profile?.wishlist_public ?? false} />
+                    <AddCardModal defaultTarget="wishlist" compact />
+                </>
+            }
             query={query}
             basePath="/dashboard/wishlist"
             facets={facets}
