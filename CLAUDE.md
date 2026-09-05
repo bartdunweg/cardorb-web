@@ -51,8 +51,8 @@ to this.
 ## Domain
 
 - **Collection** — everything you own, as a list of folders: All cards, Favorites, the Pokédex,
-  and the ones you make. Sets and the wishlist sit beside it, not in it. In copy the word means
-  only what you own.
+  and the ones you make. Browse (every set there has been) and the wishlist sit beside it, not
+  in it. In copy the word means only what you own.
 - **Folder** — an entry under Collection: three that are always there (All cards, Favorites,
   Pokédex) and the ones you make, by hand or by rule. The `collections` table and the
   `/collections` routes are the ones you make; in copy they are all "Folders", never

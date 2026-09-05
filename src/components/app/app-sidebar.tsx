@@ -13,8 +13,8 @@ import type { Facets } from "@/lib/cards";
 type Account = { name: string; email: string; avatarUrl: string | null };
 
 // Icons are component functions, so nav items are built here (client) — they can't be passed
-// from a Server Component. Home, Sets and the wishlist (cards you do not have, so outside the
-// collection) at the top; under the Collection heading every folder, flat: All cards, Favorites,
+// from a Server Component. Home, Browse (every set there has been, not your collection) and
+// the wishlist (cards you do not have, so outside it too) at the top; under the Collection heading every folder, flat: All cards, Favorites,
 // the Pokédex, and the ones you made, with New folder at the end. On desktop this list is the
 // overview; the Folders page is the phone's.
 export function AppSidebar({ account, collections, facets }: { account: Account; collections: { id: string; name: string }[]; facets: Facets }) {
@@ -22,7 +22,7 @@ export function AppSidebar({ account, collections, facets }: { account: Account;
 
     const navItems: (NavItemType | NavItemDividerType)[] = [
         { label: "Home", href: "/dashboard", icon: HomeLine },
-        { label: "Sets", href: "/dashboard/sets", icon: BookOpen01 },
+        { label: "Browse", href: "/dashboard/sets", icon: BookOpen01 },
         { label: "Wishlist", href: "/dashboard/wishlist", icon: Heart },
         { divider: true, label: "Collection" },
         { label: "All cards", href: "/dashboard/cards", icon: Folder },
