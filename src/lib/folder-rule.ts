@@ -13,7 +13,24 @@ export type FolderRule = { dex?: DexRange; sets?: string[]; rarities?: string[] 
  * A folder shown as a Pokédex: its cards in the national order, one slot per Pokémon. `missing`
  * shows the slots the folder has no card of; `dex` is the range collected, all of it when absent.
  */
-export type PokedexSetting = { missing: boolean; dex?: DexRange };
+export type PokedexSetting = { missing: boolean; dex?: DexRange; rarities?: string[] };
+
+/**
+ * The rarities that are a whole picture: the art fills the card. What a "full-art Pokédex" keeps.
+ * The catalogue spells a few of these two ways; the reader compares without case.
+ */
+export const FULL_ART_RARITIES = ["Illustration rare", "Special illustration rare", "Ultra Rare", "Hyper rare", "Secret Rare"];
+
+const sameList = (a: string[], b: string[]) => a.length === b.length && a.every((x) => b.some((y) => x.toLowerCase() === y.toLowerCase()));
+
+/** Whether a setting is the full-art one: the rarities list is exactly that list. */
+export const isFullArt = (setting: PokedexSetting): boolean => !!setting.rarities && sameList(setting.rarities, FULL_ART_RARITIES);
+
+/** The same setting with the full-art list on or off. */
+export const withFullArt = (setting: PokedexSetting, on: boolean): PokedexSetting => {
+    const rest: PokedexSetting = { missing: setting.missing, ...(setting.dex ? { dex: setting.dex } : {}) };
+    return on ? { ...rest, rarities: FULL_ART_RARITIES } : rest;
+};
 export const DEFAULT_POKEDEX: PokedexSetting = { missing: true };
 export type FolderKind = "manual" | "rule";
 
@@ -41,7 +58,7 @@ export const dexRangeSchema = z
     .object({ from: z.number().int().min(1).max(NATIONAL_DEX_MAX), to: z.number().int().min(1).max(NATIONAL_DEX_MAX) })
     .refine((d) => d.from <= d.to, "The range runs backwards.");
 
-export const pokedexSettingSchema = z.object({ missing: z.boolean(), dex: dexRangeSchema.optional() });
+export const pokedexSettingSchema = z.object({ missing: z.boolean(), dex: dexRangeSchema.optional(), rarities: list.optional() });
 
 export const folderRuleSchema = z
     .object({
