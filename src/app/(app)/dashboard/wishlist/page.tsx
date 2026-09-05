@@ -12,13 +12,22 @@ const PAGE_SIZE = 100;
 export default async function WishlistPage({ searchParams }: { searchParams: Promise<ListSearchParams> }) {
     const query = readListQuery(await searchParams);
     const { page, q, sort, order, set, rarity } = query;
-    const { cards, total, facets } = await getMyCards({ wishlist: true, limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE, q, sort, order, set, rarity });
+    const { cards, total, facets, value, unpriced } = await getMyCards({
+        wishlist: true,
+        limit: PAGE_SIZE,
+        offset: (page - 1) * PAGE_SIZE,
+        q,
+        sort,
+        order,
+        set,
+        rarity,
+    });
     const empty = total === 0 && !isNarrowed(query);
 
     return (
         <FolderPage
             title="Wishlist"
-            datapoints={{ total, narrowed: isNarrowed(query) }}
+            datapoints={{ total, narrowed: isNarrowed(query), value, unpriced }}
             actions={empty ? undefined : <AddCardModal defaultTarget="wishlist" />}
             query={query}
             basePath="/dashboard/wishlist"

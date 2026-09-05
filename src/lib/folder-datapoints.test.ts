@@ -12,6 +12,7 @@ describe("datapointsLine", () => {
         expect(datapointsLine({ total: 3, narrowed: false, value: 2140 })).toMatch(/^3 cards · /);
         expect(datapointsLine({ total: 3, narrowed: false, value: null })).toBe("3 cards");
         expect(datapointsLine({ total: 0, narrowed: false, value: 0 })).toBe("0 cards");
+        expect(datapointsLine({ total: 734, narrowed: false, caught: { of: 120, total: 151 } })).toBe("120 of 151 Pokémon · 734 cards");
     });
 });
 

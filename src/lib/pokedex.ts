@@ -16,3 +16,9 @@ export async function getPokedex() {
     const entries = await perUser("pokedex", async (token) => (await api<{ entries: DexEntry[] }>("/pokedex", { token })).entries);
     return slotsFromEntries(entries);
 }
+
+/** Every Pokémon's name by national number, for the slots a folder has no card of. */
+export async function getDexNames(): Promise<Map<number, string>> {
+    const entries = await perUser("pokedex", async (token) => (await api<{ entries: DexEntry[] }>("/pokedex", { token })).entries);
+    return new Map(entries.map((e) => [e.id, e.name]));
+}
