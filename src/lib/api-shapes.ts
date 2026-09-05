@@ -382,6 +382,8 @@ export type OwnProfile = {
     username: string;
     displayName: string | null;
     isPublic: boolean;
+    /** The wishlist on the public profile too. Absent from an API before #176. */
+    wishlistPublic?: boolean;
     avatarUrl: string | null;
     onboardedAt: string | null;
     pokedex?: PokedexSetting | null;
@@ -393,6 +395,8 @@ export type Profile = {
     username: string;
     avatar_url: string | null;
     is_public: boolean;
+    /** The wishlist shows on the public profile as well, while it is public. */
+    wishlist_public: boolean;
     /** How the built-in Pokédex shows; null is every slot, missing ones too. */
     pokedex: PokedexSetting | null;
 };
@@ -402,5 +406,6 @@ export const profileFromOwn = (p: OwnProfile): Profile => ({
     username: p.username,
     avatar_url: p.avatarUrl,
     is_public: p.isPublic,
+    wishlist_public: p.wishlistPublic ?? false,
     pokedex: p.pokedex ?? null,
 });

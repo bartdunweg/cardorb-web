@@ -3,16 +3,17 @@ import { type PublicCard, type PublicItem, publicCardFromItem } from "@/lib/api-
 import type { Facets } from "@/lib/cards";
 import type { ListQuery } from "@/lib/list-query";
 
-export type PublicProfile = { display_name: string | null; username: string | null; avatar_url: string | null };
+export type PublicProfile = { display_name: string | null; username: string | null; avatar_url: string | null; wishlist_public: boolean };
 
 // The public face of a profile, or null when there is none by that name or it is not public.
 // Unkeyed: the API's three public routes serve exactly this page and carry no prices.
 export async function getPublicProfile(username: string): Promise<PublicProfile | null> {
     try {
-        const p = await api<{ username: string; displayName: string | null; avatarUrl: string | null }>(`/public/${encodeURIComponent(username)}/profile`, {
-            auth: false,
-        });
-        return { display_name: p.displayName, username: p.username, avatar_url: p.avatarUrl };
+        const p = await api<{ username: string; displayName: string | null; avatarUrl: string | null; wishlistPublic?: boolean }>(
+            `/public/${encodeURIComponent(username)}/profile`,
+            { auth: false },
+        );
+        return { display_name: p.displayName, username: p.username, avatar_url: p.avatarUrl, wishlist_public: p.wishlistPublic ?? false };
     } catch (err) {
         if (err instanceof ApiError && err.status === 404) return null;
         throw err;
@@ -27,10 +28,13 @@ export type PublicCardsPage = { cards: PublicCard[]; total: number; sets: number
 // the totals and the facets over the whole collection behind it. The paged route rather than the
 // whole collection: a hundred tiles need thirty kilobytes, not nine hundred. The API publishes
 // nothing personal on it (R-API-002 there), so nothing here has to be hidden.
-export async function getPublicCards(username: string, { page, q, set, rarity, sort, order, folder }: ListQuery): Promise<PublicCardsPage> {
+export async function getPublicCards(username: string, { page, q, set, rarity, sort, order, folder, list }: ListQuery): Promise<PublicCardsPage> {
     const { cards, total, sets, facets } = await api<{ cards: PublicItem[]; total: number; sets: number; facets?: Facets }>(
         `/public/${encodeURIComponent(username)}/cards`,
-        { auth: false, params: { q, set, rarity, sort, order, collection: folder, limit: PUBLIC_PAGE_SIZE, offset: (page - 1) * PUBLIC_PAGE_SIZE } },
+        {
+            auth: false,
+            params: { q, set, rarity, sort, order, collection: folder, list, limit: PUBLIC_PAGE_SIZE, offset: (page - 1) * PUBLIC_PAGE_SIZE },
+        },
     );
     // This route is cached for five minutes (no session, so `revalidate`), and an answer cached before
     // the API carried facets has none. Empty menus for those minutes, not a broken page.
