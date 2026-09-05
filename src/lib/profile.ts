@@ -11,14 +11,16 @@ export async function getMyProfile(): Promise<{ profile: Profile | null; email: 
     return { profile: profileFromOwn(own), email: own.email };
 }
 
-/** What the account menu shows: a name to greet with, the email, the picture. */
-export type Account = { name: string; email: string; avatarUrl: string | null };
+/** What the account menu shows: a name to greet with, the email, the picture, and the public page where there is one. */
+export type Account = { name: string; email: string; avatarUrl: string | null; publicUrl: string | null };
 
 export function accountFrom(me: { profile: Profile | null; email: string | null }): Account {
     return {
         name: me.profile?.display_name || me.profile?.username || me.email?.split("@")[0] || "Account",
         email: me.email ?? "",
         avatarUrl: me.profile?.avatar_url ?? null,
+        // Only while the profile is public: the page answers 404 to everyone otherwise, its owner included.
+        publicUrl: me.profile?.is_public && me.profile.username ? `/user/${encodeURIComponent(me.profile.username)}` : null,
     };
 }
 
