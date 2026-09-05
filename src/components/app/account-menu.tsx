@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronSelectorVertical, LogOut01, Moon01, Settings01 } from "@untitledui/icons";
+import { ChevronSelectorVertical, Eye, LogOut01, Moon01, Settings01 } from "@untitledui/icons";
 import { Button as AriaButton } from "react-aria-components";
 import { signOut } from "@/app/(auth)/actions";
 import { Avatar } from "@/components/base/avatar/avatar";
@@ -9,7 +9,7 @@ import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { useTheme } from "@/providers/theme";
 import { cx } from "@/utils/cx";
 
-type Account = { name: string; email: string; avatarUrl: string | null };
+type Account = { name: string; email: string; avatarUrl: string | null; publicUrl?: string | null };
 
 // Account card that opens a dropdown with Settings, a real dark-mode Toggle, and Sign out.
 // `compact` renders just the avatar as trigger (for the mobile top bar).
@@ -50,7 +50,7 @@ export function AccountMenu({ account, compact }: { account: Account; compact?: 
 
             <Dropdown.Popover className="w-64">
                 <Dropdown.Menu>
-                    <AccountMenuItems />
+                    <AccountMenuItems publicUrl={account.publicUrl} />
                 </Dropdown.Menu>
             </Dropdown.Popover>
         </Dropdown.Root>
@@ -59,7 +59,7 @@ export function AccountMenu({ account, compact }: { account: Account; compact?: 
 
 // The account's own entries: Settings (which is where the profile lives), the dark-mode toggle, Sign out. Rendered inside a
 // Dropdown.Menu, here and at the end of the mobile tab bar's More menu.
-export function AccountMenuItems() {
+export function AccountMenuItems({ publicUrl }: { publicUrl?: string | null } = {}) {
     const { resolvedTheme, setTheme } = useTheme();
     // The theme is undefined on the server and the first client render alike, so reading it
     // directly matches on both and resolves after hydration — no mount flag, no mismatch.
@@ -67,6 +67,12 @@ export function AccountMenuItems() {
 
     return (
         <>
+            {/* The page others see, for the person whose it is; absent while the profile is private. */}
+            {publicUrl ? (
+                <Dropdown.Item icon={Eye} href={publicUrl}>
+                    View public profile
+                </Dropdown.Item>
+            ) : null}
             <Dropdown.Item icon={Settings01} href="/dashboard/settings">
                 Settings
             </Dropdown.Item>

@@ -10,7 +10,7 @@ import { RouteProvider } from "@/providers/router-provider";
 
 // What the sidebar shows for the account until the profile read answers, or when it fails: the
 // menu still opens, Settings and Sign out still work.
-const NO_ACCOUNT: Account = { name: "Account", email: "", avatarUrl: null };
+const NO_ACCOUNT: Account = { name: "Account", email: "", avatarUrl: null, publicUrl: null };
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
     // Not awaited. The profile and the folders are reads of an API in another region, and after
