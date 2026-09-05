@@ -41,7 +41,7 @@ export default async function PublicProfilePage({ params, searchParams }: Params
 
     const query = readPublicListQuery(await searchParams);
     const narrowed = isNarrowed(query);
-    const [{ cards, total, sets, facets }, viewer] = await Promise.all([getPublicCards(decodeURIComponent(username), query), getViewer()]);
+    const [{ cards, total, facets }, viewer] = await Promise.all([getPublicCards(decodeURIComponent(username), query), getViewer()]);
     // Whose page this is: the owner looking at their own gets Edit profile beside Share. The
     // profile read is the layout's cached one; a session the API refuses counts as a visitor.
     const mine = viewer
@@ -54,8 +54,8 @@ export default async function PublicProfilePage({ params, searchParams }: Params
     const name = profile.display_name || profile.username || "Collection";
     // The handle sits under a display name, as a profile page does; with no display name it is the name.
     const handle = profile.display_name && profile.username ? `@${profile.username}` : null;
-    // With a search or a filter on, the count is what matched; the set count still spans the whole collection.
-    const counts = [datapointsLine({ total, narrowed }), `${sets.toLocaleString("en-US")} set${sets === 1 ? "" : "s"}`].join(" · ");
+    // With a search or a filter on, the count is what matched.
+    const counts = datapointsLine({ total, narrowed });
 
     return (
         <div className="bg-page flex min-h-dvh flex-col">
