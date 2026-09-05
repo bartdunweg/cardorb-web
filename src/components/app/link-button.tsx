@@ -18,7 +18,7 @@ export function LinkButton({
 }: {
     href: string;
     size?: "md" | "xl";
-    color?: "primary" | "tertiary" | "link-gray";
+    color?: "primary" | "secondary" | "tertiary" | "link-gray";
     className?: string;
     children: ReactNode;
 }) {
