@@ -17,10 +17,11 @@ function FolderCard({ href, icon, name, count, detail }: { href: string; icon: F
     return (
         <Link
             href={href}
-            className="flex pressable flex-col gap-3 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary outline-focus-ring transition-[color,background-color,box-shadow] ring-inset hover:bg-secondary focus-visible:outline-2"
+            // One to a row on a phone, the icon beside the words; a stacked tile from sm, three or four to a row.
+            className="flex pressable items-center gap-3 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary outline-focus-ring transition-[color,background-color,box-shadow] ring-inset hover:bg-secondary focus-visible:outline-2 sm:flex-col sm:items-start"
         >
-            <FeaturedIcon color="gray" theme="modern-neue" size="lg" icon={icon} />
-            <div className="flex flex-col">
+            <FeaturedIcon color="gray" theme="modern-neue" size="lg" icon={icon} className="shrink-0" />
+            <div className="flex min-w-0 flex-col">
                 <span className="truncate text-sm font-semibold text-primary">{name}</span>
                 <span className="text-sm text-tertiary">{detail ?? `${count} card${count === 1 ? "" : "s"}`}</span>
             </div>
@@ -62,7 +63,7 @@ export function CollectionsGrid({
             {/* One grid: the three folders that are always there (every card, the favorites, the Pokédex; none a
                 folder in the data, all three one to the eye), then the ones you made. On desktop the sidebar is
                 this list. */}
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
                 <FolderCard href="/dashboard/cards" icon={Rows01} name="All cards" count={ownedCount} />
                 <FolderCard href="/dashboard/favorites" icon={Star01} name="Favorites" count={favoritesCount} />
                 <FolderCard href="/dashboard/pokedex" icon={Folder} name="Pokédex" detail="Cards by Pokémon" />
