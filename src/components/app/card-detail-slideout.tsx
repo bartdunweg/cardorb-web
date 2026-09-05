@@ -127,9 +127,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                 </div>
                             ) : (
                                 <div className="flex flex-col gap-1.5">
-                                    <span className="text-sm font-medium text-secondary">Collection</span>
+                                    <span className="text-sm font-medium text-secondary">Folder</span>
                                     <NativeSelect
-                                        aria-label="Collection"
+                                        aria-label="Folder"
                                         value={collectionId}
                                         onChange={(event) => onCollectionChange(event.target.value)}
                                         options={[{ label: "None", value: "" }, ...collections.map((c) => ({ label: c.name, value: c.id }))]}

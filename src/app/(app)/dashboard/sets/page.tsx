@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CardImage } from "@/components/app/card-image";
+import { CollectionViews } from "@/components/app/collection-views";
 import { PageHeader } from "@/components/app/page-header";
 import { ProgressBarBase } from "@/components/base/progress-indicators/progress-indicators";
 import { CatalogueUnavailable, type SetSummary, getSets } from "@/lib/sets";
@@ -26,11 +27,7 @@ export default async function SetsPage() {
 
     return (
         <div className="flex flex-col gap-8">
-            <PageHeader
-                title="Sets"
-                subtitle={`${n(complete)} of ${n(totalSets)} sets complete · ${n(started)} started`}
-                back={{ href: "/dashboard", label: "Home" }}
-            >
+            <PageHeader title="Sets" subtitle={`${n(complete)} of ${n(totalSets)} sets complete · ${n(started)} started`} above={<CollectionViews />}>
                 {/* The count above is the accessible name; the bar makes the same number visible at a glance. */}
                 <ProgressBarBase value={complete} max={totalSets} className="mt-2 max-w-md" aria-label="Sets complete" />
             </PageHeader>

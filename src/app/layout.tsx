@@ -13,7 +13,7 @@ const inter = Inter({
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 const description =
-    "Keep track of your Pokémon card collection: the cards you own, sorted into collections, a wishlist, a Pokédex of what you hold, and a public page to show it.";
+    "Keep track of your Pokémon card collection: the cards you own, sorted into folders, a wishlist, a Pokédex of what you hold, and a public page to show it.";
 
 export const metadata: Metadata = {
     metadataBase: new URL(siteUrl),

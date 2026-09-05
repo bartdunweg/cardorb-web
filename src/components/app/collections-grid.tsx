@@ -2,7 +2,7 @@
 
 import type { FC, ReactNode } from "react";
 import { useState } from "react";
-import { Folder, Grid01, Heart, Plus, Star01 } from "@untitledui/icons";
+import { Folder, Heart, Plus } from "@untitledui/icons";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
@@ -55,11 +55,11 @@ export function NewCollectionButton() {
     return (
         <>
             <CreateCollectionModal>
-                <Button iconLeading={Plus} aria-label="New collection" className="sm:hidden" />
+                <Button iconLeading={Plus} aria-label="New folder" className="sm:hidden" />
             </CreateCollectionModal>
             <CreateCollectionModal>
                 <Button iconLeading={Plus} className="max-sm:hidden">
-                    New collection
+                    New folder
                 </Button>
             </CreateCollectionModal>
         </>
@@ -96,7 +96,7 @@ function CreateCollectionModal({ children }: { children: ReactNode }) {
                         {({ close }) => (
                             <div className="flex w-full max-w-sm flex-col gap-4 rounded-2xl glass-thick p-6 shadow-xl ring-1 ring-secondary">
                                 <AriaHeading slot="title" className="text-lg font-semibold text-primary">
-                                    New collection
+                                    New folder
                                 </AriaHeading>
                                 <Input label="Name" value={name} onChange={setName} placeholder="e.g. Charizards" />
                                 {error ? (
@@ -121,25 +121,15 @@ function CreateCollectionModal({ children }: { children: ReactNode }) {
     );
 }
 
-export function CollectionsGrid({
-    collections,
-    favoritesCount,
-    wishlistCount,
-}: {
-    collections: CollectionSummary[];
-    favoritesCount: number;
-    wishlistCount: number;
-}) {
+export function CollectionsGrid({ collections, wishlistCount }: { collections: CollectionSummary[]; wishlistCount: number }) {
     const hasCollections = collections.length > 0;
 
     return (
         <div className="flex flex-1 flex-col gap-6">
-            {/* Mobile hub: Favorites, Wishlist and the Pokédex. On desktop these are sidebar items instead; the tab bar has no room
-                for them. On a phone the three stack, icon beside the name. */}
-            <div className="grid grid-cols-1 gap-4 xs:grid-cols-3 lg:hidden">
-                <FolderCard href="/dashboard/favorites" icon={Star01} name="Favorites" count={favoritesCount} row />
+            {/* The wishlist is not a folder, but on a phone this is where it lives: the Collection tab holds only
+                what is owned, and the sidebar that lists it is not there. */}
+            <div className="lg:hidden">
                 <FolderCard href="/dashboard/wishlist" icon={Heart} name="Wishlist" count={wishlistCount} row />
-                <FolderCard href="/dashboard/pokedex" icon={Grid01} name="Pokédex" detail="Cards by Pokémon" row />
             </div>
 
             {hasCollections ? (
@@ -152,9 +142,9 @@ export function CollectionsGrid({
                 // On a phone the hub above is the page and the plus beside the title is the way in; the
                 // empty state would only push the tab bar's worth of nothing under three tiles.
                 <div className="hidden lg:contents">
-                    <AppEmptyState icon="folder" title="No collections yet" description="Group your cards into folders you can jump to from the sidebar.">
+                    <AppEmptyState icon="folder" title="No folders yet" description="Group your cards into folders you can jump to from the sidebar.">
                         <CreateCollectionModal>
-                            <Button iconLeading={Plus}>Create collection</Button>
+                            <Button iconLeading={Plus}>Create folder</Button>
                         </CreateCollectionModal>
                     </AppEmptyState>
                 </div>

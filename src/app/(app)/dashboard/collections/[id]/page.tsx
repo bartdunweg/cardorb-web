@@ -35,7 +35,7 @@ export default async function CollectionDetailPage({
             <PageHeader
                 title={collection.name}
                 subtitle={`${total.toLocaleString("en-US")} card${total === 1 ? "" : "s"}`}
-                back={{ href: "/dashboard/collections", label: "Collections" }}
+                back={{ href: "/dashboard/collections", label: "Folders" }}
                 actions={
                     <>
                         <CardsSort query={query} />

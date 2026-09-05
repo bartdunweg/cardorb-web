@@ -63,7 +63,12 @@ export const NavList = ({ activeUrl, items, className }: NavListProps) => {
         <ul className={cx("flex flex-col px-4 pt-5", className)}>
             {items.map((item, index) => {
                 if (item.divider) {
-                    return (
+                    // A divider with a label heads a section; without one it is a rule.
+                    return item.label ? (
+                        <li key={index} className="px-3 pt-5 pb-1 text-xs font-semibold text-quaternary">
+                            {item.label}
+                        </li>
+                    ) : (
                         <li key={index} className="w-full px-0.5 py-2">
                             <hr className="h-px w-full border-none bg-border-secondary" />
                         </li>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CardImage } from "@/components/app/card-image";
+import { CollectionViews } from "@/components/app/collection-views";
 import { DexSlider } from "@/components/app/dex-slider";
 import { PageHeader } from "@/components/app/page-header";
 import { ProgressBarBase } from "@/components/base/progress-indicators/progress-indicators";
@@ -13,7 +14,7 @@ export default async function PokedexPage() {
             <PageHeader
                 title="Pokédex"
                 subtitle={`${caughtNumbers.toLocaleString("en-US")} of ${NATIONAL_DEX_MAX.toLocaleString("en-US")} Pokémon · ${totalCards.toLocaleString("en-US")} cards`}
-                back={{ href: "/dashboard", label: "Home" }}
+                above={<CollectionViews />}
             >
                 {/* The count above is the accessible name; the bar makes the same number visible at a glance. */}
                 <ProgressBarBase value={caughtNumbers} max={NATIONAL_DEX_MAX} className="mt-2 max-w-md" aria-label="Pokédex completion" />

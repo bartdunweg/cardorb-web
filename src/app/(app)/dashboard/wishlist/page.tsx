@@ -25,7 +25,7 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
         <PageHeader
             title="Wishlist"
             subtitle={`${total.toLocaleString("en-US")} card${total === 1 ? "" : "s"} you want but don’t own yet`}
-            back={{ href: "/dashboard/cards", label: "Cards" }}
+            back={{ href: "/dashboard/collections", label: "Folders" }}
             actions={
                 total > 0 ? (
                     <>
