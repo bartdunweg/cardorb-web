@@ -3,7 +3,9 @@
 import { CardImage } from "@/components/app/card-image";
 import { FavoriteStar } from "@/components/app/favorite-star";
 import type { PublicCard } from "@/lib/cards";
+import type { CardsSize } from "@/lib/cards-view";
 import { formatPrice } from "@/lib/format";
+import { cx } from "@/utils/cx";
 
 // Presentational grid of card thumbnails. Selection is owned by CardsView. Generic over the card
 // shape so the public profile can pass `PublicCard`; the favourite star and the price only show when
@@ -11,15 +13,24 @@ import { formatPrice } from "@/lib/format";
 /** Tiles that are on screen at load on any width: the widest grid shows six per row. */
 const FIRST_ROW = 6;
 
+// Tiles per row at each size: small packs the pictures, large shows them.
+const COLUMNS: Record<CardsSize, string> = {
+    sm: "grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8",
+    md: "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6",
+    lg: "grid-cols-1 xs:grid-cols-2 md:grid-cols-3 xl:grid-cols-4",
+};
+
 export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null; price?: number | null }>({
     cards,
     onSelect,
+    size = "md",
 }: {
     cards: T[];
     onSelect: (card: T) => void;
+    size?: CardsSize;
 }) {
     return (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+        <div className={cx("grid gap-4", COLUMNS[size])}>
             {cards.map((card, i) => (
                 <button
                     key={card.id}

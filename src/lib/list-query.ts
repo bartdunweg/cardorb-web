@@ -32,6 +32,13 @@ export type ListQuery = {
     rarity: string | undefined;
 };
 
+/** What a list page reads from its URL. */
+export type ListSearchParams = { page?: string; sort?: string; q?: string; set?: string; rarity?: string };
+
+export const activeFilterCount = (q: ListQuery): number => [q.q, q.set, q.rarity].filter(Boolean).length;
+/** A search or a filter is on. */
+export const isNarrowed = (q: ListQuery): boolean => activeFilterCount(q) > 0;
+
 const isSortKey = (v: unknown): v is SortKey => SORT_OPTIONS.some((o) => o.value === v);
 
 /** The list's URL, read forgivingly: nonsense means the default, never an error page. */
