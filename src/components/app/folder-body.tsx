@@ -6,10 +6,12 @@ import { CardsPagination } from "@/components/app/cards-pagination";
 import { CardsSearch } from "@/components/app/cards-search";
 import { CardsSort } from "@/components/app/cards-sort";
 import { CardsView } from "@/components/app/cards-view";
+import { DexView } from "@/components/app/dex-grid";
 import { FiltersSheet } from "@/components/app/filters-sheet";
 import { PublicCardsView } from "@/components/app/public-cards-view";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
 import { CARDS_SIZE_COOKIE, CARDS_VIEW_COOKIE, parseCardsSize, parseCardsView } from "@/lib/cards-view";
+import type { NamedDexSlot } from "@/lib/dex-groups";
 import { type ListQuery, SORT_OPTIONS, type SortOption, activeFilterCount, isNarrowed, listHref } from "@/lib/list-query";
 
 type Common = {
@@ -24,6 +26,8 @@ type Common = {
     pageSize?: number;
     /** The page's own "nothing here at all" state, with its way out. */
     empty: ReactNode;
+    /** A folder shown as a Pokédex: the slots stand in for the list, and there are no pages. */
+    pokedex?: { slots: NamedDexSlot[] };
 };
 
 export type FolderBodyProps = Common & ({ readOnly?: false; cards: Card[] } | { readOnly: true; cards: PublicCard[] });
@@ -32,7 +36,7 @@ export type FolderBodyProps = Common & ({ readOnly?: false; cards: Card[] } | { 
 // and the View menu, then the list, the pages, or an empty state. The same on All cards, a folder,
 // the favorites, the wishlist and a public profile, so a person learns the row once.
 export async function FolderBody(props: FolderBodyProps) {
-    const { query, basePath, facets, sortOptions = SORT_OPTIONS, searchLabel, searchPlaceholder, total, pageSize = 100, empty } = props;
+    const { query, basePath, facets, sortOptions = SORT_OPTIONS, searchLabel, searchPlaceholder, total, pageSize = 100, empty, pokedex } = props;
     const narrowed = isNarrowed(query);
     if (total === 0 && !narrowed) return <>{empty}</>;
 
@@ -61,6 +65,14 @@ export async function FolderBody(props: FolderBodyProps) {
                     title="No cards found"
                     description={q ? `No cards match “${q}”. Try a different name or set.` : "Nothing in that set or rarity. Clear a filter to widen the list."}
                 />
+            </div>
+        );
+    }
+
+    if (pokedex) {
+        return (
+            <div className="flex flex-1 flex-col gap-4">
+                <DexView slots={pokedex.slots} initialSize={size} toolbar={toolbar} />
             </div>
         );
     }

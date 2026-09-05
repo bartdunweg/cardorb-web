@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { ApiError, api } from "@/lib/api";
+import { type PokedexSetting, pokedexSettingSchema } from "@/lib/folder-rule";
 import { createClient } from "@/lib/supabase/server";
 import { forgetMine } from "@/lib/user-cache";
 
@@ -93,5 +94,19 @@ export async function updatePassword(currentPassword: string, password: string):
     const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
     if (error) return { ok: false, error: error.message };
 
+    return { ok: true };
+}
+
+// How the built-in Pokédex shows: which Pokémon you collect and whether the missing ones show.
+// Null restores the default, every slot with the missing ones.
+export async function updatePokedexSetting(setting: PokedexSetting | null): Promise<ActionResult> {
+    const parsed = pokedexSettingSchema.nullable().safeParse(setting);
+    if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+    try {
+        await api("/profile", { method: "PATCH", body: { pokedex: parsed.data } });
+    } catch (err) {
+        return failed(err);
+    }
+    await forgetMine();
     return { ok: true };
 }

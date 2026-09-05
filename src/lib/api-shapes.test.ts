@@ -74,11 +74,11 @@ describe("priceForCopy", () => {
         expect(priceForCopy({ finish: null, price: null, priceHolo: null })).toBeNull();
     });
 
-    it("prices a holo or reverse-holo copy as a holo, unless the holo price is missing", () => {
-        expect(priceForCopy({ finish: "holo", price, priceHolo: holo })).toBe(60);
+    it("prices a reverse holo with the foil price, everything else with the plain one, as the API does", () => {
         expect(priceForCopy({ finish: "reverse-holo", price, priceHolo: holo })).toBe(60);
+        expect(priceForCopy({ finish: "holo", price, priceHolo: holo })).toBe(6);
         expect(priceForCopy({ finish: "normal", price, priceHolo: holo })).toBe(6);
-        expect(priceForCopy({ finish: "holo", price, priceHolo: null })).toBe(6);
+        expect(priceForCopy({ finish: "reverse-holo", price, priceHolo: null })).toBe(6);
     });
 });
 

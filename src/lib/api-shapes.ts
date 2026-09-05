@@ -1,4 +1,4 @@
-import type { FolderKind, FolderRule } from "@/lib/folder-rule";
+import type { FolderKind, FolderRule, PokedexSetting } from "@/lib/folder-rule";
 
 /**
  * What the API answers, and how it becomes what the screens already render.
@@ -77,6 +77,8 @@ export type Card = {
     tcg_id: string | null;
     collection_id: string | null;
     wishlist: boolean | null;
+    /** The national Pokédex number the API read from the card; null for a trainer or energy. */
+    species_id: number | null;
 };
 
 /**
@@ -84,7 +86,8 @@ export type Card = {
  * one; the Near Mint midpoint is preferred, the market price is the fallback.
  */
 export function priceForCopy({ finish, price, priceHolo }: Pick<CardItem, "finish" | "price" | "priceHolo">): number | null {
-    const chosen = (finish === "holo" || finish === "reverse-holo" ? priceHolo : null) ?? price;
+    // The API's rule (cards.ts variantPrice): only a reverse holo takes the foil price.
+    const chosen = (finish === "reverse-holo" ? priceHolo : null) ?? price;
     return chosen?.nm?.mid ?? chosen?.market ?? null;
 }
 
@@ -92,13 +95,29 @@ export function priceForCopy({ finish, price, priceHolo }: Pick<CardItem, "finis
  * A folder as `GET /v1/folders` sends it. `kind` and `rule` are optional on the wire: an API from
  * before rule folders sends neither, and every folder is then one filled by hand.
  */
-export type FolderItem = { id: string; name: string; createdAt: string; count: number; kind?: FolderKind; rule?: FolderRule | null };
+export type FolderItem = {
+    id: string;
+    name: string;
+    createdAt: string;
+    count: number;
+    kind?: FolderKind;
+    rule?: FolderRule | null;
+    pokedex?: PokedexSetting | null;
+};
 
-export type Folder = { id: string; name: string; createdAt: string; count: number; kind: FolderKind; rule: FolderRule | null };
+export type Folder = {
+    id: string;
+    name: string;
+    createdAt: string;
+    count: number;
+    kind: FolderKind;
+    rule: FolderRule | null;
+    pokedex: PokedexSetting | null;
+};
 
 export function folderFromApi(f: FolderItem): Folder {
     const rule = f.rule ?? null;
-    return { id: f.id, name: f.name, createdAt: f.createdAt, count: f.count, kind: f.kind ?? (rule ? "rule" : "manual"), rule };
+    return { id: f.id, name: f.name, createdAt: f.createdAt, count: f.count, kind: f.kind ?? (rule ? "rule" : "manual"), rule, pokedex: f.pokedex ?? null };
 }
 
 export const cardFromItem = (item: CardItem): Card => ({
@@ -123,6 +142,7 @@ export const cardFromItem = (item: CardItem): Card => ({
     image_url: absoluteImage(item.image),
     tcg_id: item.tcgId,
     collection_id: item.collectionId,
+    species_id: item.speciesId,
     wishlist: !item.owned,
 });
 
@@ -366,6 +386,7 @@ export type OwnProfile = {
     isPublic: boolean;
     avatarUrl: string | null;
     onboardedAt: string | null;
+    pokedex?: PokedexSetting | null;
     email: string;
 };
 
@@ -374,6 +395,8 @@ export type Profile = {
     username: string;
     avatar_url: string | null;
     is_public: boolean;
+    /** How the built-in Pokédex shows; null is every slot, missing ones too. */
+    pokedex: PokedexSetting | null;
 };
 
 export const profileFromOwn = (p: OwnProfile): Profile => ({
@@ -381,4 +404,5 @@ export const profileFromOwn = (p: OwnProfile): Profile => ({
     username: p.username,
     avatar_url: p.avatarUrl,
     is_public: p.isPublic,
+    pokedex: p.pokedex ?? null,
 });
