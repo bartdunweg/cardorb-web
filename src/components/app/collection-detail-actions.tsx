@@ -61,13 +61,15 @@ export function CollectionDetailActions({
         <div className="flex gap-2">
             {/* A rule folder decides its own contents: its action is the rule, not a search box. */}
             <FolderDialog mode="edit" folder={folder} facets={facets}>
-                <Button color="secondary" iconLeading={Edit03}>
+                <Button color="secondary" size="md" iconLeading={Edit03}>
                     {folder.kind === "rule" ? "Edit rule" : "Edit folder"}
                 </Button>
             </FolderDialog>
             {folder.kind === "rule" ? null : (
                 <DialogTrigger>
-                    <Button iconLeading={Plus}>Add cards</Button>
+                    <Button size="md" iconLeading={Plus}>
+                        Add cards
+                    </Button>
                     <ModalOverlay>
                         <Modal className="max-w-xl">
                             <Dialog>
@@ -127,7 +129,7 @@ export function CollectionDetailActions({
             )}
 
             <DialogTrigger>
-                <Button color="secondary-destructive" iconLeading={Trash01}>
+                <Button color="secondary-destructive" size="md" iconLeading={Trash01}>
                     Delete
                 </Button>
                 <ModalOverlay>

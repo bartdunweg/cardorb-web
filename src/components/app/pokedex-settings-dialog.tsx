@@ -45,7 +45,7 @@ export function PokedexSettingsDialog({ setting, isPublic, facets }: { setting: 
 
     return (
         <DialogTrigger>
-            <Button color="secondary" iconLeading={Settings01}>
+            <Button color="secondary" size="md" iconLeading={Settings01}>
                 Pokédex settings
             </Button>
             <ModalOverlay>
