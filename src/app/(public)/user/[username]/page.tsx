@@ -7,10 +7,13 @@ import { LinkButton } from "@/components/app/link-button";
 import { PublicTopBar } from "@/components/app/public-top-bar";
 import { ShareButton } from "@/components/app/share-button";
 import { Avatar } from "@/components/base/avatar/avatar";
+import { type DexList, groupByDex } from "@/lib/dex-groups";
 import { datapointsLine } from "@/lib/folder-datapoints";
+import { DEFAULT_POKEDEX } from "@/lib/folder-rule";
 import { type ListSearchParams, PUBLIC_SORT_OPTIONS, isNarrowed, listHref, readPublicListQuery } from "@/lib/list-query";
+import { getDexNames } from "@/lib/pokedex";
 import { getMyProfile, getViewer } from "@/lib/profile";
-import { PUBLIC_PAGE_SIZE, getPublicCards, getPublicFolders, getPublicProfile } from "@/lib/public-profile";
+import { PUBLIC_PAGE_SIZE, getAllPublicCards, getPublicCards, getPublicFolders, getPublicProfile } from "@/lib/public-profile";
 import { RouteProvider } from "@/providers/router-provider";
 
 type Params = { params: Promise<{ username: string }>; searchParams: Promise<ListSearchParams> };
@@ -41,8 +44,29 @@ export default async function PublicProfilePage({ params, searchParams }: Params
 
     const query = readPublicListQuery(await searchParams);
     const narrowed = isNarrowed(query);
+    // A list the owner does not show is the collection: the chips say so, and the route would 404.
+    const list =
+        query.list === "wishlist" && profile.wishlist_public
+            ? "wishlist"
+            : query.list === "favorites" && profile.favorites_public
+              ? "favorites"
+              : query.list === "pokedex" && profile.pokedex_public
+                ? "pokedex"
+                : undefined;
+    if (list !== query.list) query.list = list;
+    // The Pokédex needs every card, and takes longest to read: it is not awaited, and the slots
+    // take their place under the row when the last page is in, as on the owner's own page.
+    const dex: Promise<DexList> | null =
+        list === "pokedex"
+            ? Promise.all([getAllPublicCards(decodeURIComponent(username), query), getDexNames()]).then(([r, names]) => ({
+                  ...groupByDex(r.cards, names, profile.pokedex ?? DEFAULT_POKEDEX),
+                  total: r.total,
+                  value: null,
+                  unpriced: 0,
+              }))
+            : null;
     const [{ cards, total, facets }, folders, viewer] = await Promise.all([
-        getPublicCards(decodeURIComponent(username), query),
+        dex ? dex.then((d) => ({ cards: [], total: d.total, facets: { sets: [], rarities: [] } })) : getPublicCards(decodeURIComponent(username), query),
         getPublicFolders(decodeURIComponent(username)),
         getViewer(),
     ]);
@@ -95,7 +119,7 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                     </div>
                 </div>
 
-                {folders.length > 0 || profile.wishlist_public ? (
+                {folders.length > 0 || profile.wishlist_public || profile.favorites_public || profile.pokedex_public ? (
                     // The folders the owner shows, as chips that narrow the list; All cards first. A chip is a link,
                     // so a folder is a URL that can be shared, and the row keeps its place through a search.
                     <nav aria-label="Folders" className="flex flex-wrap gap-2">
@@ -116,33 +140,57 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                                 </LinkButton>
                             );
                         })}
-                        {profile.wishlist_public ? (
-                            // The wishlist is not a folder: the cards the owner is looking for, beside what they hold.
-                            <LinkButton
-                                href={listHref(base, query, { folder: undefined, list: "wishlist", page: 1 })}
-                                size="sm"
-                                color={query.list === "wishlist" ? "primary" : "secondary"}
-                                aria-current={query.list === "wishlist" ? "page" : undefined}
-                            >
-                                Wishlist
-                            </LinkButton>
-                        ) : null}
+                        {/* The three lists beside the folders, each behind the owner's own setting. The favorites and
+                            the Pokédex are the collection seen another way; the wishlist is what they are looking for. */}
+                        {(
+                            [
+                                ["favorites", "Favorites", profile.favorites_public],
+                                ["pokedex", "Pokédex", profile.pokedex_public],
+                                ["wishlist", "Wishlist", profile.wishlist_public],
+                            ] as const
+                        )
+                            .filter(([, , shown]) => shown)
+                            .map(([id, label]) => (
+                                <LinkButton
+                                    key={id}
+                                    href={listHref(base, query, { folder: undefined, list: id, page: 1 })}
+                                    size="sm"
+                                    color={query.list === id ? "primary" : "secondary"}
+                                    aria-current={query.list === id ? "page" : undefined}
+                                >
+                                    {label}
+                                </LinkButton>
+                            ))}
                     </nav>
                 ) : null}
 
-                <FolderBody
-                    readOnly
-                    query={query}
-                    basePath={base}
-                    facets={facets}
-                    sortOptions={PUBLIC_SORT_OPTIONS}
-                    searchLabel="Search this collection"
-                    searchPlaceholder="Search this collection"
-                    cards={cards}
-                    total={total}
-                    pageSize={PUBLIC_PAGE_SIZE}
-                    empty={<AppEmptyState icon="folder" title="This collection is empty" description="Nothing has been added to it yet" />}
-                />
+                {dex ? (
+                    <FolderBody
+                        readOnly
+                        query={query}
+                        basePath={base}
+                        facets={facets}
+                        sortOptions={PUBLIC_SORT_OPTIONS}
+                        searchLabel="Search this collection"
+                        searchPlaceholder="Search this collection"
+                        pokedex={{ dex }}
+                        empty={<AppEmptyState icon="folder" title="This collection is empty" description="Nothing has been added to it yet" />}
+                    />
+                ) : (
+                    <FolderBody
+                        readOnly
+                        query={query}
+                        basePath={base}
+                        facets={facets}
+                        sortOptions={PUBLIC_SORT_OPTIONS}
+                        searchLabel="Search this collection"
+                        searchPlaceholder="Search this collection"
+                        cards={cards}
+                        total={total}
+                        pageSize={PUBLIC_PAGE_SIZE}
+                        empty={<AppEmptyState icon="folder" title="This collection is empty" description="Nothing has been added to it yet" />}
+                    />
+                )}
             </main>
         </div>
     );

@@ -31,11 +31,15 @@ export type ListQuery = {
     rarity: string | undefined;
     /** A public profile's folder, by id; the owner's own lists carry the folder in the path instead. */
     folder: string | undefined;
-    /** A public profile's wishlist instead of its collection. */
-    list: "wishlist" | undefined;
+    /** A public profile's wishlist, favorites or Pokédex instead of its collection. */
+    list: PublicList | undefined;
     /** Only the copies nothing prices: what the total leaves out. */
     unpriced: boolean;
 };
+
+/** The lists a public profile can show beside the collection, each behind its own setting. */
+export const PUBLIC_LISTS = ["wishlist", "favorites", "pokedex"] as const;
+export type PublicList = (typeof PUBLIC_LISTS)[number];
 
 /** What a list page reads from its URL. */
 export type ListSearchParams = { page?: string; sort?: string; q?: string; set?: string; rarity?: string; folder?: string; list?: string; unpriced?: string };
@@ -59,7 +63,7 @@ export function readListQuery(params: ListSearchParams): ListQuery {
         set: text(params.set),
         rarity: text(params.rarity),
         folder: text(params.folder),
-        list: params.list === "wishlist" ? "wishlist" : undefined,
+        list: (PUBLIC_LISTS as readonly string[]).includes(params.list ?? "") ? (params.list as PublicList) : undefined,
         unpriced: params.unpriced === "1",
     };
 }
