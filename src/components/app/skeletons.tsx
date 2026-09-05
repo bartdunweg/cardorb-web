@@ -142,3 +142,8 @@ export function AccountCardSkeleton() {
         </div>
     );
 }
+
+/** One line of text still on its way: the count and value under a folder's title. */
+export function LineSkeleton({ className = "h-4 w-40" }: { className?: string }) {
+    return <span aria-hidden="true" className={`inline-block rounded-md bg-secondary align-middle motion-safe:animate-pulse ${className}`} />;
+}

@@ -1,12 +1,13 @@
 "use client";
 
-import { type ReactNode, useState } from "react";
+import { type ReactNode, Suspense, use, useState } from "react";
 import Link from "next/link";
 import { CardImage } from "@/components/app/card-image";
 import { DexSlider } from "@/components/app/dex-slider";
+import { DexSkeleton } from "@/components/app/skeletons";
 import { ViewMenu } from "@/components/app/view-menu";
 import type { CardsSize } from "@/lib/cards-view";
-import type { NamedDexSlot } from "@/lib/dex-groups";
+import type { DexList, NamedDexSlot } from "@/lib/dex-groups";
 import { cx } from "@/utils/cx";
 
 // Slots per row at each size: the Pokédex packs tighter than the card grid, a slot being a square.
@@ -60,17 +61,24 @@ export function DexGrid({ slots, size = "md" }: { slots: NamedDexSlot[]; size?: 
 }
 
 // The Pokédex body under the shared row: the View menu offers the size alone, a slot being
-// neither a grid tile nor a table row.
+// neither a grid tile nor a table row. The row is drawn at once; the slots are a promise the
+// page did not wait for, and show their outline until every card has been read.
 export function DexView({
-    slots,
+    dex,
+    narrowed,
     initialSize = "md",
     toolbar,
+    noHits,
     empty,
 }: {
-    slots: NamedDexSlot[];
+    dex: Promise<DexList>;
+    narrowed: boolean;
     initialSize?: CardsSize;
     toolbar?: ReactNode;
-    empty?: ReactNode;
+    /** When a search or a filter finds nothing. */
+    noHits: ReactNode;
+    /** When the folder holds nothing at all. */
+    empty: ReactNode;
 }) {
     const [size, setSize] = useState(initialSize);
     return (
@@ -79,7 +87,15 @@ export function DexView({
                 <div className="contents">{toolbar}</div>
                 <ViewMenu view="grid" size={size} onView={() => {}} onSize={setSize} layouts={false} />
             </div>
-            {empty ?? <DexGrid slots={slots} size={size} />}
+            <Suspense fallback={<DexSkeleton />}>
+                <DexSlots dex={dex} size={size} narrowed={narrowed} noHits={noHits} empty={empty} />
+            </Suspense>
         </div>
     );
+}
+
+function DexSlots({ dex, size, narrowed, noHits, empty }: { dex: Promise<DexList>; size: CardsSize; narrowed: boolean; noHits: ReactNode; empty: ReactNode }) {
+    const d = use(dex);
+    if (d.total === 0) return <>{narrowed ? noHits : empty}</>;
+    return <DexGrid slots={d.slots} size={size} />;
 }

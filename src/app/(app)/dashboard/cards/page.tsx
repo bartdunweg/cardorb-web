@@ -1,42 +1,44 @@
 import { AddCardModal } from "@/components/app/add-card-modal";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderPage } from "@/components/app/folder-page";
-import { getMyCards } from "@/lib/cards";
+import { type CardFilter, getFacets, getMyCards } from "@/lib/cards";
 import { type ListSearchParams, isNarrowed, readListQuery } from "@/lib/list-query";
 
-const PAGE_SIZE = 100;
-
 // Every card you own: the folder that is the whole collection.
+//
+// The list is not awaited: the title, the actions and the row go to the browser at once, and
+// the first batch of cards, with the count and value under the title, follows when the API
+// answers. The facets for the Filters menu are a cached read, five minutes per person.
 export default async function CardsPage({ searchParams }: { searchParams: Promise<ListSearchParams> }) {
     const query = readListQuery(await searchParams);
-    const { page, q, sort, order, set, rarity } = query;
-    const { cards, total, facets, value, unpriced } = await getMyCards({ limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE, q, sort, order, set, rarity });
-    const empty = total === 0 && !isNarrowed(query);
+    const { q, sort, order, set, rarity } = query;
+    const filter: CardFilter = { q, sort, order, set, rarity };
+    const narrowed = isNarrowed(query);
+    const list = getMyCards(filter);
+    const datapoints = list.then((r) => ({ total: r.total, narrowed, value: r.value, unpriced: r.unpriced }));
+    const facets = await getFacets();
 
     return (
         <FolderPage
             title="All cards"
             back={{ href: "/dashboard/collections", label: "Folders" }}
-            datapoints={{ total, narrowed: isNarrowed(query), value, unpriced }}
+            datapoints={datapoints}
             actions={
-                empty ? undefined : (
-                    <>
-                        {/* A plus beside the title on a phone, the words from lg. */}
-                        <div className="lg:hidden">
-                            <AddCardModal compact />
-                        </div>
-                        <div className="max-lg:hidden">
-                            <AddCardModal />
-                        </div>
-                    </>
-                )
+                <>
+                    {/* A plus beside the title on a phone, the words from lg. */}
+                    <div className="lg:hidden">
+                        <AddCardModal compact />
+                    </div>
+                    <div className="max-lg:hidden">
+                        <AddCardModal />
+                    </div>
+                </>
             }
             query={query}
             basePath="/dashboard/cards"
             facets={facets}
-            cards={cards}
-            total={total}
-            pageSize={PAGE_SIZE}
+            list={list}
+            filter={filter}
             empty={
                 <AppEmptyState icon="plus" title="No cards yet" description="Add your first card to start your collection">
                     <AddCardModal />

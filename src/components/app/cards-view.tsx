@@ -1,30 +1,38 @@
 "use client";
 
-import { type ReactNode, useState } from "react";
+import { type ReactNode, Suspense, useState } from "react";
 import { CardDetailSlideout } from "@/components/app/card-detail-slideout";
-import { CardsGrid } from "@/components/app/cards-grid";
-import { CardsTable } from "@/components/app/cards-table";
+import { CardsList } from "@/components/app/cards-list";
+import { CardsSkeleton } from "@/components/app/skeletons";
 import { ViewMenu } from "@/components/app/view-menu";
-import type { Card } from "@/lib/cards";
+import type { Card, CardFilter, CardList } from "@/lib/cards";
 import type { CardsSize, CardsViewMode } from "@/lib/cards-view";
 
 // Wraps the card list with the shared detail slideout and the View menu. The page reads the
 // layout and size from cookies and hands them in, so the HTML already shows the chosen view.
 // The menu sits at the right end of the page's filter row, which comes in as `toolbar`, so
-// search, filters, sort and view share one line.
+// search, filters, sort and view share one line. The row is drawn at once; the list under it
+// is a promise the page did not wait for, and shows its outline until the cards land.
 export function CardsView({
-    cards,
+    list,
+    filter,
+    narrowed,
     initialView,
     initialSize = "md",
     toolbar,
+    noHits,
     empty,
 }: {
-    cards: Card[];
+    list: Promise<CardList>;
+    filter: CardFilter;
+    narrowed: boolean;
     initialView: CardsViewMode;
     initialSize?: CardsSize;
     toolbar?: ReactNode;
     /** Drawn in the list's place when the filters find nothing, so the row above keeps its place in the tree. */
-    empty?: ReactNode;
+    noHits: ReactNode;
+    /** Drawn in the list's place when the folder holds nothing at all. */
+    empty: ReactNode;
 }) {
     const [view, setView] = useState(initialView);
     const [size, setSize] = useState(initialSize);
@@ -38,7 +46,9 @@ export function CardsView({
                 <ViewMenu view={view} size={size} onView={setView} onSize={setSize} />
             </div>
 
-            {empty ?? (view === "grid" ? <CardsGrid cards={cards} onSelect={setSelected} size={size} /> : <CardsTable cards={cards} onSelect={setSelected} />)}
+            <Suspense fallback={<CardsSkeleton />}>
+                <CardsList list={list} filter={filter} narrowed={narrowed} view={view} size={size} onSelect={setSelected} noHits={noHits} empty={empty} />
+            </Suspense>
 
             <CardDetailSlideout card={selected} onClose={() => setSelected(null)} />
         </div>

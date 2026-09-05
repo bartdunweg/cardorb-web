@@ -9,9 +9,9 @@ import { CardsView } from "@/components/app/cards-view";
 import { DexView } from "@/components/app/dex-grid";
 import { FiltersSheet } from "@/components/app/filters-sheet";
 import { PublicCardsView } from "@/components/app/public-cards-view";
-import type { Card, Facets, PublicCard } from "@/lib/cards";
+import type { CardFilter, CardList, Facets, PublicCard } from "@/lib/cards";
 import { CARDS_SIZE_COOKIE, CARDS_VIEW_COOKIE, parseCardsSize, parseCardsView } from "@/lib/cards-view";
-import type { NamedDexSlot } from "@/lib/dex-groups";
+import type { DexList } from "@/lib/dex-groups";
 import { type ListQuery, SORT_OPTIONS, type SortOption, isNarrowed, listHref } from "@/lib/list-query";
 
 type Common = {
@@ -22,29 +22,35 @@ type Common = {
     sortOptions?: readonly SortOption[];
     searchLabel?: string;
     searchPlaceholder?: string;
-    total: number;
-    pageSize?: number;
     /** The page's own "nothing here at all" state, with its way out. */
     empty: ReactNode;
-    /** A folder shown as a Pokédex: the slots stand in for the list, and there are no pages. */
-    pokedex?: { slots: NamedDexSlot[] };
 };
 
-export type FolderBodyProps = Common & ({ readOnly?: false; cards: Card[] } | { readOnly: true; cards: PublicCard[] });
+/** A public profile: the cards came with the page, and it pages by URL. */
+type PublicBody = Common & { readOnly: true; cards: PublicCard[]; total: number; pageSize?: number };
+
+/**
+ * Your own folder: the first batch is a promise the page handed over without waiting, so the
+ * row is on screen while the API answers; the rest comes as you scroll, asked for with `filter`.
+ * As a Pokédex, the slots stand in for the list.
+ */
+type OwnBody = Common & { readOnly?: false; filter: CardFilter } & (
+        { list: Promise<CardList>; pokedex?: undefined } | { list?: undefined; pokedex: { dex: Promise<DexList> } }
+    );
+
+export type FolderBodyProps = PublicBody | OwnBody;
 
 // The lower half of every folder page: one row with the filters (a sheet on a phone), the sort
-// and the View menu, then the list, the pages, or an empty state. The same on All cards, a folder,
-// the favorites, the wishlist and a public profile, so a person learns the row once.
+// and the View menu, then the list, or an empty state. The same on All cards, a folder, the
+// favorites, the wishlist and a public profile, so a person learns the row once.
 export async function FolderBody(props: FolderBodyProps) {
-    const { query, basePath, facets, sortOptions = SORT_OPTIONS, searchLabel, searchPlaceholder, total, pageSize = 100, empty, pokedex } = props;
+    const { query, basePath, facets, sortOptions = SORT_OPTIONS, searchLabel, searchPlaceholder, empty } = props;
     const narrowed = isNarrowed(query);
-    if (total === 0 && !narrowed) return <>{empty}</>;
+    const { q } = query;
 
     const jar = await cookies();
     const view = parseCardsView(jar.get(CARDS_VIEW_COOKIE)?.value);
     const size = parseCardsSize(jar.get(CARDS_SIZE_COOKIE)?.value);
-    const totalPages = Math.max(1, Math.ceil(total / pageSize));
-    const { q } = query;
 
     // The row: the search field, then three menu buttons, Filters, Sort and View. Search is the
     // thing you type, so it stays in the row; the set and rarity filters are a sheet.
@@ -60,31 +66,51 @@ export async function FolderBody(props: FolderBodyProps) {
 
     // A search that finds nothing keeps the row where it was: the view draws this in the list's
     // place, so the search field is not remounted (and its caret lost) on the way to zero and back.
-    const noHits =
-        total === 0 ? (
-            <AppEmptyState
-                icon="search"
-                title="No cards found"
-                description={q ? `No cards match “${q}”. Try a different name or set.` : "Nothing in that set or rarity. Clear a filter to widen the list."}
-            />
-        ) : null;
+    const noHits = (
+        <AppEmptyState
+            icon="search"
+            title="No cards found"
+            description={q ? `No cards match “${q}”. Try a different name or set.` : "Nothing in that set or rarity. Clear a filter to widen the list."}
+        />
+    );
 
-    if (pokedex) {
+    if (props.readOnly) {
+        const { cards, total, pageSize = 100 } = props;
+        if (total === 0 && !narrowed) return <>{empty}</>;
+        const totalPages = Math.max(1, Math.ceil(total / pageSize));
         return (
             <div className="flex flex-1 flex-col gap-4">
-                <DexView slots={pokedex.slots} initialSize={size} toolbar={toolbar} empty={noHits} />
+                <PublicCardsView cards={cards} initialSize={size} toolbar={toolbar} empty={total === 0 ? noHits : null} />
+                {total > 0 ? <CardsPagination page={query.page} totalPages={totalPages} hrefFor={(n) => listHref(basePath, query, { page: n })} /> : null}
+            </div>
+        );
+    }
+
+    // Keyed on the list's URL: a new search or sort is a new list, with its own first batch and
+    // nothing scrolled-to from the last one.
+    const key = listHref(basePath, query, {});
+
+    if (props.pokedex) {
+        return (
+            <div className="flex flex-1 flex-col gap-4">
+                <DexView key={key} dex={props.pokedex.dex} narrowed={narrowed} initialSize={size} toolbar={toolbar} noHits={noHits} empty={empty} />
             </div>
         );
     }
 
     return (
         <div className="flex flex-1 flex-col gap-4">
-            {props.readOnly ? (
-                <PublicCardsView cards={props.cards} initialSize={size} toolbar={toolbar} empty={noHits} />
-            ) : (
-                <CardsView cards={props.cards} initialView={view} initialSize={size} toolbar={toolbar} empty={noHits} />
-            )}
-            {total > 0 ? <CardsPagination page={query.page} totalPages={totalPages} hrefFor={(n) => listHref(basePath, query, { page: n })} /> : null}
+            <CardsView
+                key={key}
+                list={props.list}
+                filter={props.filter}
+                narrowed={narrowed}
+                initialView={view}
+                initialSize={size}
+                toolbar={toolbar}
+                noHits={noHits}
+                empty={empty}
+            />
         </div>
     );
 }

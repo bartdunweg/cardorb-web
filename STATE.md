@@ -44,6 +44,15 @@ which also says what is already yours), Settings (avatar through the API), publi
   removed, and each opens its place in Cards or Wishlist. Copies are offered only when the card is
   one collection row; two printings are managed in Cards. New actions `setCopies` and `removeCard`
   in `cards/actions.ts`; the item DELETE needs a JSON content type, so it sends `{}`.
+- **A folder page opens before its cards.** The five list pages (All cards, a folder, Favorites,
+  Wishlist, Pokédex) no longer await the list: the title, actions and the row (search, Filters,
+  Sort, View) go out at once, the count and value under the title and the cards themselves
+  stream in from one promise (`FolderPage` takes `datapoints` as a promise, `CardsView` and
+  `DexView` a promise they `use()` under Suspense). The first batch is 48 cards (`LIST_BATCH`);
+  `CardsList` asks for the next 48 through the `loadMoreCards` server action when a sentinel
+  comes within a screen, with a Show more button as the manual way. `?page=` is gone from the
+  owner's lists; the public profile still pages by URL. The card sheet asks for the folder list
+  and the facets when a card first opens, not when the page mounts.
 - **The app frame streams before its reads.** The app layout no longer awaits the profile and
   the folders: it hands their promises to the sidebar and the tab bar, which draw the frame at
   once and fill the folder rows and the account card through Suspense (`use()`) when each read
