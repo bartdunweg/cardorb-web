@@ -42,7 +42,9 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                     <button
                         type="button"
                         onClick={() => onSelect(card)}
-                        className="flex h-full w-full pressable cursor-pointer flex-col gap-2 rounded-2xl bg-primary p-2 text-left shadow-lift-xs outline-focus-ring hover:bg-secondary focus-visible:outline-2"
+                        // The picture and its words, nothing around them: a card is its own surface, and a tile behind it read as
+                        // a second one. The focus ring follows the picture's corners.
+                        className="flex h-full w-full pressable cursor-pointer flex-col gap-2 rounded-lg text-left outline-offset-2 outline-focus-ring focus-visible:outline-2"
                     >
                         {/* No ring on the picture: a card carries its own printed border, and a hairline over it read as a second one. */}
                         {/* Nothing of ours around the picture: a card carries its own printed border, and a hairline

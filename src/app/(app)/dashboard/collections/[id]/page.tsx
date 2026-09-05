@@ -40,7 +40,7 @@ export default async function CollectionDetailPage({ params, searchParams }: { p
     );
     const common = {
         title: collection.name,
-        back: { href: "/dashboard/collections", label: "Folders" },
+        back: { href: "/dashboard/collections", label: "Collection" },
         actions: <CollectionDetailActions folder={collection} facets={facets} />,
         query,
         basePath: `/dashboard/collections/${id}`,

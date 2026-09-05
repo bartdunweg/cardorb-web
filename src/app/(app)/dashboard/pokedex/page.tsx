@@ -40,7 +40,7 @@ export default async function PokedexPage({ searchParams }: { searchParams: Prom
     return (
         <FolderPage
             title="Pokédex"
-            back={{ href: "/dashboard/collections", label: "Folders" }}
+            back={{ href: "/dashboard/collections", label: "Collection" }}
             datapoints={datapoints}
             actions={
                 <div className="max-lg:hidden">

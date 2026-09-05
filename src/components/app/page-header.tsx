@@ -52,13 +52,20 @@ export function PageHeader({
 
     // The bar takes the title over exactly when the large one has left the screen. IntersectionObserver
     // rather than a scroll listener: it costs nothing between changes and needs no layout reads.
+    const tall = Boolean(back || barActions);
     useEffect(() => {
         const el = sentinel.current;
         if (!el || typeof IntersectionObserver === "undefined") return;
-        const observer = new IntersectionObserver(([entry]) => setCollapsed(!entry.isIntersecting), { threshold: 0 });
+        const observer = new IntersectionObserver(([entry]) => setCollapsed(!entry.isIntersecting), {
+            // The title counts as gone once it is under the bar, not once it has left the screen: with Back
+            // the bar is 68 px and the title starts right under it, so any part of it under the bar is
+            // enough; without one the bar is 48 px over a title that starts at 24, so all of it must be.
+            threshold: tall ? 1 : 0,
+            rootMargin: `${tall ? -68 : -48}px 0px 0px 0px`,
+        });
         observer.observe(el);
         return () => observer.disconnect();
-    }, []);
+    }, [tall]);
 
     return (
         // One element, so the page's own gap applies once, under it: the distances inside are the bar's
@@ -72,7 +79,8 @@ export function PageHeader({
                     // from the top (the search on Home 16, by its own -mt-2).
                     back || barActions ? "mb-4 pt-4" : "-mb-6 h-12",
                     // The glass comes with the collapse (or with Back); over the uncollapsed title it would only blur it.
-                    (collapsed || back || barActions) && "glass",
+                    // The glass comes with the collapse alone: at rest the buttons sit on the page, not in a band.
+                    collapsed && "glass",
                     // Without Back the bar has nothing to show until the title collapses into it, so it lies over
                     // the first 48 px and lets taps through: the page's first content starts 16 px from the top.
                     !back && !barActions && !collapsed && "pointer-events-none",

@@ -19,7 +19,7 @@ export default async function FavoritesPage({ searchParams }: { searchParams: Pr
     return (
         <FolderPage
             title="Favorites"
-            back={{ href: "/dashboard/collections", label: "Folders" }}
+            back={{ href: "/dashboard/collections", label: "Collection" }}
             datapoints={datapoints}
             actions={
                 <div className="max-lg:hidden">
