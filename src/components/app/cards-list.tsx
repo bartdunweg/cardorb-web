@@ -47,6 +47,7 @@ export function CardsList({
     const more = cards.length < first.total;
 
     const loadMore = () => {
+        if (pending) return;
         setFailed(false);
         startTransition(async () => {
             try {
@@ -89,19 +90,14 @@ export function CardsList({
         <>
             {view === "grid" ? <CardsGrid cards={cards} onSelect={onSelect} size={size} /> : <CardsTable cards={cards} onSelect={onSelect} />}
             {pending ? <CardsSkeleton count={6} /> : null}
-            {failed ? (
-                <div className="flex flex-col items-center gap-3 py-4">
-                    <p className="text-sm text-tertiary">The next cards did not load.</p>
-                    <Button color="secondary" size="sm" onClick={loadMore}>
-                        Try again
-                    </Button>
-                </div>
-            ) : null}
-            {/* Where the next batch is asked for. Also the manual way in: a browser without the observer, or a reader who would rather press. */}
-            {more && !pending && !failed ? (
-                <div ref={sentinel} className="flex justify-center py-2">
-                    <Button color="tertiary" size="sm" onClick={loadMore}>
-                        Show more
+            {/* Where the next batch is asked for. Also the manual way in: a browser without the observer, or a
+                reader who would rather press. One button through loading and failure alike, so a keyboard
+                that pressed it keeps its place; it unmounts only when the last card is in. */}
+            {more ? (
+                <div ref={sentinel} className="flex flex-col items-center gap-3 py-2">
+                    {failed ? <p className="text-sm text-tertiary">The next cards did not load.</p> : null}
+                    <Button color={failed ? "secondary" : "tertiary"} size="sm" onClick={loadMore} aria-disabled={pending || undefined}>
+                        {pending ? "Loading…" : failed ? "Try again" : "Show more"}
                     </Button>
                 </div>
             ) : null}
