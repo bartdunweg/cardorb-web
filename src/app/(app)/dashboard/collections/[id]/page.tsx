@@ -4,7 +4,7 @@ import { CollectionDetailActions } from "@/components/app/collection-detail-acti
 import { FolderPage } from "@/components/app/folder-page";
 import { Badge } from "@/components/base/badges/badges";
 import { ProgressBarBase } from "@/components/base/progress-indicators/progress-indicators";
-import { getAllMyCards, getMyCards } from "@/lib/cards";
+import { type Facets, getAllMyCards, getMyCards } from "@/lib/cards";
 import { getCollection } from "@/lib/collections";
 import { groupByDex } from "@/lib/dex-groups";
 import { ruleChips } from "@/lib/folder-rule";
@@ -22,17 +22,19 @@ export default async function CollectionDetailPage({ params, searchParams }: { p
     const query = readListQuery(await searchParams);
     const { page, q, sort, order, set, rarity } = query;
     const filter = { collectionId: id, q, sort, order, set, rarity };
-    const chips = collection.rule ? (
-        <ul className="flex flex-wrap gap-1.5" aria-label="Rule">
-            {ruleChips(collection.rule).map((chip) => (
-                <li key={chip}>
-                    <Badge size="sm" color="gray" type="pill-color">
-                        {chip}
-                    </Badge>
-                </li>
-            ))}
-        </ul>
-    ) : null;
+    // A rule names a set by its code; the facets carry the title a chip should read.
+    const chipsFor = (facets: Facets) =>
+        collection.rule ? (
+            <ul className="flex flex-wrap gap-1.5" aria-label="Rule">
+                {ruleChips(collection.rule, facets).map((chip) => (
+                    <li key={chip}>
+                        <Badge size="sm" color="gray" type="pill-color">
+                            {chip}
+                        </Badge>
+                    </li>
+                ))}
+            </ul>
+        ) : null;
     const empty = collection.rule ? (
         <AppEmptyState icon="folder" title="Nothing matches yet" description="Cards you own that fit the rule show up here" />
     ) : (
@@ -58,7 +60,7 @@ export default async function CollectionDetailPage({ params, searchParams }: { p
                 empty={empty}
                 pokedex={{ slots: dex.slots }}
             >
-                {chips}
+                {chipsFor(facets)}
                 <ProgressBarBase value={dex.caught} max={span} className="mt-2 max-w-md" aria-label="Pokédex completion" />
             </FolderPage>
         );
@@ -79,7 +81,7 @@ export default async function CollectionDetailPage({ params, searchParams }: { p
             pageSize={PAGE_SIZE}
             empty={empty}
         >
-            {chips}
+            {chipsFor(facets)}
         </FolderPage>
     );
 }

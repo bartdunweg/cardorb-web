@@ -71,7 +71,7 @@ export function CollectionDetailActions({
                     <ModalOverlay>
                         <Modal className="max-w-xl">
                             <Dialog>
-                                <div className="flex max-h-[80vh] w-full max-w-xl flex-col gap-4 rounded-2xl glass-thick p-6 shadow-xl ring-1 ring-secondary">
+                                <div className="flex max-h-[80vh] w-full max-w-xl flex-col gap-4 rounded-2xl glass-thick p-6 shadow-xl">
                                     <AriaHeading slot="title" className="text-lg font-semibold text-primary">
                                         Add cards to this folder
                                     </AriaHeading>
@@ -134,7 +134,7 @@ export function CollectionDetailActions({
                     <Modal className="max-w-sm">
                         <Dialog>
                             {({ close }) => (
-                                <div className="flex w-full max-w-sm flex-col gap-4 rounded-2xl glass-thick p-6 shadow-xl ring-1 ring-secondary">
+                                <div className="flex w-full max-w-sm flex-col gap-4 rounded-2xl glass-thick p-6 shadow-xl">
                                     <AriaHeading slot="title" className="text-lg font-semibold text-primary">
                                         Delete this folder?
                                     </AriaHeading>

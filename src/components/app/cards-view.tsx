@@ -17,11 +17,14 @@ export function CardsView({
     initialView,
     initialSize = "md",
     toolbar,
+    empty,
 }: {
     cards: Card[];
     initialView: CardsViewMode;
     initialSize?: CardsSize;
     toolbar?: ReactNode;
+    /** Drawn in the list's place when the filters find nothing, so the row above keeps its place in the tree. */
+    empty?: ReactNode;
 }) {
     const [view, setView] = useState(initialView);
     const [size, setSize] = useState(initialSize);
@@ -35,7 +38,7 @@ export function CardsView({
                 <ViewMenu view={view} size={size} onView={setView} onSize={setSize} />
             </div>
 
-            {view === "grid" ? <CardsGrid cards={cards} onSelect={setSelected} size={size} /> : <CardsTable cards={cards} onSelect={setSelected} />}
+            {empty ?? (view === "grid" ? <CardsGrid cards={cards} onSelect={setSelected} size={size} /> : <CardsTable cards={cards} onSelect={setSelected} />)}
 
             <CardDetailSlideout card={selected} onClose={() => setSelected(null)} />
         </div>

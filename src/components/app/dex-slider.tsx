@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "@untitledui/icons";
 import Link from "next/link";
 import { CardImage } from "@/components/app/card-image";
-import type { DexCard } from "@/lib/pokedex";
+import type { DexCard } from "@/lib/api-shapes";
 
 // One Pokédex slot holding several owned cards: a horizontal scroll-snap slider. Swipe on
 // touch/trackpad; the arrows (shown on hover) let a mouse-only desktop page through them too.

@@ -59,7 +59,7 @@ to this.
   "collections". On desktop the sidebar is the list; on a phone the Folders tab is.
 - **Owned / wishlist** — mutually exclusive. A card you do not own is on the wishlist, nowhere
   else. Collection views and stats exclude wishlist cards.
-- **Favorite** — a flag on a card you own. Not a folder.
+- **Favorite** — a flag on a card you own, shown as a folder that is always there.
 - **Pokédex slot** — one Pokémon (dex number 1–1025) with every card you own of it; grey when
   you own none. A card can belong to several slots (tag teams).
 - **Card** — one printing, as the Card Orb API identifies it from its catalogues (TCGdex first). Not the Pokémon.

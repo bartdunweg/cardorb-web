@@ -8,7 +8,6 @@ import { SidebarSearchTrigger } from "@/components/app/command-search";
 import { FolderDialog } from "@/components/app/folder-dialog";
 import type { NavItemDividerType, NavItemType } from "@/components/application/app-navigation/config";
 import { SidebarNavigationSectionDividers } from "@/components/application/app-navigation/sidebar-navigation/sidebar-section-dividers";
-import type { Facets } from "@/lib/cards";
 
 type Account = { name: string; email: string; avatarUrl: string | null };
 
@@ -17,7 +16,7 @@ type Account = { name: string; email: string; avatarUrl: string | null };
 // the wishlist (cards you do not have, so outside it too) at the top; under the Collection heading every folder, flat: All cards, Favorites,
 // the Pokédex, each with its own icon, and the ones you made with a folder's, then New folder. On desktop this list is the
 // overview; the Folders page is the phone's.
-export function AppSidebar({ account, collections, facets }: { account: Account; collections: { id: string; name: string }[]; facets: Facets }) {
+export function AppSidebar({ account, collections }: { account: Account; collections: { id: string; name: string }[] }) {
     const pathname = usePathname();
 
     const navItems: (NavItemType | NavItemDividerType)[] = [
@@ -40,7 +39,7 @@ export function AppSidebar({ account, collections, facets }: { account: Account;
             // Drawn as a nav item, so it sits on the items' line: the same padding, icon size and type.
             afterItems={
                 <div className="px-4 pt-px">
-                    <FolderDialog mode="create" facets={facets}>
+                    <FolderDialog mode="create">
                         <AriaButton className="group relative flex max-h-9 w-full cursor-pointer items-center rounded-md bg-primary p-2 outline-focus-ring transition duration-100 ease-linear select-none hover:bg-primary_hover focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2">
                             <Plus
                                 aria-hidden="true"

@@ -1,5 +1,5 @@
 import { SettingsForm } from "@/components/app/settings-form";
-import { AvatarLabelGroup } from "@/components/base/avatar/avatar-label-group";
+import { Avatar } from "@/components/base/avatar/avatar";
 import { accountFrom, getMyProfile } from "@/lib/profile";
 
 // The fifth tab on a phone: the account at the top, the settings under it, Sign out at the end.
@@ -18,9 +18,14 @@ export default async function YouPage() {
             profile={me.profile}
             email={me.email}
             heading={
-                <h1>
-                    <AvatarLabelGroup size="lg" src={account.avatarUrl ?? undefined} alt="" title={account.name} subtitle={account.email} />
-                </h1>
+                // The name is the heading; the avatar and the email sit beside and under it, outside the h1.
+                <div className="flex items-center gap-3">
+                    <Avatar size="lg" src={account.avatarUrl ?? undefined} alt="" />
+                    <div className="flex min-w-0 flex-col">
+                        <h1 className="truncate text-lg font-semibold text-primary">{account.name}</h1>
+                        <p className="truncate text-sm text-tertiary">{account.email}</p>
+                    </div>
+                </div>
             }
         />
     );

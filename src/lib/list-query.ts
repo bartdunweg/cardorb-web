@@ -36,9 +36,8 @@ export type ListQuery = {
 /** What a list page reads from its URL. */
 export type ListSearchParams = { page?: string; sort?: string; q?: string; set?: string; rarity?: string };
 
-export const activeFilterCount = (q: ListQuery): number => [q.q, q.set, q.rarity].filter(Boolean).length;
 /** A search or a filter is on. */
-export const isNarrowed = (q: ListQuery): boolean => activeFilterCount(q) > 0;
+export const isNarrowed = (q: ListQuery): boolean => [q.q, q.set, q.rarity].some(Boolean);
 
 const isSortKey = (v: unknown): v is SortKey => SORT_OPTIONS.some((o) => o.value === v);
 

@@ -10,7 +10,6 @@ import {
     publicCardFromItem,
     seriesFromSets,
     setCardFromBrowse,
-    slotsFromEntries,
 } from "./api-shapes";
 
 describe("absoluteImage", () => {
@@ -100,18 +99,6 @@ describe("publicCardFromItem", () => {
         });
         expect(card).toMatchObject({ id: "Base Set-58", set_name: "Base Set", quantity: 3, types: ["Lightning"], finish: null, tcg_id: "base1-58" });
         expect(card.image_url).toMatch(/^https:\/\/.*\/api\/cover\?url=x$/);
-    });
-});
-
-describe("slotsFromEntries", () => {
-    it("counts caught Pokémon and cards", () => {
-        const { slots, caughtNumbers, totalCards } = slotsFromEntries([
-            { id: 1, name: "Bulbasaur", owned: 0, cards: [] },
-            { id: 25, name: "Pikachu", owned: 2, cards: [{ key: "a", name: "Pikachu", image: "/p.png" }] },
-        ]);
-        expect(caughtNumbers).toBe(1);
-        expect(totalCards).toBe(2);
-        expect(slots[1]).toEqual({ number: 25, cards: [{ id: "a", name: "Pikachu", imageUrl: "https://api.cardorb.com/p.png" }] });
     });
 });
 

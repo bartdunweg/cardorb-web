@@ -58,23 +58,21 @@ export async function FolderBody(props: FolderBodyProps) {
         </>
     );
 
-    if (total === 0) {
-        return (
-            <div className="flex flex-1 flex-col gap-4">
-                <div className="flex flex-wrap items-center gap-2">{toolbar}</div>
-                <AppEmptyState
-                    icon="search"
-                    title="No cards found"
-                    description={q ? `No cards match “${q}”. Try a different name or set.` : "Nothing in that set or rarity. Clear a filter to widen the list."}
-                />
-            </div>
-        );
-    }
+    // A search that finds nothing keeps the row where it was: the view draws this in the list's
+    // place, so the search field is not remounted (and its caret lost) on the way to zero and back.
+    const noHits =
+        total === 0 ? (
+            <AppEmptyState
+                icon="search"
+                title="No cards found"
+                description={q ? `No cards match “${q}”. Try a different name or set.` : "Nothing in that set or rarity. Clear a filter to widen the list."}
+            />
+        ) : null;
 
     if (pokedex) {
         return (
             <div className="flex flex-1 flex-col gap-4">
-                <DexView slots={pokedex.slots} initialSize={size} toolbar={toolbar} />
+                <DexView slots={pokedex.slots} initialSize={size} toolbar={toolbar} empty={noHits} />
             </div>
         );
     }
@@ -82,11 +80,11 @@ export async function FolderBody(props: FolderBodyProps) {
     return (
         <div className="flex flex-1 flex-col gap-4">
             {props.readOnly ? (
-                <PublicCardsView cards={props.cards} initialSize={size} toolbar={toolbar} />
+                <PublicCardsView cards={props.cards} initialSize={size} toolbar={toolbar} empty={noHits} />
             ) : (
-                <CardsView cards={props.cards} initialView={view} initialSize={size} toolbar={toolbar} />
+                <CardsView cards={props.cards} initialView={view} initialSize={size} toolbar={toolbar} empty={noHits} />
             )}
-            <CardsPagination page={query.page} totalPages={totalPages} hrefFor={(n) => listHref(basePath, query, { page: n })} />
+            {total > 0 ? <CardsPagination page={query.page} totalPages={totalPages} hrefFor={(n) => listHref(basePath, query, { page: n })} /> : null}
         </div>
     );
 }

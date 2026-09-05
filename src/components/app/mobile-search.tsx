@@ -31,8 +31,8 @@ export function MobileSearchSheet() {
             <button
                 type="button"
                 aria-label="Scan a card"
-                aria-disabled="true"
-                className="absolute top-1/2 right-2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-tertiary text-fg-secondary outline-focus-ring hover:bg-quaternary focus-visible:outline-2"
+                disabled
+                className="absolute top-1/2 right-2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-tertiary text-fg-secondary outline-focus-ring focus-visible:outline-2 disabled:cursor-not-allowed"
             >
                 <Scan className="size-5" />
             </button>

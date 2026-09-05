@@ -1,9 +1,9 @@
 "use client";
 
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
-import { createCollection, updateCollection } from "@/app/(app)/dashboard/collections/actions";
+import { createCollection, loadFacets, updateCollection } from "@/app/(app)/dashboard/collections/actions";
 import { DexRangeFields, dexDraft, dexFromDraft } from "@/components/app/dex-range-fields";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { BadgeWithButton } from "@/components/base/badges/badges";
@@ -16,12 +16,37 @@ import type { Facets } from "@/lib/cards";
 import { type FolderKind, type FolderRule, type PokedexSetting, ruleSummary } from "@/lib/folder-rule";
 
 type FolderShape = { id: string; name: string; kind: FolderKind; rule: FolderRule | null; pokedex: PokedexSetting | null };
+type FormProps = {
+    mode: "create" | "edit";
+    folder?: FolderShape;
+    facets?: Facets;
+    /** Told the new folder's id, when the opener wants to use it (the card sheet files the card in it). */
+    onSaved?: (id: string | undefined) => void;
+};
+
+const NO_FACETS: Facets = { sets: [], rarities: [] };
 
 // One dialog for a folder's name and its rule: New folder (by hand or by rule) and, on the
 // folder's page, Rename or Edit rule. A folder keeps its kind, so edit mode never shows the
-// choice. The set and rarity pickers are a select that appends chips: the kit has no multi-
-// select, and a list of chips reads what a rule says better than a scrolling box (R-UI-001).
-export function FolderDialog({ mode, folder, facets, children }: { mode: "create" | "edit"; folder?: FolderShape; facets: Facets; children: ReactNode }) {
+// choice. The form mounts inside the dialog, so it starts clean on every open: the sidebar's
+// New folder lives for the whole session and must not remember the last folder made. The set
+// and rarity pickers are a select that appends chips: the kit has no multi-select, and a list of
+// chips reads what a rule says better than a scrolling box (R-UI-001). A page that has the
+// facets hands them in; the sidebar has none and the form asks for them when it opens.
+export function FolderDialog({ children, ...form }: FormProps & { children: ReactNode }) {
+    return (
+        <DialogTrigger>
+            {children}
+            <ModalOverlay>
+                <Modal className="max-w-md">
+                    <Dialog>{({ close }) => <FolderForm {...form} close={close} />}</Dialog>
+                </Modal>
+            </ModalOverlay>
+        </DialogTrigger>
+    );
+}
+
+function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps & { close: () => void }) {
     const router = useRouter();
     const [name, setName] = useState(folder?.name ?? "");
     const [kind, setKind] = useState<FolderKind>(folder?.kind ?? "manual");
@@ -34,6 +59,11 @@ export function FolderDialog({ mode, folder, facets, children }: { mode: "create
     const [rarities, setRarities] = useState<string[]>(folder?.rule?.rarities ?? []);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [loaded, setLoaded] = useState<Facets | null>(given ?? null);
+    useEffect(() => {
+        if (!given) loadFacets().then(setLoaded);
+    }, [given]);
+    const facets = loaded ?? NO_FACETS;
 
     const rule = (): FolderRule | undefined => {
         if (kind !== "rule") return undefined;
@@ -64,8 +94,12 @@ export function FolderDialog({ mode, folder, facets, children }: { mode: "create
             return;
         }
         close();
-        // A new rule folder is worth seeing filled; a renamed one is where it was.
-        if (mode === "create" && kind === "rule" && res.id) router.push(`/dashboard/collections/${res.id}`);
+        // A new rule folder is worth seeing filled; a renamed one is where it was. An opener that
+        // asked for the id stays where it is and gets it.
+        if (onSaved) {
+            onSaved(res.id);
+            router.refresh();
+        } else if (mode === "create" && kind === "rule" && res.id) router.push(`/dashboard/collections/${res.id}`);
         else router.refresh();
     };
 
@@ -75,140 +109,124 @@ export function FolderDialog({ mode, folder, facets, children }: { mode: "create
     const titleOf = (name: string) => facets.sets.find((s) => s.name === name)?.title ?? name;
 
     return (
-        <DialogTrigger>
-            {children}
-            <ModalOverlay>
-                <Modal className="max-w-md">
-                    <Dialog>
-                        {({ close }) => (
-                            <div className="flex max-h-[85dvh] w-full max-w-md flex-col gap-4 overflow-y-auto rounded-2xl glass-thick p-6 shadow-xl">
-                                <AriaHeading slot="title" className="text-lg font-semibold text-primary">
-                                    {title}
-                                </AriaHeading>
-                                <Input label="Name" value={name} onChange={setName} placeholder={kind === "rule" ? "e.g. Kanto" : "e.g. Charizards"} />
+        <div className="flex max-h-[85dvh] w-full max-w-md flex-col gap-4 overflow-y-auto rounded-2xl glass-thick p-6 shadow-xl">
+            <AriaHeading slot="title" className="text-lg font-semibold text-primary">
+                {title}
+            </AriaHeading>
+            <Input label="Name" value={name} onChange={setName} placeholder={kind === "rule" ? "e.g. Kanto" : "e.g. Charizards"} />
 
-                                {mode === "create" ? (
-                                    <div className="flex flex-col gap-1.5">
-                                        <span className="text-sm font-medium text-secondary">Filled</span>
-                                        <ButtonGroup
-                                            aria-label="How the folder fills"
-                                            selectionMode="single"
-                                            disallowEmptySelection
-                                            selectedKeys={new Set([kind])}
-                                            onSelectionChange={(keys) => {
-                                                const key = [...keys][0];
-                                                if (key === "manual" || key === "rule") setKind(key);
-                                            }}
-                                        >
-                                            <ButtonGroupItem id="manual">By hand</ButtonGroupItem>
-                                            <ButtonGroupItem id="rule">By rule</ButtonGroupItem>
-                                        </ButtonGroup>
-                                    </div>
-                                ) : null}
+            {mode === "create" ? (
+                <div className="flex flex-col gap-1.5">
+                    <span className="text-sm font-medium text-secondary">Filled</span>
+                    <ButtonGroup
+                        aria-label="How the folder fills"
+                        selectionMode="single"
+                        disallowEmptySelection
+                        selectedKeys={new Set([kind])}
+                        onSelectionChange={(keys) => {
+                            const key = [...keys][0];
+                            if (key === "manual" || key === "rule") setKind(key);
+                        }}
+                    >
+                        <ButtonGroupItem id="manual">By hand</ButtonGroupItem>
+                        <ButtonGroupItem id="rule">By rule</ButtonGroupItem>
+                    </ButtonGroup>
+                </div>
+            ) : null}
 
-                                {kind === "rule" ? (
-                                    <>
-                                        <DexRangeFields label="Pokédex" anyLabel="Any Pokémon" dex={dex} onChange={setDex} />
+            {kind === "rule" ? (
+                <>
+                    <DexRangeFields label="Pokédex" anyLabel="Any Pokémon" dex={dex} onChange={setDex} />
 
-                                        <div className="flex flex-col gap-1.5">
-                                            <NativeSelect
-                                                label="Sets"
-                                                value=""
-                                                onChange={(event) => {
-                                                    if (event.target.value) setSets((s) => [...s, event.target.value]);
-                                                }}
-                                                options={[
-                                                    { label: sets.length ? "Add another set" : "Any set", value: "" },
-                                                    ...setOptions.map((s) => ({ label: s.title, value: s.name })),
-                                                ]}
-                                            />
-                                            {sets.length ? (
-                                                <div className="flex flex-wrap gap-1.5">
-                                                    {sets.map((s) => (
-                                                        <BadgeWithButton
-                                                            key={s}
-                                                            size="md"
-                                                            color="gray"
-                                                            type="pill-color"
-                                                            buttonLabel={`Remove ${titleOf(s)}`}
-                                                            onButtonClick={() => setSets((all) => all.filter((x) => x !== s))}
-                                                        >
-                                                            {titleOf(s)}
-                                                        </BadgeWithButton>
-                                                    ))}
-                                                </div>
-                                            ) : null}
-                                        </div>
-
-                                        <div className="flex flex-col gap-1.5">
-                                            <NativeSelect
-                                                label="Rarities"
-                                                value=""
-                                                onChange={(event) => {
-                                                    if (event.target.value) setRarities((r) => [...r, event.target.value]);
-                                                }}
-                                                options={[
-                                                    { label: rarities.length ? "Add another rarity" : "Any rarity", value: "" },
-                                                    ...rarityOptions.map((r) => ({ label: r, value: r })),
-                                                ]}
-                                            />
-                                            {rarities.length ? (
-                                                <div className="flex flex-wrap gap-1.5">
-                                                    {rarities.map((r) => (
-                                                        <BadgeWithButton
-                                                            key={r}
-                                                            size="md"
-                                                            color="gray"
-                                                            type="pill-color"
-                                                            buttonLabel={`Remove ${r}`}
-                                                            onButtonClick={() => setRarities((all) => all.filter((x) => x !== r))}
-                                                        >
-                                                            {r}
-                                                        </BadgeWithButton>
-                                                    ))}
-                                                </div>
-                                            ) : null}
-                                        </div>
-
-                                        <p className="text-sm text-tertiary" aria-live="polite">
-                                            {preview && (preview.dex || preview.sets || preview.rarities)
-                                                ? `Shows ${ruleSummary(preview, facets)}.`
-                                                : "Add a Pokédex range, a set or a rarity."}{" "}
-                                            Owned cards only.
-                                        </p>
-                                    </>
-                                ) : null}
-
-                                <Toggle
-                                    label="Show as Pokédex"
-                                    hint="One slot per Pokémon, in the national order."
-                                    isSelected={asPokedex}
-                                    onChange={setAsPokedex}
-                                />
-                                {asPokedex ? (
-                                    <>
-                                        <DexRangeFields label="Pokédex range" anyLabel="Every Pokémon" dex={dexShown} onChange={setDexShown} />
-                                        <Toggle label="Show the Pokémon I'm missing" isSelected={missing} onChange={setMissing} />
-                                    </>
-                                ) : null}
-                                {error ? (
-                                    <p role="alert" className="text-sm text-error-primary">
-                                        {error}
-                                    </p>
-                                ) : null}
-                                <div className="flex justify-end gap-2">
-                                    <Button color="secondary" onClick={close}>
-                                        Cancel
-                                    </Button>
-                                    <Button onClick={() => save(close)} isLoading={saving}>
-                                        {mode === "create" ? "Create" : "Save"}
-                                    </Button>
-                                </div>
+                    <div className="flex flex-col gap-1.5">
+                        <NativeSelect
+                            label="Sets"
+                            value=""
+                            onChange={(event) => {
+                                if (event.target.value) setSets((s) => [...s, event.target.value]);
+                            }}
+                            options={[
+                                { label: !loaded ? "Loading sets…" : sets.length ? "Add another set" : "Any set", value: "" },
+                                ...setOptions.map((s) => ({ label: s.title, value: s.name })),
+                            ]}
+                        />
+                        {sets.length ? (
+                            <div className="flex flex-wrap gap-1.5">
+                                {sets.map((s) => (
+                                    <BadgeWithButton
+                                        key={s}
+                                        size="md"
+                                        color="gray"
+                                        type="pill-color"
+                                        buttonLabel={`Remove ${titleOf(s)}`}
+                                        onButtonClick={() => setSets((all) => all.filter((x) => x !== s))}
+                                    >
+                                        {titleOf(s)}
+                                    </BadgeWithButton>
+                                ))}
                             </div>
-                        )}
-                    </Dialog>
-                </Modal>
-            </ModalOverlay>
-        </DialogTrigger>
+                        ) : null}
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                        <NativeSelect
+                            label="Rarities"
+                            value=""
+                            onChange={(event) => {
+                                if (event.target.value) setRarities((r) => [...r, event.target.value]);
+                            }}
+                            options={[
+                                { label: !loaded ? "Loading rarities…" : rarities.length ? "Add another rarity" : "Any rarity", value: "" },
+                                ...rarityOptions.map((r) => ({ label: r, value: r })),
+                            ]}
+                        />
+                        {rarities.length ? (
+                            <div className="flex flex-wrap gap-1.5">
+                                {rarities.map((r) => (
+                                    <BadgeWithButton
+                                        key={r}
+                                        size="md"
+                                        color="gray"
+                                        type="pill-color"
+                                        buttonLabel={`Remove ${r}`}
+                                        onButtonClick={() => setRarities((all) => all.filter((x) => x !== r))}
+                                    >
+                                        {r}
+                                    </BadgeWithButton>
+                                ))}
+                            </div>
+                        ) : null}
+                    </div>
+
+                    <p className="text-sm text-tertiary" aria-live="polite">
+                        {preview && (preview.dex || preview.sets || preview.rarities)
+                            ? `Shows ${ruleSummary(preview, facets)}.`
+                            : "Add a Pokédex range, a set or a rarity."}{" "}
+                        Owned cards only.
+                    </p>
+                </>
+            ) : null}
+
+            <Toggle label="Show as Pokédex" hint="One slot per Pokémon, in the national order." isSelected={asPokedex} onChange={setAsPokedex} />
+            {asPokedex ? (
+                <>
+                    <DexRangeFields label="Pokédex range" anyLabel="Every Pokémon" dex={dexShown} onChange={setDexShown} />
+                    <Toggle label="Show the Pokémon I'm missing" isSelected={missing} onChange={setMissing} />
+                </>
+            ) : null}
+            {error ? (
+                <p role="alert" className="text-sm text-error-primary">
+                    {error}
+                </p>
+            ) : null}
+            <div className="flex justify-end gap-2">
+                <Button color="secondary" onClick={close}>
+                    Cancel
+                </Button>
+                <Button onClick={() => save(close)} isLoading={saving}>
+                    {mode === "create" ? "Create" : "Save"}
+                </Button>
+            </div>
+        </div>
     );
 }

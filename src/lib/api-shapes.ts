@@ -187,20 +187,6 @@ export type DexEntry = { id: number; name: string; owned: number; cards: { key: 
 export type DexCard = { id: string; name: string; imageUrl: string | null };
 export type DexSlot = { number: number; cards: DexCard[] };
 
-export function slotsFromEntries(entries: DexEntry[]): { slots: DexSlot[]; caughtNumbers: number; totalCards: number } {
-    let caughtNumbers = 0;
-    let totalCards = 0;
-    const slots = entries.map((e) => {
-        if (e.owned > 0) caughtNumbers += 1;
-        totalCards += e.owned;
-        return {
-            number: e.id,
-            cards: e.cards.map((c) => ({ id: c.key, name: c.name, imageUrl: absoluteImage(c.image) })),
-        };
-    });
-    return { slots, caughtNumbers, totalCards };
-}
-
 // ── GET /v1/catalog/sets ──────────────────────────────────────────────────────────────────
 
 /** One set as the API lists it, with the viewer's own counts folded in. Newest set first. */
