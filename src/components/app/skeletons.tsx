@@ -25,7 +25,7 @@ export function CardsSkeleton({ count = 12 }: { count?: number }) {
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {Array.from({ length: count }, (_, i) => (
                 <div key={i} className="flex flex-col gap-2 p-2">
-                    <div className="aspect-[63/88] w-full rounded-lg bg-quaternary" />
+                    <div className="aspect-card w-full rounded-lg bg-quaternary" />
                     <Block className="h-4 w-3/4" />
                     <Block className="h-3 w-1/2" />
                 </div>
@@ -40,7 +40,7 @@ export function HomeSkeleton() {
         <>
             <div className="flex flex-col gap-x-6 gap-y-5 md:flex-row md:flex-wrap">
                 {Array.from({ length: 4 }, (_, i) => (
-                    <div key={i} className="flex flex-1 flex-col gap-5 rounded-xl px-4 py-5 ring-1 ring-primary ring-inset md:min-w-[240px] md:px-5">
+                    <div key={i} className="flex flex-1 flex-col gap-5 rounded-xl px-4 py-5 ring-1 ring-primary ring-inset md:min-w-60 md:px-5">
                         <Block className="size-12 rounded-lg" />
                         <div className="flex flex-col gap-2">
                             <Block className="h-4 w-20" />
@@ -99,7 +99,7 @@ export function SetSkeleton() {
             <Block className="-mt-4 h-2 max-w-md" />
             <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
                 {Array.from({ length: 40 }, (_, i) => (
-                    <div key={i} className="aspect-[63/88] rounded-md bg-quaternary" />
+                    <div key={i} className="aspect-card rounded-md bg-quaternary" />
                 ))}
             </div>
         </>

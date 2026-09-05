@@ -144,11 +144,11 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
 
                     <SlideoutMenu.Content>
                         {card?.image_url ? (
-                            <div className="relative mx-auto aspect-[63/88] w-48 overflow-hidden rounded-xl ring-1 ring-image ring-inset">
+                            <div className="relative mx-auto aspect-card w-48 overflow-hidden rounded-xl ring-1 ring-image ring-inset">
                                 <CardImage src={card.image_url} alt={card.name} sizes="192px" className="object-contain" priority />
                             </div>
                         ) : (
-                            <div className="mx-auto flex aspect-[63/88] w-48 flex-col items-center justify-center gap-1 rounded-xl bg-quaternary p-4 text-center">
+                            <div className="mx-auto flex aspect-card w-48 flex-col items-center justify-center gap-1 rounded-xl bg-quaternary p-4 text-center">
                                 <span className="text-sm font-medium text-secondary">{card?.name}</span>
                                 {card?.number ? <span className="text-xs text-quaternary">#{card.number}</span> : null}
                             </div>

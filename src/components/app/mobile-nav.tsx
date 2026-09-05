@@ -18,7 +18,7 @@ const tabs = [
 ];
 
 // 11 px labels: a size under the body scale, as a native tab bar writes them, so five fit with room.
-const tabClass = "pressable flex flex-1 flex-col items-center gap-1 rounded-full py-1.5 text-[11px]/3.5 font-medium transition-colors duration-150";
+const tabClass = "pressable flex flex-1 flex-col items-center gap-1 rounded-full py-1.5 text-2xs font-medium transition-colors duration-150";
 
 // Bottom tab bar for mobile: Home, Browse (every set), the folders (All cards, Favorites and the
 // Pokédex among them, one level down) and the wishlist. You is the avatar at the top of Home and

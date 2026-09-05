@@ -47,7 +47,7 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                         {/* No ring on the picture: a card carries its own printed border, and a hairline over it read as a second one. */}
                         {/* Nothing of ours around the picture: a card carries its own printed border, and a hairline
                             or a grey box behind it read as a second one. The grey stays only where there is no picture. */}
-                        <div className={cx("relative aspect-[63/88] w-full overflow-hidden rounded-lg", !card.image_url && "bg-quaternary")}>
+                        <div className={cx("relative aspect-card w-full overflow-hidden rounded-lg", !card.image_url && "bg-quaternary")}>
                             {card.image_url ? (
                                 <CardImage
                                     src={card.image_high_url ?? card.image_url}
