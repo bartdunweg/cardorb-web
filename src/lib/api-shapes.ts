@@ -1,3 +1,5 @@
+import type { FolderKind, FolderRule } from "@/lib/folder-rule";
+
 /**
  * What the API answers, and how it becomes what the screens already render.
  *
@@ -84,6 +86,19 @@ export type Card = {
 export function priceForCopy({ finish, price, priceHolo }: Pick<CardItem, "finish" | "price" | "priceHolo">): number | null {
     const chosen = (finish === "holo" || finish === "reverse-holo" ? priceHolo : null) ?? price;
     return chosen?.nm?.mid ?? chosen?.market ?? null;
+}
+
+/**
+ * A folder as `GET /v1/folders` sends it. `kind` and `rule` are optional on the wire: an API from
+ * before rule folders sends neither, and every folder is then one filled by hand.
+ */
+export type FolderItem = { id: string; name: string; createdAt: string; count: number; kind?: FolderKind; rule?: FolderRule | null };
+
+export type Folder = { id: string; name: string; createdAt: string; count: number; kind: FolderKind; rule: FolderRule | null };
+
+export function folderFromApi(f: FolderItem): Folder {
+    const rule = f.rule ?? null;
+    return { id: f.id, name: f.name, createdAt: f.createdAt, count: f.count, kind: f.kind ?? (rule ? "rule" : "manual"), rule };
 }
 
 export const cardFromItem = (item: CardItem): Card => ({

@@ -1,17 +1,13 @@
 "use client";
 
-import type { FC, ReactNode } from "react";
-import { useState } from "react";
-import { Folder, Heart, Plus } from "@untitledui/icons";
+import type { FC } from "react";
+import { Dataflow03, Folder, Heart, Plus } from "@untitledui/icons";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Heading as AriaHeading } from "react-aria-components";
-import { createCollection } from "@/app/(app)/dashboard/collections/actions";
 import { AppEmptyState } from "@/components/app/app-empty-state";
-import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
+import { FolderDialog } from "@/components/app/folder-dialog";
 import { Button } from "@/components/base/buttons/button";
-import { Input } from "@/components/base/input/input";
 import { FeaturedIcon } from "@/components/foundations/featured-icon/featured-icon";
+import type { Facets } from "@/lib/cards";
 import type { CollectionSummary } from "@/lib/collections";
 import { cx } from "@/utils/cx";
 
@@ -51,77 +47,22 @@ function FolderCard({
 }
 
 // Beside the page title: a plus on a phone, the words from sm up. Both open the dialog below.
-export function NewCollectionButton() {
+export function NewCollectionButton({ facets }: { facets: Facets }) {
     return (
         <>
-            <CreateCollectionModal>
+            <FolderDialog mode="create" facets={facets}>
                 <Button iconLeading={Plus} aria-label="New folder" className="sm:hidden" />
-            </CreateCollectionModal>
-            <CreateCollectionModal>
+            </FolderDialog>
+            <FolderDialog mode="create" facets={facets}>
                 <Button iconLeading={Plus} className="max-sm:hidden">
                     New folder
                 </Button>
-            </CreateCollectionModal>
+            </FolderDialog>
         </>
     );
 }
 
-// The create-collection dialog, opened by whatever trigger is passed as children.
-function CreateCollectionModal({ children }: { children: ReactNode }) {
-    const router = useRouter();
-    const [name, setName] = useState("");
-    const [saving, setSaving] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    const create = async (close: () => void) => {
-        setSaving(true);
-        setError(null);
-        const res = await createCollection(name);
-        setSaving(false);
-        if (res.ok) {
-            setName("");
-            close();
-            router.refresh();
-        } else {
-            setError(res.error);
-        }
-    };
-
-    return (
-        <DialogTrigger>
-            {children}
-            <ModalOverlay>
-                <Modal className="max-w-sm">
-                    <Dialog>
-                        {({ close }) => (
-                            <div className="flex w-full max-w-sm flex-col gap-4 rounded-2xl glass-thick p-6 shadow-xl ring-1 ring-secondary">
-                                <AriaHeading slot="title" className="text-lg font-semibold text-primary">
-                                    New folder
-                                </AriaHeading>
-                                <Input label="Name" value={name} onChange={setName} placeholder="e.g. Charizards" />
-                                {error ? (
-                                    <p role="alert" className="text-sm text-error-primary">
-                                        {error}
-                                    </p>
-                                ) : null}
-                                <div className="flex justify-end gap-2">
-                                    <Button color="secondary" onClick={close}>
-                                        Cancel
-                                    </Button>
-                                    <Button onClick={() => create(close)} isLoading={saving}>
-                                        Create
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
-                    </Dialog>
-                </Modal>
-            </ModalOverlay>
-        </DialogTrigger>
-    );
-}
-
-export function CollectionsGrid({ collections, wishlistCount }: { collections: CollectionSummary[]; wishlistCount: number }) {
+export function CollectionsGrid({ collections, wishlistCount, facets }: { collections: CollectionSummary[]; wishlistCount: number; facets: Facets }) {
     const hasCollections = collections.length > 0;
 
     return (
@@ -135,7 +76,14 @@ export function CollectionsGrid({ collections, wishlistCount }: { collections: C
             {hasCollections ? (
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
                     {collections.map((c) => (
-                        <FolderCard key={c.id} href={`/dashboard/collections/${c.id}`} icon={Folder} name={c.name} count={c.count} />
+                        <FolderCard
+                            key={c.id}
+                            href={`/dashboard/collections/${c.id}`}
+                            icon={c.kind === "rule" ? Dataflow03 : Folder}
+                            name={c.name}
+                            count={c.count}
+                            detail={c.kind === "rule" ? `${c.count} card${c.count === 1 ? "" : "s"} · by rule` : undefined}
+                        />
                     ))}
                 </div>
             ) : (
@@ -143,9 +91,9 @@ export function CollectionsGrid({ collections, wishlistCount }: { collections: C
                 // empty state would only push the tab bar's worth of nothing under three tiles.
                 <div className="hidden lg:contents">
                     <AppEmptyState icon="folder" title="No folders yet" description="Group your cards into folders you can jump to from the sidebar.">
-                        <CreateCollectionModal>
+                        <FolderDialog mode="create" facets={facets}>
                             <Button iconLeading={Plus}>Create folder</Button>
-                        </CreateCollectionModal>
+                        </FolderDialog>
                     </AppEmptyState>
                 </div>
             )}
