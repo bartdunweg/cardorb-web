@@ -45,12 +45,6 @@ export function rarityKept(entries: string[], rarity: string | null, name: strin
     });
 }
 
-/**
- * The rarities that are a whole picture: the art fills the card. What a "full-art Pokédex" keeps.
- * The catalogue spells a few of these two ways; the reader compares without case.
- */
-export const FULL_ART_RARITIES = ["Illustration rare", "Special illustration rare", "Ultra Rare", "Hyper rare", "Secret Rare"];
-
 export const DEFAULT_POKEDEX: PokedexSetting = { missing: true };
 export type FolderKind = "manual" | "rule";
 

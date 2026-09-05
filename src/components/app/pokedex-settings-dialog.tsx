@@ -50,16 +50,21 @@ export function PokedexSettingsDialog({
             setError(shownRes.error);
             return;
         }
-        if (!res.ok) {
-            setError(res.error);
-            return;
-        }
         close();
         router.refresh();
     };
 
     return (
-        <DialogTrigger>
+        <DialogTrigger
+            onOpenChange={(open) => {
+                if (!open) return;
+                setMissing(setting.missing);
+                setDex(dexDraft(setting.dex));
+                setRarities(setting.rarities ?? []);
+                setShown(isPublic);
+                setError(null);
+            }}
+        >
             {compact ? (
                 <Button color="secondary" size="sm" iconLeading={DotsHorizontal} aria-label="Pokédex settings" />
             ) : (
@@ -85,7 +90,7 @@ export function PokedexSettingsDialog({
                                 <RarityPicker label="Rarities that count" options={facets.rarities} selected={rarities} onChange={setRarities} />
                                 <Toggle
                                     label="Show on my public profile"
-                                    hint="As a tab on your page, drawn the way you see it here. Only while your profile is public."
+                                    hint="As a chip beside your folders on your page, drawn the way you see it here. Only while your profile is public."
                                     isSelected={shown}
                                     onChange={setShown}
                                 />

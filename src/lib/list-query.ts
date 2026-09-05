@@ -38,7 +38,7 @@ export type ListQuery = {
 };
 
 /** The lists a public profile can show beside the collection, each behind its own setting. */
-export const PUBLIC_LISTS = ["wishlist", "favorites", "pokedex"] as const;
+const PUBLIC_LISTS = ["wishlist", "favorites", "pokedex"] as const;
 export type PublicList = (typeof PUBLIC_LISTS)[number];
 
 /** What a list page reads from its URL. */

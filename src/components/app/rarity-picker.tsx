@@ -3,10 +3,10 @@
 import { Checkbox } from "@/components/base/checkbox/checkbox";
 import { RARITY_SPLITS, SPLIT_RARITY } from "@/lib/folder-rule";
 
-// A list of boxes for what fills a Pokédex: the rarities you hold a card of, or the kinds of card.
+// A list of boxes for what fills a Pokédex: the rarities you hold a card of.
 // None ticked is every card. Boxes rather than a select: several are meant to be on at once, and
 // a person should see at a glance which.
-export function CheckPicker({
+function CheckPicker({
     label,
     options,
     selected,
@@ -63,13 +63,15 @@ export function RarityPicker({
     selected: string[];
     onChange: (r: string[]) => void;
 }) {
+    // A plain "Ultra Rare" saved before the split means all three of its rows.
+    const shown = selected.flatMap((s) => (s.toLowerCase() === SPLIT_RARITY.toLowerCase() ? RARITY_SPLITS.map((k) => `${SPLIT_RARITY} / ${k.id}`) : [s]));
     return (
         <CheckPicker
             label={label}
             options={options.flatMap((r) =>
                 r === SPLIT_RARITY ? RARITY_SPLITS.map((k) => ({ value: `${r} / ${k.id}`, label: `${r} · ${k.label}` })) : [{ value: r, label: r }],
             )}
-            selected={selected}
+            selected={shown}
             onChange={onChange}
             none="Every card, whatever its rarity."
             loading="Loading rarities…"

@@ -23,7 +23,7 @@ which also says what is already yours), Settings (avatar through the API), publi
 ## Last session
 
 - **2026-09-05, one day, sixteen web PRs and five API PRs.** Dark mode one step above black,
-  hairline borders, glass chrome, five phone tabs with You as a page, sheets on a phone, dialogs
+  hairline borders, glass chrome, four phone tabs with You as the avatar in Home's bar, sheets on a phone, dialogs
   centred (#101, #103). Icons in buttons take the label's colour, thick glass is 92% (#103). The
   collection is folders: All cards, Favorites, Pokédex and the ones you make, flat under one
   heading, with New folder at its end; Home, Browse (sets) and Wishlist sit beside it (#104,

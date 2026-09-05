@@ -1,7 +1,7 @@
 import { CardsStats } from "@/components/app/cards-stats";
-import { YouLink } from "@/components/app/mobile-top-row";
 import { PageHeader } from "@/components/app/page-header";
 import { ValueChart } from "@/components/app/value-chart";
+import { YouLink } from "@/components/app/you-link";
 import { getCardStats } from "@/lib/cards";
 import { getValueHistory } from "@/lib/value-history";
 

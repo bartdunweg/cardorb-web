@@ -57,7 +57,7 @@ export function PageHeader({
         const el = sentinel.current;
         // A title hidden on the phone has nothing to collapse into the bar: the bar stays out of the way.
         if (!titleOnPhone || !el || typeof IntersectionObserver === "undefined") return;
-        const observer = new IntersectionObserver(([entry]) => setCollapsed(!entry.isIntersecting), {
+        const observer = new IntersectionObserver(([entry]) => setCollapsed(tall ? entry.intersectionRatio < 1 : !entry.isIntersecting), {
             // The title counts as gone once it is under the bar, not once it has left the screen: with Back
             // the bar is 68 px and the title starts right under it, so any part of it under the bar is
             // enough; without one the bar is 48 px over a title that starts at 24, so all of it must be.
@@ -79,10 +79,9 @@ export function PageHeader({
                     // one it is the 48 px the title collapses into, and the page's first content starts 24 px
                     // from the top (the search on Home 16, by its own -mt-2).
                     back || barActions ? "mb-4 pt-4" : "-mb-6 h-12",
-                    // The glass comes with the collapse (or with Back); over the uncollapsed title it would only blur it.
                     // The glass comes with the collapse alone: at rest the buttons sit on the page, not in a band.
                     collapsed && "glass",
-                    // Without Back the bar has nothing to show until the title collapses into it, so it lies over
+                    // Without Back or bar buttons the bar has nothing to show until the title collapses into it, so it lies over
                     // the first 48 px and lets taps through: the page's first content starts 16 px from the top.
                     !back && !barActions && !collapsed && "pointer-events-none",
                     // Where content meets the bar: a fade from the page surface to nothing under the bar's edge,
