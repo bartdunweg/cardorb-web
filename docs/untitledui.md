@@ -196,6 +196,12 @@ with the theme: in dark the ring is white and the lift deeper, since a black sha
 surface is invisible. The values are the `--elevation-*` variables in `theme.css`; the `--shadow-*`
 tokens point at them because Tailwind inlines any shadow it can parse.
 
+A control and a surface draw their edge differently, and each one way. A control (a button, an
+input, a select, a search pill, a button group) takes `ring-1 ring-primary ring-inset` and no
+shadow: one hairline, crisp, the same on every control. A surface (a tile, a popover, a sheet, a
+dialog, a bar) takes a shadow from the scale and no ring. The kit's skeuomorphic inset shine on
+buttons is off: it was a second edge inside the first.
+
 An elevated surface takes `shadow-*` alone, never a ring as well: the scale's first layer is the
 rim, and a ring on top draws two rims a shade apart. The sidebar is a floating panel like the tab
 bar: thick glass and `shadow-lg`.
