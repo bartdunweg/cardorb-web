@@ -2,10 +2,10 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { ArrowRight } from "@untitledui/icons";
+import { ArrowRight, Star01 } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
-import { markOwned } from "@/app/(app)/dashboard/cards/actions";
+import { markOwned, setFavorite } from "@/app/(app)/dashboard/cards/actions";
 import { type FolderChoice, listCollections, setCardCollection } from "@/app/(app)/dashboard/collections/actions";
 import { CardImage } from "@/components/app/card-image";
 import { FavoriteStar } from "@/components/app/favorite-star";
@@ -35,6 +35,20 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
     const [collections, setCollections] = useState<FolderChoice[]>([]);
     const [collectionId, setCollectionId] = useState<string>("");
     const [moving, setMoving] = useState(false);
+    // The star, kept here so a tap answers at once; the page re-reads the flag after the save.
+    const [starred, setStarred] = useState<boolean | null>(null);
+    const [starring, setStarring] = useState(false);
+    const isStarred = starred ?? mine?.is_favorite ?? false;
+    const toggleStar = async () => {
+        if (!mine) return;
+        const next = !isStarred;
+        setStarred(next);
+        setStarring(true);
+        const res = await setFavorite(mine.id, next);
+        setStarring(false);
+        if (res.ok) router.refresh();
+        else setStarred(!next);
+    };
     const [moveError, setMoveError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -47,6 +61,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
     if (card?.id !== syncedCardId) {
         setSyncedCardId(card?.id);
         setCollectionId(mine?.collection_id ?? "");
+        setStarred(null);
     }
 
     const [collectionError, setCollectionError] = useState<string | null>(null);
@@ -91,10 +106,24 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                 <>
                     <SlideoutMenu.Header onClose={close}>
                         <AriaHeading slot="title" className="text-lg font-semibold text-primary">
-                            {mine?.is_favorite ? <FavoriteStar /> : null}
+                            {isStarred && mine ? <FavoriteStar /> : null}
                             {card?.name}
                         </AriaHeading>
                         <p className="text-sm text-tertiary">{[card?.set_name, card?.number ? `#${card.number}` : null].filter(Boolean).join(" · ") || "—"}</p>
+                        {/* A card you own can be starred: it then sits in Favorites, and the sheet says so. */}
+                        {mine?.owned ? (
+                            <Button
+                                size="sm"
+                                color={isStarred ? "primary" : "secondary"}
+                                iconLeading={Star01}
+                                aria-pressed={isStarred}
+                                isLoading={starring}
+                                onClick={toggleStar}
+                                className="mt-2"
+                            >
+                                {isStarred ? "Favorite" : "Add to favorites"}
+                            </Button>
+                        ) : null}
                         {/* The price sits under the title, where a product panel puts it, not among the attributes. */}
                         {mine?.price != null ? (
                             <p className="text-md font-semibold text-primary tabular-nums">
@@ -154,7 +183,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                 <span className="text-sm font-medium text-secondary">In folders</span>
                                 <ul className="flex flex-wrap gap-1.5" aria-label="In folders">
                                     {[
-                                        ...(mine.is_favorite ? ["Favorites"] : []),
+                                        ...(isStarred ? ["Favorites"] : []),
                                         ...collections.filter((c) => (c.rule ? matchesRule(mine, c.rule) : c.id === collectionId)).map((c) => c.name),
                                     ].map((name) => (
                                         <li key={name}>
@@ -163,7 +192,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                             </Badge>
                                         </li>
                                     ))}
-                                    {!mine.is_favorite && !collections.some((c) => (c.rule ? matchesRule(mine, c.rule) : c.id === collectionId)) ? (
+                                    {!isStarred && !collections.some((c) => (c.rule ? matchesRule(mine, c.rule) : c.id === collectionId)) ? (
                                         <li className="text-sm text-quaternary">None yet</li>
                                     ) : null}
                                 </ul>
