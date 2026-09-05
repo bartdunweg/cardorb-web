@@ -7,6 +7,7 @@ import { type CardHit, searchMyCards } from "@/app/(app)/dashboard/cards/actions
 import { CardDetailSlideout } from "@/components/app/card-detail-slideout";
 import { CardImage } from "@/components/app/card-image";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
+import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import { cx } from "@/utils/cx";
@@ -23,19 +24,15 @@ export function MobileSearchSheet() {
                 onClick={() => setOpen(true)}
                 className="flex w-full pressable cursor-pointer items-center gap-3 rounded-full bg-primary py-3 pr-16 pl-4 text-md text-tertiary ring-1 ring-primary outline-focus-ring ring-inset hover:bg-secondary focus-visible:outline-2"
             >
-                <SearchLg className="size-6 text-fg-tertiary" />
+                <SearchLg className="size-5 text-fg-tertiary" />
                 <span className="flex-1 text-left">Search a card</span>
             </button>
             {/* Scan sits at the bar's right end, its own control beside the search rather than inside it
                 (a button in a button is not HTML). There is no scanner yet: the button is the place for one. */}
-            <button
-                type="button"
-                aria-label="Scan a card"
-                disabled
-                className="absolute top-1/2 right-2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-tertiary text-fg-secondary outline-focus-ring focus-visible:outline-2 disabled:cursor-not-allowed"
-            >
-                <Scan className="size-5" />
-            </button>
+            <div className="absolute top-1/2 right-1.5 -translate-y-1/2">
+                {/* The kit's button, so it reads as one: the same ring and press as every other control. */}
+                <Button color="secondary" size="sm" iconLeading={Scan} aria-label="Scan a card" isDisabled />
+            </div>
             <SlideoutMenu isDismissable isOpen={open} onOpenChange={setOpen}>
                 {({ close }) => <CollectionSearch onClose={close} />}
             </SlideoutMenu>

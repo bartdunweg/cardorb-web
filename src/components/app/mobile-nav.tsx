@@ -36,7 +36,7 @@ export function MobileTabBar({ account }: { account: Promise<Account> }) {
             aria-label="Primary"
             // The same hairline ring as an input, so the bar's edge matches the search pill above it, and the
             // lift without the scale's own rim, so it is one line.
-            className="fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex items-stretch justify-around gap-1 rounded-full glass p-0.5 shadow-lift-lg ring-1 ring-primary ring-inset sm:inset-x-6 lg:hidden"
+            className="fixed inset-x-4 bottom-[max(1.25rem,calc(env(safe-area-inset-bottom)+0.5rem))] z-40 flex items-stretch justify-around gap-1 rounded-full glass p-0.5 shadow-lift-lg ring-1 ring-primary ring-inset sm:inset-x-6 lg:hidden"
         >
             {tabs.map((tab) => {
                 const active = tab.match(pathname);
