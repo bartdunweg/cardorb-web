@@ -44,6 +44,12 @@ which also says what is already yours), Settings (avatar through the API), publi
   removed, and each opens its place in Cards or Wishlist. Copies are offered only when the card is
   one collection row; two printings are managed in Cards. New actions `setCopies` and `removeCard`
   in `cards/actions.ts`; the item DELETE needs a JSON content type, so it sends `{}`.
+- **The app frame streams before its reads.** The app layout no longer awaits the profile and
+  the folders: it hands their promises to the sidebar and the tab bar, which draw the frame at
+  once and fill the folder rows and the account card through Suspense (`use()`) when each read
+  lands, so the page's loading.tsx shows while the API answers instead of a blank tab. A
+  `SessionGuard` inside its own Suspense awaits both, redirects to /login on a 401 while streaming,
+  and logs any other failure, so the root error page no longer sees layout reads.
 - **The app frame survives a folder read that fails.** The layout asks for the folder names only
   (`getMyFolders`), no longer the stats of the whole collection, and draws the sidebar without
   folders when that read fails; a 401 still goes to /login. On 2026-09-04 a TCGdex outage made

@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense, use } from "react";
 import { BookOpen01, Folder, Heart, HomeLine } from "@untitledui/icons";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -25,7 +26,7 @@ const tabClass = "pressable flex flex-1 flex-col items-center gap-1 rounded-full
 // Bottom tab bar for mobile: Home, the folders (All cards, Favorites and the Pokédex among them,
 // one level down), Browse (every set), the wishlist, and You. Search lives at the top of Home. Its side
 // inset matches the content's padding, so bar and page share an edge.
-export function MobileTabBar({ account }: { account: Account }) {
+export function MobileTabBar({ account }: { account: Promise<Account> }) {
     const pathname = usePathname();
     const youActive = pathname.startsWith("/dashboard/you");
 
@@ -55,9 +56,16 @@ export function MobileTabBar({ account }: { account: Account }) {
                 className={cx(tabClass, youActive ? "bg-secondary text-primary" : "text-tertiary")}
             >
                 {/* The avatar sits in the icon's 20 px, so the You tab is as tall as the other four. */}
-                <Avatar size="xs" src={account.avatarUrl ?? undefined} alt="" className="size-5" />
+                <Suspense fallback={<Avatar size="xs" alt="" className="size-5" />}>
+                    <YouAvatar account={account} />
+                </Suspense>
                 You
             </Link>
         </nav>
     );
+}
+
+// The picture arrives with the profile read; until then the tab shows the avatar's own placeholder.
+function YouAvatar({ account }: { account: Promise<Account> }) {
+    return <Avatar size="xs" src={use(account).avatarUrl ?? undefined} alt="" className="size-5" />;
 }
