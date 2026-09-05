@@ -12,7 +12,7 @@ import { PublicCardsView } from "@/components/app/public-cards-view";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
 import { CARDS_SIZE_COOKIE, CARDS_VIEW_COOKIE, parseCardsSize, parseCardsView } from "@/lib/cards-view";
 import type { NamedDexSlot } from "@/lib/dex-groups";
-import { type ListQuery, SORT_OPTIONS, type SortOption, activeFilterCount, isNarrowed, listHref } from "@/lib/list-query";
+import { type ListQuery, SORT_OPTIONS, type SortOption, isNarrowed, listHref } from "@/lib/list-query";
 
 type Common = {
     query: ListQuery;
@@ -46,10 +46,12 @@ export async function FolderBody(props: FolderBodyProps) {
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
     const { q } = query;
 
+    // The row: the search field, then three menu buttons, Filters, Sort and View. Search is the
+    // thing you type, so it stays in the row; the set and rarity filters are a sheet.
     const toolbar = (
         <>
-            <FiltersSheet key="filters" active={activeFilterCount(query)}>
-                <CardsSearch key="search" initialValue={q ?? ""} label={searchLabel} placeholder={searchPlaceholder} className="w-full lg:w-64" />
+            <CardsSearch key="search" initialValue={q ?? ""} label={searchLabel} placeholder={searchPlaceholder} className="w-full sm:w-64" />
+            <FiltersSheet key="filters" active={[query.set, query.rarity].filter(Boolean).length}>
                 <CardsFilters key="set-rarity" query={query} facets={facets} />
             </FiltersSheet>
             <CardsSort key="sort" query={query} options={sortOptions} />

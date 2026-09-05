@@ -40,7 +40,6 @@ export default async function PublicProfilePage({ params, searchParams }: Params
     const query = readPublicListQuery(await searchParams);
     const narrowed = isNarrowed(query);
     const [{ cards, total, sets, facets }, viewer] = await Promise.all([getPublicCards(decodeURIComponent(username), query), getViewer()]);
-    const totalPages = Math.max(1, Math.ceil(total / PUBLIC_PAGE_SIZE));
     const base = `/user/${encodeURIComponent(username)}`;
     const name = profile.display_name || profile.username || "Collection";
     // The handle sits under a display name, as a profile page does; with no display name it is the name.
