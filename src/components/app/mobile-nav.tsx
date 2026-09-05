@@ -1,13 +1,9 @@
 "use client";
 
-import { Suspense, use } from "react";
 import { BookOpen01, Folder, Heart, HomeLine } from "@untitledui/icons";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Avatar } from "@/components/base/avatar/avatar";
 import { cx } from "@/utils/cx";
-
-type Account = { name: string; email: string; avatarUrl: string | null };
 
 const tabs = [
     { label: "Home", href: "/dashboard", icon: HomeLine, match: (p: string) => p === "/dashboard" },
@@ -24,12 +20,12 @@ const tabs = [
 // 11 px labels: a size under the body scale, as a native tab bar writes them, so five fit with room.
 const tabClass = "pressable flex flex-1 flex-col items-center gap-1 rounded-full py-1.5 text-[11px]/3.5 font-medium transition-colors duration-150";
 
-// Bottom tab bar for mobile: Home, the folders (All cards, Favorites and the Pokédex among them,
-// one level down), Browse (every set), the wishlist, and You. Search lives at the top of Home. Its side
-// inset matches the content's padding, so bar and page share an edge.
-export function MobileTabBar({ account }: { account: Promise<Account> }) {
+// Bottom tab bar for mobile: Home, Browse (every set), the folders (All cards, Favorites and the
+// Pokédex among them, one level down) and the wishlist. You is the avatar at the top of Home and
+// Browse, and search lives beside it. The bar's side inset matches the content's padding, so bar
+// and page share an edge.
+export function MobileTabBar() {
     const pathname = usePathname();
-    const youActive = pathname.startsWith("/dashboard/you");
 
     return (
         <nav
@@ -53,22 +49,6 @@ export function MobileTabBar({ account }: { account: Promise<Account> }) {
                     </Link>
                 );
             })}
-            <Link
-                href="/dashboard/you"
-                aria-current={youActive ? "page" : undefined}
-                className={cx(tabClass, youActive ? "bg-alpha-black/8 text-primary" : "text-tertiary")}
-            >
-                {/* The avatar sits in the icon's 20 px, so the You tab is as tall as the other four. */}
-                <Suspense fallback={<Avatar size="xs" alt="" className="size-5" />}>
-                    <YouAvatar account={account} />
-                </Suspense>
-                You
-            </Link>
         </nav>
     );
-}
-
-// The picture arrives with the profile read; until then the tab shows the avatar's own placeholder.
-function YouAvatar({ account }: { account: Promise<Account> }) {
-    return <Avatar size="xs" src={use(account).avatarUrl ?? undefined} alt="" className="size-5" />;
 }
