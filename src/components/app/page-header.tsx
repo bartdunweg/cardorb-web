@@ -55,7 +55,8 @@ export function PageHeader({
     const tall = Boolean(back || barActions);
     useEffect(() => {
         const el = sentinel.current;
-        if (!el || typeof IntersectionObserver === "undefined") return;
+        // A title hidden on the phone has nothing to collapse into the bar: the bar stays out of the way.
+        if (!titleOnPhone || !el || typeof IntersectionObserver === "undefined") return;
         const observer = new IntersectionObserver(([entry]) => setCollapsed(!entry.isIntersecting), {
             // The title counts as gone once it is under the bar, not once it has left the screen: with Back
             // the bar is 68 px and the title starts right under it, so any part of it under the bar is
@@ -65,7 +66,7 @@ export function PageHeader({
         });
         observer.observe(el);
         return () => observer.disconnect();
-    }, [tall]);
+    }, [tall, titleOnPhone]);
 
     return (
         // One element, so the page's own gap applies once, under it: the distances inside are the bar's
