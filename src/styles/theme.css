@@ -1,4 +1,7 @@
 @theme {
+    /* ASPECT. A Pokémon card is 63 by 88 mm: every card picture keeps that shape. */
+    --aspect-card: 63 / 88;
+
     /* FONT FAMILY */
     --font-body: var(--font-inter, "Inter"), -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
     --font-display: var(--font-inter, "Inter"), -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
@@ -13,8 +16,6 @@
     --text-2xs--line-height: calc(var(--spacing) * 3.5);
     --text-xs: calc(var(--spacing) * 3);
     --text-xs--line-height: calc(var(--spacing) * 4.5);
-    /* A Pokémon card is 63 by 88 mm: every card picture keeps that shape. */
-    --aspect-card: 63 / 88;
 
     --text-sm: calc(var(--spacing) * 3.5);
     --text-sm--line-height: calc(var(--spacing) * 5);
@@ -817,8 +818,6 @@
         --color-bg-error-primary: var(--color-red-950);
         --color-bg-brand-secondary: var(--color-brand-600);
         --color-bg-secondary: var(--color-neutral-800);
-        /* A step under the surfaces, as the light page is a step under white: a tile, the sidebar and
-           the tab bar lie on it rather than in it. */
         /* Halfway between 950 and the surfaces' 900: a step under a tile, not a pit. */
         --color-bg-page: color-mix(in oklab, var(--color-neutral-950), var(--color-neutral-900));
         --color-bg-page-raised: var(--color-neutral-800);

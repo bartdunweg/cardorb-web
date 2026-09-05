@@ -16,17 +16,12 @@ export function FiltersSheet({ active = 0, children }: { active?: number; childr
     return (
         <>
             <div>
-                <Button
-                    color="secondary"
-                    size="sm"
-                    iconLeading={FilterLines}
-                    onClick={() => setOpen(true)}
-                    aria-label={active > 0 ? `Filters, ${active} on` : "Filters"}
-                >
+                <Button color="secondary" size="sm" iconLeading={FilterLines} onClick={() => setOpen(true)}>
                     <span className="max-sm:sr-only">Filters</span>
                     {active > 0 ? (
                         <Badge size="sm" color="gray" type="pill-color">
                             {active}
+                            <span className="sr-only"> on</span>
                         </Badge>
                     ) : null}
                 </Button>

@@ -56,7 +56,7 @@ to this.
 - **Folder** — an entry under Collection: three that are always there (All cards, Favorites,
   Pokédex) and the ones you make, by hand or by rule. The `collections` table and the
   `/collections` routes are the ones you make; in copy they are all "Folders", never
-  "collections". On desktop the sidebar is the list; on a phone the Folders tab is.
+  "collections". On desktop the sidebar is the list; on a phone the Collection tab is.
 - **Owned / wishlist** — mutually exclusive. A card you do not own is on the wishlist, nowhere
   else. Collection views and stats exclude wishlist cards.
 - **Favorite** — a flag on a card you own, shown as a folder that is always there.

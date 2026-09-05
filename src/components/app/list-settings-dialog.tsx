@@ -43,7 +43,13 @@ export function ListSettingsDialog({
     };
 
     return (
-        <DialogTrigger>
+        <DialogTrigger
+            onOpenChange={(open) => {
+                if (!open) return;
+                setShown(isPublic);
+                setError(null);
+            }}
+        >
             {compact ? (
                 <Button color="secondary" size="sm" iconLeading={DotsHorizontal} aria-label={`${title} settings`} />
             ) : (
@@ -59,7 +65,7 @@ export function ListSettingsDialog({
                                 </AriaHeading>
                                 <Toggle
                                     label="Show on my public profile"
-                                    hint="As a tab on your page, beside your collection. Only while your profile is public."
+                                    hint="As a chip beside your folders on your page. Only while your profile is public."
                                     isSelected={shown}
                                     onChange={setShown}
                                 />

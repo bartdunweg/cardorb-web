@@ -63,8 +63,10 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                   unpriced: 0,
               }))
             : null;
+    // The paged read for every list, the Pokédex too: its first page carries the count and the facets
+    // at once, while the slots' own read of every card streams in behind the row.
     const [{ cards, total, facets }, folders, viewer, owned, wishes] = await Promise.all([
-        dex ? dex.then((d) => ({ cards: [], total: d.total, facets: { sets: [], rarities: [] } })) : getPublicCards(decodeURIComponent(username), query),
+        getPublicCards(decodeURIComponent(username), query),
         getPublicFolders(decodeURIComponent(username)),
         getViewer(),
         // The line under the name counts the whole collection and the wishlist, whatever list is open.
