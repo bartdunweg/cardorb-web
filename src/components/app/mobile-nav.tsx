@@ -14,15 +14,20 @@ const tabs = [
         label: "Collection",
         href: "/dashboard/cards",
         icon: Rows01,
-        match: (p: string) => ["/dashboard/cards", "/dashboard/sets", "/dashboard/pokedex", "/dashboard/favorites"].some((h) => p.startsWith(h)),
+        match: (p: string) => ["/dashboard/cards", "/dashboard/sets", "/dashboard/pokedex"].some((h) => p.startsWith(h)),
     },
-    { label: "Folders", href: "/dashboard/collections", icon: Folder, match: (p: string) => p.startsWith("/dashboard/collections") },
+    {
+        label: "Folders",
+        href: "/dashboard/collections",
+        icon: Folder,
+        match: (p: string) => ["/dashboard/collections", "/dashboard/favorites", "/dashboard/wishlist"].some((h) => p.startsWith(h)),
+    },
 ];
 
 const tabClass = "pressable flex flex-1 flex-col items-center gap-1 rounded-full py-1 text-xs/4 font-medium transition-colors duration-150";
 
-// Bottom tab bar for mobile: Home, the collection (its four views switch at the top of the page),
-// the folders, and You. Search lives at the top of Home; the wishlist is a tile on Folders. Its side
+// Bottom tab bar for mobile: Home, the collection (its three views switch at the top of the page),
+// the folders (Favorites and Wishlist among them), and You. Search lives at the top of Home. Its side
 // inset matches the content's padding, so bar and page share an edge.
 export function MobileTabBar({ account }: { account: Account }) {
     const pathname = usePathname();

@@ -4,13 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cx } from "@/utils/cx";
 
-// The four views on the collection, as a segmented control above a page's title on a phone. On
-// desktop the sidebar's Collection section is the same four; this stays hidden there.
+// The three views on the collection, as a segmented control above a page's title on a phone. On
+// desktop the sidebar's Collection section is the same three; this stays hidden there.
 const views = [
     { label: "All cards", href: "/dashboard/cards" },
     { label: "Sets", href: "/dashboard/sets" },
     { label: "Pokédex", href: "/dashboard/pokedex" },
-    { label: "Favorites", href: "/dashboard/favorites" },
 ];
 
 export function CollectionViews() {

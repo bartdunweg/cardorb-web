@@ -1,7 +1,7 @@
 "use client";
 
 import type { FC } from "react";
-import { Dataflow03, Folder, Heart, Plus } from "@untitledui/icons";
+import { Dataflow03, Folder, Heart, Plus, Star01 } from "@untitledui/icons";
 import Link from "next/link";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderDialog } from "@/components/app/folder-dialog";
@@ -62,14 +62,25 @@ export function NewCollectionButton({ facets }: { facets: Facets }) {
     );
 }
 
-export function CollectionsGrid({ collections, wishlistCount, facets }: { collections: CollectionSummary[]; wishlistCount: number; facets: Facets }) {
+export function CollectionsGrid({
+    collections,
+    favoritesCount,
+    wishlistCount,
+    facets,
+}: {
+    collections: CollectionSummary[];
+    favoritesCount: number;
+    wishlistCount: number;
+    facets: Facets;
+}) {
     const hasCollections = collections.length > 0;
 
     return (
         <div className="flex flex-1 flex-col gap-6">
-            {/* The wishlist is not a folder, but on a phone this is where it lives: the Collection tab holds only
-                what is owned, and the sidebar that lists it is not there. */}
-            <div className="lg:hidden">
+            {/* Two folders that are always there, above the ones you made: the favorites (a flag on a card) and
+                the wishlist (cards not owned). Neither is a folder in the data, both are one to the eye. */}
+            <div className="grid grid-cols-1 gap-4 xs:grid-cols-2 lg:grid-cols-4">
+                <FolderCard href="/dashboard/favorites" icon={Star01} name="Favorites" count={favoritesCount} row />
                 <FolderCard href="/dashboard/wishlist" icon={Heart} name="Wishlist" count={wishlistCount} row />
             </div>
 
