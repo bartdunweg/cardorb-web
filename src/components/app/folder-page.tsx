@@ -12,6 +12,7 @@ import { type Datapoints, datapointsLine } from "@/lib/folder-datapoints";
 // take their place under the title when it lands.
 export function FolderPage({
     title,
+    subtitle,
     back,
     datapoints,
     actions,
@@ -19,6 +20,8 @@ export function FolderPage({
     ...body
 }: FolderBodyProps & {
     title: string;
+    /** A sentence under the title, above the count, where the title alone does not say what the list is. */
+    subtitle?: string;
     back?: { href: string; label: string };
     datapoints: Datapoints | Promise<Datapoints>;
     actions?: ReactNode;
@@ -30,9 +33,12 @@ export function FolderPage({
             <PageHeader
                 title={title}
                 subtitle={
-                    <Suspense fallback={null}>
-                        <DatapointsText datapoints={datapoints} />
-                    </Suspense>
+                    <>
+                        {subtitle ? <span className="block">{subtitle}</span> : null}
+                        <Suspense fallback={null}>
+                            <DatapointsText datapoints={datapoints} />
+                        </Suspense>
+                    </>
                 }
                 back={back}
                 actions={actions}
