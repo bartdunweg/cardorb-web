@@ -2,20 +2,16 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AccountMenu } from "@/components/app/account-menu";
 import { AppEmptyState } from "@/components/app/app-empty-state";
-import { CardsFilters } from "@/components/app/cards-filters";
-import { CardsPagination } from "@/components/app/cards-pagination";
-import { CardsSearch } from "@/components/app/cards-search";
-import { CardsSort } from "@/components/app/cards-sort";
-import { FiltersSheet } from "@/components/app/filters-sheet";
-import { PublicCardsView } from "@/components/app/public-cards-view";
+import { FolderBody } from "@/components/app/folder-body";
 import { PublicTopBar } from "@/components/app/public-top-bar";
 import { Avatar } from "@/components/base/avatar/avatar";
-import { PUBLIC_SORT_OPTIONS, listHref, readPublicListQuery } from "@/lib/list-query";
+import { datapointsLine } from "@/lib/folder-datapoints";
+import { type ListSearchParams, PUBLIC_SORT_OPTIONS, isNarrowed, readPublicListQuery } from "@/lib/list-query";
 import { getViewer } from "@/lib/profile";
 import { PUBLIC_PAGE_SIZE, getPublicCards, getPublicProfile } from "@/lib/public-profile";
 import { RouteProvider } from "@/providers/router-provider";
 
-type Params = { params: Promise<{ username: string }>; searchParams: Promise<{ page?: string; q?: string; sort?: string; set?: string; rarity?: string }> };
+type Params = { params: Promise<{ username: string }>; searchParams: Promise<ListSearchParams> };
 
 export async function generateMetadata({ params, searchParams }: Params): Promise<Metadata> {
     const { username } = await params;
@@ -42,8 +38,7 @@ export default async function PublicProfilePage({ params, searchParams }: Params
     if (!profile) notFound();
 
     const query = readPublicListQuery(await searchParams);
-    const { page, q } = query;
-    const narrowed = Boolean(q || query.set || query.rarity);
+    const narrowed = isNarrowed(query);
     const [{ cards, total, sets, facets }, viewer] = await Promise.all([getPublicCards(decodeURIComponent(username), query), getViewer()]);
     const totalPages = Math.max(1, Math.ceil(total / PUBLIC_PAGE_SIZE));
     const base = `/user/${encodeURIComponent(username)}`;
@@ -51,10 +46,7 @@ export default async function PublicProfilePage({ params, searchParams }: Params
     // The handle sits under a display name, as a profile page does; with no display name it is the name.
     const handle = profile.display_name && profile.username ? `@${profile.username}` : null;
     // With a search or a filter on, the count is what matched; the set count still spans the whole collection.
-    const counts = [
-        narrowed ? `${total.toLocaleString("en-US")} match${total === 1 ? "" : "es"}` : `${total.toLocaleString("en-US")} card${total === 1 ? "" : "s"}`,
-        `${sets.toLocaleString("en-US")} set${sets === 1 ? "" : "s"}`,
-    ].join(" · ");
+    const counts = [datapointsLine({ total, narrowed }), `${sets.toLocaleString("en-US")} set${sets === 1 ? "" : "s"}`].join(" · ");
 
     return (
         <div className="flex min-h-dvh flex-col bg-primary">
@@ -79,42 +71,19 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                     </div>
                 </div>
 
-                {cards.length === 0 && !narrowed ? (
-                    <AppEmptyState icon="folder" title="This collection is empty" description="Nothing has been added to it yet" />
-                ) : (
-                    <div className="flex flex-1 flex-col gap-4">
-                        {/* One row: search, the two filters, the sort. It wraps on a narrow screen. */}
-                        <div className="flex flex-wrap items-center gap-2">
-                            <FiltersSheet active={[q, query.set, query.rarity].filter(Boolean).length}>
-                                <CardsSearch
-                                    key="search"
-                                    initialValue={q ?? ""}
-                                    label="Search this collection"
-                                    placeholder="Search this collection"
-                                    className="w-full lg:w-72"
-                                />
-                                <CardsFilters key="filters" query={query} facets={facets} />
-                                <CardsSort key="sort" query={query} options={PUBLIC_SORT_OPTIONS} />
-                            </FiltersSheet>
-                        </div>
-                        {cards.length === 0 ? (
-                            <AppEmptyState
-                                icon="search"
-                                title="No cards found"
-                                description={
-                                    q
-                                        ? `No cards match “${q}”. Try a different name or set.`
-                                        : "Nothing in that set or rarity. Clear a filter to widen the list."
-                                }
-                            />
-                        ) : (
-                            <>
-                                <PublicCardsView cards={cards} />
-                                <CardsPagination page={page} totalPages={totalPages} hrefFor={(n) => listHref(base, query, { page: n })} />
-                            </>
-                        )}
-                    </div>
-                )}
+                <FolderBody
+                    readOnly
+                    query={query}
+                    basePath={base}
+                    facets={facets}
+                    sortOptions={PUBLIC_SORT_OPTIONS}
+                    searchLabel="Search this collection"
+                    searchPlaceholder="Search this collection"
+                    cards={cards}
+                    total={total}
+                    pageSize={PUBLIC_PAGE_SIZE}
+                    empty={<AppEmptyState icon="folder" title="This collection is empty" description="Nothing has been added to it yet" />}
+                />
             </main>
         </div>
     );

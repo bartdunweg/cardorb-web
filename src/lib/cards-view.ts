@@ -10,3 +10,10 @@ export type CardsViewMode = "table" | "grid";
 
 // Grid until the cookie says table: the pictures are the collection, the table is the ledger.
 export const parseCardsView = (raw: string | undefined): CardsViewMode => (raw === "table" ? "table" : "grid");
+
+/** How big a tile is in the grid. A cookie for the same reason as the view. */
+export const CARDS_SIZE_COOKIE = "cards-size";
+
+export type CardsSize = "sm" | "md" | "lg";
+
+export const parseCardsSize = (raw: string | undefined): CardsSize => (raw === "sm" || raw === "lg" ? raw : "md");
