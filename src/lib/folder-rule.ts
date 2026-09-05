@@ -13,32 +13,36 @@ export type FolderRule = { dex?: DexRange; sets?: string[]; rarities?: string[] 
  * A folder shown as a Pokédex: its cards in the national order, one slot per Pokémon. `missing`
  * shows the slots the folder has no card of; `dex` is the range collected, all of it when absent.
  */
-export type PokedexSetting = { missing: boolean; dex?: DexRange; rarities?: string[]; kinds?: string[] };
+export type PokedexSetting = { missing: boolean; dex?: DexRange; rarities?: string[] };
 
 /**
- * The kinds of card, read off the name's suffix: what a rarity cannot tell apart. A full-art V
- * from Sword & Shield and a full-art ex from Scarlet & Violet are both "Ultra Rare"; the kind is
- * what separates them. "Regular" is a card with no suffix at all.
+ * "Ultra Rare" is the one rarity that mixes kinds of card a person tells apart: a full-art V,
+ * VMAX or VSTAR (Sword & Shield; GX and EX before it), a full-art ex (Scarlet & Violet), and the
+ * full-art trainers. A Pokédex names them as three entries, "Ultra Rare / v", "Ultra Rare / ex"
+ * and "Ultra Rare / other", stored in the rarities list beside the plain names.
  */
-export const CARD_KINDS: { id: string; label: string; test: (name: string) => boolean }[] = [
-    { id: "regular", label: "Regular", test: () => false },
-    // Mega and Tag Team before the suffixes they end in: "M Charizard EX" is a Mega, not an EX.
-    { id: "mega", label: "Mega", test: (n) => /^M(ega)? /.test(n) },
-    { id: "tag-team", label: "Tag Team", test: (n) => /&/.test(n) && /\b(GX|ex)$/.test(n) },
+export const SPLIT_RARITY = "Ultra Rare";
+export const RARITY_SPLITS: { id: string; label: string; test: (name: string) => boolean }[] = [
+    { id: "v", label: "V, VMAX, VSTAR, GX, EX", test: (n) => /\b(V|VMAX|VSTAR|GX|EX)$/.test(n) },
     { id: "ex", label: "ex", test: (n) => /\bex$/.test(n) },
-    { id: "EX", label: "EX", test: (n) => /\bEX$/.test(n) },
-    { id: "GX", label: "GX", test: (n) => /\bGX$/.test(n) },
-    { id: "V", label: "V", test: (n) => /\bV$/.test(n) },
-    { id: "VMAX", label: "VMAX", test: (n) => /\bVMAX$/.test(n) },
-    { id: "VSTAR", label: "VSTAR", test: (n) => /\bVSTAR$/.test(n) },
-    { id: "radiant", label: "Radiant", test: (n) => /^Radiant /.test(n) },
-    { id: "break", label: "BREAK", test: (n) => /\bBREAK$/.test(n) },
+    { id: "other", label: "trainers and the rest", test: () => true },
 ];
 
-/** Which kind a card is, by its name; "regular" when no suffix names one. */
-export function kindOf(name: string): string {
-    const n = name.trim();
-    return CARD_KINDS.find((k) => k.id !== "regular" && k.test(n))?.id ?? "regular";
+/** The split half of an "Ultra Rare / …" entry; null for a plain rarity. */
+export const splitOf = (entry: string): { rarity: string; split: string } | null => {
+    const m = /^(.*) \/ (v|ex|other)$/.exec(entry);
+    return m ? { rarity: m[1], split: m[2] } : null;
+};
+
+/** Whether a card is one of the rarities a setting names, split entries included. */
+export function rarityKept(entries: string[], rarity: string | null, name: string): boolean {
+    const r = (rarity ?? "").toLowerCase();
+    return entries.some((e) => {
+        const s = splitOf(e);
+        if (!s) return e.toLowerCase() === r;
+        if (s.rarity.toLowerCase() !== r) return false;
+        return (RARITY_SPLITS.find((k) => k.test(name)) ?? RARITY_SPLITS[RARITY_SPLITS.length - 1]).id === s.split;
+    });
 }
 
 /**
@@ -74,7 +78,7 @@ export const dexRangeSchema = z
     .object({ from: z.number().int().min(1).max(NATIONAL_DEX_MAX), to: z.number().int().min(1).max(NATIONAL_DEX_MAX) })
     .refine((d) => d.from <= d.to, "The range runs backwards.");
 
-export const pokedexSettingSchema = z.object({ missing: z.boolean(), dex: dexRangeSchema.optional(), rarities: list.optional(), kinds: list.optional() });
+export const pokedexSettingSchema = z.object({ missing: z.boolean(), dex: dexRangeSchema.optional(), rarities: list.optional() });
 
 export const folderRuleSchema = z
     .object({
