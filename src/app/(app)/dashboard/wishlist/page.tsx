@@ -26,11 +26,14 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
             // A plus alone: the page says Wishlist, the button need not repeat it.
             actions={
                 <>
-                    <ListSettingsDialog list="wishlist" title="Wishlist" isPublic={profile?.wishlist_public ?? false} />
+                    <div className="max-lg:hidden">
+                        <ListSettingsDialog list="wishlist" title="Wishlist" isPublic={profile?.wishlist_public ?? false} />
+                    </div>
                     <AddCardModal defaultTarget="wishlist" compact />
                 </>
             }
             query={query}
+            barActions={<ListSettingsDialog list="wishlist" title="Wishlist" isPublic={profile?.wishlist_public ?? false} compact />}
             basePath="/dashboard/wishlist"
             facets={facets}
             list={list}

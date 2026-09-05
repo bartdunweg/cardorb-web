@@ -16,6 +16,7 @@ export function FolderPage({
     back,
     datapoints,
     actions,
+    barActions,
     children,
     ...body
 }: FolderBodyProps & {
@@ -25,6 +26,8 @@ export function FolderPage({
     back?: { href: string; label: string };
     datapoints: Datapoints | Promise<Datapoints>;
     actions?: ReactNode;
+    /** A phone's settings button, in the bar across from Back; see PageHeader. */
+    barActions?: ReactNode;
     /** Under the data points: a rule's chips, a progress bar. */
     children?: ReactNode;
 }) {
@@ -42,6 +45,7 @@ export function FolderPage({
                 }
                 back={back}
                 actions={actions}
+                barActions={barActions}
             >
                 {children}
             </PageHeader>
