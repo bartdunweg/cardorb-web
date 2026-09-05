@@ -62,7 +62,8 @@ export function AddCardModal({
             {/* The app's main action says what it does; a grey circle with a plus did not. */}
             {trigger ??
                 (compact ? (
-                    <Button iconLeading={Plus} size="md" aria-label="Add card" />
+                    // The plus alone, the size of Back: it sits in the phone's bar beside it.
+                    <Button iconLeading={Plus} size="sm" aria-label="Add card" />
                 ) : (
                     <Button iconLeading={Plus} size="md">
                         {label}

@@ -29,19 +29,19 @@ function FolderCard({ href, icon, name, count, detail }: { href: string; icon: F
     );
 }
 
-// Beside the page title: a plus on a phone, the words from sm up. Both open the dialog below.
-export function NewCollectionButton({ facets }: { facets: Facets }) {
+// Beside the page title from lg, the words; `compact` is the plus alone for the phone's bar, the size
+// of Back beside it. Both open the dialog below.
+export function NewCollectionButton({ facets, compact }: { facets: Facets; compact?: boolean }) {
     return (
-        <>
-            <FolderDialog mode="create" facets={facets}>
-                <Button iconLeading={Plus} size="md" aria-label="New folder" className="sm:hidden" />
-            </FolderDialog>
-            <FolderDialog mode="create" facets={facets}>
-                <Button iconLeading={Plus} size="md" className="max-sm:hidden">
+        <FolderDialog mode="create" facets={facets}>
+            {compact ? (
+                <Button iconLeading={Plus} size="sm" aria-label="New folder" />
+            ) : (
+                <Button iconLeading={Plus} size="md">
                     New folder
                 </Button>
-            </FolderDialog>
-        </>
+            )}
+        </FolderDialog>
     );
 }
 
