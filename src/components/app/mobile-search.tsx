@@ -21,7 +21,7 @@ export function MobileSearchSheet() {
             <button
                 type="button"
                 onClick={() => setOpen(true)}
-                className="flex w-full pressable cursor-pointer items-center gap-3 rounded-full bg-primary py-3 pr-16 pl-4 text-md text-tertiary shadow-xs ring-1 ring-primary outline-focus-ring ring-inset hover:bg-secondary focus-visible:outline-2"
+                className="flex w-full pressable cursor-pointer items-center gap-3 rounded-full bg-primary py-3 pr-16 pl-4 text-md text-tertiary ring-1 ring-primary outline-focus-ring ring-inset hover:bg-secondary focus-visible:outline-2"
             >
                 <SearchLg className="size-6 text-fg-tertiary" />
                 <span className="flex-1 text-left">Search a card</span>
