@@ -42,7 +42,7 @@ export default async function PokedexPage({ searchParams }: { searchParams: Prom
             title="Pokédex"
             back={{ href: "/dashboard/collections", label: "Folders" }}
             datapoints={datapoints}
-            actions={<PokedexSettingsDialog setting={setting} isPublic={me.profile?.pokedex_public ?? false} />}
+            actions={<PokedexSettingsDialog setting={setting} isPublic={me.profile?.pokedex_public ?? false} facets={facets} />}
             query={query}
             basePath="/dashboard/pokedex"
             facets={facets}
