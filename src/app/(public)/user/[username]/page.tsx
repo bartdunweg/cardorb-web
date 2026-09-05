@@ -82,6 +82,15 @@ export default async function PublicProfilePage({ params, searchParams }: Params
         : false;
     const base = `/user/${encodeURIComponent(username)}`;
     const name = profile.display_name || profile.username || "Collection";
+    // What an empty list says, by which list it is: the words are the visitor's, not the owner's.
+    const emptyState =
+        list === "wishlist" ? (
+            <AppEmptyState icon="heart" title="Nothing on the wishlist" description="No cards are being looked for right now" />
+        ) : list === "favorites" ? (
+            <AppEmptyState icon="star" title="No favorites yet" description="No card has been starred" />
+        ) : (
+            <AppEmptyState icon="folder" title="This collection is empty" description="Nothing has been added to it yet" />
+        );
     // The handle sits under a display name, as a profile page does; with no display name it is the name.
     const handle = profile.display_name && profile.username ? `@${profile.username}` : null;
     // With a search or a filter on, the count is what matched.
@@ -174,7 +183,7 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                         searchLabel="Search this collection"
                         searchPlaceholder="Search this collection"
                         pokedex={{ dex }}
-                        empty={<AppEmptyState icon="folder" title="This collection is empty" description="Nothing has been added to it yet" />}
+                        empty={emptyState}
                     />
                 ) : (
                     <FolderBody
@@ -188,7 +197,7 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                         cards={cards}
                         total={total}
                         pageSize={PUBLIC_PAGE_SIZE}
-                        empty={<AppEmptyState icon="folder" title="This collection is empty" description="Nothing has been added to it yet" />}
+                        empty={emptyState}
                     />
                 )}
             </main>
