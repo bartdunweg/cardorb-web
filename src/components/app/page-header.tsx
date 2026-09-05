@@ -67,7 +67,7 @@ export function PageHeader({
                     !back && !collapsed && "pointer-events-none",
                     // Where content meets the bar: a fade from the page surface to nothing under the bar's edge,
                     // not a rule. It appears with the collapse and goes when the title is back.
-                    "after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-4 after:bg-linear-to-b after:from-bg-primary after:to-transparent after:transition-opacity after:duration-150 after:ease-out",
+                    "after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-4 after:bg-linear-to-b after:from-bg-page after:to-transparent after:transition-opacity after:duration-150 after:ease-out",
                     collapsed ? "after:opacity-100" : "after:opacity-0",
                 )}
             >

@@ -61,7 +61,7 @@ function SetTile({ set }: { set: SetSummary }) {
         <Link
             href={`/dashboard/sets/${encodeURIComponent(set.id)}`}
             className={cx(
-                "flex pressable items-center gap-4 rounded-xl bg-primary p-4 shadow-border outline-focus-ring transition-[color,background-color,box-shadow] hover:bg-secondary hover:shadow-border_hover focus-visible:outline-2",
+                "flex pressable items-center gap-4 rounded-xl bg-primary p-4 shadow-border outline-focus-ring transition-[color,background-color,box-shadow] hover:shadow-border_hover focus-visible:outline-2",
                 empty && "opacity-70 hover:opacity-100",
             )}
         >

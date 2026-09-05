@@ -33,7 +33,7 @@ function FolderCard({
         <Link
             href={href}
             className={cx(
-                "flex pressable gap-3 rounded-xl bg-primary p-4 shadow-border outline-focus-ring transition-[color,background-color,box-shadow] hover:bg-secondary hover:shadow-border_hover focus-visible:outline-2",
+                "flex pressable gap-3 rounded-xl bg-primary p-4 shadow-border outline-focus-ring transition-[color,background-color,box-shadow] hover:shadow-border_hover focus-visible:outline-2",
                 row ? "flex-row items-center xs:flex-col xs:items-stretch" : "flex-col",
             )}
         >
