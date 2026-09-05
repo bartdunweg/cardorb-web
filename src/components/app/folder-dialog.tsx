@@ -4,16 +4,18 @@ import { type ReactNode, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import { createCollection, updateCollection } from "@/app/(app)/dashboard/collections/actions";
+import { DexRangeFields, dexDraft, dexFromDraft } from "@/components/app/dex-range-fields";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { BadgeWithButton } from "@/components/base/badges/badges";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { NativeSelect } from "@/components/base/select/select-native";
+import { Toggle } from "@/components/base/toggle/toggle";
 import type { Facets } from "@/lib/cards";
-import { type FolderKind, type FolderRule, GENERATIONS, NATIONAL_DEX_MAX, ruleSummary } from "@/lib/folder-rule";
+import { type FolderKind, type FolderRule, type PokedexSetting, ruleSummary } from "@/lib/folder-rule";
 
-type FolderShape = { id: string; name: string; kind: FolderKind; rule: FolderRule | null };
+type FolderShape = { id: string; name: string; kind: FolderKind; rule: FolderRule | null; pokedex: PokedexSetting | null };
 
 // One dialog for a folder's name and its rule: New folder (by hand or by rule) and, on the
 // folder's page, Rename or Edit rule. A folder keeps its kind, so edit mode never shows the
@@ -23,10 +25,11 @@ export function FolderDialog({ mode, folder, facets, children }: { mode: "create
     const router = useRouter();
     const [name, setName] = useState(folder?.name ?? "");
     const [kind, setKind] = useState<FolderKind>(folder?.kind ?? "manual");
-    const [dex, setDex] = useState<{ from: string; to: string }>({
-        from: folder?.rule?.dex ? String(folder.rule.dex.from) : "",
-        to: folder?.rule?.dex ? String(folder.rule.dex.to) : "",
-    });
+    const [dex, setDex] = useState(dexDraft(folder?.rule?.dex));
+    // Shown as a Pokédex: any folder may be; the setting has its own range, which may differ from a rule's.
+    const [asPokedex, setAsPokedex] = useState(!!folder?.pokedex);
+    const [missing, setMissing] = useState(folder?.pokedex?.missing ?? true);
+    const [dexShown, setDexShown] = useState(dexDraft(folder?.pokedex?.dex));
     const [sets, setSets] = useState<string[]>(folder?.rule?.sets ?? []);
     const [rarities, setRarities] = useState<string[]>(folder?.rule?.rarities ?? []);
     const [saving, setSaving] = useState(false);
@@ -35,22 +38,26 @@ export function FolderDialog({ mode, folder, facets, children }: { mode: "create
     const rule = (): FolderRule | undefined => {
         if (kind !== "rule") return undefined;
         const out: FolderRule = {};
-        const from = Number(dex.from);
-        const to = Number(dex.to);
-        if (dex.from || dex.to) out.dex = { from: dex.from ? from : 1, to: dex.to ? to : NATIONAL_DEX_MAX };
+        const range = dexFromDraft(dex);
+        if (range) out.dex = range;
         if (sets.length) out.sets = sets;
         if (rarities.length) out.rarities = rarities;
         return out;
     };
     const preview = rule();
-    const generation = GENERATIONS.find((g) => String(g.from) === dex.from && String(g.to) === dex.to);
-    const generationValue = !dex.from && !dex.to ? "" : (generation?.label ?? "custom");
+    const pokedex = (): PokedexSetting | null => {
+        if (!asPokedex) return null;
+        const range = dexFromDraft(dexShown);
+        return { missing, ...(range ? { dex: range } : {}) };
+    };
 
     const save = async (close: () => void) => {
         setSaving(true);
         setError(null);
         const res =
-            mode === "create" ? await createCollection(name, rule()) : await updateCollection(folder!.id, kind === "rule" ? { name, rule: rule() } : { name });
+            mode === "create"
+                ? await createCollection(name, rule(), pokedex() ?? undefined)
+                : await updateCollection(folder!.id, { name, ...(kind === "rule" ? { rule: rule() } : {}), pokedex: pokedex() });
         setSaving(false);
         if (!res.ok) {
             setError(res.error);
@@ -62,7 +69,7 @@ export function FolderDialog({ mode, folder, facets, children }: { mode: "create
         else router.refresh();
     };
 
-    const title = mode === "create" ? "New folder" : kind === "rule" ? "Edit rule" : "Rename folder";
+    const title = mode === "create" ? "New folder" : kind === "rule" ? "Edit rule" : "Edit folder";
     const setOptions = facets.sets.filter((s) => !sets.includes(s.name));
     const rarityOptions = facets.rarities.filter((r) => !rarities.includes(r));
     const titleOf = (name: string) => facets.sets.find((s) => s.name === name)?.title ?? name;
@@ -101,39 +108,7 @@ export function FolderDialog({ mode, folder, facets, children }: { mode: "create
 
                                 {kind === "rule" ? (
                                     <>
-                                        <div className="flex flex-col gap-1.5">
-                                            <NativeSelect
-                                                label="Pokédex"
-                                                value={generationValue}
-                                                onChange={(event) => {
-                                                    const v = event.target.value;
-                                                    const gen = GENERATIONS.find((g) => g.label === v);
-                                                    if (gen) setDex({ from: String(gen.from), to: String(gen.to) });
-                                                    else if (v === "") setDex({ from: "", to: "" });
-                                                }}
-                                                options={[
-                                                    { label: "Any Pokémon", value: "" },
-                                                    ...GENERATIONS.map((g) => ({ label: `${g.label} (${g.from}–${g.to})`, value: g.label })),
-                                                    { label: "Custom range", value: "custom" },
-                                                ]}
-                                            />
-                                            <div className="flex gap-2">
-                                                <Input
-                                                    aria-label="From dex number"
-                                                    type="number"
-                                                    placeholder="From"
-                                                    value={dex.from}
-                                                    onChange={(v) => setDex((d) => ({ ...d, from: v }))}
-                                                />
-                                                <Input
-                                                    aria-label="To dex number"
-                                                    type="number"
-                                                    placeholder="To"
-                                                    value={dex.to}
-                                                    onChange={(v) => setDex((d) => ({ ...d, to: v }))}
-                                                />
-                                            </div>
-                                        </div>
+                                        <DexRangeFields label="Pokédex" anyLabel="Any Pokémon" dex={dex} onChange={setDex} />
 
                                         <div className="flex flex-col gap-1.5">
                                             <NativeSelect
@@ -204,6 +179,18 @@ export function FolderDialog({ mode, folder, facets, children }: { mode: "create
                                     </>
                                 ) : null}
 
+                                <Toggle
+                                    label="Show as Pokédex"
+                                    hint="One slot per Pokémon, in the national order."
+                                    isSelected={asPokedex}
+                                    onChange={setAsPokedex}
+                                />
+                                {asPokedex ? (
+                                    <>
+                                        <DexRangeFields label="Pokédex range" anyLabel="Every Pokémon" dex={dexShown} onChange={setDexShown} />
+                                        <Toggle label="Show the Pokémon I'm missing" isSelected={missing} onChange={setMissing} />
+                                    </>
+                                ) : null}
                                 {error ? (
                                     <p role="alert" className="text-sm text-error-primary">
                                         {error}

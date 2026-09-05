@@ -6,13 +6,15 @@ import { ArrowRight } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import { markOwned } from "@/app/(app)/dashboard/cards/actions";
-import { listCollections, setCardCollection } from "@/app/(app)/dashboard/collections/actions";
+import { type FolderChoice, listCollections, setCardCollection } from "@/app/(app)/dashboard/collections/actions";
 import { CardImage } from "@/components/app/card-image";
 import { FavoriteStar } from "@/components/app/favorite-star";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
+import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { NativeSelect } from "@/components/base/select/select-native";
 import type { Card, PublicCard } from "@/lib/cards";
+import { matchesRule } from "@/lib/folder-rule";
 import { formatDate, formatPrice } from "@/lib/format";
 
 function DetailRow({ label, value }: { label: string; value: ReactNode }) {
@@ -30,7 +32,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
     const router = useRouter();
     // The owner's fields exist only on the editable view; the public view never receives them.
     const mine = readOnly ? null : (card as Card | null);
-    const [collections, setCollections] = useState<{ id: string; name: string }[]>([]);
+    const [collections, setCollections] = useState<FolderChoice[]>([]);
     const [collectionId, setCollectionId] = useState<string>("");
     const [moving, setMoving] = useState(false);
     const [moveError, setMoveError] = useState<string | null>(null);
@@ -132,7 +134,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                         aria-label="Folder"
                                         value={collectionId}
                                         onChange={(event) => onCollectionChange(event.target.value)}
-                                        options={[{ label: "None", value: "" }, ...collections.map((c) => ({ label: c.name, value: c.id }))]}
+                                        options={[
+                                            { label: "None", value: "" },
+                                            ...collections.filter((c) => !c.rule).map((c) => ({ label: c.name, value: c.id })),
+                                        ]}
                                     />
                                     {collectionError ? (
                                         <p role="alert" className="text-sm text-error-primary">
@@ -141,6 +146,29 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                     ) : null}
                                 </div>
                             ))}
+
+                        {/* Where the card is: the folder it was filed in, every rule folder whose rule it fits, and
+                            Favorites when starred. A wish is in none of them. */}
+                        {mine ? (
+                            <div className="flex flex-col gap-1.5">
+                                <span className="text-sm font-medium text-secondary">In folders</span>
+                                <ul className="flex flex-wrap gap-1.5" aria-label="In folders">
+                                    {[
+                                        ...(mine.is_favorite ? ["Favorites"] : []),
+                                        ...collections.filter((c) => (c.rule ? matchesRule(mine, c.rule) : c.id === collectionId)).map((c) => c.name),
+                                    ].map((name) => (
+                                        <li key={name}>
+                                            <Badge size="sm" color="gray" type="pill-color">
+                                                {name}
+                                            </Badge>
+                                        </li>
+                                    ))}
+                                    {!mine.is_favorite && !collections.some((c) => (c.rule ? matchesRule(mine, c.rule) : c.id === collectionId)) ? (
+                                        <li className="text-sm text-quaternary">None yet</li>
+                                    ) : null}
+                                </ul>
+                            </div>
+                        ) : null}
 
                         <dl className="flex flex-col divide-y divide-secondary">
                             <DetailRow label="Rarity" value={card?.rarity} />

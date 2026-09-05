@@ -11,6 +11,7 @@ export const SORT_OPTIONS = [
     { value: "price-asc", label: "Price, low to high", sort: "price", order: "asc" },
     { value: "added-desc", label: "Newest first", sort: "added", order: "desc" },
     { value: "added-asc", label: "Oldest first", sort: "added", order: "asc" },
+    { value: "dex", label: "Pokédex number", sort: "dex", order: undefined },
 ] as const;
 
 export type SortKey = (typeof SORT_OPTIONS)[number]["value"];
@@ -18,7 +19,7 @@ export type SortOption = (typeof SORT_OPTIONS)[number];
 
 /** What a public collection can be sorted by: it carries no price and no date. */
 export const PUBLIC_SORT_OPTIONS = SORT_OPTIONS.filter((o) => o.sort === undefined || o.sort === "name");
-export type ApiSort = "name" | "price" | "added";
+export type ApiSort = "name" | "price" | "added" | "dex";
 export type ApiOrder = "asc" | "desc";
 
 export type ListQuery = {

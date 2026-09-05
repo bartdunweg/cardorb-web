@@ -30,33 +30,40 @@ export async function getMyCards({
     collectionId?: string;
     favoritesOnly?: boolean;
     wishlist?: boolean;
-    sort?: "name" | "price" | "added";
+    sort?: "name" | "price" | "added" | "dex";
     order?: "asc" | "desc";
     set?: string;
     rarity?: string;
 } = {}): Promise<{
     cards: Card[];
     total: number;
+    /** What the whole filtered list is worth, in euros; null from an API that does not answer it yet. */
+    value: number | null;
+    /** Copies in the filtered list without a price. */
+    unpriced: number;
     /** The sets and rarities held, over the whole collection whatever the filters: what the two menus offer. */
     facets: Facets;
 }> {
-    const { cards, total, facets } = await api<{ cards: CardItem[]; total: number; facets?: Facets }>("/cards", {
-        params: {
-            q: q?.trim() || undefined,
-            owned: !wishlist,
-            favorite: favoritesOnly ? true : undefined,
-            collection: collectionId,
-            sort,
-            order,
-            set,
-            rarity,
-            limit,
-            offset,
+    const { cards, total, facets, value, unpriced } = await api<{ cards: CardItem[]; total: number; facets?: Facets; value?: number; unpriced?: number }>(
+        "/cards",
+        {
+            params: {
+                q: q?.trim() || undefined,
+                owned: !wishlist,
+                favorite: favoritesOnly ? true : undefined,
+                collection: collectionId,
+                sort,
+                order,
+                set,
+                rarity,
+                limit,
+                offset,
+            },
         },
-    });
+    );
     // The API has carried facets since its #161, the same day as this read; an older deploy or a
     // rollback answers without them. Empty menus then, not a Cards page that throws on facets.sets.
-    return { cards: cards.map(cardFromItem), total, facets: facets ?? { sets: [], rarities: [] } };
+    return { cards: cards.map(cardFromItem), total, value: value ?? null, unpriced: unpriced ?? 0, facets: facets ?? { sets: [], rarities: [] } };
 }
 
 export type CardStats = {
@@ -78,4 +85,16 @@ export const getStats = () => perUser("stats", async (token) => (await api<{ sta
 export async function getCardStats(): Promise<CardStats> {
     const stats = await getStats();
     return { owned: stats.cards, wishlist: stats.wishlist, favorites: stats.favorites, value: stats.value, unpriced: stats.unpriced };
+}
+
+/**
+ * The whole of a list, for a folder shown as a Pokédex: the slots need every card, not a page.
+ * The API caps a page at 500; the first page says how many there are, the rest come in parallel.
+ */
+export async function getAllMyCards(filter: Omit<Parameters<typeof getMyCards>[0], "limit" | "offset">) {
+    const PAGE = 500;
+    const first = await getMyCards({ ...filter, limit: PAGE, offset: 0 });
+    const pages = Math.ceil(first.total / PAGE);
+    const rest = await Promise.all(Array.from({ length: Math.max(0, pages - 1) }, (_, i) => getMyCards({ ...filter, limit: PAGE, offset: (i + 1) * PAGE })));
+    return { ...first, cards: [...first.cards, ...rest.flatMap((p) => p.cards)] };
 }

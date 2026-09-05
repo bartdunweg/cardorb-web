@@ -6,7 +6,15 @@ import type { Facets } from "@/lib/cards";
  * list. The API validates the same shape (cardorb-api, lib/core/collection/folders.ts); this is the
  * client's copy, for the dialog and the server actions.
  */
-export type FolderRule = { dex?: { from: number; to: number }; sets?: string[]; rarities?: string[] };
+export type DexRange = { from: number; to: number };
+export type FolderRule = { dex?: DexRange; sets?: string[]; rarities?: string[] };
+
+/**
+ * A folder shown as a Pokédex: its cards in the national order, one slot per Pokémon. `missing`
+ * shows the slots the folder has no card of; `dex` is the range collected, all of it when absent.
+ */
+export type PokedexSetting = { missing: boolean; dex?: DexRange };
+export const DEFAULT_POKEDEX: PokedexSetting = { missing: true };
 export type FolderKind = "manual" | "rule";
 
 /** The last national dex number. Defined here, not read from pokedex.ts: that file reaches the
@@ -29,12 +37,15 @@ export const GENERATIONS = [
 const term = z.string().trim().min(1).max(100);
 const list = z.array(term).min(1).max(20);
 
+export const dexRangeSchema = z
+    .object({ from: z.number().int().min(1).max(NATIONAL_DEX_MAX), to: z.number().int().min(1).max(NATIONAL_DEX_MAX) })
+    .refine((d) => d.from <= d.to, "The range runs backwards.");
+
+export const pokedexSettingSchema = z.object({ missing: z.boolean(), dex: dexRangeSchema.optional() });
+
 export const folderRuleSchema = z
     .object({
-        dex: z
-            .object({ from: z.number().int().min(1).max(NATIONAL_DEX_MAX), to: z.number().int().min(1).max(NATIONAL_DEX_MAX) })
-            .refine((d) => d.from <= d.to, "The range runs backwards.")
-            .optional(),
+        dex: dexRangeSchema.optional(),
         sets: list.optional(),
         rarities: list.optional(),
     })
@@ -56,3 +67,25 @@ export function ruleChips(rule: FolderRule, facets?: Facets): string[] {
 
 /** The chips in one line, for a subtitle: "Dex 1–151 · Paldea Evolved · Illustration Rare". */
 export const ruleSummary = (rule: FolderRule, facets?: Facets): string => ruleChips(rule, facets).join(" · ");
+
+/** What a rule reads on a card. */
+export type RuleSubject = { species_id: number | null; set_name: string | null; rarity: string | null; owned: boolean | null };
+
+/**
+ * Whether a card is in a rule folder, with the API's semantics (cardorb-api, folders.ts
+ * ruleMatcher): owned only, the dex range on the card's number, a set by its name or its title,
+ * a rarity, all case-insensitive. The card sheet uses it to say which folders hold a card.
+ */
+export function matchesRule(card: RuleSubject, rule: FolderRule, facets?: Facets): boolean {
+    if (!card.owned) return false;
+    if (rule.dex && (card.species_id === null || card.species_id < rule.dex.from || card.species_id > rule.dex.to)) return false;
+    if (rule.sets) {
+        const own = (card.set_name ?? "").toLowerCase();
+        const names = rule.sets.map((s) => s.toLowerCase());
+        // The card carries the set's title; a rule may name the set either way.
+        const titles = facets?.sets.filter((s) => names.includes(s.name.toLowerCase())).map((s) => s.title.toLowerCase()) ?? [];
+        if (!names.includes(own) && !titles.includes(own)) return false;
+    }
+    if (rule.rarities && !rule.rarities.map((r) => r.toLowerCase()).includes((card.rarity ?? "").toLowerCase())) return false;
+    return true;
+}

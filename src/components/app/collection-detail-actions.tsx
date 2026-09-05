@@ -13,7 +13,7 @@ import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import type { Facets } from "@/lib/cards";
-import type { FolderKind, FolderRule } from "@/lib/folder-rule";
+import type { FolderKind, FolderRule, PokedexSetting } from "@/lib/folder-rule";
 import { cx } from "@/utils/cx";
 
 // The button's visible text; also its accessible name, with the card's name after it.
@@ -23,7 +23,7 @@ export function CollectionDetailActions({
     folder,
     facets,
 }: {
-    folder: { id: string; name: string; kind: FolderKind; rule: FolderRule | null };
+    folder: { id: string; name: string; kind: FolderKind; rule: FolderRule | null; pokedex: PokedexSetting | null };
     facets: Facets;
 }) {
     const router = useRouter();
@@ -62,7 +62,7 @@ export function CollectionDetailActions({
             {/* A rule folder decides its own contents: its action is the rule, not a search box. */}
             <FolderDialog mode="edit" folder={folder} facets={facets}>
                 <Button color="secondary" iconLeading={Edit03}>
-                    {folder.kind === "rule" ? "Edit rule" : "Rename"}
+                    {folder.kind === "rule" ? "Edit rule" : "Edit folder"}
                 </Button>
             </FolderDialog>
             {folder.kind === "rule" ? null : (

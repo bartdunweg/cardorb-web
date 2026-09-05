@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { ApiError, api } from "@/lib/api";
-import { type FolderRule, folderRuleSchema } from "@/lib/folder-rule";
+import { type FolderRule, type PokedexSetting, folderRuleSchema, pokedexSettingSchema } from "@/lib/folder-rule";
 import { forgetMine } from "@/lib/user-cache";
 
 export type CollectionResult = { ok: true; id?: string } | { ok: false; error: string };
@@ -16,14 +16,20 @@ const nameSchema = z.string().trim().min(1, "Enter a name.").max(60);
 
 // Folders live in the API; every call is scoped to the caller there. With a rule the folder
 // fills itself from the cards you own; without one you file cards in it by hand.
-export async function createCollection(name: string, rule?: FolderRule): Promise<CollectionResult> {
-    const parsed = z.object({ name: nameSchema, rule: folderRuleSchema.optional() }).safeParse({ name, rule });
+export async function createCollection(name: string, rule?: FolderRule, pokedex?: PokedexSetting): Promise<CollectionResult> {
+    const parsed = z
+        .object({ name: nameSchema, rule: folderRuleSchema.optional(), pokedex: pokedexSettingSchema.optional() })
+        .safeParse({ name, rule, pokedex });
     if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
     try {
         const { folder } = await api<{ folder: { id: string } }>("/folders", {
             method: "POST",
-            body: { name: parsed.data.name, ...(parsed.data.rule ? { rule: parsed.data.rule } : {}) },
+            body: {
+                name: parsed.data.name,
+                ...(parsed.data.rule ? { rule: parsed.data.rule } : {}),
+                ...(parsed.data.pokedex ? { pokedex: parsed.data.pokedex } : {}),
+            },
         });
         await forgetMine();
         return { ok: true, id: folder.id };
@@ -33,10 +39,10 @@ export async function createCollection(name: string, rule?: FolderRule): Promise
 }
 
 // A folder's name or rule. The API keeps the kind: a folder filled by hand takes no rule.
-export async function updateCollection(id: string, patch: { name?: string; rule?: FolderRule }): Promise<CollectionResult> {
+export async function updateCollection(id: string, patch: { name?: string; rule?: FolderRule; pokedex?: PokedexSetting | null }): Promise<CollectionResult> {
     const parsed = z
-        .object({ id: z.string().uuid(), name: nameSchema.optional(), rule: folderRuleSchema.optional() })
-        .refine((p) => p.name !== undefined || p.rule !== undefined, "Nothing to change.")
+        .object({ id: z.string().uuid(), name: nameSchema.optional(), rule: folderRuleSchema.optional(), pokedex: pokedexSettingSchema.nullable().optional() })
+        .refine((p) => p.name !== undefined || p.rule !== undefined || p.pokedex !== undefined, "Nothing to change.")
         .safeParse({ id, ...patch });
     if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
@@ -51,12 +57,14 @@ export async function updateCollection(id: string, patch: { name?: string; rule?
     return { ok: true, id: parsed.data.id };
 }
 
-// The folders a card can be filed in, for the slideout's select: the ones filled by hand. A
-// rule folder decides its own contents.
-export async function listCollections(): Promise<{ id: string; name: string }[]> {
+export type FolderChoice = { id: string; name: string; rule: FolderRule | null };
+
+// Every folder with its rule, for the card sheet: the ones filled by hand are where a card can be
+// filed; the rule folders say, by their rule, whether they hold it.
+export async function listCollections(): Promise<FolderChoice[]> {
     try {
-        const { folders } = await api<{ folders: { id: string; name: string; rule?: unknown }[] }>("/folders");
-        return folders.filter((f) => !f.rule).map((f) => ({ id: f.id, name: f.name }));
+        const { folders } = await api<{ folders: { id: string; name: string; rule?: FolderRule | null }[] }>("/folders");
+        return folders.map((f) => ({ id: f.id, name: f.name, rule: f.rule ?? null }));
     } catch {
         return [];
     }
