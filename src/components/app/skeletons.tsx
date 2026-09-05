@@ -3,7 +3,8 @@
 // composes these. The shell (sidebar, tab bar) streams before any of them, with the two slots below
 // standing in for what its own reads bring: the folders you made and the account card.
 
-const Block = ({ className }: { className: string }) => <div className={`rounded-md bg-secondary ${className}`} />;
+// A shade under the page, which is itself a shade under white: bg-secondary on a bg-secondary page would be no outline at all.
+const Block = ({ className }: { className: string }) => <div className={`rounded-md bg-tertiary ${className}`} />;
 
 export function SkeletonFrame({ children }: { children: React.ReactNode }) {
     return (
@@ -26,7 +27,7 @@ export function CardsSkeleton({ count = 12 }: { count?: number }) {
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {Array.from({ length: count }, (_, i) => (
                 <div key={i} className="flex flex-col gap-2 p-2">
-                    <div className="aspect-[63/88] w-full rounded-lg bg-secondary" />
+                    <div className="aspect-[63/88] w-full rounded-lg bg-tertiary" />
                     <Block className="h-4 w-3/4" />
                     <Block className="h-3 w-1/2" />
                 </div>
@@ -105,7 +106,7 @@ export function SetSkeleton() {
             <Block className="-mt-4 h-2 max-w-md" />
             <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
                 {Array.from({ length: 40 }, (_, i) => (
-                    <div key={i} className="aspect-[63/88] rounded-md bg-secondary" />
+                    <div key={i} className="aspect-[63/88] rounded-md bg-tertiary" />
                 ))}
             </div>
         </>
@@ -130,7 +131,7 @@ export function FolderRowsSkeleton() {
 export function AccountCardSkeleton() {
     return (
         <div className="flex items-center gap-3 p-2 motion-safe:animate-pulse" aria-hidden="true">
-            <div className="size-10 shrink-0 rounded-full bg-secondary" />
+            <div className="size-10 shrink-0 rounded-full bg-tertiary" />
             <div className="flex flex-col gap-1.5">
                 <Block className="h-3.5 w-24" />
                 <Block className="h-3 w-32" />
@@ -141,5 +142,5 @@ export function AccountCardSkeleton() {
 
 /** One line of text still on its way: the count and value under a folder's title. */
 export function LineSkeleton({ className = "h-4 w-40" }: { className?: string }) {
-    return <span aria-hidden="true" className={`inline-block rounded-md bg-secondary align-middle motion-safe:animate-pulse ${className}`} />;
+    return <span aria-hidden="true" className={`inline-block rounded-md bg-tertiary align-middle motion-safe:animate-pulse ${className}`} />;
 }

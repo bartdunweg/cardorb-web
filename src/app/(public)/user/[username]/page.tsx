@@ -58,7 +58,7 @@ export default async function PublicProfilePage({ params, searchParams }: Params
     const counts = [datapointsLine({ total, narrowed }), `${sets.toLocaleString("en-US")} set${sets === 1 ? "" : "s"}`].join(" · ");
 
     return (
-        <div className="flex min-h-dvh flex-col bg-primary">
+        <div className="bg-page flex min-h-dvh flex-col">
             {/* The menu's items are react-aria links; the provider hands them the app router. */}
             <PublicTopBar
                 menu={

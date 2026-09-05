@@ -397,6 +397,12 @@
     --color-bg-error-primary: var(--color-red-50);
     --color-bg-brand-secondary: var(--color-brand-100);
     --color-bg-secondary: var(--color-neutral-50);
+    /* The page under the signed-in app and a public profile: a shade off white, so the surfaces
+       on it (tiles, inputs, the chart) read as white things lying on it. In dark the page is the
+       darkest layer, the same as bg-primary; a lighter page there turns the surfaces into holes. */
+    --color-bg-page: var(--color-neutral-50);
+    /* What a flat tile (a card in a grid) turns into under the pointer: a surface on the page. */
+    --color-bg-page-raised: var(--color-bg-primary);
     --color-bg-quaternary: var(--color-neutral-200);
     --color-bg-primary_alt: var(--color-white);
     --color-bg-brand-primary_alt: var(--color-brand-50);
@@ -795,6 +801,8 @@
         --color-bg-error-primary: var(--color-red-950);
         --color-bg-brand-secondary: var(--color-brand-600);
         --color-bg-secondary: var(--color-neutral-800);
+        --color-bg-page: var(--color-bg-primary);
+        --color-bg-page-raised: var(--color-neutral-800);
         --color-bg-quaternary: var(--color-neutral-600);
         --color-bg-primary_alt: var(--color-bg-secondary);
         --color-bg-brand-primary_alt: var(--color-bg-secondary);

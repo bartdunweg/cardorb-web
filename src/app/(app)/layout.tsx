@@ -35,7 +35,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     <SessionGuard reads={[me, folders]} />
                 </Suspense>
                 {/* overflow-x-clip: a decoration wider than a phone (the empty state's rings) must not widen the page, or the fixed tab bar drifts off the screen. */}
-                <div className="flex min-h-dvh flex-col overflow-x-clip bg-primary">
+                {/* A page a shade off white, so the surfaces on it (tiles, inputs, the chart) read as white
+                    things lying on it. In dark the page stays the darkest layer; a lighter page there would
+                    turn the surfaces into holes. */}
+                <div className="bg-page flex min-h-dvh flex-col overflow-x-clip">
                     <div className="flex flex-1 flex-col lg:flex-row">
                         <AppSidebar account={account} collections={collections} />
                         <main className="flex min-w-0 flex-1 flex-col">
