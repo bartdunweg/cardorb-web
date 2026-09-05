@@ -96,7 +96,9 @@ export async function FolderBody(props: FolderBodyProps) {
 
     if (props.readOnly) {
         const { cards, total, pageSize = 100 } = props;
-        if (total === 0 && !narrowed) return <>{empty}</>;
+        // In a column that grows: the empty state takes the room under the chips and, on a tall
+        // viewport, sits in the middle of it rather than against the row above.
+        if (total === 0 && !narrowed) return <div className="flex flex-1 flex-col">{empty}</div>;
         const totalPages = Math.max(1, Math.ceil(total / pageSize));
         return (
             <div className="flex flex-1 flex-col gap-4">

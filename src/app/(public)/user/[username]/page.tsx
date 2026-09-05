@@ -5,14 +5,13 @@ import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderBody } from "@/components/app/folder-body";
 import { LinkButton } from "@/components/app/link-button";
 import { PublicTopBar } from "@/components/app/public-top-bar";
-import { ShareButton } from "@/components/app/share-button";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { type DexList, groupByDex } from "@/lib/dex-groups";
 import { datapointsLine } from "@/lib/folder-datapoints";
 import { DEFAULT_POKEDEX } from "@/lib/folder-rule";
 import { type ListSearchParams, PUBLIC_SORT_OPTIONS, isNarrowed, listHref, readPublicListQuery } from "@/lib/list-query";
 import { getDexNames } from "@/lib/pokedex";
-import { getMyProfile, getViewer } from "@/lib/profile";
+import { getViewer } from "@/lib/profile";
 import { PUBLIC_PAGE_SIZE, getAllPublicCards, getPublicCards, getPublicFolders, getPublicProfile } from "@/lib/public-profile";
 import { RouteProvider } from "@/providers/router-provider";
 
@@ -72,16 +71,17 @@ export default async function PublicProfilePage({ params, searchParams }: Params
     ]);
     // A folder in the URL that the owner does not show: the API answered the whole list; the chips say so too.
     const folder = folders.find((f) => f.id === query.folder) ?? null;
-    // Whose page this is: the owner looking at their own gets Edit profile beside Share. The
-    // profile read is the layout's cached one; a session the API refuses counts as a visitor.
-    const mine = viewer
-        ? await getMyProfile().then(
-              (me) => me.profile?.username === profile.username,
-              () => false,
-          )
-        : false;
     const base = `/user/${encodeURIComponent(username)}`;
     const name = profile.display_name || profile.username || "Collection";
+    // What an empty list says, by which list it is: the words are the visitor's, not the owner's.
+    const emptyState =
+        list === "wishlist" ? (
+            <AppEmptyState icon="heart" title="Nothing on the wishlist" description="No cards are being looked for right now" />
+        ) : list === "favorites" ? (
+            <AppEmptyState icon="star" title="No favorites yet" description="No card has been starred" />
+        ) : (
+            <AppEmptyState icon="folder" title="This collection is empty" description="Nothing has been added to it yet" />
+        );
     // The handle sits under a display name, as a profile page does; with no display name it is the name.
     const handle = profile.display_name && profile.username ? `@${profile.username}` : null;
     // With a search or a filter on, the count is what matched.
@@ -108,14 +108,6 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                         <h1 className="text-display-sm font-semibold text-primary">{name}</h1>
                         {handle ? <p className="text-md text-tertiary">{handle}</p> : null}
                         <p className="text-md font-medium text-secondary tabular-nums">{counts}</p>
-                    </div>
-                    <div className="flex items-center gap-2 pt-1">
-                        <ShareButton title={`${name}'s collection on Cardorb`} />
-                        {mine ? (
-                            <LinkButton href="/dashboard/settings" color="secondary" size="md">
-                                Edit profile
-                            </LinkButton>
-                        ) : null}
                     </div>
                 </div>
 
@@ -174,7 +166,7 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                         searchLabel="Search this collection"
                         searchPlaceholder="Search this collection"
                         pokedex={{ dex }}
-                        empty={<AppEmptyState icon="folder" title="This collection is empty" description="Nothing has been added to it yet" />}
+                        empty={emptyState}
                     />
                 ) : (
                     <FolderBody
@@ -188,7 +180,7 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                         cards={cards}
                         total={total}
                         pageSize={PUBLIC_PAGE_SIZE}
-                        empty={<AppEmptyState icon="folder" title="This collection is empty" description="Nothing has been added to it yet" />}
+                        empty={emptyState}
                     />
                 )}
             </main>

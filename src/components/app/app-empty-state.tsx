@@ -16,8 +16,10 @@ const ICONS = { book: BookOpen01, folder: Folder, heart: Heart, plus: Plus, sear
 export function AppEmptyState({ icon, title, description, children }: { icon: keyof typeof ICONS; title: string; description: string; children?: ReactNode }) {
     const Icon = ICONS[icon];
 
+    // In the middle of whatever room the page leaves it, with a margin above and below so it never
+    // touches the row over it; on a tall viewport that room is most of the screen.
     return (
-        <div className="flex flex-1 items-start justify-center pt-6 lg:items-center lg:pt-0">
+        <div className="flex flex-1 items-center justify-center py-12">
             <div className="mx-auto flex w-full max-w-lg arrive flex-col items-center justify-center">
                 <div className="relative mb-5">
                     <Circle size="md" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
