@@ -32,47 +32,53 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
     return (
         <div className={cx("grid gap-4", COLUMNS[size])}>
             {cards.map((card, i) => (
-                <button
-                    key={card.id}
-                    type="button"
-                    onClick={() => onSelect(card)}
-                    className="flex pressable cursor-pointer flex-col gap-2 rounded-2xl p-2 text-left outline-focus-ring transition-colors hover:bg-secondary focus-visible:outline-2"
-                >
-                    <div className="relative aspect-[63/88] w-full overflow-hidden rounded-lg bg-quaternary ring-1 ring-image ring-inset">
-                        {card.image_url ? (
-                            <CardImage
-                                src={card.image_url}
-                                alt=""
-                                sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 213px"
-                                className="object-contain"
-                                // The first row is on screen at load and one of it is the largest paint; it must not wait for lazy loading.
-                                priority={i < FIRST_ROW}
-                            />
-                        ) : (
-                            // No art in our source (e.g. some promos) — show the name so the tile still reads as a card.
-                            <div className="flex h-full w-full flex-col items-center justify-center gap-1 p-3 text-center">
-                                <span className="line-clamp-4 text-sm font-medium text-secondary">{card.name}</span>
-                                {card.number ? <span className="text-xxs text-quaternary">#{card.number}</span> : null}
-                            </div>
-                        )}
-                    </div>
-                    <div className="flex flex-col">
-                        <span className="truncate text-sm font-medium text-primary">
-                            {card.is_favorite ? <FavoriteStar /> : null}
-                            {card.name}
-                        </span>
-                        <span className="truncate text-xs text-tertiary">
-                            {[card.set_name, card.number ? `#${card.number}` : null].filter(Boolean).join(" · ")}
-                        </span>
-                        {/* The market price carries the weight of the name, as a marketplace tile does; the set line stays quiet. */}
-                        {card.price != null ? (
-                            <span className="mt-0.5 text-sm font-medium text-primary tabular-nums">
-                                <span className="sr-only">Market price </span>
-                                {formatPrice(card.price)}
+                // The arrival is on a box of its own: the button already transitions its colours and its
+                // scale, and three utilities naming transition-property on one element leave one standing.
+                // The first two rows arrive one after another, 20 ms apart; everything under them comes in
+                // together once that wave has passed. A batch appended on scroll sits below the fold, so
+                // its wave is not seen and its delay has passed by the time it is.
+                <div key={card.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i, 12) * 20}ms` } as React.CSSProperties}>
+                    <button
+                        type="button"
+                        onClick={() => onSelect(card)}
+                        className="flex h-full w-full pressable cursor-pointer flex-col gap-2 rounded-2xl p-2 text-left outline-focus-ring transition-colors hover:bg-secondary focus-visible:outline-2"
+                    >
+                        <div className="relative aspect-[63/88] w-full overflow-hidden rounded-lg bg-quaternary ring-1 ring-image ring-inset">
+                            {card.image_url ? (
+                                <CardImage
+                                    src={card.image_url}
+                                    alt=""
+                                    sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 213px"
+                                    className="object-contain"
+                                    // The first row is on screen at load and one of it is the largest paint; it must not wait for lazy loading.
+                                    priority={i < FIRST_ROW}
+                                />
+                            ) : (
+                                // No art in our source (e.g. some promos) — show the name so the tile still reads as a card.
+                                <div className="flex h-full w-full flex-col items-center justify-center gap-1 p-3 text-center">
+                                    <span className="line-clamp-4 text-sm font-medium text-secondary">{card.name}</span>
+                                    {card.number ? <span className="text-xxs text-quaternary">#{card.number}</span> : null}
+                                </div>
+                            )}
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="truncate text-sm font-medium text-primary">
+                                {card.is_favorite ? <FavoriteStar /> : null}
+                                {card.name}
                             </span>
-                        ) : null}
-                    </div>
-                </button>
+                            <span className="truncate text-xs text-tertiary">
+                                {[card.set_name, card.number ? `#${card.number}` : null].filter(Boolean).join(" · ")}
+                            </span>
+                            {/* The market price carries the weight of the name, as a marketplace tile does; the set line stays quiet. */}
+                            {card.price != null ? (
+                                <span className="mt-0.5 text-sm font-medium text-primary tabular-nums">
+                                    <span className="sr-only">Market price </span>
+                                    {formatPrice(card.price)}
+                                </span>
+                            ) : null}
+                        </div>
+                    </button>
+                </div>
             ))}
         </div>
     );

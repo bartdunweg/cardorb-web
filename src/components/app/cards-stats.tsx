@@ -15,6 +15,7 @@ const StatCard = ({
     detail,
     icon,
     className,
+    delay,
 }: {
     label: string;
     value: string;
@@ -22,8 +23,10 @@ const StatCard = ({
     detail?: string;
     icon: FC<{ className?: string }>;
     className?: string;
+    /** Its place in the row: the tiles arrive one after another, 40 ms apart. */
+    delay?: number;
 }) => (
-    <div className={cx("rounded-xl bg-primary shadow-border", className)}>
+    <div className={cx("arrive rounded-xl bg-primary shadow-border", className)} style={{ "--arrive-delay": `${delay ?? 0}ms` } as React.CSSProperties}>
         <div className="flex flex-col gap-4 px-4 py-5 md:gap-5 md:px-5">
             <FeaturedIcon color="gray" theme="modern-neue" icon={icon} size="lg" />
             <div className="flex flex-col gap-2">
@@ -43,15 +46,16 @@ const unpricedNote = (unpriced: number) => (unpriced === 0 ? undefined : `${coun
 export function CardsStats({ stats }: { stats: CardStats }) {
     return (
         <div className="flex flex-col gap-x-6 gap-y-5 md:flex-row md:flex-wrap">
-            <StatCard label="Owned" value={count(stats.owned)} icon={CheckDone01} className="flex-1 md:min-w-[240px]" />
-            <StatCard label="Wishlist" value={count(stats.wishlist)} icon={Heart} className="flex-1 md:min-w-[240px]" />
-            <StatCard label="Favorites" value={count(stats.favorites)} icon={Star01} className="flex-1 md:min-w-[240px]" />
+            <StatCard label="Owned" value={count(stats.owned)} icon={CheckDone01} className="flex-1 md:min-w-[240px]" delay={0} />
+            <StatCard label="Wishlist" value={count(stats.wishlist)} icon={Heart} className="flex-1 md:min-w-[240px]" delay={40} />
+            <StatCard label="Favorites" value={count(stats.favorites)} icon={Star01} className="flex-1 md:min-w-[240px]" delay={80} />
             <StatCard
                 label="Collection value"
                 value={formatPrice(stats.value)}
                 detail={unpricedNote(stats.unpriced)}
                 icon={CoinsStacked01}
                 className="flex-1 md:min-w-[240px]"
+                delay={120}
             />
         </div>
     );

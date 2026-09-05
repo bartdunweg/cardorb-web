@@ -44,6 +44,13 @@ which also says what is already yours), Settings (avatar through the API), publi
   removed, and each opens its place in Cards or Wishlist. Copies are offered only when the card is
   one collection row; two printings are managed in Cards. New actions `setCopies` and `removeCard`
   in `cards/actions.ts`; the item DELETE needs a JSON content type, so it sends `{}`.
+- **What streams in arrives; what opens follows one curve.** `arrive` (globals.css) fades what
+  lands after the page is standing up 4 px into place, 200 ms on `--ease-enter`, from
+  `@starting-style`, with `--arrive-delay` for a row's stagger (cards 20 ms to the 12th, stat
+  tiles 40 ms, sets 30 ms); reduced motion keeps the fade. The kit's modal, sheet and dropdown
+  enter and exit on `--ease-enter` (the sheet on `--ease-drawer`), never `ease-in`, and drop
+  their zoom or slide under reduced motion. The command palette, hover and keyboard actions
+  stay unanimated on purpose.
 - **A folder page opens before its cards.** The five list pages (All cards, a folder, Favorites,
   Wishlist, Pokédex) no longer await the list: the title, actions and the row (search, Filters,
   Sort, View) go out at once, the count and value under the title and the cards themselves

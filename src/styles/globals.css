@@ -71,6 +71,33 @@
     }
 }
 
+/* Arrive: what streams in after the page is standing — a batch of cards, the count under a title,
+   the sidebar's folder rows — fades up 4 px into place rather than popping. 200 ms on the enter
+   curve, from @starting-style, so it runs once, on the element's first frame, with no JS. A
+   --arrive-delay staggers a row; the rest arrive together. Reduced motion keeps the fade and
+   drops the movement. */
+@utility arrive {
+    opacity: 1;
+    translate: 0 0;
+    transition-property: opacity, translate;
+    transition-duration: 200ms;
+    transition-timing-function: var(--ease-enter);
+    transition-delay: var(--arrive-delay, 0ms);
+
+    @starting-style {
+        opacity: 0;
+        translate: 0 4px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        transition-property: opacity;
+
+        @starting-style {
+            translate: 0 0;
+        }
+    }
+}
+
 @utility transition-inherit-all {
     transition-property: inherit;
     transition-duration: inherit;

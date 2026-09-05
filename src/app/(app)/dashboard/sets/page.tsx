@@ -37,8 +37,9 @@ export default async function SetsPage() {
                         {group.name}
                     </h2>
                     <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                        {group.sets.map((set) => (
-                            <li key={set.id}>
+                        {/* The first row of each series arrives 30 ms apart; the rest of it together. */}
+                        {group.sets.map((set, i) => (
+                            <li key={set.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i, 3) * 30}ms` } as React.CSSProperties}>
                                 <SetTile set={set} />
                             </li>
                         ))}

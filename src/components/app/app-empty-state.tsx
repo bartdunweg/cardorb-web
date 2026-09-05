@@ -18,7 +18,7 @@ export function AppEmptyState({ icon, title, description, children }: { icon: ke
 
     return (
         <div className="flex flex-1 items-start justify-center pt-6 lg:items-center lg:pt-0">
-            <div className="mx-auto flex w-full max-w-lg flex-col items-center justify-center">
+            <div className="mx-auto flex w-full max-w-lg arrive flex-col items-center justify-center">
                 <div className="relative mb-5">
                     <Circle size="md" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                     <FeaturedIcon icon={Icon} color="gray" theme="modern" size="xl" className="relative z-10" />
