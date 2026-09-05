@@ -42,8 +42,8 @@ function DexTile({ slot }: { slot: NamedDexSlot }) {
 
     if (held === 0) {
         return (
-            <div className="flex flex-col gap-2 rounded-2xl p-2">
-                <div className="flex aspect-[63/88] w-full items-center justify-center rounded-lg bg-quaternary">
+            <div className="flex flex-col gap-2 rounded-2xl bg-primary p-2 shadow-lift-xs">
+                <div className="flex aspect-[63/88] w-full items-center justify-center rounded-lg bg-tertiary">
                     <span className="text-sm font-medium text-quaternary tabular-nums">{dexNumber(slot.number)}</span>
                 </div>
                 {words}
@@ -53,7 +53,7 @@ function DexTile({ slot }: { slot: NamedDexSlot }) {
 
     if (held > 1) {
         return (
-            <div className="flex flex-col gap-2 rounded-2xl p-2">
+            <div className="flex flex-col gap-2 rounded-2xl bg-primary p-2 shadow-lift-xs">
                 <DexSlider cards={slot.cards} />
                 {words}
             </div>
@@ -64,7 +64,7 @@ function DexTile({ slot }: { slot: NamedDexSlot }) {
     return (
         <Link
             href={`/dashboard/cards?q=${encodeURIComponent(card.name)}`}
-            className="hover:bg-page-raised flex pressable cursor-pointer flex-col gap-2 rounded-2xl p-2 text-left outline-focus-ring transition-colors focus-visible:outline-2"
+            className="flex pressable cursor-pointer flex-col gap-2 rounded-2xl bg-primary p-2 text-left shadow-lift-xs outline-focus-ring hover:bg-secondary focus-visible:outline-2"
         >
             <div className="relative aspect-[63/88] w-full overflow-hidden rounded-lg bg-quaternary ring-1 ring-image ring-inset">
                 {card.imageUrl ? (

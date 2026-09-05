@@ -21,7 +21,10 @@ const StatCard = ({
     /** Its place in the row: the tiles arrive one after another, 40 ms apart. */
     delay?: number;
 }) => (
-    <div className={cx("arrive rounded-xl bg-primary shadow-border", className)} style={{ "--arrive-delay": `${delay ?? 0}ms` } as React.CSSProperties}>
+    <div
+        className={cx("arrive rounded-xl bg-primary shadow-lift-xs ring-1 ring-primary ring-inset", className)}
+        style={{ "--arrive-delay": `${delay ?? 0}ms` } as React.CSSProperties}
+    >
         <div className="flex flex-col gap-3 px-3 py-4 sm:gap-4 sm:px-4 sm:py-5 md:gap-5 md:px-5">
             <div className="flex flex-col gap-2">
                 <h3 className="text-sm font-semibold text-tertiary">{label}</h3>

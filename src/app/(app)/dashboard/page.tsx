@@ -14,7 +14,7 @@ export default async function DashboardPage() {
             <CardsStats stats={stats} />
 
             <section
-                className="flex arrive flex-col gap-4 rounded-xl bg-primary px-4 py-5 shadow-border md:px-5"
+                className="flex arrive flex-col gap-4 rounded-xl bg-primary px-4 py-5 shadow-lift-xs ring-1 ring-primary ring-inset md:px-5"
                 style={{ "--arrive-delay": "120ms" } as React.CSSProperties}
             >
                 <div className="flex flex-col gap-1">

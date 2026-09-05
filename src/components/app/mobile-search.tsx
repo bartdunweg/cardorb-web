@@ -22,9 +22,11 @@ export function MobileSearchSheet() {
             <button
                 type="button"
                 onClick={() => setOpen(true)}
-                className="flex w-full pressable cursor-pointer items-center gap-3 rounded-full bg-primary py-3 pr-16 pl-4 text-md text-tertiary ring-1 ring-primary outline-focus-ring ring-inset hover:bg-secondary focus-visible:outline-2"
+                // The kit's Input at its lg size, as a button: the same ring, padding, type and icon as the search
+                // field on every folder page, so the two read as one control.
+                className="flex w-full pressable cursor-pointer items-center gap-2 rounded-full bg-primary py-2.5 pr-16 pl-3.5 text-md text-placeholder ring-1 ring-primary outline-focus-ring ring-inset hover:bg-secondary focus-visible:outline-2"
             >
-                <SearchLg className="size-5 text-fg-tertiary" />
+                <SearchLg className="size-5 text-fg-quaternary" />
                 <span className="flex-1 text-left">Search a card</span>
             </button>
             {/* Scan sits at the bar's right end, its own control beside the search rather than inside it

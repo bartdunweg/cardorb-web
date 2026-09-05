@@ -20,7 +20,8 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
             title="Wishlist"
             datapoints={datapoints}
             // Beside the title whatever the list holds: the title is drawn before the count is known.
-            actions={<AddCardModal defaultTarget="wishlist" />}
+            // A plus alone: the page says Wishlist, the button need not repeat it.
+            actions={<AddCardModal defaultTarget="wishlist" compact />}
             query={query}
             basePath="/dashboard/wishlist"
             facets={facets}

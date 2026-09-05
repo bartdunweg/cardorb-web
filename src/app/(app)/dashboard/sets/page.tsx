@@ -22,14 +22,12 @@ export default async function SetsPage() {
             />
         );
     }
-    const { series, complete, started, totalSets } = shelf;
+    const { series } = shelf;
 
     return (
         <div className="flex flex-col gap-8">
-            <PageHeader title="Browse" subtitle={`${n(complete)} of ${n(totalSets)} sets complete · ${n(started)} started`}>
-                {/* The count above is the accessible name; the bar makes the same number visible at a glance. */}
-                <ProgressBarBase value={complete} max={totalSets} className="mt-2 max-w-md" aria-label="Sets complete" />
-            </PageHeader>
+            {/* The title alone: how far the shelf is comes per set, on its tile, not as one number over all of them. */}
+            <PageHeader title="Browse" />
 
             {series.map((group) => (
                 <section key={group.name} aria-labelledby={`series-${slug(group.name)}`} className="flex flex-col gap-3">
@@ -61,7 +59,7 @@ function SetTile({ set }: { set: SetSummary }) {
         <Link
             href={`/dashboard/sets/${encodeURIComponent(set.id)}`}
             className={cx(
-                "flex pressable items-center gap-4 rounded-xl bg-primary p-4 shadow-border outline-focus-ring transition-[color,background-color,box-shadow] hover:shadow-border_hover focus-visible:outline-2",
+                "flex pressable items-center gap-4 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary outline-focus-ring transition-[color,background-color,box-shadow] ring-inset hover:bg-secondary focus-visible:outline-2",
                 empty && "opacity-70 hover:opacity-100",
             )}
         >
