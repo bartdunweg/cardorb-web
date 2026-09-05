@@ -1,6 +1,7 @@
 // The outlines a page shows while it fetches, one per shape of page. Each keeps the real layout's
 // grid and ratios, so nothing moves when the content lands. Every loading.tsx under the dashboard
-// composes these; the shell (sidebar, tab bar) is already standing.
+// composes these. The shell (sidebar, tab bar) streams before any of them, with the two slots below
+// standing in for what its own reads bring: the folders you made and the account card.
 
 const Block = ({ className }: { className: string }) => <div className={`rounded-md bg-secondary ${className}`} />;
 
@@ -112,5 +113,32 @@ export function SetSkeleton() {
                 ))}
             </div>
         </>
+    );
+}
+
+/** The sidebar's folder rows, two of them, at a nav item's height and padding. */
+export function FolderRowsSkeleton() {
+    return (
+        <div className="flex flex-col px-4 motion-safe:animate-pulse" aria-hidden="true">
+            {[0, 1].map((i) => (
+                <div key={i} className="flex h-9 items-center gap-2 p-2">
+                    <Block className="size-5 shrink-0 rounded-sm" />
+                    <Block className={i === 0 ? "h-3.5 w-24" : "h-3.5 w-16"} />
+                </div>
+            ))}
+        </div>
+    );
+}
+
+/** The account card at the sidebar's foot: a circle and two lines, in the card's own padding. */
+export function AccountCardSkeleton() {
+    return (
+        <div className="flex items-center gap-3 p-2 motion-safe:animate-pulse" aria-hidden="true">
+            <div className="size-10 shrink-0 rounded-full bg-secondary" />
+            <div className="flex flex-col gap-1.5">
+                <Block className="h-3.5 w-24" />
+                <Block className="h-3 w-32" />
+            </div>
+        </div>
     );
 }
