@@ -112,12 +112,16 @@ export async function updatePokedexSetting(setting: PokedexSetting | null): Prom
     return { ok: true };
 }
 
-// The wishlist's one setting, from the wishlist page: whether it shows on the public profile.
-export async function updateWishlistPublic(input: unknown): Promise<ActionResult> {
-    const parsed = z.boolean().safeParse(input);
+// A list's one setting, from its own page: whether it shows on the public profile. The wishlist,
+// the favorites and the Pokédex each have the flag; a folder you made carries its own.
+const listSchema = z.object({ list: z.enum(["wishlist", "favorites", "pokedex"]), shown: z.boolean() });
+const FLAG = { wishlist: "wishlistPublic", favorites: "favoritesPublic", pokedex: "pokedexPublic" } as const;
+
+export async function updateListPublic(input: unknown): Promise<ActionResult> {
+    const parsed = listSchema.safeParse(input);
     if (!parsed.success) return { ok: false, error: "Something went wrong. Try again." };
     try {
-        await api("/profile", { method: "PATCH", body: { wishlistPublic: parsed.data } });
+        await api("/profile", { method: "PATCH", body: { [FLAG[parsed.data.list]]: parsed.data.shown } });
     } catch (err) {
         return failed(err);
     }

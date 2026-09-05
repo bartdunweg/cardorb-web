@@ -1,19 +1,42 @@
 import { ApiError, api } from "@/lib/api";
 import { type PublicCard, type PublicItem, publicCardFromItem } from "@/lib/api-shapes";
 import type { Facets } from "@/lib/cards";
+import type { PokedexSetting } from "@/lib/folder-rule";
 import type { ListQuery } from "@/lib/list-query";
 
-export type PublicProfile = { display_name: string | null; username: string | null; avatar_url: string | null; wishlist_public: boolean };
+export type PublicProfile = {
+    display_name: string | null;
+    username: string | null;
+    avatar_url: string | null;
+    wishlist_public: boolean;
+    favorites_public: boolean;
+    pokedex_public: boolean;
+    /** The owner's Pokédex setting, while the Pokédex is shown; null otherwise. */
+    pokedex: PokedexSetting | null;
+};
 
 // The public face of a profile, or null when there is none by that name or it is not public.
 // Unkeyed: the API's three public routes serve exactly this page and carry no prices.
 export async function getPublicProfile(username: string): Promise<PublicProfile | null> {
     try {
-        const p = await api<{ username: string; displayName: string | null; avatarUrl: string | null; wishlistPublic?: boolean }>(
-            `/public/${encodeURIComponent(username)}/profile`,
-            { auth: false },
-        );
-        return { display_name: p.displayName, username: p.username, avatar_url: p.avatarUrl, wishlist_public: p.wishlistPublic ?? false };
+        const p = await api<{
+            username: string;
+            displayName: string | null;
+            avatarUrl: string | null;
+            wishlistPublic?: boolean;
+            favoritesPublic?: boolean;
+            pokedexPublic?: boolean;
+            pokedex?: PokedexSetting | null;
+        }>(`/public/${encodeURIComponent(username)}/profile`, { auth: false });
+        return {
+            display_name: p.displayName,
+            username: p.username,
+            avatar_url: p.avatarUrl,
+            wishlist_public: p.wishlistPublic ?? false,
+            favorites_public: p.favoritesPublic ?? false,
+            pokedex_public: p.pokedexPublic ?? false,
+            pokedex: p.pokedex ?? null,
+        };
     } catch (err) {
         if (err instanceof ApiError && err.status === 404) return null;
         throw err;
@@ -39,6 +62,26 @@ export async function getPublicCards(username: string, { page, q, set, rarity, s
     // This route is cached for five minutes (no session, so `revalidate`), and an answer cached before
     // the API carried facets has none. Empty menus for those minutes, not a broken page.
     return { cards: cards.map(publicCardFromItem), total, sets, facets: facets ?? { sets: [], rarities: [] } };
+}
+
+/** The maximum the public route hands out at once; the Pokédex needs every card, so it pages through at this size. */
+const ALL_PAGE_SIZE = 500;
+
+// Every owned card behind a public profile, for the page that draws them as a Pokédex: the slots
+// need all of them, not a page. The first page says how many there are; the rest come at once.
+export async function getAllPublicCards(username: string, query: ListQuery): Promise<{ cards: PublicCard[]; total: number; facets: Facets }> {
+    const read = async (offset: number) =>
+        api<{ cards: PublicItem[]; total: number; facets?: Facets }>(`/public/${encodeURIComponent(username)}/cards`, {
+            auth: false,
+            params: { q: query.q, set: query.set, rarity: query.rarity, list: "pokedex", limit: ALL_PAGE_SIZE, offset },
+        });
+    const first = await read(0);
+    const rest = await Promise.all(Array.from({ length: Math.max(0, Math.ceil(first.total / ALL_PAGE_SIZE) - 1) }, (_, i) => read((i + 1) * ALL_PAGE_SIZE)));
+    return {
+        cards: [first, ...rest].flatMap((p) => p.cards).map(publicCardFromItem),
+        total: first.total,
+        facets: first.facets ?? { sets: [], rarities: [] },
+    };
 }
 
 /** A folder its owner shows on the profile: a chip over the list, with how many cards it holds. */

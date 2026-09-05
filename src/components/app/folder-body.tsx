@@ -27,7 +27,10 @@ type Common = {
 };
 
 /** A public profile: the cards came with the page, and it pages by URL. */
-type PublicBody = Common & { readOnly: true; cards: PublicCard[]; total: number; pageSize?: number };
+type PublicBody = Common & { readOnly: true } & (
+        | { cards: PublicCard[]; total: number; pageSize?: number; pokedex?: undefined }
+        | { cards?: undefined; total?: undefined; pageSize?: undefined; pokedex: { dex: Promise<DexList> } }
+    );
 
 /**
  * Your own folder: the first batch is a promise the page handed over without waiting, so the
@@ -73,6 +76,23 @@ export async function FolderBody(props: FolderBodyProps) {
             description={q ? `No cards match “${q}”. Try a different name or set.` : "Nothing in that set or rarity. Clear a filter to widen the list."}
         />
     );
+
+    if (props.readOnly && props.pokedex) {
+        return (
+            <div className="flex flex-1 flex-col gap-4">
+                <DexView
+                    key={listHref(basePath, query, {})}
+                    dex={props.pokedex.dex}
+                    narrowed={narrowed}
+                    initialSize={size}
+                    toolbar={toolbar}
+                    noHits={noHits}
+                    empty={empty}
+                    linked={false}
+                />
+            </div>
+        );
+    }
 
     if (props.readOnly) {
         const { cards, total, pageSize = 100 } = props;

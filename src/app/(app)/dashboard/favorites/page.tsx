@@ -1,7 +1,9 @@
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderPage } from "@/components/app/folder-page";
+import { ListSettingsDialog } from "@/components/app/list-settings-dialog";
 import { type CardFilter, getFacets, getMyCards } from "@/lib/cards";
 import { type ListSearchParams, isNarrowed, readListQuery } from "@/lib/list-query";
+import { getMyProfile } from "@/lib/profile";
 
 // Starred cards you own. A favourite is a flag on a card in the collection (CLAUDE.md), so this asks the
 // API for owned copies only; a wish cannot carry a star here. The list itself is not awaited: see cards/page.tsx.
@@ -12,13 +14,14 @@ export default async function FavoritesPage({ searchParams }: { searchParams: Pr
     const narrowed = isNarrowed(query);
     const list = getMyCards(filter);
     const datapoints = list.then((r) => ({ total: r.total, narrowed, value: r.value, unpriced: r.unpriced }));
-    const facets = await getFacets();
+    const [facets, { profile }] = await Promise.all([getFacets(), getMyProfile()]);
 
     return (
         <FolderPage
             title="Favorites"
             back={{ href: "/dashboard/collections", label: "Folders" }}
             datapoints={datapoints}
+            actions={<ListSettingsDialog list="favorites" title="Favorites" isPublic={profile?.favorites_public ?? false} />}
             query={query}
             basePath="/dashboard/favorites"
             facets={facets}

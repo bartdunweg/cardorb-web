@@ -1,7 +1,7 @@
 import { AddCardModal } from "@/components/app/add-card-modal";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderPage } from "@/components/app/folder-page";
-import { WishlistSettingsDialog } from "@/components/app/wishlist-settings-dialog";
+import { ListSettingsDialog } from "@/components/app/list-settings-dialog";
 import { type CardFilter, getFacets, getMyCards } from "@/lib/cards";
 import { type ListSearchParams, isNarrowed, readListQuery } from "@/lib/list-query";
 import { getMyProfile } from "@/lib/profile";
@@ -25,7 +25,7 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
             // A plus alone: the page says Wishlist, the button need not repeat it.
             actions={
                 <>
-                    <WishlistSettingsDialog isPublic={profile?.wishlist_public ?? false} />
+                    <ListSettingsDialog list="wishlist" title="Wishlist" isPublic={profile?.wishlist_public ?? false} />
                     <AddCardModal defaultTarget="wishlist" compact />
                 </>
             }

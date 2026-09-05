@@ -165,7 +165,20 @@ export const cardFromItem = (item: CardItem): Card => ({
 
 export type PublicCard = Pick<
     Card,
-    "id" | "name" | "set_name" | "number" | "rarity" | "gen" | "types" | "quantity" | "finish" | "image_url" | "image_high_url" | "tcg_id"
+    | "id"
+    | "name"
+    | "set_name"
+    | "number"
+    | "rarity"
+    | "gen"
+    | "types"
+    | "quantity"
+    | "finish"
+    | "image_url"
+    | "image_high_url"
+    | "tcg_id"
+    | "is_favorite"
+    | "species_id"
 >;
 
 /** One card on a public profile with how many copies the owner holds. Nothing private (R-API-002 there). */
@@ -184,6 +197,8 @@ export type PublicItem = {
     speciesId: number | null;
     tcgId: string | null;
     copies: number;
+    /** One of the owned copies is starred; absent from an API before it said so. */
+    favorite?: boolean;
 };
 
 /** One tile per card; the copies held are its quantity. A wish never reaches this route. */
@@ -200,6 +215,8 @@ export const publicCardFromItem = (item: PublicItem): PublicCard => ({
     image_url: absoluteImage(item.image),
     image_high_url: absoluteImage(item.imageHigh ?? null),
     tcg_id: item.tcgId,
+    is_favorite: item.favorite ?? false,
+    species_id: item.speciesId,
 });
 
 // ── GET /v1/pokedex ───────────────────────────────────────────────────────────────────────
@@ -393,6 +410,9 @@ export type OwnProfile = {
     isPublic: boolean;
     /** The wishlist on the public profile too. Absent from an API before #176. */
     wishlistPublic?: boolean;
+    /** The favorites and the Pokédex on the public profile too. Absent from an API before #187. */
+    favoritesPublic?: boolean;
+    pokedexPublic?: boolean;
     avatarUrl: string | null;
     onboardedAt: string | null;
     pokedex?: PokedexSetting | null;
@@ -406,6 +426,9 @@ export type Profile = {
     is_public: boolean;
     /** The wishlist shows on the public profile as well, while it is public. */
     wishlist_public: boolean;
+    /** The favorites and the Pokédex show on the public profile as well, while it is public. */
+    favorites_public: boolean;
+    pokedex_public: boolean;
     /** How the built-in Pokédex shows; null is every slot, missing ones too. */
     pokedex: PokedexSetting | null;
 };
@@ -416,5 +439,7 @@ export const profileFromOwn = (p: OwnProfile): Profile => ({
     avatar_url: p.avatarUrl,
     is_public: p.isPublic,
     wishlist_public: p.wishlistPublic ?? false,
+    favorites_public: p.favoritesPublic ?? false,
+    pokedex_public: p.pokedexPublic ?? false,
     pokedex: p.pokedex ?? null,
 });

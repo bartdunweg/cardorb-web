@@ -20,17 +20,19 @@ const dexNumber = (n: number) => `#${String(n).padStart(3, "0")}`;
 // the Pokédex reads as one of the folders and not as a different screen. A number you hold
 // shows its card (several: a slider), its name and how many you have; one you do not is the
 // same tile in grey, named, so a person knows what to find.
-export function DexGrid({ slots, size = "md" }: { slots: NamedDexSlot[]; size?: CardsSize }) {
+export function DexGrid({ slots, size = "md", linked = true }: { slots: NamedDexSlot[]; size?: CardsSize; linked?: boolean }) {
     return (
         <div className={cx("grid gap-4", GRID_COLUMNS[size])}>
             {slots.map((slot) => (
-                <DexTile key={slot.number} slot={slot} />
+                <DexTile key={slot.number} slot={slot} linked={linked} />
             ))}
         </div>
     );
 }
 
-function DexTile({ slot }: { slot: NamedDexSlot }) {
+// `linked`: a single card leads to its search in the owner's collection; on a public page there is
+// nowhere to go, so the tile is a plain tile.
+function DexTile({ slot, linked }: { slot: NamedDexSlot; linked: boolean }) {
     const held = slot.cards.length;
     const line = `${dexNumber(slot.number)} · ${held === 0 ? "Missing" : held === 1 ? "1 card" : `${held} cards`}`;
     const words = (
@@ -61,20 +63,31 @@ function DexTile({ slot }: { slot: NamedDexSlot }) {
     }
 
     const card = slot.cards[0]!;
+    const picture = (
+        <div className={cx("relative aspect-[63/88] w-full overflow-hidden rounded-lg", !card.imageUrl && "bg-quaternary")}>
+            {card.imageUrl ? (
+                <CardImage src={card.imageHighUrl ?? card.imageUrl} alt="" sizes={SIZES} quality={75} className="object-contain" />
+            ) : (
+                <div className="flex h-full w-full flex-col items-center justify-center gap-1 p-3 text-center">
+                    <span className="line-clamp-4 text-sm font-medium text-secondary">{card.name}</span>
+                </div>
+            )}
+        </div>
+    );
+    if (!linked) {
+        return (
+            <div className="flex flex-col gap-2 rounded-2xl bg-primary p-2 shadow-lift-xs">
+                {picture}
+                {words}
+            </div>
+        );
+    }
     return (
         <Link
             href={`/dashboard/cards?q=${encodeURIComponent(card.name)}`}
             className="flex pressable cursor-pointer flex-col gap-2 rounded-2xl bg-primary p-2 text-left shadow-lift-xs outline-focus-ring hover:bg-secondary focus-visible:outline-2"
         >
-            <div className={cx("relative aspect-[63/88] w-full overflow-hidden rounded-lg", !card.imageUrl && "bg-quaternary")}>
-                {card.imageUrl ? (
-                    <CardImage src={card.imageHighUrl ?? card.imageUrl} alt="" sizes={SIZES} quality={75} className="object-contain" />
-                ) : (
-                    <div className="flex h-full w-full flex-col items-center justify-center gap-1 p-3 text-center">
-                        <span className="line-clamp-4 text-sm font-medium text-secondary">{card.name}</span>
-                    </div>
-                )}
-            </div>
+            {picture}
             {words}
         </Link>
     );
@@ -90,11 +103,14 @@ export function DexView({
     toolbar,
     noHits,
     empty,
+    linked = true,
 }: {
     dex: Promise<DexList>;
     narrowed: boolean;
     initialSize?: CardsSize;
     toolbar?: ReactNode;
+    /** Whether a tile leads into the owner's collection; not on a public page. */
+    linked?: boolean;
     /** When a search or a filter finds nothing. */
     noHits: ReactNode;
     /** When the folder holds nothing at all. */
@@ -108,14 +124,28 @@ export function DexView({
                 <ViewMenu view="grid" size={size} onView={() => {}} onSize={setSize} layouts={false} />
             </div>
             <Suspense fallback={<DexSkeleton />}>
-                <DexSlots dex={dex} size={size} narrowed={narrowed} noHits={noHits} empty={empty} />
+                <DexSlots dex={dex} size={size} narrowed={narrowed} noHits={noHits} empty={empty} linked={linked} />
             </Suspense>
         </div>
     );
 }
 
-function DexSlots({ dex, size, narrowed, noHits, empty }: { dex: Promise<DexList>; size: CardsSize; narrowed: boolean; noHits: ReactNode; empty: ReactNode }) {
+function DexSlots({
+    dex,
+    size,
+    narrowed,
+    noHits,
+    empty,
+    linked,
+}: {
+    dex: Promise<DexList>;
+    size: CardsSize;
+    narrowed: boolean;
+    noHits: ReactNode;
+    empty: ReactNode;
+    linked: boolean;
+}) {
     const d = use(dex);
     if (d.total === 0) return <>{narrowed ? noHits : empty}</>;
-    return <DexGrid slots={d.slots} size={size} />;
+    return <DexGrid slots={d.slots} size={size} linked={linked} />;
 }

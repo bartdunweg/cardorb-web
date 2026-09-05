@@ -10,11 +10,18 @@ export type NamedDexSlot = DexSlot & { name: string };
  * list's own order. A card without a number (a trainer, an energy) is not in any slot. With
  * `missing` off, the empty slots go; with it on they stay, named, so a person sees what to find.
  */
-export function groupByDex(cards: Card[], names: DexNames, setting: PokedexSetting): { slots: NamedDexSlot[]; caught: number; range: DexRange; cards: number } {
+/** What a slot needs of a card: the owner's card and a public profile's both have it. */
+export type DexCardLike = Pick<Card, "id" | "name" | "species_id" | "rarity" | "image_url" | "image_high_url">;
+
+export function groupByDex(
+    cards: DexCardLike[],
+    names: DexNames,
+    setting: PokedexSetting,
+): { slots: NamedDexSlot[]; caught: number; range: DexRange; cards: number } {
     const range = setting.dex ?? { from: 1, to: NATIONAL_DEX_MAX };
     // Only the rarities the setting names, compared without case: the catalogue spells some two ways.
     const kept = setting.rarities ? new Set(setting.rarities.map((r) => r.toLowerCase())) : null;
-    const bySlot = new Map<number, Card[]>();
+    const bySlot = new Map<number, DexCardLike[]>();
     let counted = 0;
     for (const card of cards) {
         const id = card.species_id;
