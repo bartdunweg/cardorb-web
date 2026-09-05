@@ -74,12 +74,13 @@ export const SidebarNavigationSectionDividers = ({
             {!hideMobileHeader && <MobileNavigationHeader>{content}</MobileNavigationHeader>}
 
             {/* Desktop sidebar navigation */}
-            <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:py-1 lg:pl-1">{content}</div>
+            {/* 12 px around the panel: it floats on glass with a shadow, and the kit's 4 px read as none. */}
+            <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:py-3 lg:pl-3">{content}</div>
 
             {/* Placeholder to take up physical space because the real sidebar has `fixed` position. */}
             <div
                 style={{
-                    paddingLeft: MAIN_SIDEBAR_WIDTH + 4, // Add 4px to account for the padding in the sidebar wrapper
+                    paddingLeft: MAIN_SIDEBAR_WIDTH + 12, // The 12 px inset of the sidebar wrapper
                 }}
                 className="invisible hidden lg:sticky lg:top-0 lg:bottom-0 lg:left-0 lg:block"
             />
