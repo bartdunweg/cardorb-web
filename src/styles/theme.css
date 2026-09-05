@@ -8,8 +8,13 @@
     --text-xxs: calc(var(--spacing) * 2.5);
     --text-xxs--line-height: calc(var(--spacing) * 4);
 
+    /* Under xs: a native tab bar's label, so five fit with room. */
+    --text-2xs: 0.6875rem;
+    --text-2xs--line-height: calc(var(--spacing) * 3.5);
     --text-xs: calc(var(--spacing) * 3);
     --text-xs--line-height: calc(var(--spacing) * 4.5);
+    /* A Pokémon card is 63 by 88 mm: every card picture keeps that shape. */
+    --aspect-card: 63 / 88;
 
     --text-sm: calc(var(--spacing) * 3.5);
     --text-sm--line-height: calc(var(--spacing) * 5);
@@ -760,9 +765,9 @@
 
         --color-border-image: oklch(1 0 0 / 0.1);
         --color-border-glass: color-mix(in oklab, var(--color-white) 12%, transparent);
-        --color-border-secondary: var(--color-neutral-700);
+        --color-border-secondary: var(--color-neutral-800);
         --color-border-error_subtle: var(--color-red-500);
-        --color-border-primary: var(--color-neutral-600);
+        --color-border-primary: var(--color-neutral-700);
         --color-border-brand: var(--color-brand-400);
         --color-border-error: var(--color-red-400);
         --color-border-tertiary: var(--color-neutral-700);
@@ -814,7 +819,8 @@
         --color-bg-secondary: var(--color-neutral-800);
         /* A step under the surfaces, as the light page is a step under white: a tile, the sidebar and
            the tab bar lie on it rather than in it. */
-        --color-bg-page: var(--color-neutral-950);
+        /* Halfway between 950 and the surfaces' 900: a step under a tile, not a pit. */
+        --color-bg-page: color-mix(in oklab, var(--color-neutral-950), var(--color-neutral-900));
         --color-bg-page-raised: var(--color-neutral-800);
         --color-bg-quaternary: var(--color-neutral-600);
         --color-bg-primary_alt: var(--color-bg-secondary);

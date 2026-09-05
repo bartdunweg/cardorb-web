@@ -145,7 +145,7 @@ export function ValueChart({ snapshots }: { snapshots: ValueSnapshot[] }) {
                             ) : null,
                         )}
 
-                        <path d={areaPath(points, baseline)} className="fill-fg-brand-primary opacity-[0.08]" />
+                        <path d={areaPath(points, baseline)} className="fill-fg-brand-primary opacity-10" />
                         <path
                             d={linePath(points)}
                             className="stroke-fg-brand-primary"
