@@ -1,8 +1,6 @@
-import { Plus } from "@untitledui/icons";
 import { AddCardModal } from "@/components/app/add-card-modal";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderPage } from "@/components/app/folder-page";
-import { Button } from "@/components/base/buttons/button";
 import { type CardFilter, getFacets, getMyCards } from "@/lib/cards";
 import { type ListSearchParams, isNarrowed, readListQuery } from "@/lib/list-query";
 
@@ -30,7 +28,8 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
             filter={filter}
             empty={
                 <AppEmptyState icon="heart" title="Your wishlist is empty" description="Add cards you’re looking for but don’t own yet">
-                    <AddCardModal defaultTarget="wishlist" trigger={<Button iconLeading={Plus}>Add to wishlist</Button>} />
+                    {/* The words only: this node crosses to a client component, and an icon is a function. */}
+                    <AddCardModal defaultTarget="wishlist" label="Add to wishlist" />
                 </AppEmptyState>
             }
         />
