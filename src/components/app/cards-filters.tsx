@@ -3,7 +3,6 @@
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/base/buttons/button";
 import { NativeSelect } from "@/components/base/select/select-native";
-import { Toggle } from "@/components/base/toggle/toggle";
 import type { Facets } from "@/lib/cards";
 import { type ListQuery, listHref } from "@/lib/list-query";
 
@@ -14,9 +13,8 @@ import { type ListQuery, listHref } from "@/lib/list-query";
 export function CardsFilters({ query, facets }: { query: ListQuery; facets: Facets }) {
     const router = useRouter();
     const pathname = usePathname();
-    const go = (patch: Partial<Pick<ListQuery, "set" | "rarity" | "unpriced">>) =>
-        router.replace(listHref(pathname, query, { ...patch, page: 1 }), { scroll: false });
-    const active = Boolean(query.set || query.rarity || query.unpriced);
+    const go = (patch: Partial<Pick<ListQuery, "set" | "rarity">>) => router.replace(listHref(pathname, query, { ...patch, page: 1 }), { scroll: false });
+    const active = Boolean(query.set || query.rarity);
 
     return (
         <div className="contents">
@@ -37,9 +35,8 @@ export function CardsFilters({ query, facets }: { query: ListQuery; facets: Face
                 options={[{ label: "All rarities", value: "" }, ...facets.rarities.map((r) => ({ label: r, value: r }))]}
             />
             {/* What the total leaves out: the copies nothing prices. */}
-            <Toggle size="sm" label="Without a price" isSelected={query.unpriced} onChange={(on) => go({ unpriced: on })} />
             {active ? (
-                <Button color="link-gray" size="sm" onClick={() => go({ set: undefined, rarity: undefined, unpriced: false })}>
+                <Button color="link-gray" size="sm" onClick={() => go({ set: undefined, rarity: undefined })}>
                     Clear filters
                 </Button>
             ) : null}

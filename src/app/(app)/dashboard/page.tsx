@@ -10,7 +10,7 @@ export default async function DashboardPage() {
 
     return (
         <div className="flex flex-col gap-6">
-            <PageHeader title="Home" subtitle="An overview of your collection." actions={<YouLink />} />
+            <PageHeader title="Home" subtitle="An overview of your collection." barActions={<YouLink />} />
             <CardsStats stats={stats} />
 
             <section
