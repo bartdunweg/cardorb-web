@@ -43,7 +43,7 @@ function DexTile({ slot }: { slot: NamedDexSlot }) {
     if (held === 0) {
         return (
             <div className="flex flex-col gap-2 rounded-2xl p-2">
-                <div className="flex aspect-[63/88] w-full items-center justify-center rounded-lg bg-tertiary">
+                <div className="flex aspect-[63/88] w-full items-center justify-center rounded-lg bg-quaternary">
                     <span className="text-sm font-medium text-quaternary tabular-nums">{dexNumber(slot.number)}</span>
                 </div>
                 {words}
