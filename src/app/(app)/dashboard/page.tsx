@@ -10,7 +10,7 @@ export default async function DashboardPage() {
 
     return (
         <div className="flex flex-col gap-6">
-            <PageHeader title="Home" subtitle="An overview of your collection." above={<MobileTopRow />} />
+            <PageHeader title="Home" subtitle="An overview of your collection." above={<MobileTopRow search={false} />} />
             <CardsStats stats={stats} />
 
             <section
