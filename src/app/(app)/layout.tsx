@@ -3,9 +3,20 @@ import { AppSidebar } from "@/components/app/app-sidebar";
 import { CommandSearchProvider } from "@/components/app/command-search";
 import { MobileTabBar } from "@/components/app/mobile-nav";
 import { ApiError } from "@/lib/api";
+import { getFacets } from "@/lib/cards";
 import { getMyFolders } from "@/lib/collections";
 import { accountFrom, getMyProfile } from "@/lib/profile";
 import { RouteProvider } from "@/providers/router-provider";
+
+// The sidebar's New folder dialog offers the sets and rarities you hold; a frame without them is
+// a poorer dialog, a thrown error is no page at all.
+async function getFacetsSoft() {
+    try {
+        return await getFacets();
+    } catch {
+        return { sets: [], rarities: [] };
+    }
+}
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
     // The profile and the folders are independent reads of an API in another region, and after
@@ -18,8 +29,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     // session it was handed is not good enough, which comes to the same door.
     let me;
     let collections;
+    let facets;
     try {
-        [me, collections] = await Promise.all([getMyProfile(), getMyFolders()]);
+        [me, collections, facets] = await Promise.all([getMyProfile(), getMyFolders(), getFacetsSoft()]);
     } catch (err) {
         if (err instanceof ApiError && err.status === 401) redirect("/login");
         throw err;
@@ -33,7 +45,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 {/* overflow-x-clip: a decoration wider than a phone (the empty state's rings) must not widen the page, or the fixed tab bar drifts off the screen. */}
                 <div className="flex min-h-dvh flex-col overflow-x-clip bg-primary">
                     <div className="flex flex-1 flex-col lg:flex-row">
-                        <AppSidebar account={account} collections={collections} />
+                        <AppSidebar account={account} collections={collections} facets={facets} />
                         <main className="flex min-w-0 flex-1 flex-col">
                             <div className="mx-auto flex w-full max-w-container flex-1 flex-col px-4 pt-4 pb-24 sm:px-6 sm:py-8 lg:pb-8">{children}</div>
                         </main>

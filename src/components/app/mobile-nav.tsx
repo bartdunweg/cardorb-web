@@ -1,6 +1,6 @@
 "use client";
 
-import { Folder, HomeLine, Rows01 } from "@untitledui/icons";
+import { BookOpen01, Folder, Heart, HomeLine } from "@untitledui/icons";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Avatar } from "@/components/base/avatar/avatar";
@@ -11,24 +11,19 @@ type Account = { name: string; email: string; avatarUrl: string | null };
 const tabs = [
     { label: "Home", href: "/dashboard", icon: HomeLine, match: (p: string) => p === "/dashboard" },
     {
-        label: "Collection",
-        href: "/dashboard/cards",
-        icon: Rows01,
-        match: (p: string) => ["/dashboard/cards", "/dashboard/sets"].some((h) => p.startsWith(h)),
-    },
-    {
         label: "Folders",
         href: "/dashboard/collections",
         icon: Folder,
-        match: (p: string) => ["/dashboard/collections", "/dashboard/favorites", "/dashboard/wishlist", "/dashboard/pokedex"].some((h) => p.startsWith(h)),
+        match: (p: string) => ["/dashboard/collections", "/dashboard/cards", "/dashboard/favorites", "/dashboard/pokedex"].some((h) => p.startsWith(h)),
     },
+    { label: "Sets", href: "/dashboard/sets", icon: BookOpen01, match: (p: string) => p.startsWith("/dashboard/sets") },
+    { label: "Wishlist", href: "/dashboard/wishlist", icon: Heart, match: (p: string) => p.startsWith("/dashboard/wishlist") },
 ];
 
 const tabClass = "pressable flex flex-1 flex-col items-center gap-1 rounded-full py-1 text-xs/4 font-medium transition-colors duration-150";
 
-// Bottom tab bar for mobile: Home, the collection (All cards and Sets switch at the top of the
-// page), the folders (Favorites, Wishlist and the Pokédex among them), and You. Search lives at
-// the top of Home. Its side
+// Bottom tab bar for mobile: Home, the folders (All cards, Favorites and the Pokédex among them,
+// one level down), Sets, the wishlist, and You. Search lives at the top of Home. Its side
 // inset matches the content's padding, so bar and page share an edge.
 export function MobileTabBar({ account }: { account: Account }) {
     const pathname = usePathname();

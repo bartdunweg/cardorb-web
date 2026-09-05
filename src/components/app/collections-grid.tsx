@@ -1,7 +1,7 @@
 "use client";
 
 import type { FC } from "react";
-import { Dataflow03, Folder, Grid01, Heart, Plus, Star01 } from "@untitledui/icons";
+import { Dataflow03, Folder, Grid01, Plus, Rows01, Star01 } from "@untitledui/icons";
 import Link from "next/link";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderDialog } from "@/components/app/folder-dialog";
@@ -64,25 +64,25 @@ export function NewCollectionButton({ facets }: { facets: Facets }) {
 
 export function CollectionsGrid({
     collections,
+    ownedCount,
     favoritesCount,
-    wishlistCount,
     facets,
 }: {
     collections: CollectionSummary[];
+    ownedCount: number;
     favoritesCount: number;
-    wishlistCount: number;
     facets: Facets;
 }) {
     const hasCollections = collections.length > 0;
 
     return (
         <div className="flex flex-1 flex-col gap-6">
-            {/* Three folders that are always there, above the ones you made: the favorites (a flag on a card), the
-                wishlist (cards not owned) and the Pokédex (every Pokémon, with the slots you have no card of). None is
-                a folder in the data; all three are one to the eye. */}
+            {/* Three folders that are always there, above the ones you made: every card, the favorites (a flag on
+                a card) and the Pokédex (every Pokémon, with the slots you have no card of). None is a folder in the
+                data; all three are one to the eye. On desktop the sidebar is this list. */}
             <div className="grid grid-cols-1 gap-4 xs:grid-cols-3 lg:grid-cols-4">
+                <FolderCard href="/dashboard/cards" icon={Rows01} name="All cards" count={ownedCount} row />
                 <FolderCard href="/dashboard/favorites" icon={Star01} name="Favorites" count={favoritesCount} row />
-                <FolderCard href="/dashboard/wishlist" icon={Heart} name="Wishlist" count={wishlistCount} row />
                 <FolderCard href="/dashboard/pokedex" icon={Grid01} name="Pokédex" detail="Cards by Pokémon" row />
             </div>
 

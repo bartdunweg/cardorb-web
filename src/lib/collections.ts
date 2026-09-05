@@ -12,10 +12,11 @@ export type CollectionSummary = { id: string; name: string; count: number; kind:
 const folders = (): Promise<Folder[]> =>
     perUser("folders", async (token) => (await api<{ folders: FolderItem[] }>("/folders", { token })).folders.map(folderFromApi));
 
-export async function getMyCollections(): Promise<{ collections: CollectionSummary[]; favoritesCount: number; wishlistCount: number }> {
+export async function getMyCollections(): Promise<{ collections: CollectionSummary[]; ownedCount: number; favoritesCount: number; wishlistCount: number }> {
     const [list, stats] = await Promise.all([folders(), getStats()]);
     return {
         collections: list.map((f) => ({ id: f.id, name: f.name, count: f.count, kind: f.kind, rule: f.rule })),
+        ownedCount: stats.cards,
         favoritesCount: stats.favorites,
         wishlistCount: stats.wishlist,
     };
