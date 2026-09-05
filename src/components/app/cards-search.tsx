@@ -27,6 +27,8 @@ export function CardsSearch({
     const [value, setValue] = useState(initialValue);
 
     useEffect(() => {
+        // Only what was typed: on mount the URL already says what the field shows, and a shared page 2 must stay page 2.
+        if (value === initialValue) return;
         const id = setTimeout(() => {
             const params = new URLSearchParams(searchParams.toString());
             if (value.trim()) params.set("q", value.trim());

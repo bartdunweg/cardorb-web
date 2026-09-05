@@ -9,7 +9,7 @@ import type { DexCard } from "@/lib/api-shapes";
 // One Pokédex number held as several cards: a horizontal scroll-snap slider in a card tile's
 // picture box. Swipe on touch/trackpad; the arrows (shown on hover) let a mouse-only desktop
 // page through them too. The number and the count are written under the tile, not over it.
-export function DexSlider({ cards }: { cards: DexCard[] }) {
+export function DexSlider({ cards, linked = true }: { cards: DexCard[]; linked?: boolean }) {
     const ref = useRef<HTMLDivElement>(null);
 
     const scroll = (direction: 1 | -1) => {
@@ -21,7 +21,7 @@ export function DexSlider({ cards }: { cards: DexCard[] }) {
         <div className="group relative aspect-card w-full overflow-hidden rounded-lg">
             <div ref={ref} className="flex size-full snap-x snap-mandatory [scrollbar-width:none] overflow-x-auto [&::-webkit-scrollbar]:hidden">
                 {cards.map((card) => (
-                    <Link key={card.id} href={`/dashboard/cards?q=${encodeURIComponent(card.name)}`} className="relative size-full shrink-0 snap-start">
+                    <Slide key={card.id} linked={linked} href={`/dashboard/cards?q=${encodeURIComponent(card.name)}`}>
                         {card.imageUrl ? (
                             <CardImage
                                 src={card.imageHighUrl ?? card.imageUrl}
@@ -35,7 +35,7 @@ export function DexSlider({ cards }: { cards: DexCard[] }) {
                                 {card.name}
                             </div>
                         )}
-                    </Link>
+                    </Slide>
                 ))}
             </div>
 
@@ -56,5 +56,17 @@ export function DexSlider({ cards }: { cards: DexCard[] }) {
                 <ChevronRight className="size-4 text-alpha-white" />
             </button>
         </div>
+    );
+}
+
+// A slide is a link into the owner's collection, or on a public page a plain frame.
+function Slide({ linked, href, children }: { linked: boolean; href: string; children: React.ReactNode }) {
+    const className = "relative size-full shrink-0 snap-start";
+    return linked ? (
+        <Link href={href} className={className}>
+            {children}
+        </Link>
+    ) : (
+        <div className={className}>{children}</div>
     );
 }

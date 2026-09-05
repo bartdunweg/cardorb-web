@@ -17,13 +17,13 @@ const tabs = [
     { label: "Wishlist", href: "/dashboard/wishlist", icon: Heart, match: (p: string) => p.startsWith("/dashboard/wishlist") },
 ];
 
-// 11 px labels: a size under the body scale, as a native tab bar writes them, so five fit with room.
+// Labels a size under the body scale, as a native tab bar writes them, so four fit with room.
 const tabClass = "pressable flex flex-1 flex-col items-center gap-1 rounded-full py-1.5 text-2xs font-medium transition-colors duration-150";
 
 // Bottom tab bar for mobile: Home, Browse (every set), the folders (All cards, Favorites and the
-// Pokédex among them, one level down) and the wishlist. You is the avatar at the top of Home and
-// Browse, and search lives beside it. The bar's side inset matches the content's padding, so bar
-// and page share an edge.
+// Pokédex among them, one level down) and the wishlist. You is the avatar in Home's bar, and the
+// card search sits at the top of Browse. The bar's side inset matches the content's padding, so
+// bar and page share an edge.
 export function MobileTabBar() {
     const pathname = usePathname();
 

@@ -170,7 +170,7 @@ export function SettingsForm({ profile, email, heading }: { profile: Profile; em
                         </div>
                         <p className="text-xs text-tertiary">JPG, PNG or WebP.</p>
                     </div>
-                    <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" onChange={onPickFile} className="hidden" />
+                    <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={onPickFile} className="hidden" />
                 </div>
                 <Input label="Display name" value={displayName} onChange={setDisplayName} placeholder="Your name" />
                 <Input label="Username" value={username} onChange={setUsername} hint="Lowercase letters, numbers and hyphens." />

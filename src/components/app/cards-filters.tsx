@@ -34,7 +34,6 @@ export function CardsFilters({ query, facets }: { query: ListQuery; facets: Face
                 onChange={(event) => go({ rarity: event.target.value || undefined })}
                 options={[{ label: "All rarities", value: "" }, ...facets.rarities.map((r) => ({ label: r, value: r }))]}
             />
-            {/* What the total leaves out: the copies nothing prices. */}
             {active ? (
                 <Button color="link-gray" size="sm" onClick={() => go({ set: undefined, rarity: undefined })}>
                     Clear filters
