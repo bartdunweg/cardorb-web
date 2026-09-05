@@ -1,7 +1,7 @@
 "use client";
 
 import type { CardStats } from "@/lib/cards";
-import { formatPrice } from "@/lib/format";
+import { formatValue } from "@/lib/format";
 import { cx } from "@/utils/cx";
 
 // Stat card after Untitled UI's Metric, without its featured icon: the label and the number say it, and
@@ -49,7 +49,7 @@ export function CardsStats({ stats }: { stats: CardStats }) {
             <StatCard label="Favorites" value={count(stats.favorites)} delay={80} />
             <StatCard
                 label="Collection value"
-                value={formatPrice(stats.value)}
+                value={formatValue(stats.value)}
                 detail={unpricedNote(stats.unpriced)}
 
                 delay={120}

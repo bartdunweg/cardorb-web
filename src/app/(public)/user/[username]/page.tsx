@@ -12,7 +12,7 @@ import { DEFAULT_POKEDEX } from "@/lib/folder-rule";
 import { type ListSearchParams, PUBLIC_SORT_OPTIONS, isNarrowed, listHref, readPublicListQuery } from "@/lib/list-query";
 import { getDexNames } from "@/lib/pokedex";
 import { getViewer } from "@/lib/profile";
-import { PUBLIC_PAGE_SIZE, getAllPublicCards, getPublicCards, getPublicFolders, getPublicProfile } from "@/lib/public-profile";
+import { PUBLIC_PAGE_SIZE, countPublicCards, getAllPublicCards, getPublicCards, getPublicFolders, getPublicProfile } from "@/lib/public-profile";
 
 type Params = { params: Promise<{ username: string }>; searchParams: Promise<ListSearchParams> };
 
@@ -63,10 +63,13 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                   unpriced: 0,
               }))
             : null;
-    const [{ cards, total, facets }, folders, viewer] = await Promise.all([
+    const [{ cards, total, facets }, folders, viewer, owned, wishes] = await Promise.all([
         dex ? dex.then((d) => ({ cards: [], total: d.total, facets: { sets: [], rarities: [] } })) : getPublicCards(decodeURIComponent(username), query),
         getPublicFolders(decodeURIComponent(username)),
         getViewer(),
+        // The line under the name counts the whole collection and the wishlist, whatever list is open.
+        countPublicCards(decodeURIComponent(username)),
+        profile.wishlist_public ? countPublicCards(decodeURIComponent(username), "wishlist") : Promise.resolve(null),
     ]);
     // A folder in the URL that the owner does not show: the API answered the whole list; the chips say so too.
     const folder = folders.find((f) => f.id === query.folder) ?? null;
@@ -83,8 +86,12 @@ export default async function PublicProfilePage({ params, searchParams }: Params
         );
     // The handle sits under a display name, as a profile page does; with no display name it is the name.
     const handle = profile.display_name && profile.username ? `@${profile.username}` : null;
-    // With a search or a filter on, the count is what matched.
-    const counts = datapointsLine({ total, narrowed });
+    // With a search or a filter on, the count is what matched; otherwise the collection and the wishlist.
+    const counts = narrowed
+        ? datapointsLine({ total, narrowed })
+        : [datapointsLine({ total: owned, narrowed: false }), wishes != null ? `${wishes.toLocaleString("en-US")} on the wishlist` : null]
+              .filter(Boolean)
+              .join(" · ");
 
     return (
         <div className="bg-page flex min-h-dvh flex-col">
