@@ -3,6 +3,7 @@
 import { type ReactNode, Suspense, use, useState } from "react";
 import Link from "next/link";
 import { CardImage } from "@/components/app/card-image";
+import { GRID_COLUMNS } from "@/components/app/cards-grid";
 import { DexSlider } from "@/components/app/dex-slider";
 import { DexSkeleton } from "@/components/app/skeletons";
 import { ViewMenu } from "@/components/app/view-menu";
@@ -10,53 +11,72 @@ import type { CardsSize } from "@/lib/cards-view";
 import type { DexList, NamedDexSlot } from "@/lib/dex-groups";
 import { cx } from "@/utils/cx";
 
-// Slots per row at each size: the Pokédex packs tighter than the card grid, a slot being a square.
-const COLUMNS: Record<CardsSize, string> = {
-    sm: "grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 xl:grid-cols-15",
-    md: "grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12",
-    lg: "grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-9",
-};
+/** The width a tile draws its picture at, per breakpoint: the same as a card in a list. */
+const SIZES = "(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 213px";
 
-const SIZES = "(max-width: 640px) 25vw, (max-width: 768px) 17vw, (max-width: 1024px) 13vw, (max-width: 1280px) 10vw, 107px";
+const dexNumber = (n: number) => `#${String(n).padStart(3, "0")}`;
 
-// A folder as a Pokédex: one slot per number, the folder's cards in it, an empty slot named so a
-// person knows what to find. The same tiles the Pokédex page always had.
+// A folder as a Pokédex: one tile per number, drawn as the same tile a list of cards uses, so
+// the Pokédex reads as one of the folders and not as a different screen. A number you hold
+// shows its card (several: a slider), its name and how many you have; one you do not is the
+// same tile in grey, named, so a person knows what to find.
 export function DexGrid({ slots, size = "md" }: { slots: NamedDexSlot[]; size?: CardsSize }) {
     return (
-        <div className={cx("grid gap-2", COLUMNS[size])}>
-            {slots.map((slot) => {
-                if (slot.cards.length === 0) {
-                    return (
-                        <div
-                            key={slot.number}
-                            className="flex aspect-3/4 flex-col items-center justify-center gap-0.5 rounded-md bg-secondary px-1 text-center text-xs font-medium text-quaternary"
-                            title={slot.name}
-                        >
-                            <span>{slot.number}</span>
-                            <span className="line-clamp-2 text-xxs font-normal">{slot.name}</span>
-                        </div>
-                    );
-                }
-                if (slot.cards.length > 1) return <DexSlider key={slot.number} number={slot.number} cards={slot.cards} />;
-                const card = slot.cards[0];
-                return (
-                    <div key={slot.number} className="relative aspect-3/4 overflow-hidden rounded-md ring-1 ring-image ring-inset">
-                        <Link href={`/dashboard/cards?q=${encodeURIComponent(card.name)}`} className="relative block size-full">
-                            {card.imageUrl ? (
-                                <CardImage src={card.imageUrl} alt={card.name} sizes={SIZES} className="object-cover" />
-                            ) : (
-                                <div className="flex size-full items-center justify-center bg-quaternary p-1 text-center text-xxs text-quaternary">
-                                    {card.name}
-                                </div>
-                            )}
-                        </Link>
-                        <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-alpha-black/55 px-1 py-0.5 text-center text-xxs font-medium text-alpha-white">
-                            {slot.number}
-                        </span>
-                    </div>
-                );
-            })}
+        <div className={cx("grid gap-4", GRID_COLUMNS[size])}>
+            {slots.map((slot) => (
+                <DexTile key={slot.number} slot={slot} />
+            ))}
         </div>
+    );
+}
+
+function DexTile({ slot }: { slot: NamedDexSlot }) {
+    const held = slot.cards.length;
+    const line = `${dexNumber(slot.number)} · ${held === 0 ? "Missing" : held === 1 ? "1 card" : `${held} cards`}`;
+    const words = (
+        <div className="flex flex-col">
+            <span className={cx("truncate text-sm font-medium", held === 0 ? "text-tertiary" : "text-primary")}>{slot.name}</span>
+            <span className="truncate text-xs text-tertiary">{line}</span>
+        </div>
+    );
+
+    if (held === 0) {
+        return (
+            <div className="flex flex-col gap-2 rounded-2xl p-2">
+                <div className="flex aspect-[63/88] w-full items-center justify-center rounded-lg bg-secondary">
+                    <span className="text-sm font-medium text-quaternary tabular-nums">{dexNumber(slot.number)}</span>
+                </div>
+                {words}
+            </div>
+        );
+    }
+
+    if (held > 1) {
+        return (
+            <div className="flex flex-col gap-2 rounded-2xl p-2">
+                <DexSlider cards={slot.cards} />
+                {words}
+            </div>
+        );
+    }
+
+    const card = slot.cards[0]!;
+    return (
+        <Link
+            href={`/dashboard/cards?q=${encodeURIComponent(card.name)}`}
+            className="flex pressable cursor-pointer flex-col gap-2 rounded-2xl p-2 text-left outline-focus-ring transition-colors hover:bg-secondary focus-visible:outline-2"
+        >
+            <div className="relative aspect-[63/88] w-full overflow-hidden rounded-lg bg-quaternary ring-1 ring-image ring-inset">
+                {card.imageUrl ? (
+                    <CardImage src={card.imageUrl} alt="" sizes={SIZES} className="object-contain" />
+                ) : (
+                    <div className="flex h-full w-full flex-col items-center justify-center gap-1 p-3 text-center">
+                        <span className="line-clamp-4 text-sm font-medium text-secondary">{card.name}</span>
+                    </div>
+                )}
+            </div>
+            {words}
+        </Link>
     );
 }
 

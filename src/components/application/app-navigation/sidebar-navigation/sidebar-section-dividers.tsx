@@ -44,7 +44,9 @@ export const SidebarNavigationSectionDividers = ({
                     "--width": `${MAIN_SIDEBAR_WIDTH}px`,
                 } as React.CSSProperties
             }
-            className="flex h-full w-full max-w-full flex-col justify-between overflow-auto glass-thick pt-4 shadow-lg lg:w-(--width) lg:rounded-xl lg:pt-5"
+            // The same hairline ring as an input and the search pill inside it, so the sidebar's edge and
+            // the controls on it are one line; the lift without the scale's own rim, so it is one line.
+            className="flex h-full w-full max-w-full flex-col justify-between overflow-auto glass-thick pt-4 shadow-lift-lg ring-1 ring-primary ring-inset lg:w-(--width) lg:rounded-xl lg:pt-5"
         >
             <div className="flex flex-col gap-5 px-4 lg:px-5">
                 <div className="flex items-center justify-between gap-2">
