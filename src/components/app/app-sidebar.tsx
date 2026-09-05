@@ -77,7 +77,7 @@ function FolderRows({ collections, activeUrl }: { collections: Promise<FolderLin
     const list = use(collections);
     if (list.length === 0) return null;
     return (
-        <ul className="flex flex-col px-4">
+        <ul className="flex arrive flex-col px-4">
             {list.map((c) => {
                 const href = `/dashboard/collections/${c.id}`;
                 return (
@@ -93,5 +93,9 @@ function FolderRows({ collections, activeUrl }: { collections: Promise<FolderLin
 }
 
 function AccountSlot({ account }: { account: Promise<Account> }) {
-    return <AccountMenu account={use(account)} />;
+    return (
+        <div className="arrive">
+            <AccountMenu account={use(account)} />
+        </div>
+    );
 }

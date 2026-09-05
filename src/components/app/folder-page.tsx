@@ -49,7 +49,7 @@ export function FolderPage({
 }
 
 async function DatapointsText({ datapoints }: { datapoints: Datapoints | Promise<Datapoints> }) {
-    return datapointsLine(await datapoints);
+    return <span className="inline-block arrive">{datapointsLine(await datapoints)}</span>;
 }
 
 async function UnpricedText({ datapoints }: { datapoints: Datapoints | Promise<Datapoints> }) {

@@ -146,10 +146,11 @@ const DropdownPopover = (props: DropdownPopoverProps) => {
             className={(state) =>
                 cx(
                     "w-62 origin-(--trigger-anchor-point) overflow-auto rounded-lg glass-thick shadow-lg will-change-transform",
+                    // The enter curve both ways; an exit that eases in starts slow on the frame the menu should be gone.
                     state.isEntering &&
-                        "duration-150 ease-out animate-in fade-in placement-right:slide-in-from-left-0.5 placement-top:slide-in-from-bottom-0.5 placement-bottom:slide-in-from-top-0.5",
+                        "duration-150 animate-in [animation-timing-function:var(--ease-enter)] fade-in placement-right:slide-in-from-left-0.5 placement-top:slide-in-from-bottom-0.5 placement-bottom:slide-in-from-top-0.5",
                     state.isExiting &&
-                        "duration-100 ease-in animate-out fade-out placement-right:slide-out-to-left-0.5 placement-top:slide-out-to-bottom-0.5 placement-bottom:slide-out-to-top-0.5",
+                        "duration-100 animate-out [animation-timing-function:var(--ease-enter)] fade-out placement-right:slide-out-to-left-0.5 placement-top:slide-out-to-bottom-0.5 placement-bottom:slide-out-to-top-0.5",
                     typeof props.className === "function" ? props.className(state) : props.className,
                 )
             }

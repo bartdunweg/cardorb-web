@@ -98,6 +98,12 @@
     --drop-shadow-iphone-mockup: 20px 12px 18px rgba(16, 24, 40, 0.2);
 
     /* ANIMATIONS */
+    /* Entering: a strong ease-out, so what arrives is nearly in place at once and settles. The
+       built-in ease-out is too weak to read. For anything that appears; never for a hover. */
+    --ease-enter: cubic-bezier(0.23, 1, 0.32, 1);
+    /* A sheet or drawer, in and out: the iOS drawer curve, fast off the edge and long to settle. */
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
     --animate-marquee: marquee 60s linear infinite;
     --animate-caret-blink: caret-blink 1s infinite;
 

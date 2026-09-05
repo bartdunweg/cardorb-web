@@ -30,7 +30,7 @@ export function CardsTable({ cards, onSelect }: { cards: Card[]; onSelect: (card
                 </Table.Header>
                 <Table.Body items={cards}>
                     {(card) => (
-                        <Table.Row id={card.id} className="cursor-pointer">
+                        <Table.Row id={card.id} className="arrive cursor-pointer">
                             <Table.Cell className="font-medium text-primary">
                                 <div className="flex items-center gap-3">
                                     {card.image_url ? (
