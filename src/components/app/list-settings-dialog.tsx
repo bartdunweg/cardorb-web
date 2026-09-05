@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Settings01 } from "@untitledui/icons";
+import { DotsHorizontal, Settings01 } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import { updateListPublic } from "@/app/(app)/dashboard/settings/actions";
@@ -12,7 +12,18 @@ import { Toggle } from "@/components/base/toggle/toggle";
 // A built-in list's settings, beside its title like a folder's: today one, whether the list shows
 // on the public profile. Saved on the profile, so the phone and the desktop agree. Only the icon,
 // as the plus beside it on the wishlist is.
-export function ListSettingsDialog({ list, title, isPublic }: { list: "wishlist" | "favorites"; title: string; isPublic: boolean }) {
+// `compact`: the trigger is a dots button for the phone's bar, across from Back.
+export function ListSettingsDialog({
+    list,
+    title,
+    isPublic,
+    compact,
+}: {
+    list: "wishlist" | "favorites";
+    title: string;
+    isPublic: boolean;
+    compact?: boolean;
+}) {
     const router = useRouter();
     const [shown, setShown] = useState(isPublic);
     const [saving, setSaving] = useState(false);
@@ -33,7 +44,11 @@ export function ListSettingsDialog({ list, title, isPublic }: { list: "wishlist"
 
     return (
         <DialogTrigger>
-            <Button color="secondary" size="md" iconLeading={Settings01} aria-label={`${title} settings`} />
+            {compact ? (
+                <Button color="secondary" size="sm" iconLeading={DotsHorizontal} aria-label={`${title} settings`} />
+            ) : (
+                <Button color="secondary" size="md" iconLeading={Settings01} aria-label={`${title} settings`} />
+            )}
             <ModalOverlay>
                 <Modal className="max-w-md">
                     <Dialog>

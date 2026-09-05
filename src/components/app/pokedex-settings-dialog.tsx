@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Settings01 } from "@untitledui/icons";
+import { DotsHorizontal, Settings01 } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import { updateListPublic, updatePokedexSetting } from "@/app/(app)/dashboard/settings/actions";
@@ -15,7 +15,18 @@ import type { PokedexSetting } from "@/lib/folder-rule";
 
 // The built-in Pokédex's two settings: which Pokémon you collect, and whether the ones you miss
 // show. Saved on the profile, so the phone and the desktop agree.
-export function PokedexSettingsDialog({ setting, isPublic, facets }: { setting: PokedexSetting; isPublic: boolean; facets: Facets }) {
+// `compact`: the trigger is a dots button for the phone's bar, across from Back.
+export function PokedexSettingsDialog({
+    setting,
+    isPublic,
+    facets,
+    compact,
+}: {
+    setting: PokedexSetting;
+    isPublic: boolean;
+    facets: Facets;
+    compact?: boolean;
+}) {
     const router = useRouter();
     const [missing, setMissing] = useState(setting.missing);
     const [dex, setDex] = useState(dexDraft(setting.dex));
@@ -49,9 +60,13 @@ export function PokedexSettingsDialog({ setting, isPublic, facets }: { setting: 
 
     return (
         <DialogTrigger>
-            <Button color="secondary" size="md" iconLeading={Settings01}>
-                Pokédex settings
-            </Button>
+            {compact ? (
+                <Button color="secondary" size="sm" iconLeading={DotsHorizontal} aria-label="Pokédex settings" />
+            ) : (
+                <Button color="secondary" size="md" iconLeading={Settings01}>
+                    Pokédex settings
+                </Button>
+            )}
             <ModalOverlay>
                 <Modal className="max-w-md">
                     <Dialog>

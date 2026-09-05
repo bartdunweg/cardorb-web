@@ -27,6 +27,7 @@ export function PageHeader({
     back,
     actions,
     above,
+    barActions,
     children,
     titleOnPhone = true,
 }: {
@@ -39,6 +40,8 @@ export function PageHeader({
     actions?: ReactNode;
     /** Above the title, under the sticky bar: Home's search on a phone. */
     above?: ReactNode;
+    /** On a phone, at the bar's right end across from Back: a page's settings as a dots button. */
+    barActions?: ReactNode;
     /** Anything else that belongs with the title, like a progress bar. */
     children?: ReactNode;
     /** Off on a page whose title says nothing on a phone (Browse): the h1 stays for a screen reader. */
@@ -67,12 +70,12 @@ export function PageHeader({
                     // With Back the bar is the button with the page's 16 px above it and 16 under it. Without
                     // one it is the 48 px the title collapses into, and the page's first content starts 24 px
                     // from the top (the search on Home 16, by its own -mt-2).
-                    back ? "mb-4 pt-4" : "-mb-6 h-12",
+                    back || barActions ? "mb-4 pt-4" : "-mb-6 h-12",
                     // The glass comes with the collapse (or with Back); over the uncollapsed title it would only blur it.
-                    (collapsed || back) && "glass",
+                    (collapsed || back || barActions) && "glass",
                     // Without Back the bar has nothing to show until the title collapses into it, so it lies over
                     // the first 48 px and lets taps through: the page's first content starts 16 px from the top.
-                    !back && !collapsed && "pointer-events-none",
+                    !back && !barActions && !collapsed && "pointer-events-none",
                     // Where content meets the bar: a fade from the page surface to nothing under the bar's edge,
                     // not a rule. It appears with the collapse and goes when the title is back.
                     "after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-4 after:bg-linear-to-b after:from-bg-page after:to-transparent after:transition-opacity after:duration-150 after:ease-out",
@@ -92,7 +95,7 @@ export function PageHeader({
                 >
                     {title}
                 </span>
-                <div />
+                <div className="flex justify-end">{barActions}</div>
             </div>
 
             {/* Above the title, 8 px from the top: the search on Home sits higher than a page's first content,
