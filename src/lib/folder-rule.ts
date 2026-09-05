@@ -21,15 +21,37 @@ export type PokedexSetting = { missing: boolean; dex?: DexRange; rarities?: stri
  */
 export const FULL_ART_RARITIES = ["Illustration rare", "Special illustration rare", "Ultra Rare", "Hyper rare", "Secret Rare"];
 
-const sameList = (a: string[], b: string[]) => a.length === b.length && a.every((x) => b.some((y) => x.toLowerCase() === y.toLowerCase()));
+/**
+ * The kinds of card a Pokédex can be filled with: each a list of rarities, in the catalogue's
+ * words (compared without case, since it spells some two ways). "Every card" is no list at all.
+ */
+export type DexKind = "all" | "full-art" | "illustration" | "special-illustration" | "ultra" | "holo";
+type DexKindDef = { id: DexKind; label: string; hint?: string; rarities?: readonly string[] };
+export const DEX_KINDS: readonly DexKindDef[] = [
+    { id: "all", label: "Every card", rarities: undefined },
+    { id: "full-art", label: "Full art", hint: "Illustration, ultra, hyper and secret rares.", rarities: FULL_ART_RARITIES },
+    {
+        id: "illustration",
+        label: "Illustration rares",
+        hint: "Illustration and special illustration rares.",
+        rarities: ["Illustration rare", "Special illustration rare"],
+    },
+    { id: "special-illustration", label: "Special illustration rares", rarities: ["Special illustration rare"] },
+    { id: "ultra", label: "Ultra, hyper and secret rares", rarities: ["Ultra Rare", "Hyper rare", "Secret Rare"] },
+    { id: "holo", label: "Holo rares", rarities: ["Holo Rare", "Rare Holo", "Holo Rare V", "Reversed Holo"] },
+];
 
-/** Whether a setting is the full-art one: the rarities list is exactly that list. */
-export const isFullArt = (setting: PokedexSetting): boolean => !!setting.rarities && sameList(setting.rarities, FULL_ART_RARITIES);
+const sameList = (a: readonly string[], b: readonly string[]) => a.length === b.length && a.every((x) => b.some((y) => x.toLowerCase() === y.toLowerCase()));
 
-/** The same setting with the full-art list on or off. */
-export const withFullArt = (setting: PokedexSetting, on: boolean): PokedexSetting => {
+/** Which kind a setting names; a list no kind matches (an older setting, say) is "all". */
+export const dexKindOf = (setting: PokedexSetting): DexKind =>
+    (setting.rarities && DEX_KINDS.find((k) => k.rarities && sameList(k.rarities, setting.rarities!))?.id) ?? "all";
+
+/** The same setting filled with a kind of card. */
+export const withDexKind = (setting: PokedexSetting, kind: DexKind): PokedexSetting => {
     const rest: PokedexSetting = { missing: setting.missing, ...(setting.dex ? { dex: setting.dex } : {}) };
-    return on ? { ...rest, rarities: FULL_ART_RARITIES } : rest;
+    const rarities = DEX_KINDS.find((k) => k.id === kind)?.rarities;
+    return rarities ? { ...rest, rarities: [...rarities] } : rest;
 };
 export const DEFAULT_POKEDEX: PokedexSetting = { missing: true };
 export type FolderKind = "manual" | "rule";

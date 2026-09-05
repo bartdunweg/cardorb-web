@@ -8,8 +8,9 @@ import { updateListPublic, updatePokedexSetting } from "@/app/(app)/dashboard/se
 import { DexRangeFields, dexDraft, dexFromDraft } from "@/components/app/dex-range-fields";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { Button } from "@/components/base/buttons/button";
+import { NativeSelect } from "@/components/base/select/select-native";
 import { Toggle } from "@/components/base/toggle/toggle";
-import { type PokedexSetting, isFullArt, withFullArt } from "@/lib/folder-rule";
+import { DEX_KINDS, type DexKind, type PokedexSetting, dexKindOf, withDexKind } from "@/lib/folder-rule";
 
 // The built-in Pokédex's two settings: which Pokémon you collect, and whether the ones you miss
 // show. Saved on the profile, so the phone and the desktop agree.
@@ -17,7 +18,7 @@ export function PokedexSettingsDialog({ setting, isPublic }: { setting: PokedexS
     const router = useRouter();
     const [missing, setMissing] = useState(setting.missing);
     const [dex, setDex] = useState(dexDraft(setting.dex));
-    const [fullArt, setFullArt] = useState(isFullArt(setting));
+    const [kind, setKind] = useState<DexKind>(dexKindOf(setting));
     const [shown, setShown] = useState(isPublic);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -26,7 +27,7 @@ export function PokedexSettingsDialog({ setting, isPublic }: { setting: PokedexS
         setSaving(true);
         setError(null);
         const range = dexFromDraft(dex);
-        const res = await updatePokedexSetting(withFullArt({ missing, ...(range ? { dex: range } : {}) }, fullArt));
+        const res = await updatePokedexSetting(withDexKind({ missing, ...(range ? { dex: range } : {}) }, kind));
         const shownRes = res.ok && shown !== isPublic ? await updateListPublic({ list: "pokedex", shown }) : res;
         setSaving(false);
         if (!shownRes.ok) {
@@ -61,11 +62,12 @@ export function PokedexSettingsDialog({ setting, isPublic }: { setting: PokedexS
                                     isSelected={missing}
                                     onChange={setMissing}
                                 />
-                                <Toggle
-                                    label="Full-art cards only"
-                                    hint="Illustration, ultra and hyper rares fill the slots."
-                                    isSelected={fullArt}
-                                    onChange={setFullArt}
+                                <NativeSelect
+                                    label="Cards that count"
+                                    hint={DEX_KINDS.find((k) => k.id === kind)?.hint}
+                                    value={kind}
+                                    onChange={(event) => setKind(event.target.value as DexKind)}
+                                    options={DEX_KINDS.map((k) => ({ label: k.label, value: k.id }))}
                                 />
                                 <Toggle
                                     label="Show on my public profile"
