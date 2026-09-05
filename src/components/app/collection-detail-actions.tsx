@@ -56,7 +56,7 @@ export function CollectionDetailActions({ collectionId }: { collectionId: string
                         <Dialog>
                             <div className="flex max-h-[80vh] w-full max-w-xl flex-col gap-4 rounded-2xl glass-thick p-6 shadow-xl ring-1 ring-secondary">
                                 <AriaHeading slot="title" className="text-lg font-semibold text-primary">
-                                    Add cards to this collection
+                                    Add cards to this folder
                                 </AriaHeading>
                                 <Input
                                     aria-label="Search your cards"
@@ -118,7 +118,7 @@ export function CollectionDetailActions({ collectionId }: { collectionId: string
                             {({ close }) => (
                                 <div className="flex w-full max-w-sm flex-col gap-4 rounded-2xl glass-thick p-6 shadow-xl ring-1 ring-secondary">
                                     <AriaHeading slot="title" className="text-lg font-semibold text-primary">
-                                        Delete this collection?
+                                        Delete this folder?
                                     </AriaHeading>
                                     <p className="text-sm text-tertiary">
                                         The cards stay in your collection. Only this folder goes, and it cannot be brought back.

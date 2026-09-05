@@ -7,8 +7,8 @@ export default async function CollectionsPage() {
 
     return (
         <div className="flex flex-1 flex-col gap-6">
-            <PageHeader title="Collections" subtitle="Organize your cards into folders." actions={<NewCollectionButton />} />
-            <CollectionsGrid collections={collections} favoritesCount={favoritesCount} wishlistCount={wishlistCount} />
+            <PageHeader title="Folders" subtitle="Group your cards the way you like." actions={<NewCollectionButton />} />
+            <CollectionsGrid collections={collections} wishlistCount={wishlistCount} />
         </div>
     );
 }

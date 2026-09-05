@@ -50,8 +50,10 @@ to this.
 
 ## Domain
 
-- **Collection** — two meanings: everything you own, and a folder you create yourself to
-  group cards. The `collections` table is the folders; "the collection" in copy is the owned set.
+- **Collection** — everything you own. Four views on it: All cards, Sets, Pokédex, Favorites.
+  In copy the word means only this set.
+- **Folder** — a grouping you make yourself. The `collections` table and the `/collections`
+  routes are the folders; in copy they are "Folders", never "collections".
 - **Owned / wishlist** — mutually exclusive. A card you do not own is on the wishlist, nowhere
   else. Collection views and stats exclude wishlist cards.
 - **Favorite** — a flag on a card you own. Not a folder.

@@ -3,6 +3,7 @@ import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CardsPagination } from "@/components/app/cards-pagination";
 import { CardsSort } from "@/components/app/cards-sort";
 import { CardsView } from "@/components/app/cards-view";
+import { CollectionViews } from "@/components/app/collection-views";
 import { PageHeader } from "@/components/app/page-header";
 import { getMyCards } from "@/lib/cards";
 import { CARDS_VIEW_COOKIE, parseCardsView } from "@/lib/cards-view";
@@ -24,7 +25,7 @@ export default async function FavoritesPage({ searchParams }: { searchParams: Pr
         <PageHeader
             title="Favorites"
             subtitle={`${total.toLocaleString("en-US")} starred card${total === 1 ? "" : "s"}`}
-            back={{ href: "/dashboard/cards", label: "Cards" }}
+            above={<CollectionViews />}
             actions={total > 0 ? <CardsSort query={query} /> : undefined}
         />
     );
