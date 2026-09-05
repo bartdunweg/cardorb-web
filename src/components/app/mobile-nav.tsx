@@ -46,9 +46,9 @@ export function MobileTabBar({ account }: { account: Promise<Account> }) {
                         key={tab.href}
                         href={tab.href}
                         aria-current={active ? "page" : undefined}
-                        className={cx(tabClass, active ? "bg-brand-solid text-primary_on-brand" : "text-tertiary")}
+                        className={cx(tabClass, active ? "bg-alpha-black/8 text-primary" : "text-tertiary")}
                     >
-                        <Icon className={cx("size-5", active ? "text-fg-white" : "text-fg-quaternary")} />
+                        <Icon className={cx("size-5", active ? "text-fg-primary" : "text-fg-quaternary")} />
                         {tab.label}
                     </Link>
                 );
@@ -56,7 +56,7 @@ export function MobileTabBar({ account }: { account: Promise<Account> }) {
             <Link
                 href="/dashboard/you"
                 aria-current={youActive ? "page" : undefined}
-                className={cx(tabClass, youActive ? "bg-brand-solid text-primary_on-brand" : "text-tertiary")}
+                className={cx(tabClass, youActive ? "bg-alpha-black/8 text-primary" : "text-tertiary")}
             >
                 {/* The avatar sits in the icon's 20 px, so the You tab is as tall as the other four. */}
                 <Suspense fallback={<Avatar size="xs" alt="" className="size-5" />}>
