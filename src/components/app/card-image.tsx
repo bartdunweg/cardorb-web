@@ -45,6 +45,7 @@ export function CardImage({
     sizes,
     className,
     priority = false,
+    quality = 60,
 }: {
     src: string;
     alt: string;
@@ -53,6 +54,8 @@ export function CardImage({
     className?: string;
     /** Only for a picture that is on screen at load, like the one open in the detail panel. */
     priority?: boolean;
+    /** 60 for a thumbnail; 75 for a tile drawn large enough to show the difference (next.config.mjs lists both). */
+    quality?: 60 | 75;
 }) {
     const [direct, setDirect] = useState(false);
 
@@ -64,7 +67,7 @@ export function CardImage({
             sizes={sizes}
             className={className}
             priority={priority}
-            quality={60}
+            quality={quality}
             unoptimized={direct || !isOptimised(src)}
             onError={() => setDirect(true)}
         />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Share04 } from "@untitledui/icons";
+import { Check, Share01 } from "@untitledui/icons";
 import { Button } from "@/components/base/buttons/button";
 
 // Share this page: the system share sheet where there is one (a phone), the link on the
@@ -29,7 +29,7 @@ export function ShareButton({ title }: { title: string }) {
     };
 
     return (
-        <Button color="secondary" size="md" iconLeading={copied ? Check : Share04} onClick={share} aria-live="polite">
+        <Button color="secondary" size="md" iconLeading={copied ? Check : Share01} onClick={share} aria-live="polite">
             {copied ? "Copied" : "Share"}
         </Button>
     );

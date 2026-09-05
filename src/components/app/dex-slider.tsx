@@ -24,7 +24,8 @@ export function DexSlider({ cards }: { cards: DexCard[] }) {
                     <Link key={card.id} href={`/dashboard/cards?q=${encodeURIComponent(card.name)}`} className="relative size-full shrink-0 snap-start">
                         {card.imageUrl ? (
                             <CardImage
-                                src={card.imageUrl}
+                                src={card.imageHighUrl ?? card.imageUrl}
+                                quality={75}
                                 alt={card.name}
                                 sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 213px"
                                 className="object-contain"

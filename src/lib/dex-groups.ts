@@ -29,7 +29,11 @@ export function groupByDex(cards: Card[], names: DexNames, setting: PokedexSetti
     for (let number = range.from; number <= range.to; number += 1) {
         const held = bySlot.get(number) ?? [];
         if (held.length === 0 && !setting.missing) continue;
-        slots.push({ number, name: names.get(number) ?? `#${number}`, cards: held.map((c) => ({ id: c.id, name: c.name, imageUrl: c.image_url })) });
+        slots.push({
+            number,
+            name: names.get(number) ?? `#${number}`,
+            cards: held.map((c) => ({ id: c.id, name: c.name, imageUrl: c.image_url, imageHighUrl: c.image_high_url })),
+        });
     }
     return { slots, caught: bySlot.size, range, cards: counted };
 }

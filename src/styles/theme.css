@@ -377,8 +377,8 @@
     /* Glass, two weights, both derived from bg-primary so they follow the theme on their own. Thin
        is for bars content scrolls under; thick is for a sheet, dialog or popover that holds content
        of its own. The `glass` and `glass-thick` utilities add the blur. */
-    --color-bg-glass: color-mix(in oklab, var(--color-bg-primary) 64%, transparent);
-    --color-bg-glass-thick: color-mix(in oklab, var(--color-bg-primary) 92%, transparent);
+    --color-bg-glass: color-mix(in oklab, var(--color-bg-primary) 85%, transparent);
+    --color-bg-glass-thick: color-mix(in oklab, var(--color-bg-primary) 96%, transparent);
     --color-bg-primary: var(--color-white);
     --color-bg-tertiary: var(--color-neutral-100);
     --color-bg-brand-primary: var(--color-brand-50);
