@@ -22,6 +22,8 @@ interface SidebarNavigationSectionDividersProps {
     hideMobileHeader?: boolean;
     /** Replaces the default search inputs (e.g. a button that opens a command palette). */
     search?: ReactNode;
+    /** Under the list: an action that belongs with the last section, like New folder. */
+    afterItems?: ReactNode;
 }
 
 export const SidebarNavigationSectionDividers = ({
@@ -31,6 +33,7 @@ export const SidebarNavigationSectionDividers = ({
     headerAction,
     hideMobileHeader,
     search,
+    afterItems,
 }: SidebarNavigationSectionDividersProps) => {
     const MAIN_SIDEBAR_WIDTH = 276;
 
@@ -63,6 +66,7 @@ export const SidebarNavigationSectionDividers = ({
             </div>
 
             <NavList activeUrl={activeUrl} items={items} />
+            {afterItems}
 
             <div className="mt-auto flex flex-col gap-5 px-2 py-4 lg:gap-6 lg:px-4 lg:py-4">{footer ?? <NavAccountCard />}</div>
         </aside>

@@ -63,10 +63,21 @@ export const NavList = ({ activeUrl, items, className }: NavListProps) => {
         <ul className={cx("flex flex-col px-4 pt-5", className)}>
             {items.map((item, index) => {
                 if (item.divider) {
-                    // A divider with a label heads a section; without one it is a rule.
+                    // A divider with a label heads a section; with an href the heading is also the way to
+                    // the section's overview. Without a label it is a rule.
                     return item.label ? (
-                        <li key={index} className="px-3 pt-5 pb-1 text-xs font-semibold text-quaternary">
-                            {item.label}
+                        <li key={index} className="pt-5 pb-1">
+                            {item.href ? (
+                                <a
+                                    href={item.href}
+                                    aria-current={activeUrl === item.href ? "page" : undefined}
+                                    className="block rounded-md px-3 py-0.5 text-xs font-semibold text-quaternary outline-focus-ring transition-colors hover:text-secondary focus-visible:outline-2 aria-[current=page]:text-primary"
+                                >
+                                    {item.label}
+                                </a>
+                            ) : (
+                                <span className="block px-3 py-0.5 text-xs font-semibold text-quaternary">{item.label}</span>
+                            )}
                         </li>
                     ) : (
                         <li key={index} className="w-full px-0.5 py-2">
