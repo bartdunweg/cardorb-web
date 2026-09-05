@@ -3,11 +3,13 @@ import { notFound } from "next/navigation";
 import { AccountMenu } from "@/components/app/account-menu";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderBody } from "@/components/app/folder-body";
+import { LinkButton } from "@/components/app/link-button";
 import { PublicTopBar } from "@/components/app/public-top-bar";
+import { ShareButton } from "@/components/app/share-button";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { datapointsLine } from "@/lib/folder-datapoints";
 import { type ListSearchParams, PUBLIC_SORT_OPTIONS, isNarrowed, readPublicListQuery } from "@/lib/list-query";
-import { getViewer } from "@/lib/profile";
+import { getMyProfile, getViewer } from "@/lib/profile";
 import { PUBLIC_PAGE_SIZE, getPublicCards, getPublicProfile } from "@/lib/public-profile";
 import { RouteProvider } from "@/providers/router-provider";
 
@@ -40,6 +42,14 @@ export default async function PublicProfilePage({ params, searchParams }: Params
     const query = readPublicListQuery(await searchParams);
     const narrowed = isNarrowed(query);
     const [{ cards, total, sets, facets }, viewer] = await Promise.all([getPublicCards(decodeURIComponent(username), query), getViewer()]);
+    // Whose page this is: the owner looking at their own gets Edit profile beside Share. The
+    // profile read is the layout's cached one; a session the API refuses counts as a visitor.
+    const mine = viewer
+        ? await getMyProfile().then(
+              (me) => me.profile?.username === profile.username,
+              () => false,
+          )
+        : false;
     const base = `/user/${encodeURIComponent(username)}`;
     const name = profile.display_name || profile.username || "Collection";
     // The handle sits under a display name, as a profile page does; with no display name it is the name.
@@ -60,13 +70,22 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                 }
             />
 
-            <main className="mx-auto flex w-full max-w-container flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
-                <div className="flex items-center gap-4">
-                    <Avatar size="xl" src={profile.avatar_url ?? undefined} alt={name} />
-                    <div className="flex flex-col gap-1">
-                        <h1 className="text-display-xs font-semibold text-primary">{name}</h1>
+            <main className="mx-auto flex w-full max-w-container flex-1 flex-col gap-8 px-4 py-6 sm:px-6 sm:py-8">
+                {/* Centred, as a profile page is read: the person first, then what they hold, then the ways to act on it. */}
+                <div className="flex flex-col items-center gap-3 text-center">
+                    <Avatar size="2xl" src={profile.avatar_url ?? undefined} alt={name} className="size-24" />
+                    <div className="flex flex-col items-center gap-1">
+                        <h1 className="text-display-sm font-semibold text-primary">{name}</h1>
                         {handle ? <p className="text-md text-tertiary">{handle}</p> : null}
-                        <p className="text-sm font-medium text-secondary tabular-nums">{counts}</p>
+                        <p className="text-md font-medium text-secondary tabular-nums">{counts}</p>
+                    </div>
+                    <div className="flex items-center gap-2 pt-1">
+                        <ShareButton title={`${name}'s collection on Cardorb`} />
+                        {mine ? (
+                            <LinkButton href="/dashboard/settings" color="secondary" size="md">
+                                Edit profile
+                            </LinkButton>
+                        ) : null}
                     </div>
                 </div>
 
