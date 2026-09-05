@@ -1,7 +1,7 @@
 "use client";
 
 import type { FC } from "react";
-import { Dataflow03, Folder, Heart, Plus, Star01 } from "@untitledui/icons";
+import { Dataflow03, Folder, Grid01, Heart, Plus, Star01 } from "@untitledui/icons";
 import Link from "next/link";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderDialog } from "@/components/app/folder-dialog";
@@ -77,11 +77,13 @@ export function CollectionsGrid({
 
     return (
         <div className="flex flex-1 flex-col gap-6">
-            {/* Two folders that are always there, above the ones you made: the favorites (a flag on a card) and
-                the wishlist (cards not owned). Neither is a folder in the data, both are one to the eye. */}
-            <div className="grid grid-cols-1 gap-4 xs:grid-cols-2 lg:grid-cols-4">
+            {/* Three folders that are always there, above the ones you made: the favorites (a flag on a card), the
+                wishlist (cards not owned) and the Pokédex (every Pokémon, with the slots you have no card of). None is
+                a folder in the data; all three are one to the eye. */}
+            <div className="grid grid-cols-1 gap-4 xs:grid-cols-3 lg:grid-cols-4">
                 <FolderCard href="/dashboard/favorites" icon={Star01} name="Favorites" count={favoritesCount} row />
                 <FolderCard href="/dashboard/wishlist" icon={Heart} name="Wishlist" count={wishlistCount} row />
+                <FolderCard href="/dashboard/pokedex" icon={Grid01} name="Pokédex" detail="Cards by Pokémon" row />
             </div>
 
             {hasCollections ? (
