@@ -58,16 +58,12 @@ export function HomeSkeleton() {
     );
 }
 
-/** The Pokédex: the bar under the count, then the small square slots in their own columns. */
+/** The Pokédex: the bar under the count, then the same tiles as a list of cards. */
 export function DexSkeleton() {
     return (
         <>
             <Block className="-mt-4 h-2 max-w-md" />
-            <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12">
-                {Array.from({ length: 48 }, (_, i) => (
-                    <div key={i} className="aspect-3/4 rounded-md bg-secondary" />
-                ))}
-            </div>
+            <CardsSkeleton />
         </>
     );
 }

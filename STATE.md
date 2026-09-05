@@ -31,7 +31,8 @@ which also says what is already yours), Settings (avatar through the API), publi
   (#105; cardorb-api#166, #167). Every folder page has one shape: title, what it holds and is
   worth, actions, one row (search, Filters, Sort, View), the list; Pokédex is a folder setting,
   "Pokédex number" a sort (#111, #113, #114; cardorb-api#168). Controls draw one hairline ring,
-  surfaces a shadow (#115). A card can be starred from its sheet (#116). Home's search bar is
+  surfaces a shadow (#115); the sidebar and the tab bar draw the control's ring over a lift
+  without a rim (`shadow-lift-lg`), so their edge is the inputs' line. A card can be starred from its sheet (#116). Home's search bar is
   the larger pill with a scan button (#107). A review of the day found three blocking defects
   in each repository, fixed in cardorb-api#169 and the PR after #116: the toolbar kept its
   place in the tree, the New folder dialog forgets its last folder, rule chips and "In

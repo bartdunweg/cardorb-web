@@ -861,8 +861,10 @@ dialog, a bar) takes a shadow from the scale and no ring. The kit's skeuomorphic
 buttons is off: it was a second edge inside the first.
 
 An elevated surface takes `shadow-*` alone, never a ring as well: the scale's first layer is the
-rim, and a ring on top draws two rims a shade apart. The sidebar is a floating panel like the tab
-bar: thick glass and `shadow-lg`.
+rim, and a ring on top draws two rims a shade apart. The one exception is the chrome: the sidebar
+and the tab bar carry the controls (the search pill, the inputs beside them) and read as one line
+with them, so they take the control's `ring-1 ring-primary ring-inset` and `shadow-lift-lg`, the
+lift of `lg` with its rim left out, so the edge is still one line.
 
 ### Polish
 
