@@ -26,7 +26,7 @@ export default async function SetsPage() {
 
     return (
         <div className="flex flex-col gap-8">
-            <PageHeader title="Sets" subtitle={`${n(complete)} of ${n(totalSets)} sets complete · ${n(started)} started`}>
+            <PageHeader title="Browse" subtitle={`${n(complete)} of ${n(totalSets)} sets complete · ${n(started)} started`}>
                 {/* The count above is the accessible name; the bar makes the same number visible at a glance. */}
                 <ProgressBarBase value={complete} max={totalSets} className="mt-2 max-w-md" aria-label="Sets complete" />
             </PageHeader>
