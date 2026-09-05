@@ -3,10 +3,10 @@ import { listHref, readListQuery, readPublicListQuery } from "./list-query";
 
 describe("readListQuery", () => {
     it("reads page and sort, and falls back to set order and page one for anything else", () => {
-        expect(readListQuery({ page: "3", sort: "price-desc", q: " pika " })).toEqual({
+        expect(readListQuery({ page: "3", sort: "added-desc", q: " pika " })).toEqual({
             page: 3,
-            sortKey: "price-desc",
-            sort: "price",
+            sortKey: "added-desc",
+            sort: "added",
             order: "desc",
             q: "pika",
         });
@@ -38,6 +38,6 @@ describe("set and rarity", () => {
 describe("readPublicListQuery", () => {
     it("keeps name order and drops a price or date sort back to set order", () => {
         expect(readPublicListQuery({ sort: "name", q: "mew" })).toMatchObject({ sortKey: "name", sort: "name", q: "mew" });
-        expect(readPublicListQuery({ sort: "price-desc", set: "jungle" })).toMatchObject({ sortKey: "set", sort: undefined, order: undefined, set: "jungle" });
+        expect(readPublicListQuery({ sort: "added-desc", set: "jungle" })).toMatchObject({ sortKey: "set", sort: undefined, order: undefined, set: "jungle" });
     });
 });

@@ -5,13 +5,11 @@
 
 /** One entry per menu option; the API takes `sort` and `order` apart. */
 export const SORT_OPTIONS = [
-    { value: "set", label: "Newest set first", sort: undefined, order: undefined },
     { value: "name", label: "Name", sort: "name", order: undefined },
-    { value: "price-desc", label: "Price, high to low", sort: "price", order: "desc" },
-    { value: "price-asc", label: "Price, low to high", sort: "price", order: "asc" },
+    { value: "set", label: "Set", sort: undefined, order: undefined },
+    { value: "dex", label: "Pokédex number", sort: "dex", order: undefined },
     { value: "added-desc", label: "Newest first", sort: "added", order: "desc" },
     { value: "added-asc", label: "Oldest first", sort: "added", order: "asc" },
-    { value: "dex", label: "Pokédex number", sort: "dex", order: undefined },
 ] as const;
 
 export type SortKey = (typeof SORT_OPTIONS)[number]["value"];

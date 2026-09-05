@@ -66,7 +66,7 @@ function DexTile({ slot }: { slot: NamedDexSlot }) {
             href={`/dashboard/cards?q=${encodeURIComponent(card.name)}`}
             className="flex pressable cursor-pointer flex-col gap-2 rounded-2xl bg-primary p-2 text-left shadow-lift-xs outline-focus-ring hover:bg-secondary focus-visible:outline-2"
         >
-            <div className="relative aspect-[63/88] w-full overflow-hidden rounded-lg bg-quaternary ring-1 ring-image ring-inset">
+            <div className={cx("relative aspect-[63/88] w-full overflow-hidden rounded-lg", !card.imageUrl && "bg-quaternary")}>
                 {card.imageUrl ? (
                     <CardImage src={card.imageUrl} alt="" sizes={SIZES} className="object-contain" />
                 ) : (

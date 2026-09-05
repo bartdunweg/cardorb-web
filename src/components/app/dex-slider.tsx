@@ -18,7 +18,7 @@ export function DexSlider({ cards }: { cards: DexCard[] }) {
     };
 
     return (
-        <div className="group relative aspect-[63/88] w-full overflow-hidden rounded-lg bg-quaternary ring-1 ring-image ring-inset">
+        <div className="group relative aspect-[63/88] w-full overflow-hidden rounded-lg">
             <div ref={ref} className="flex size-full snap-x snap-mandatory [scrollbar-width:none] overflow-x-auto [&::-webkit-scrollbar]:hidden">
                 {cards.map((card) => (
                     <Link key={card.id} href={`/dashboard/cards?q=${encodeURIComponent(card.name)}`} className="relative size-full shrink-0 snap-start">
@@ -30,7 +30,9 @@ export function DexSlider({ cards }: { cards: DexCard[] }) {
                                 className="object-contain"
                             />
                         ) : (
-                            <div className="flex size-full items-center justify-center p-3 text-center text-sm font-medium text-secondary">{card.name}</div>
+                            <div className="flex size-full items-center justify-center bg-quaternary p-3 text-center text-sm font-medium text-secondary">
+                                {card.name}
+                            </div>
                         )}
                     </Link>
                 ))}
