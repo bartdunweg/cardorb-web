@@ -74,6 +74,8 @@ export type Card = {
     /** What one copy trades at today, in euros; null when Cardmarket has no number. */
     price: number | null;
     image_url: string | null;
+    /** The larger scan (600 px), for a tile a phone draws at two pixels per point; null where the catalogue has one size. */
+    image_high_url: string | null;
     tcg_id: string | null;
     collection_id: string | null;
     wishlist: boolean | null;
@@ -152,6 +154,7 @@ export const cardFromItem = (item: CardItem): Card => ({
     notes: item.notes,
     price: priceForCopy(item),
     image_url: absoluteImage(item.image),
+    image_high_url: absoluteImage(item.imageHigh),
     tcg_id: item.tcgId,
     collection_id: item.collectionId,
     species_id: item.speciesId,
@@ -160,7 +163,10 @@ export const cardFromItem = (item: CardItem): Card => ({
 
 // ── GET /v1/public/{username}/cards ───────────────────────────────────────────────────────
 
-export type PublicCard = Pick<Card, "id" | "name" | "set_name" | "number" | "rarity" | "gen" | "types" | "quantity" | "finish" | "image_url" | "tcg_id">;
+export type PublicCard = Pick<
+    Card,
+    "id" | "name" | "set_name" | "number" | "rarity" | "gen" | "types" | "quantity" | "finish" | "image_url" | "image_high_url" | "tcg_id"
+>;
 
 /** One card on a public profile with how many copies the owner holds. Nothing private (R-API-002 there). */
 export type PublicItem = {
@@ -190,13 +196,15 @@ export const publicCardFromItem = (item: PublicItem): PublicCard => ({
     quantity: item.copies,
     finish: null,
     image_url: absoluteImage(item.image),
+    // The public route sends one size; the optimizer scales it up rather than leaving the tile empty.
+    image_high_url: null,
     tcg_id: item.tcgId,
 });
 
 // ── GET /v1/pokedex ───────────────────────────────────────────────────────────────────────
 
 export type DexEntry = { id: number; name: string; owned: number; cards: { key: string; name: string; image: string | null }[] };
-export type DexCard = { id: string; name: string; imageUrl: string | null };
+export type DexCard = { id: string; name: string; imageUrl: string | null; imageHighUrl: string | null };
 export type DexSlot = { number: number; cards: DexCard[] };
 
 // ── GET /v1/catalog/sets ──────────────────────────────────────────────────────────────────

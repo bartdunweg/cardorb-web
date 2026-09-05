@@ -50,7 +50,8 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                         <div className={cx("relative aspect-[63/88] w-full overflow-hidden rounded-lg", !card.image_url && "bg-quaternary")}>
                             {card.image_url ? (
                                 <CardImage
-                                    src={card.image_url}
+                                    src={card.image_high_url ?? card.image_url}
+                                    quality={75}
                                     alt=""
                                     sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 213px"
                                     className="object-contain"
