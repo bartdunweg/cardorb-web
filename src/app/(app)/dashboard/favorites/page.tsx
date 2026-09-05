@@ -1,37 +1,29 @@
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderPage } from "@/components/app/folder-page";
-import { getMyCards } from "@/lib/cards";
+import { type CardFilter, getFacets, getMyCards } from "@/lib/cards";
 import { type ListSearchParams, isNarrowed, readListQuery } from "@/lib/list-query";
 
-const PAGE_SIZE = 100;
-
 // Starred cards you own. A favourite is a flag on a card in the collection (CLAUDE.md), so this asks the
-// API for owned copies only; a wish cannot carry a star here.
+// API for owned copies only; a wish cannot carry a star here. The list itself is not awaited: see cards/page.tsx.
 export default async function FavoritesPage({ searchParams }: { searchParams: Promise<ListSearchParams> }) {
     const query = readListQuery(await searchParams);
-    const { page, q, sort, order, set, rarity } = query;
-    const { cards, total, facets, value, unpriced } = await getMyCards({
-        favoritesOnly: true,
-        limit: PAGE_SIZE,
-        offset: (page - 1) * PAGE_SIZE,
-        q,
-        sort,
-        order,
-        set,
-        rarity,
-    });
+    const { q, sort, order, set, rarity } = query;
+    const filter: CardFilter = { favoritesOnly: true, q, sort, order, set, rarity };
+    const narrowed = isNarrowed(query);
+    const list = getMyCards(filter);
+    const datapoints = list.then((r) => ({ total: r.total, narrowed, value: r.value, unpriced: r.unpriced }));
+    const facets = await getFacets();
 
     return (
         <FolderPage
             title="Favorites"
             back={{ href: "/dashboard/collections", label: "Folders" }}
-            datapoints={{ total, narrowed: isNarrowed(query), value, unpriced }}
+            datapoints={datapoints}
             query={query}
             basePath="/dashboard/favorites"
             facets={facets}
-            cards={cards}
-            total={total}
-            pageSize={PAGE_SIZE}
+            list={list}
+            filter={filter}
             empty={<AppEmptyState icon="star" title="No favorites yet" description="Star a card to keep it here for quick access" />}
         />
     );

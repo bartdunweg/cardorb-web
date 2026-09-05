@@ -10,10 +10,32 @@ export type Facets = { sets: { name: string; title: string }[]; rarities: string
 /** The sets and rarities you hold a card of, for a rule's fields. Five minutes per person. */
 export const getFacets = (): Promise<Facets> => perUser("facets", async () => (await getMyCards({ limit: 1 })).facets);
 
-// One page of the signed-in person's cards, from the API (R-DATA-003). `wishlist` picks the
+/** Which cards a list asks for: the folder, the search, the sort and the two filters. Plain data, so a page can hand it to the client for the next batch. */
+export type CardFilter = {
+    q?: string;
+    collectionId?: string;
+    favoritesOnly?: boolean;
+    wishlist?: boolean;
+    sort?: "name" | "price" | "added" | "dex";
+    order?: "asc" | "desc";
+    set?: string;
+    rarity?: string;
+};
+
+/**
+ * Cards per batch of a list. The first batch comes with the page, the rest as the reader scrolls
+ * (`CardsList`). Forty-eight fills two to three screens on any width and keeps the first answer,
+ * and the pictures it asks for, small.
+ */
+export const LIST_BATCH = 48;
+
+/** What one read of a list answers: a batch of cards and the numbers about the whole of it. */
+export type CardList = Awaited<ReturnType<typeof getMyCards>>;
+
+// One batch of the signed-in person's cards, from the API (R-DATA-003). `wishlist` picks the
 // wishlist (`owned=false`) over the collection; the API sorts by set, then number.
 export async function getMyCards({
-    limit = 100,
+    limit = LIST_BATCH,
     offset = 0,
     q,
     collectionId,
@@ -23,18 +45,7 @@ export async function getMyCards({
     order,
     set,
     rarity,
-}: {
-    limit?: number;
-    offset?: number;
-    q?: string;
-    collectionId?: string;
-    favoritesOnly?: boolean;
-    wishlist?: boolean;
-    sort?: "name" | "price" | "added" | "dex";
-    order?: "asc" | "desc";
-    set?: string;
-    rarity?: string;
-} = {}): Promise<{
+}: CardFilter & { limit?: number; offset?: number } = {}): Promise<{
     cards: Card[];
     total: number;
     /** What the whole filtered list is worth, in euros; null from an API that does not answer it yet. */
@@ -91,7 +102,7 @@ export async function getCardStats(): Promise<CardStats> {
  * The whole of a list, for a folder shown as a Pokédex: the slots need every card, not a page.
  * The API caps a page at 500; the first page says how many there are, the rest come in parallel.
  */
-export async function getAllMyCards(filter: Omit<Parameters<typeof getMyCards>[0], "limit" | "offset">) {
+export async function getAllMyCards(filter: CardFilter) {
     const PAGE = 500;
     const first = await getMyCards({ ...filter, limit: PAGE, offset: 0 });
     const pages = Math.ceil(first.total / PAGE);

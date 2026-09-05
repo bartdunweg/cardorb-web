@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Plus, Star01 } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
@@ -53,12 +53,16 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
     };
     const [moveError, setMoveError] = useState<string | null>(null);
 
+    // The folders and the facets are for the sheet's own controls, so they are asked for when a
+    // card first opens, not when the page mounts: this sits on every list page, closed, and used
+    // to cost two calls on every visit for a sheet nobody had opened.
+    const askedForChoices = useRef(false);
     useEffect(() => {
-        if (!readOnly) {
-            listCollections().then(setCollections);
-            loadFacets().then(setFacets);
-        }
-    }, [readOnly]);
+        if (readOnly || !card || askedForChoices.current) return;
+        askedForChoices.current = true;
+        listCollections().then(setCollections);
+        loadFacets().then(setFacets);
+    }, [readOnly, card]);
 
     // Reset the editable collection value when a different card opens — done during render (React's
     // documented pattern for adjusting state on prop change) rather than in an effect.
