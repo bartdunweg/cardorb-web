@@ -7,7 +7,6 @@ import { Button as AriaButton } from "react-aria-components";
 import { AccountMenu } from "@/components/app/account-menu";
 import { SidebarSearchTrigger } from "@/components/app/command-search";
 import { FolderDialog } from "@/components/app/folder-dialog";
-import { AccountCardSkeleton, FolderRowsSkeleton } from "@/components/app/skeletons";
 import { NavItemBase } from "@/components/application/app-navigation/base-components/nav-item";
 import type { NavItemDividerType, NavItemType } from "@/components/application/app-navigation/config";
 import { SidebarNavigationSectionDividers } from "@/components/application/app-navigation/sidebar-navigation/sidebar-section-dividers";
@@ -44,7 +43,7 @@ export function AppSidebar({ account, collections }: { account: Promise<Account>
             search={<SidebarSearchTrigger />}
             afterItems={
                 <>
-                    <Suspense fallback={<FolderRowsSkeleton />}>
+                    <Suspense fallback={null}>
                         <FolderRows collections={collections} activeUrl={pathname} />
                     </Suspense>
                     {/* An item like the others: the same padding, icon size and type, at the list's end. */}
@@ -64,7 +63,7 @@ export function AppSidebar({ account, collections }: { account: Promise<Account>
                 </>
             }
             footer={
-                <Suspense fallback={<AccountCardSkeleton />}>
+                <Suspense fallback={null}>
                     <AccountSlot account={account} />
                 </Suspense>
             }
