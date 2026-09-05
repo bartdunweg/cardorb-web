@@ -27,11 +27,11 @@ const StatCard = ({
     delay?: number;
 }) => (
     <div className={cx("arrive rounded-xl bg-primary shadow-border", className)} style={{ "--arrive-delay": `${delay ?? 0}ms` } as React.CSSProperties}>
-        <div className="flex flex-col gap-4 px-4 py-5 md:gap-5 md:px-5">
+        <div className="flex flex-col gap-3 px-3 py-4 sm:gap-4 sm:px-4 sm:py-5 md:gap-5 md:px-5">
             <FeaturedIcon color="gray" theme="modern-neue" icon={icon} size="lg" />
             <div className="flex flex-col gap-2">
                 <h3 className="text-sm font-semibold text-tertiary">{label}</h3>
-                <p className="text-display-sm font-semibold text-primary tabular-nums">{value}</p>
+                <p className="text-display-xs font-semibold text-primary tabular-nums sm:text-display-sm">{value}</p>
                 {detail ? <p className="text-sm text-tertiary">{detail}</p> : null}
             </div>
         </div>
@@ -45,16 +45,17 @@ const unpricedNote = (unpriced: number) => (unpriced === 0 ? undefined : `${coun
 
 export function CardsStats({ stats }: { stats: CardStats }) {
     return (
-        <div className="flex flex-col gap-x-6 gap-y-5 md:flex-row md:flex-wrap">
-            <StatCard label="Owned" value={count(stats.owned)} icon={CheckDone01} className="flex-1 md:min-w-[240px]" delay={0} />
-            <StatCard label="Wishlist" value={count(stats.wishlist)} icon={Heart} className="flex-1 md:min-w-[240px]" delay={40} />
-            <StatCard label="Favorites" value={count(stats.favorites)} icon={Star01} className="flex-1 md:min-w-[240px]" delay={80} />
+        // Two to a row on a phone, four from xl: a column of four tiles pushed the chart off the first screen.
+        <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4">
+            <StatCard label="Owned" value={count(stats.owned)} icon={CheckDone01} delay={0} />
+            <StatCard label="Wishlist" value={count(stats.wishlist)} icon={Heart} delay={40} />
+            <StatCard label="Favorites" value={count(stats.favorites)} icon={Star01} delay={80} />
             <StatCard
                 label="Collection value"
                 value={formatPrice(stats.value)}
                 detail={unpricedNote(stats.unpriced)}
                 icon={CoinsStacked01}
-                className="flex-1 md:min-w-[240px]"
+
                 delay={120}
             />
         </div>
