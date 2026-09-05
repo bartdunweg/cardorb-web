@@ -278,6 +278,31 @@ Backlog from the review, ranked. Each is one PR.
 - Ancient Mew (Miscellaneous Promos #001) has no scan anywhere; a scan of the owner's own copy
   goes under the API's `public/artwork` with a lookup by tcgId in the resolver.
 
+From the audit of 2026-09-06 (night), still open, each one PR:
+
+- One `ListActions` component (settings plus add, one size, the words from lg) for All cards,
+  Wishlist, Favorites and Pokédex: today the four pages spell the pair three ways. Start in
+  `app/(app)/dashboard/wishlist/page.tsx`.
+- One place for the public flags: "Public wishlist" lives in Settings and on the wishlist page;
+  favorites and Pokédex only on their pages. Drop it from `settings-form.tsx` or add the other two.
+- Settings and You on `PageHeader` (Back, the phone bar, the collapsed title) and `AppErrorState`
+  when the profile read fails; today they render a bare paragraph.
+- Same action, one name: "Mark as owned" (card sheet) vs "Got it" (set tile); "New folder" vs
+  "Create folder" (empty state); Back on a set says "Sets" where the tab says Browse.
+- Icons: a rule folder is `Dataflow03` in the grid and `Folder` in the sidebar; the Pokédex shares
+  the folder icon. Let `getMyFolders` carry `kind` and give the Pokédex its own icon.
+- Section headings differ per page (Home `text-sm text-tertiary`, Browse `text-lg`, Settings
+  `text-md`); page gap is 6 everywhere but 8 on Browse and the profile.
+- `collection-detail-actions.tsx`: the Add cards dialog has no close button (the add-card modal
+  has one). `set-card-tile.tsx:123`: a card you do not own is named in `text-quaternary`; measure
+  the contrast on the off-white page, tertiary is safe. `dex-slider.tsx`: the arrows exist only on
+  hover from lg, so a tablet without a mouse cannot step.
+- Six copies no source prices (Professor's Research Black Bolt ×2, Yveltal-EX XY150A, Pikachu
+  Wizards promo #1, Nidoran♀ Jungle #57, Ancient Mew ×2): a manual price field per copy, or
+  wait for pokemontcg.io, which was down most of the night.
+- `text-xxs` (10 px) and `text-2xs` (11 px) are two tokens a step apart; fold the four `text-xxs`
+  uses onto one or name them `3xs`/`2xs`.
+
 ## Open
 
 - **A revoked session stays open on the web for up to an hour (#79).** The middleware and the
