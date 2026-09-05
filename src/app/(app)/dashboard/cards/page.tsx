@@ -21,7 +21,7 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
     return (
         <FolderPage
             title="All cards"
-            back={{ href: "/dashboard/collections", label: "Folders" }}
+            back={{ href: "/dashboard/collections", label: "Collection" }}
             datapoints={datapoints}
             actions={
                 <>

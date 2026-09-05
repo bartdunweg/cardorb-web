@@ -9,7 +9,7 @@ const tabs = [
     { label: "Home", href: "/dashboard", icon: HomeLine, match: (p: string) => p === "/dashboard" },
     { label: "Browse", href: "/dashboard/sets", icon: BookOpen01, match: (p: string) => p.startsWith("/dashboard/sets") },
     {
-        label: "Folders",
+        label: "Collection",
         href: "/dashboard/collections",
         icon: Folder,
         match: (p: string) => ["/dashboard/collections", "/dashboard/cards", "/dashboard/favorites", "/dashboard/pokedex"].some((h) => p.startsWith(h)),

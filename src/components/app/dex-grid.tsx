@@ -44,7 +44,7 @@ function DexTile({ slot, linked }: { slot: NamedDexSlot; linked: boolean }) {
 
     if (held === 0) {
         return (
-            <div className="flex flex-col gap-2 rounded-2xl bg-primary p-2 shadow-lift-xs">
+            <div className="flex flex-col gap-2">
                 <div className="flex aspect-card w-full items-center justify-center rounded-lg bg-tertiary">
                     <span className="text-sm font-medium text-quaternary tabular-nums">{dexNumber(slot.number)}</span>
                 </div>
@@ -55,7 +55,7 @@ function DexTile({ slot, linked }: { slot: NamedDexSlot; linked: boolean }) {
 
     if (held > 1) {
         return (
-            <div className="flex flex-col gap-2 rounded-2xl bg-primary p-2 shadow-lift-xs">
+            <div className="flex flex-col gap-2">
                 <DexSlider cards={slot.cards} />
                 {words}
             </div>
@@ -76,7 +76,7 @@ function DexTile({ slot, linked }: { slot: NamedDexSlot; linked: boolean }) {
     );
     if (!linked) {
         return (
-            <div className="flex flex-col gap-2 rounded-2xl bg-primary p-2 shadow-lift-xs">
+            <div className="flex flex-col gap-2">
                 {picture}
                 {words}
             </div>
@@ -85,7 +85,7 @@ function DexTile({ slot, linked }: { slot: NamedDexSlot; linked: boolean }) {
     return (
         <Link
             href={`/dashboard/cards?q=${encodeURIComponent(card.name)}`}
-            className="flex pressable cursor-pointer flex-col gap-2 rounded-2xl bg-primary p-2 text-left shadow-lift-xs outline-focus-ring hover:bg-secondary focus-visible:outline-2"
+            className="flex pressable cursor-pointer flex-col gap-2 rounded-lg text-left outline-offset-2 outline-focus-ring focus-visible:outline-2"
         >
             {picture}
             {words}
