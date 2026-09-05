@@ -7,16 +7,15 @@ import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-m
 import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 
-// A page's filter row: inline from lg up, and on a phone one Filters button that opens a sheet
-// with the same controls stacked. `active` is how many filters are set, shown on the button so a
+// The set and rarity filters, behind one button on every screen: a sheet from the bottom on a
+// phone, a drawer from the right from sm up. Search stays in the row: it is the thing you type. `active` is how many filters are set, shown on the button so a
 // narrowed list says why. The controls apply as they change; Done only closes the sheet.
 export function FiltersSheet({ active = 0, children }: { active?: number; children: ReactNode }) {
     const [open, setOpen] = useState(false);
 
     return (
         <>
-            <div className="hidden lg:contents">{children}</div>
-            <div className="lg:hidden">
+            <div>
                 <Button color="secondary" size="sm" iconLeading={FilterLines} onClick={() => setOpen(true)}>
                     Filters
                     {active > 0 ? (

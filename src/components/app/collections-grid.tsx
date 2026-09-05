@@ -1,7 +1,7 @@
 "use client";
 
 import type { FC } from "react";
-import { Dataflow03, Folder, Grid01, Plus, Rows01, Star01 } from "@untitledui/icons";
+import { Dataflow03, Folder, Plus, Rows01, Star01 } from "@untitledui/icons";
 import Link from "next/link";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderDialog } from "@/components/app/folder-dialog";
@@ -83,7 +83,7 @@ export function CollectionsGrid({
             <div className="grid grid-cols-1 gap-4 xs:grid-cols-3 lg:grid-cols-4">
                 <FolderCard href="/dashboard/cards" icon={Rows01} name="All cards" count={ownedCount} row />
                 <FolderCard href="/dashboard/favorites" icon={Star01} name="Favorites" count={favoritesCount} row />
-                <FolderCard href="/dashboard/pokedex" icon={Grid01} name="Pokédex" detail="Cards by Pokémon" row />
+                <FolderCard href="/dashboard/pokedex" icon={Folder} name="Pokédex" detail="Cards by Pokémon" row />
             </div>
 
             {hasCollections ? (
