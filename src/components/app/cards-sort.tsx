@@ -14,8 +14,8 @@ export function CardsSort({ query, options = SORT_OPTIONS }: { query: ListQuery;
     const pathname = usePathname();
     return (
         <Dropdown.Root>
-            <Button color="secondary" size="sm" iconLeading={SwitchVertical01} iconTrailing={ChevronDown}>
-                Sort
+            <Button color="secondary" size="sm" iconLeading={SwitchVertical01} iconTrailing={ChevronDown} aria-label="Sort">
+                <span className="max-sm:sr-only">Sort</span>
             </Button>
             <Dropdown.Popover placement="bottom start" className="w-56">
                 <Dropdown.Menu

@@ -16,8 +16,8 @@ export function FiltersSheet({ active = 0, children }: { active?: number; childr
     return (
         <>
             <div>
-                <Button color="secondary" size="sm" iconLeading={FilterLines} onClick={() => setOpen(true)}>
-                    Filters
+                <Button color="secondary" size="sm" iconLeading={FilterLines} onClick={() => setOpen(true)} aria-label="Filters">
+                    <span className="max-sm:sr-only">Filters</span>
                     {active > 0 ? (
                         <Badge size="sm" color="gray" type="pill-color">
                             {active}

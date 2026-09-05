@@ -32,8 +32,15 @@ export function ViewMenu({
 }) {
     return (
         <Dropdown.Root>
-            <Button color="secondary" size="sm" iconLeading={view === "grid" ? Grid01 : Rows01} iconTrailing={ChevronDown} className="ml-auto">
-                View
+            <Button
+                color="secondary"
+                size="sm"
+                iconLeading={view === "grid" ? Grid01 : Rows01}
+                iconTrailing={ChevronDown}
+                className="ml-auto"
+                aria-label="View"
+            >
+                <span className="max-sm:sr-only">View</span>
             </Button>
             <Dropdown.Popover placement="bottom end" className="w-48">
                 <Dropdown.Menu>

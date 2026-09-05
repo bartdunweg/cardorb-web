@@ -59,7 +59,16 @@ export async function FolderBody(props: FolderBodyProps) {
     // thing you type, so it stays in the row; the set and rarity filters are a sheet.
     const toolbar = (
         <>
-            <CardsSearch key="search" size="sm" initialValue={q ?? ""} label={searchLabel} placeholder={searchPlaceholder} className="w-full sm:w-64" />
+            {/* The field takes what the three buttons leave, so the row is one line at every width; on a
+                phone the buttons are their icons alone to leave it enough. */}
+            <CardsSearch
+                key="search"
+                size="sm"
+                initialValue={q ?? ""}
+                label={searchLabel}
+                placeholder={searchPlaceholder}
+                className="min-w-0 flex-1 sm:max-w-80"
+            />
             <FiltersSheet key="filters" active={[query.set, query.rarity, query.unpriced].filter(Boolean).length}>
                 <CardsFilters key="set-rarity" query={query} facets={facets} />
             </FiltersSheet>
