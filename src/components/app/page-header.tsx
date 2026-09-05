@@ -58,7 +58,10 @@ export function PageHeader({
         <>
             <div
                 className={cx(
-                    "sticky top-0 z-30 -mx-4 -mt-4 grid h-12 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-2 sm:-mx-6 sm:-mt-8 lg:hidden",
+                    "sticky top-0 z-30 -mx-4 -mt-4 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-4 sm:-mx-6 sm:-mt-8 lg:hidden",
+                    // With Back the bar is as tall as the button plus 16 px above and below it, the page's margin;
+                    // without one it is the 48 px the title collapses into.
+                    back ? "py-4" : "h-12",
                     // The glass comes with the collapse (or with Back); over the uncollapsed title it would only blur it.
                     (collapsed || back) && "glass",
                     // Without Back the bar has nothing to show until the title collapses into it, so it lies over
