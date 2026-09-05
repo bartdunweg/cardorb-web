@@ -216,7 +216,7 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
                     <Toggle label="Show the Pokémon I'm missing" isSelected={missing} onChange={setMissing} />
                     <Toggle
                         label="Full-art cards only"
-                        hint="Illustration rares, ultra and hyper rares fill the slots."
+                        hint="Illustration, ultra and hyper rares fill the slots."
                         isSelected={fullArt}
                         onChange={setFullArt}
                     />

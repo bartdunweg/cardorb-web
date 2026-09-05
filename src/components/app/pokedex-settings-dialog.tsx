@@ -57,7 +57,7 @@ export function PokedexSettingsDialog({ setting }: { setting: PokedexSetting }) 
                                 />
                                 <Toggle
                                     label="Full-art cards only"
-                                    hint="Illustration rares, ultra and hyper rares fill the slots; the rest stay in the collection."
+                                    hint="Illustration, ultra and hyper rares fill the slots."
                                     isSelected={fullArt}
                                     onChange={setFullArt}
                                 />
