@@ -27,12 +27,27 @@ export type PublicCardsPage = { cards: PublicCard[]; total: number; sets: number
 // the totals and the facets over the whole collection behind it. The paged route rather than the
 // whole collection: a hundred tiles need thirty kilobytes, not nine hundred. The API publishes
 // nothing personal on it (R-API-002 there), so nothing here has to be hidden.
-export async function getPublicCards(username: string, { page, q, set, rarity, sort, order }: ListQuery): Promise<PublicCardsPage> {
+export async function getPublicCards(username: string, { page, q, set, rarity, sort, order, folder }: ListQuery): Promise<PublicCardsPage> {
     const { cards, total, sets, facets } = await api<{ cards: PublicItem[]; total: number; sets: number; facets?: Facets }>(
         `/public/${encodeURIComponent(username)}/cards`,
-        { auth: false, params: { q, set, rarity, sort, order, limit: PUBLIC_PAGE_SIZE, offset: (page - 1) * PUBLIC_PAGE_SIZE } },
+        { auth: false, params: { q, set, rarity, sort, order, collection: folder, limit: PUBLIC_PAGE_SIZE, offset: (page - 1) * PUBLIC_PAGE_SIZE } },
     );
     // This route is cached for five minutes (no session, so `revalidate`), and an answer cached before
     // the API carried facets has none. Empty menus for those minutes, not a broken page.
     return { cards: cards.map(publicCardFromItem), total, sets, facets: facets ?? { sets: [], rarities: [] } };
+}
+
+/** A folder its owner shows on the profile: a chip over the list, with how many cards it holds. */
+export type PublicFolder = { id: string; name: string; kind: "manual" | "rule"; count: number };
+
+// The folders a person shows, oldest first; none when they show none. Fails soft to none: a
+// profile without its chips is a poorer page, and an API from before the route answers 404.
+export async function getPublicFolders(username: string): Promise<PublicFolder[]> {
+    try {
+        const { folders } = await api<{ folders: PublicFolder[] }>(`/public/${encodeURIComponent(username)}/folders`, { auth: false });
+        return folders;
+    } catch (err) {
+        if (err instanceof ApiError && (err.status === 404 || err.status === 503)) return [];
+        throw err;
+    }
 }

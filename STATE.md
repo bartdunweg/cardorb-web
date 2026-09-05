@@ -45,6 +45,11 @@ which also says what is already yours), Settings (avatar through the API), publi
   removed, and each opens its place in Cards or Wishlist. Copies are offered only when the card is
   one collection row; two printings are managed in Cards. New actions `setCopies` and `removeCard`
   in `cards/actions.ts`; the item DELETE needs a JSON content type, so it sends `{}`.
+- **A folder can be public.** The folder dialog has "Show on my public profile" (`isPublic`
+  on the API's folders, cardorb-api#175); a public profile lists those folders as chips over
+  the list (All cards first, each with its card count, `GET /v1/public/<username>/folders`)
+  and `?folder=<id>` narrows the list through the API's `collection` parameter. The wishlist
+  and a Pokédex "full art only" setting are asked for next.
 - **What streams in arrives; what opens follows one curve.** `arrive` (globals.css) fades what
   lands after the page is standing up 4 px into place, 200 ms on `--ease-enter`, from
   `@starting-style`, with `--arrive-delay` for a row's stagger (cards 20 ms to the 12th, stat

@@ -15,17 +15,21 @@ export function LinkButton({
     color = "primary",
     className,
     children,
+    "aria-current": ariaCurrent,
 }: {
     href: string;
-    size?: "md" | "xl";
+    size?: "sm" | "md" | "xl";
     color?: "primary" | "secondary" | "tertiary" | "link-gray";
     className?: string;
     children: ReactNode;
+    /** The one of a set of links that is the page in view, for a chip row. */
+    "aria-current"?: "page";
 }) {
     const isLinkType = color === "link-gray";
     return (
         <Link
             href={href}
+            aria-current={ariaCurrent}
             className={cx(
                 styles.common.root,
                 styles.sizes[size].root,

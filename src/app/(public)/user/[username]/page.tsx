@@ -8,9 +8,9 @@ import { PublicTopBar } from "@/components/app/public-top-bar";
 import { ShareButton } from "@/components/app/share-button";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { datapointsLine } from "@/lib/folder-datapoints";
-import { type ListSearchParams, PUBLIC_SORT_OPTIONS, isNarrowed, readPublicListQuery } from "@/lib/list-query";
+import { type ListSearchParams, PUBLIC_SORT_OPTIONS, isNarrowed, listHref, readPublicListQuery } from "@/lib/list-query";
 import { getMyProfile, getViewer } from "@/lib/profile";
-import { PUBLIC_PAGE_SIZE, getPublicCards, getPublicProfile } from "@/lib/public-profile";
+import { PUBLIC_PAGE_SIZE, getPublicCards, getPublicFolders, getPublicProfile } from "@/lib/public-profile";
 import { RouteProvider } from "@/providers/router-provider";
 
 type Params = { params: Promise<{ username: string }>; searchParams: Promise<ListSearchParams> };
@@ -41,7 +41,13 @@ export default async function PublicProfilePage({ params, searchParams }: Params
 
     const query = readPublicListQuery(await searchParams);
     const narrowed = isNarrowed(query);
-    const [{ cards, total, facets }, viewer] = await Promise.all([getPublicCards(decodeURIComponent(username), query), getViewer()]);
+    const [{ cards, total, facets }, folders, viewer] = await Promise.all([
+        getPublicCards(decodeURIComponent(username), query),
+        getPublicFolders(decodeURIComponent(username)),
+        getViewer(),
+    ]);
+    // A folder in the URL that the owner does not show: the API answered the whole list; the chips say so too.
+    const folder = folders.find((f) => f.id === query.folder) ?? null;
     // Whose page this is: the owner looking at their own gets Edit profile beside Share. The
     // profile read is the layout's cached one; a session the API refuses counts as a visitor.
     const mine = viewer
@@ -88,6 +94,30 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                         ) : null}
                     </div>
                 </div>
+
+                {folders.length > 0 ? (
+                    // The folders the owner shows, as chips that narrow the list; All cards first. A chip is a link,
+                    // so a folder is a URL that can be shared, and the row keeps its place through a search.
+                    <nav aria-label="Folders" className="flex flex-wrap gap-2">
+                        {[{ id: null as string | null, name: "All cards", count: null as number | null }, ...folders].map((f) => {
+                            const current = (folder?.id ?? null) === f.id;
+                            return (
+                                // The kit's button as a link, primary for the one in view: the same pill and colours as
+                                // every other control, in both themes.
+                                <LinkButton
+                                    key={f.id ?? "all"}
+                                    href={listHref(base, query, { folder: f.id ?? undefined, page: 1 })}
+                                    size="sm"
+                                    color={current ? "primary" : "secondary"}
+                                    aria-current={current ? "page" : undefined}
+                                >
+                                    {f.name}
+                                    {f.count != null ? <span className="ml-1.5 tabular-nums opacity-70">{f.count.toLocaleString("en-US")}</span> : null}
+                                </LinkButton>
+                            );
+                        })}
+                    </nav>
+                ) : null}
 
                 <FolderBody
                     readOnly

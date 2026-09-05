@@ -23,7 +23,7 @@ export function CollectionDetailActions({
     folder,
     facets,
 }: {
-    folder: { id: string; name: string; kind: FolderKind; rule: FolderRule | null; pokedex: PokedexSetting | null };
+    folder: { id: string; name: string; kind: FolderKind; rule: FolderRule | null; pokedex: PokedexSetting | null; isPublic: boolean };
     facets: Facets;
 }) {
     const router = useRouter();
