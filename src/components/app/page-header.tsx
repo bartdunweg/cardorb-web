@@ -59,14 +59,15 @@ export function PageHeader({
             <div
                 className={cx(
                     "sticky top-0 z-30 -mx-4 -mt-4 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-4 sm:-mx-6 sm:-mt-8 lg:hidden",
-                    // With Back the bar is as tall as the button plus 16 px above and below it, the page's margin;
-                    // without one it is the 48 px the title collapses into.
-                    back ? "py-4" : "h-12",
+                    // With Back the bar is the button with the page's 16 px above it; the column's own gap
+                    // (24 px) less 8 puts the title 16 px under the button. Without one it is the 48 px the
+                    // title collapses into.
+                    back ? "pt-4" : "h-12",
                     // The glass comes with the collapse (or with Back); over the uncollapsed title it would only blur it.
                     (collapsed || back) && "glass",
                     // Without Back the bar has nothing to show until the title collapses into it, so it lies over
                     // the first 48 px and lets taps through: the page's first content starts 16 px from the top.
-                    back ? "mb-2" : "-mb-12",
+                    back ? "-mb-2" : "-mb-12",
                     !back && !collapsed && "pointer-events-none",
                     // Where content meets the bar: a fade from the page surface to nothing under the bar's edge,
                     // not a rule. It appears with the collapse and goes when the title is back.
@@ -90,8 +91,9 @@ export function PageHeader({
                 <div />
             </div>
 
-            {/* Above the title, 8 px from the top: the search on Home sits higher than a page's first content. */}
-            {above ? <div className="-mt-2 mb-6">{above}</div> : null}
+            {/* Above the title, 8 px from the top: the search on Home sits higher than a page's first content.
+                The column's gap less 8 leaves 16 px between it and the title, as under Back. */}
+            {above ? <div className="-mt-2 -mb-2">{above}</div> : null}
 
             {/* Actions sit beside the title when they fit (a plus on a phone) and wrap under it when they do not. */}
             <div className="flex flex-row flex-wrap items-start justify-between gap-3">

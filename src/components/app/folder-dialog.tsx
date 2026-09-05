@@ -13,7 +13,7 @@ import { Input } from "@/components/base/input/input";
 import { NativeSelect } from "@/components/base/select/select-native";
 import { Toggle } from "@/components/base/toggle/toggle";
 import type { Facets } from "@/lib/cards";
-import { type FolderKind, type FolderRule, type PokedexSetting, isFullArt, ruleSummary, withFullArt } from "@/lib/folder-rule";
+import { DEX_KINDS, type DexKind, type FolderKind, type FolderRule, type PokedexSetting, dexKindOf, ruleSummary, withDexKind } from "@/lib/folder-rule";
 
 type FolderShape = { id: string; name: string; kind: FolderKind; rule: FolderRule | null; pokedex: PokedexSetting | null; isPublic: boolean };
 type FormProps = {
@@ -55,7 +55,7 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
     const [asPokedex, setAsPokedex] = useState(!!folder?.pokedex);
     const [missing, setMissing] = useState(folder?.pokedex?.missing ?? true);
     const [dexShown, setDexShown] = useState(dexDraft(folder?.pokedex?.dex));
-    const [fullArt, setFullArt] = useState(folder?.pokedex ? isFullArt(folder.pokedex) : false);
+    const [dexKind, setDexKind] = useState<DexKind>(folder?.pokedex ? dexKindOf(folder.pokedex) : "all");
     const [isPublic, setIsPublic] = useState(folder?.isPublic ?? false);
     const [sets, setSets] = useState<string[]>(folder?.rule?.sets ?? []);
     const [rarities, setRarities] = useState<string[]>(folder?.rule?.rarities ?? []);
@@ -80,7 +80,7 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
     const pokedex = (): PokedexSetting | null => {
         if (!asPokedex) return null;
         const range = dexFromDraft(dexShown);
-        return withFullArt({ missing, ...(range ? { dex: range } : {}) }, fullArt);
+        return withDexKind({ missing, ...(range ? { dex: range } : {}) }, dexKind);
     };
 
     const save = async (close: () => void) => {
@@ -214,7 +214,13 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
                 <>
                     <DexRangeFields label="Pokédex range" anyLabel="Every Pokémon" dex={dexShown} onChange={setDexShown} />
                     <Toggle label="Show the Pokémon I'm missing" isSelected={missing} onChange={setMissing} />
-                    <Toggle label="Full-art cards only" hint="Illustration, ultra and hyper rares fill the slots." isSelected={fullArt} onChange={setFullArt} />
+                    <NativeSelect
+                        label="Cards that count"
+                        hint={DEX_KINDS.find((k) => k.id === dexKind)?.hint}
+                        value={dexKind}
+                        onChange={(event) => setDexKind(event.target.value as DexKind)}
+                        options={DEX_KINDS.map((k) => ({ label: k.label, value: k.id }))}
+                    />
                 </>
             ) : null}
             <Toggle
