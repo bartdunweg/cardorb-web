@@ -1,0 +1,227 @@
+"use client";
+
+import { type ReactNode, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Heading as AriaHeading } from "react-aria-components";
+import { createCollection, updateCollection } from "@/app/(app)/dashboard/collections/actions";
+import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
+import { BadgeWithButton } from "@/components/base/badges/badges";
+import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
+import { Button } from "@/components/base/buttons/button";
+import { Input } from "@/components/base/input/input";
+import { NativeSelect } from "@/components/base/select/select-native";
+import type { Facets } from "@/lib/cards";
+import { type FolderKind, type FolderRule, GENERATIONS, NATIONAL_DEX_MAX, ruleSummary } from "@/lib/folder-rule";
+
+type FolderShape = { id: string; name: string; kind: FolderKind; rule: FolderRule | null };
+
+// One dialog for a folder's name and its rule: New folder (by hand or by rule) and, on the
+// folder's page, Rename or Edit rule. A folder keeps its kind, so edit mode never shows the
+// choice. The set and rarity pickers are a select that appends chips: the kit has no multi-
+// select, and a list of chips reads what a rule says better than a scrolling box (R-UI-001).
+export function FolderDialog({ mode, folder, facets, children }: { mode: "create" | "edit"; folder?: FolderShape; facets: Facets; children: ReactNode }) {
+    const router = useRouter();
+    const [name, setName] = useState(folder?.name ?? "");
+    const [kind, setKind] = useState<FolderKind>(folder?.kind ?? "manual");
+    const [dex, setDex] = useState<{ from: string; to: string }>({
+        from: folder?.rule?.dex ? String(folder.rule.dex.from) : "",
+        to: folder?.rule?.dex ? String(folder.rule.dex.to) : "",
+    });
+    const [sets, setSets] = useState<string[]>(folder?.rule?.sets ?? []);
+    const [rarities, setRarities] = useState<string[]>(folder?.rule?.rarities ?? []);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const rule = (): FolderRule | undefined => {
+        if (kind !== "rule") return undefined;
+        const out: FolderRule = {};
+        const from = Number(dex.from);
+        const to = Number(dex.to);
+        if (dex.from || dex.to) out.dex = { from: dex.from ? from : 1, to: dex.to ? to : NATIONAL_DEX_MAX };
+        if (sets.length) out.sets = sets;
+        if (rarities.length) out.rarities = rarities;
+        return out;
+    };
+    const preview = rule();
+    const generation = GENERATIONS.find((g) => String(g.from) === dex.from && String(g.to) === dex.to);
+    const generationValue = !dex.from && !dex.to ? "" : (generation?.label ?? "custom");
+
+    const save = async (close: () => void) => {
+        setSaving(true);
+        setError(null);
+        const res =
+            mode === "create" ? await createCollection(name, rule()) : await updateCollection(folder!.id, kind === "rule" ? { name, rule: rule() } : { name });
+        setSaving(false);
+        if (!res.ok) {
+            setError(res.error);
+            return;
+        }
+        close();
+        // A new rule folder is worth seeing filled; a renamed one is where it was.
+        if (mode === "create" && kind === "rule" && res.id) router.push(`/dashboard/collections/${res.id}`);
+        else router.refresh();
+    };
+
+    const title = mode === "create" ? "New folder" : kind === "rule" ? "Edit rule" : "Rename folder";
+    const setOptions = facets.sets.filter((s) => !sets.includes(s.name));
+    const rarityOptions = facets.rarities.filter((r) => !rarities.includes(r));
+    const titleOf = (name: string) => facets.sets.find((s) => s.name === name)?.title ?? name;
+
+    return (
+        <DialogTrigger>
+            {children}
+            <ModalOverlay>
+                <Modal className="max-w-md">
+                    <Dialog>
+                        {({ close }) => (
+                            <div className="flex max-h-[85dvh] w-full max-w-md flex-col gap-4 overflow-y-auto rounded-2xl glass-thick p-6 shadow-xl">
+                                <AriaHeading slot="title" className="text-lg font-semibold text-primary">
+                                    {title}
+                                </AriaHeading>
+                                <Input label="Name" value={name} onChange={setName} placeholder={kind === "rule" ? "e.g. Kanto" : "e.g. Charizards"} />
+
+                                {mode === "create" ? (
+                                    <div className="flex flex-col gap-1.5">
+                                        <span className="text-sm font-medium text-secondary">Filled</span>
+                                        <ButtonGroup
+                                            aria-label="How the folder fills"
+                                            selectionMode="single"
+                                            disallowEmptySelection
+                                            selectedKeys={new Set([kind])}
+                                            onSelectionChange={(keys) => {
+                                                const key = [...keys][0];
+                                                if (key === "manual" || key === "rule") setKind(key);
+                                            }}
+                                        >
+                                            <ButtonGroupItem id="manual">By hand</ButtonGroupItem>
+                                            <ButtonGroupItem id="rule">By rule</ButtonGroupItem>
+                                        </ButtonGroup>
+                                    </div>
+                                ) : null}
+
+                                {kind === "rule" ? (
+                                    <>
+                                        <div className="flex flex-col gap-1.5">
+                                            <NativeSelect
+                                                label="Pokédex"
+                                                value={generationValue}
+                                                onChange={(event) => {
+                                                    const v = event.target.value;
+                                                    const gen = GENERATIONS.find((g) => g.label === v);
+                                                    if (gen) setDex({ from: String(gen.from), to: String(gen.to) });
+                                                    else if (v === "") setDex({ from: "", to: "" });
+                                                }}
+                                                options={[
+                                                    { label: "Any Pokémon", value: "" },
+                                                    ...GENERATIONS.map((g) => ({ label: `${g.label} (${g.from}–${g.to})`, value: g.label })),
+                                                    { label: "Custom range", value: "custom" },
+                                                ]}
+                                            />
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    aria-label="From dex number"
+                                                    type="number"
+                                                    placeholder="From"
+                                                    value={dex.from}
+                                                    onChange={(v) => setDex((d) => ({ ...d, from: v }))}
+                                                />
+                                                <Input
+                                                    aria-label="To dex number"
+                                                    type="number"
+                                                    placeholder="To"
+                                                    value={dex.to}
+                                                    onChange={(v) => setDex((d) => ({ ...d, to: v }))}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-col gap-1.5">
+                                            <NativeSelect
+                                                label="Sets"
+                                                value=""
+                                                onChange={(event) => {
+                                                    if (event.target.value) setSets((s) => [...s, event.target.value]);
+                                                }}
+                                                options={[
+                                                    { label: sets.length ? "Add another set" : "Any set", value: "" },
+                                                    ...setOptions.map((s) => ({ label: s.title, value: s.name })),
+                                                ]}
+                                            />
+                                            {sets.length ? (
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {sets.map((s) => (
+                                                        <BadgeWithButton
+                                                            key={s}
+                                                            size="md"
+                                                            color="gray"
+                                                            type="pill-color"
+                                                            buttonLabel={`Remove ${titleOf(s)}`}
+                                                            onButtonClick={() => setSets((all) => all.filter((x) => x !== s))}
+                                                        >
+                                                            {titleOf(s)}
+                                                        </BadgeWithButton>
+                                                    ))}
+                                                </div>
+                                            ) : null}
+                                        </div>
+
+                                        <div className="flex flex-col gap-1.5">
+                                            <NativeSelect
+                                                label="Rarities"
+                                                value=""
+                                                onChange={(event) => {
+                                                    if (event.target.value) setRarities((r) => [...r, event.target.value]);
+                                                }}
+                                                options={[
+                                                    { label: rarities.length ? "Add another rarity" : "Any rarity", value: "" },
+                                                    ...rarityOptions.map((r) => ({ label: r, value: r })),
+                                                ]}
+                                            />
+                                            {rarities.length ? (
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {rarities.map((r) => (
+                                                        <BadgeWithButton
+                                                            key={r}
+                                                            size="md"
+                                                            color="gray"
+                                                            type="pill-color"
+                                                            buttonLabel={`Remove ${r}`}
+                                                            onButtonClick={() => setRarities((all) => all.filter((x) => x !== r))}
+                                                        >
+                                                            {r}
+                                                        </BadgeWithButton>
+                                                    ))}
+                                                </div>
+                                            ) : null}
+                                        </div>
+
+                                        <p className="text-sm text-tertiary" aria-live="polite">
+                                            {preview && (preview.dex || preview.sets || preview.rarities)
+                                                ? `Shows ${ruleSummary(preview, facets)}.`
+                                                : "Add a Pokédex range, a set or a rarity."}{" "}
+                                            Owned cards only.
+                                        </p>
+                                    </>
+                                ) : null}
+
+                                {error ? (
+                                    <p role="alert" className="text-sm text-error-primary">
+                                        {error}
+                                    </p>
+                                ) : null}
+                                <div className="flex justify-end gap-2">
+                                    <Button color="secondary" onClick={close}>
+                                        Cancel
+                                    </Button>
+                                    <Button onClick={() => save(close)} isLoading={saving}>
+                                        {mode === "create" ? "Create" : "Save"}
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </Dialog>
+                </Modal>
+            </ModalOverlay>
+        </DialogTrigger>
+    );
+}

@@ -7,6 +7,9 @@ export type { Card, PublicCard } from "@/lib/api-shapes";
 /** What a filter menu offers: the sets you hold a card of, in set order, and the rarities, A to Z. */
 export type Facets = { sets: { name: string; title: string }[]; rarities: string[] };
 
+/** The sets and rarities you hold a card of, for a rule's fields. Five minutes per person. */
+export const getFacets = (): Promise<Facets> => perUser("facets", async () => (await getMyCards({ limit: 1 })).facets);
+
 // One page of the signed-in person's cards, from the API (R-DATA-003). `wishlist` picks the
 // wishlist (`owned=false`) over the collection; the API sorts by set, then number.
 export async function getMyCards({

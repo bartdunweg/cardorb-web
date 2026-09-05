@@ -3,6 +3,7 @@ import {
     type CatalogueSet,
     absoluteImage,
     cardFromItem,
+    folderFromApi,
     pokemonCardFromBrowse,
     pokemonCardFromSetCard,
     priceForCopy,
@@ -231,5 +232,15 @@ describe("pokemonCardFromSetCard", () => {
             itemIds: [],
         });
         expect(card).toMatchObject({ id: "sv1-1", name: "Sprigatito", set: "Scarlet & Violet", number: "1", rarity: null, types: null, owned: false });
+    });
+});
+
+describe("folderFromApi", () => {
+    it("reads a folder from an API that knows no rules as one filled by hand", () => {
+        expect(folderFromApi({ id: "f", name: "Kanto", createdAt: "2026-09-05", count: 3 })).toMatchObject({ kind: "manual", rule: null });
+    });
+    it("keeps a rule and its kind", () => {
+        const rule = { dex: { from: 1, to: 151 } };
+        expect(folderFromApi({ id: "f", name: "Kanto", createdAt: "2026-09-05", count: 3, rule })).toMatchObject({ kind: "rule", rule });
     });
 });
