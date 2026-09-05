@@ -111,3 +111,16 @@ export async function updatePokedexSetting(setting: PokedexSetting | null): Prom
     await forgetMine();
     return { ok: true };
 }
+
+// The wishlist's one setting, from the wishlist page: whether it shows on the public profile.
+export async function updateWishlistPublic(input: unknown): Promise<ActionResult> {
+    const parsed = z.boolean().safeParse(input);
+    if (!parsed.success) return { ok: false, error: "Something went wrong. Try again." };
+    try {
+        await api("/profile", { method: "PATCH", body: { wishlistPublic: parsed.data } });
+    } catch (err) {
+        return failed(err);
+    }
+    await forgetMine();
+    return { ok: true };
+}

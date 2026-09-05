@@ -403,7 +403,8 @@
        neutral-50 could not be told from white on a phone), so the surfaces on it (tiles, inputs,
        the chart) read as white things lying on it. In dark the page is the
        darkest layer, the same as bg-primary; a lighter page there turns the surfaces into holes. */
-    --color-bg-page: var(--color-neutral-100);
+    /* Between the two greys: 100 reads as white beside a white tile, 200 is a wall. */
+    --color-bg-page: color-mix(in oklab, var(--color-neutral-100), var(--color-neutral-200));
     /* What a flat tile (a card in a grid) turns into under the pointer: a surface on the page. */
     --color-bg-page-raised: var(--color-bg-primary);
     --color-bg-quaternary: var(--color-neutral-200);

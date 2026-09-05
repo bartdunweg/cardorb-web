@@ -11,13 +11,13 @@ type Account = { name: string; email: string; avatarUrl: string | null };
 
 const tabs = [
     { label: "Home", href: "/dashboard", icon: HomeLine, match: (p: string) => p === "/dashboard" },
+    { label: "Browse", href: "/dashboard/sets", icon: BookOpen01, match: (p: string) => p.startsWith("/dashboard/sets") },
     {
         label: "Folders",
         href: "/dashboard/collections",
         icon: Folder,
         match: (p: string) => ["/dashboard/collections", "/dashboard/cards", "/dashboard/favorites", "/dashboard/pokedex"].some((h) => p.startsWith(h)),
     },
-    { label: "Browse", href: "/dashboard/sets", icon: BookOpen01, match: (p: string) => p.startsWith("/dashboard/sets") },
     { label: "Wishlist", href: "/dashboard/wishlist", icon: Heart, match: (p: string) => p.startsWith("/dashboard/wishlist") },
 ];
 
