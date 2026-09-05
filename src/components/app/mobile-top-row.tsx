@@ -12,10 +12,10 @@ export async function YouLink() {
         <Link
             href="/dashboard/you"
             aria-label={`You, ${account.name}`}
-            // Beside a title and a subtitle: as tall as the two lines together, and centred on them.
+            // Beside a title and a subtitle: the size of every other button beside a title (40 px), centred on the two lines.
             className="shrink-0 pressable self-center rounded-full outline-offset-2 outline-focus-ring focus-visible:outline-2 lg:hidden"
         >
-            <Avatar size="lg" src={account.avatarUrl ?? undefined} alt="" />
+            <Avatar size="md" src={account.avatarUrl ?? undefined} alt="" />
         </Link>
     );
 }
