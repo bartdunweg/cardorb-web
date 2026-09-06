@@ -7,11 +7,13 @@ import { type CardHit, searchMyCards } from "@/app/(app)/dashboard/cards/actions
 import { listSetsShelf } from "@/app/(app)/dashboard/sets/actions";
 import { CardDetailSlideout } from "@/components/app/card-detail-slideout";
 import { CardImage } from "@/components/app/card-image";
+import { LanguageChips } from "@/components/app/language-chips";
 import { SetsShelfList } from "@/components/app/sets-shelf-list";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
+import type { BrowseLanguage } from "@/lib/languages";
 import type { SetSeries } from "@/lib/sets";
 import { cx } from "@/utils/cx";
 
@@ -50,16 +52,18 @@ function CollectionSearch({ onClose }: { onClose: () => void }) {
     const [query, setQuery] = useState("");
     const [selected, setSelected] = useState<CardHit | null>(null);
     // Every set, under an empty search: the sheet is also the way into Browse on a phone.
-    const [shelf, setShelf] = useState<{ series: SetSeries[]; unavailable: boolean } | null>(null);
+    const [language, setLanguage] = useState<BrowseLanguage>("en");
+    const [shelf, setShelf] = useState<{ of: BrowseLanguage; series: SetSeries[]; unavailable: boolean } | null>(null);
     useEffect(() => {
         let live = true;
-        listSetsShelf().then((r) => {
-            if (live) setShelf(r);
+        listSetsShelf(language).then((r) => {
+            if (live) setShelf({ of: language, ...r });
         });
         return () => {
             live = false;
         };
-    }, []);
+    }, [language]);
+    const shown = shelf?.of === language ? shelf : null;
     const field = useRef<HTMLInputElement>(null);
     // The sheet exists to type into: the tap on Search lands the caret in the field.
     useEffect(() => field.current?.focus(), []);
@@ -89,11 +93,14 @@ function CollectionSearch({ onClose }: { onClose: () => void }) {
                 </output>
                 {/* Nothing typed: the shelf of sets, series by series, so the sheet is Browse as well as search. */}
                 {!query.trim() ? (
-                    shelf === null ? null : shelf.unavailable ? (
-                        <p className="px-1 py-6 text-center text-sm text-tertiary">The list of sets is not reachable right now.</p>
-                    ) : (
-                        <SetsShelfList series={shelf.series} onNavigate={onClose} />
-                    )
+                    <>
+                        <LanguageChips value={language} onChange={setLanguage} className="px-1 pb-2" />
+                        {shown === null ? null : shown.unavailable ? (
+                            <p className="px-1 py-6 text-center text-sm text-tertiary">The list of sets is not reachable right now.</p>
+                        ) : (
+                            <SetsShelfList series={shown.series} language={language} onNavigate={onClose} />
+                        )}
+                    </>
                 ) : null}
                 {!loading &&
                     results.map((card) => (

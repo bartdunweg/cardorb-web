@@ -4,6 +4,7 @@ import { CardImage } from "@/components/app/card-image";
 import { PageHeader } from "@/components/app/page-header";
 import { SetCardTile } from "@/components/app/set-card-tile";
 import { ProgressBarBase } from "@/components/base/progress-indicators/progress-indicators";
+import { isBrowseLanguage } from "@/lib/languages";
 import { CatalogueUnavailable, getSet } from "@/lib/sets";
 
 const n = (value: number) => value.toLocaleString("en-US");
@@ -16,11 +17,13 @@ function releaseLabel(date: string | null): string | null {
     return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 }
 
-export default async function SetPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function SetPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ language?: string }> }) {
     const { id } = await params;
+    const { language: raw } = await searchParams;
+    const language = isBrowseLanguage(raw) ? raw : "en";
     let set;
     try {
-        set = await getSet(id);
+        set = await getSet(id, language);
     } catch (err) {
         if (!(err instanceof CatalogueUnavailable)) throw err;
         return (
@@ -41,7 +44,7 @@ export default async function SetPage({ params }: { params: Promise<{ id: string
             <PageHeader
                 title={set.name}
                 subtitle={subtitle}
-                back={{ href: "/dashboard/sets", label: "Browse" }}
+                back={{ href: language === "en" ? "/dashboard/sets" : `/dashboard/sets?language=${language}`, label: "Browse" }}
                 // The set's logo over its name, as it is printed on the pack. Decoration: the h1 says which set.
                 above={
                     set.logoUrl ? (
@@ -58,7 +61,7 @@ export default async function SetPage({ params }: { params: Promise<{ id: string
                 {/* The first two rows arrive 20 ms apart, the rest together; the same wave as a folder's cards. */}
                 {set.cards.map((card, i) => (
                     <li key={card.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i, 16) * 20}ms` } as React.CSSProperties}>
-                        <SetCardTile card={card} />
+                        <SetCardTile card={card} readOnly={language !== "en"} />
                     </li>
                 ))}
             </ul>

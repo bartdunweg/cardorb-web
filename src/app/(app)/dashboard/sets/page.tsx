@@ -1,33 +1,39 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { AppEmptyState } from "@/components/app/app-empty-state";
+import { BrowseLanguage } from "@/components/app/browse-language";
 import { CardImage } from "@/components/app/card-image";
 import { MobileTopRow } from "@/components/app/mobile-top-row";
 import { PageHeader } from "@/components/app/page-header";
 import { SetsOutline } from "@/components/app/skeletons";
 import { ProgressBarBase } from "@/components/base/progress-indicators/progress-indicators";
+import { type BrowseLanguage as BrowseLanguageCode, isBrowseLanguage } from "@/lib/languages";
 import { CatalogueUnavailable, type SetSummary, getSets } from "@/lib/sets";
 import { cx } from "@/utils/cx";
 
 const n = (value: number) => value.toLocaleString("en-US");
 
-export default function SetsPage() {
+export default async function SetsPage({ searchParams }: { searchParams: Promise<{ language?: string }> }) {
+    const { language: raw } = await searchParams;
+    const language: BrowseLanguageCode = isBrowseLanguage(raw) ? raw : "en";
     return (
         <div className="flex flex-col gap-6">
             {/* The title alone: how far the shelf is comes per set, on its tile, not as one number over all of them. */}
             <PageHeader title="Browse" above={<MobileTopRow />} titleOnPhone={false} />
             {/* The shelf is not awaited: the title and the search go out first, the sets when the catalogue answers. */}
-            <Suspense fallback={<SetsOutline />}>
-                <Shelf />
+            {/* Which catalogue: English, or one of TCGdex's own for Japanese, Chinese and Korean cards. */}
+            <BrowseLanguage value={language} />
+            <Suspense key={language} fallback={<SetsOutline />}>
+                <Shelf language={language} />
             </Suspense>
         </div>
     );
 }
 
-async function Shelf() {
+async function Shelf({ language }: { language: BrowseLanguageCode }) {
     let shelf;
     try {
-        shelf = await getSets();
+        shelf = await getSets(language);
     } catch (err) {
         if (!(err instanceof CatalogueUnavailable)) throw err;
         return (
@@ -51,7 +57,7 @@ async function Shelf() {
                         {/* The first row of each series arrives 30 ms apart; the rest of it together. */}
                         {group.sets.map((set, i) => (
                             <li key={set.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i, 3) * 30}ms` } as React.CSSProperties}>
-                                <SetTile set={set} />
+                                <SetTile set={set} language={language} />
                             </li>
                         ))}
                     </ul>
@@ -66,11 +72,11 @@ const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 // One set on the shelf. The whole tile is the link; the bar repeats the count, which is the
 // accessible name, so a screen reader hears "12 of 207" once. A set with nothing in it stays on
 // the shelf but dimmed, like an empty Pokédex slot: it is the part still to collect.
-function SetTile({ set }: { set: SetSummary }) {
+function SetTile({ set, language }: { set: SetSummary; language: BrowseLanguageCode }) {
     const empty = set.owned === 0;
     return (
         <Link
-            href={`/dashboard/sets/${encodeURIComponent(set.id)}`}
+            href={`/dashboard/sets/${encodeURIComponent(set.id)}${language === "en" ? "" : `?language=${language}`}`}
             className={cx(
                 "flex pressable items-center gap-4 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary outline-focus-ring transition-[color,background-color,box-shadow] ring-inset hover:bg-secondary focus-visible:outline-2",
                 empty && "opacity-70 hover:opacity-100",
