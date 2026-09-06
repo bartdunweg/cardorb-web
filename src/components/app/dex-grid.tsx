@@ -5,7 +5,7 @@ import Link from "next/link";
 import { CardImage } from "@/components/app/card-image";
 import { GRID_COLUMNS } from "@/components/app/cards-grid";
 import { DexSlider } from "@/components/app/dex-slider";
-import { DexSkeleton } from "@/components/app/skeletons";
+import { CardsSkeleton } from "@/components/app/skeletons";
 import { ViewMenu } from "@/components/app/view-menu";
 import type { CardsSize } from "@/lib/cards-view";
 import type { DexList, NamedDexSlot } from "@/lib/dex-groups";
@@ -123,7 +123,7 @@ export function DexView({
                 <div className="contents">{toolbar}</div>
                 <ViewMenu view="grid" size={size} onView={() => {}} onSize={setSize} layouts={false} />
             </div>
-            <Suspense fallback={<DexSkeleton />}>
+            <Suspense fallback={<CardsSkeleton />}>
                 <DexSlots dex={dex} size={size} narrowed={narrowed} noHits={noHits} empty={empty} linked={linked} />
             </Suspense>
         </div>
