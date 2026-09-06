@@ -136,3 +136,19 @@ export async function setFavorite(cardId: string, isFavorite: boolean): Promise<
     await forgetMine();
     return { ok: true };
 }
+
+/** One reading of a card's price, from GET /v1/cards/{tcgId}/prices. Euros; null where Cardmarket published nothing. */
+export type PricePoint = { date: string; market: number | null; holo: number | null };
+
+// A card's price day by day over the last ninety days, for the sheet. Empty, not an error, for a
+// card with no readings yet; and empty when the API cannot answer, since the sheet is open for
+// the card, not for its line.
+export async function cardPriceHistory(tcgId: string): Promise<PricePoint[]> {
+    try {
+        const { points } = await api<{ points: PricePoint[] }>(`/cards/${encodeURIComponent(tcgId)}/prices`);
+        return points;
+    } catch (err) {
+        console.error("Price history unavailable:", err instanceof Error ? err.message : err);
+        return [];
+    }
+}
