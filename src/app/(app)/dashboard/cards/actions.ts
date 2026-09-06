@@ -271,3 +271,16 @@ export async function cardFacts(tcgId: string): Promise<CardFacts | null> {
         return null;
     }
 }
+
+// The condition of one copy, in Cardmarket's words; null clears it.
+export async function setCondition(cardId: string, condition: string | null): Promise<Result> {
+    const parsed = z.object({ cardId: z.string().uuid(), condition: z.string().trim().min(1).max(40).nullable() }).safeParse({ cardId, condition });
+    if (!parsed.success) return { ok: false, error: "Invalid input." };
+    try {
+        await api(`/collection/items/${parsed.data.cardId}`, { method: "PATCH", body: { condition: parsed.data.condition } });
+    } catch (err) {
+        return failed(err);
+    }
+    await forgetMine();
+    return { ok: true };
+}
