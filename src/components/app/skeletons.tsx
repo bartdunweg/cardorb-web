@@ -92,11 +92,12 @@ export function ListSkeleton({
     );
 }
 
-/** Home: the title, the four stat tiles in their grid, and the chart's box. */
+/** Home: the title, the value section's outline, then the four stat tiles in their grid. */
 export function HomeSkeleton() {
     return (
         <SkeletonFrame>
             <PageHeader title="Home" subtitle="An overview of your collection." />
+            <ValueHeroOutline />
             <Outline className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4">
                 {Array.from({ length: 4 }, (_, i) => (
                     <div key={i} className="rounded-xl bg-primary shadow-lift-xs ring-1 ring-primary ring-inset">
@@ -109,16 +110,36 @@ export function HomeSkeleton() {
                     </div>
                 ))}
             </Outline>
-            <section className="flex flex-col gap-4 rounded-xl bg-primary px-4 py-5 shadow-lift-xs ring-1 ring-primary ring-inset md:px-5">
-                <div className="flex flex-col gap-1">
-                    <h2 className="text-md font-semibold text-primary">Collection value over time</h2>
-                    <p className="text-xs text-quaternary">One reading a night, at Cardmarket&apos;s prices of that day.</p>
-                </div>
-                <Outline>
-                    <Block className="h-56 w-full" />
-                </Outline>
-            </section>
         </SkeletonFrame>
+    );
+}
+
+/** The value section before its numbers: the label with its real words, then the number, the change line, the chart's box and the periods. */
+export function ValueHeroOutline() {
+    return (
+        <section className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1">
+                <h2 className="text-sm font-semibold text-tertiary">Collection value</h2>
+                <Outline className="flex flex-col gap-1">
+                    <p className="text-display-md sm:text-display-lg">
+                        <Line className="h-[0.8em] w-48" />
+                    </p>
+                    <p className="text-sm">
+                        <Line className="h-4 w-40" />
+                    </p>
+                </Outline>
+            </div>
+            <Outline>
+                <Block className="h-[200px] w-full" />
+            </Outline>
+            <div className="flex justify-center gap-1" aria-hidden="true">
+                {["7D", "1M", "3M", "6M", "Max"].map((p) => (
+                    <span key={p} className="rounded-full px-3 py-1.5 text-sm font-semibold text-tertiary">
+                        {p}
+                    </span>
+                ))}
+            </div>
+        </section>
     );
 }
 

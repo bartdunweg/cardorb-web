@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { formatPrice } from "@/lib/format";
 import { type Frame, areaPath, linePath, nearestIndex, niceTicks, pointsFor } from "@/lib/value-chart-math";
 import type { ValueSnapshot } from "@/lib/value-history";
+import { cx } from "@/utils/cx";
 
 /**
  * What the collection has been worth, night by night: one line, no legend, the title names it.
@@ -19,15 +20,24 @@ import type { ValueSnapshot } from "@/lib/value-history";
  */
 
 const HEIGHT = 200;
-const FRAME: Omit<Frame, "width"> = { height: HEIGHT, top: 12, right: 12, bottom: 28, left: 56 };
+// No axis: the number above the chart says the scale, the tooltip says any point, and the table
+// says them all. The line runs edge to edge, the three dates sit under it.
+const FRAME: Omit<Frame, "width"> = { height: HEIGHT, top: 12, right: 0, bottom: 28, left: 0 };
 
 const day = new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short" });
 const dayYear = new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short", year: "numeric" });
-const euroAxis = new Intl.NumberFormat("en-US", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
-
 const dateOf = (s: ValueSnapshot) => new Date(`${s.date}T00:00:00`);
 
-export function ValueChart({ snapshots }: { snapshots: ValueSnapshot[] }) {
+export function ValueChart({
+    snapshots,
+    label = "Collection value over time",
+    children,
+}: {
+    snapshots: ValueSnapshot[];
+    label?: string;
+    /** Under the chart, above the table: the period buttons. */
+    children?: ReactNode;
+}) {
     const container = useRef<HTMLDivElement>(null);
     const [width, setWidth] = useState(0);
     const [active, setActive] = useState<number | null>(null);
@@ -45,9 +55,9 @@ export function ValueChart({ snapshots }: { snapshots: ValueSnapshot[] }) {
 
     if (snapshots.length < 2) {
         return (
-            <p className="text-sm text-tertiary">
+            <p className="flex items-center text-sm text-tertiary" style={{ minHeight: HEIGHT }}>
                 {snapshots.length === 0
-                    ? "The first reading is taken tonight; the line starts once there are two."
+                    ? "No readings in this period yet; the line starts once there are two."
                     : `One reading so far, ${formatPrice(snapshots[0].value)} on ${dayYear.format(dateOf(snapshots[0]))}. The line starts tomorrow.`}
             </p>
         );
@@ -63,6 +73,11 @@ export function ValueChart({ snapshots }: { snapshots: ValueSnapshot[] }) {
     const first = snapshots[0];
     const last = snapshots[snapshots.length - 1];
     const change = last.value - first.value;
+    // The line takes the period's direction: up reads green, down red, flat the brand colour.
+    const tone = change > 0 ? "success" : change < 0 ? "error" : "brand";
+    const fillTone = { success: "fill-fg-success-primary", error: "fill-fg-error-primary", brand: "fill-fg-brand-primary" }[tone];
+    // The line's class sets the stroke only: a fill class would win over its fill="none".
+    const strokeTone = { success: "stroke-fg-success-primary", error: "stroke-fg-error-primary", brand: "stroke-fg-brand-primary" }[tone];
     const summary = `${formatPrice(first.value)} on ${dayYear.format(dateOf(first))} to ${formatPrice(last.value)} on ${dayYear.format(dateOf(last))}, ${
         change === 0 ? "unchanged" : `${change > 0 ? "up" : "down"} ${formatPrice(Math.abs(change))}`
     }.`;
@@ -95,7 +110,7 @@ export function ValueChart({ snapshots }: { snapshots: ValueSnapshot[] }) {
     return (
         <figure className="flex flex-col gap-3" aria-labelledby={titleId} aria-describedby={descId}>
             <figcaption id={titleId} className="sr-only">
-                Collection value over time
+                {label}
             </figcaption>
             <p id={descId} className="sr-only">
                 {summary}
@@ -117,19 +132,9 @@ export function ValueChart({ snapshots }: { snapshots: ValueSnapshot[] }) {
                         onKeyDown={onKeyDown}
                         onBlur={() => setActive(null)}
                     >
-                        <title id={svgTitleId}>Collection value over time. Use the arrow keys to step through the readings.</title>
-                        {/* Recessive grid: one hairline per tick, the label to its left. */}
-                        {ticks.map((t) => {
-                            const y = frame.top + (baseline - frame.top) * (1 - (t - yMin) / (yMax - yMin));
-                            return (
-                                <g key={t}>
-                                    <line x1={frame.left} x2={width - frame.right} y1={y} y2={y} className="stroke-border-secondary" strokeWidth={1} />
-                                    <text x={frame.left - 8} y={y + 3.5} textAnchor="end" className="fill-text-quaternary text-2xs tabular-nums">
-                                        {euroAxis.format(t)}
-                                    </text>
-                                </g>
-                            );
-                        })}
+                        <title id={svgTitleId}>{label}. Use the arrow keys to step through the readings.</title>
+                        {/* One hairline where the line lands: the baseline the dates hang from. */}
+                        <line x1={0} x2={width} y1={baseline} y2={baseline} className="stroke-border-secondary" strokeWidth={1} />
 
                         {snapshots.map((s, i) =>
                             labelled.has(i) ? (
@@ -145,20 +150,13 @@ export function ValueChart({ snapshots }: { snapshots: ValueSnapshot[] }) {
                             ) : null,
                         )}
 
-                        <path d={areaPath(points, baseline)} className="fill-fg-brand-primary opacity-10" />
-                        <path
-                            d={linePath(points)}
-                            className="stroke-fg-brand-primary"
-                            strokeWidth={2}
-                            fill="none"
-                            strokeLinejoin="round"
-                            strokeLinecap="round"
-                        />
+                        <path d={areaPath(points, baseline)} className={cx(fillTone, "opacity-15")} />
+                        <path d={linePath(points)} className={strokeTone} strokeWidth={2} fill="none" strokeLinejoin="round" strokeLinecap="round" />
 
                         {currentPoint ? (
                             <g aria-hidden="true">
                                 <line x1={currentPoint.x} x2={currentPoint.x} y1={frame.top} y2={baseline} className="stroke-border-primary" strokeWidth={1} />
-                                <circle cx={currentPoint.x} cy={currentPoint.y} r={5} className="fill-fg-brand-primary stroke-bg-primary" strokeWidth={2} />
+                                <circle cx={currentPoint.x} cy={currentPoint.y} r={5} className={cx(fillTone, "stroke-bg-primary")} strokeWidth={2} />
                             </g>
                         ) : null}
                     </svg>
@@ -179,6 +177,8 @@ export function ValueChart({ snapshots }: { snapshots: ValueSnapshot[] }) {
                     </output>
                 ) : null}
             </div>
+
+            {children}
 
             <details className="text-sm">
                 <summary className="cursor-pointer text-tertiary outline-focus-ring focus-visible:outline-2">Show as table</summary>
