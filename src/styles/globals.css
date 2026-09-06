@@ -51,17 +51,6 @@
     }
 }
 
-/* Fade to thick glass: laid over the bottom of a picture that heads a sheet, so the picture runs
-   into the sheet's own surface instead of ending on a line. The same colour the sheet draws, in
-   both transparency settings. */
-@utility fade-to-glass-thick {
-    background-image: linear-gradient(to bottom, transparent, var(--color-bg-glass-thick));
-
-    @media (prefers-reduced-transparency: reduce) {
-        background-image: linear-gradient(to bottom, transparent, var(--color-bg-primary));
-    }
-}
-
 /* Fade to page: under the floating tab bar, from nothing to the page's own ground, so the page runs
    out under the bar instead of ending on it, and Safari, which takes its bottom bar's colour from
    the page's bottom edge, finds the ground there rather than whatever scrolled under. */
