@@ -329,13 +329,24 @@ table; the fourth tile is Pokémon collected, counted as the Pokédex page count
 `listCardPrices` pages past PostgREST's 1,000-row cap (#206), and the cache key moved to v2 so
 the truncated entries did not stand for an hour (#207).
 
+Later that afternoon (#188, #189; cardorb-api #208–#210): the value menu offers the wishlist
+("Wishlist cost": every wish once, `?folder=wishlist`); a card's sheet shows its price over the
+last ninety days (`PriceHistory`, `GET /v1/cards/{tcgId}/prices`) with the change since the
+first reading; Sort has Highest price and Lowest price; Show as table is gone from the value
+chart. Found on the way: the API's card-price cache was keyed by person and day but not by the
+ids asked, so one card's line came back as the whole collection's (v3 key hashes the ids, #210).
+
 Still open on the value line: the nightly cron prices a card from the Cardmarket guide alone
 (`cardPricesOf`, `snapshotOf` with `prices: false`), while the live number blends in TCGplayer
 where the guide has nothing. So a folder's line ends under its live value (Kanto: €16,710 on
 Sep 6 against €22,199 live, 52 copies unpriced on the line, none live), and the whole
-collection's line likewise. The fix is the cron writing the blended price, which means
+collection's line likewise, and a card's sheet says €999.61 above a line that ends at €830.97
+(Pikachu with Grey Felt Hat, Sep 6). The fix is the cron writing the blended price, which means
 assembling with prices inside its 60 s; the warm cron already does that assembly every ten
-minutes, so the snapshot cron could read the memoised one.
+minutes, so the snapshot cron could read the memoised one. Price history reaches back only as
+far as our own table: the first nightly per-card reading is 2026-08-16. Cardmarket's guide is
+today's file only, TCGdex and pokemontcg.io carry no history, so nothing earlier can be fetched;
+the line grows by a night a night.
 
 ## Open
 
