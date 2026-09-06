@@ -448,6 +448,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                                                     .filter(Boolean)
                                                                     .join(" · ") || "Copy"}
                                                             </span>
+                                                            {/* The copy's own price: a reverse holo has the foil's, the rest the plain one. */}
+                                                            {row.price != null ? (
+                                                                <span className="text-tertiary tabular-nums">{formatPrice(row.price)}</span>
+                                                            ) : null}
                                                             <span className="text-tertiary tabular-nums">×{row.quantity ?? 1}</span>
                                                         </button>
                                                     </li>
