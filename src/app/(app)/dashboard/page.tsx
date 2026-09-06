@@ -25,6 +25,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <div className="flex flex-col gap-6">
             <PageHeader
                 title="Home"
+                titleOnPhone={false}
                 // On a phone the search runs the width of the page, the avatar at its right end: the row Home starts with.
                 above={
                     <div className="flex items-center gap-2 lg:hidden">
