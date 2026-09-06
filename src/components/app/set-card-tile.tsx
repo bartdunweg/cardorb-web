@@ -53,7 +53,7 @@ export function SetCardTile({ card }: { card: SetCard }) {
                     aria-label={`${card.name} #${card.number}, ${stateLabel}`}
                     className={({ isPressed, isFocusVisible }) =>
                         cx(
-                            "relative block aspect-card w-full cursor-pointer overflow-hidden rounded-md ring-1 ring-secondary outline-focus-ring ring-inset",
+                            "relative block aspect-card w-full cursor-pointer overflow-hidden rounded-card ring-1 ring-secondary outline-focus-ring ring-inset",
                             !card.owned && "bg-secondary",
                             (isPressed || isFocusVisible) && "outline-2 outline-offset-2",
                             pending && "cursor-progress",
