@@ -117,7 +117,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
         >
             {({ close }) => (
                 <>
-                    <SlideoutMenu.Header onClose={close} className="px-0 pt-0">
+                    <SlideoutMenu.Header onClose={close} close="circle" className="px-0 pt-0">
                         {/* The card first, on a blurred, dimmed copy of itself: the art sets the header's colour,
                             the way a product page takes its hero's. The copy is decoration and says nothing. */}
                         <div className="relative w-full overflow-hidden">
@@ -128,7 +128,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                             ) : null}
                             <div className="relative px-10 pt-10 pb-6">
                                 {card?.image_url ? (
-                                    <div className="relative mx-auto aspect-card w-full max-w-60 overflow-hidden rounded-xl shadow-lift-lg">
+                                    <div className="relative mx-auto aspect-card w-full max-w-44 overflow-hidden rounded-xl shadow-lift-lg">
                                         <CardImage
                                             src={card.image_high_url ?? card.image_url}
                                             alt={card.name}
@@ -139,7 +139,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                         />
                                     </div>
                                 ) : (
-                                    <div className="mx-auto flex aspect-card w-full max-w-60 flex-col items-center justify-center gap-1 rounded-xl bg-quaternary p-4 text-center">
+                                    <div className="mx-auto flex aspect-card w-full max-w-44 flex-col items-center justify-center gap-1 rounded-xl bg-quaternary p-4 text-center">
                                         <span className="text-sm font-medium text-secondary">{card?.name}</span>
                                         {card?.number ? <span className="text-xs text-quaternary">#{card.number}</span> : null}
                                     </div>
