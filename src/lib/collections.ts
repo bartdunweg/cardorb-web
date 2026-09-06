@@ -26,9 +26,9 @@ export async function getMyCollections(): Promise<{ collections: CollectionSumma
  * a thrown error is no page at all, and on 2026-09-04 a catalogue outage took every screen down
  * through this one read. A 401 still throws: that is the session, not the folders.
  */
-export async function getMyFolders(): Promise<{ id: string; name: string }[]> {
+export async function getMyFolders(): Promise<{ id: string; name: string; kind: FolderKind }[]> {
     try {
-        return (await folders()).map((f) => ({ id: f.id, name: f.name }));
+        return (await folders()).map((f) => ({ id: f.id, name: f.name, kind: f.kind }));
     } catch (err) {
         if (err instanceof ApiError && err.status === 401) throw err;
         console.error("Folders unavailable, sidebar drawn without them:", err instanceof Error ? err.message : err);
