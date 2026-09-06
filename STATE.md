@@ -22,6 +22,22 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **2026-09-06, the search evening.** A search can be narrowed by chips once something is
+  typed (#240): under the field a row that scrolls sideways, Set and Rarity on the phone's
+  search sheet (the sets and rarities you hold, from the facets), Set and Type in the desktop
+  palette (every set the catalogue knows, the eleven energy types in `src/lib/card-types.ts`).
+  `FilterChip` (`src/components/app/filter-chip.tsx`) opens its choices as a sheet from the
+  bottom under `sm` and as a popover from `sm`, with a field over a list of twelve or more; its
+  choices are plain buttons on purpose, because the palette's autocomplete claims any listbox
+  inside it. `useDebouncedSearch` takes filters beside the term; a chip on its own lists the set
+  with nothing typed. The catalogue search uses the API's fielded mode with a filter on, and
+  cardorb-api#223 quotes the set's name there (pokemontcg.io split "Base Set 2" on its spaces
+  and answered 502). Two things found on the way: `getFacets` read the session inside the
+  cache, where there is none, so every reader had empty menus (the card sheet's rule folders
+  too); and the palette registered an empty hotkey that pulled focus back to its input on any
+  key, so nothing beside the input worked by keyboard. Rarity is not a catalogue chip yet: the
+  API's fielded search has no rarity field. The Browser pane's Enter never clicks a native
+  button and its dialog counts go stale while the pane is hidden; that is in memory, not here.
 - **2026-09-06, the holo evening.** The card in its sheet tilts and shines like its printing:
   `src/components/app/holo-card.tsx` around the picture, `src/lib/holo/` (rarity → effect
   family, a Svelte-style spring, the pose maths, the hook), the effect CSS vendored verbatim
