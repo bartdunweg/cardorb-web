@@ -19,7 +19,7 @@ export function LanguageChips({ value, onChange, className }: { value: BrowseLan
                     aria-label={l.label}
                     onClick={() => onChange(l.code)}
                     className={cx(
-                        "flex pressable items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-semibold outline-focus-ring transition-colors duration-150 focus-visible:outline-2",
+                        "flex shrink-0 pressable items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap outline-focus-ring transition-colors duration-150 focus-visible:outline-2",
                         l.code === value ? "bg-alpha-black/8 text-primary" : "text-tertiary hover:text-secondary",
                     )}
                 >
