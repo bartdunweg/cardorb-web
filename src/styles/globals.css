@@ -51,6 +51,17 @@
     }
 }
 
+/* Fade to thick glass: laid over the bottom of a picture that heads a sheet, so the picture runs
+   into the sheet's own surface instead of ending on a line. The same colour the sheet draws, in
+   both transparency settings. */
+@utility fade-to-glass-thick {
+    background-image: linear-gradient(to bottom, transparent, var(--color-bg-glass-thick));
+
+    @media (prefers-reduced-transparency: reduce) {
+        background-image: linear-gradient(to bottom, transparent, var(--color-bg-primary));
+    }
+}
+
 /* Pressable: scale 0.96 on press, so a tap is answered before anything else happens. 0.96, not
    less: below 0.95 it reads as exaggerated. Buttons, tabs and tappable cards all carry it. */
 @utility pressable {

@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Plus, Star01 } from "@untitledui/icons";
+import { ArrowRight, Plus, Star01, XClose } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import { markOwned, setFavorite } from "@/app/(app)/dashboard/cards/actions";
@@ -117,7 +117,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
         >
             {({ close }) => (
                 <>
-                    <SlideoutMenu.Header onClose={close} close="circle" className="px-0 pt-0">
+                    <SlideoutMenu.Header onClose={close} close="none" className="px-0 pt-0">
                         {/* The card first, on a blurred, dimmed copy of itself: the art sets the header's colour,
                             the way a product page takes its hero's. The copy is decoration and says nothing. */}
                         <div className="relative w-full overflow-hidden">
@@ -125,6 +125,22 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                 <div aria-hidden="true" className="absolute inset-0 scale-150 opacity-60 blur-2xl">
                                     <CardImage src={card.image_url} alt="" width={64} className="object-cover" />
                                 </div>
+                            ) : null}
+                            <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-2/5 fade-to-glass-thick" />
+                            {/* Close at the left, the star at the right, on one line over the art: the two things a
+                                person does to a card's page without reading it. */}
+                            <Button color="secondary" size="sm" iconLeading={XClose} aria-label="Close" className="absolute top-3 left-3" onClick={close} />
+                            {mine?.owned ? (
+                                <Button
+                                    color={isStarred ? "primary" : "secondary"}
+                                    size="sm"
+                                    iconLeading={Star01}
+                                    aria-label="Favorite"
+                                    aria-pressed={isStarred}
+                                    isLoading={starring}
+                                    onClick={toggleStar}
+                                    className="absolute top-3 right-3"
+                                />
                             ) : null}
                             <div className="relative px-10 pt-10 pb-6">
                                 {card?.image_url ? (
@@ -154,20 +170,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                             <p className="text-sm text-tertiary">
                                 {[card?.set_name, card?.number ? `#${card.number}` : null].filter(Boolean).join(" · ") || "—"}
                             </p>
-                            {/* A card you own can be starred: it then sits in Favorites, and the sheet says so. */}
-                            {mine?.owned ? (
-                                <Button
-                                    size="sm"
-                                    color={isStarred ? "primary" : "secondary"}
-                                    iconLeading={Star01}
-                                    aria-pressed={isStarred}
-                                    isLoading={starring}
-                                    onClick={toggleStar}
-                                    className="mt-2 self-start"
-                                >
-                                    Favorite
-                                </Button>
-                            ) : null}
                             {/* The price sits under the title, where a product panel puts it, not among the attributes. */}
                             {mine?.price != null ? (
                                 <p className="text-md font-semibold text-primary tabular-nums">
