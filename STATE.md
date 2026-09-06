@@ -278,14 +278,12 @@ Backlog from the review, ranked. Each is one PR.
 - Ancient Mew (Miscellaneous Promos #001) has no scan anywhere; a scan of the owner's own copy
   goes under the API's `public/artwork` with a lookup by tcgId in the resolver.
 
-From the audit of 2026-09-06 (night): everything but two items shipped that night (#166–#172).
-Still open:
-
-- The SM tag-team promos (SM167–SM241) have no Cardmarket product linked and ride on TCGplayer:
-  their expansion holds each name four times, so `node scripts/cardmarket-ids-fill.mjs` in
-  cardorb-api prints the candidates and a person picks. Fennekin MEP 080 the same.
-- Section headings still differ between Browse (`text-lg`) and the rest (`text-md`); Browse's are
-  page sections, the rest live in cards, so this may be right as it is.
+From the audit of 2026-09-06 (night): everything shipped that night (#166–#173; cardorb-api
+#194–#201). Every card in the collection has a Cardmarket product linked and a price. The SM
+tag-team promos SM168, SM201, SM230, SM240 and SM241 were picked among several products of one
+name by their place in the expansion's id sequence; if one of them shows a price that does not
+match Cardmarket's page, the other candidates are in `node scripts/cardmarket-ids-fill.mjs`'s
+output before the id was set (git history of `cardmarket-ids.generated.json`).
 
 ## Open
 
