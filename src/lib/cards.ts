@@ -61,29 +61,40 @@ export async function getMyCards({
     /** The sets and rarities held, over the whole collection whatever the filters: what the two menus offer. */
     facets: Facets;
 }> {
-    const { cards, total, facets, value, unpriced } = await api<{ cards: CardItem[]; total: number; facets?: Facets; value?: number; unpriced?: number }>(
-        "/cards",
-        {
-            params: {
-                q: q?.trim() || undefined,
-                owned: !wishlist,
-                favorite: favoritesOnly ? true : undefined,
-                collection: collectionId,
-                sort,
-                order,
-                set,
-                rarity,
-                priced,
-                // The API skips its facets pass when told nobody will read them.
-                facets: wantFacets === false ? 0 : undefined,
-                limit,
-                offset,
+    // The first batch of a list is the read every list page waits on; per person and five
+    // minutes it is a cache read instead of a round trip, and a write drops it with the rest
+    // (forgetMine). Further batches and the odd sizes (a count, a whole Pokédex) go straight.
+    const key =
+        offset === 0 && limit === LIST_BATCH
+            ? `cards:${JSON.stringify([q, collectionId, favoritesOnly, wishlist, sort, order, set, rarity, priced, wantFacets])}`
+            : null;
+    const read = async (token?: string) => {
+        const { cards, total, facets, value, unpriced } = await api<{ cards: CardItem[]; total: number; facets?: Facets; value?: number; unpriced?: number }>(
+            "/cards",
+            {
+                token,
+                params: {
+                    q: q?.trim() || undefined,
+                    owned: !wishlist,
+                    favorite: favoritesOnly ? true : undefined,
+                    collection: collectionId,
+                    sort,
+                    order,
+                    set,
+                    rarity,
+                    priced,
+                    // The API skips its facets pass when told nobody will read them.
+                    facets: wantFacets === false ? 0 : undefined,
+                    limit,
+                    offset,
+                },
             },
-        },
-    );
-    // The API has carried facets since its #161, the same day as this read; an older deploy or a
-    // rollback answers without them. Empty menus then, not a Cards page that throws on facets.sets.
-    return { cards: cards.map(cardFromItem), total, value: value ?? null, unpriced: unpriced ?? 0, facets: facets ?? { sets: [], rarities: [] } };
+        );
+        // The API has carried facets since its #161, the same day as this read; an older deploy or a
+        // rollback answers without them. Empty menus then, not a Cards page that throws on facets.sets.
+        return { cards: cards.map(cardFromItem), total, value: value ?? null, unpriced: unpriced ?? 0, facets: facets ?? { sets: [], rarities: [] } };
+    };
+    return key ? perUser(key, read) : read();
 }
 
 export type CardStats = {
