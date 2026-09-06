@@ -3,6 +3,7 @@ import { CardsStats, StatCard } from "@/components/app/cards-stats";
 import { DexStat } from "@/components/app/dex-stat";
 import { PageHeader } from "@/components/app/page-header";
 import { ValueHeroOutline } from "@/components/app/skeletons";
+import { TopCards } from "@/components/app/top-cards";
 import { ValueHero, type ValueList } from "@/components/app/value-hero";
 import { YouLink } from "@/components/app/you-link";
 import { getCardStats, getMyCards } from "@/lib/cards";
@@ -33,6 +34,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                     </Suspense>
                 }
             />
+            <Suspense fallback={null}>
+                <TopCards />
+            </Suspense>
         </div>
     );
 }
