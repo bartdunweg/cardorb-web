@@ -8,7 +8,7 @@ import { cx } from "@/utils/cx";
 // and simplified), Korean. One pressed; the name is read out, the flag is what is seen.
 export function LanguageChips({ value, onChange, className }: { value: BrowseLanguage; onChange: (next: BrowseLanguage) => void; className?: string }) {
     return (
-        <fieldset className={cx("flex flex-wrap gap-1", className)}>
+        <fieldset className={cx("scrollbar-hide flex gap-1 overflow-x-auto", className)}>
             <legend className="sr-only">Catalogue language</legend>
             {BROWSE_LANGUAGES.map((l) => (
                 <button
