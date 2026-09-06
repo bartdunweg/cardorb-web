@@ -134,7 +134,19 @@ describe("holoVariant", () => {
         expect(trainer["--clip-invert"]).toContain("calc(100% - 9.5%)");
         expect(trainer["--clip-trainer"]).toBe(trainer["--clip"]);
         expect(holoVariant("Rare Holo", null, null, { gen: "Sword & Shield" }).style).toEqual({});
-        expect(holoVariant("Rare Holo", null, null, { gen: "XY" }).style).toEqual({});
+        expect(holoVariant("Rare Holo", null, null, { gen: "Sun & Moon" }).style).toEqual({});
+        expect(holoVariant("Rare Holo", null, null, { gen: "EX" }).style).toEqual({});
+    });
+
+    it("gives the frames between the Wizards era and Sun & Moon their own windows", () => {
+        expect(holoVariant("Rare Holo", null, null, { gen: "E-Card" }).style["--clip"]).toBe("inset(12% 9.5% 51.4% 9.5%)");
+        expect(holoVariant("Rare Holo", null, null, { gen: "Diamond & Pearl" }).style["--clip"]).toBe("inset(9.1% 6.8% 49.9% 6.8%)");
+        expect(holoVariant("Rare Holo", null, null, { gen: "Platinum" }).style["--clip"]).toBe("inset(9.1% 6.8% 49.9% 6.8%)");
+        expect(holoVariant("Rare Holo", null, null, { gen: "HeartGold & SoulSilver" }).style["--clip"]).toBe("inset(8% 5% 47.5% 5%)");
+        expect(holoVariant("Rare Holo", null, null, { gen: "Call of Legends" }).style["--clip"]).toBe("inset(8% 5% 47.5% 5%)");
+        expect(holoVariant("Rare Holo", null, null, { gen: "Black & White" }).style["--clip"]).toBe("inset(10.3% 8.6% 50.3% 8.6%)");
+        expect(holoVariant("Rare Holo", null, null, { gen: "XY" }).style["--clip"]).toBe("inset(10.3% 8.6% 50.3% 8.6%)");
+        expect(holoVariant("Uncommon", null, { stage: null, hp: null }, { gen: "XY" }).style["--clip"]).toBe("inset(15.7% 9.5% 48.8% 9.5%)");
     });
 
     it("keeps only the type names the CSS has a glow for", () => {

@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { useRef, useState } from "react";
 import { Monitor04, Moon01, Sun } from "@untitledui/icons";
-import { removeAvatar, updatePassword, updateProfile, uploadAvatar } from "@/app/(app)/dashboard/settings/actions";
+import { removeAvatar, updateEmail, updatePassword, updateProfile, uploadAvatar } from "@/app/(app)/dashboard/settings/actions";
 import { signOut } from "@/app/(auth)/actions";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
@@ -31,6 +31,12 @@ function Section({ title, description, children }: { title: string; description?
 const AVATAR_TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
 
+/** The public page's address as a person would type it: the site's origin without its scheme. */
+function publicUrl(username: string): string {
+    const site = process.env.NEXT_PUBLIC_SITE_URL ?? "https://cardorb.com";
+    return `${site.replace(/^https?:\/\//, "")}/user/${username}`;
+}
+
 function StatusText({ msg }: { msg: Msg }) {
     if (!msg) return null;
     // <output> carries the status role natively; an error is an alert so it interrupts.
@@ -48,6 +54,7 @@ export function SettingsForm({ profile, email, heading }: { profile: Profile; em
     const [username, setUsername] = useState(profile.username);
     const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url ?? "");
     const [isPublic, setIsPublic] = useState(profile.is_public);
+    const [emailValue, setEmailValue] = useState(email ?? "");
     const [savingProfile, setSavingProfile] = useState(false);
     const [profileMsg, setProfileMsg] = useState<Msg>(null);
     const [uploading, setUploading] = useState(false);
@@ -121,8 +128,15 @@ export function SettingsForm({ profile, email, heading }: { profile: Profile; em
         setSavingProfile(true);
         setProfileMsg(null);
         const res = await updateProfile({ display_name: displayName, username, is_public: isPublic, wishlist_public: profile.wishlist_public });
+        // The address goes to Supabase, not the API, and lands only once the mail it sends is answered.
+        const newEmail = emailValue.trim().toLowerCase();
+        const changed = newEmail !== (email ?? "").toLowerCase();
+        const mail = res.ok && changed ? await updateEmail(newEmail) : null;
         setSavingProfile(false);
-        setProfileMsg(res.ok ? { type: "ok", text: "Saved." } : { type: "err", text: res.error });
+        if (!res.ok) setProfileMsg({ type: "err", text: res.error });
+        else if (mail && !mail.ok) setProfileMsg({ type: "err", text: mail.error });
+        else if (mail) setProfileMsg({ type: "ok", text: `Saved. Check ${newEmail} for a link to confirm the new address.` });
+        else setProfileMsg({ type: "ok", text: "Saved." });
     };
 
     const savePassword = async () => {
@@ -173,9 +187,25 @@ export function SettingsForm({ profile, email, heading }: { profile: Profile; em
                 </div>
                 <Input label="Display name" value={displayName} onChange={setDisplayName} placeholder="Your name" />
                 <Input label="Username" value={username} onChange={setUsername} hint="Lowercase letters, numbers and hyphens." />
-                <Toggle label="Public collection" hint="When on, anyone can view your collection." isSelected={isPublic} onChange={setIsPublic} />
+                <Input
+                    label="Email"
+                    type="email"
+                    value={emailValue}
+                    onChange={setEmailValue}
+                    autoComplete="email"
+                    hint="A new address takes effect once you confirm it from your inbox."
+                />
+                <Toggle
+                    label="Public collection"
+                    // With the toggle on, the address people can open, so it can be read and copied from here.
+                    hint={isPublic && username ? `Anyone can view your collection at ${publicUrl(username)}.` : "When on, anyone can view your collection."}
+                    isSelected={isPublic}
+                    onChange={setIsPublic}
+                    // The kit's toggle is as wide as its words; the address has to wrap on a phone.
+                    className="w-full"
+                />
                 {isPublic && username ? (
-                    <Button href={`/user/${username}`} color="link-color" size="sm" className="self-start">
+                    <Button href={`/user/${username}`} color="secondary" size="sm" className="self-start">
                         View your public page
                     </Button>
                 ) : null}
@@ -229,7 +259,6 @@ export function SettingsForm({ profile, email, heading }: { profile: Profile; em
             </Section>
 
             <Section title="Account">
-                <Input label="Email" value={email ?? ""} isDisabled />
                 <form action={signOut}>
                     <Button type="submit" color="secondary-destructive">
                         Sign out

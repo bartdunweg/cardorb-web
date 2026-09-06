@@ -210,11 +210,12 @@ input[type="search"]::-webkit-search-cancel-button {
 }
 
 /* The card in its sheet, wearing the vendored effect: the corner and the ratio the rest of the app
-   draws a card with, and a sideways drag tilts while a vertical one still scrolls the sheet. */
+   draws a card with. A finger on the card drives the card and nothing else: with pan-y a vertical
+   drag scrolled the sheet under the tilt (iPhone, Safari); the sheet scrolls from anywhere else. */
 .holo-card {
     --card-radius: 4.8% / 3.436%;
     --card-aspect: 63 / 88;
 }
 .holo-card .card__rotator {
-    touch-action: pan-y;
+    touch-action: none;
 }

@@ -53,21 +53,25 @@ export function PageHeader({
     // The bar takes the title over exactly when the large one has left the screen. IntersectionObserver
     // rather than a scroll listener: it costs nothing between changes and needs no layout reads.
     const tall = Boolean(back || barActions);
+    // Without Back but with buttons in the bar (All cards, a folder, Collection) the large title starts level
+    // with those buttons, on their line, rather than on a line of its own under them.
+    const beside = Boolean(!back && barActions && titleOnPhone);
     useEffect(() => {
         const el = sentinel.current;
         // A title hidden on the phone has nothing to collapse into the bar: the bar stays out of the way.
         if (!titleOnPhone || !el || typeof IntersectionObserver === "undefined") return;
-        const observer = new IntersectionObserver(([entry]) => setCollapsed(tall ? entry.intersectionRatio < 1 : !entry.isIntersecting), {
+        const observer = new IntersectionObserver(([entry]) => setCollapsed(tall && !beside ? entry.intersectionRatio < 1 : !entry.isIntersecting), {
             // The title counts as gone once it is under the bar, not once it has left the screen: with Back
             // the bar is 76 px (a 44 px button, the avatar's and the search's size, with 16 above and under) and
             // the title starts right under it, so any part of it under the bar is enough; without one the
-            // bar is 48 px over a title that starts at 24, so all of it must be.
-            threshold: tall ? 1 : 0,
-            rootMargin: `${tall ? -76 : -48}px 0px 0px 0px`,
+            // bar is 48 px over a title that starts at 24, so all of it must be. A title beside the buttons
+            // starts at 22, level with them, and counts as gone once it has scrolled past its own top.
+            threshold: tall && !beside ? 1 : 0,
+            rootMargin: `${beside ? -22 : tall ? -76 : -48}px 0px 0px 0px`,
         });
         observer.observe(el);
         return () => observer.disconnect();
-    }, [tall, titleOnPhone]);
+    }, [tall, beside, titleOnPhone]);
 
     return (
         // One element, so the page's own gap applies once, under it: the distances inside are the bar's
@@ -113,7 +117,15 @@ export function PageHeader({
                 {above ? <div className="-mt-2">{above}</div> : null}
 
                 {/* Actions sit beside the title when they fit (a plus on a phone) and wrap under it when they do not. */}
-                <div className={cx("flex flex-row flex-wrap items-start justify-between gap-3", !titleOnPhone && "max-lg:sr-only")}>
+                <div
+                    className={cx(
+                        "flex flex-row flex-wrap items-start justify-between gap-3",
+                        !titleOnPhone && "max-lg:sr-only",
+                        // Up into the bar's line: the bar is 76 px (16, a 44 px button, 16), the title's 32 px line
+                        // centred on the button starts at 22; the buttons keep the right end of the line.
+                        beside && "max-lg:-mt-13.5 max-lg:pr-28",
+                    )}
+                >
                     {/* The words take what the actions leave, so a long subtitle wraps rather than pushing them under the title. */}
                     <div className="flex min-w-0 flex-1 basis-48 flex-col gap-1">
                         <h1 ref={sentinel} className="text-display-xs font-semibold text-primary">

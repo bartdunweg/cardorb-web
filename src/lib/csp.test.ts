@@ -15,7 +15,16 @@ function routesUnder(group: string): string[] {
         }
     };
     walk(root);
-    return pages.map((dir) => "/" + relative(root, dir).replace(/\[[^\]]+\]/g, "sample")).map((p) => (p === "/" ? "/" : p));
+    // A route group, `(home)`, is a folder and not a path segment; a dynamic segment stands for one value.
+    return pages
+        .map(
+            (dir) =>
+                "/" +
+                relative(root, dir)
+                    .replace(/\([^)]+\)\/?/g, "")
+                    .replace(/\[[^\]]+\]/g, "sample"),
+        )
+        .map((p) => p.replace(/\/$/, "") || "/");
 }
 
 describe("needsNonce", () => {
