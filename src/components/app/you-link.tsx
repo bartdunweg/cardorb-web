@@ -12,7 +12,7 @@ export async function YouLink() {
             href="/dashboard/you"
             aria-label={`You, ${account.name}`}
             // In Home's bar, the size of Back beside it.
-            className="shrink-0 pressable self-center rounded-full outline-offset-2 outline-focus-ring focus-visible:outline-2 lg:hidden"
+            className="flex shrink-0 pressable self-center rounded-full outline-offset-2 outline-focus-ring focus-visible:outline-2 lg:hidden"
         >
             <Avatar size="sm" src={account.avatarUrl ?? undefined} alt="" className="size-11" />
         </Link>
