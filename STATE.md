@@ -304,6 +304,13 @@ set (13 s measured once): `unstable_cache` keys carry the function's source, so 
 touches collection.ts empties the set-facts entries. A warm-up cron every ten minutes covers
 it (cardorb-api, `/api/v1/cron/warm`).
 
+Then (#180–#182): the router keeps a shown page for a minute (`staleTimes.dynamic`), the tab bar's
+links prefetch the whole page and the sidebar prefetches its seven routes once, a list's first
+batch is a per-person cache read, and nothing under a title moves when the count lands (the
+count line's outline keeps its height; the Pokédex's count is two lines always). A soft
+navigation between the tabs commits in about 25 ms with no request (MutationObserver; a timer
+poll in the Browser pane reads 1 s for everything, which is the pane's throttling, not the page).
+
 Still open on load time: the Pokédex's 1.17 MB is 688 pictures' markup; drawing slots in
 batches on scroll (as `CardsList` does) would cut it to a tenth. And the browser console shows
 one `<script src=…chunks/…>` without a nonce on Collection and Browse, blocked by the CSP: a
