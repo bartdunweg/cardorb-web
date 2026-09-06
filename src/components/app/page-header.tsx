@@ -74,25 +74,22 @@ export function PageHeader({
     }, [tall, beside, titleOnPhone]);
 
     return (
-        // One element, so the page's own gap applies once, under it: the distances inside are the bar's
-        // own margins and the 16 px column, whatever the page puts between its sections.
+        // One element, so the page's own gap applies once, under it: the distances inside are the spacer's
+        // and the 16 px column, whatever the page puts between its sections.
         <div className="flex flex-col">
+            {/* The bar is fixed to the top of the screen, like the tab bar to its bottom, so it stays through
+                the whole page and not only while the header is in view. Collapsed, it stands on a fade from
+                the page's ground to nothing, so the buttons and the small title stay readable over whatever
+                scrolls under; content runs out under the bar the way it runs out under the tab bar. */}
             <div
                 className={cx(
-                    "sticky top-0 z-30 -mx-4 -mt-4 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-4 sm:-mx-6 sm:-mt-8 lg:hidden",
-                    // With Back the bar is the button with the page's 16 px above it and 16 under it. Without
-                    // one it is the 48 px the title collapses into, and the page's first content starts 24 px
-                    // from the top (the search on Home 16, by its own -mt-2).
-                    back || barActions ? "mb-4 pt-4" : "-mb-6 h-12",
-                    // The glass comes with the collapse alone: at rest the buttons sit on the page, not in a band.
-                    collapsed && "glass",
-                    // Without Back or bar buttons the bar has nothing to show until the title collapses into it, so it lies over
-                    // the first 48 px and lets taps through: the page's first content starts 16 px from the top.
+                    "fixed inset-x-0 top-0 z-30 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-4 pt-4 pb-2 sm:px-6 lg:hidden",
+                    // Nothing to tap until Back, a button or the collapsed title is there: taps go through to the page.
                     !back && !barActions && !collapsed && "pointer-events-none",
-                    // Where content meets the bar: a fade from the page surface to nothing under the bar's edge,
-                    // not a rule. It appears with the collapse and goes when the title is back.
-                    "after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-4 after:bg-linear-to-b after:from-bg-page after:to-transparent after:transition-opacity after:duration-150 after:ease-out",
-                    collapsed ? "after:opacity-100" : "after:opacity-0",
+                    // The fade comes with the collapse: at rest the buttons sit on the page and the large title
+                    // sits on its line; once content scrolls under, the page's ground fades in behind the bar.
+                    "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:-z-10 before:h-24 before:bg-linear-to-b before:from-bg-page before:from-40% before:to-transparent before:transition-opacity before:duration-150 before:ease-out",
+                    collapsed ? "before:opacity-100" : "before:opacity-0",
                 )}
             >
                 <div className="flex justify-start">
@@ -110,6 +107,10 @@ export function PageHeader({
                 </span>
                 <div className="flex items-center justify-end gap-3">{barActions}</div>
             </div>
+            {/* The room the bar takes in the flow, on top of the page's own 16 px (32 from `sm`). With Back the
+                title starts at 76: under the 44 px button with 16 above and under it. Beside the buttons it
+                starts at 22, its 32 px line centred on them. With nothing in the bar, at 24. */}
+            <div aria-hidden="true" className={cx("lg:hidden", back ? "mb-4 h-11 sm:h-7" : beside ? "h-1.5 sm:h-0" : "h-2 sm:h-0")} />
 
             {/* Above the title, 8 px from the top: the search on Home sits higher than a page's first content,
                 and the title 16 px under it whatever the page's own gap, as under Back. */}
@@ -121,9 +122,8 @@ export function PageHeader({
                     className={cx(
                         "flex flex-row flex-wrap items-start justify-between gap-3",
                         !titleOnPhone && "max-lg:sr-only",
-                        // Up into the bar's line: the bar is 76 px (16, a 44 px button, 16), the title's 32 px line
-                        // centred on the button starts at 22; the buttons keep the right end of the line.
-                        beside && "max-lg:-mt-13.5 max-lg:pr-28",
+                        // On the bar's line, the buttons keep its right end.
+                        beside && "max-lg:pr-28",
                     )}
                 >
                     {/* The words take what the actions leave, so a long subtitle wraps rather than pushing them under the title. */}

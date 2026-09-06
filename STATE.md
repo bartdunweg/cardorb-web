@@ -30,7 +30,9 @@ which also says what is already yours), Settings (avatar through the API), publi
   under `/dashboard`, which the router showed while a folder page (a dynamic route, prefetched
   only to the first boundary) was fetched; the foil window table covers e-Card, Diamond &
   Pearl, Platinum, HeartGold SoulSilver, Black & White and XY too; Settings shows the public
-  address under the toggle and "View your public page" as a secondary button.
+  address under the toggle and "View your public page" as a secondary button. The phone's page
+  bar is fixed to the screen like the tab bar (it was `sticky` inside the header, so it left with
+  the header), with a spacer in the flow; collapsed, it stands on a fade from the page's ground.
 - **2026-09-06, the search evening.** A search can be narrowed by chips once something is
   typed (#240): under the field a row that scrolls sideways, Set and Rarity on the phone's
   search sheet (the sets and rarities you hold, from the facets), Set and Type in the desktop
