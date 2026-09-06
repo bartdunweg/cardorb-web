@@ -24,6 +24,8 @@ type Props = {
     from: Card;
     folders: FolderChoice[];
     onSaved?: () => void;
+    /** The Western languages the card was printed in, when the API has said. */
+    languages?: readonly string[] | null;
 };
 
 const FINISHES = [
@@ -46,7 +48,7 @@ export function CopyFormDialog({ children, ...form }: Props & { children: ReactN
     );
 }
 
-function CopyForm({ mode, from, folders, onSaved, close }: Props & { close: () => void }) {
+function CopyForm({ mode, from, folders, languages, onSaved, close }: Props & { close: () => void }) {
     const router = useRouter();
     const total = from.quantity ?? 1;
     const [count, setCount] = useState(1);
@@ -137,7 +139,7 @@ function CopyForm({ mode, from, folders, onSaved, close }: Props & { close: () =
                         className="w-auto"
                         value={language}
                         onChange={(e) => setLanguage(e.target.value as typeof language)}
-                        options={languagesFor(null).map((l) => ({ label: l.label, value: l.code }))}
+                        options={languagesFor(null, languages).map((l) => ({ label: l.label, value: l.code }))}
                     />
                 </span>
             </div>

@@ -392,7 +392,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                             {/* A wish becomes a copy here, above the tabs: the one thing to do with a card you do not
                                 hold yet. The form asks what the copy is like as it arrives. */}
                             {!readOnly && mine?.wishlist ? (
-                                <MarkOwnedDialog card={mine} folders={collections} onSaved={onClose}>
+                                <MarkOwnedDialog card={mine} folders={collections} languages={known?.languages} onSaved={onClose}>
                                     <Button size="md" iconTrailing={ArrowRight} className="mt-3 self-start">
                                         Mark as owned
                                     </Button>
@@ -575,7 +575,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                                                         className="w-auto"
                                                                         value={shownLanguage}
                                                                         onChange={(event) => void pickLanguage(event.target.value)}
-                                                                        options={languagesFor(null).map((l) => ({ label: l.label, value: l.code }))}
+                                                                        options={languagesFor(null, known?.languages).map((l) => ({
+                                                                            label: l.label,
+                                                                            value: l.code,
+                                                                        }))}
                                                                     />
                                                                 </span>
                                                             }
@@ -704,6 +707,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                                     {shownCopies > 1 ? (
                                                         <CopyFormDialog
                                                             mode="split"
+                                                            languages={known?.languages}
                                                             from={{ ...mine, quantity: shownCopies }}
                                                             folders={collections}
                                                             onSaved={() => void reloadCopies()}
