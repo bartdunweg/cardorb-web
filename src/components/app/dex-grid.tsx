@@ -118,7 +118,7 @@ export function DexView({
 }) {
     const [size, setSize] = useState(initialSize);
     return (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-1 flex-col gap-4">
             <div className="flex flex-wrap items-center gap-2">
                 <div className="contents">{toolbar}</div>
                 <ViewMenu view="grid" size={size} onView={() => {}} onSize={setSize} layouts={false} />
@@ -146,6 +146,6 @@ function DexSlots({
     linked: boolean;
 }) {
     const d = use(dex);
-    if (d.total === 0) return <>{narrowed ? noHits : empty}</>;
+    if (d.total === 0) return <div className="flex flex-1 flex-col">{narrowed ? noHits : empty}</div>;
     return <DexGrid slots={d.slots} size={size} linked={linked} />;
 }

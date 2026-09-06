@@ -84,7 +84,7 @@ export function CardsList({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [more, pending, failed, cards.length]);
 
-    if (first.total === 0) return <>{narrowed ? noHits : empty}</>;
+    if (first.total === 0) return <div className="flex flex-1 flex-col">{narrowed ? noHits : empty}</div>;
 
     return (
         <>
