@@ -37,7 +37,10 @@ export default async function SetPage({ params, searchParams }: { params: Promis
     if (!set) notFound();
 
     const released = releaseLabel(set.releaseDate);
-    const subtitle = [set.series, released ? `released ${released}` : null, `${n(set.owned)} of ${n(set.total)} cards`].filter(Boolean).join(" · ");
+    // The set's own name first where the title is a translation: that is what the pack says.
+    const subtitle = [set.localName, set.series, released ? `released ${released}` : null, `${n(set.owned)} of ${n(set.total)} cards`]
+        .filter(Boolean)
+        .join(" · ");
 
     return (
         <div className="flex flex-col gap-6">

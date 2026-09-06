@@ -38,6 +38,7 @@ const WHOLE_SET = 250;
 export type SetDetail = {
     id: string;
     name: string;
+    localName: string | null;
     series: string;
     releaseDate: string | null;
     logoUrl: string | null;
@@ -59,6 +60,7 @@ export async function getSet(id: string, language: BrowseLanguage = "en"): Promi
         return {
             id: set.id,
             name: set.name,
+            localName: set.localName ?? null,
             series: set.series,
             releaseDate: set.releaseDate,
             logoUrl: absoluteImage(set.logo),

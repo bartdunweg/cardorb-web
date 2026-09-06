@@ -246,6 +246,8 @@ export type CatalogueSet = {
     printedTotal: number | null;
     logo: string | null;
     symbol: string | null;
+    /** The set's own name where `name` is a translation (a Japanese set); null for English. */
+    localName?: string | null;
     /** Distinct cards of the set held; never more than `total` (cardorb-api#162). */
     ownedCount: number;
     wishlistCount: number;
@@ -254,6 +256,8 @@ export type CatalogueSet = {
 export type SetSummary = {
     id: string;
     name: string;
+    /** The set's own name beside a translated one; null for English. */
+    localName: string | null;
     series: string;
     releaseDate: string | null;
     logoUrl: string | null;
@@ -275,6 +279,7 @@ export function seriesFromSets(sets: CatalogueSet[]): { series: SetSeries[]; com
         const summary: SetSummary = {
             id: set.id,
             name: set.name,
+            localName: set.localName ?? null,
             series: set.series,
             releaseDate: set.releaseDate,
             logoUrl: absoluteImage(set.logo),
