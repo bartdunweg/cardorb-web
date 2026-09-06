@@ -55,9 +55,8 @@ export function PriceHistory({
     const pad = (max - min || Math.abs(max) || 1) * 0.1;
     const frame = { width: WIDTH, height: HEIGHT, top: 4, right: 0, bottom: 0, left: 0 };
     const pts = pointsFor(values, frame, min - pad, max + pad);
-    const tone = change > 0 ? "success" : change < 0 ? "error" : "brand";
-    const fill = { success: "fill-fg-success-primary", error: "fill-fg-error-primary", brand: "fill-fg-brand-primary" }[tone];
-    const stroke = { success: "stroke-fg-success-primary", error: "stroke-fg-error-primary", brand: "stroke-fg-brand-primary" }[tone];
+    const fill = "fill-fg-primary";
+    const stroke = "stroke-fg-primary";
     const said = `${change === 0 ? "Unchanged" : `${change > 0 ? "+" : "−"}${formatPrice(Math.abs(change))}`} since ${dayYear.format(new Date(`${first.date}T00:00:00`))}`;
 
     return (

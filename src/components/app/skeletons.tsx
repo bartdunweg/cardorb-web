@@ -96,7 +96,7 @@ export function ListSkeleton({
 export function HomeSkeleton() {
     return (
         <SkeletonFrame>
-            <PageHeader title="Home" subtitle="An overview of your collection." />
+            <PageHeader title="Home" />
             <ValueHeroOutline />
             <Outline className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4">
                 {Array.from({ length: 4 }, (_, i) => (
@@ -147,7 +147,7 @@ export function ValueHeroOutline() {
 export function FoldersSkeleton() {
     return (
         <SkeletonFrame>
-            <PageHeader title="Collection" subtitle="Group your cards the way you like." />
+            <PageHeader title="Collection" />
             <Outline className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
                 {Array.from({ length: 4 }, (_, i) => (
                     <div

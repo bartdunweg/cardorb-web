@@ -13,5 +13,13 @@ export async function DexStat() {
     const setting = me.profile?.pokedex ?? DEFAULT_POKEDEX;
     const { caught, range } = groupByDex(all.cards, names, setting);
     const total = range.to - range.from + 1;
-    return <StatCard label="Pokémon collected" value={caught.toLocaleString("en-US")} detail={`of ${total.toLocaleString("en-US")}`} delay={120} />;
+    return (
+        <StatCard
+            label="Pokémon collected"
+            value={caught.toLocaleString("en-US")}
+            detail={`of ${total.toLocaleString("en-US")}`}
+            href="/dashboard/pokedex"
+            delay={120}
+        />
+    );
 }

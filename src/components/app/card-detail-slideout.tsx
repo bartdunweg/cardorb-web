@@ -3,14 +3,16 @@
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Check, DotsHorizontal, Minus, Plus, Star01, Trash01, XClose } from "@untitledui/icons";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading, Tab as AriaTab, TabList as AriaTabList, TabPanel as AriaTabPanel, Tabs as AriaTabs } from "react-aria-components";
-import { markOwned, removeCard, setCopies, setFavorite } from "@/app/(app)/dashboard/cards/actions";
+import { markOwned, removeCard, seriesLogo, setCopies, setFavorite } from "@/app/(app)/dashboard/cards/actions";
 import { type FolderChoice, listCollections, loadFacets, setCardCollection } from "@/app/(app)/dashboard/collections/actions";
 import { CardImage } from "@/components/app/card-image";
 import { FavoriteStar } from "@/components/app/favorite-star";
 import { FolderDialog } from "@/components/app/folder-dialog";
 import { PriceHistory } from "@/components/app/price-history";
+import { TypeIcon } from "@/components/app/type-icon";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
@@ -63,6 +65,20 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
         else setStarred(!next);
     };
     const [moveError, setMoveError] = useState<string | null>(null);
+    // The generation's logo, asked for when a card opens; kept with the series it was read for.
+    const [logo, setLogo] = useState<{ series: string; url: string | null } | null>(null);
+    const gen = card?.gen ?? null;
+    useEffect(() => {
+        if (!gen) return;
+        let live = true;
+        seriesLogo(gen).then((url) => {
+            if (live) setLogo({ series: gen, url });
+        });
+        return () => {
+            live = false;
+        };
+    }, [gen]);
+    const genLogo = logo?.series === gen ? logo.url : null;
     // The dots menu's actions: each one server call, then the page re-reads; removing closes the sheet
     // first, since the card it showed is gone.
     const [busy, setBusy] = useState(false);
@@ -353,8 +369,35 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
 
                                 <dl className="flex flex-col divide-y divide-secondary">
                                     <DetailRow label="Rarity" value={card?.rarity} />
-                                    <DetailRow label="Generation" value={card?.gen} />
-                                    <DetailRow label="Types" value={card?.types?.length ? card.types.join(", ") : null} />
+                                    <DetailRow
+                                        label="Generation"
+                                        value={
+                                            card?.gen ? (
+                                                <span className="flex items-center justify-end gap-2">
+                                                    {/* The logo is the series' own picture; the name beside it says it for a reader. */}
+                                                    {genLogo ? (
+                                                        <Image src={genLogo} alt="" width={96} height={24} className="h-6 w-auto max-w-24 object-contain" />
+                                                    ) : null}
+                                                    {card.gen}
+                                                </span>
+                                            ) : null
+                                        }
+                                    />
+                                    <DetailRow
+                                        label="Types"
+                                        value={
+                                            card?.types?.length ? (
+                                                <span className="flex flex-wrap items-center justify-end gap-2">
+                                                    {card.types.map((t) => (
+                                                        <span key={t} className="flex items-center gap-1.5">
+                                                            <TypeIcon type={t} />
+                                                            {t}
+                                                        </span>
+                                                    ))}
+                                                </span>
+                                            ) : null
+                                        }
+                                    />
                                     <DetailRow label="Quantity" value={card?.quantity ?? 1} />
                                     {mine && <DetailRow label="Condition" value={mine.condition} />}
                                     {mine && <DetailRow label="Grade" value={mine.grade} />}
