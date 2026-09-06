@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Check, DotsHorizontal, Minus, Plus, Star01, Trash01, XClose } from "@untitledui/icons";
+import { ArrowRight, DotsHorizontal, Minus, Plus, Star01, Trash01, XClose } from "@untitledui/icons";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
@@ -11,7 +11,6 @@ import {
     addCopy,
     cardFacts,
     listCopies,
-    markOwned,
     removeCard,
     seriesLogo,
     setAcquiredAt,
@@ -27,6 +26,7 @@ import { CopyFormDialog } from "@/components/app/copy-form-dialog";
 import { FavoriteStar } from "@/components/app/favorite-star";
 import { FlagIcon } from "@/components/app/flag-icon";
 import { FolderDialog } from "@/components/app/folder-dialog";
+import { MarkOwnedDialog } from "@/components/app/mark-owned-dialog";
 import { PriceHistory } from "@/components/app/price-history";
 import { TypeIcon } from "@/components/app/type-icon";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
@@ -92,7 +92,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
     const [collections, setCollections] = useState<FolderChoice[]>([]);
     const [facets, setFacets] = useState<Facets | undefined>(undefined);
     const [collectionId, setCollectionId] = useState<string>("");
-    const [moving, setMoving] = useState(false);
     // The star, kept here so a tap answers at once; the page re-reads the flag after the save.
     const [starred, setStarred] = useState<boolean | null>(null);
     const [starring, setStarring] = useState(false);
@@ -107,7 +106,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
         if (res.ok) router.refresh();
         else setStarred(!next);
     };
-    const [moveError, setMoveError] = useState<string | null>(null);
     // The generation's logo, asked for when a card opens; kept with the series it was read for.
     const [logo, setLogo] = useState<{ series: string; url: string | null } | null>(null);
     const gen = card?.gen ?? null;
@@ -265,20 +263,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
         }
     };
 
-    const onMoveToCollection = async () => {
-        if (!card) return;
-        setMoving(true);
-        setMoveError(null);
-        const res = await markOwned(card.id);
-        setMoving(false);
-        if (res.ok) {
-            onClose();
-            router.refresh();
-        } else {
-            setMoveError(res.error);
-        }
-    };
-
     return (
         <SlideoutMenu
             isDismissable
@@ -286,10 +270,11 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
             onOpenChange={(open) => {
                 if (!open) void closeSheet();
             }}
-            // The whole screen on a phone: the sheet is the card's page, not a panel over one, so it
-            // stands on the page's own opaque ground rather than on glass: the art's fade has one
-            // colour to end on, the same in both themes.
-            dialogClassName="h-dvh max-h-dvh bg-page backdrop-blur-none sm:h-full"
+            // The whole screen on a phone but for the page sheet's inset (iOS leaves ten points under
+            // the status bar, so the page behind still shows as a page): the sheet is the card's page,
+            // on the page's own opaque ground rather than on glass, so the art's fade has one colour
+            // to end on, the same in both themes.
+            dialogClassName="mt-auto h-[calc(100dvh-env(safe-area-inset-top)-0.625rem)] max-h-[calc(100dvh-env(safe-area-inset-top)-0.625rem)] bg-page backdrop-blur-none sm:h-full sm:max-h-full"
         >
             {({ close }) => (
                 <>
@@ -342,9 +327,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                             <Dropdown.Menu>
                                                 {mine.wishlist ? (
                                                     <>
-                                                        <Dropdown.Item icon={Check} onAction={() => run(() => markOwned(mine.id), true)}>
-                                                            Mark as owned
-                                                        </Dropdown.Item>
                                                         <Dropdown.Item icon={Trash01} onAction={() => run(() => removeCard(mine.id), true)}>
                                                             Remove from wishlist
                                                         </Dropdown.Item>
@@ -407,6 +389,15 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                     <span className="sr-only"> market price</span>
                                 </p>
                             ) : null}
+                            {/* A wish becomes a copy here, above the tabs: the one thing to do with a card you do not
+                                hold yet. The form asks what the copy is like as it arrives. */}
+                            {!readOnly && mine?.wishlist ? (
+                                <MarkOwnedDialog card={mine} folders={collections} onSaved={onClose}>
+                                    <Button size="md" iconTrailing={ArrowRight} className="mt-3 self-start">
+                                        Mark as owned
+                                    </Button>
+                                </MarkOwnedDialog>
+                            ) : null}
                             {menuError ? (
                                 <p role="alert" className="text-sm text-error-primary">
                                     {menuError}
@@ -428,21 +419,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                     {mine ? <Tab id="price" label="Price" /> : null}
                                 </TabList>
                                 <TabPanel id="details" className="flex flex-col gap-6">
-                                    {!readOnly && mine?.wishlist ? (
-                                        <div className="flex flex-col gap-5 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary ring-inset">
-                                            <div className="flex flex-col gap-1.5">
-                                                <Button size="md" iconTrailing={ArrowRight} onClick={onMoveToCollection} isLoading={moving}>
-                                                    Mark as owned
-                                                </Button>
-                                                {moveError ? (
-                                                    <p role="alert" className="text-sm text-error-primary">
-                                                        {moveError}
-                                                    </p>
-                                                ) : null}
-                                            </div>
-                                        </div>
-                                    ) : null}
-
                                     <dl className="flex flex-col divide-y divide-secondary">
                                         <DetailRow label="Rarity" value={card?.rarity} />
                                         {/* From the catalogue, once it answers: who drew it, and the card's own facts. */}
