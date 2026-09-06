@@ -285,6 +285,31 @@ name by their place in the expansion's id sequence; if one of them shows a price
 match Cardmarket's page, the other candidates are in `node scripts/cardmarket-ids-fill.mjs`'s
 output before the id was set (git history of `cardmarket-ids.generated.json`).
 
+Load time (2026-09-06, morning; web #175–#178, cardorb-api #202–#203). Measured on production
+from the Browser pane, warm, whole HTML fetched:
+
+| page | before | after |
+|---|---|---|
+| Home | 164 ms, 68 KB | 157 ms, 70 KB |
+| Collection | 198 ms, 70 KB | 145 ms, 73 KB |
+| Browse | 439 ms, 670 KB | 222 ms, 582 KB |
+| All cards | 626 ms, 215 KB | 244 ms, 190 KB |
+| Pokédex | 1363 ms, 1.6 MB | 362 ms, 1.17 MB |
+
+What did it: skeletons that are the page's frame; two srcset candidates per picture instead
+of nine; no page waits for the facets before its first byte, Browse and Collection stream; the
+Pokédex reads its cards in one request; the API keeps an assembled collection per instance for
+ten minutes by the rows' version. The first request after an API deploy still rebuilds every
+set (13 s measured once): `unstable_cache` keys carry the function's source, so a deploy that
+touches collection.ts empties the set-facts entries. A warm-up cron every ten minutes covers
+it (cardorb-api, `/api/v1/cron/warm`).
+
+Still open on load time: the Pokédex's 1.17 MB is 688 pictures' markup; drawing slots in
+batches on scroll (as `CardsList` does) would cut it to a tenth. And the browser console shows
+one `<script src=…chunks/…>` without a nonce on Collection and Browse, blocked by the CSP: a
+duplicate preload of a chunk the nonced loader also fetches, so nothing breaks (the New folder
+dialog and the sheets open), but it is noise worth tracing to the streamed boundary that emits it.
+
 ## Open
 
 - **A revoked session stays open on the web for up to an hour (#79).** The middleware and the
