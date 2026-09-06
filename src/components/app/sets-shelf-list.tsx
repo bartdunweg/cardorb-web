@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { CardImage } from "@/components/app/card-image";
+import type { BrowseLanguage } from "@/lib/languages";
 import type { SetSeries } from "@/lib/sets";
 import { cx } from "@/utils/cx";
 
@@ -10,7 +11,7 @@ const n = (v: number) => v.toLocaleString("en-US");
 // Every set there has been, as a list under the search: series by series, each set a row with
 // its logo, name and how many of it you hold, leading to the set's page. The same shelf Browse
 // draws, in rows rather than tiles, because it sits in a sheet.
-export function SetsShelfList({ series, onNavigate }: { series: SetSeries[]; onNavigate?: () => void }) {
+export function SetsShelfList({ series, language = "en", onNavigate }: { series: SetSeries[]; language?: BrowseLanguage; onNavigate?: () => void }) {
     return (
         <div className="flex flex-col gap-5">
             {series.map((group) => (
@@ -20,7 +21,7 @@ export function SetsShelfList({ series, onNavigate }: { series: SetSeries[]; onN
                         {group.sets.map((set) => (
                             <li key={set.id}>
                                 <Link
-                                    href={`/dashboard/sets/${encodeURIComponent(set.id)}`}
+                                    href={`/dashboard/sets/${encodeURIComponent(set.id)}${language === "en" ? "" : `?language=${language}`}`}
                                     onClick={onNavigate}
                                     className={cx(
                                         "flex pressable items-center gap-3 rounded-lg p-2 outline-focus-ring transition-colors hover:bg-secondary focus-visible:outline-2",

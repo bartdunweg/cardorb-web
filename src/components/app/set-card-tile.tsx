@@ -22,7 +22,8 @@ type Result = { ok: true } | { ok: false; error: string };
  * The picture carries no text of its own — the caption under it and the button's name say
  * which card this is and whether it is yours, so the grey is never the only signal.
  */
-export function SetCardTile({ card }: { card: SetCard }) {
+/** `readOnly`: another language's catalogue, which the collection cannot take yet; the tile shows and does nothing. */
+export function SetCardTile({ card, readOnly = false }: { card: SetCard; readOnly?: boolean }) {
     const router = useRouter();
     const [pending, startTransition] = useTransition();
     const [error, setError] = useState<string | null>(null);
@@ -49,7 +50,7 @@ export function SetCardTile({ card }: { card: SetCard }) {
         <div className="flex flex-col gap-1.5">
             <Dropdown.Root>
                 <AriaButton
-                    isDisabled={pending}
+                    isDisabled={pending || readOnly}
                     aria-label={`${card.name} #${card.number}, ${stateLabel}`}
                     className={({ isPressed, isFocusVisible }) =>
                         cx(

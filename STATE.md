@@ -374,6 +374,19 @@ row; One more, Different…, One is different…), `CopyFormDialog`, `FlagIcon` 
 series' logo alone, Acquired as a date field, a flag on a non-English tile. A card added from a manual
 folder's page is filed in it (#210).
 
+Languages, step 1 (evening of 2026-09-06; cardorb-api #216, web this PR). The shelf and a set
+page can be another language's catalogue: `GET /v1/catalog/sets?language=ja|zh-tw|zh-cn|ko`
+and `…/sets/{id}?language=` read TCGdex's own catalogues (184 Japanese sets, 98 and 57
+Chinese, 95 Korean), names in that language only (there is no English name for a Japanese set),
+scans at the address every TCGdex scan has. On the web: a row of flag chips (`LanguageChips`)
+on Browse (`?language=` in the URL) and in the search sheet's shelf; set pages carry the
+language; another language's tiles are read-only. Step 2, not done: adding such a card to the
+collection (the assembly resolves facts by English set name against TCGdex `en`; it needs the
+row's language to pick the catalogue), search per language, and prices (Japanese cards have
+Cardmarket product ids in TCGdex's pricing block; Chinese have next to none). Home's search sits
+in the bar with the avatar, lists every set until something is typed, and Browse left the tab
+bar (#223–#225).
+
 ## Open
 
 - **A revoked session stays open on the web for up to an hour (#79).** The middleware and the
