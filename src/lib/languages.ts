@@ -28,8 +28,8 @@ export function languageOf(code: string | null | undefined): Language {
 export const BROWSE_LANGUAGES = [
     { code: "en", label: "English", short: "English", country: "gb" },
     { code: "ja", label: "Japanese", short: "Japanese", country: "jp" },
-    { code: "zh-tw", label: "Chinese (traditional)", short: "Chinese (TW)", country: "tw" },
-    { code: "zh-cn", label: "Chinese (simplified)", short: "Chinese (CN)", country: "cn" },
+    { code: "zh-tw", label: "Traditional Chinese", short: "Traditional Chinese", country: "tw" },
+    { code: "zh-cn", label: "Simplified Chinese", short: "Simplified Chinese", country: "cn" },
     { code: "ko", label: "Korean", short: "Korean", country: "kr" },
 ] as const;
 export type BrowseLanguage = (typeof BROWSE_LANGUAGES)[number]["code"];
