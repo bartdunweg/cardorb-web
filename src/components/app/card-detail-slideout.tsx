@@ -21,7 +21,7 @@ import {
 } from "@/app/(app)/dashboard/cards/actions";
 import { type FolderChoice, listCollections, loadFacets, setCardCollection } from "@/app/(app)/dashboard/collections/actions";
 import { CardImage } from "@/components/app/card-image";
-import { CONDITIONS, ConditionBadge } from "@/components/app/condition-badge";
+import { CONDITIONS } from "@/components/app/condition-badge";
 import { CopyFormDialog } from "@/components/app/copy-form-dialog";
 import { FavoriteStar } from "@/components/app/favorite-star";
 import { FlagIcon } from "@/components/app/flag-icon";
@@ -520,7 +520,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                                     label="Condition"
                                                     value={
                                                         <span className="flex items-center justify-end gap-2">
-                                                            {mine.condition ? <ConditionBadge condition={mine.condition} /> : null}
                                                             <NativeSelect
                                                                 aria-label="Condition"
                                                                 size="sm"
