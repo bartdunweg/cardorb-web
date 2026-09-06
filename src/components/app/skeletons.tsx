@@ -1,107 +1,181 @@
-// The outlines a page shows while it fetches, one per shape of page. Each keeps the real layout's
-// grid and ratios, so nothing moves when the content lands. Every loading.tsx under the dashboard
-// composes these. The shell (sidebar, tab bar) streams before any of them, with the two slots below
-// standing in for what its own reads bring: the folders you made and the account card.
+import type { ReactNode } from "react";
+import { GRID_COLUMNS } from "@/components/app/cards-grid";
+import { MobileTopRow } from "@/components/app/mobile-top-row";
+import { PageHeader } from "@/components/app/page-header";
+import { ListRow } from "@/components/app/skeleton-row";
 
-// A shade under the page (neutral-100): a block the page's own colour would be no outline at all.
+// What a page shows while it fetches: the page's own frame, with outlines only where the data
+// will be. The title, the subtitle, Back and the row are the real components with the real words,
+// so nothing moves when the content lands; the count line, the tiles and the cards are blocks in
+// the real grid's columns. Every loading.tsx under the dashboard composes these. The shell (sidebar,
+// tab bar) streams before any of them.
+
+// A shade under the page: a block the page's own colour would be no outline at all.
 const Block = ({ className }: { className: string }) => <div className={`rounded-md bg-quaternary ${className}`} />;
 
-export function SkeletonFrame({ children }: { children: React.ReactNode }) {
+// The same block where a line of text will be: inside a <p>, so a span.
+const Line = ({ className }: { className: string }) => <span className={`inline-block rounded-md bg-quaternary align-middle ${className}`} />;
+
+/** The outlines: hidden from a screen reader (the frame around them says "Loading…"), pulsing. */
+function Outline({ children, className = "" }: { children: ReactNode; className?: string }) {
     return (
-        <output aria-live="polite" className="flex flex-1 flex-col gap-6 motion-safe:animate-pulse">
+        <div aria-hidden="true" className={`motion-safe:animate-pulse ${className}`}>
+            {children}
+        </div>
+    );
+}
+
+export function SkeletonFrame({ children }: { children: ReactNode }) {
+    return (
+        <output aria-live="polite" className="flex flex-1 flex-col gap-6">
             <span className="sr-only">Loading…</span>
-            {/* No stand-in for the title or the row: those come with the page itself, a moment later; only
-                the cards, which come after that, are worth an outline. */}
-            <div className="contents" aria-hidden="true">
-                {children}
-            </div>
+            {children}
         </output>
     );
 }
 
-/** A card list: the tiles' own ratio, in the grid's own columns. */
+/** A card list: the tiles' own ratio, in the grid's own columns, without the surface a tile no longer has. */
 export function CardsSkeleton({ count = 12 }: { count?: number }) {
     return (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+        <Outline className={`grid gap-4 ${GRID_COLUMNS.md}`}>
             {Array.from({ length: count }, (_, i) => (
-                <div key={i} className="flex flex-col gap-2 p-2">
+                <div key={i} className="flex flex-col gap-2">
                     <div className="aspect-card w-full rounded-lg bg-quaternary" />
                     <Block className="h-4 w-3/4" />
                     <Block className="h-3 w-1/2" />
                 </div>
             ))}
-        </div>
+        </Outline>
     );
 }
 
-/** Home: the row of stat tiles and the chart's box. */
+/**
+ * A list page: the title, its count line as a block, Back where the page has one, then the row and
+ * the cards. `title` absent (a folder, a set: the name comes with the data) leaves the title's
+ * line empty rather than guessing a word that would then change.
+ */
+export function ListSkeleton({
+    title,
+    subtitle,
+    back,
+    tiles = 12,
+}: {
+    title?: string;
+    subtitle?: string;
+    back?: { href: string; label: string };
+    tiles?: number;
+}) {
+    return (
+        <SkeletonFrame>
+            <PageHeader
+                title={title ?? " "}
+                subtitle={
+                    <>
+                        {subtitle ? <span className="block">{subtitle}</span> : null}
+                        <Line className="h-5 w-40" />
+                    </>
+                }
+                back={back}
+            />
+            <div className="flex flex-col gap-4">
+                <ListRow />
+                <CardsSkeleton count={tiles} />
+            </div>
+        </SkeletonFrame>
+    );
+}
+
+/** Home: the title, the four stat tiles in their grid, and the chart's box. */
 export function HomeSkeleton() {
     return (
-        <>
-            <div className="flex flex-col gap-x-6 gap-y-5 md:flex-row md:flex-wrap">
+        <SkeletonFrame>
+            <PageHeader title="Home" subtitle="An overview of your collection." />
+            <Outline className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4">
                 {Array.from({ length: 4 }, (_, i) => (
-                    <div key={i} className="flex flex-1 flex-col gap-5 rounded-xl px-4 py-5 ring-1 ring-primary ring-inset md:min-w-60 md:px-5">
-                        <Block className="size-12 rounded-lg" />
-                        <div className="flex flex-col gap-2">
-                            <Block className="h-4 w-20" />
-                            <Block className="h-8 w-28" />
+                    <div key={i} className="rounded-xl bg-primary shadow-lift-xs ring-1 ring-primary ring-inset">
+                        <div className="flex flex-col gap-3 px-3 py-4 sm:gap-4 sm:px-4 sm:py-5 md:gap-5 md:px-5">
+                            <div className="flex flex-col gap-2">
+                                <Block className="h-5 w-20" />
+                                <Block className="h-8 w-24 sm:h-9" />
+                            </div>
                         </div>
                     </div>
                 ))}
-            </div>
-            <div className="flex flex-col gap-4 rounded-xl px-4 py-5 ring-1 ring-primary ring-inset md:px-5">
-                <Block className="h-4 w-48" />
-                <Block className="h-56 w-full" />
-            </div>
-        </>
+            </Outline>
+            <section className="flex flex-col gap-4 rounded-xl bg-primary px-4 py-5 shadow-lift-xs ring-1 ring-primary ring-inset md:px-5">
+                <div className="flex flex-col gap-1">
+                    <h2 className="text-md font-semibold text-primary">Collection value over time</h2>
+                    <p className="text-xs text-quaternary">One reading a night, at Cardmarket&apos;s prices of that day.</p>
+                </div>
+                <Outline>
+                    <Block className="h-56 w-full" />
+                </Outline>
+            </section>
+        </SkeletonFrame>
     );
 }
 
-/** The Pokédex: the same tiles as a list of cards. */
-export function DexSkeleton() {
-    return <CardsSkeleton />;
-}
-
-/** Folders: the tiles of the collections page. */
+/** Collection: the title and its line, then the folder tiles in their grid, each an icon square and two lines. */
 export function FoldersSkeleton() {
     return (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }, (_, i) => (
-                <Block key={i} className="h-24 rounded-xl" />
-            ))}
-        </div>
+        <SkeletonFrame>
+            <PageHeader title="Collection" subtitle="Group your cards the way you like." />
+            <Outline className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+                {Array.from({ length: 4 }, (_, i) => (
+                    <div
+                        key={i}
+                        className="flex items-center gap-3 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary ring-inset sm:flex-col sm:items-start"
+                    >
+                        <Block className="size-12 shrink-0 rounded-lg" />
+                        <div className="flex min-w-0 flex-1 flex-col gap-2">
+                            <Block className="h-4 w-24" />
+                            <Block className="h-3.5 w-16" />
+                        </div>
+                    </div>
+                ))}
+            </Outline>
+        </SkeletonFrame>
     );
 }
 
-/** The sets shelf: a series heading, then rows of logo, name and bar. */
+/** Browse: the search at the top on a phone, then a series heading and rows of logo, name and bar in the shelf's grid. */
 export function SetsSkeleton() {
     return (
-        <>
-            <Block className="-mt-4 h-2 max-w-md" />
+        <SkeletonFrame>
+            <PageHeader title="Browse" above={<MobileTopRow />} titleOnPhone={false} />
             {Array.from({ length: 2 }, (_, s) => (
-                <div key={s} className="flex flex-col gap-3">
-                    <Block className="h-5 w-32" />
+                <Outline key={s} className="flex flex-col gap-3">
+                    <Block className="h-6 w-40" />
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                         {Array.from({ length: 6 }, (_, i) => (
-                            <Block key={i} className="h-20 rounded-xl" />
+                            <div key={i} className="flex items-center gap-4 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary ring-inset">
+                                <Block className="size-12 shrink-0" />
+                                <div className="flex min-w-0 flex-1 flex-col gap-2.5">
+                                    <div className="flex items-baseline justify-between gap-3">
+                                        <Block className="h-4 w-32" />
+                                        <Block className="h-4 w-14" />
+                                    </div>
+                                    <Block className="h-2 w-full rounded-full" />
+                                </div>
+                            </div>
                         ))}
                     </div>
-                </div>
+                </Outline>
             ))}
-        </>
+        </SkeletonFrame>
     );
 }
 
-/** One set: the bar under the count, then card tiles in the set grid's columns. */
+/** One set: Back to Browse, the name's line and the count, then card tiles in the set grid's columns. */
 export function SetSkeleton() {
     return (
-        <>
-            <Block className="-mt-4 h-2 max-w-md" />
-            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
+        <SkeletonFrame>
+            <PageHeader title={" "} subtitle={<Line className="h-5 w-40" />} back={{ href: "/dashboard/sets", label: "Browse" }} />
+            <Outline className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
                 {Array.from({ length: 40 }, (_, i) => (
                     <div key={i} className="aspect-card rounded-md bg-quaternary" />
                 ))}
-            </div>
-        </>
+            </Outline>
+        </SkeletonFrame>
     );
 }

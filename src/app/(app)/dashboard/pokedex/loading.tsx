@@ -1,9 +1,6 @@
-import { DexSkeleton, SkeletonFrame } from "@/components/app/skeletons";
+import { ListSkeleton } from "@/components/app/skeletons";
 
+// The page's own frame while it fetches; see skeletons.tsx.
 export default function Loading() {
-    return (
-        <SkeletonFrame>
-            <DexSkeleton />
-        </SkeletonFrame>
-    );
+    return <ListSkeleton title="Pokédex" back={{ href: "/dashboard/collections", label: "Collection" }} />;
 }

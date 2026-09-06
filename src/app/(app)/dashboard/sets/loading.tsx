@@ -1,9 +1,6 @@
-import { SetsSkeleton, SkeletonFrame } from "@/components/app/skeletons";
+import { SetsSkeleton } from "@/components/app/skeletons";
 
+// The page's own frame while it fetches; see skeletons.tsx.
 export default function Loading() {
-    return (
-        <SkeletonFrame>
-            <SetsSkeleton />
-        </SkeletonFrame>
-    );
+    return <SetsSkeleton />;
 }
