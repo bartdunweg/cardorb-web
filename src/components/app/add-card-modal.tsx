@@ -30,7 +30,15 @@ export function AddCardModal({
     trigger,
     compact = false,
     label = "Add card",
-}: { defaultTarget?: Target; trigger?: ReactNode; compact?: boolean; label?: string } = {}) {
+    collectionId,
+}: {
+    defaultTarget?: Target;
+    trigger?: ReactNode;
+    compact?: boolean;
+    label?: string;
+    /** Opened from a manual folder's page: the card is filed in it at once. */
+    collectionId?: string;
+} = {}) {
     const router = useRouter();
     const [target, setTarget] = useState<Target>(defaultTarget);
     const [query, setQuery] = useState("");
@@ -44,7 +52,7 @@ export function AddCardModal({
     const onAdd = async (card: PokemonCard) => {
         const key = keyFor(card);
         setStatus((s) => ({ ...s, [key]: "adding" }));
-        const res = await addCard(card, target);
+        const res = await addCard(card, target, collectionId);
         if (res.ok) {
             setStatus((s) => ({ ...s, [key]: "done" }));
             router.refresh();
