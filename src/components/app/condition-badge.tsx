@@ -15,6 +15,9 @@ const SCALE: { keys: string[]; label: string; color: BadgeColors }[] = [
     { keys: ["poor", "po"], label: "Poor", color: "error" },
 ];
 
+/** The scale, top down, for a picker. */
+export const CONDITIONS = SCALE.map((c) => c.label);
+
 export function conditionOf(raw: string): { label: string; color: BadgeColors } {
     const key = raw.trim().toLowerCase();
     return SCALE.find((c) => c.keys.includes(key)) ?? { label: raw, color: "gray" };

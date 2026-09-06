@@ -53,6 +53,7 @@ describe("cardFromItem", () => {
         expect(card).toMatchObject({
             price: 6,
             set_name: "Base Set",
+            set: "base1",
             types: ["Lightning"],
             is_favorite: true,
             owned: false,

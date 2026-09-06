@@ -2,6 +2,7 @@
 
 import { CardImage } from "@/components/app/card-image";
 import { FavoriteStar } from "@/components/app/favorite-star";
+import { FlagIcon } from "@/components/app/flag-icon";
 import type { PublicCard } from "@/lib/cards";
 import type { CardsSize } from "@/lib/cards-view";
 import { formatPrice } from "@/lib/format";
@@ -70,6 +71,10 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                             <span className="flex items-center gap-1 text-sm font-medium text-primary">
                                 <span className="truncate">{card.name}</span>
                                 {card.is_favorite ? <FavoriteStar /> : null}
+                                {/* A copy in another language wears its flag; English, which nearly every card is, stays plain. */}
+                                {"language" in card && typeof card.language === "string" && card.language !== "en" ? (
+                                    <FlagIcon language={card.language} />
+                                ) : null}
                             </span>
                             <span className="truncate text-xs text-tertiary">
                                 {[card.set_name, card.number ? `#${card.number}` : null].filter(Boolean).join(" · ")}
