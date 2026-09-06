@@ -46,7 +46,7 @@ export default async function SetPage({ params }: { params: Promise<{ id: string
                 above={
                     set.logoUrl ? (
                         <div className="relative h-14 w-48 max-w-full">
-                            <CardImage src={set.logoUrl} alt="" sizes="192px" className="object-contain object-left" />
+                            <CardImage src={set.logoUrl} alt="" width={384} ratio="square" className="object-contain object-left" />
                         </div>
                     ) : undefined
                 }

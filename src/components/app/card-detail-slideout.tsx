@@ -152,7 +152,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                 <CardImage
                                     src={card.image_high_url ?? card.image_url}
                                     alt={card.name}
-                                    sizes="384px"
+                                    width={384}
                                     quality={75}
                                     className="object-contain"
                                     priority
