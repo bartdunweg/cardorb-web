@@ -14,12 +14,14 @@ import { cx } from "@/utils/cx";
 /** Tiles that are on screen at load on any width: the widest grid shows six per row. */
 const FIRST_ROW = 6;
 
-// Tiles per row at each size: small packs the pictures, large shows them. Exported for the
-// Pokédex, which draws the same tiles so a folder reads the same whichever way it is shown.
+// Tiles per row at each size: small packs the pictures, large shows them. On a phone four,
+// three and two: two across at medium read as large, and a card is legible at a quarter of the
+// width because the words under it truncate. Exported for the Pokédex, which draws the same
+// tiles so a folder reads the same whichever way it is shown.
 export const GRID_COLUMNS: Record<CardsSize, string> = {
-    sm: "grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8",
-    md: "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6",
-    lg: "grid-cols-1 xs:grid-cols-2 md:grid-cols-3 xl:grid-cols-4",
+    sm: "grid-cols-4 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8",
+    md: "grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6",
+    lg: "grid-cols-2 md:grid-cols-3 xl:grid-cols-4",
 };
 
 export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null; price?: number | null }>({

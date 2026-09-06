@@ -6,7 +6,8 @@ import { formatPrice } from "@/lib/format";
 import { areaPath, linePath, pointsFor } from "@/lib/value-chart-math";
 import { cx } from "@/utils/cx";
 
-// A card's price over the last ninety days, under the price in its sheet: one small line in the
+// A card's price, day by day, as far back as there is a reading (the API's own nightly readings, and
+// before those TCGplayer's dollars in euros), under the price in its sheet: one small line in the
 // direction's colour, and a sentence saying how much it moved. Asked for when the sheet opens,
 // not when the page mounts. A reverse holo reads the foil price, the same rule as the price above.
 // No axis and no table: the sentence carries the numbers, the line the shape.
@@ -55,15 +56,27 @@ export function PriceHistory({
     const pad = (max - min || Math.abs(max) || 1) * 0.1;
     const frame = { width: WIDTH, height: HEIGHT, top: 4, right: 0, bottom: 0, left: 0 };
     const pts = pointsFor(values, frame, min - pad, max + pad);
-    const fill = "fill-fg-primary";
+    // The line's colour, as `color`: the fill under it is a gradient of currentColor.
+    const tone = "text-fg-primary";
     const stroke = "stroke-fg-primary";
+    const fadeId = `${titleId}-fade`;
     const said = `${change === 0 ? "Unchanged" : `${change > 0 ? "+" : "−"}${formatPrice(Math.abs(change))}`} since ${dayYear.format(new Date(`${first.date}T00:00:00`))}`;
 
     return (
         <figure className="flex flex-col gap-1" aria-labelledby={titleId}>
             <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className={cx("w-full", tall ? "h-28" : "h-14")} preserveAspectRatio="none" aria-labelledby={titleId}>
-                <title id={titleId}>{`Price over the last ${series.length} readings: ${formatPrice(first.value)} to ${formatPrice(last.value)}.`}</title>
-                <path d={areaPath(pts, HEIGHT)} className={cx(fill, "opacity-15")} />
+                <title
+                    id={titleId}
+                >{`Price since ${dayYear.format(new Date(`${first.date}T00:00:00`))}: ${formatPrice(first.value)} to ${formatPrice(last.value)}, ${series.length} readings.`}</title>
+                {/* The ground under the line: the line's own colour, faint at the line and nothing at the
+                    bottom, so it reads as the line's shadow and not a block. */}
+                <defs>
+                    <linearGradient id={fadeId} x1={0} y1={0} x2={0} y2={1}>
+                        <stop offset={0} stopColor="currentColor" stopOpacity={0.15} />
+                        <stop offset={1} stopColor="currentColor" stopOpacity={0} />
+                    </linearGradient>
+                </defs>
+                <path d={areaPath(pts, HEIGHT)} fill={`url(#${fadeId})`} className={tone} />
                 <path
                     d={linePath(pts)}
                     className={stroke}

@@ -16,10 +16,11 @@ type Account = { name: string; email: string; avatarUrl: string | null };
 type FolderLink = { id: string; name: string; kind: "manual" | "rule" };
 
 // Icons are component functions, so nav items are built here (client) — they can't be passed
-// from a Server Component. Home, Browse (every set there has been, not your collection) and
-// the wishlist (cards you do not have, so outside it too) at the top; under the Collection heading every folder, flat: All cards, Favorites,
-// the Pokédex, each with its own icon, and the ones you made with a folder's, then New folder. On desktop this list is the
-// overview; the Folders page is the phone's.
+// from a Server Component. Home, All cards, the wishlist (cards you do not have, so outside the
+// collection) and Browse (every set there has been, not your collection) at the top, the same
+// three the phone's tab bar carries plus Browse; under the Collections heading the rest, flat:
+// Favorites, the Pokédex, each with its own icon, and the ones you made with a folder's, then
+// New folder. On desktop this list is the overview; the Collections page is the phone's.
 //
 // The folders and the account arrive as promises: the layout hands them over without waiting, so
 // the frame is on screen while the API answers, and each slot fills in on its own.
@@ -39,10 +40,10 @@ export function AppSidebar({ account, collections }: { account: Promise<Account>
 
     const navItems: (NavItemType | NavItemDividerType)[] = [
         { label: "Home", href: "/dashboard", icon: HomeLine },
-        { label: "Browse", href: "/dashboard/sets", icon: BookOpen01 },
-        { label: "Wishlist", href: "/dashboard/wishlist", icon: Heart },
-        { divider: true, label: "Collection" },
         { label: "All cards", href: "/dashboard/cards", icon: Rows01 },
+        { label: "Wishlist", href: "/dashboard/wishlist", icon: Heart },
+        { label: "Browse", href: "/dashboard/sets", icon: BookOpen01 },
+        { divider: true, label: "Collections" },
         { label: "Favorites", href: "/dashboard/favorites", icon: Star01 },
         { label: "Pokédex", href: "/dashboard/pokedex", icon: Grid01 },
     ];

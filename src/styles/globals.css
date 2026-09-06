@@ -62,6 +62,11 @@
     background-image: linear-gradient(to bottom, transparent, var(--color-bg-page) 70%);
 }
 
+/* The same fade the other way up: the ground of a bar at the top of a scrolling sheet. */
+@utility fade-from-page {
+    background-image: linear-gradient(to top, transparent, var(--color-bg-page) 70%);
+}
+
 /* A card's corners: a printed card is rounded at about 4.8 % of its width, and a scan carries
    that corner. A fixed radius either shows the box behind the corner or clips the print; this
    one scales with the box. Two radii, because the box is always 63 by 88: the vertical one is

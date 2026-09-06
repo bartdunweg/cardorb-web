@@ -1,12 +1,15 @@
 "use client";
 
 import { type ReactNode, Suspense, use, useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import { listCopies } from "@/app/(app)/dashboard/cards/actions";
+import { CardDetailSlideout } from "@/components/app/card-detail-slideout";
 import { CardImage } from "@/components/app/card-image";
 import { GRID_COLUMNS } from "@/components/app/cards-grid";
 import { DexSlider } from "@/components/app/dex-slider";
 import { CardsSkeleton } from "@/components/app/skeletons";
 import { ViewMenu } from "@/components/app/view-menu";
+import type { DexCard } from "@/lib/api-shapes";
+import type { Card } from "@/lib/cards";
 import type { CardsSize } from "@/lib/cards-view";
 import type { DexList, NamedDexSlot } from "@/lib/dex-groups";
 import { cx } from "@/utils/cx";
@@ -28,6 +31,23 @@ export function DexGrid({ slots, size = "md", linked = true }: { slots: NamedDex
     // all in hand already, so a batch is a render and not a request.
     const [shown, setShown] = useState(DEX_BATCH);
     const sentinel = useRef<HTMLDivElement>(null);
+    // The card a tile opens, in the same sheet a list opens one in. A slot carries its cards' ids and
+    // names only; the sheet wants the whole row, so a tap asks the API for that card's rows (set and
+    // number: the same call the sheet's Copies tile makes) and opens the one the tile showed, not a
+    // search for its name, which would list every namesake.
+    const [selected, setSelected] = useState<Card | null>(null);
+    const opening = useRef<string | null>(null);
+    const open = async (card: DexCard) => {
+        if (opening.current === card.id) return;
+        opening.current = card.id;
+        try {
+            const rows = await listCopies({ set: card.set, number: card.number, name: card.name });
+            const row = rows.find((r) => r.id === card.id) ?? rows[0] ?? null;
+            if (row) setSelected(row);
+        } finally {
+            opening.current = null;
+        }
+    };
     const more = shown < slots.length;
     useEffect(() => {
         const el = sentinel.current;
@@ -47,7 +67,7 @@ export function DexGrid({ slots, size = "md", linked = true }: { slots: NamedDex
         <>
             <div className={cx("grid gap-4", GRID_COLUMNS[size])}>
                 {slots.slice(0, shown).map((slot) => (
-                    <DexTile key={slot.number} slot={slot} linked={linked} />
+                    <DexTile key={slot.number} slot={slot} onSelect={linked ? open : undefined} />
                 ))}
             </div>
             {more ? (
@@ -61,13 +81,13 @@ export function DexGrid({ slots, size = "md", linked = true }: { slots: NamedDex
                     </button>
                 </div>
             ) : null}
+            {linked ? <CardDetailSlideout card={selected} onClose={() => setSelected(null)} /> : null}
         </>
     );
 }
 
-// `linked`: a single card leads to its search in the owner's collection; on a public page there is
-// nowhere to go, so the tile is a plain tile.
-function DexTile({ slot, linked }: { slot: NamedDexSlot; linked: boolean }) {
+// `onSelect`: a card opens its sheet; on a public page there is nowhere to go, so the tile is a plain tile.
+function DexTile({ slot, onSelect }: { slot: NamedDexSlot; onSelect?: (card: DexCard) => void }) {
     const held = slot.cards.length;
     const line = `${dexNumber(slot.number)} · ${held === 0 ? "Missing" : held === 1 ? "1 card" : `${held} cards`}`;
     const words = (
@@ -91,7 +111,7 @@ function DexTile({ slot, linked }: { slot: NamedDexSlot; linked: boolean }) {
     if (held > 1) {
         return (
             <div className="flex flex-col gap-2">
-                <DexSlider cards={slot.cards} linked={linked} />
+                <DexSlider cards={slot.cards} onSelect={onSelect} />
                 {words}
             </div>
         );
@@ -109,7 +129,7 @@ function DexTile({ slot, linked }: { slot: NamedDexSlot; linked: boolean }) {
             )}
         </div>
     );
-    if (!linked) {
+    if (!onSelect) {
         return (
             <div className="flex flex-col gap-2">
                 {picture}
@@ -118,13 +138,14 @@ function DexTile({ slot, linked }: { slot: NamedDexSlot; linked: boolean }) {
         );
     }
     return (
-        <Link
-            href={`/dashboard/cards?q=${encodeURIComponent(card.name)}`}
-            className="flex pressable cursor-pointer flex-col gap-2 rounded-lg text-left outline-offset-2 outline-focus-ring focus-visible:outline-2"
+        <button
+            type="button"
+            onClick={() => onSelect(card)}
+            className="flex w-full pressable cursor-pointer flex-col gap-2 rounded-lg text-left outline-offset-2 outline-focus-ring focus-visible:outline-2"
         >
             {picture}
             {words}
-        </Link>
+        </button>
     );
 }
 

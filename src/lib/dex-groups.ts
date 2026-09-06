@@ -11,7 +11,8 @@ export type NamedDexSlot = DexSlot & { name: string };
  * `missing` off, the empty slots go; with it on they stay, named, so a person sees what to find.
  */
 /** What a slot needs of a card: the owner's card and a public profile's both have it. */
-export type DexCardLike = Pick<Card, "id" | "name" | "species_id" | "rarity" | "image_url" | "image_high_url">;
+/** `set` is what a public card does not carry; a public Pokédex opens nothing, so it needs none. */
+export type DexCardLike = Pick<Card, "id" | "name" | "number" | "species_id" | "rarity" | "image_url" | "image_high_url"> & { set?: string | null };
 
 export function groupByDex(
     cards: DexCardLike[],
@@ -39,7 +40,7 @@ export function groupByDex(
         slots.push({
             number,
             name: names.get(number) ?? `#${number}`,
-            cards: held.map((c) => ({ id: c.id, name: c.name, imageUrl: c.image_url, imageHighUrl: c.image_high_url })),
+            cards: held.map((c) => ({ id: c.id, name: c.name, set: c.set ?? null, number: c.number, imageUrl: c.image_url, imageHighUrl: c.image_high_url })),
         });
     }
     return { slots, caught: bySlot.size, range, cards: counted };

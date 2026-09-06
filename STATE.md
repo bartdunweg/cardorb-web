@@ -429,6 +429,29 @@ the others, and only the printings the card has, which `GET /v1/cards/{tcgId}` r
 `languages` by asking each Western TCGdex catalogue for the id (Pikachu with Grey Felt Hat:
 English and Portuguese).
 
+Navigation, the evening of 2026-09-06 (this PR). All cards is a tab of its own beside Home on
+the phone and the second item in the sidebar; the tab bar reads Home, All cards, Collections,
+Wishlist. The sidebar's top group is Home, All cards, Wishlist, Browse; under the Collections
+heading Favorites, the Pokédex and the folders you made. The phone's Collections page lost its
+All cards tile, and the pages under it say Back to Collections. A page bar's buttons (Back, the
+plus, the dots) are 44 px, the avatar's and Home's search's size. The card sheet scrolls as one
+page, art and all; a sticky bar (`sheet-bar.tsx`) holds Close, the star and the menu, and takes
+the card's name and the page's colour as the title slides under it, the page bar's collapse for
+a sheet. The fill under a chart's line runs out to nothing at the bottom. The Supabase migration
+history of the API project is in step with its files again (`supabase migration repair`: two
+entries recorded under the timestamp of their apply, three applied by hand, all five marked).
+
+Price history, later that night (cardorb-api #224; web #238). A card's line goes back to
+November 2022 where the American market has it: the API's prices route answers every reading,
+and `card_prices` carries `source`: the nightly Cardmarket guide from 2026-08-16, before it
+TCGplayer's market price weekly from February 2024 (tcgcsv.com's archive) and weekly averages
+of TCGplayer sales from November 2022 to November 2023 (tcgdex/price-history, older sets),
+dollars turned into euros at each day's ECB rate. One line, no second market on screen; the
+two markets disagree card by card (a Base Set Charizard: ~€340 Cardmarket, ~€770 from
+TCGplayer), so a line can step at 2026-08-16, accepted until a calibration pass. Nobody sells
+Cardmarket's own past: PokemonPriceTracker has 12 months in beta at $99 a month, pokedata.io
+is personal use only. `scripts/backfill-card-prices.mjs` in the API reruns the fill.
+
 ## Open
 
 - **The holo CSS is GPL-3.0.** GPL is about what the browser receives, not about free or
