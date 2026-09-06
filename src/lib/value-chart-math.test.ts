@@ -41,4 +41,18 @@ describe("nearestIndex", () => {
         expect(nearestIndex(points, 30)).toBe(1);
         expect(nearestIndex(points, 90)).toBe(2);
     });
+
+    it("draws three or more points as a smooth curve that stays within the readings", () => {
+        const points = [
+            { x: 0, y: 50, index: 0 },
+            { x: 100, y: 10, index: 1 },
+            { x: 200, y: 50, index: 2 },
+        ];
+        const d = linePath(points);
+        expect(d.startsWith("M0.0 50.0 C")).toBe(true);
+        expect(d.endsWith("200.0 50.0")).toBe(true);
+        // The peak is a reading: the tangent there is flat, so the control points sit at its height.
+        expect(d).toContain("66.7 10.0 100.0 10.0");
+        expect(d).toContain("C133.3 10.0");
+    });
 });

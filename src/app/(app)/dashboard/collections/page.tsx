@@ -9,7 +9,6 @@ export default async function CollectionsPage() {
         <div className="flex flex-1 flex-col gap-6">
             <PageHeader
                 title="Collection"
-                subtitle="Group your cards the way you like."
                 actions={
                     <div className="max-lg:hidden">
                         <NewCollectionButton />

@@ -21,7 +21,6 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
     return (
         <FolderPage
             title="Wishlist"
-            subtitle="Cards you’re looking for but don’t own yet."
             datapoints={datapoints}
             settings={(compact) => <ListSettingsDialog list="wishlist" title="Wishlist" isPublic={profile?.wishlist_public ?? false} compact={compact} />}
             add={(compact) => <AddCardModal defaultTarget="wishlist" compact={compact} />}

@@ -62,6 +62,13 @@
     }
 }
 
+/* Fade to page: under the floating tab bar, from nothing to the page's own ground, so the page runs
+   out under the bar instead of ending on it, and Safari, which takes its bottom bar's colour from
+   the page's bottom edge, finds the ground there rather than whatever scrolled under. */
+@utility fade-to-page {
+    background-image: linear-gradient(to bottom, transparent, var(--color-bg-page) 70%);
+}
+
 /* Pressable: scale 0.96 on press, so a tap is answered before anything else happens. 0.96, not
    less: below 0.95 it reads as exaggerated. Buttons, tabs and tappable cards all carry it. */
 @utility pressable {

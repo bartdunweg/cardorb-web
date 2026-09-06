@@ -4,6 +4,7 @@ import { z } from "zod";
 import { ApiError, api } from "@/lib/api";
 import { type BrowseCard, type PokemonCard, pokemonCardFromBrowse } from "@/lib/api-shapes";
 import { type Card, getMyCards } from "@/lib/cards";
+import { getSets } from "@/lib/sets";
 import { forgetMine } from "@/lib/user-cache";
 
 export type { PokemonCard } from "@/lib/api-shapes";
@@ -150,5 +151,21 @@ export async function cardPriceHistory(tcgId: string): Promise<PricePoint[]> {
     } catch (err) {
         console.error("Price history unavailable:", err instanceof Error ? err.message : err);
         return [];
+    }
+}
+
+// A generation's logo: the earliest set of that series that carries one and is not a promo
+// set, from the shelf the Browse page already reads. Null where the series is unknown.
+export async function seriesLogo(series: string): Promise<string | null> {
+    try {
+        const shelf = await getSets();
+        const found = shelf.series.find((s) => s.name === series);
+        if (!found) return null;
+        const sets = [...found.sets]
+            .filter((s) => s.logoUrl && !/promo/i.test(s.name))
+            .sort((a, b) => (a.releaseDate ?? "").localeCompare(b.releaseDate ?? ""));
+        return sets[0]?.logoUrl ?? null;
+    } catch {
+        return null;
     }
 }

@@ -73,11 +73,10 @@ export function ValueChart({
     const first = snapshots[0];
     const last = snapshots[snapshots.length - 1];
     const change = last.value - first.value;
-    // The line takes the period's direction: up reads green, down red, flat the brand colour.
-    const tone = change > 0 ? "success" : change < 0 ? "error" : "brand";
-    const fillTone = { success: "fill-fg-success-primary", error: "fill-fg-error-primary", brand: "fill-fg-brand-primary" }[tone];
+    // The line is the page's own ink; the sentence beside it carries the direction and its colour.
+    const fillTone = "fill-fg-primary";
     // The line's class sets the stroke only: a fill class would win over its fill="none".
-    const strokeTone = { success: "stroke-fg-success-primary", error: "stroke-fg-error-primary", brand: "stroke-fg-brand-primary" }[tone];
+    const strokeTone = "stroke-fg-primary";
     const summary = `${formatPrice(first.value)} on ${dayYear.format(dateOf(first))} to ${formatPrice(last.value)} on ${dayYear.format(dateOf(last))}, ${
         change === 0 ? "unchanged" : `${change > 0 ? "up" : "down"} ${formatPrice(Math.abs(change))}`
     }.`;

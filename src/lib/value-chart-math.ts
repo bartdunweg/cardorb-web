@@ -38,9 +38,45 @@ export function pointsFor(values: number[], frame: Frame, yMin: number, yMax: nu
     }));
 }
 
-/** An SVG path through the points, straight segments: a reading a night is data, not a curve. */
+/**
+ * An SVG path through the points as a smooth line. Monotone cubic (Fritsch–Carlson) rather
+ * than a Catmull-Rom: the curve never overshoots a reading, so a peak is the reading and not
+ * a bulge past it. Two points are a straight segment.
+ */
 export function linePath(points: Point[]): string {
-    return points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
+    const n = points.length;
+    if (n === 0) return "";
+    const f = (v: number) => v.toFixed(1);
+    if (n < 3) return points.map((p, i) => `${i === 0 ? "M" : "L"}${f(p.x)} ${f(p.y)}`).join(" ");
+    // Secant slopes, then a tangent per point that keeps the curve monotone between readings.
+    const dx = Array.from({ length: n - 1 }, (_, i) => points[i + 1].x - points[i].x || 1e-6);
+    const m = Array.from({ length: n - 1 }, (_, i) => (points[i + 1].y - points[i].y) / dx[i]);
+    const t = new Array<number>(n).fill(0);
+    t[0] = m[0];
+    t[n - 1] = m[n - 2];
+    for (let i = 1; i < n - 1; i++) t[i] = m[i - 1] * m[i] <= 0 ? 0 : (m[i - 1] + m[i]) / 2;
+    for (let i = 0; i < n - 1; i++) {
+        if (m[i] === 0) {
+            t[i] = 0;
+            t[i + 1] = 0;
+            continue;
+        }
+        const a = t[i] / m[i];
+        const b = t[i + 1] / m[i];
+        const h = Math.hypot(a, b);
+        if (h > 3) {
+            t[i] = ((3 * a) / h) * m[i];
+            t[i + 1] = ((3 * b) / h) * m[i];
+        }
+    }
+    let d = `M${f(points[0].x)} ${f(points[0].y)}`;
+    for (let i = 0; i < n - 1; i++) {
+        const p0 = points[i];
+        const p1 = points[i + 1];
+        const h = dx[i] / 3;
+        d += ` C${f(p0.x + h)} ${f(p0.y + t[i] * h)} ${f(p1.x - h)} ${f(p1.y - t[i + 1] * h)} ${f(p1.x)} ${f(p1.y)}`;
+    }
+    return d;
 }
 
 /** The same line closed down to the baseline, for the fill under it. */

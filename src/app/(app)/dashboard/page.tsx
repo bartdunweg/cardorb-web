@@ -21,14 +21,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
     return (
         <div className="flex flex-col gap-6">
-            <PageHeader title="Home" subtitle="An overview of your collection." barActions={<YouLink />} />
+            <PageHeader title="Home" barActions={<YouLink />} />
             <Suspense fallback={<ValueHeroOutline />}>
                 <ValueSection selected={selected} total={stats.value} />
             </Suspense>
             <CardsStats
                 stats={stats}
                 fourth={
-                    <Suspense fallback={<StatCard label="Pokémon collected" value=" " delay={120} />}>
+                    <Suspense fallback={<StatCard label="Pokémon collected" value=" " href="/dashboard/pokedex" delay={120} />}>
                         <DexStat />
                     </Suspense>
                 }
