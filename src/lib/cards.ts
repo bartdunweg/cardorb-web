@@ -12,6 +12,8 @@ export const getFacets = (): Promise<Facets> => perUser("facets", async () => (a
 
 /** Which cards a list asks for: the folder, the search, the sort and the two filters. Plain data, so a page can hand it to the client for the next batch. */
 export type CardFilter = {
+    /** False from a caller that will not read the facets (a further batch on scroll): the API skips that pass. */
+    facets?: boolean;
     q?: string;
     collectionId?: string;
     favoritesOnly?: boolean;
@@ -48,6 +50,7 @@ export async function getMyCards({
     set,
     rarity,
     priced,
+    facets: wantFacets,
 }: CardFilter & { limit?: number; offset?: number } = {}): Promise<{
     cards: Card[];
     total: number;
@@ -71,6 +74,8 @@ export async function getMyCards({
                 set,
                 rarity,
                 priced,
+                // The API skips its facets pass when told nobody will read them.
+                facets: wantFacets === false ? 0 : undefined,
                 limit,
                 offset,
             },
