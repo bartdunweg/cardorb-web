@@ -59,11 +59,14 @@ export function ListSkeleton({
     subtitle,
     back,
     tiles = 12,
+    lines = 1,
 }: {
     title?: string;
     subtitle?: string;
     back?: { href: string; label: string };
     tiles?: number;
+    /** The count's lines: two on the Pokédex. */
+    lines?: 1 | 2;
 }) {
     return (
         <SkeletonFrame>
@@ -72,7 +75,11 @@ export function ListSkeleton({
                 subtitle={
                     <>
                         {subtitle ? <span className="block">{subtitle}</span> : null}
-                        <Line className="h-5 w-40" />
+                        {Array.from({ length: lines }, (_, i) => (
+                            <span key={i} className="block">
+                                <Line className="h-5 w-40" />
+                            </span>
+                        ))}
                     </>
                 }
                 back={back}

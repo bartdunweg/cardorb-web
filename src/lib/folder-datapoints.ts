@@ -17,9 +17,18 @@ const n = (v: number) => v.toLocaleString("en-US");
 
 /** "734 cards · €2,140" · "12 matches" · "0 cards" */
 export function datapointsLine(d: Datapoints): string {
+    return datapointsLines(d).join(" · ");
+}
+
+/**
+ * The same, as lines: the Pokédex's "544 of 1,025 Pokémon" on one, the count and the value on the
+ * next. Two lines always, so the line does not wrap on one phone and not on another, and the
+ * outline drawn while the numbers load has the same height as the numbers.
+ */
+export function datapointsLines(d: Datapoints): string[] {
     const count = d.narrowed ? `${n(d.total)} match${d.total === 1 ? "" : "es"}` : `${n(d.total)} card${d.total === 1 ? "" : "s"}`;
     const parts = [count];
-    if (d.caught) parts.unshift(`${n(d.caught.of)} of ${n(d.caught.total)} Pokémon`);
     if (d.value != null && d.total > 0) parts.push(formatValue(d.value));
-    return parts.join(" · ");
+    const line = parts.join(" · ");
+    return d.caught ? [`${n(d.caught.of)} of ${n(d.caught.total)} Pokémon`, line] : [line];
 }
