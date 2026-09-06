@@ -39,7 +39,8 @@ export function CardsView({
     const [selected, setSelected] = useState<Card | null>(null);
 
     return (
-        <div className="flex flex-col gap-4">
+        // A column that grows: an empty state under the row takes the rest of the page and sits in the middle of it.
+        <div className="flex flex-1 flex-col gap-4">
             <div className="flex flex-wrap items-center gap-2">
                 {/* In its own box: an element that crossed the server boundary, in a list with local ones, trips the key check. */}
                 <div className="contents">{toolbar}</div>
