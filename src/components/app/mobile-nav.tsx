@@ -41,6 +41,8 @@ export function MobileTabBar() {
                     <Link
                         key={tab.href}
                         href={tab.href}
+                        // The whole page, fetched when the bar mounts, so a tap draws it at once rather than its outline.
+                        prefetch={true}
                         aria-current={active ? "page" : undefined}
                         className={cx(tabClass, active ? "bg-alpha-black/8 text-primary" : "text-tertiary")}
                     >

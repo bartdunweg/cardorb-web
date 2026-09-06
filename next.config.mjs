@@ -26,6 +26,9 @@ const nextConfig = {
     },
     experimental: {
         optimizePackageImports: ["@untitledui/icons"],
+        // The router keeps a page it has shown for a minute: a tab tapped twice, or Back, is drawn
+        // from memory rather than fetched again. A write calls router.refresh(), which bypasses it.
+        staleTimes: { dynamic: 60, static: 300 },
     },
     // Headers a browser honours without any script change. The Content-Security-Policy is not
     // here: src/proxy.ts sets it per request (a nonce policy on the signed-in and auth pages,
