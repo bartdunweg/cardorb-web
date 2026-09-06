@@ -54,7 +54,7 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                                     src={card.image_high_url ?? card.image_url}
                                     quality={75}
                                     alt=""
-                                    className="object-contain"
+                                    className="object-cover"
                                     // The first row is on screen at load and one of it is the largest paint; it must not wait for lazy loading.
                                     priority={i < FIRST_ROW}
                                 />

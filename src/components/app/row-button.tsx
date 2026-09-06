@@ -30,7 +30,11 @@ export function RowButton({
             iconLeading={icon}
             iconTrailing={menu ? <ChevronDown data-icon="trailing" className={cx(styles.common.icon, "max-sm:hidden")} /> : undefined}
             aria-label={label}
-            className={cx("max-sm:p-2", className)}
+            // The kit wraps children in a span with its own padding, beside a gap; with the word read
+            // out only, that was 8 px of nothing and a 44 by 36 pill. No text padding and no gap on a
+            // phone, the padding back from sm, so the button is a 36 px circle until the word shows.
+            noTextPadding
+            className={cx("max-sm:gap-0 max-sm:p-2 sm:[&>[data-text]]:px-0.5", className)}
             {...props}
         >
             <span className="max-sm:sr-only">{label}</span>

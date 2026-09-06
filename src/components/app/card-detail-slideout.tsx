@@ -240,7 +240,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                             alt={card.name}
                                             width={384}
                                             quality={75}
-                                            className="object-contain"
+                                            className="object-cover"
                                             priority
                                         />
                                     </div>
