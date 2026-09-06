@@ -15,8 +15,8 @@ import { cx } from "@/utils/cx";
  * The line is the brand colour at 2 px with a faint fill under it; the grid and axis text stay
  * recessive. Hovering or focusing finds the nearest reading and shows a crosshair, an 8 px marker
  * and a tooltip with the date, the value and how many copies had no price. Arrow keys walk the
- * readings for a keyboard. The same numbers are in a table under "Show as table", so nothing is
- * carried by the picture alone.
+ * readings for a keyboard, and the description under the figure says first, last and the change,
+ * so nothing is carried by the picture alone.
  */
 
 const HEIGHT = 200;
@@ -179,40 +179,6 @@ export function ValueChart({
             </div>
 
             {children}
-
-            <details className="text-sm">
-                <summary className="cursor-pointer text-tertiary outline-focus-ring focus-visible:outline-2">Show as table</summary>
-                <div className="mt-2 overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                        <thead>
-                            <tr className="border-b border-secondary text-xs font-medium text-tertiary">
-                                <th scope="col" className="py-2 pr-4">
-                                    Date
-                                </th>
-                                <th scope="col" className="py-2 pr-4 text-right">
-                                    Value
-                                </th>
-                                <th scope="col" className="py-2 pr-4 text-right">
-                                    Copies
-                                </th>
-                                <th scope="col" className="py-2 text-right">
-                                    Without a price
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {snapshots.map((s) => (
-                                <tr key={s.date} className="border-b border-secondary text-primary last:border-0">
-                                    <td className="py-2 pr-4">{dayYear.format(dateOf(s))}</td>
-                                    <td className="py-2 pr-4 text-right tabular-nums">{formatPrice(s.value)}</td>
-                                    <td className="py-2 pr-4 text-right tabular-nums">{s.cards.toLocaleString("en-US")}</td>
-                                    <td className="py-2 text-right tabular-nums">{s.unpriced.toLocaleString("en-US")}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </details>
         </figure>
     );
 }

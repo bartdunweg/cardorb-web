@@ -10,6 +10,8 @@ export const SORT_OPTIONS = [
     { value: "dex", label: "Pokédex number", sort: "dex", order: undefined },
     { value: "added-desc", label: "Newest first", sort: "added", order: "desc" },
     { value: "added-asc", label: "Oldest first", sort: "added", order: "asc" },
+    { value: "price-desc", label: "Highest price", sort: "price", order: "desc" },
+    { value: "price-asc", label: "Lowest price", sort: "price", order: "asc" },
 ] as const;
 
 export type SortKey = (typeof SORT_OPTIONS)[number]["value"];

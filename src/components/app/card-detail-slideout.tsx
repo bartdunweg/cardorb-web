@@ -10,6 +10,7 @@ import { type FolderChoice, listCollections, loadFacets, setCardCollection } fro
 import { CardImage } from "@/components/app/card-image";
 import { FavoriteStar } from "@/components/app/favorite-star";
 import { FolderDialog } from "@/components/app/folder-dialog";
+import { PriceHistory } from "@/components/app/price-history";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
@@ -140,6 +141,8 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                 {formatPrice(mine.price)} <span className="text-sm font-normal text-tertiary">market price</span>
                             </p>
                         ) : null}
+                        {/* How that price has moved: the nightly readings, under the number they explain. */}
+                        {mine?.tcg_id ? <PriceHistory tcgId={mine.tcg_id} holo={mine.finish === "reverse-holo"} /> : null}
                     </SlideoutMenu.Header>
 
                     <SlideoutMenu.Content>
