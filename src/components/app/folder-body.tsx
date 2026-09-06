@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { ReactNode } from "react";
 import { cookies } from "next/headers";
 import { AppEmptyState } from "@/components/app/app-empty-state";
@@ -18,7 +19,8 @@ type Common = {
     query: ListQuery;
     /** Where the list lives, for page links. */
     basePath: string;
-    facets: Facets;
+    /** The sets and rarities for the Filters sheet; a promise when they come with the list itself. */
+    facets: Facets | Promise<Facets>;
     sortOptions?: readonly SortOption[];
     searchLabel?: string;
     searchPlaceholder?: string;
@@ -70,7 +72,9 @@ export async function FolderBody(props: FolderBodyProps) {
                 className="min-w-0 flex-1 sm:max-w-80"
             />
             <FiltersSheet key="filters" active={[query.set, query.rarity].filter(Boolean).length}>
-                <CardsFilters key="set-rarity" query={query} facets={facets} />
+                <Suspense key="set-rarity" fallback={<CardsFilters query={query} facets={NO_FACETS} />}>
+                    <FiltersWhenReady query={query} facets={facets} />
+                </Suspense>
             </FiltersSheet>
             <CardsSort key="sort" query={query} options={sortOptions} />
         </>
@@ -144,4 +148,12 @@ export async function FolderBody(props: FolderBodyProps) {
             />
         </div>
     );
+}
+
+const NO_FACETS: Facets = { sets: [], rarities: [] };
+
+// The Filters sheet's fields once the sets and rarities are known: they ride with the list's first
+// page, so a page no longer waits for a second read before its first byte.
+async function FiltersWhenReady({ query, facets }: { query: ListQuery; facets: Facets | Promise<Facets> }) {
+    return <CardsFilters query={query} facets={await facets} />;
 }

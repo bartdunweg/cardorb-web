@@ -1,7 +1,7 @@
 import { AddCardModal } from "@/components/app/add-card-modal";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderPage } from "@/components/app/folder-page";
-import { type CardFilter, getFacets, getMyCards } from "@/lib/cards";
+import { type CardFilter, getMyCards } from "@/lib/cards";
 import { type ListSearchParams, isNarrowed, readListQuery } from "@/lib/list-query";
 
 // Every card you own: the folder that is the whole collection.
@@ -16,7 +16,8 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
     const narrowed = isNarrowed(query);
     const list = getMyCards(filter);
     const datapoints = list.then((r) => ({ total: r.total, narrowed, value: r.value, unpriced: r.unpriced }));
-    const facets = await getFacets();
+    // The facets ride with the list's first page: nothing else is read before the first byte.
+    const facets = list.then((r) => r.facets);
 
     return (
         <FolderPage

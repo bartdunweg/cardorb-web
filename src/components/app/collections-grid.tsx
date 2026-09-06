@@ -7,7 +7,6 @@ import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderDialog } from "@/components/app/folder-dialog";
 import { Button } from "@/components/base/buttons/button";
 import { FeaturedIcon } from "@/components/foundations/featured-icon/featured-icon";
-import type { Facets } from "@/lib/cards";
 import type { CollectionSummary } from "@/lib/collections";
 
 // A tile with a count, or with a line of its own for a view that is not a pile of cards. One
@@ -31,9 +30,10 @@ function FolderCard({ href, icon, name, count, detail }: { href: string; icon: F
 
 // Beside the page title from lg, the words; `compact` is the plus alone for the phone's bar, the size
 // of Back beside it. Both open the dialog below.
-export function NewCollectionButton({ facets, compact }: { facets: Facets; compact?: boolean }) {
+// No facets handed in: the dialog reads them itself when it opens (folder-dialog.tsx), so the page waits for nothing.
+export function NewCollectionButton({ compact }: { compact?: boolean }) {
     return (
-        <FolderDialog mode="create" facets={facets}>
+        <FolderDialog mode="create">
             {compact ? (
                 <Button iconLeading={Plus} size="sm" aria-label="New folder" />
             ) : (
@@ -45,17 +45,7 @@ export function NewCollectionButton({ facets, compact }: { facets: Facets; compa
     );
 }
 
-export function CollectionsGrid({
-    collections,
-    ownedCount,
-    favoritesCount,
-    facets,
-}: {
-    collections: CollectionSummary[];
-    ownedCount: number;
-    favoritesCount: number;
-    facets: Facets;
-}) {
+export function CollectionsGrid({ collections, ownedCount, favoritesCount }: { collections: CollectionSummary[]; ownedCount: number; favoritesCount: number }) {
     const hasCollections = collections.length > 0;
 
     return (
@@ -84,7 +74,7 @@ export function CollectionsGrid({
                 // empty state would only push the tab bar's worth of nothing under three tiles.
                 <div className="hidden lg:contents">
                     <AppEmptyState icon="folder" title="No folders yet" description="Group your cards into folders you can jump to from the sidebar.">
-                        <FolderDialog mode="create" facets={facets}>
+                        <FolderDialog mode="create">
                             <Button iconLeading={Plus}>New folder</Button>
                         </FolderDialog>
                     </AppEmptyState>

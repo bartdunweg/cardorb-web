@@ -1,15 +1,30 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CardImage } from "@/components/app/card-image";
 import { MobileTopRow } from "@/components/app/mobile-top-row";
 import { PageHeader } from "@/components/app/page-header";
+import { SetsOutline } from "@/components/app/skeletons";
 import { ProgressBarBase } from "@/components/base/progress-indicators/progress-indicators";
 import { CatalogueUnavailable, type SetSummary, getSets } from "@/lib/sets";
 import { cx } from "@/utils/cx";
 
 const n = (value: number) => value.toLocaleString("en-US");
 
-export default async function SetsPage() {
+export default function SetsPage() {
+    return (
+        <div className="flex flex-col gap-6">
+            {/* The title alone: how far the shelf is comes per set, on its tile, not as one number over all of them. */}
+            <PageHeader title="Browse" above={<MobileTopRow />} titleOnPhone={false} />
+            {/* The shelf is not awaited: the title and the search go out first, the sets when the catalogue answers. */}
+            <Suspense fallback={<SetsOutline />}>
+                <Shelf />
+            </Suspense>
+        </div>
+    );
+}
+
+async function Shelf() {
     let shelf;
     try {
         shelf = await getSets();
@@ -26,10 +41,7 @@ export default async function SetsPage() {
     const { series } = shelf;
 
     return (
-        <div className="flex flex-col gap-6">
-            {/* The title alone: how far the shelf is comes per set, on its tile, not as one number over all of them. */}
-            <PageHeader title="Browse" above={<MobileTopRow />} titleOnPhone={false} />
-
+        <>
             {series.map((group) => (
                 <section key={group.name} aria-labelledby={`series-${slug(group.name)}`} className="flex flex-col gap-3">
                     <h2 id={`series-${slug(group.name)}`} className="text-lg font-semibold text-primary">
@@ -45,7 +57,7 @@ export default async function SetsPage() {
                     </ul>
                 </section>
             ))}
-        </div>
+        </>
     );
 }
 

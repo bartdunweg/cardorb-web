@@ -1,7 +1,7 @@
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderPage } from "@/components/app/folder-page";
 import { ListSettingsDialog } from "@/components/app/list-settings-dialog";
-import { type CardFilter, getFacets, getMyCards } from "@/lib/cards";
+import { type CardFilter, getMyCards } from "@/lib/cards";
 import { type ListSearchParams, isNarrowed, readListQuery } from "@/lib/list-query";
 import { getMyProfile } from "@/lib/profile";
 
@@ -14,7 +14,8 @@ export default async function FavoritesPage({ searchParams }: { searchParams: Pr
     const narrowed = isNarrowed(query);
     const list = getMyCards(filter);
     const datapoints = list.then((r) => ({ total: r.total, narrowed, value: r.value, unpriced: r.unpriced }));
-    const [facets, { profile }] = await Promise.all([getFacets(), getMyProfile()]);
+    const { profile } = await getMyProfile();
+    const facets = list.then((r) => r.facets);
 
     return (
         <FolderPage
