@@ -311,11 +311,16 @@ count line's outline keeps its height; the Pokédex's count is two lines always)
 navigation between the tabs commits in about 25 ms with no request (MutationObserver; a timer
 poll in the Browser pane reads 1 s for everything, which is the pane's throttling, not the page).
 
-Still open on load time: the Pokédex's 1.17 MB is 688 pictures' markup; drawing slots in
-batches on scroll (as `CardsList` does) would cut it to a tenth. And the browser console shows
-one `<script src=…chunks/…>` without a nonce on Collection and Browse, blocked by the CSP: a
-duplicate preload of a chunk the nonced loader also fetches, so nothing breaks (the New folder
-dialog and the sheets open), but it is noise worth tracing to the streamed boundary that emits it.
+Load time, closed on 2026-09-06 evening (#211): the Pokédex draws ninety-six slots at a time, a
+screen ahead of a sentinel (`DexGrid`); its HTML went from 1.17 MB to 411 KB in the dev pane,
+688 `<img>` tags to 59. The CSP noise is traced: on production two `<script src=… async>`
+tags for streamed chunks carry no nonce (Next emits them for a Suspense boundary's chunk
+preload); the nonced loader fetches the same chunks, so nothing breaks. A Next fix or a
+`script-src-elem` with the chunk host would silence it; left as is.
+
+Also that evening (#210, #212): a folder filled by hand takes a card straight from its own
+page (filed in it at once); the sheet shows the illustrator, HP, stage, regulation mark and a
+link to the Cardmarket page, from `GET /v1/cards/{tcgId}` (`cardFacts`).
 
 Afternoon of 2026-09-06 (#185, #186; cardorb-api #205–#207). The tab bar's pill slides to the
 tapped tab (transform only, 200 ms on `--ease-move`); Filters, Sort and View are `RowButton`s,
@@ -366,9 +371,8 @@ names one card's every row; a draft may carry `collectionId`; PATCH takes `acqui
 the sheet's Copies tile (flag, finish, condition or grade, folder, count; a tap shows that
 row; One more, Different…, One is different…), `CopyFormDialog`, `FlagIcon` from ten
 `flag-icons` SVGs (not the stylesheet, which pulls in five hundred), the Generation row as the
-series' logo alone, Acquired as a date field, a flag on a non-English tile. Not yet wired: a
-card added from a manual folder's page filing itself there (`addCard` takes `collectionId`;
-`AddCardModal` does not pass it).
+series' logo alone, Acquired as a date field, a flag on a non-English tile. A card added from a manual
+folder's page is filed in it (#210).
 
 ## Open
 
