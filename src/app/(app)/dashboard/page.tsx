@@ -28,7 +28,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                 titleOnPhone={false}
                 // On a phone the search runs the width of the page, the avatar at its right end: the row Home starts with.
                 above={
-                    <div className="flex items-center gap-2 lg:hidden">
+                    <div className="flex items-center gap-3 lg:hidden">
                         <MobileTopRow className="min-w-0 flex-1" />
                         <YouLink />
                     </div>
