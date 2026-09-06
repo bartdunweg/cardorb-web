@@ -153,25 +153,40 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                 </div>
                             ) : null}
                             <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-2/5 fade-to-glass-thick" />
-                            {/* Close at the left, the star at the right, on one line over the art: the two things a
-                                person does to a card's page without reading it. */}
-                            <Button color="secondary" size="sm" iconLeading={XClose} aria-label="Close" className="absolute top-3 left-3" onClick={close} />
+                            {/* Close at the left, the star and the menu at the right, on one line over the art; glass, so
+                                they sit in the picture rather than on it. */}
+                            <Button
+                                color="tertiary"
+                                size="sm"
+                                iconLeading={XClose}
+                                aria-label="Close"
+                                className="absolute top-3 left-3 glass text-primary ring-1 ring-glass ring-inset"
+                                onClick={close}
+                            />
                             {mine ? (
                                 <div className="absolute top-3 right-3 flex items-center gap-2">
                                     {mine.owned ? (
                                         <Button
-                                            color={isStarred ? "primary" : "secondary"}
+                                            color={isStarred ? "primary" : "tertiary"}
                                             size="sm"
                                             iconLeading={Star01}
                                             aria-label="Favorite"
                                             aria-pressed={isStarred}
                                             isLoading={starring}
                                             onClick={toggleStar}
+                                            className={isStarred ? undefined : "glass text-primary ring-1 ring-glass ring-inset"}
                                         />
                                     ) : null}
                                     {/* What else is done to a card: copies, and taking it out. A wish can be marked owned here too. */}
                                     <Dropdown.Root>
-                                        <Button color="secondary" size="sm" iconLeading={DotsHorizontal} aria-label="More" isLoading={busy} />
+                                        <Button
+                                            color="tertiary"
+                                            size="sm"
+                                            iconLeading={DotsHorizontal}
+                                            aria-label="More"
+                                            isLoading={busy}
+                                            className="glass text-primary ring-1 ring-glass ring-inset"
+                                        />
                                         <Dropdown.Popover placement="bottom end" className="w-56">
                                             <Dropdown.Menu>
                                                 {mine.wishlist ? (
@@ -262,75 +277,79 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                 </AriaTabList>
                             ) : null}
                             <AriaTabPanel id="details" className="flex flex-col gap-6 outline-hidden">
-                                {!readOnly &&
-                                    (mine?.wishlist ? (
-                                        <div className="flex flex-col gap-1.5">
-                                            <Button size="md" iconTrailing={ArrowRight} onClick={onMoveToCollection} isLoading={moving}>
-                                                Mark as owned
-                                            </Button>
-                                            {moveError ? (
-                                                <p role="alert" className="text-sm text-error-primary">
-                                                    {moveError}
-                                                </p>
-                                            ) : null}
-                                        </div>
-                                    ) : (
-                                        <div className="flex flex-col gap-1.5">
-                                            <span className="text-sm font-medium text-secondary">Folder</span>
-                                            {/* Only a folder filled by hand takes a card; a rule folder fills itself. With none yet, the
-                                        way to file this card is to make one, and the card goes straight into it. */}
-                                            {manual.length ? (
-                                                <NativeSelect
-                                                    aria-label="Folder"
-                                                    value={collectionId}
-                                                    onChange={(event) => onCollectionChange(event.target.value)}
-                                                    options={[{ label: "None", value: "" }, ...manual.map((c) => ({ label: c.name, value: c.id }))]}
-                                                />
-                                            ) : (
-                                                <p className="text-sm text-tertiary">No folder filled by hand yet. A rule folder fills itself.</p>
-                                            )}
-                                            <FolderDialog
-                                                mode="create"
-                                                onSaved={async (id) => {
-                                                    const next = await listCollections();
-                                                    setCollections(next);
-                                                    if (id && next.some((c) => c.id === id && !c.rule)) onCollectionChange(id);
-                                                }}
-                                            >
-                                                <Button size="sm" color="secondary" iconLeading={Plus} className="self-start">
-                                                    New folder
+                                {/* Where the card goes and where it is, as one tile: a surface of its own inside the page. */}
+                                <div className="flex flex-col gap-5 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary ring-inset">
+                                    {!readOnly &&
+                                        (mine?.wishlist ? (
+                                            <div className="flex flex-col gap-1.5">
+                                                <Button size="md" iconTrailing={ArrowRight} onClick={onMoveToCollection} isLoading={moving}>
+                                                    Mark as owned
                                                 </Button>
-                                            </FolderDialog>
-                                            {collectionError ? (
-                                                <p role="alert" className="text-sm text-error-primary">
-                                                    {collectionError}
-                                                </p>
-                                            ) : null}
-                                        </div>
-                                    ))}
+                                                {moveError ? (
+                                                    <p role="alert" className="text-sm text-error-primary">
+                                                        {moveError}
+                                                    </p>
+                                                ) : null}
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col gap-1.5">
+                                                <span className="text-sm font-medium text-secondary">Folder</span>
+                                                {/* Only a folder filled by hand takes a card; a rule folder fills itself. With none yet, the
+                                        way to file this card is to make one, and the card goes straight into it. */}
+                                                {manual.length ? (
+                                                    <NativeSelect
+                                                        aria-label="Folder"
+                                                        value={collectionId}
+                                                        onChange={(event) => onCollectionChange(event.target.value)}
+                                                        options={[{ label: "None", value: "" }, ...manual.map((c) => ({ label: c.name, value: c.id }))]}
+                                                    />
+                                                ) : (
+                                                    <p className="text-sm text-tertiary">No folder filled by hand yet. A rule folder fills itself.</p>
+                                                )}
+                                                <FolderDialog
+                                                    mode="create"
+                                                    onSaved={async (id) => {
+                                                        const next = await listCollections();
+                                                        setCollections(next);
+                                                        if (id && next.some((c) => c.id === id && !c.rule)) onCollectionChange(id);
+                                                    }}
+                                                >
+                                                    <Button size="sm" color="secondary" iconLeading={Plus} className="self-start">
+                                                        New folder
+                                                    </Button>
+                                                </FolderDialog>
+                                                {collectionError ? (
+                                                    <p role="alert" className="text-sm text-error-primary">
+                                                        {collectionError}
+                                                    </p>
+                                                ) : null}
+                                            </div>
+                                        ))}
 
-                                {/* Where the card is: the folder it was filed in, every rule folder whose rule it fits, and
+                                    {/* Where the card is: the folder it was filed in, every rule folder whose rule it fits, and
                             Favorites when starred. A wish is in none of them. */}
-                                {mine ? (
-                                    <div className="flex flex-col gap-1.5">
-                                        <span className="text-sm font-medium text-secondary">In folders</span>
-                                        <ul className="flex flex-wrap gap-1.5" aria-label="In folders">
-                                            {[
-                                                ...(isStarred ? [{ id: "favorites", name: "Favorites" }] : []),
-                                                ...collections.filter((c) => (c.rule ? matchesRule(mine, c.rule, facets) : c.id === collectionId)),
-                                            ].map(({ id, name }) => (
-                                                <li key={id}>
-                                                    <Badge size="sm" color="gray" type="pill-color">
-                                                        {name}
-                                                    </Badge>
-                                                </li>
-                                            ))}
-                                            {!isStarred && !collections.some((c) => (c.rule ? matchesRule(mine, c.rule, facets) : c.id === collectionId)) ? (
-                                                <li className="text-sm text-quaternary">None yet</li>
-                                            ) : null}
-                                        </ul>
-                                    </div>
-                                ) : null}
+                                    {mine ? (
+                                        <div className="flex flex-col gap-1.5">
+                                            <span className="text-sm font-medium text-secondary">In folders</span>
+                                            <ul className="flex flex-wrap gap-1.5" aria-label="In folders">
+                                                {[
+                                                    ...(isStarred ? [{ id: "favorites", name: "Favorites" }] : []),
+                                                    ...collections.filter((c) => (c.rule ? matchesRule(mine, c.rule, facets) : c.id === collectionId)),
+                                                ].map(({ id, name }) => (
+                                                    <li key={id}>
+                                                        <Badge size="sm" color="gray" type="pill-color">
+                                                            {name}
+                                                        </Badge>
+                                                    </li>
+                                                ))}
+                                                {!isStarred &&
+                                                !collections.some((c) => (c.rule ? matchesRule(mine, c.rule, facets) : c.id === collectionId)) ? (
+                                                    <li className="text-sm text-quaternary">None yet</li>
+                                                ) : null}
+                                            </ul>
+                                        </div>
+                                    ) : null}
+                                </div>
 
                                 <dl className="flex flex-col divide-y divide-secondary">
                                     <DetailRow label="Rarity" value={card?.rarity} />
