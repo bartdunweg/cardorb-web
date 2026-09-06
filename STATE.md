@@ -387,6 +387,20 @@ Cardmarket product ids in TCGdex's pricing block; Chinese have next to none). Ho
 in the bar with the avatar, lists every set until something is typed, and Browse left the tab
 bar (#223–#225).
 
+Later that evening (web #227–#235, cardorb-api #217–#222). Japanese sets are named in English
+where the translation list knows them (`set-names.ja.json`, 164 of 184; Chinese and Korean take
+it for the ids they share, plus `set-names.zh.json` and `set-names.zh-cn.json`), the set's own
+name beside it as `localName`. No logo exists for those sets anywhere; the first card stood in
+for a while and read as the wrong thing, so the box stays empty. Another language's catalogue
+carries no ownership marks until the index knows languages (a Japanese "Black Bolt" counted the
+English cards). The language chips say the word in full and scroll on one line. The search opens
+the same full sheet a card does, without a title, the chips in its head; the sheets' shadow box
+and the card's head are rounded like the sheet. A copy's language follows its catalogue
+(`languagesFor`): the Western printings for an English-catalogue card, one fixed language for
+the others, and only the printings the card has, which `GET /v1/cards/{tcgId}` reports as
+`languages` by asking each Western TCGdex catalogue for the id (Pikachu with Grey Felt Hat:
+English and Portuguese).
+
 ## Open
 
 - **A revoked session stays open on the web for up to an hour (#79).** The middleware and the
