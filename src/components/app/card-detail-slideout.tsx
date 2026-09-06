@@ -374,6 +374,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                         facts={known}
                                         number={card.number}
                                         types={card.types}
+                                        gen={card.gen}
                                         className="mx-auto w-full max-w-44"
                                     >
                                         <CardImage

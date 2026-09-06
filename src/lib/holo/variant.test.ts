@@ -109,6 +109,34 @@ describe("holoVariant", () => {
         expect(holoVariant("Holo Rare V", null, null, { number: "25" }).trainerGallery).toBe(false);
     });
 
+    it("gives a holo from before Sword & Shield the starry foil", () => {
+        expect(holoVariant("Rare Holo", null, null, { gen: "Base" }).rarity).toBe("rare holo cosmos");
+        expect(holoVariant("Rare Holo", null, null, { gen: "Sun & Moon" }).rarity).toBe("rare holo cosmos");
+        expect(holoVariant("Rare", "holo", null, { gen: "XY" }).rarity).toBe("rare holo cosmos");
+        expect(holoVariant("Rare Holo", null, null, { gen: "Sword & Shield" }).rarity).toBe("rare holo");
+        expect(holoVariant("Rare Holo", null, null, { gen: "Scarlet & Violet" }).rarity).toBe("rare holo");
+        expect(holoVariant("Rare Holo", null, null, {}).rarity).toBe("rare holo");
+        expect(holoVariant("Rare Holo", "reverse-holo", null, { gen: "Base" }).rarity).toBe("rare holo reverse holo");
+    });
+
+    it("knows a trainer once the facts say it has no HP and no stage", () => {
+        const t = holoVariant("Rare Holo", null, { stage: null, hp: null });
+        expect(t.supertype).toBe("trainer");
+        expect(t.subtypes).toBe("supporter");
+        expect(holoVariant("Rare Holo", null, { stage: "Basic", hp: 60 }).supertype).toBe("pokémon");
+        expect(holoVariant("Rare Holo", null, null).supertype).toBe("pokémon");
+    });
+
+    it("places the window for a Wizards-era card and leaves the modern eras to the CSS", () => {
+        expect(holoVariant("Rare Holo", null, { stage: "Basic", hp: 120 }, { gen: "Base" }).style["--clip"]).toBe("inset(11% 10.5% 48.5% 10.5%)");
+        const trainer = holoVariant("Uncommon", "reverse-holo", { stage: null, hp: null }, { gen: "Base" }).style;
+        expect(trainer["--clip"]).toBe("inset(22.5% 9.5% 41.5% 9.5%)");
+        expect(trainer["--clip-invert"]).toContain("calc(100% - 9.5%)");
+        expect(trainer["--clip-trainer"]).toBe(trainer["--clip"]);
+        expect(holoVariant("Rare Holo", null, null, { gen: "Sword & Shield" }).style).toEqual({});
+        expect(holoVariant("Rare Holo", null, null, { gen: "XY" }).style).toEqual({});
+    });
+
     it("keeps only the type names the CSS has a glow for", () => {
         expect(holoVariant("Rare", null, null, { types: ["Lightning", "Colorless"] }).typeClasses).toEqual(["lightning"]);
         expect(holoVariant("Rare", null, null, { types: null }).typeClasses).toEqual([]);

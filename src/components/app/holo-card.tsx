@@ -18,14 +18,17 @@ export function HoloCard({
     facts,
     number,
     types,
+    gen,
     className,
     children,
 }: {
     rarity: string | null;
     finish: string | null;
-    facts: { stage: string | null } | null;
+    facts: { stage: string | null; hp?: number | null } | null;
     number: string | null;
     types: string[] | null;
+    /** The series the card was printed in; the picture's window and the holo's pattern follow it. */
+    gen: string | null;
     className?: string;
     children: ReactNode;
 }) {
@@ -34,7 +37,7 @@ export function HoloCard({
     useHoloTilt(card, surface);
     // Where a starry foil starts: once per card, so it does not jump on a re-render.
     const [seed] = useState(() => ({ x: Math.random(), y: Math.random() }));
-    const v = holoVariant(rarity, finish, facts, { number, types });
+    const v = holoVariant(rarity, finish, facts, { number, types, gen });
 
     return (
         <div
@@ -46,6 +49,7 @@ export function HoloCard({
             data-trainer-gallery={v.trainerGallery ? "true" : undefined}
             style={
                 {
+                    ...v.style,
                     "--seedx": seed.x,
                     "--seedy": seed.y,
                     "--cosmosbg": `${Math.floor(seed.x * 734)}px ${Math.floor(seed.y * 1280)}px`,

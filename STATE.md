@@ -44,8 +44,13 @@ which also says what is already yours), Settings (avatar through the API), publi
   under `src/styles/vendor/pokemon-cards-css/` with its licence and every edit listed, the
   eleven textures it reads under `public/holo/`. Left out: the author's per-card foil masks
   (a private CDN, Sword & Shield only; every family runs its no-mask path, foil over the whole
-  card), the iOS gyroscope (needs a permission gesture; a finger drives it there) and a
-  cosmos foil for pre-Sword & Shield holos (one row in `variant.ts` when wanted).
+  card) and the iOS gyroscope (needs a permission gesture; a finger drives it there). Then the
+  era templates: the foil window measured per era on TCGdex scans (Sword & Shield, Scarlet &
+  Violet and Mega Evolution share the CSS's own window; XY and Sun & Moon sit within a percent
+  of it; the Wizards frame gets its own, trainers a fifth of the way down), a trainer known
+  from the facts (no HP, no stage), and every holo before Sword & Shield on the starry cosmos
+  foil. Not measured: EX through HeartGold SoulSilver and Black & White, which keep the modern
+  window until someone owns one.
 - **2026-09-05, one day, sixteen web PRs and five API PRs.** Dark mode one step above black,
   hairline borders, glass chrome, four phone tabs with You as the avatar in Home's bar, sheets on a phone, dialogs
   centred (#101, #103). Icons in buttons take the label's colour, thick glass is 92% (#103). The
