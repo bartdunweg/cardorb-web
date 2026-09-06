@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import {
     type CardFacts,
+    addCopy,
     cardFacts,
     listCopies,
     markOwned,
@@ -67,6 +68,26 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
         if (!row || !row.owned) return;
         const rows = sortCopies(await listCopies(row));
         setCopiesState({ of: copiesKey(row), rows });
+        // A row that is gone (removed, or merged away) cannot stay the one shown.
+        setViewing((v) => (v && !rows.some((r) => r.id === v.row.id) ? null : v));
+    };
+    // A new copy as a row of its own, made like the row shown, pulled today; the sheet moves to
+    // it so what differs can be set at once.
+    const addRow = async () => {
+        if (!mine || !card) return;
+        setBusy(true);
+        setMenuError(null);
+        const res = await addCopy(mine.id, {}, 1);
+        setBusy(false);
+        if (!res.ok) {
+            setMenuError(res.error);
+            return;
+        }
+        const rows = sortCopies(await listCopies(mine));
+        setCopiesState({ of: copiesKey(mine), rows });
+        const made = "id" in res ? rows.find((r) => r.id === res.id) : undefined;
+        if (made) setViewing({ of: card.id, row: made });
+        router.refresh();
     };
     const [collections, setCollections] = useState<FolderChoice[]>([]);
     const [facets, setFacets] = useState<Facets | undefined>(undefined);
@@ -166,6 +187,8 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
     };
     // Closing the sheet on a card at nought removes it; the list behind re-reads after.
     const closeSheet = async () => {
+        // The next card, or this one again, opens on its own row.
+        setViewing(null);
         if (leaving && mine) {
             const res = await removeCard(mine.id);
             if (!res.ok) {
@@ -474,11 +497,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                             {mine?.owned ? (
                                 <TabPanel id="copies" className="flex flex-col gap-6">
                                     {/* The copies you hold of this card, one line per row: the language's flag, the finish,
-                                    the condition or grade, the folder and the count. A tap shows that row; One more is one
-                                    more of the row shown; Different… and One is different… open the form. */}
+                                    the condition or grade, the folder and the count. A tap shows that row and its fields;
+                                    Add a copy at the foot makes a new row and shows it. */}
                                     {mine?.owned ? (
                                         <div className="flex flex-col gap-3 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary ring-inset">
-                                            <span className="text-sm font-medium text-secondary">Copies</span>
                                             <ul className="flex flex-col divide-y divide-secondary" aria-label="Copies">
                                                 {(copies ?? [mine]).map((row) => {
                                                     const folderName = collections.find((c) => c.id === row.collection_id)?.name;
@@ -659,28 +681,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                                     }
                                                 />
                                             </dl>
-                                            <div className="flex flex-wrap gap-2">
-                                                <Button size="sm" color="secondary" iconLeading={Plus} isDisabled={busy} onClick={() => step(shownCopies + 1)}>
-                                                    One more
-                                                </Button>
-                                                <CopyFormDialog mode="add" from={mine} folders={collections} onSaved={() => void reloadCopies()}>
-                                                    <Button size="sm" color="secondary">
-                                                        Different…
-                                                    </Button>
-                                                </CopyFormDialog>
-                                                {shownCopies > 1 ? (
-                                                    <CopyFormDialog
-                                                        mode="split"
-                                                        from={{ ...mine, quantity: shownCopies }}
-                                                        folders={collections}
-                                                        onSaved={() => void reloadCopies()}
-                                                    >
-                                                        <Button size="sm" color="secondary">
-                                                            One is different…
-                                                        </Button>
-                                                    </CopyFormDialog>
-                                                ) : null}
-                                            </div>
                                             {/* Where the card is: the folder it was filed in, every rule folder whose rule it fits, and
                             Favorites when starred. A wish is in none of them. */}
                                             {mine ? (
@@ -704,6 +704,26 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                                     </ul>
                                                 </div>
                                             ) : null}
+                                            {/* At the foot: a new copy is a row of its own, made like this one and shown at once, so
+                                                its language, condition or folder is set right here. One is different… moves some of
+                                                a row's copies to their own row. */}
+                                            <div className="flex flex-wrap gap-2 border-t border-secondary pt-4">
+                                                <Button size="sm" color="secondary" iconLeading={Plus} isDisabled={busy} onClick={() => void addRow()}>
+                                                    Add a copy
+                                                </Button>
+                                                {shownCopies > 1 ? (
+                                                    <CopyFormDialog
+                                                        mode="split"
+                                                        from={{ ...mine, quantity: shownCopies }}
+                                                        folders={collections}
+                                                        onSaved={() => void reloadCopies()}
+                                                    >
+                                                        <Button size="sm" color="secondary">
+                                                            One is different…
+                                                        </Button>
+                                                    </CopyFormDialog>
+                                                ) : null}
+                                            </div>
                                         </div>
                                     ) : null}
                                 </TabPanel>
