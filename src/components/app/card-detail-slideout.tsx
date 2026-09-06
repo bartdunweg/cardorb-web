@@ -156,7 +156,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                             the way a product page takes its hero's. The copy is decoration and says nothing. */}
                         <div className="relative w-full overflow-hidden">
                             {card?.image_url ? (
-                                <div aria-hidden="true" className="absolute inset-0 scale-150 opacity-60 blur-2xl">
+                                <div aria-hidden="true" className="absolute inset-0 scale-125 opacity-60 blur-lg">
                                     <CardImage src={card.image_url} alt="" width={64} className="object-cover" />
                                 </div>
                             ) : null}
