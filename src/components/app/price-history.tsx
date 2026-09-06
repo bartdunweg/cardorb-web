@@ -6,7 +6,8 @@ import { formatPrice } from "@/lib/format";
 import { areaPath, linePath, pointsFor } from "@/lib/value-chart-math";
 import { cx } from "@/utils/cx";
 
-// A card's price over the last ninety days, under the price in its sheet: one small line in the
+// A card's price, day by day, as far back as there is a reading (the API's own nightly readings, and
+// before those TCGplayer's dollars in euros), under the price in its sheet: one small line in the
 // direction's colour, and a sentence saying how much it moved. Asked for when the sheet opens,
 // not when the page mounts. A reverse holo reads the foil price, the same rule as the price above.
 // No axis and no table: the sentence carries the numbers, the line the shape.
@@ -64,7 +65,9 @@ export function PriceHistory({
     return (
         <figure className="flex flex-col gap-1" aria-labelledby={titleId}>
             <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className={cx("w-full", tall ? "h-28" : "h-14")} preserveAspectRatio="none" aria-labelledby={titleId}>
-                <title id={titleId}>{`Price over the last ${series.length} readings: ${formatPrice(first.value)} to ${formatPrice(last.value)}.`}</title>
+                <title
+                    id={titleId}
+                >{`Price since ${dayYear.format(new Date(`${first.date}T00:00:00`))}: ${formatPrice(first.value)} to ${formatPrice(last.value)}, ${series.length} readings.`}</title>
                 {/* The ground under the line: the line's own colour, faint at the line and nothing at the
                     bottom, so it reads as the line's shadow and not a block. */}
                 <defs>
