@@ -7,8 +7,16 @@ export type { Card, PublicCard } from "@/lib/api-shapes";
 /** What a filter menu offers: the sets you hold a card of, in set order, and the rarities, A to Z. */
 export type Facets = { sets: { name: string; title: string }[]; rarities: string[] };
 
-/** The sets and rarities you hold a card of, for a rule's fields. Five minutes per person. */
-export const getFacets = (): Promise<Facets> => perUser("facets", async () => (await getMyCards({ limit: 1 })).facets);
+/**
+ * The sets and rarities you hold a card of, for a rule's fields and the search's chips. Five
+ * minutes per person. The loader takes the token it is handed: inside the cache there is no
+ * request to read a session from, and a read that asks for one throws before the API is called.
+ */
+export const getFacets = (): Promise<Facets> =>
+    perUser("facets", async (token) => {
+        const { facets } = await api<{ facets?: Facets }>("/cards", { token, params: { owned: true, limit: 1 } });
+        return facets ?? { sets: [], rarities: [] };
+    });
 
 /** Which cards a list asks for: the folder, the search, the sort and the two filters. Plain data, so a page can hand it to the client for the next batch. */
 export type CardFilter = {

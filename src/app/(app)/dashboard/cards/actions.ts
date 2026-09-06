@@ -21,22 +21,39 @@ const failed = (err: unknown): { ok: false; error: string } => ({
     error: err instanceof ApiError ? err.message : "Something went wrong. Try again.",
 });
 
-// Searches the signed-in person's own collection (for the command palette).
-export async function searchMyCards(query: string): Promise<CardHit[]> {
-    const parsed = z.string().trim().min(1).max(100).safeParse(query);
-    if (!parsed.success) return [];
+const term = z.string().trim().max(100);
+const choice = z.string().trim().min(1).max(100).optional();
 
-    const { cards } = await getMyCards({ q: parsed.data, limit: 20 });
+/** The chips under a collection search: a set (as the API addresses it) and a rarity, matched whole, as on a folder page. */
+export type MyCardsFilters = { set?: string; rarity?: string };
+
+// Searches the signed-in person's own collection (the phone's search sheet). A filter on its own
+// lists that set or rarity; without one the term has to be at least a character.
+export async function searchMyCards(query: string, filters: MyCardsFilters = {}): Promise<CardHit[]> {
+    const parsed = z.object({ q: term, set: choice, rarity: choice }).safeParse({ q: query, ...filters });
+    if (!parsed.success) return [];
+    const { q, set, rarity } = parsed.data;
+    if (!q && !set && !rarity) return [];
+
+    const { cards } = await getMyCards({ q: q || undefined, set, rarity, facets: false, limit: 20 });
     return cards;
 }
 
-// Searches the catalogue through the API, which also says whether each hit is already yours.
-export async function searchPokemon(query: string): Promise<PokemonCard[]> {
-    const parsed = z.string().trim().min(2).max(100).safeParse(query);
+/** The chips under a catalogue search: a set by its name and an energy type. */
+export type CatalogueFilters = { set?: string; type?: string };
+
+// Searches the catalogue through the API, which also says whether each hit is already yours. With
+// a filter on, the API's fielded mode is asked instead: the term matches the name only, the set
+// and the type their own fields; the term may then be empty, or one character.
+export async function searchPokemon(query: string, filters: CatalogueFilters = {}): Promise<PokemonCard[]> {
+    const parsed = z.object({ q: term, set: choice, type: choice }).safeParse({ q: query, ...filters });
     if (!parsed.success) return [];
+    const { q, set, type } = parsed.data;
+    const params = set || type ? { ...(q ? { name: q } : {}), ...(set ? { set } : {}), ...(type ? { type } : {}) } : q.length >= 2 ? { query: q } : null;
+    if (!params) return [];
 
     try {
-        const { cards } = await api<{ cards: BrowseCard[] }>("/catalog/search", { params: { query: parsed.data } });
+        const { cards } = await api<{ cards: BrowseCard[] }>("/catalog/search", { params });
         return cards.map(pokemonCardFromBrowse);
     } catch {
         return [];

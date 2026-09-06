@@ -15,7 +15,7 @@ describe("useDebouncedSearch", () => {
             await vi.advanceTimersByTimeAsync(100);
         });
         expect(search).toHaveBeenCalledTimes(1);
-        expect(search).toHaveBeenCalledWith("pik");
+        expect(search).toHaveBeenCalledWith("pik", {});
         expect(result.current.results).toEqual(["pik"]);
         expect(result.current.loading).toBe(false);
     });
@@ -48,5 +48,30 @@ describe("useDebouncedSearch", () => {
             answers.slow();
         });
         expect(result.current.results).toEqual(["fast"]);
+    });
+
+    it("asks with the filters, and asks again when one changes, even under the minimum length", async () => {
+        const search = vi.fn(async (term: string, params: { set?: string }) => [`${term}|${params.set ?? ""}`]);
+        const { result, rerender } = renderHook(({ set }) => useDebouncedSearch(" ", search, { minLength: 2, delay: 10, params: { set } }), {
+            initialProps: { set: "sv3" as string | undefined },
+        });
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(10);
+        });
+        expect(search).toHaveBeenCalledWith("", { set: "sv3" });
+        expect(result.current.results).toEqual(["|sv3"]);
+        // The same filters, rebuilt as a new object: no second ask.
+        rerender({ set: "sv3" });
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(10);
+        });
+        expect(search).toHaveBeenCalledTimes(1);
+        // The filter taken off under the minimum length: cleared without asking.
+        rerender({ set: undefined });
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(10);
+        });
+        expect(search).toHaveBeenCalledTimes(1);
+        expect(result.current.results).toEqual([]);
     });
 });

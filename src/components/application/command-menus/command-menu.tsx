@@ -118,8 +118,9 @@ const CommandMenuRoot = ({
         { enableOnFormTags: true },
     );
 
-    // Register hotkey for input
-    useHotkeys(shortcut?.split("").join("+").replace("⌘", "meta") ?? "", () => inputRef.current?.focus());
+    // Register hotkey for input. Only with a shortcut: an empty key string matches every key,
+    // which sent focus back to the input on any keypress elsewhere in the dialog (a chip, a button).
+    useHotkeys(shortcut?.split("").join("+").replace("⌘", "meta") ?? "", () => inputRef.current?.focus(), { enabled: Boolean(shortcut) });
 
     // Determine if the command menu has a footer.
     const hasFooter = useMemo(() => {
