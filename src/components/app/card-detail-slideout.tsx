@@ -9,6 +9,7 @@ import { Heading as AriaHeading } from "react-aria-components";
 import { markOwned, removeCard, seriesLogo, setCopies, setFavorite } from "@/app/(app)/dashboard/cards/actions";
 import { type FolderChoice, listCollections, loadFacets, setCardCollection } from "@/app/(app)/dashboard/collections/actions";
 import { CardImage } from "@/components/app/card-image";
+import { ConditionBadge } from "@/components/app/condition-badge";
 import { FavoriteStar } from "@/components/app/favorite-star";
 import { FolderDialog } from "@/components/app/folder-dialog";
 import { PriceHistory } from "@/components/app/price-history";
@@ -391,7 +392,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                         }
                                     />
                                     <DetailRow label="Quantity" value={card?.quantity ?? 1} />
-                                    {mine && <DetailRow label="Condition" value={mine.condition} />}
+                                    {mine && <DetailRow label="Condition" value={mine.condition ? <ConditionBadge condition={mine.condition} /> : null} />}
                                     {mine && <DetailRow label="Grade" value={mine.grade} />}
                                     <DetailRow label="Finish" value={card?.finish} />
                                     {/* Personal fields stay off the public read-only view. */}
