@@ -417,343 +417,361 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
 
                     <SlideoutMenu.Content>
                         {/* Two tabs: the card's details, and its price with its line. A public view has no price, so no tabs. */}
-                        <Tabs className="flex flex-col gap-5">
-                            {mine ? (
-                                <TabList aria-label="Card" type="underline" size="sm">
+                        {/* The list before its panels, and only once there is a card: a panel without its tab is
+                            what react-aria warns about, and the sheet is mounted closed on every list page. A public
+                            view has Details alone; the list is drawn all the same, so the panel has its tab. */}
+                        {card ? (
+                            <Tabs className="flex flex-col gap-5">
+                                <TabList aria-label="Card" type="underline" size="sm" className={mine ? undefined : "sr-only"}>
                                     <Tab id="details" label="Details" />
-                                    {mine.owned ? <Tab id="copies" label="Copies" /> : null}
-                                    <Tab id="price" label="Price" />
+                                    {mine?.owned ? <Tab id="copies" label="Copies" /> : null}
+                                    {mine ? <Tab id="price" label="Price" /> : null}
                                 </TabList>
-                            ) : null}
-                            <TabPanel id="details" className="flex flex-col gap-6">
-                                {!readOnly && mine?.wishlist ? (
-                                    <div className="flex flex-col gap-5 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary ring-inset">
-                                        <div className="flex flex-col gap-1.5">
-                                            <Button size="md" iconTrailing={ArrowRight} onClick={onMoveToCollection} isLoading={moving}>
-                                                Mark as owned
-                                            </Button>
-                                            {moveError ? (
-                                                <p role="alert" className="text-sm text-error-primary">
-                                                    {moveError}
-                                                </p>
-                                            ) : null}
-                                        </div>
-                                    </div>
-                                ) : null}
-
-                                <dl className="flex flex-col divide-y divide-secondary">
-                                    <DetailRow label="Rarity" value={card?.rarity} />
-                                    {/* From the catalogue, once it answers: who drew it, and the card's own facts. */}
-                                    {known?.illustrator ? <DetailRow label="Illustrator" value={known.illustrator} /> : null}
-                                    {known?.hp != null ? <DetailRow label="HP" value={known.hp} /> : null}
-                                    {known?.stage ? (
-                                        <DetailRow label="Stage" value={known.evolveFrom ? `${known.stage} · from ${known.evolveFrom}` : known.stage} />
-                                    ) : null}
-                                    {known?.regulationMark ? <DetailRow label="Regulation mark" value={known.regulationMark} /> : null}
-                                    <DetailRow
-                                        label="Generation"
-                                        value={
-                                            card?.gen ? (
-                                                <span className="flex items-center justify-end gap-2">
-                                                    {/* The logo is the series' own picture; the name beside it says it for a reader. */}
-                                                    {genLogo ? (
-                                                        <>
-                                                            <Image src={genLogo} alt="" width={96} height={24} className="h-6 w-auto max-w-28 object-contain" />
-                                                            <span className="sr-only">{card.gen}</span>
-                                                        </>
-                                                    ) : (
-                                                        card.gen
-                                                    )}
-                                                </span>
-                                            ) : null
-                                        }
-                                    />
-                                    <DetailRow
-                                        label="Types"
-                                        value={
-                                            card?.types?.length ? (
-                                                <span className="flex flex-wrap items-center justify-end gap-2">
-                                                    {card.types.map((t) => (
-                                                        <span key={t} className="flex items-center gap-1.5">
-                                                            <TypeIcon type={t} />
-                                                            {t}
-                                                        </span>
-                                                    ))}
-                                                </span>
-                                            ) : null
-                                        }
-                                    />
-                                    {readOnly ? <DetailRow label="Quantity" value={card?.quantity ?? 1} /> : null}
-                                    {readOnly ? <DetailRow label="Finish" value={card?.finish} /> : null}
-                                </dl>
-
-                                {mine?.notes ? (
-                                    <div className="flex flex-col gap-1 border-t border-secondary pt-4">
-                                        <p className="text-sm text-tertiary">Notes</p>
-                                        <p className="text-sm text-primary">{mine.notes}</p>
-                                    </div>
-                                ) : null}
-                            </TabPanel>
-                            {mine?.owned ? (
-                                <TabPanel id="copies" className="flex flex-col gap-6">
-                                    {/* The copies you hold of this card, one line per row: the language's flag, the finish,
-                                    the condition or grade, the folder and the count. A tap shows that row and its fields;
-                                    Add a copy at the foot makes a new row and shows it. */}
-                                    {mine?.owned ? (
-                                        <div className="flex flex-col gap-3 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary ring-inset">
-                                            <ul className="flex flex-col divide-y divide-secondary" aria-label="Copies">
-                                                {(copies ?? [mine]).map((row) => {
-                                                    const folderName = collections.find((c) => c.id === row.collection_id)?.name;
-                                                    const current = row.id === mine.id;
-                                                    return (
-                                                        <li key={row.id}>
-                                                            <button
-                                                                type="button"
-                                                                aria-current={current ? "true" : undefined}
-                                                                onClick={() => card && setViewing({ of: card.id, row })}
-                                                                className={cx(
-                                                                    "flex w-full items-center gap-2 py-2 text-left text-sm outline-focus-ring focus-visible:outline-2",
-                                                                    current ? "text-primary" : "text-secondary hover:text-primary",
-                                                                )}
-                                                            >
-                                                                <FlagIcon language={row.language} />
-                                                                <span className="min-w-0 flex-1 truncate">
-                                                                    {[
-                                                                        row.finish === "reverse-holo" ? "Reverse holo" : row.finish === "holo" ? "Holo" : null,
-                                                                        row.grade ?? row.condition,
-                                                                        folderName,
-                                                                    ]
-                                                                        .filter(Boolean)
-                                                                        .join(" · ") || "Copy"}
-                                                                </span>
-                                                                {/* The copy's own price: a reverse holo has the foil's, the rest the plain one. */}
-                                                                {row.price != null ? (
-                                                                    <span className="text-tertiary tabular-nums">{formatPrice(row.price)}</span>
-                                                                ) : null}
-                                                                <span className="text-tertiary tabular-nums">×{row.quantity ?? 1}</span>
-                                                            </button>
-                                                        </li>
-                                                    );
-                                                })}
-                                            </ul>
-                                            {/* This copy: everything that belongs to the row shown, not to the card. */}
-                                            <dl className="flex flex-col divide-y divide-secondary">
-                                                {/* Copies, with a step either way for an owner: the number is the row's own, the
-                                        buttons the same call the menu makes. */}
-                                                <DetailRow
-                                                    label="Quantity"
-                                                    value={
-                                                        mine?.owned ? (
-                                                            <span className="flex items-center gap-2">
-                                                                <Button
-                                                                    color="secondary"
-                                                                    size="sm"
-                                                                    iconLeading={Minus}
-                                                                    aria-label="One copy fewer"
-                                                                    isDisabled={busy || shownCopies <= 0}
-                                                                    onClick={() => step(shownCopies - 1)}
-                                                                />
-                                                                <span className="min-w-4 text-center tabular-nums">{shownCopies}</span>
-                                                                <Button
-                                                                    color="secondary"
-                                                                    size="sm"
-                                                                    iconLeading={Plus}
-                                                                    aria-label="One copy more"
-                                                                    isDisabled={busy}
-                                                                    onClick={() => step(shownCopies + 1)}
-                                                                />
-                                                            </span>
-                                                        ) : (
-                                                            (card?.quantity ?? 1)
-                                                        )
-                                                    }
-                                                />
-                                                {leaving ? (
-                                                    <output className="block py-2 text-sm text-warning-primary">
-                                                        No copies left: this card leaves your collection when you close the sheet.
-                                                    </output>
-                                                ) : null}
-                                                {/* The printing's language, with its flag; an owner picks it here, a reader sees it. Not
-                                        recorded reads as English, which nearly every card is. */}
-                                                {mine ? (
-                                                    <DetailRow
-                                                        label="Language"
-                                                        value={
-                                                            <span className="flex items-center justify-end gap-2">
-                                                                <FlagIcon language={shownLanguage} size="md" labelled />
-                                                                <NativeSelect
-                                                                    aria-label="Language"
-                                                                    size="sm"
-                                                                    className="w-auto"
-                                                                    value={shownLanguage}
-                                                                    onChange={(event) => void pickLanguage(event.target.value)}
-                                                                    options={LANGUAGES.map((l) => ({ label: l.label, value: l.code }))}
-                                                                />
-                                                            </span>
-                                                        }
-                                                    />
-                                                ) : null}
-                                                {/* A graded copy has a grade and no condition: the slab says which it is. Otherwise the
-                                        condition is picked here, in Cardmarket's scale. */}
-                                                {mine && mine.grade ? (
-                                                    <DetailRow label="Grade" value={mine.grade} />
-                                                ) : mine ? (
-                                                    <DetailRow
-                                                        label="Condition"
-                                                        value={
-                                                            <span className="flex items-center justify-end gap-2">
-                                                                <NativeSelect
-                                                                    aria-label="Condition"
-                                                                    size="sm"
-                                                                    className="w-auto"
-                                                                    value={shownCondition}
-                                                                    onChange={(event) => void pickCondition(event.target.value)}
-                                                                    options={[
-                                                                        { label: "Not recorded", value: "" },
-                                                                        ...CONDITIONS.map((c) => ({ label: c, value: c })),
-                                                                    ]}
-                                                                />
-                                                            </span>
-                                                        }
-                                                    />
-                                                ) : null}
-                                                <DetailRow label="Finish" value={mine?.finish ?? "Not recorded"} />
-                                                {/* Personal fields stay off the public read-only view. */}
-                                                {mine && (
-                                                    <DetailRow
-                                                        label="Acquired"
-                                                        value={
-                                                            mine.owned ? (
-                                                                <input
-                                                                    type="date"
-                                                                    aria-label="Acquired"
-                                                                    className="rounded-md bg-primary px-2 py-1 text-sm text-primary ring-1 ring-primary outline-focus-ring ring-inset focus-visible:outline-2"
-                                                                    value={mine.acquired_at ? mine.acquired_at.slice(0, 10) : ""}
-                                                                    max={new Date().toISOString().slice(0, 10)}
-                                                                    onChange={(e) => {
-                                                                        const date = e.target.value;
-                                                                        if (date) void run(() => setAcquiredAt(mine.id, date));
-                                                                    }}
-                                                                />
-                                                            ) : mine.acquired_at ? (
-                                                                formatDate(mine.acquired_at)
-                                                            ) : null
-                                                        }
-                                                    />
-                                                )}
-                                                {/* The folder this copy is filed in. Only a folder filled by hand takes a card; a rule
-                                        folder fills itself. With none yet, the way to file it is to make one. */}
-                                                <DetailRow
-                                                    label="Folder"
-                                                    value={
-                                                        <span className="flex flex-col items-end gap-2">
-                                                            {manual.length ? (
-                                                                <NativeSelect
-                                                                    aria-label="Folder"
-                                                                    size="sm"
-                                                                    className="w-auto max-w-48"
-                                                                    value={collectionId}
-                                                                    onChange={(event) => onCollectionChange(event.target.value)}
-                                                                    options={[
-                                                                        { label: "None", value: "" },
-                                                                        ...manual.map((c) => ({ label: c.name, value: c.id })),
-                                                                    ]}
-                                                                />
-                                                            ) : null}
-                                                            <FolderDialog
-                                                                mode="create"
-                                                                onSaved={async (id) => {
-                                                                    const next = await listCollections();
-                                                                    setCollections(next);
-                                                                    if (id && next.some((c) => c.id === id && !c.rule)) onCollectionChange(id);
-                                                                }}
-                                                            >
-                                                                <Button size="sm" color="link-gray" iconLeading={Plus}>
-                                                                    New folder
-                                                                </Button>
-                                                            </FolderDialog>
-                                                            {collectionError ? (
-                                                                <span role="alert" className="text-sm text-error-primary">
-                                                                    {collectionError}
-                                                                </span>
-                                                            ) : null}
-                                                        </span>
-                                                    }
-                                                />
-                                            </dl>
-                                            {/* Where the card is: the folder it was filed in, every rule folder whose rule it fits, and
-                            Favorites when starred. A wish is in none of them. */}
-                                            {mine ? (
-                                                <div className="flex flex-col gap-1.5">
-                                                    <span className="text-sm font-medium text-secondary">In folders</span>
-                                                    <ul className="flex flex-wrap gap-1.5" aria-label="In folders">
-                                                        {[
-                                                            ...(isStarred ? [{ id: "favorites", name: "Favorites" }] : []),
-                                                            ...collections.filter((c) => (c.rule ? matchesRule(mine, c.rule, facets) : c.id === collectionId)),
-                                                        ].map(({ id, name }) => (
-                                                            <li key={id}>
-                                                                <Badge size="sm" color="gray" type="pill-color">
-                                                                    {name}
-                                                                </Badge>
-                                                            </li>
-                                                        ))}
-                                                        {!isStarred &&
-                                                        !collections.some((c) => (c.rule ? matchesRule(mine, c.rule, facets) : c.id === collectionId)) ? (
-                                                            <li className="text-sm text-quaternary">None yet</li>
-                                                        ) : null}
-                                                    </ul>
-                                                </div>
-                                            ) : null}
-                                            {/* At the foot: a new copy is a row of its own, made like this one and shown at once, so
-                                                its language, condition or folder is set right here. One is different… moves some of
-                                                a row's copies to their own row. */}
-                                            <div className="flex flex-wrap gap-2 border-t border-secondary pt-4">
-                                                <Button size="sm" color="secondary" iconLeading={Plus} isDisabled={busy} onClick={() => void addRow()}>
-                                                    Add a copy
+                                <TabPanel id="details" className="flex flex-col gap-6">
+                                    {!readOnly && mine?.wishlist ? (
+                                        <div className="flex flex-col gap-5 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary ring-inset">
+                                            <div className="flex flex-col gap-1.5">
+                                                <Button size="md" iconTrailing={ArrowRight} onClick={onMoveToCollection} isLoading={moving}>
+                                                    Mark as owned
                                                 </Button>
-                                                {shownCopies > 1 ? (
-                                                    <CopyFormDialog
-                                                        mode="split"
-                                                        from={{ ...mine, quantity: shownCopies }}
-                                                        folders={collections}
-                                                        onSaved={() => void reloadCopies()}
-                                                    >
-                                                        <Button size="sm" color="secondary">
-                                                            One is different…
-                                                        </Button>
-                                                    </CopyFormDialog>
+                                                {moveError ? (
+                                                    <p role="alert" className="text-sm text-error-primary">
+                                                        {moveError}
+                                                    </p>
                                                 ) : null}
                                             </div>
                                         </div>
                                     ) : null}
-                                </TabPanel>
-                            ) : null}
-                            {mine ? (
-                                <TabPanel id="price" className="flex flex-col gap-6">
-                                    {/* The line first, then the numbers around it: what one copy trades at, what all the
-                                        copies come to, what was paid, and what that bought. */}
-                                    {mine.tcg_id ? <PriceHistory tcgId={mine.tcg_id} holo={mine.finish === "reverse-holo"} tall /> : null}
+
                                     <dl className="flex flex-col divide-y divide-secondary">
-                                        <DetailRow label="Market price" value={mine.price != null ? formatPrice(mine.price) : null} />
-                                        <DetailRow label="Copies" value={mine.quantity ?? 1} />
-                                        <DetailRow label="Holding value" value={mine.price != null ? formatPrice(mine.price * (mine.quantity ?? 1)) : null} />
-                                        <DetailRow label="Purchase price" value={mine.purchase_price != null ? formatPrice(mine.purchase_price) : null} />
-                                        {mine.purchase_price != null && mine.price != null ? (
-                                            <DetailRow
-                                                label="Since purchase"
-                                                value={
-                                                    <span className={mine.price - mine.purchase_price >= 0 ? "text-success-primary" : "text-error-primary"}>
-                                                        {mine.price - mine.purchase_price >= 0 ? "+" : "−"}
-                                                        {formatPrice(Math.abs(mine.price - mine.purchase_price))}
-                                                    </span>
-                                                }
-                                            />
+                                        <DetailRow label="Rarity" value={card?.rarity} />
+                                        {/* From the catalogue, once it answers: who drew it, and the card's own facts. */}
+                                        {known?.illustrator ? <DetailRow label="Illustrator" value={known.illustrator} /> : null}
+                                        {known?.hp != null ? <DetailRow label="HP" value={known.hp} /> : null}
+                                        {known?.stage ? (
+                                            <DetailRow label="Stage" value={known.evolveFrom ? `${known.stage} · from ${known.evolveFrom}` : known.stage} />
                                         ) : null}
-                                        <DetailRow label="Purchase date" value={mine.purchase_date ? formatDate(mine.purchase_date) : null} />
+                                        {known?.regulationMark ? <DetailRow label="Regulation mark" value={known.regulationMark} /> : null}
+                                        <DetailRow
+                                            label="Generation"
+                                            value={
+                                                card?.gen ? (
+                                                    <span className="flex items-center justify-end gap-2">
+                                                        {/* The logo is the series' own picture; the name beside it says it for a reader. */}
+                                                        {genLogo ? (
+                                                            <>
+                                                                <Image
+                                                                    src={genLogo}
+                                                                    alt=""
+                                                                    width={96}
+                                                                    height={24}
+                                                                    className="h-6 w-auto max-w-28 object-contain"
+                                                                />
+                                                                <span className="sr-only">{card.gen}</span>
+                                                            </>
+                                                        ) : (
+                                                            card.gen
+                                                        )}
+                                                    </span>
+                                                ) : null
+                                            }
+                                        />
+                                        <DetailRow
+                                            label="Types"
+                                            value={
+                                                card?.types?.length ? (
+                                                    <span className="flex flex-wrap items-center justify-end gap-2">
+                                                        {card.types.map((t) => (
+                                                            <span key={t} className="flex items-center gap-1.5">
+                                                                <TypeIcon type={t} />
+                                                                {t}
+                                                            </span>
+                                                        ))}
+                                                    </span>
+                                                ) : null
+                                            }
+                                        />
+                                        {readOnly ? <DetailRow label="Quantity" value={card?.quantity ?? 1} /> : null}
+                                        {readOnly ? <DetailRow label="Finish" value={card?.finish} /> : null}
                                     </dl>
+
+                                    {mine?.notes ? (
+                                        <div className="flex flex-col gap-1 border-t border-secondary pt-4">
+                                            <p className="text-sm text-tertiary">Notes</p>
+                                            <p className="text-sm text-primary">{mine.notes}</p>
+                                        </div>
+                                    ) : null}
                                 </TabPanel>
-                            ) : null}
-                        </Tabs>
+                                {mine?.owned ? (
+                                    <TabPanel id="copies" className="flex flex-col gap-6">
+                                        {/* The copies you hold of this card, one line per row: the language's flag, the finish,
+                                    the condition or grade, the folder and the count. A tap shows that row and its fields;
+                                    Add a copy at the foot makes a new row and shows it. */}
+                                        {mine?.owned ? (
+                                            <div className="flex flex-col gap-3 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary ring-inset">
+                                                <ul className="flex flex-col divide-y divide-secondary" aria-label="Copies">
+                                                    {(copies ?? [mine]).map((row) => {
+                                                        const folderName = collections.find((c) => c.id === row.collection_id)?.name;
+                                                        const current = row.id === mine.id;
+                                                        return (
+                                                            <li key={row.id}>
+                                                                <button
+                                                                    type="button"
+                                                                    aria-current={current ? "true" : undefined}
+                                                                    onClick={() => card && setViewing({ of: card.id, row })}
+                                                                    className={cx(
+                                                                        "flex w-full items-center gap-2 py-2 text-left text-sm outline-focus-ring focus-visible:outline-2",
+                                                                        current ? "text-primary" : "text-secondary hover:text-primary",
+                                                                    )}
+                                                                >
+                                                                    <FlagIcon language={row.language} />
+                                                                    <span className="min-w-0 flex-1 truncate">
+                                                                        {[
+                                                                            row.finish === "reverse-holo"
+                                                                                ? "Reverse holo"
+                                                                                : row.finish === "holo"
+                                                                                  ? "Holo"
+                                                                                  : null,
+                                                                            row.grade ?? row.condition,
+                                                                            folderName,
+                                                                        ]
+                                                                            .filter(Boolean)
+                                                                            .join(" · ") || "Copy"}
+                                                                    </span>
+                                                                    {/* The copy's own price: a reverse holo has the foil's, the rest the plain one. */}
+                                                                    {row.price != null ? (
+                                                                        <span className="text-tertiary tabular-nums">{formatPrice(row.price)}</span>
+                                                                    ) : null}
+                                                                    <span className="text-tertiary tabular-nums">×{row.quantity ?? 1}</span>
+                                                                </button>
+                                                            </li>
+                                                        );
+                                                    })}
+                                                </ul>
+                                                {/* This copy: everything that belongs to the row shown, not to the card. */}
+                                                <dl className="flex flex-col divide-y divide-secondary">
+                                                    {/* Copies, with a step either way for an owner: the number is the row's own, the
+                                        buttons the same call the menu makes. */}
+                                                    <DetailRow
+                                                        label="Quantity"
+                                                        value={
+                                                            mine?.owned ? (
+                                                                <span className="flex items-center gap-2">
+                                                                    <Button
+                                                                        color="secondary"
+                                                                        size="sm"
+                                                                        iconLeading={Minus}
+                                                                        aria-label="One copy fewer"
+                                                                        isDisabled={busy || shownCopies <= 0}
+                                                                        onClick={() => step(shownCopies - 1)}
+                                                                    />
+                                                                    <span className="min-w-4 text-center tabular-nums">{shownCopies}</span>
+                                                                    <Button
+                                                                        color="secondary"
+                                                                        size="sm"
+                                                                        iconLeading={Plus}
+                                                                        aria-label="One copy more"
+                                                                        isDisabled={busy}
+                                                                        onClick={() => step(shownCopies + 1)}
+                                                                    />
+                                                                </span>
+                                                            ) : (
+                                                                (card?.quantity ?? 1)
+                                                            )
+                                                        }
+                                                    />
+                                                    {leaving ? (
+                                                        <output className="block py-2 text-sm text-warning-primary">
+                                                            No copies left: this card leaves your collection when you close the sheet.
+                                                        </output>
+                                                    ) : null}
+                                                    {/* The printing's language, with its flag; an owner picks it here, a reader sees it. Not
+                                        recorded reads as English, which nearly every card is. */}
+                                                    {mine ? (
+                                                        <DetailRow
+                                                            label="Language"
+                                                            value={
+                                                                <span className="flex items-center justify-end gap-2">
+                                                                    <FlagIcon language={shownLanguage} size="md" labelled />
+                                                                    <NativeSelect
+                                                                        aria-label="Language"
+                                                                        size="sm"
+                                                                        className="w-auto"
+                                                                        value={shownLanguage}
+                                                                        onChange={(event) => void pickLanguage(event.target.value)}
+                                                                        options={LANGUAGES.map((l) => ({ label: l.label, value: l.code }))}
+                                                                    />
+                                                                </span>
+                                                            }
+                                                        />
+                                                    ) : null}
+                                                    {/* A graded copy has a grade and no condition: the slab says which it is. Otherwise the
+                                        condition is picked here, in Cardmarket's scale. */}
+                                                    {mine && mine.grade ? (
+                                                        <DetailRow label="Grade" value={mine.grade} />
+                                                    ) : mine ? (
+                                                        <DetailRow
+                                                            label="Condition"
+                                                            value={
+                                                                <span className="flex items-center justify-end gap-2">
+                                                                    <NativeSelect
+                                                                        aria-label="Condition"
+                                                                        size="sm"
+                                                                        className="w-auto"
+                                                                        value={shownCondition}
+                                                                        onChange={(event) => void pickCondition(event.target.value)}
+                                                                        options={[
+                                                                            { label: "Not recorded", value: "" },
+                                                                            ...CONDITIONS.map((c) => ({ label: c, value: c })),
+                                                                        ]}
+                                                                    />
+                                                                </span>
+                                                            }
+                                                        />
+                                                    ) : null}
+                                                    <DetailRow label="Finish" value={mine?.finish ?? "Not recorded"} />
+                                                    {/* Personal fields stay off the public read-only view. */}
+                                                    {mine && (
+                                                        <DetailRow
+                                                            label="Acquired"
+                                                            value={
+                                                                mine.owned ? (
+                                                                    <input
+                                                                        type="date"
+                                                                        aria-label="Acquired"
+                                                                        className="rounded-md bg-primary px-2 py-1 text-sm text-primary ring-1 ring-primary outline-focus-ring ring-inset focus-visible:outline-2"
+                                                                        value={mine.acquired_at ? mine.acquired_at.slice(0, 10) : ""}
+                                                                        max={new Date().toISOString().slice(0, 10)}
+                                                                        onChange={(e) => {
+                                                                            const date = e.target.value;
+                                                                            if (date) void run(() => setAcquiredAt(mine.id, date));
+                                                                        }}
+                                                                    />
+                                                                ) : mine.acquired_at ? (
+                                                                    formatDate(mine.acquired_at)
+                                                                ) : null
+                                                            }
+                                                        />
+                                                    )}
+                                                    {/* The folder this copy is filed in. Only a folder filled by hand takes a card; a rule
+                                        folder fills itself. With none yet, the way to file it is to make one. */}
+                                                    <DetailRow
+                                                        label="Folder"
+                                                        value={
+                                                            <span className="flex flex-col items-end gap-2">
+                                                                {manual.length ? (
+                                                                    <NativeSelect
+                                                                        aria-label="Folder"
+                                                                        size="sm"
+                                                                        className="w-auto max-w-48"
+                                                                        value={collectionId}
+                                                                        onChange={(event) => onCollectionChange(event.target.value)}
+                                                                        options={[
+                                                                            { label: "None", value: "" },
+                                                                            ...manual.map((c) => ({ label: c.name, value: c.id })),
+                                                                        ]}
+                                                                    />
+                                                                ) : null}
+                                                                <FolderDialog
+                                                                    mode="create"
+                                                                    onSaved={async (id) => {
+                                                                        const next = await listCollections();
+                                                                        setCollections(next);
+                                                                        if (id && next.some((c) => c.id === id && !c.rule)) onCollectionChange(id);
+                                                                    }}
+                                                                >
+                                                                    <Button size="sm" color="link-gray" iconLeading={Plus}>
+                                                                        New folder
+                                                                    </Button>
+                                                                </FolderDialog>
+                                                                {collectionError ? (
+                                                                    <span role="alert" className="text-sm text-error-primary">
+                                                                        {collectionError}
+                                                                    </span>
+                                                                ) : null}
+                                                            </span>
+                                                        }
+                                                    />
+                                                </dl>
+                                                {/* Where the card is: the folder it was filed in, every rule folder whose rule it fits, and
+                            Favorites when starred. A wish is in none of them. */}
+                                                {mine ? (
+                                                    <div className="flex flex-col gap-1.5">
+                                                        <span className="text-sm font-medium text-secondary">In folders</span>
+                                                        <ul className="flex flex-wrap gap-1.5" aria-label="In folders">
+                                                            {[
+                                                                ...(isStarred ? [{ id: "favorites", name: "Favorites" }] : []),
+                                                                ...collections.filter((c) =>
+                                                                    c.rule ? matchesRule(mine, c.rule, facets) : c.id === collectionId,
+                                                                ),
+                                                            ].map(({ id, name }) => (
+                                                                <li key={id}>
+                                                                    <Badge size="sm" color="gray" type="pill-color">
+                                                                        {name}
+                                                                    </Badge>
+                                                                </li>
+                                                            ))}
+                                                            {!isStarred &&
+                                                            !collections.some((c) => (c.rule ? matchesRule(mine, c.rule, facets) : c.id === collectionId)) ? (
+                                                                <li className="text-sm text-quaternary">None yet</li>
+                                                            ) : null}
+                                                        </ul>
+                                                    </div>
+                                                ) : null}
+                                                {/* At the foot: a new copy is a row of its own, made like this one and shown at once, so
+                                                its language, condition or folder is set right here. One is different… moves some of
+                                                a row's copies to their own row. */}
+                                                <div className="flex flex-wrap gap-2 border-t border-secondary pt-4">
+                                                    <Button size="sm" color="secondary" iconLeading={Plus} isDisabled={busy} onClick={() => void addRow()}>
+                                                        Add a copy
+                                                    </Button>
+                                                    {shownCopies > 1 ? (
+                                                        <CopyFormDialog
+                                                            mode="split"
+                                                            from={{ ...mine, quantity: shownCopies }}
+                                                            folders={collections}
+                                                            onSaved={() => void reloadCopies()}
+                                                        >
+                                                            <Button size="sm" color="secondary">
+                                                                One is different…
+                                                            </Button>
+                                                        </CopyFormDialog>
+                                                    ) : null}
+                                                </div>
+                                            </div>
+                                        ) : null}
+                                    </TabPanel>
+                                ) : null}
+                                {mine ? (
+                                    <TabPanel id="price" className="flex flex-col gap-6">
+                                        {/* The line first, then the numbers around it: what one copy trades at, what all the
+                                        copies come to, what was paid, and what that bought. */}
+                                        {mine.tcg_id ? <PriceHistory tcgId={mine.tcg_id} holo={mine.finish === "reverse-holo"} tall /> : null}
+                                        <dl className="flex flex-col divide-y divide-secondary">
+                                            <DetailRow label="Market price" value={mine.price != null ? formatPrice(mine.price) : null} />
+                                            <DetailRow label="Copies" value={mine.quantity ?? 1} />
+                                            <DetailRow
+                                                label="Holding value"
+                                                value={mine.price != null ? formatPrice(mine.price * (mine.quantity ?? 1)) : null}
+                                            />
+                                            <DetailRow label="Purchase price" value={mine.purchase_price != null ? formatPrice(mine.purchase_price) : null} />
+                                            {mine.purchase_price != null && mine.price != null ? (
+                                                <DetailRow
+                                                    label="Since purchase"
+                                                    value={
+                                                        <span className={mine.price - mine.purchase_price >= 0 ? "text-success-primary" : "text-error-primary"}>
+                                                            {mine.price - mine.purchase_price >= 0 ? "+" : "−"}
+                                                            {formatPrice(Math.abs(mine.price - mine.purchase_price))}
+                                                        </span>
+                                                    }
+                                                />
+                                            ) : null}
+                                            <DetailRow label="Purchase date" value={mine.purchase_date ? formatDate(mine.purchase_date) : null} />
+                                        </dl>
+                                    </TabPanel>
+                                ) : null}
+                            </Tabs>
+                        ) : null}
                     </SlideoutMenu.Content>
                 </>
             )}
