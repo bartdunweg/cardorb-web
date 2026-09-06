@@ -364,7 +364,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                 </div>
                             ) : null}
                             <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-2/5 fade-to-page" />
-                            <div className="relative px-10 pt-10 pb-6">
+                            {/* The card begins under the row of buttons, with a breath between: pt-16 clears the
+                                buttons (top-3 plus their height) by a little over a line. */}
+                            <div className="relative px-10 pt-16 pb-6">
                                 {card?.image_url ? (
                                     /* The card tilts and shines under the pointer (the copy's finish and the
                                        printing's rarity pick the foil); the header's padding is the room it tilts in. */

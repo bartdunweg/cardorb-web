@@ -82,16 +82,32 @@ const SHEEN_ERAS = new Set(["sword & shield", "scarlet & violet", "mega evolutio
 
 /**
  * Where the picture sits, per era, as the CSS's clip properties. Measured on TCGdex scans at
- * 600 × 825: Sword & Shield, Scarlet & Violet and Mega Evolution share the window the vendored
- * CSS was written for (picture 9.85 % to 47.15 % down, 8 % in; trainers 14.5 % to 51.8 %); Sun &
- * Moon and XY sit within a percent of it and keep it. The Wizards-era frame (Base to e-Card) is
- * another shape: the picture starts lower and narrower, and a trainer's picture sits under a
- * TRAINER banner, a fifth of the way down.
+ * 600 × 825, the strongest horizontal and vertical edges of a Basic, a Stage and a trainer per
+ * set: Sword & Shield, Scarlet & Violet and Mega Evolution share the window the vendored CSS was
+ * written for (picture 9.85 % to 47.15 % down, 8 % in; trainers 14.5 % to 51.8 %), and EX and Sun
+ * & Moon sit within a percent of it and keep it. The others each have a frame of their own.
  */
-const CLASSIC_ERAS = new Set(["base", "gym", "neo", "legendary collection", "e-card"]);
-const CLASSIC_WINDOW = {
-    pokemon: "inset(11% 10.5% 48.5% 10.5%)",
-    trainer: "inset(22.5% 9.5% 41.5% 9.5%)",
+type Window = { pokemon: string; trainer: string };
+const WINDOWS: Record<string, Window> = {
+    // The Wizards frame: the picture lower and narrower, a trainer's under a TRAINER banner.
+    classic: { pokemon: "inset(11% 10.5% 48.5% 10.5%)", trainer: "inset(22.5% 9.5% 41.5% 9.5%)" },
+    ecard: { pokemon: "inset(12% 9.5% 51.4% 9.5%)", trainer: "inset(16% 10% 49.8% 10%)" },
+    dp: { pokemon: "inset(9.1% 6.8% 49.9% 6.8%)", trainer: "inset(13.8% 8.7% 49.9% 8.7%)" },
+    hgss: { pokemon: "inset(8% 5% 47.5% 5%)", trainer: "inset(13.5% 7.5% 45.1% 7.5%)" },
+    bw: { pokemon: "inset(10.3% 8.6% 50.3% 8.6%)", trainer: "inset(15.7% 9.5% 48.8% 9.5%)" },
+};
+const ERA_WINDOW: Record<string, keyof typeof WINDOWS> = {
+    base: "classic",
+    gym: "classic",
+    neo: "classic",
+    "legendary collection": "classic",
+    "e-card": "ecard",
+    "diamond & pearl": "dp",
+    platinum: "dp",
+    "heartgold & soulsilver": "hgss",
+    "call of legends": "hgss",
+    "black & white": "bw",
+    xy: "bw",
 };
 /** The card less the window: what a reverse holo's foil covers. */
 function invert(inset: string): string {
@@ -101,8 +117,9 @@ function invert(inset: string): string {
     return `polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 ${t}, ${l} ${t}, ${l} ${bottom}, ${right} ${bottom}, ${right} ${t}, 0 ${t})`;
 }
 function windowStyle(gen: string | null | undefined, trainer: boolean): Record<string, string> {
-    if (!CLASSIC_ERAS.has((gen ?? "").trim().toLowerCase())) return {};
-    const clip = trainer ? CLASSIC_WINDOW.trainer : CLASSIC_WINDOW.pokemon;
+    const era = ERA_WINDOW[(gen ?? "").trim().toLowerCase()];
+    if (!era) return {};
+    const clip = trainer ? WINDOWS[era].trainer : WINDOWS[era].pokemon;
     const inv = invert(clip);
     return {
         "--clip": clip,

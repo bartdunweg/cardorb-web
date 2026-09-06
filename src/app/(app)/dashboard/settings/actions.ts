@@ -98,6 +98,27 @@ export async function updatePassword(currentPassword: string, password: string):
     return { ok: true };
 }
 
+/**
+ * A new address for the account. Supabase mails a confirmation link to the new address (and, with
+ * secure email change on, one to the old); the change lands when it is clicked, so the answer here
+ * is "check your inbox", not "done".
+ */
+export async function updateEmail(email: string): Promise<ActionResult> {
+    const parsed = z.string().trim().toLowerCase().email("Enter a valid email address.").safeParse(email);
+    if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+
+    const supabase = await createClient();
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { ok: false, error: "Not signed in." };
+    if (user.email === parsed.data) return { ok: true };
+
+    const { error } = await supabase.auth.updateUser({ email: parsed.data });
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
+}
+
 // How the built-in Pokédex shows: which Pokémon you collect and whether the missing ones show.
 // Null restores the default, every slot with the missing ones.
 export async function updatePokedexSetting(setting: PokedexSetting | null): Promise<ActionResult> {

@@ -7,6 +7,7 @@ import { cx } from "@/utils/cx";
 
 const tabs = [
     { label: "Home", href: "/dashboard", icon: HomeLine, match: (p: string) => p === "/dashboard" },
+    { label: "Wishlist", href: "/dashboard/wishlist", icon: Heart, match: (p: string) => p.startsWith("/dashboard/wishlist") },
     { label: "All cards", href: "/dashboard/cards", icon: Rows01, match: (p: string) => p.startsWith("/dashboard/cards") },
     {
         label: "Collections",
@@ -14,7 +15,6 @@ const tabs = [
         icon: Folder,
         match: (p: string) => ["/dashboard/collections", "/dashboard/favorites", "/dashboard/pokedex"].some((h) => p.startsWith(h)),
     },
-    { label: "Wishlist", href: "/dashboard/wishlist", icon: Heart, match: (p: string) => p.startsWith("/dashboard/wishlist") },
 ];
 
 // Labels a size under the body scale, as a native tab bar writes them, so four fit with room.

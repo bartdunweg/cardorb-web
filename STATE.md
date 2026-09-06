@@ -22,6 +22,15 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **2026-09-06, later the same evening.** The phone's page title sits on the bar's line beside its
+  buttons where there is no Back (All cards, Wishlist, Collections); the tab bar and the sidebar
+  read Home, Wishlist, All cards, then Collections / Browse; the card in its sheet starts under
+  the button row; a finger on the card drives the card alone (`touch-action: none`); Home's
+  skeleton moved into a `(home)` route group so it is no longer the first loading boundary
+  under `/dashboard`, which the router showed while a folder page (a dynamic route, prefetched
+  only to the first boundary) was fetched; the foil window table covers e-Card, Diamond &
+  Pearl, Platinum, HeartGold SoulSilver, Black & White and XY too; Settings shows the public
+  address under the toggle and "View your public page" as a secondary button.
 - **2026-09-06, the search evening.** A search can be narrowed by chips once something is
   typed (#240): under the field a row that scrolls sideways, Set and Rarity on the phone's
   search sheet (the sets and rarities you hold, from the facets), Set and Type in the desktop
@@ -49,8 +58,7 @@ which also says what is already yours), Settings (avatar through the API), publi
   Violet and Mega Evolution share the CSS's own window; XY and Sun & Moon sit within a percent
   of it; the Wizards frame gets its own, trainers a fifth of the way down), a trainer known
   from the facts (no HP, no stage), and every holo before Sword & Shield on the starry cosmos
-  foil. Not measured: EX through HeartGold SoulSilver and Black & White, which keep the modern
-  window until someone owns one.
+  foil.
 - **2026-09-05, one day, sixteen web PRs and five API PRs.** Dark mode one step above black,
   hairline borders, glass chrome, four phone tabs with You as the avatar in Home's bar, sheets on a phone, dialogs
   centred (#101, #103). Icons in buttons take the label's colour, thick glass is 92% (#103). The
@@ -435,8 +443,8 @@ the others, and only the printings the card has, which `GET /v1/cards/{tcgId}` r
 English and Portuguese).
 
 Navigation, the evening of 2026-09-06 (this PR). All cards is a tab of its own beside Home on
-the phone and the second item in the sidebar; the tab bar reads Home, All cards, Collections,
-Wishlist. The sidebar's top group is Home, All cards, Wishlist, Browse; under the Collections
+the phone; the tab bar reads Home, Wishlist, All cards, Collections (Wishlist second, the
+owner's call later that evening). The sidebar's top group is Home, Wishlist, All cards, Browse; under the Collections
 heading Favorites, the Pokédex and the folders you made. The phone's Collections page lost its
 All cards tile, and the pages under it say Back to Collections. A page bar's buttons (Back, the
 plus, the dots) are 44 px, the avatar's and Home's search's size. The card sheet scrolls as one

@@ -40,8 +40,8 @@ export function AppSidebar({ account, collections }: { account: Promise<Account>
 
     const navItems: (NavItemType | NavItemDividerType)[] = [
         { label: "Home", href: "/dashboard", icon: HomeLine },
-        { label: "All cards", href: "/dashboard/cards", icon: Rows01 },
         { label: "Wishlist", href: "/dashboard/wishlist", icon: Heart },
+        { label: "All cards", href: "/dashboard/cards", icon: Rows01 },
         { label: "Browse", href: "/dashboard/sets", icon: BookOpen01 },
         { divider: true, label: "Collections" },
         { label: "Favorites", href: "/dashboard/favorites", icon: Star01 },
