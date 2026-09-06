@@ -1,8 +1,9 @@
+import { Suspense } from "react";
 import { AddCardModal } from "@/components/app/add-card-modal";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderPage } from "@/components/app/folder-page";
 import { PokedexSettingsDialog } from "@/components/app/pokedex-settings-dialog";
-import { type CardFilter, getAllMyCards, getFacets } from "@/lib/cards";
+import { type CardFilter, type Facets, getAllMyCards } from "@/lib/cards";
 import { type DexList, groupByDex } from "@/lib/dex-groups";
 import { DEFAULT_POKEDEX } from "@/lib/folder-rule";
 import { type ListSearchParams, isNarrowed, readListQuery } from "@/lib/list-query";
@@ -20,10 +21,13 @@ export default async function PokedexPage({ searchParams }: { searchParams: Prom
     const { q, sort, order, set, rarity, unpriced } = query;
     const filter: CardFilter = { q, sort, order, set, rarity, ...(unpriced ? { priced: false } : {}) };
     const narrowed = isNarrowed(query);
-    const [me, facets] = await Promise.all([getMyProfile(), getFacets()]);
+    const me = await getMyProfile();
     const setting = me.profile?.pokedex ?? DEFAULT_POKEDEX;
 
-    const dex: Promise<DexList> = Promise.all([getAllMyCards(filter), getDexNames()]).then(([r, names]) => ({
+    // One read of every card, not awaited: the slots, the count and the Filters sheet's facets all come from it.
+    const all = getAllMyCards(filter);
+    const facets = all.then((r) => r.facets);
+    const dex: Promise<DexList> = Promise.all([all, getDexNames()]).then(([r, names]) => ({
         ...groupByDex(r.cards, names, setting),
         total: r.total,
         value: r.value,
@@ -42,7 +46,13 @@ export default async function PokedexPage({ searchParams }: { searchParams: Prom
             title="Pokédex"
             back={{ href: "/dashboard/collections", label: "Collection" }}
             datapoints={datapoints}
-            settings={(compact) => <PokedexSettingsDialog setting={setting} isPublic={me.profile?.pokedex_public ?? false} facets={facets} compact={compact} />}
+            settings={(compact) => (
+                <Suspense
+                    fallback={<PokedexSettingsDialog setting={setting} isPublic={me.profile?.pokedex_public ?? false} facets={NO_FACETS} compact={compact} />}
+                >
+                    <SettingsWhenReady setting={setting} isPublic={me.profile?.pokedex_public ?? false} facets={facets} compact={compact} />
+                </Suspense>
+            )}
             query={query}
             basePath="/dashboard/pokedex"
             facets={facets}
@@ -55,4 +65,11 @@ export default async function PokedexPage({ searchParams }: { searchParams: Prom
             pokedex={{ dex }}
         />
     );
+}
+
+const NO_FACETS: Facets = { sets: [], rarities: [] };
+
+// The dialog with the rarities it lists, once the list has said which there are.
+async function SettingsWhenReady({ facets, ...rest }: { facets: Promise<Facets> } & Omit<Parameters<typeof PokedexSettingsDialog>[0], "facets">) {
+    return <PokedexSettingsDialog {...rest} facets={await facets} />;
 }

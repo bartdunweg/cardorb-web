@@ -1,5 +1,6 @@
 import { ApiError, api } from "@/lib/api";
 import { type BrowseCard, type CatalogueSet, type SetCard, absoluteImage, seriesFromSets, setCardFromBrowse } from "@/lib/api-shapes";
+import { perUser } from "@/lib/user-cache";
 
 export type { SetCard, SetSeries, SetSummary } from "@/lib/api-shapes";
 
@@ -15,9 +16,11 @@ const catalogueDown = (err: unknown) => err instanceof ApiError && err.status ==
 
 // Every set there is, grouped by series, with how much of each is in the binder. The API lists
 // them newest first and the groups keep that order.
+// Five minutes per person (user-cache.ts): the counts on the tiles change on a write, and every
+// write drops the person's entries.
 export async function getSets() {
     try {
-        const { sets } = await api<{ sets: CatalogueSet[] }>("/catalog/sets");
+        const sets = await perUser("sets", async (token) => (await api<{ sets: CatalogueSet[] }>("/catalog/sets", { token })).sets);
         return seriesFromSets(sets);
     } catch (err) {
         if (catalogueDown(err)) throw new CatalogueUnavailable();

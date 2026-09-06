@@ -143,6 +143,15 @@ export function SetsSkeleton() {
     return (
         <SkeletonFrame>
             <PageHeader title="Browse" above={<MobileTopRow />} titleOnPhone={false} />
+            <SetsOutline />
+        </SkeletonFrame>
+    );
+}
+
+/** The shelf's rows alone, under a title the page has already drawn. */
+export function SetsOutline() {
+    return (
+        <>
             {Array.from({ length: 2 }, (_, s) => (
                 <Outline key={s} className="flex flex-col gap-3">
                     <Block className="h-6 w-40" />
@@ -162,7 +171,7 @@ export function SetsSkeleton() {
                     </div>
                 </Outline>
             ))}
-        </SkeletonFrame>
+        </>
     );
 }
 

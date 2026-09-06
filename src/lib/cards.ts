@@ -104,12 +104,15 @@ export async function getCardStats(): Promise<CardStats> {
 
 /**
  * The whole of a list, for a folder shown as a Pokédex: the slots need every card, not a page.
- * The API caps a page at 500; the first page says how many there are, the rest come in parallel.
+ * One request of up to 2,000 (the API's ceiling for an owner); should a collection outgrow it,
+ * the rest follows in pages of the same size.
  */
 export async function getAllMyCards(filter: CardFilter) {
-    const PAGE = 500;
+    const PAGE = 2000;
     const first = await getMyCards({ ...filter, limit: PAGE, offset: 0 });
-    const pages = Math.ceil(first.total / PAGE);
-    const rest = await Promise.all(Array.from({ length: Math.max(0, pages - 1) }, (_, i) => getMyCards({ ...filter, limit: PAGE, offset: (i + 1) * PAGE })));
+    const got = first.cards.length;
+    if (got >= first.total || got === 0) return first;
+    const pages = Math.ceil((first.total - got) / got);
+    const rest = await Promise.all(Array.from({ length: pages }, (_, i) => getMyCards({ ...filter, limit: PAGE, offset: got * (i + 1) })));
     return { ...first, cards: [...first.cards, ...rest.flatMap((p) => p.cards)] };
 }
