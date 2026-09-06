@@ -6,7 +6,7 @@ import { ArrowRight, Check, DotsHorizontal, Minus, Plus, Star01, Trash01, XClose
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
-import { markOwned, removeCard, seriesLogo, setCopies, setFavorite } from "@/app/(app)/dashboard/cards/actions";
+import { markOwned, removeCard, seriesLogo, setCopies, setFavorite, setLanguage } from "@/app/(app)/dashboard/cards/actions";
 import { type FolderChoice, listCollections, loadFacets, setCardCollection } from "@/app/(app)/dashboard/collections/actions";
 import { CardImage } from "@/components/app/card-image";
 import { ConditionBadge } from "@/components/app/condition-badge";
@@ -23,6 +23,7 @@ import { NativeSelect } from "@/components/base/select/select-native";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
 import { matchesRule } from "@/lib/folder-rule";
 import { formatDate, formatPrice } from "@/lib/format";
+import { LANGUAGES } from "@/lib/languages";
 
 function DetailRow({ label, value }: { label: string; value: ReactNode }) {
     return (
@@ -89,6 +90,18 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
         if (!res.ok) {
             setMenuError(res.error);
             setCopies_({ id: mine.id, n: mine.quantity ?? 1 });
+        } else router.refresh();
+    };
+    // The language as the sheet shows it, kept with the row it was picked for; the page re-reads after.
+    const [language, setLanguage_] = useState<{ id: string; code: string } | null>(null);
+    const shownLanguage = mine && language?.id === mine.id ? language.code : (mine?.language ?? "en");
+    const pickLanguage = async (code: string) => {
+        if (!mine) return;
+        setLanguage_({ id: mine.id, code });
+        const res = await setLanguage(mine.id, code);
+        if (!res.ok) {
+            setMenuError(res.error);
+            setLanguage_(null);
         } else router.refresh();
     };
     // Closing the sheet on a card at nought removes it; the list behind re-reads after.
@@ -454,6 +467,26 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                             No copies left: this card leaves your collection when you close the sheet.
                                         </output>
                                     ) : null}
+                                    {/* The printing's language, with its flag; an owner picks it here, a reader sees it. Not
+                                        recorded reads as English, which nearly every card is. */}
+                                    {mine ? (
+                                        <DetailRow
+                                            label="Language"
+                                            value={
+                                                <span className="flex items-center justify-end gap-2">
+                                                    <span aria-hidden="true">{LANGUAGES.find((l) => l.code === shownLanguage)?.flag}</span>
+                                                    <NativeSelect
+                                                        aria-label="Language"
+                                                        size="sm"
+                                                        className="w-auto"
+                                                        value={shownLanguage}
+                                                        onChange={(event) => void pickLanguage(event.target.value)}
+                                                        options={LANGUAGES.map((l) => ({ label: l.label, value: l.code }))}
+                                                    />
+                                                </span>
+                                            }
+                                        />
+                                    ) : null}
                                     {/* A graded copy has a grade and no condition: the slab says which it is. */}
                                     {mine && mine.grade ? (
                                         <DetailRow label="Grade" value={mine.grade} />
@@ -462,7 +495,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                     ) : null}
                                     <DetailRow label="Finish" value={card?.finish} />
                                     {/* Personal fields stay off the public read-only view. */}
-                                    {mine && <DetailRow label="Owned" value={mine.owned ? "Yes" : "No"} />}
                                     {mine && <DetailRow label="Acquired" value={mine.acquired_at ? formatDate(mine.acquired_at) : null} />}
                                 </dl>
 

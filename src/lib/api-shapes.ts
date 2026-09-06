@@ -43,6 +43,7 @@ export type CardItem = {
     quantity: number;
     condition: string | null;
     grade: string | null;
+    language: string | null;
     purchasePrice: number | null;
     purchaseDate: string | null;
     notes: string | null;
@@ -66,6 +67,7 @@ export type Card = {
     is_favorite: boolean | null;
     condition: string | null;
     grade: string | null;
+    language: string | null;
     finish: string | null;
     purchase_price: number | null;
     purchase_date: string | null;
@@ -147,6 +149,7 @@ export const cardFromItem = (item: CardItem): Card => ({
     is_favorite: item.isFavorite,
     condition: item.condition,
     grade: item.grade,
+    language: item.language,
     finish: item.finish,
     purchase_price: item.purchasePrice,
     purchase_date: item.purchaseDate,
