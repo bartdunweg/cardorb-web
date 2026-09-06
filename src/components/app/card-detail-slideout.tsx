@@ -274,14 +274,14 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
             // the status bar, so the page behind still shows as a page): the sheet is the card's page,
             // on the page's own opaque ground rather than on glass, so the art's fade has one colour
             // to end on, the same in both themes.
-            dialogClassName="mt-auto h-[calc(100dvh-env(safe-area-inset-top)-0.625rem)] max-h-[calc(100dvh-env(safe-area-inset-top)-0.625rem)] bg-page backdrop-blur-none sm:h-full sm:max-h-full"
+            dialogClassName="scrollbar-hide mt-auto h-[calc(100dvh-env(safe-area-inset-top)-0.625rem)] max-h-[calc(100dvh-env(safe-area-inset-top)-0.625rem)] bg-page backdrop-blur-none sm:h-full sm:max-h-full"
         >
             {({ close }) => (
                 <>
                     <SlideoutMenu.Header onClose={close} close="none" className="px-0 pt-0">
                         {/* The card first, on a blurred, dimmed copy of itself: the art sets the header's colour,
                             the way a product page takes its hero's. The copy is decoration and says nothing. */}
-                        <div className="relative w-full overflow-hidden">
+                        <div className="relative w-full overflow-hidden rounded-t-2xl sm:rounded-none">
                             {card?.image_url ? (
                                 <div aria-hidden="true" className="absolute inset-0 scale-125 opacity-60 blur-lg">
                                     <CardImage src={card.image_url} alt="" width={64} className="object-cover" />
