@@ -106,8 +106,8 @@ Content.displayName = "SlideoutContent";
 
 interface SlideoutHeaderProps extends ComponentPropsWithRef<"header"> {
     onClose?: () => void;
-    /** `circle`: the same round secondary button as a page's dots, for a head that is a picture. */
-    close?: "plain" | "circle";
+    /** `circle`: the same round secondary button as a page's dots, for a head that is a picture; `none`: the caller draws its own. */
+    close?: "plain" | "circle" | "none";
 }
 
 const Header = ({ className, children, onClose, close = "plain", ...props }: SlideoutHeaderProps) => {
@@ -116,9 +116,9 @@ const Header = ({ className, children, onClose, close = "plain", ...props }: Sli
             {children}
             {close === "circle" ? (
                 <Button color="secondary" size="sm" iconLeading={XClose} aria-label="Close" className="absolute top-3 right-3 shrink-0" onClick={onClose} />
-            ) : (
+            ) : close === "plain" ? (
                 <CloseButton size="sm" className="absolute top-3 right-3 shrink-0" onClick={onClose} />
-            )}
+            ) : null}
         </header>
     );
 };
