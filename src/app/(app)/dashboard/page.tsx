@@ -18,7 +18,7 @@ export default async function DashboardPage() {
                 style={{ "--arrive-delay": "120ms" } as React.CSSProperties}
             >
                 <div className="flex flex-col gap-1">
-                    <h2 className="text-sm font-semibold text-tertiary">Collection value over time</h2>
+                    <h2 className="text-md font-semibold text-primary">Collection value over time</h2>
                     <p className="text-xs text-quaternary">One reading a night, at Cardmarket&apos;s prices of that day.</p>
                 </div>
                 <ValueChart snapshots={snapshots} />

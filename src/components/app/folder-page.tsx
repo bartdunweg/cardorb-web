@@ -17,6 +17,8 @@ export function FolderPage({
     datapoints,
     actions,
     barActions,
+    settings,
+    add,
     children,
     ...body
 }: FolderBodyProps & {
@@ -28,6 +30,13 @@ export function FolderPage({
     actions?: ReactNode;
     /** A phone's settings button, in the bar across from Back; see PageHeader. */
     barActions?: ReactNode;
+    /**
+     * A list's own two actions, drawn twice: beside the title from lg (words), and in the phone's bar
+     * across from Back (icons, `compact`). One shape for All cards, Favorites, the wishlist and the
+     * Pokédex, so the pair sits in the same place on every list.
+     */
+    settings?: (compact: boolean) => ReactNode;
+    add?: (compact: boolean) => ReactNode;
     /** Under the data points: a rule's chips, a progress bar. */
     children?: ReactNode;
 }) {
@@ -44,8 +53,26 @@ export function FolderPage({
                     </>
                 }
                 back={back}
-                actions={actions}
-                barActions={barActions}
+                actions={
+                    settings || add ? (
+                        <div className="flex items-center gap-2 max-lg:hidden">
+                            {settings?.(false)}
+                            {add?.(false)}
+                        </div>
+                    ) : (
+                        actions
+                    )
+                }
+                barActions={
+                    settings || add ? (
+                        <>
+                            {settings?.(true)}
+                            {add?.(true)}
+                        </>
+                    ) : (
+                        barActions
+                    )
+                }
             >
                 {children}
             </PageHeader>

@@ -23,15 +23,7 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
             title="All cards"
             back={{ href: "/dashboard/collections", label: "Collection" }}
             datapoints={datapoints}
-            barActions={<AddCardModal compact />}
-            actions={
-                <>
-                    {/* The words beside the title from lg; on a phone the plus sits in the bar. */}
-                    <div className="max-lg:hidden">
-                        <AddCardModal />
-                    </div>
-                </>
-            }
+            add={(compact) => <AddCardModal compact={compact} />}
             query={query}
             basePath="/dashboard/cards"
             facets={facets}

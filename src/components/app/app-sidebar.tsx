@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, use } from "react";
-import { BookOpen01, Folder, Grid01, Heart, HomeLine, Plus, Rows01, Star01 } from "@untitledui/icons";
+import { BookOpen01, Dataflow03, Folder, Grid01, Heart, HomeLine, Plus, Rows01, Star01 } from "@untitledui/icons";
 import { usePathname } from "next/navigation";
 import { Button as AriaButton } from "react-aria-components";
 import { AccountMenu } from "@/components/app/account-menu";
@@ -12,7 +12,7 @@ import type { NavItemDividerType, NavItemType } from "@/components/application/a
 import { SidebarNavigationSectionDividers } from "@/components/application/app-navigation/sidebar-navigation/sidebar-section-dividers";
 
 type Account = { name: string; email: string; avatarUrl: string | null };
-type FolderLink = { id: string; name: string };
+type FolderLink = { id: string; name: string; kind: "manual" | "rule" };
 
 // Icons are component functions, so nav items are built here (client) — they can't be passed
 // from a Server Component. Home, Browse (every set there has been, not your collection) and
@@ -80,7 +80,7 @@ function FolderRows({ collections, activeUrl }: { collections: Promise<FolderLin
                 const href = `/dashboard/collections/${c.id}`;
                 return (
                     <li key={c.id} className="arrive py-px">
-                        <NavItemBase type="link" icon={Folder} href={href} current={activeUrl === href}>
+                        <NavItemBase type="link" icon={c.kind === "rule" ? Dataflow03 : Folder} href={href} current={activeUrl === href}>
                             {c.name}
                         </NavItemBase>
                     </li>

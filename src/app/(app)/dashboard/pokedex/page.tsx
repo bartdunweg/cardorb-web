@@ -42,12 +42,7 @@ export default async function PokedexPage({ searchParams }: { searchParams: Prom
             title="Pokédex"
             back={{ href: "/dashboard/collections", label: "Collection" }}
             datapoints={datapoints}
-            actions={
-                <div className="max-lg:hidden">
-                    <PokedexSettingsDialog setting={setting} isPublic={me.profile?.pokedex_public ?? false} facets={facets} />
-                </div>
-            }
-            barActions={<PokedexSettingsDialog setting={setting} isPublic={me.profile?.pokedex_public ?? false} facets={facets} compact />}
+            settings={(compact) => <PokedexSettingsDialog setting={setting} isPublic={me.profile?.pokedex_public ?? false} facets={facets} compact={compact} />}
             query={query}
             basePath="/dashboard/pokedex"
             facets={facets}

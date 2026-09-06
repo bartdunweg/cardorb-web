@@ -21,12 +21,7 @@ export default async function FavoritesPage({ searchParams }: { searchParams: Pr
             title="Favorites"
             back={{ href: "/dashboard/collections", label: "Collection" }}
             datapoints={datapoints}
-            actions={
-                <div className="max-lg:hidden">
-                    <ListSettingsDialog list="favorites" title="Favorites" isPublic={profile?.favorites_public ?? false} />
-                </div>
-            }
-            barActions={<ListSettingsDialog list="favorites" title="Favorites" isPublic={profile?.favorites_public ?? false} compact />}
+            settings={(compact) => <ListSettingsDialog list="favorites" title="Favorites" isPublic={profile?.favorites_public ?? false} compact={compact} />}
             query={query}
             basePath="/dashboard/favorites"
             facets={facets}

@@ -22,21 +22,9 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
             title="Wishlist"
             subtitle="Cards you’re looking for but don’t own yet."
             datapoints={datapoints}
-            // Beside the title whatever the list holds: the title is drawn before the count is known.
-            // A plus alone: the page says Wishlist, the button need not repeat it.
-            actions={
-                <div className="flex items-center gap-2 max-lg:hidden">
-                    <ListSettingsDialog list="wishlist" title="Wishlist" isPublic={profile?.wishlist_public ?? false} />
-                    <AddCardModal defaultTarget="wishlist" compact />
-                </div>
-            }
+            settings={(compact) => <ListSettingsDialog list="wishlist" title="Wishlist" isPublic={profile?.wishlist_public ?? false} compact={compact} />}
+            add={(compact) => <AddCardModal defaultTarget="wishlist" compact={compact} />}
             query={query}
-            barActions={
-                <>
-                    <ListSettingsDialog list="wishlist" title="Wishlist" isPublic={profile?.wishlist_public ?? false} compact />
-                    <AddCardModal defaultTarget="wishlist" compact />
-                </>
-            }
             basePath="/dashboard/wishlist"
             facets={facets}
             list={list}
