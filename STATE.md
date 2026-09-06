@@ -356,6 +356,20 @@ The card's sheet also has the kit's Tabs (#198; `components/application/tabs`), 
 drawn in `type-icon.tsx`, the series logo beside Generation (`seriesLogo` from the shelf), and
 the buttons over the art above the card's block (they were under it and took no taps).
 
+Copies (evening of 2026-09-06; web #207–#208, cardorb-api #214–#215). A `cards` row is still
+N identical copies; a copy that differs gets a row of its own. API: `language` on every card
+shape (en, de, fr, it, es, pt, nl, ja, ko, zh, null reads as English); `POST
+/v1/collection/items/{id}/copies` (one more, the differences applied, pulled now) and
+`…/split` (some of a row's copies to a row of their own, the source's acquired date kept;
+`split_card` in Postgres does both writes in one transaction); `GET /v1/cards?set=&number=`
+names one card's every row; a draft may carry `collectionId`; PATCH takes `acquiredAt`. Web:
+the sheet's Copies tile (flag, finish, condition or grade, folder, count; a tap shows that
+row; One more, Different…, One is different…), `CopyFormDialog`, `FlagIcon` from ten
+`flag-icons` SVGs (not the stylesheet, which pulls in five hundred), the Generation row as the
+series' logo alone, Acquired as a date field, a flag on a non-English tile. Not yet wired: a
+card added from a manual folder's page filing itself there (`addCard` takes `collectionId`;
+`AddCardModal` does not pass it).
+
 ## Open
 
 - **A revoked session stays open on the web for up to an hour (#79).** The middleware and the
