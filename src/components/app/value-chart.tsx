@@ -77,6 +77,7 @@ export function ValueChart({
     const fillTone = "fill-fg-primary";
     // The line's class sets the stroke only: a fill class would win over its fill="none".
     const strokeTone = "stroke-fg-primary";
+    const fadeId = `${svgTitleId}-fade`;
     const summary = `${formatPrice(first.value)} on ${dayYear.format(dateOf(first))} to ${formatPrice(last.value)} on ${dayYear.format(dateOf(last))}, ${
         change === 0 ? "unchanged" : `${change > 0 ? "up" : "down"} ${formatPrice(Math.abs(change))}`
     }.`;
@@ -149,7 +150,14 @@ export function ValueChart({
                             ) : null,
                         )}
 
-                        <path d={areaPath(points, baseline)} className={cx(fillTone, "opacity-15")} />
+                        {/* The ground under the line: its own colour, faint at the line and nothing at the baseline. */}
+                        <defs>
+                            <linearGradient id={fadeId} x1={0} y1={0} x2={0} y2={1}>
+                                <stop offset={0} stopColor="currentColor" stopOpacity={0.15} />
+                                <stop offset={1} stopColor="currentColor" stopOpacity={0} />
+                            </linearGradient>
+                        </defs>
+                        <path d={areaPath(points, baseline)} fill={`url(#${fadeId})`} className="text-fg-primary" />
                         <path d={linePath(points)} className={strokeTone} strokeWidth={2} fill="none" strokeLinejoin="round" strokeLinecap="round" />
 
                         {currentPoint ? (

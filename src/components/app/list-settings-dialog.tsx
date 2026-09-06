@@ -51,7 +51,7 @@ export function ListSettingsDialog({
             }}
         >
             {compact ? (
-                <Button color="secondary" size="sm" iconLeading={DotsHorizontal} aria-label={`${title} settings`} />
+                <Button color="secondary" size="lg" iconLeading={DotsHorizontal} aria-label={`${title} settings`} />
             ) : (
                 <Button color="secondary" size="md" iconLeading={Settings01} aria-label={`${title} settings`}>
                     Settings

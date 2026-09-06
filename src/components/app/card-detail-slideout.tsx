@@ -28,6 +28,7 @@ import { FlagIcon } from "@/components/app/flag-icon";
 import { FolderDialog } from "@/components/app/folder-dialog";
 import { MarkOwnedDialog } from "@/components/app/mark-owned-dialog";
 import { PriceHistory } from "@/components/app/price-history";
+import { SheetBar } from "@/components/app/sheet-bar";
 import { TypeIcon } from "@/components/app/type-icon";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Tab, TabList, TabPanel, Tabs } from "@/components/application/tabs/tabs";
@@ -246,6 +247,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
         setStarred(null);
     }
 
+    const titleRef = useRef<HTMLHeadingElement>(null);
     const [collectionError, setCollectionError] = useState<string | null>(null);
     const manual = collections.filter((c) => !c.rule);
     const onCollectionChange = async (value: string) => {
@@ -274,37 +276,32 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
             // the status bar, so the page behind still shows as a page): the sheet is the card's page,
             // on the page's own opaque ground rather than on glass, so the art's fade has one colour
             // to end on, the same in both themes.
-            dialogClassName="scrollbar-hide mt-auto h-[calc(100dvh-env(safe-area-inset-top)-0.625rem)] max-h-[calc(100dvh-env(safe-area-inset-top)-0.625rem)] bg-page backdrop-blur-none sm:h-full sm:max-h-full"
+            dialogClassName="scrollbar-hide gap-0 mt-auto h-[calc(100dvh-env(safe-area-inset-top)-0.625rem)] max-h-[calc(100dvh-env(safe-area-inset-top)-0.625rem)] bg-page backdrop-blur-none sm:h-full sm:max-h-full"
         >
             {({ close }) => (
                 <>
-                    <SlideoutMenu.Header onClose={close} close="none" className="px-0 pt-0">
-                        {/* The card first, on a blurred, dimmed copy of itself: the art sets the header's colour,
-                            the way a product page takes its hero's. The copy is decoration and says nothing. */}
-                        <div className="relative w-full overflow-hidden rounded-t-2xl sm:rounded-none">
-                            {card?.image_url ? (
-                                <div aria-hidden="true" className="absolute inset-0 scale-125 opacity-60 blur-lg">
-                                    <CardImage src={card.image_url} alt="" width={64} className="object-cover" />
-                                </div>
-                            ) : null}
-                            <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-2/5 fade-to-page" />
-                            {/* Close at the left, the star and the menu at the right, on one line over the art; glass, so
-                                they sit in the picture rather than on it. z-10: the card's block is drawn after them and
-                                would otherwise take the taps meant for them. */}
+                    {/* Close, the name once the title has passed, the star and the menu: sticky on the sheet's
+                        scroll, over the art at first. Glass buttons, so they sit in the picture rather than on it. */}
+                    <SheetBar
+                        title={card?.name ?? ""}
+                        titleRef={titleRef}
+                        left={
                             <Button
                                 color="tertiary"
-                                size="sm"
+                                size="lg"
                                 iconLeading={XClose}
                                 aria-label="Close"
-                                className="absolute top-3 left-3 z-10 glass text-primary ring-1 ring-glass ring-inset"
+                                className="glass text-primary ring-1 ring-glass ring-inset"
                                 onClick={() => void closeSheet()}
                             />
-                            {mine ? (
-                                <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
+                        }
+                        right={
+                            mine ? (
+                                <>
                                     {mine.owned ? (
                                         <Button
                                             color={isStarred ? "primary" : "tertiary"}
-                                            size="sm"
+                                            size="lg"
                                             iconLeading={Star01}
                                             aria-label="Favorite"
                                             aria-pressed={isStarred}
@@ -317,7 +314,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                     <Dropdown.Root>
                                         <Button
                                             color="tertiary"
-                                            size="sm"
+                                            size="lg"
                                             iconLeading={DotsHorizontal}
                                             aria-label="More"
                                             isLoading={busy}
@@ -352,8 +349,20 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                             </Dropdown.Menu>
                                         </Dropdown.Popover>
                                     </Dropdown.Root>
+                                </>
+                            ) : null
+                        }
+                    />
+                    <SlideoutMenu.Header onClose={close} close="none" className="px-0 pt-0">
+                        {/* The card first, on a blurred, dimmed copy of itself: the art sets the header's colour,
+                            the way a product page takes its hero's. The copy is decoration and says nothing. */}
+                        <div className="relative w-full overflow-hidden rounded-t-2xl sm:rounded-none">
+                            {card?.image_url ? (
+                                <div aria-hidden="true" className="absolute inset-0 scale-125 opacity-60 blur-lg">
+                                    <CardImage src={card.image_url} alt="" width={64} className="object-cover" />
                                 </div>
                             ) : null}
+                            <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-2/5 fade-to-page" />
                             <div className="relative px-10 pt-10 pb-6">
                                 {card?.image_url ? (
                                     <div className="relative mx-auto aspect-card w-full max-w-44 overflow-hidden rounded-card shadow-lift-lg">
@@ -375,7 +384,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                             </div>
                         </div>
                         <div className="flex flex-col px-4 pt-4 md:px-6">
-                            <AriaHeading slot="title" className="text-lg font-semibold text-primary">
+                            <AriaHeading ref={titleRef} slot="title" className="text-lg font-semibold text-primary">
                                 {card?.name}
                                 {isStarred && mine ? <FavoriteStar /> : null}
                             </AriaHeading>
@@ -406,7 +415,8 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                         </div>
                     </SlideoutMenu.Header>
 
-                    <SlideoutMenu.Content>
+                    {/* No scroll box of its own: the sheet is the page, and the whole of it scrolls, art and all. */}
+                    <SlideoutMenu.Content className="h-auto w-full flex-none overflow-visible pt-6 pb-6">
                         {/* Two tabs: the card's details, and its price with its line. A public view has no price, so no tabs. */}
                         {/* The list before its panels, and only once there is a card: a panel without its tab is
                             what react-aria warns about, and the sheet is mounted closed on every list page. A public

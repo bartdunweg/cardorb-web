@@ -401,6 +401,18 @@ the others, and only the printings the card has, which `GET /v1/cards/{tcgId}` r
 `languages` by asking each Western TCGdex catalogue for the id (Pikachu with Grey Felt Hat:
 English and Portuguese).
 
+Navigation, the evening of 2026-09-06 (this PR). All cards is a tab of its own beside Home on
+the phone and the second item in the sidebar; the tab bar reads Home, All cards, Collections,
+Wishlist. The sidebar's top group is Home, All cards, Wishlist, Browse; under the Collections
+heading Favorites, the Pokédex and the folders you made. The phone's Collections page lost its
+All cards tile, and the pages under it say Back to Collections. A page bar's buttons (Back, the
+plus, the dots) are 44 px, the avatar's and Home's search's size. The card sheet scrolls as one
+page, art and all; a sticky bar (`sheet-bar.tsx`) holds Close, the star and the menu, and takes
+the card's name and the page's colour as the title slides under it, the page bar's collapse for
+a sheet. The fill under a chart's line runs out to nothing at the bottom. The Supabase migration
+history of the API project is in step with its files again (`supabase migration repair`: two
+entries recorded under the timestamp of their apply, three applied by hand, all five marked).
+
 ## Open
 
 - **A revoked session stays open on the web for up to an hour (#79).** The middleware and the

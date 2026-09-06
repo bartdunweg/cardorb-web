@@ -3,12 +3,12 @@ import { PageHeader } from "@/components/app/page-header";
 import { getMyCollections } from "@/lib/collections";
 
 export default async function CollectionsPage() {
-    const { collections, ownedCount, favoritesCount } = await getMyCollections();
+    const { collections, favoritesCount } = await getMyCollections();
 
     return (
         <div className="flex flex-1 flex-col gap-6">
             <PageHeader
-                title="Collection"
+                title="Collections"
                 actions={
                     <div className="max-lg:hidden">
                         <NewCollectionButton />
@@ -16,7 +16,7 @@ export default async function CollectionsPage() {
                 }
                 barActions={<NewCollectionButton compact />}
             />
-            <CollectionsGrid collections={collections} ownedCount={ownedCount} favoritesCount={favoritesCount} />
+            <CollectionsGrid collections={collections} favoritesCount={favoritesCount} />
         </div>
     );
 }

@@ -59,10 +59,11 @@ export function PageHeader({
         if (!titleOnPhone || !el || typeof IntersectionObserver === "undefined") return;
         const observer = new IntersectionObserver(([entry]) => setCollapsed(tall ? entry.intersectionRatio < 1 : !entry.isIntersecting), {
             // The title counts as gone once it is under the bar, not once it has left the screen: with Back
-            // the bar is 68 px and the title starts right under it, so any part of it under the bar is
-            // enough; without one the bar is 48 px over a title that starts at 24, so all of it must be.
+            // the bar is 76 px (a 44 px button, the avatar's and the search's size, with 16 above and under) and
+            // the title starts right under it, so any part of it under the bar is enough; without one the
+            // bar is 48 px over a title that starts at 24, so all of it must be.
             threshold: tall ? 1 : 0,
-            rootMargin: `${tall ? -68 : -48}px 0px 0px 0px`,
+            rootMargin: `${tall ? -76 : -48}px 0px 0px 0px`,
         });
         observer.observe(el);
         return () => observer.disconnect();
@@ -91,7 +92,7 @@ export function PageHeader({
                 )}
             >
                 <div className="flex justify-start">
-                    {back ? <Button href={back.href} color="secondary" size="sm" iconLeading={ChevronLeft} aria-label={`Back to ${back.label}`} /> : null}
+                    {back ? <Button href={back.href} color="secondary" size="lg" iconLeading={ChevronLeft} aria-label={`Back to ${back.label}`} /> : null}
                 </div>
                 {/* The same words as the h1 below, so a screen reader hears the title once. */}
                 <span

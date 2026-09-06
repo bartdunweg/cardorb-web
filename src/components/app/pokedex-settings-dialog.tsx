@@ -66,7 +66,7 @@ export function PokedexSettingsDialog({
             }}
         >
             {compact ? (
-                <Button color="secondary" size="sm" iconLeading={DotsHorizontal} aria-label="Pokédex settings" />
+                <Button color="secondary" size="lg" iconLeading={DotsHorizontal} aria-label="Pokédex settings" />
             ) : (
                 <Button color="secondary" size="md" iconLeading={Settings01} aria-label="Pokédex settings">
                     Settings

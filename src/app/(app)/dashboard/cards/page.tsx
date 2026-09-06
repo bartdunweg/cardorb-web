@@ -4,7 +4,7 @@ import { FolderPage } from "@/components/app/folder-page";
 import { type CardFilter, getMyCards } from "@/lib/cards";
 import { type ListSearchParams, isNarrowed, readListQuery } from "@/lib/list-query";
 
-// Every card you own: the folder that is the whole collection.
+// Every card you own: the whole collection as one list, a tab of its own beside Home.
 //
 // The list is not awaited: the title, the actions and the row go to the browser at once, and
 // the first batch of cards, with the count and value under the title, follows when the API
@@ -22,7 +22,6 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
     return (
         <FolderPage
             title="All cards"
-            back={{ href: "/dashboard/collections", label: "Collection" }}
             datapoints={datapoints}
             add={(compact) => <AddCardModal compact={compact} />}
             query={query}
