@@ -10,7 +10,7 @@ import { Input } from "@/components/base/input/input";
 export function CardsSearch({
     initialValue = "",
     label = "Search your cards",
-    placeholder = "Search your collection",
+    placeholder = "Search",
     className = "w-full max-w-80",
     size = "md",
 }: {

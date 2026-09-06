@@ -69,7 +69,7 @@ export async function FolderBody(props: FolderBodyProps) {
                 initialValue={q ?? ""}
                 label={searchLabel}
                 placeholder={searchPlaceholder}
-                className="min-w-0 flex-1 sm:max-w-80"
+                className="min-w-0 flex-1 sm:max-w-64"
             />
             <FiltersSheet key="filters" active={[query.set, query.rarity].filter(Boolean).length}>
                 <Suspense key="set-rarity" fallback={<CardsFilters query={query} facets={NO_FACETS} />}>
