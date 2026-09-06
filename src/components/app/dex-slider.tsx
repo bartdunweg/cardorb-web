@@ -18,7 +18,7 @@ export function DexSlider({ cards, linked = true }: { cards: DexCard[]; linked?:
     };
 
     return (
-        <div className="group relative aspect-card w-full overflow-hidden rounded-lg">
+        <div className="group relative aspect-card w-full overflow-hidden rounded-card">
             <div ref={ref} className="flex size-full snap-x snap-mandatory [scrollbar-width:none] overflow-x-auto [&::-webkit-scrollbar]:hidden">
                 {cards.map((card) => (
                     <Slide key={card.id} linked={linked} href={`/dashboard/cards?q=${encodeURIComponent(card.name)}`}>

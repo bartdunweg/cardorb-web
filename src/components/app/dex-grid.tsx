@@ -80,7 +80,7 @@ function DexTile({ slot, linked }: { slot: NamedDexSlot; linked: boolean }) {
     if (held === 0) {
         return (
             <div className="flex flex-col gap-2">
-                <div className="flex aspect-card w-full items-center justify-center rounded-lg bg-tertiary">
+                <div className="flex aspect-card w-full items-center justify-center rounded-card bg-tertiary">
                     <span className="text-sm font-medium text-quaternary tabular-nums">{dexNumber(slot.number)}</span>
                 </div>
                 {words}
@@ -99,7 +99,7 @@ function DexTile({ slot, linked }: { slot: NamedDexSlot; linked: boolean }) {
 
     const card = slot.cards[0]!;
     const picture = (
-        <div className={cx("relative aspect-card w-full overflow-hidden rounded-lg", !card.imageUrl && "bg-quaternary")}>
+        <div className={cx("relative aspect-card w-full overflow-hidden rounded-card", !card.imageUrl && "bg-quaternary")}>
             {card.imageUrl ? (
                 <CardImage src={card.imageHighUrl ?? card.imageUrl} alt="" quality={75} className="object-cover" />
             ) : (

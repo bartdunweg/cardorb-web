@@ -58,6 +58,14 @@
     background-image: linear-gradient(to bottom, transparent, var(--color-bg-page) 70%);
 }
 
+/* A card's corners: a printed card is rounded at about 4.8 % of its width, and a scan carries
+   that corner. A fixed radius either shows the box behind the corner or clips the print; this
+   one scales with the box. Two radii, because the box is always 63 by 88: the vertical one is
+   the same length as the horizontal, so the corner is a circle and not an ellipse. */
+@utility rounded-card {
+    border-radius: 4.8% / 3.436%;
+}
+
 /* Pressable: scale 0.96 on press, so a tap is answered before anything else happens. 0.96, not
    less: below 0.95 it reads as exaggerated. Buttons, tabs and tappable cards all carry it. */
 @utility pressable {

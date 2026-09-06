@@ -335,7 +335,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                             ) : null}
                             <div className="relative px-10 pt-10 pb-6">
                                 {card?.image_url ? (
-                                    <div className="relative mx-auto aspect-card w-full max-w-44 overflow-hidden rounded-xl shadow-lift-lg">
+                                    <div className="relative mx-auto aspect-card w-full max-w-44 overflow-hidden rounded-card shadow-lift-lg">
                                         <CardImage
                                             src={card.image_high_url ?? card.image_url}
                                             alt={card.name}
@@ -346,7 +346,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                         />
                                     </div>
                                 ) : (
-                                    <div className="mx-auto flex aspect-card w-full max-w-44 flex-col items-center justify-center gap-1 rounded-xl bg-quaternary p-4 text-center">
+                                    <div className="mx-auto flex aspect-card w-full max-w-44 flex-col items-center justify-center gap-1 rounded-card bg-quaternary p-4 text-center">
                                         <span className="text-sm font-medium text-secondary">{card?.name}</span>
                                         {card?.number ? <span className="text-xs text-quaternary">#{card.number}</span> : null}
                                     </div>

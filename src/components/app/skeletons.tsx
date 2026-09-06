@@ -40,7 +40,7 @@ export function CardsSkeleton({ count = 12 }: { count?: number }) {
         <Outline className={`grid gap-4 ${GRID_COLUMNS.md}`}>
             {Array.from({ length: count }, (_, i) => (
                 <div key={i} className="flex flex-col gap-2">
-                    <div className="aspect-card w-full rounded-lg bg-quaternary" />
+                    <div className="aspect-card w-full rounded-card bg-quaternary" />
                     <Block className="h-4 w-3/4" />
                     <Block className="h-3 w-1/2" />
                 </div>
@@ -210,7 +210,7 @@ export function SetSkeleton() {
             <PageHeader title={" "} subtitle={<Line className="h-5 w-40" />} back={{ href: "/dashboard/sets", label: "Browse" }} />
             <Outline className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
                 {Array.from({ length: 40 }, (_, i) => (
-                    <div key={i} className="aspect-card rounded-md bg-quaternary" />
+                    <div key={i} className="aspect-card rounded-card bg-quaternary" />
                 ))}
             </Outline>
         </SkeletonFrame>

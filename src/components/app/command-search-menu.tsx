@@ -25,7 +25,7 @@ function CardPreview({ card, status, onAdd }: { card: PokemonCard; status: AddSt
     return (
         <div className="flex w-full flex-col gap-4 overflow-y-auto border-secondary p-6 max-md:border-t md:max-h-[70vh] md:w-90 md:border-l">
             {card.image ? (
-                <div className="relative mx-auto aspect-card w-40 overflow-hidden rounded-xl ring-1 ring-image ring-inset">
+                <div className="relative mx-auto aspect-card w-40 overflow-hidden rounded-card ring-1 ring-image ring-inset">
                     <CardImage src={card.image} alt={card.name} width={160} className="object-cover" priority />
                 </div>
             ) : (
