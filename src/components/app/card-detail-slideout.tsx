@@ -44,9 +44,10 @@ import { formatDate, formatPrice } from "@/lib/format";
 import { languagesFor } from "@/lib/languages";
 import { cx } from "@/utils/cx";
 
-function DetailRow({ label, value }: { label: string; value: ReactNode }) {
+// `late`: a row the catalogue sends a hop after the sheet has settled arrives like the rest of what streams in.
+function DetailRow({ label, value, late = false }: { label: string; value: ReactNode; late?: boolean }) {
     return (
-        <div className="flex items-start justify-between gap-4 py-3">
+        <div className={cx("flex items-start justify-between gap-4 py-3", late && "arrive")}>
             <dt className="text-sm text-tertiary">{label}</dt>
             <dd className="text-right text-sm font-medium text-primary">{value ?? "—"}</dd>
         </div>
@@ -445,12 +446,16 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                     <dl className="flex flex-col divide-y divide-secondary">
                                         <DetailRow label="Rarity" value={card?.rarity} />
                                         {/* From the catalogue, once it answers: who drew it, and the card's own facts. */}
-                                        {known?.illustrator ? <DetailRow label="Illustrator" value={known.illustrator} /> : null}
-                                        {known?.hp != null ? <DetailRow label="HP" value={known.hp} /> : null}
+                                        {known?.illustrator ? <DetailRow label="Illustrator" value={known.illustrator} late /> : null}
+                                        {known?.hp != null ? <DetailRow label="HP" value={known.hp} late /> : null}
                                         {known?.stage ? (
-                                            <DetailRow label="Stage" value={known.evolveFrom ? `${known.stage} · from ${known.evolveFrom}` : known.stage} />
+                                            <DetailRow
+                                                label="Stage"
+                                                value={known.evolveFrom ? `${known.stage} · from ${known.evolveFrom}` : known.stage}
+                                                late
+                                            />
                                         ) : null}
-                                        {known?.regulationMark ? <DetailRow label="Regulation mark" value={known.regulationMark} /> : null}
+                                        {known?.regulationMark ? <DetailRow label="Regulation mark" value={known.regulationMark} late /> : null}
                                         <DetailRow
                                             label="Generation"
                                             value={
@@ -509,11 +514,16 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                         {mine?.owned ? (
                                             <div className="flex flex-col gap-3 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary ring-inset">
                                                 <ul className="flex flex-col divide-y divide-secondary" aria-label="Copies">
-                                                    {(copies ?? [mine]).map((row) => {
+                                                    {(copies ?? [mine]).map((row, i) => {
                                                         const folderName = collections.find((c) => c.id === row.collection_id)?.name;
                                                         const current = row.id === mine.id;
                                                         return (
-                                                            <li key={row.id}>
+                                                            // The row the sheet opened on is already there; the other copies arrive.
+                                                            <li
+                                                                key={row.id}
+                                                                className={cx(!current && "arrive")}
+                                                                style={{ "--arrive-delay": `${Math.min(i, 8) * 20}ms` } as React.CSSProperties}
+                                                            >
                                                                 <button
                                                                     type="button"
                                                                     aria-current={current ? "true" : undefined}

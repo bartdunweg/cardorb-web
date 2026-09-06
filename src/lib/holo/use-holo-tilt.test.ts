@@ -51,7 +51,7 @@ describe("useHoloTilt", () => {
         expect(card.style.getPropertyValue("--card-opacity")).not.toBe("0");
     });
 
-    it("lets go half a second after the pointer leaves and settles flat", () => {
+    it("lets go a beat after the pointer leaves and settles flat", () => {
         const { card, surface } = mount();
         act(() => {
             surface.dispatchEvent(new PointerEvent("pointermove", { clientX: 0, clientY: 0, bubbles: true }));
@@ -62,7 +62,7 @@ describe("useHoloTilt", () => {
             surface.dispatchEvent(new PointerEvent("pointerleave", { bubbles: true }));
         });
         act(() => {
-            vi.advanceTimersByTime(499);
+            vi.advanceTimersByTime(149);
         });
         expect(frames).toHaveLength(0);
         act(() => {

@@ -54,17 +54,23 @@ export function CollectionsGrid({ collections, favoritesCount }: { collections: 
                 the data, both one to the eye), then the ones you made. All cards is not here: it is a tab of its
                 own, beside Home. On desktop the sidebar's Collections section is this list. */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-                <FolderCard href="/dashboard/favorites" icon={Star01} name="Favorites" count={favoritesCount} />
-                <FolderCard href="/dashboard/pokedex" icon={Grid01} name="Pokédex" detail="Cards by Pokémon" />
-                {collections.map((c) => (
-                    <FolderCard
-                        key={c.id}
-                        href={`/dashboard/collections/${c.id}`}
-                        icon={c.kind === "rule" ? Dataflow03 : Folder}
-                        name={c.name}
-                        count={c.count}
-                        detail={c.kind === "rule" ? `${c.count} card${c.count === 1 ? "" : "s"} · by rule` : undefined}
-                    />
+                {/* The tiles arrive as the card grids do, in a wrapper: the link owns a transition of its own. */}
+                <div className="arrive">
+                    <FolderCard href="/dashboard/favorites" icon={Star01} name="Favorites" count={favoritesCount} />
+                </div>
+                <div className="arrive" style={{ "--arrive-delay": "20ms" } as React.CSSProperties}>
+                    <FolderCard href="/dashboard/pokedex" icon={Grid01} name="Pokédex" detail="Cards by Pokémon" />
+                </div>
+                {collections.map((c, i) => (
+                    <div key={c.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i + 2, 8) * 20}ms` } as React.CSSProperties}>
+                        <FolderCard
+                            href={`/dashboard/collections/${c.id}`}
+                            icon={c.kind === "rule" ? Dataflow03 : Folder}
+                            name={c.name}
+                            count={c.count}
+                            detail={c.kind === "rule" ? `${c.count} card${c.count === 1 ? "" : "s"} · by rule` : undefined}
+                        />
+                    </div>
                 ))}
             </div>
 
