@@ -204,16 +204,21 @@ export async function listCopies(card: Pick<Card, "set" | "number" | "name">): P
 const copyBody = z.object({ cardId: z.string().uuid(), count: z.number().int().min(1).max(999), edits: copyEdits });
 
 // One more copy of a row, as a row of its own, with these differences (none is one more of the same).
-export async function addCopy(cardId: string, edits: CopyEdits, count = 1): Promise<Result> {
+export async function addCopy(cardId: string, edits: CopyEdits, count = 1): Promise<Result | { ok: true; id: string }> {
     const parsed = copyBody.safeParse({ cardId, count, edits });
     if (!parsed.success) return { ok: false, error: "Invalid input." };
+    let id: string | undefined;
     try {
-        await api(`/collection/items/${parsed.data.cardId}/copies`, { method: "POST", body: { ...parsed.data.edits, count: parsed.data.count } });
+        const res = await api<{ card?: { id?: string | null } }>(`/collection/items/${parsed.data.cardId}/copies`, {
+            method: "POST",
+            body: { ...parsed.data.edits, count: parsed.data.count },
+        });
+        id = res.card?.id ?? undefined;
     } catch (err) {
         return failed(err);
     }
     await forgetMine();
-    return { ok: true };
+    return id ? { ok: true, id } : { ok: true };
 }
 
 // Some of a row's copies as a row of their own: the row loses `count`, the copy keeps the row's acquired date.
