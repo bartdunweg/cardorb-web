@@ -12,7 +12,6 @@ import type { DexList, NamedDexSlot } from "@/lib/dex-groups";
 import { cx } from "@/utils/cx";
 
 /** The width a tile draws its picture at, per breakpoint: the same as a card in a list. */
-const SIZES = "(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 213px";
 
 const dexNumber = (n: number) => `#${String(n).padStart(3, "0")}`;
 
@@ -66,7 +65,7 @@ function DexTile({ slot, linked }: { slot: NamedDexSlot; linked: boolean }) {
     const picture = (
         <div className={cx("relative aspect-card w-full overflow-hidden rounded-lg", !card.imageUrl && "bg-quaternary")}>
             {card.imageUrl ? (
-                <CardImage src={card.imageHighUrl ?? card.imageUrl} alt="" sizes={SIZES} quality={75} className="object-contain" />
+                <CardImage src={card.imageHighUrl ?? card.imageUrl} alt="" quality={75} className="object-contain" />
             ) : (
                 <div className="flex h-full w-full flex-col items-center justify-center gap-1 p-3 text-center">
                     <span className="line-clamp-4 text-sm font-medium text-secondary">{card.name}</span>

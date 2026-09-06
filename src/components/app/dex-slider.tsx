@@ -23,13 +23,7 @@ export function DexSlider({ cards, linked = true }: { cards: DexCard[]; linked?:
                 {cards.map((card) => (
                     <Slide key={card.id} linked={linked} href={`/dashboard/cards?q=${encodeURIComponent(card.name)}`}>
                         {card.imageUrl ? (
-                            <CardImage
-                                src={card.imageHighUrl ?? card.imageUrl}
-                                quality={75}
-                                alt={card.name}
-                                sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 213px"
-                                className="object-contain"
-                            />
+                            <CardImage src={card.imageHighUrl ?? card.imageUrl} quality={75} alt={card.name} className="object-contain" />
                         ) : (
                             <div className="flex size-full items-center justify-center bg-quaternary p-3 text-center text-sm font-medium text-secondary">
                                 {card.name}

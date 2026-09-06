@@ -14,7 +14,8 @@ import Image from "next/image";
  * `next.config.mjs`, and mirrored here: a picture from anywhere else goes direct.
  *
  * Fills its parent, which must be `relative` with a set aspect ratio (a card is 63 × 88), so
- * the box exists before the picture lands and nothing jumps.
+ * the box exists before the picture lands and nothing jumps; `width` and `height` are the
+ * optimizer's hint, not the box's size.
  *
  * Quality 60: the source is a scan of a printed card, and at the sizes drawn here 60 is not
  * told apart from 75 while the file is a third smaller (next.config.mjs lists the qualities).
@@ -42,30 +43,39 @@ function isOptimised(src: string): boolean {
 export function CardImage({
     src,
     alt,
-    sizes,
     className,
     priority = false,
     quality = 60,
+    width = 256,
+    ratio = "card",
 }: {
     src: string;
     alt: string;
-    /** The width the layout draws this at, per breakpoint — what decides which size is fetched. */
-    sizes: string;
     className?: string;
     /** Only for a picture that is on screen at load, like the one open in the detail panel. */
     priority?: boolean;
     /** 60 for a thumbnail; 75 for a tile drawn large enough to show the difference (next.config.mjs lists both). */
     quality?: 60 | 75;
+    /**
+     * The widest the layout draws this, in CSS pixels. With a width and no `sizes` the optimizer
+     * names two candidates (1x and 2x) rather than one per configured size: nine srcset entries
+     * of ninety characters each, on every tile of a thousand-slot Pokédex, were most of that
+     * page's HTML. The box the picture fills is the parent's, whatever the width says.
+     */
+    width?: number;
+    /** A card is 63 by 88; a set logo or a badge is drawn square. */
+    ratio?: "card" | "square";
 }) {
     const [direct, setDirect] = useState(false);
+    const height = ratio === "card" ? Math.round((width * 88) / 63) : width;
 
     return (
         <Image
             src={src}
             alt={alt}
-            fill
-            sizes={sizes}
-            className={className}
+            width={width}
+            height={height}
+            className={`h-full w-full ${className ?? ""}`}
             priority={priority}
             quality={quality}
             unoptimized={direct || !isOptimised(src)}

@@ -10,8 +10,6 @@ import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
 import { cx } from "@/utils/cx";
 
-const SIZES = "(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, (max-width: 1280px) 17vw, 140px";
-
 type Result = { ok: true } | { ok: false; error: string };
 
 /**
@@ -63,7 +61,7 @@ export function SetCardTile({ card }: { card: SetCard }) {
                     }
                 >
                     {card.imageUrl ? (
-                        <CardImage src={card.imageUrl} alt="" sizes={SIZES} className={cx("object-cover", !card.owned && "opacity-30 grayscale")} />
+                        <CardImage src={card.imageUrl} alt="" width={160} className={cx("object-cover", !card.owned && "opacity-30 grayscale")} />
                     ) : (
                         <div className="flex size-full items-center justify-center bg-quaternary p-1 text-center text-2xs text-quaternary">{card.name}</div>
                     )}

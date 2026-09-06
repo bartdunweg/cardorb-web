@@ -67,7 +67,7 @@ function SetTile({ set }: { set: SetSummary }) {
             <div className="relative flex size-12 shrink-0 items-center justify-center">
                 {set.logoUrl ? (
                     // The logo is decoration: the name beside it says which set this is.
-                    <CardImage src={set.logoUrl} alt="" sizes="48px" className="object-contain" />
+                    <CardImage src={set.logoUrl} alt="" width={96} ratio="square" className="object-contain" />
                 ) : (
                     <div className="size-full rounded-md bg-secondary" />
                 )}
