@@ -413,6 +413,17 @@ a sheet. The fill under a chart's line runs out to nothing at the bottom. The Su
 history of the API project is in step with its files again (`supabase migration repair`: two
 entries recorded under the timestamp of their apply, three applied by hand, all five marked).
 
+Price history, later that night (cardorb-api #224; web #238). A card's line goes back to
+November 2022 where the American market has it: the API's prices route answers every reading,
+and `card_prices` carries `source`: the nightly Cardmarket guide from 2026-08-16, before it
+TCGplayer's market price weekly from February 2024 (tcgcsv.com's archive) and weekly averages
+of TCGplayer sales from November 2022 to November 2023 (tcgdex/price-history, older sets),
+dollars turned into euros at each day's ECB rate. One line, no second market on screen; the
+two markets disagree card by card (a Base Set Charizard: ~€340 Cardmarket, ~€770 from
+TCGplayer), so a line can step at 2026-08-16, accepted until a calibration pass. Nobody sells
+Cardmarket's own past: PokemonPriceTracker has 12 months in beta at $99 a month, pokedata.io
+is personal use only. `scripts/backfill-card-prices.mjs` in the API reruns the fill.
+
 ## Open
 
 - **A revoked session stays open on the web for up to an hour (#79).** The middleware and the
