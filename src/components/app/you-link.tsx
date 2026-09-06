@@ -14,7 +14,7 @@ export async function YouLink() {
             // In Home's bar, the size of Back beside it.
             className="shrink-0 pressable self-center rounded-full outline-offset-2 outline-focus-ring focus-visible:outline-2 lg:hidden"
         >
-            <Avatar size="sm" src={account.avatarUrl ?? undefined} alt="" className="size-9" />
+            <Avatar size="sm" src={account.avatarUrl ?? undefined} alt="" className="size-11" />
         </Link>
     );
 }

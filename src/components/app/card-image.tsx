@@ -66,7 +66,11 @@ export function CardImage({
     /** A card is 63 by 88; a set logo or a badge is drawn square. */
     ratio?: "card" | "square";
 }) {
+    // Once the optimizer fails, the original is tried; when that fails too there is no picture,
+    // and the box behind (a name, a grey) is better than the browser's broken-image mark.
     const [direct, setDirect] = useState(false);
+    const [gone, setGone] = useState(false);
+    if (gone) return null;
     const height = ratio === "card" ? Math.round((width * 88) / 63) : width;
 
     return (
@@ -79,7 +83,7 @@ export function CardImage({
             priority={priority}
             quality={quality}
             unoptimized={direct || !isOptimised(src)}
-            onError={() => setDirect(true)}
+            onError={() => (direct || !isOptimised(src) ? setGone(true) : setDirect(true))}
         />
     );
 }
