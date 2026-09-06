@@ -146,8 +146,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
             onOpenChange={(open) => {
                 if (!open) onClose();
             }}
-            // The whole screen on a phone: the sheet is the card's page, not a panel over one.
-            dialogClassName="h-dvh max-h-dvh sm:h-full"
+            // The whole screen on a phone: the sheet is the card's page, not a panel over one, so it
+            // stands on the page's own opaque ground rather than on glass: the art's fade has one
+            // colour to end on, the same in both themes.
+            dialogClassName="h-dvh max-h-dvh bg-page backdrop-blur-none sm:h-full"
         >
             {({ close }) => (
                 <>
@@ -160,7 +162,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                     <CardImage src={card.image_url} alt="" width={64} className="object-cover" />
                                 </div>
                             ) : null}
-                            <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-2/5 fade-to-glass-thick" />
+                            <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-2/5 fade-to-page" />
                             {/* Close at the left, the star and the menu at the right, on one line over the art; glass, so
                                 they sit in the picture rather than on it. z-10: the card's block is drawn after them and
                                 would otherwise take the taps meant for them. */}
