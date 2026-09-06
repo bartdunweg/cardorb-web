@@ -13,7 +13,7 @@ import { Input } from "@/components/base/input/input";
 import { NativeSelect } from "@/components/base/select/select-native";
 import type { Card } from "@/lib/api-shapes";
 import type { CopyEdits } from "@/lib/copies";
-import { LANGUAGES } from "@/lib/languages";
+import { languagesFor } from "@/lib/languages";
 
 // A wish becomes a copy you hold. The moment to say what it is: language, condition (Near Mint
 // unless said), finish, folder, what you paid and the day you got it (today unless said). One
@@ -109,7 +109,7 @@ function MarkOwnedForm({ card, folders, onSaved, close }: Props & { close: () =>
                         className="w-auto"
                         value={language}
                         onChange={(e) => setLanguage(e.target.value)}
-                        options={LANGUAGES.map((l) => ({ label: l.label, value: l.code }))}
+                        options={languagesFor(null).map((l) => ({ label: l.label, value: l.code }))}
                     />
                 </span>
             </div>

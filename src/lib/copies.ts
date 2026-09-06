@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { Card } from "@/lib/api-shapes";
-import { LANGUAGES, languageOf } from "@/lib/languages";
+import { WESTERN_LANGUAGES, languageOf } from "@/lib/languages";
 
 /** The same card: the same set, number and name; a second row of it is another copy, not another card. */
 export const sameCard = (a: Pick<Card, "set" | "number" | "name">, b: Pick<Card, "set" | "number" | "name">) =>
@@ -15,7 +15,8 @@ export const sortCopies = (rows: Card[]) => [...rows].sort((a, b) => rank(a).loc
 /** What a copy may differ in from the row it comes from. */
 export const copyEdits = z
     .object({
-        language: z.enum(LANGUAGES.map((l) => l.code) as [string, ...string[]]).nullable(),
+        // Only the Western printings: every row is from the English catalogue until the others can be added.
+        language: z.enum(WESTERN_LANGUAGES.map((l) => l.code) as [string, ...string[]]).nullable(),
         condition: z.string().trim().max(40).nullable(),
         grade: z.string().trim().max(40).nullable(),
         finish: z.enum(["normal", "reverse-holo", "holo"]).nullable(),

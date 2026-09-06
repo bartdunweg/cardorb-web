@@ -13,6 +13,21 @@ export const LANGUAGES = [
 ] as const;
 
 export type LanguageCode = (typeof LANGUAGES)[number]["code"];
+
+/**
+ * The languages a copy of a card from the English catalogue can be: the Western printings share
+ * one set and one numbering, so an English card's copy may be German or Dutch. A card from the
+ * Japanese, Chinese or Korean catalogue is in that language and no other; its language is the
+ * catalogue's, not a choice.
+ */
+export const WESTERN_LANGUAGES = LANGUAGES.filter((l) => ["en", "de", "fr", "it", "es", "pt", "nl"].includes(l.code));
+
+/** The languages a copy may be set to, given the catalogue it came from (null: the English one). */
+export function languagesFor(catalogue: string | null | undefined): readonly Language[] {
+    if (!catalogue || catalogue === "en") return WESTERN_LANGUAGES;
+    const fixed = languageOf(catalogue === "zh-tw" || catalogue === "zh-cn" ? "zh" : catalogue);
+    return [fixed];
+}
 export type Language = (typeof LANGUAGES)[number];
 
 /** The language a code names; not recorded (null) reads as English, which nearly every card is. */
