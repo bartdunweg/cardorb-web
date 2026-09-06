@@ -16,7 +16,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // in behind them, each with an outline in its place.
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ value?: string }> }) {
     const { value } = await searchParams;
-    const selected = value === "favorites" || (value && UUID.test(value)) ? value : "all";
+    const selected = value === "favorites" || value === "wishlist" || (value && UUID.test(value)) ? value : "all";
     const stats = await getCardStats();
 
     return (
@@ -38,16 +38,29 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 }
 
 // The value of the chosen list, its line, and the lists to choose from. "All cards" is the
-// collection's own number, already read for the tiles; a folder's is one narrow list read.
+// collection's own number, already read for the tiles; a folder's, the favorites' or the
+// wishlist's is one narrow list read.
 async function ValueSection({ selected, total }: { selected: string; total: number }) {
     const [folders, snapshots, current] = await Promise.all([
         getMyFolders(),
         getValueHistory(selected === "all" ? undefined : selected),
         selected === "all"
             ? null
-            : getMyCards(selected === "favorites" ? { favoritesOnly: true, limit: 1, facets: false } : { collectionId: selected, limit: 1, facets: false }),
+            : getMyCards(
+                  selected === "favorites"
+                      ? { favoritesOnly: true, limit: 1, facets: false }
+                      : selected === "wishlist"
+                        ? { wishlist: true, limit: 1, facets: false }
+                        : { collectionId: selected, limit: 1, facets: false },
+              ),
     ]);
-    const lists: ValueList[] = [{ id: "all", name: "All cards" }, { id: "favorites", name: "Favorites" }, ...folders.map((f) => ({ id: f.id, name: f.name }))];
+    // The wishlist last: its number is what the cards you lack would cost, not what you hold.
+    const lists: ValueList[] = [
+        { id: "all", name: "All cards" },
+        { id: "favorites", name: "Favorites" },
+        ...folders.map((f) => ({ id: f.id, name: f.name })),
+        { id: "wishlist", name: "Wishlist" },
+    ];
     const known = lists.some((l) => l.id === selected);
     return (
         <ValueHero
