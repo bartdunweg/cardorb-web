@@ -289,3 +289,20 @@ export async function setCondition(cardId: string, condition: string | null): Pr
     await forgetMine();
     return { ok: true };
 }
+
+// A wish becomes a copy you hold, with what is known about it at once: language, condition or
+// grade, finish, folder, purchase price and the day you got it (today unless said). One PATCH.
+export async function markOwnedWith(cardId: string, edits: CopyEdits): Promise<Result> {
+    const parsed = z.object({ cardId: z.string().uuid(), edits: copyEdits }).safeParse({ cardId, edits });
+    if (!parsed.success) return { ok: false, error: "Invalid input." };
+    try {
+        await api(`/collection/items/${parsed.data.cardId}`, {
+            method: "PATCH",
+            body: { owned: true, acquiredAt: new Date().toISOString(), ...parsed.data.edits },
+        });
+    } catch (err) {
+        return failed(err);
+    }
+    await forgetMine();
+    return { ok: true };
+}

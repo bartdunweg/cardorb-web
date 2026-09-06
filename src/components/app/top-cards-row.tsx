@@ -13,7 +13,7 @@ export function TopCardsRow({ cards }: { cards: Card[] }) {
     const [selected, setSelected] = useState<Card | null>(null);
     return (
         <>
-            <ol className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6">
+            <ol className="scrollbar-hide flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1">
                 {cards.map((card) => (
                     <li key={card.id} className="w-28 shrink-0 snap-start sm:w-32">
                         <button
