@@ -88,7 +88,7 @@ export function PageHeader({
                     !back && !barActions && !collapsed && "pointer-events-none",
                     // The fade comes with the collapse: at rest the buttons sit on the page and the large title
                     // sits on its line; once content scrolls under, the page's ground fades in behind the bar.
-                    "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:-z-10 before:h-24 before:bg-linear-to-b before:from-bg-page before:from-40% before:to-transparent before:transition-opacity before:duration-150 before:ease-out",
+                    "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:-z-10 before:h-24 before:bg-linear-to-b before:from-bg-page before:from-40% before:to-transparent before:transition-opacity before:duration-150 before:ease-enter",
                     collapsed ? "before:opacity-100" : "before:opacity-0",
                 )}
             >
@@ -99,7 +99,7 @@ export function PageHeader({
                 <span
                     aria-hidden="true"
                     className={cx(
-                        "truncate px-2 text-sm font-semibold text-primary transition-opacity duration-150 ease-out",
+                        "truncate px-2 text-sm font-semibold text-primary transition-opacity duration-150 ease-enter",
                         collapsed ? "opacity-100" : "opacity-0",
                     )}
                 >

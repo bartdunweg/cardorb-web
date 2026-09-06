@@ -33,6 +33,12 @@ which also says what is already yours), Settings (avatar through the API), publi
   address under the toggle and "View your public page" as a secondary button. The phone's page
   bar is fixed to the screen like the tab bar (it was `sticky` inside the header, so it left with
   the header), with a spacer in the flow; collapsed, it stands on a fade from the page's ground.
+  An animation sweep of the day's surfaces found four unwired spots and one hang, all fixed:
+  the catalogue rows and the copies in the card sheet, the Collections tiles and the Settings
+  status now `arrive` like their siblings; the holo card lets go 150 ms after the pointer
+  leaves, not 500; the page bar's fades ease on `--ease-enter`. Rejected on purpose: the search
+  hits and chips (keyboard-driven), the value chart's range switch (data being read), a sliding
+  tab underline, a skeleton cross-fade.
 - **2026-09-06, the search evening.** A search can be narrowed by chips once something is
   typed (#240): under the field a row that scrolls sideways, Set and Rarity on the phone's
   search sheet (the sets and rarities you hold, from the facets), Set and Type in the desktop

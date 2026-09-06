@@ -40,9 +40,10 @@ function publicUrl(username: string): string {
 function StatusText({ msg }: { msg: Msg }) {
     if (!msg) return null;
     // <output> carries the status role natively; an error is an alert so it interrupts.
-    if (msg.type === "ok") return <output className="text-sm text-success-primary">{msg.text}</output>;
+    // Either arrives rather than snapping in under the buttons; the roles are untouched by the fade.
+    if (msg.type === "ok") return <output className="arrive text-sm text-success-primary">{msg.text}</output>;
     return (
-        <p role="alert" className="text-sm text-error-primary">
+        <p role="alert" className="arrive text-sm text-error-primary">
             {msg.text}
         </p>
     );

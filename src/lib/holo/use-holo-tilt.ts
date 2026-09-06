@@ -10,8 +10,7 @@ import { Spring } from "./spring";
  * render.
  *
  * A pointer over the surface drives three springs (tilt, light, foil offset) with the source
- * effect's stiffness; when it leaves, half a second later, a softer spring lets the card settle
- * flat. On a phone that has no permission prompt for it (Android), the gyroscope drives the same
+ * effect's stiffness; when it leaves, a beat later, a softer spring lets the card settle flat. On a phone that has no permission prompt for it (Android), the gyroscope drives the same
  * springs while nothing touches the card; a finger over it wins. iOS asks permission for the
  * gyroscope inside a gesture, which the sheet's opening is not, so there a finger drives it.
  *
@@ -20,7 +19,8 @@ import { Spring } from "./spring";
 
 const INTERACT = { stiffness: 0.066, damping: 0.25 };
 const SNAP = { stiffness: 0.01, damping: 0.06 };
-const RELEASE_MS = 500;
+// Long enough for a pointer to skip across the shine layers, short enough that the settle reads as an answer.
+const RELEASE_MS = 150;
 
 export type HoloTiltOptions = {
     /** "auto" reads the phone's tilt where the browser allows it without asking. */
