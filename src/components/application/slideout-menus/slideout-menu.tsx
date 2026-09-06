@@ -1,6 +1,7 @@
 "use client";
 
 import { type ComponentPropsWithRef, type ReactNode, type RefAttributes } from "react";
+import { XClose } from "@untitledui/icons";
 import type {
     DialogProps as AriaDialogProps,
     ModalOverlayProps as AriaModalOverlayProps,
@@ -8,6 +9,7 @@ import type {
 } from "react-aria-components";
 import { Dialog as AriaDialog, DialogTrigger as AriaDialogTrigger, Modal as AriaModal, ModalOverlay as AriaModalOverlay } from "react-aria-components";
 import { OverlayThemeColor } from "@/components/app/overlay-theme-color";
+import { Button } from "@/components/base/buttons/button";
 import { CloseButton } from "@/components/base/buttons/close-button";
 import { cx } from "@/utils/cx";
 
@@ -104,13 +106,19 @@ Content.displayName = "SlideoutContent";
 
 interface SlideoutHeaderProps extends ComponentPropsWithRef<"header"> {
     onClose?: () => void;
+    /** `circle`: the same round secondary button as a page's dots, for a head that is a picture. */
+    close?: "plain" | "circle";
 }
 
-const Header = ({ className, children, onClose, ...props }: SlideoutHeaderProps) => {
+const Header = ({ className, children, onClose, close = "plain", ...props }: SlideoutHeaderProps) => {
     return (
         <header {...props} className={cx("relative z-1 w-full px-4 pt-6 md:px-6", className)}>
             {children}
-            <CloseButton size="sm" className="absolute top-3 right-3 shrink-0" onClick={onClose} />
+            {close === "circle" ? (
+                <Button color="secondary" size="sm" iconLeading={XClose} aria-label="Close" className="absolute top-3 right-3 shrink-0" onClick={onClose} />
+            ) : (
+                <CloseButton size="sm" className="absolute top-3 right-3 shrink-0" onClick={onClose} />
+            )}
         </header>
     );
 };
