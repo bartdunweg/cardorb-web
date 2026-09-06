@@ -104,7 +104,7 @@ export function PageHeader({
                 >
                     {title}
                 </span>
-                <div className="flex items-center justify-end gap-2">{barActions}</div>
+                <div className="flex items-center justify-end gap-3">{barActions}</div>
             </div>
 
             {/* Above the title, 8 px from the top: the search on Home sits higher than a page's first content,

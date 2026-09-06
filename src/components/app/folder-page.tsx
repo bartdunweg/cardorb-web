@@ -59,7 +59,7 @@ export function FolderPage({
                 back={back}
                 actions={
                     settings || add ? (
-                        <div className="flex items-center gap-2 max-lg:hidden">
+                        <div className="flex items-center gap-3 max-lg:hidden">
                             {settings?.(false)}
                             {add?.(false)}
                         </div>

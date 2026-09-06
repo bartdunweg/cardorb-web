@@ -62,7 +62,7 @@ export function SheetBar({
                 <p aria-hidden="true" className="relative min-w-0 truncate text-center text-md font-semibold text-primary" style={{ opacity: "var(--bar)" }}>
                     {title}
                 </p>
-                <div className="relative flex items-center gap-2 justify-self-end">{right}</div>
+                <div className="relative flex items-center gap-3 justify-self-end">{right}</div>
             </div>
         </div>
     );

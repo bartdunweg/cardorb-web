@@ -41,7 +41,7 @@ export function CardsView({
     return (
         // A column that grows: an empty state under the row takes the rest of the page and sits in the middle of it.
         <div className="flex flex-1 flex-col gap-4">
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-3">
                 {/* In its own box: an element that crossed the server boundary, in a list with local ones, trips the key check. */}
                 <div className="contents">{toolbar}</div>
                 <ViewMenu view={view} size={size} onView={setView} onSize={setSize} />
