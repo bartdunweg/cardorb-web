@@ -44,6 +44,7 @@ export default async function PokedexPage({ searchParams }: { searchParams: Prom
     return (
         <FolderPage
             title="Pokédex"
+            datapointLines={2}
             back={{ href: "/dashboard/collections", label: "Collection" }}
             datapoints={datapoints}
             settings={(compact) => (

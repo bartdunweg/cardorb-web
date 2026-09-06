@@ -1,7 +1,7 @@
 import { type ReactNode, Suspense } from "react";
 import { FolderBody, type FolderBodyProps } from "@/components/app/folder-body";
 import { PageHeader } from "@/components/app/page-header";
-import { type Datapoints, datapointsLine } from "@/lib/folder-datapoints";
+import { type Datapoints, datapointsLines } from "@/lib/folder-datapoints";
 
 // Every folder page, top to bottom: the title, what it holds (count and value), the folder's
 // actions where it has any, then the row and the list. One shape, so All cards, a folder of
@@ -13,6 +13,7 @@ import { type Datapoints, datapointsLine } from "@/lib/folder-datapoints";
 export function FolderPage({
     title,
     subtitle,
+    datapointLines = 1,
     back,
     datapoints,
     actions,
@@ -25,6 +26,8 @@ export function FolderPage({
     title: string;
     /** A sentence under the title, above the count, where the title alone does not say what the list is. */
     subtitle?: string;
+    /** How many lines the count takes: two on a Pokédex ("544 of 1,025 Pokémon", then the count). */
+    datapointLines?: 1 | 2;
     back?: { href: string; label: string };
     datapoints: Datapoints | Promise<Datapoints>;
     actions?: ReactNode;
@@ -47,8 +50,9 @@ export function FolderPage({
                 subtitle={
                     <>
                         {subtitle ? <span className="block">{subtitle}</span> : null}
-                        <Suspense fallback={null}>
-                            <DatapointsText datapoints={datapoints} />
+                        <Suspense fallback={<CountOutline lines={datapointLines} />}>
+                            {/* The outline keeps the line's height, so the row and the cards do not move when the numbers land. */}
+                            <DatapointsText datapoints={datapoints} lines={datapointLines} />
                         </Suspense>
                     </>
                 }
@@ -81,6 +85,27 @@ export function FolderPage({
     );
 }
 
-async function DatapointsText({ datapoints }: { datapoints: Datapoints | Promise<Datapoints> }) {
-    return <span className="inline-block arrive">{datapointsLine(await datapoints)}</span>;
+async function DatapointsText({ datapoints }: { datapoints: Datapoints | Promise<Datapoints>; lines: 1 | 2 }) {
+    return (
+        <>
+            {datapointsLines(await datapoints).map((line) => (
+                <span key={line} className="block arrive">
+                    {line}
+                </span>
+            ))}
+        </>
+    );
+}
+
+// What stands where the numbers will: a block per line, the line's height, so nothing under it moves.
+function CountOutline({ lines }: { lines: 1 | 2 }) {
+    return (
+        <>
+            {Array.from({ length: lines }, (_, i) => (
+                <span key={i} className="block">
+                    <span className="inline-block h-5 w-40 rounded-md bg-quaternary align-middle motion-safe:animate-pulse" />
+                </span>
+            ))}
+        </>
+    );
 }
