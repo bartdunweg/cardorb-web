@@ -391,9 +391,42 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                             ) : null
                                         }
                                     />
-                                    <DetailRow label="Quantity" value={card?.quantity ?? 1} />
-                                    {mine && <DetailRow label="Condition" value={mine.condition ? <ConditionBadge condition={mine.condition} /> : null} />}
-                                    {mine && <DetailRow label="Grade" value={mine.grade} />}
+                                    {/* Copies, with a step either way for an owner: the number is the row's own, the
+                                        buttons the same call the menu makes. */}
+                                    <DetailRow
+                                        label="Quantity"
+                                        value={
+                                            mine?.owned ? (
+                                                <span className="flex items-center gap-2">
+                                                    <Button
+                                                        color="secondary"
+                                                        size="sm"
+                                                        iconLeading={Minus}
+                                                        aria-label="One copy fewer"
+                                                        isDisabled={busy || (mine.quantity ?? 1) <= 1}
+                                                        onClick={() => run(() => setCopies(mine.id, (mine.quantity ?? 1) - 1))}
+                                                    />
+                                                    <span className="min-w-4 text-center tabular-nums">{mine.quantity ?? 1}</span>
+                                                    <Button
+                                                        color="secondary"
+                                                        size="sm"
+                                                        iconLeading={Plus}
+                                                        aria-label="One copy more"
+                                                        isDisabled={busy}
+                                                        onClick={() => run(() => setCopies(mine.id, (mine.quantity ?? 1) + 1))}
+                                                    />
+                                                </span>
+                                            ) : (
+                                                (card?.quantity ?? 1)
+                                            )
+                                        }
+                                    />
+                                    {/* A graded copy has a grade and no condition: the slab says which it is. */}
+                                    {mine && mine.grade ? (
+                                        <DetailRow label="Grade" value={mine.grade} />
+                                    ) : mine ? (
+                                        <DetailRow label="Condition" value={mine.condition ? <ConditionBadge condition={mine.condition} /> : null} />
+                                    ) : null}
                                     <DetailRow label="Finish" value={card?.finish} />
                                     {/* Personal fields stay off the public read-only view. */}
                                     {mine && <DetailRow label="Owned" value={mine.owned ? "Yes" : "No"} />}
