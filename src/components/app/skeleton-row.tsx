@@ -11,10 +11,10 @@ export function ListRow() {
             <Input
                 aria-label="Search"
                 icon={SearchLg}
-                placeholder="Search your collection"
+                placeholder="Search"
                 size="sm"
                 isDisabled
-                className="min-w-0 flex-1 sm:max-w-80"
+                className="min-w-0 flex-1 sm:max-w-64"
                 wrapperClassName="rounded-full"
             />
             <RowButton icon={FilterLines} label="Filters" isDisabled />
