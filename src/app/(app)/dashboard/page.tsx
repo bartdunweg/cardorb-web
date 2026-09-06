@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { CardsStats, StatCard } from "@/components/app/cards-stats";
 import { DexStat } from "@/components/app/dex-stat";
+import { MobileTopRow } from "@/components/app/mobile-top-row";
 import { PageHeader } from "@/components/app/page-header";
 import { ValueHeroOutline } from "@/components/app/skeletons";
 import { TopCards } from "@/components/app/top-cards";
@@ -22,7 +23,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
     return (
         <div className="flex flex-col gap-6">
-            <PageHeader title="Home" barActions={<YouLink />} />
+            <PageHeader title="Home" above={<MobileTopRow />} barActions={<YouLink />} />
             <Suspense fallback={<ValueHeroOutline />}>
                 <ValueSection selected={selected} total={stats.value} />
             </Suspense>

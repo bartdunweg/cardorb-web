@@ -4,12 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import { Scan, SearchLg } from "@untitledui/icons";
 import { Heading as AriaHeading } from "react-aria-components";
 import { type CardHit, searchMyCards } from "@/app/(app)/dashboard/cards/actions";
+import { listSetsShelf } from "@/app/(app)/dashboard/sets/actions";
 import { CardDetailSlideout } from "@/components/app/card-detail-slideout";
 import { CardImage } from "@/components/app/card-image";
+import { SetsShelfList } from "@/components/app/sets-shelf-list";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
+import type { SetSeries } from "@/lib/sets";
 import { cx } from "@/utils/cx";
 
 // The collection search on a phone: a search-field-looking bar at the top of Home that opens a
@@ -27,7 +30,7 @@ export function MobileSearchSheet() {
                 className="flex w-full pressable cursor-pointer items-center gap-2 rounded-full bg-primary py-2.5 pr-16 pl-3.5 text-md text-placeholder ring-1 ring-primary outline-focus-ring ring-inset hover:bg-secondary focus-visible:outline-2"
             >
                 <SearchLg className="size-5 text-fg-quaternary" />
-                <span className="flex-1 text-left">Search a card</span>
+                <span className="flex-1 text-left">Search a card or a set</span>
             </button>
             {/* Scan sits at the bar's right end, its own control beside the search rather than inside it
                 (a button in a button is not HTML). There is no scanner yet: the button is the place for one. */}
@@ -46,6 +49,17 @@ export function MobileSearchSheet() {
 function CollectionSearch({ onClose }: { onClose: () => void }) {
     const [query, setQuery] = useState("");
     const [selected, setSelected] = useState<CardHit | null>(null);
+    // Every set, under an empty search: the sheet is also the way into Browse on a phone.
+    const [shelf, setShelf] = useState<{ series: SetSeries[]; unavailable: boolean } | null>(null);
+    useEffect(() => {
+        let live = true;
+        listSetsShelf().then((r) => {
+            if (live) setShelf(r);
+        });
+        return () => {
+            live = false;
+        };
+    }, []);
     const field = useRef<HTMLInputElement>(null);
     // The sheet exists to type into: the tap on Search lands the caret in the field.
     useEffect(() => field.current?.focus(), []);
@@ -73,6 +87,14 @@ function CollectionSearch({ onClose }: { onClose: () => void }) {
                 <output aria-live="polite" className={cx("text-center text-sm text-tertiary", searchState ? "px-1 py-6" : "sr-only")}>
                     {searchState}
                 </output>
+                {/* Nothing typed: the shelf of sets, series by series, so the sheet is Browse as well as search. */}
+                {!query.trim() ? (
+                    shelf === null ? null : shelf.unavailable ? (
+                        <p className="px-1 py-6 text-center text-sm text-tertiary">The list of sets is not reachable right now.</p>
+                    ) : (
+                        <SetsShelfList series={shelf.series} onNavigate={onClose} />
+                    )
+                ) : null}
                 {!loading &&
                     results.map((card) => (
                         <button
