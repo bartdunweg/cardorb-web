@@ -47,7 +47,9 @@ export const Modal = (props: ModalProps) => (
         {...props}
         className={(state) =>
             cx(
-                "w-full shadow-xl transition sm:inset-y-0 sm:right-0 sm:h-full sm:max-w-100",
+                // Rounded like the dialog inside it: the shadow is drawn on this box, and a square one showed
+                // as a straight edge above the sheet's round corners.
+                "w-full rounded-t-2xl shadow-xl transition sm:inset-y-0 sm:right-0 sm:h-full sm:max-w-100 sm:rounded-none",
                 // The sheet enters and leaves through the bottom edge, the drawer through the right one, on
                 // the drawer curve: fast off the edge, long to settle. Reduced motion keeps only the fade.
                 state.isEntering &&
