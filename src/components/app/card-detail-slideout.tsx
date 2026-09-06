@@ -39,7 +39,7 @@ import type { Card, Facets, PublicCard } from "@/lib/cards";
 import { sortCopies } from "@/lib/copies";
 import { matchesRule } from "@/lib/folder-rule";
 import { formatDate, formatPrice } from "@/lib/format";
-import { LANGUAGES } from "@/lib/languages";
+import { languagesFor } from "@/lib/languages";
 import { cx } from "@/utils/cx";
 
 function DetailRow({ label, value }: { label: string; value: ReactNode }) {
@@ -575,7 +575,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                                                         className="w-auto"
                                                                         value={shownLanguage}
                                                                         onChange={(event) => void pickLanguage(event.target.value)}
-                                                                        options={LANGUAGES.map((l) => ({ label: l.label, value: l.code }))}
+                                                                        options={languagesFor(null).map((l) => ({ label: l.label, value: l.code }))}
                                                                     />
                                                                 </span>
                                                             }

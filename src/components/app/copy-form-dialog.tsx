@@ -13,7 +13,7 @@ import { Input } from "@/components/base/input/input";
 import { NativeSelect } from "@/components/base/select/select-native";
 import type { Card } from "@/lib/api-shapes";
 import type { CopyEdits } from "@/lib/copies";
-import { LANGUAGES, languageOf } from "@/lib/languages";
+import { languageOf, languagesFor } from "@/lib/languages";
 
 // A copy that differs from the row it comes from. `add`: one more, pulled today, in the
 // language, condition, finish, folder and at the price given. `split`: some of this row's
@@ -137,7 +137,7 @@ function CopyForm({ mode, from, folders, onSaved, close }: Props & { close: () =
                         className="w-auto"
                         value={language}
                         onChange={(e) => setLanguage(e.target.value as typeof language)}
-                        options={LANGUAGES.map((l) => ({ label: l.label, value: l.code }))}
+                        options={languagesFor(null).map((l) => ({ label: l.label, value: l.code }))}
                     />
                 </span>
             </div>
