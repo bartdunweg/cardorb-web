@@ -6,7 +6,18 @@ import { ArrowRight, Check, DotsHorizontal, Minus, Plus, Star01, Trash01, XClose
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
-import { listCopies, markOwned, removeCard, seriesLogo, setAcquiredAt, setCopies, setFavorite, setLanguage } from "@/app/(app)/dashboard/cards/actions";
+import {
+    type CardFacts,
+    cardFacts,
+    listCopies,
+    markOwned,
+    removeCard,
+    seriesLogo,
+    setAcquiredAt,
+    setCopies,
+    setFavorite,
+    setLanguage,
+} from "@/app/(app)/dashboard/cards/actions";
 import { type FolderChoice, listCollections, loadFacets, setCardCollection } from "@/app/(app)/dashboard/collections/actions";
 import { CardImage } from "@/components/app/card-image";
 import { ConditionBadge } from "@/components/app/condition-badge";
@@ -89,6 +100,20 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
         };
     }, [gen]);
     const genLogo = logo?.series === gen ? logo.url : null;
+    // What the catalogue knows about the printing: read when a card opens, kept with its id.
+    const [facts, setFacts] = useState<{ tcgId: string; facts: CardFacts | null } | null>(null);
+    const tcgId = card?.tcg_id ?? null;
+    useEffect(() => {
+        if (!tcgId) return;
+        let live = true;
+        cardFacts(tcgId).then((f) => {
+            if (live) setFacts({ tcgId, facts: f });
+        });
+        return () => {
+            live = false;
+        };
+    }, [tcgId]);
+    const known = facts?.tcgId === tcgId ? facts.facts : null;
     // The dots menu's actions: each one server call, then the page re-reads; removing closes the sheet
     // first, since the card it showed is gone.
     const [busy, setBusy] = useState(false);
@@ -502,6 +527,13 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
 
                                 <dl className="flex flex-col divide-y divide-secondary">
                                     <DetailRow label="Rarity" value={card?.rarity} />
+                                    {/* From the catalogue, once it answers: who drew it, and the card's own facts. */}
+                                    {known?.illustrator ? <DetailRow label="Illustrator" value={known.illustrator} /> : null}
+                                    {known?.hp != null ? <DetailRow label="HP" value={known.hp} /> : null}
+                                    {known?.stage ? (
+                                        <DetailRow label="Stage" value={known.evolveFrom ? `${known.stage} · from ${known.evolveFrom}` : known.stage} />
+                                    ) : null}
+                                    {known?.regulationMark ? <DetailRow label="Regulation mark" value={known.regulationMark} /> : null}
                                     <DetailRow
                                         label="Generation"
                                         value={
@@ -620,6 +652,21 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                             }
                                         />
                                     )}
+                                    {known?.cmUrl ? (
+                                        <DetailRow
+                                            label="Cardmarket"
+                                            value={
+                                                <a
+                                                    href={known.cmUrl}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="text-brand-secondary underline-offset-2 hover:underline"
+                                                >
+                                                    Open the listing
+                                                </a>
+                                            }
+                                        />
+                                    ) : null}
                                 </dl>
 
                                 {mine?.notes ? (

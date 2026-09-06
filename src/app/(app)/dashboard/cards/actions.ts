@@ -241,3 +241,33 @@ export async function setAcquiredAt(cardId: string, date: string): Promise<Resul
     await forgetMine();
     return { ok: true };
 }
+
+/** What the catalogue knows about a printing beyond what the row carries (GET /v1/cards/{tcgId}). */
+export type CardFacts = {
+    illustrator: string | null;
+    hp: number | null;
+    stage: string | null;
+    evolveFrom: string | null;
+    regulationMark: string | null;
+    /** Cardmarket's page for the card. */
+    cmUrl: string | null;
+};
+
+// The card's facts for the sheet: the illustrator, HP, stage, regulation mark and the
+// Cardmarket page. Null when the catalogue cannot answer; the sheet is open for the row, not for these.
+export async function cardFacts(tcgId: string): Promise<CardFacts | null> {
+    try {
+        const c = await api<Partial<CardFacts>>(`/cards/${encodeURIComponent(tcgId)}`);
+        return {
+            illustrator: c.illustrator ?? null,
+            hp: c.hp ?? null,
+            stage: c.stage ?? null,
+            evolveFrom: c.evolveFrom ?? null,
+            regulationMark: c.regulationMark ?? null,
+            cmUrl: c.cmUrl ?? null,
+        };
+    } catch (err) {
+        console.error("Card facts unavailable:", err instanceof Error ? err.message : err);
+        return null;
+    }
+}
