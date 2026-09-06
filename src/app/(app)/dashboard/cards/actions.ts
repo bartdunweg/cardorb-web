@@ -4,6 +4,7 @@ import { z } from "zod";
 import { ApiError, api } from "@/lib/api";
 import { type BrowseCard, type PokemonCard, pokemonCardFromBrowse } from "@/lib/api-shapes";
 import { type Card, getMyCards } from "@/lib/cards";
+import { LANGUAGES } from "@/lib/languages";
 import { getSets } from "@/lib/sets";
 import { forgetMine } from "@/lib/user-cache";
 
@@ -168,4 +169,18 @@ export async function seriesLogo(series: string): Promise<string | null> {
     } catch {
         return null;
     }
+}
+
+// The language of one copy. Null clears it back to "not recorded", which reads as English.
+export async function setLanguage(cardId: string, language: string | null): Promise<Result> {
+    const codes = LANGUAGES.map((l) => l.code);
+    const parsed = z.object({ cardId: z.string().uuid(), language: z.enum(codes as [string, ...string[]]).nullable() }).safeParse({ cardId, language });
+    if (!parsed.success) return { ok: false, error: "Invalid input." };
+    try {
+        await api(`/collection/items/${parsed.data.cardId}`, { method: "PATCH", body: { language: parsed.data.language } });
+    } catch (err) {
+        return failed(err);
+    }
+    await forgetMine();
+    return { ok: true };
 }
