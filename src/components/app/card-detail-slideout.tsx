@@ -112,62 +112,74 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
             onOpenChange={(open) => {
                 if (!open) onClose();
             }}
+            // The whole screen on a phone: the sheet is the card's page, not a panel over one.
+            dialogClassName="h-dvh max-h-dvh sm:h-full"
         >
             {({ close }) => (
                 <>
-                    <SlideoutMenu.Header onClose={close}>
-                        <AriaHeading slot="title" className="text-lg font-semibold text-primary">
-                            {card?.name}
-                            {isStarred && mine ? <FavoriteStar /> : null}
-                        </AriaHeading>
-                        <p className="text-sm text-tertiary">{[card?.set_name, card?.number ? `#${card.number}` : null].filter(Boolean).join(" · ") || "—"}</p>
-                        {/* A card you own can be starred: it then sits in Favorites, and the sheet says so. */}
-                        {mine?.owned ? (
-                            <Button
-                                size="sm"
-                                color={isStarred ? "primary" : "secondary"}
-                                iconLeading={Star01}
-                                aria-pressed={isStarred}
-                                isLoading={starring}
-                                onClick={toggleStar}
-                                className="mt-2"
-                            >
-                                Favorite
-                            </Button>
-                        ) : null}
-                        {/* The price sits under the title, where a product panel puts it, not among the attributes. */}
-                        {mine?.price != null ? (
-                            <p className="text-md font-semibold text-primary tabular-nums">
-                                {formatPrice(mine.price)} <span className="text-sm font-normal text-tertiary">market price</span>
+                    <SlideoutMenu.Header onClose={close} className="px-0 pt-0">
+                        {/* The card first, on a blurred, dimmed copy of itself: the art sets the header's colour,
+                            the way a product page takes its hero's. The copy is decoration and says nothing. */}
+                        <div className="relative w-full overflow-hidden">
+                            {card?.image_url ? (
+                                <div aria-hidden="true" className="absolute inset-0 scale-150 opacity-60 blur-2xl">
+                                    <CardImage src={card.image_url} alt="" width={64} className="object-cover" />
+                                </div>
+                            ) : null}
+                            <div className="relative px-10 pt-10 pb-6">
+                                {card?.image_url ? (
+                                    <div className="relative mx-auto aspect-card w-full max-w-60 overflow-hidden rounded-xl shadow-lift-lg">
+                                        <CardImage
+                                            src={card.image_high_url ?? card.image_url}
+                                            alt={card.name}
+                                            width={384}
+                                            quality={75}
+                                            className="object-contain"
+                                            priority
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="mx-auto flex aspect-card w-full max-w-60 flex-col items-center justify-center gap-1 rounded-xl bg-quaternary p-4 text-center">
+                                        <span className="text-sm font-medium text-secondary">{card?.name}</span>
+                                        {card?.number ? <span className="text-xs text-quaternary">#{card.number}</span> : null}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <div className="flex flex-col px-4 pt-4 md:px-6">
+                            <AriaHeading slot="title" className="text-lg font-semibold text-primary">
+                                {card?.name}
+                                {isStarred && mine ? <FavoriteStar /> : null}
+                            </AriaHeading>
+                            <p className="text-sm text-tertiary">
+                                {[card?.set_name, card?.number ? `#${card.number}` : null].filter(Boolean).join(" · ") || "—"}
                             </p>
-                        ) : null}
-                        {/* How that price has moved: the nightly readings, under the number they explain. */}
-                        {mine?.tcg_id ? <PriceHistory tcgId={mine.tcg_id} holo={mine.finish === "reverse-holo"} /> : null}
+                            {/* A card you own can be starred: it then sits in Favorites, and the sheet says so. */}
+                            {mine?.owned ? (
+                                <Button
+                                    size="sm"
+                                    color={isStarred ? "primary" : "secondary"}
+                                    iconLeading={Star01}
+                                    aria-pressed={isStarred}
+                                    isLoading={starring}
+                                    onClick={toggleStar}
+                                    className="mt-2 self-start"
+                                >
+                                    Favorite
+                                </Button>
+                            ) : null}
+                            {/* The price sits under the title, where a product panel puts it, not among the attributes. */}
+                            {mine?.price != null ? (
+                                <p className="text-md font-semibold text-primary tabular-nums">
+                                    {formatPrice(mine.price)} <span className="text-sm font-normal text-tertiary">market price</span>
+                                </p>
+                            ) : null}
+                            {/* How that price has moved: the nightly readings, under the number they explain. */}
+                            {mine?.tcg_id ? <PriceHistory tcgId={mine.tcg_id} holo={mine.finish === "reverse-holo"} /> : null}
+                        </div>
                     </SlideoutMenu.Header>
 
                     <SlideoutMenu.Content>
-                        {card?.image_url ? (
-                            // The card as large as the sheet allows, from the big scan: the sheet is where a person looks at
-                            // one card, so the picture is the page. Nothing of ours around it; it carries its own border.
-                            // shrink-0: in the sheet's column a box whose height comes from its aspect ratio has no
-                            // content of its own, so the column shrank it to nothing when the sheet was full.
-                            <div className="relative mx-auto aspect-card w-full max-w-sm shrink-0 overflow-hidden rounded-xl">
-                                <CardImage
-                                    src={card.image_high_url ?? card.image_url}
-                                    alt={card.name}
-                                    width={384}
-                                    quality={75}
-                                    className="object-contain"
-                                    priority
-                                />
-                            </div>
-                        ) : (
-                            <div className="mx-auto flex aspect-card w-full max-w-sm shrink-0 flex-col items-center justify-center gap-1 rounded-xl bg-quaternary p-4 text-center">
-                                <span className="text-sm font-medium text-secondary">{card?.name}</span>
-                                {card?.number ? <span className="text-xs text-quaternary">#{card.number}</span> : null}
-                            </div>
-                        )}
-
                         {!readOnly &&
                             (mine?.wishlist ? (
                                 <div className="flex flex-col gap-1.5">
