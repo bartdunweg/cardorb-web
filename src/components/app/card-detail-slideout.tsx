@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Check, DotsHorizontal, Minus, Plus, Star01, Trash01, XClose } from "@untitledui/icons";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Heading as AriaHeading, Tab as AriaTab, TabList as AriaTabList, TabPanel as AriaTabPanel, Tabs as AriaTabs } from "react-aria-components";
+import { Heading as AriaHeading } from "react-aria-components";
 import { markOwned, removeCard, seriesLogo, setCopies, setFavorite } from "@/app/(app)/dashboard/cards/actions";
 import { type FolderChoice, listCollections, loadFacets, setCardCollection } from "@/app/(app)/dashboard/collections/actions";
 import { CardImage } from "@/components/app/card-image";
@@ -14,6 +14,7 @@ import { FolderDialog } from "@/components/app/folder-dialog";
 import { PriceHistory } from "@/components/app/price-history";
 import { TypeIcon } from "@/components/app/type-icon";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
+import { Tab, TabList, TabPanel, Tabs } from "@/components/application/tabs/tabs";
 import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
@@ -21,7 +22,6 @@ import { NativeSelect } from "@/components/base/select/select-native";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
 import { matchesRule } from "@/lib/folder-rule";
 import { formatDate, formatPrice } from "@/lib/format";
-import { cx } from "@/utils/cx";
 
 function DetailRow({ label, value }: { label: string; value: ReactNode }) {
     return (
@@ -31,14 +31,6 @@ function DetailRow({ label, value }: { label: string; value: ReactNode }) {
         </div>
     );
 }
-
-// A tab under the title, the way a segmented row draws one: the chosen tab in the sheet's own ink, the
-// other quiet; a hairline under the row, the chosen tab's edge on it.
-const tabClass = ({ isSelected }: { isSelected: boolean }) =>
-    cx(
-        "-mb-px cursor-pointer border-b-2 px-1 pb-2 text-sm font-semibold outline-focus-ring transition-colors duration-150 focus-visible:outline-2",
-        isSelected ? "border-fg-brand-primary text-primary" : "border-transparent text-tertiary hover:text-secondary",
-    );
 
 type Props = { card: Card | null; onClose: () => void; readOnly?: false } | { card: PublicCard | null; onClose: () => void; readOnly: true };
 
@@ -170,17 +162,18 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                             ) : null}
                             <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-2/5 fade-to-glass-thick" />
                             {/* Close at the left, the star and the menu at the right, on one line over the art; glass, so
-                                they sit in the picture rather than on it. */}
+                                they sit in the picture rather than on it. z-10: the card's block is drawn after them and
+                                would otherwise take the taps meant for them. */}
                             <Button
                                 color="tertiary"
                                 size="sm"
                                 iconLeading={XClose}
                                 aria-label="Close"
-                                className="absolute top-3 left-3 glass text-primary ring-1 ring-glass ring-inset"
+                                className="absolute top-3 left-3 z-10 glass text-primary ring-1 ring-glass ring-inset"
                                 onClick={close}
                             />
                             {mine ? (
-                                <div className="absolute top-3 right-3 flex items-center gap-2">
+                                <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
                                     {mine.owned ? (
                                         <Button
                                             color={isStarred ? "primary" : "tertiary"}
@@ -268,7 +261,8 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                             {/* The price sits under the title, where a product panel puts it, not among the attributes. */}
                             {mine?.price != null ? (
                                 <p className="text-md font-semibold text-primary tabular-nums">
-                                    {formatPrice(mine.price)} <span className="text-sm font-normal text-tertiary">market price</span>
+                                    {formatPrice(mine.price)}
+                                    <span className="sr-only"> market price</span>
                                 </p>
                             ) : null}
                             {menuError ? (
@@ -281,18 +275,14 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
 
                     <SlideoutMenu.Content>
                         {/* Two tabs: the card's details, and its price with its line. A public view has no price, so no tabs. */}
-                        <AriaTabs className="flex flex-col gap-5">
+                        <Tabs className="flex flex-col gap-5">
                             {mine ? (
-                                <AriaTabList aria-label="Card" className="flex gap-4 border-b border-secondary">
-                                    <AriaTab id="details" className={tabClass}>
-                                        Details
-                                    </AriaTab>
-                                    <AriaTab id="price" className={tabClass}>
-                                        Price
-                                    </AriaTab>
-                                </AriaTabList>
+                                <TabList aria-label="Card" type="underline" size="sm">
+                                    <Tab id="details" label="Details" />
+                                    <Tab id="price" label="Price" />
+                                </TabList>
                             ) : null}
-                            <AriaTabPanel id="details" className="flex flex-col gap-6 outline-hidden">
+                            <TabPanel id="details" className="flex flex-col gap-6">
                                 {/* Where the card goes and where it is, as one tile: a surface of its own inside the page. */}
                                 <div className="flex flex-col gap-5 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary ring-inset">
                                     {!readOnly &&
@@ -413,9 +403,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                         <p className="text-sm text-primary">{mine.notes}</p>
                                     </div>
                                 ) : null}
-                            </AriaTabPanel>
+                            </TabPanel>
                             {mine ? (
-                                <AriaTabPanel id="price" className="flex flex-col gap-6 outline-hidden">
+                                <TabPanel id="price" className="flex flex-col gap-6">
                                     {/* The line first, then the numbers around it: what one copy trades at, what all the
                                         copies come to, what was paid, and what that bought. */}
                                     {mine.tcg_id ? <PriceHistory tcgId={mine.tcg_id} holo={mine.finish === "reverse-holo"} tall /> : null}
@@ -437,9 +427,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                         ) : null}
                                         <DetailRow label="Purchase date" value={mine.purchase_date ? formatDate(mine.purchase_date) : null} />
                                     </dl>
-                                </AriaTabPanel>
+                                </TabPanel>
                             ) : null}
-                        </AriaTabs>
+                        </Tabs>
                     </SlideoutMenu.Content>
                 </>
             )}
