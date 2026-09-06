@@ -96,7 +96,7 @@ export function ListSkeleton({
 export function HomeSkeleton() {
     return (
         <SkeletonFrame>
-            <PageHeader title="Home" />
+            <PageHeader title="Home" titleOnPhone={false} />
             <ValueHeroOutline />
             <Outline className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4">
                 {Array.from({ length: 4 }, (_, i) => (
