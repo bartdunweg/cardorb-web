@@ -2,11 +2,13 @@
 
 import type { ReactNode } from "react";
 import { Heading as AriaHeading } from "react-aria-components";
-import type { PokemonCard } from "@/app/(app)/dashboard/cards/actions";
+import type { CatalogueFilters, PokemonCard } from "@/app/(app)/dashboard/cards/actions";
 import { CardImage } from "@/components/app/card-image";
 import type { AddStatus } from "@/components/app/command-search";
+import { FilterChip, FilterChipRow, type FilterOption } from "@/components/app/filter-chip";
 import { CommandMenu, type CommandMenuGroupType } from "@/components/application/command-menus/command-menu";
 import { Button } from "@/components/base/buttons/button";
+import { CARD_TYPES } from "@/lib/card-types";
 import { formatDate } from "@/lib/format";
 import { cx } from "@/utils/cx";
 
@@ -66,7 +68,11 @@ export function CommandSearchMenu({
     onOpenChange,
     inputValue,
     onInputChange,
+    filters,
+    onFiltersChange,
+    sets,
     hits,
+    loading,
     status,
     onAdd,
 }: {
@@ -74,10 +80,17 @@ export function CommandSearchMenu({
     onOpenChange: (open: boolean) => void;
     inputValue: string;
     onInputChange: (value: string) => void;
+    filters: CatalogueFilters;
+    onFiltersChange: (next: CatalogueFilters) => void;
+    /** Every set the catalogue knows, for the Set chip; empty until the list lands. */
+    sets: FilterOption[];
     hits: PokemonCard[];
+    loading: boolean;
     status: Record<string, AddStatus>;
     onAdd: (card: PokemonCard) => void;
 }) {
+    const filtering = Boolean(filters.set || filters.type);
+    const searching = inputValue.trim().length >= 2 || filtering;
     const groups: CommandMenuGroupType[] = hits.length
         ? [
               {
@@ -108,7 +121,7 @@ export function CommandSearchMenu({
             shortcut={null}
             emptyState={
                 <div className="px-4 py-10 text-center text-sm text-tertiary">
-                    {inputValue.trim().length < 2 ? "Type to search for a card." : "No cards found."}
+                    {!searching ? "Type to search for a card." : loading ? "Searching…" : "No cards found."}
                 </div>
             }
             dialogClassName={cx("max-w-[calc(100vw-2rem)]")}
@@ -116,6 +129,19 @@ export function CommandSearchMenu({
             <AriaHeading slot="title" className="sr-only">
                 Search cards
             </AriaHeading>
+
+            {/* The chips that narrow the hits, once something is typed; a set kept while the term changes stays. */}
+            {searching ? (
+                <FilterChipRow className="border-b border-secondary px-4 py-2" onClear={filtering ? () => onFiltersChange({}) : undefined}>
+                    <FilterChip label="Set" value={filters.set} options={sets} onChange={(set) => onFiltersChange({ ...filters, set })} />
+                    <FilterChip
+                        label="Type"
+                        value={filters.type}
+                        options={CARD_TYPES.map((t) => ({ value: t, label: t }))}
+                        onChange={(type) => onFiltersChange({ ...filters, type })}
+                    />
+                </FilterChipRow>
+            ) : null}
 
             <CommandMenu.Group className="flex max-md:flex-col">
                 <CommandMenu.List>

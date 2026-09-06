@@ -3,15 +3,18 @@
 import { useEffect, useRef, useState } from "react";
 import { SearchLg } from "@untitledui/icons";
 import { Heading as AriaHeading } from "react-aria-components";
-import { type CardHit, searchMyCards } from "@/app/(app)/dashboard/cards/actions";
+import { type CardHit, type MyCardsFilters, searchMyCards } from "@/app/(app)/dashboard/cards/actions";
+import { loadFacets } from "@/app/(app)/dashboard/collections/actions";
 import { listSetsShelf } from "@/app/(app)/dashboard/sets/actions";
 import { CardDetailSlideout } from "@/components/app/card-detail-slideout";
 import { CardImage } from "@/components/app/card-image";
+import { FilterChip, FilterChipRow } from "@/components/app/filter-chip";
 import { LanguageChips } from "@/components/app/language-chips";
 import { SetsShelfList } from "@/components/app/sets-shelf-list";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Input } from "@/components/base/input/input";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
+import type { Facets } from "@/lib/cards";
 import type { BrowseLanguage } from "@/lib/languages";
 import type { SetSeries } from "@/lib/sets";
 import { cx } from "@/utils/cx";
@@ -50,6 +53,22 @@ export function MobileSearchSheet() {
 // The sheet's inside. Mounted with the sheet, so the field starts empty every time.
 function CollectionSearch({ onClose }: { onClose: () => void }) {
     const [query, setQuery] = useState("");
+    // The chips under the field: a set and a rarity you hold, from the collection's facets, asked
+    // for once something is typed, which is when the chips show.
+    const [filters, setFilters] = useState<MyCardsFilters>({});
+    const [facets, setFacets] = useState<Facets | null>(null);
+    const filtering = Boolean(filters.set || filters.rarity);
+    const searching = Boolean(query.trim()) || filtering;
+    useEffect(() => {
+        if (!searching || facets) return;
+        let live = true;
+        loadFacets().then((f) => {
+            if (live) setFacets(f);
+        });
+        return () => {
+            live = false;
+        };
+    }, [searching, facets]);
     const [selected, setSelected] = useState<CardHit | null>(null);
     // Every set, under an empty search: the sheet is also the way into Browse on a phone.
     const [language, setLanguage] = useState<BrowseLanguage>("en");
@@ -67,8 +86,8 @@ function CollectionSearch({ onClose }: { onClose: () => void }) {
     const field = useRef<HTMLInputElement>(null);
     // The sheet exists to type into: the tap on Search lands the caret in the field.
     useEffect(() => field.current?.focus(), []);
-    const { results, loading } = useDebouncedSearch<CardHit>(query, searchMyCards, { minLength: 1, delay: 250 });
-    const searchState = loading ? "Searching…" : query.trim().length >= 1 && results.length === 0 ? "No cards found." : "";
+    const { results, loading } = useDebouncedSearch<CardHit, MyCardsFilters>(query, searchMyCards, { minLength: 1, delay: 250, params: filters });
+    const searchState = loading ? "Searching…" : searching && results.length === 0 ? "No cards found." : "";
 
     return (
         <>
@@ -86,16 +105,34 @@ function CollectionSearch({ onClose }: { onClose: () => void }) {
                     ref={field}
                     wrapperClassName="rounded-full"
                 />
-                {/* Which catalogue the shelf below shows; in the head so it stays put while the shelf scrolls. */}
-                {!query.trim() ? <LanguageChips value={language} onChange={setLanguage} className="-mr-14" /> : null}
+                {/* Which catalogue the shelf below shows; in the head so it stays put while the shelf scrolls.
+                    Once something is typed, the chips that narrow the hits take its place. */}
+                {searching ? (
+                    <FilterChipRow className="-mr-14" onClear={filtering ? () => setFilters({}) : undefined}>
+                        <FilterChip
+                            label="Set"
+                            value={filters.set}
+                            options={(facets?.sets ?? []).map((s) => ({ value: s.name, label: s.title }))}
+                            onChange={(set) => setFilters((f) => ({ ...f, set }))}
+                        />
+                        <FilterChip
+                            label="Rarity"
+                            value={filters.rarity}
+                            options={(facets?.rarities ?? []).map((r) => ({ value: r, label: r }))}
+                            onChange={(rarity) => setFilters((f) => ({ ...f, rarity }))}
+                        />
+                    </FilterChipRow>
+                ) : (
+                    <LanguageChips value={language} onChange={setLanguage} className="-mr-14" />
+                )}
             </SlideoutMenu.Header>
             <SlideoutMenu.Content className="gap-1 pb-4">
                 {/* One live region, always mounted, so a screen reader hears the state change. */}
                 <output aria-live="polite" className={cx("text-center text-sm text-tertiary", searchState ? "px-1 py-6" : "sr-only")}>
                     {searchState}
                 </output>
-                {/* Nothing typed: the shelf of sets, series by series, so the sheet is Browse as well as search. */}
-                {!query.trim() ? (
+                {/* Nothing typed and no chip set: the shelf of sets, series by series, so the sheet is Browse as well as search. */}
+                {!searching ? (
                     <>
                         {shown === null ? null : shown.unavailable ? (
                             <p className="px-1 py-6 text-center text-sm text-tertiary">The list of sets is not reachable right now.</p>

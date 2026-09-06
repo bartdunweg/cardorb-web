@@ -1,11 +1,13 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { SearchLg } from "@untitledui/icons";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { type PokemonCard, addCard, searchPokemon } from "@/app/(app)/dashboard/cards/actions";
+import { type CatalogueFilters, type PokemonCard, addCard, searchPokemon } from "@/app/(app)/dashboard/cards/actions";
+import { listSetsShelf } from "@/app/(app)/dashboard/sets/actions";
+import type { FilterOption } from "@/components/app/filter-chip";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 
 export type AddStatus = "idle" | "adding" | "added";
@@ -40,7 +42,25 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
     // True from the first open on: the menu stays mounted after, so closing still animates.
     const [wanted, setWanted] = useState(false);
     const [inputValue, setInputValue] = useState("");
-    const { results: hits } = useDebouncedSearch<PokemonCard>(inputValue, searchPokemon, { minLength: 2, delay: 300 });
+    // The chips under the field: a set from the English catalogue (asked for on the first open, once)
+    // and an energy type. Both go to the API's fielded search beside the term.
+    const [filters, setFilters] = useState<CatalogueFilters>({});
+    const [sets, setSets] = useState<FilterOption[] | null>(null);
+    useEffect(() => {
+        if (!wanted || sets) return;
+        let live = true;
+        listSetsShelf("en").then(({ series }) => {
+            if (live) setSets(series.flatMap((group) => group.sets.map((set) => ({ value: set.name, label: set.name, hint: group.name }))));
+        });
+        return () => {
+            live = false;
+        };
+    }, [wanted, sets]);
+    const { results: hits, loading } = useDebouncedSearch<PokemonCard, CatalogueFilters>(inputValue, searchPokemon, {
+        minLength: 2,
+        delay: 300,
+        params: filters,
+    });
     const [status, setStatus] = useState<Record<string, AddStatus>>({});
 
     const add = async (card: PokemonCard) => {
@@ -74,12 +94,19 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
                     isOpen={isOpen}
                     onOpenChange={(o) => {
                         setIsOpen(o);
-                        // An empty term clears the hits through the hook.
-                        if (!o) setInputValue("");
+                        // An empty term and no chips clear the hits through the hook.
+                        if (!o) {
+                            setInputValue("");
+                            setFilters({});
+                        }
                     }}
                     inputValue={inputValue}
                     onInputChange={setInputValue}
+                    filters={filters}
+                    onFiltersChange={setFilters}
+                    sets={sets ?? []}
                     hits={hits}
+                    loading={loading}
                     status={status}
                     onAdd={add}
                 />
