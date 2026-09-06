@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, Suspense, use, useState } from "react";
+import { type ReactNode, Suspense, use, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CardImage } from "@/components/app/card-image";
 import { GRID_COLUMNS } from "@/components/app/cards-grid";
@@ -19,13 +19,49 @@ const dexNumber = (n: number) => `#${String(n).padStart(3, "0")}`;
 // the Pokédex reads as one of the folders and not as a different screen. A number you hold
 // shows its card (several: a slider), its name and how many you have; one you do not is the
 // same tile in grey, named, so a person knows what to find.
+/** Slots drawn per batch: two to three screens on any width, the rest as the reader scrolls. */
+const DEX_BATCH = 96;
+
 export function DexGrid({ slots, size = "md", linked = true }: { slots: NamedDexSlot[]; size?: CardsSize; linked?: boolean }) {
+    // A thousand slots is seven hundred pictures' markup, most of it below the fold: drawn a
+    // batch at a time, a screen ahead of the sentinel, the way a list of cards is. The slots are
+    // all in hand already, so a batch is a render and not a request.
+    const [shown, setShown] = useState(DEX_BATCH);
+    const sentinel = useRef<HTMLDivElement>(null);
+    const more = shown < slots.length;
+    useEffect(() => {
+        const el = sentinel.current;
+        if (!el || !more || typeof IntersectionObserver === "undefined") return;
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (!entry?.isIntersecting) return;
+                observer.disconnect();
+                setShown((n) => n + DEX_BATCH);
+            },
+            { rootMargin: "100% 0px" },
+        );
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [more, shown]);
     return (
-        <div className={cx("grid gap-4", GRID_COLUMNS[size])}>
-            {slots.map((slot) => (
-                <DexTile key={slot.number} slot={slot} linked={linked} />
-            ))}
-        </div>
+        <>
+            <div className={cx("grid gap-4", GRID_COLUMNS[size])}>
+                {slots.slice(0, shown).map((slot) => (
+                    <DexTile key={slot.number} slot={slot} linked={linked} />
+                ))}
+            </div>
+            {more ? (
+                <div ref={sentinel} className="flex justify-center py-2">
+                    <button
+                        type="button"
+                        className="text-sm text-tertiary outline-focus-ring focus-visible:outline-2"
+                        onClick={() => setShown((n) => n + DEX_BATCH)}
+                    >
+                        Show more
+                    </button>
+                </div>
+            ) : null}
+        </>
     );
 }
 
