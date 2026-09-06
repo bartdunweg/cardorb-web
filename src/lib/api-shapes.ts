@@ -58,6 +58,8 @@ export type Card = {
     id: string;
     name: string;
     set_name: string | null;
+    /** The set as the API addresses it, for asking after this card's other rows. */
+    set: string | null;
     number: string | null;
     rarity: string | null;
     gen: string | null;
@@ -140,6 +142,7 @@ export const cardFromItem = (item: CardItem): Card => ({
     id: item.id,
     name: item.name,
     set_name: item.setTitle || item.set || null,
+    set: item.set || null,
     number: item.number || null,
     rarity: item.rarity,
     gen: item.gen,

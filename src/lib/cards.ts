@@ -22,6 +22,8 @@ export type CardFilter = {
     order?: "asc" | "desc";
     set?: string;
     rarity?: string;
+    /** A card number, whole; with `set` it names one card's every row. */
+    number?: string;
     /** true: copies with a price; false: the ones nothing prices. */
     priced?: boolean;
 };
@@ -49,6 +51,7 @@ export async function getMyCards({
     order,
     set,
     rarity,
+    number,
     priced,
     facets: wantFacets,
 }: CardFilter & { limit?: number; offset?: number } = {}): Promise<{
@@ -66,7 +69,7 @@ export async function getMyCards({
     // (forgetMine). Further batches and the odd sizes (a count, a whole Pokédex) go straight.
     const key =
         offset === 0 && limit === LIST_BATCH
-            ? `cards:${JSON.stringify([q, collectionId, favoritesOnly, wishlist, sort, order, set, rarity, priced, wantFacets])}`
+            ? `cards:${JSON.stringify([q, collectionId, favoritesOnly, wishlist, sort, order, set, rarity, number, priced, wantFacets])}`
             : null;
     const read = async (token?: string) => {
         const { cards, total, facets, value, unpriced } = await api<{ cards: CardItem[]; total: number; facets?: Facets; value?: number; unpriced?: number }>(
@@ -82,6 +85,7 @@ export async function getMyCards({
                     order,
                     set,
                     rarity,
+                    number,
                     priced,
                     // The API skips its facets pass when told nobody will read them.
                     facets: wantFacets === false ? 0 : undefined,

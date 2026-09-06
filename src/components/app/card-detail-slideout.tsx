@@ -6,11 +6,13 @@ import { ArrowRight, Check, DotsHorizontal, Minus, Plus, Star01, Trash01, XClose
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
-import { markOwned, removeCard, seriesLogo, setCopies, setFavorite, setLanguage } from "@/app/(app)/dashboard/cards/actions";
+import { listCopies, markOwned, removeCard, seriesLogo, setAcquiredAt, setCopies, setFavorite, setLanguage } from "@/app/(app)/dashboard/cards/actions";
 import { type FolderChoice, listCollections, loadFacets, setCardCollection } from "@/app/(app)/dashboard/collections/actions";
 import { CardImage } from "@/components/app/card-image";
 import { ConditionBadge } from "@/components/app/condition-badge";
+import { CopyFormDialog } from "@/components/app/copy-form-dialog";
 import { FavoriteStar } from "@/components/app/favorite-star";
+import { FlagIcon } from "@/components/app/flag-icon";
 import { FolderDialog } from "@/components/app/folder-dialog";
 import { PriceHistory } from "@/components/app/price-history";
 import { TypeIcon } from "@/components/app/type-icon";
@@ -21,9 +23,11 @@ import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { NativeSelect } from "@/components/base/select/select-native";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
+import { sortCopies } from "@/lib/copies";
 import { matchesRule } from "@/lib/folder-rule";
 import { formatDate, formatPrice } from "@/lib/format";
 import { LANGUAGES } from "@/lib/languages";
+import { cx } from "@/utils/cx";
 
 function DetailRow({ label, value }: { label: string; value: ReactNode }) {
     return (
@@ -39,7 +43,19 @@ type Props = { card: Card | null; onClose: () => void; readOnly?: false } | { ca
 export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
     const router = useRouter();
     // The owner's fields exist only on the editable view; the public view never receives them.
-    const mine = readOnly ? null : (card as Card | null);
+    // The row the sheet shows: the one it opened on, or another copy of the card tapped in the
+    // Copies tile. Kept with the card it was chosen for, so a new card opens on its own row.
+    const [viewing, setViewing] = useState<{ of: string; row: Card } | null>(null);
+    const mine = readOnly ? null : viewing && card && viewing.of === card.id ? viewing.row : (card as Card | null);
+    // Every row of this card the person holds, read when the sheet opens and after each write.
+    const copiesKey = (c: Card) => `${c.set ?? ""}|${c.number ?? ""}|${c.name}`;
+    const [copiesState, setCopiesState] = useState<{ of: string; rows: Card[] } | null>(null);
+    const copies = mine && copiesState?.of === copiesKey(mine) ? copiesState.rows : null;
+    const reloadCopies = async (row: Card | null = mine) => {
+        if (!row || !row.owned) return;
+        const rows = sortCopies(await listCopies(row));
+        setCopiesState({ of: copiesKey(row), rows });
+    };
     const [collections, setCollections] = useState<FolderChoice[]>([]);
     const [facets, setFacets] = useState<Facets | undefined>(undefined);
     const [collectionId, setCollectionId] = useState<string>("");
@@ -79,8 +95,8 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
     // Copies, as the sheet shows them. Minus goes to nought and stops there: the card stays on the
     // sheet, marked as leaving, and is removed when the sheet closes, so a slip of the thumb is
     // undone with plus rather than with a search. Kept with the row it was read for.
-    const [copies, setCopies_] = useState<{ id: string; n: number } | null>(null);
-    const shownCopies = mine && copies?.id === mine.id ? copies.n : (mine?.quantity ?? 1);
+    const [copyCount, setCopies_] = useState<{ id: string; n: number } | null>(null);
+    const shownCopies = mine && copyCount?.id === mine.id ? copyCount.n : (mine?.quantity ?? 1);
     const leaving = mine?.owned === true && shownCopies === 0;
     const step = async (n: number) => {
         if (!mine) return;
@@ -90,7 +106,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
         if (!res.ok) {
             setMenuError(res.error);
             setCopies_({ id: mine.id, n: mine.quantity ?? 1 });
-        } else router.refresh();
+        } else {
+            router.refresh();
+            void reloadCopies();
+        }
     };
     // The language as the sheet shows it, kept with the row it was picked for; the page re-reads after.
     const [language, setLanguage_] = useState<{ id: string; code: string } | null>(null);
@@ -128,11 +147,26 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
         }
         if (closes) onClose();
         router.refresh();
+        void reloadCopies();
     };
 
     // The folders and the facets are for the sheet's own controls, so they are asked for when a
     // card first opens, not when the page mounts: this sits on every list page, closed, and used
     // to cost two calls on every visit for a sheet nobody had opened.
+    // The card's copies, read when a card opens; the list behind hands the sheet one row.
+    const opened = !readOnly && (card as Card | null)?.owned ? (card as Card) : null;
+    const openedId = opened?.id ?? null;
+    useEffect(() => {
+        if (!opened) return;
+        let live = true;
+        listCopies(opened).then((rows) => {
+            if (live) setCopiesState({ of: copiesKey(opened), rows: sortCopies(rows) });
+        });
+        return () => {
+            live = false;
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [openedId]);
     const askedForChoices = useRef(false);
     useEffect(() => {
         if (readOnly || !card || askedForChoices.current) return;
@@ -344,6 +378,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                         ) : (
                                             <div className="flex flex-col gap-1.5">
                                                 <span className="text-sm font-medium text-secondary">Folder</span>
+                                                {shownCopies > 1 ? (
+                                                    <p className="text-xs text-tertiary">Applies to all {shownCopies} copies. To move one, use Copies below.</p>
+                                                ) : null}
                                                 {/* Only a folder filled by hand takes a card; a rule folder fills itself. With none yet, the
                                         way to file this card is to make one, and the card goes straight into it. */}
                                                 {manual.length ? (
@@ -401,6 +438,68 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                     ) : null}
                                 </div>
 
+                                {/* The copies you hold of this card, one line per row: the language's flag, the finish,
+                                    the condition or grade, the folder and the count. A tap shows that row; One more is one
+                                    more of the row shown; Different… and One is different… open the form. */}
+                                {mine?.owned ? (
+                                    <div className="flex flex-col gap-3 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary ring-inset">
+                                        <span className="text-sm font-medium text-secondary">Copies</span>
+                                        <ul className="flex flex-col divide-y divide-secondary" aria-label="Copies">
+                                            {(copies ?? [mine]).map((row) => {
+                                                const folderName = collections.find((c) => c.id === row.collection_id)?.name;
+                                                const current = row.id === mine.id;
+                                                return (
+                                                    <li key={row.id}>
+                                                        <button
+                                                            type="button"
+                                                            aria-current={current ? "true" : undefined}
+                                                            onClick={() => card && setViewing({ of: card.id, row })}
+                                                            className={cx(
+                                                                "flex w-full items-center gap-2 py-2 text-left text-sm outline-focus-ring focus-visible:outline-2",
+                                                                current ? "text-primary" : "text-secondary hover:text-primary",
+                                                            )}
+                                                        >
+                                                            <FlagIcon language={row.language} />
+                                                            <span className="min-w-0 flex-1 truncate">
+                                                                {[
+                                                                    row.finish === "reverse-holo" ? "Reverse holo" : row.finish === "holo" ? "Holo" : null,
+                                                                    row.grade ?? row.condition,
+                                                                    folderName,
+                                                                ]
+                                                                    .filter(Boolean)
+                                                                    .join(" · ") || "Copy"}
+                                                            </span>
+                                                            <span className="text-tertiary tabular-nums">×{row.quantity ?? 1}</span>
+                                                        </button>
+                                                    </li>
+                                                );
+                                            })}
+                                        </ul>
+                                        <div className="flex flex-wrap gap-2">
+                                            <Button size="sm" color="secondary" iconLeading={Plus} isDisabled={busy} onClick={() => step(shownCopies + 1)}>
+                                                One more
+                                            </Button>
+                                            <CopyFormDialog mode="add" from={mine} folders={collections} onSaved={() => void reloadCopies()}>
+                                                <Button size="sm" color="secondary">
+                                                    Different…
+                                                </Button>
+                                            </CopyFormDialog>
+                                            {shownCopies > 1 ? (
+                                                <CopyFormDialog
+                                                    mode="split"
+                                                    from={{ ...mine, quantity: shownCopies }}
+                                                    folders={collections}
+                                                    onSaved={() => void reloadCopies()}
+                                                >
+                                                    <Button size="sm" color="secondary">
+                                                        One is different…
+                                                    </Button>
+                                                </CopyFormDialog>
+                                            ) : null}
+                                        </div>
+                                    </div>
+                                ) : null}
+
                                 <dl className="flex flex-col divide-y divide-secondary">
                                     <DetailRow label="Rarity" value={card?.rarity} />
                                     <DetailRow
@@ -410,9 +509,13 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                                 <span className="flex items-center justify-end gap-2">
                                                     {/* The logo is the series' own picture; the name beside it says it for a reader. */}
                                                     {genLogo ? (
-                                                        <Image src={genLogo} alt="" width={96} height={24} className="h-6 w-auto max-w-24 object-contain" />
-                                                    ) : null}
-                                                    {card.gen}
+                                                        <>
+                                                            <Image src={genLogo} alt="" width={96} height={24} className="h-6 w-auto max-w-28 object-contain" />
+                                                            <span className="sr-only">{card.gen}</span>
+                                                        </>
+                                                    ) : (
+                                                        card.gen
+                                                    )}
                                                 </span>
                                             ) : null
                                         }
@@ -474,7 +577,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                             label="Language"
                                             value={
                                                 <span className="flex items-center justify-end gap-2">
-                                                    <span aria-hidden="true">{LANGUAGES.find((l) => l.code === shownLanguage)?.flag}</span>
+                                                    <FlagIcon language={shownLanguage} size="md" labelled />
                                                     <NativeSelect
                                                         aria-label="Language"
                                                         size="sm"
@@ -495,7 +598,28 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                     ) : null}
                                     <DetailRow label="Finish" value={card?.finish} />
                                     {/* Personal fields stay off the public read-only view. */}
-                                    {mine && <DetailRow label="Acquired" value={mine.acquired_at ? formatDate(mine.acquired_at) : null} />}
+                                    {mine && (
+                                        <DetailRow
+                                            label="Acquired"
+                                            value={
+                                                mine.owned ? (
+                                                    <input
+                                                        type="date"
+                                                        aria-label="Acquired"
+                                                        className="rounded-md bg-primary px-2 py-1 text-sm text-primary ring-1 ring-primary outline-focus-ring ring-inset focus-visible:outline-2"
+                                                        value={mine.acquired_at ? mine.acquired_at.slice(0, 10) : ""}
+                                                        max={new Date().toISOString().slice(0, 10)}
+                                                        onChange={(e) => {
+                                                            const date = e.target.value;
+                                                            if (date) void run(() => setAcquiredAt(mine.id, date));
+                                                        }}
+                                                    />
+                                                ) : mine.acquired_at ? (
+                                                    formatDate(mine.acquired_at)
+                                                ) : null
+                                            }
+                                        />
+                                    )}
                                 </dl>
 
                                 {mine?.notes ? (

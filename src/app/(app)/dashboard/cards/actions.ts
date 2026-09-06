@@ -4,6 +4,7 @@ import { z } from "zod";
 import { ApiError, api } from "@/lib/api";
 import { type BrowseCard, type PokemonCard, pokemonCardFromBrowse } from "@/lib/api-shapes";
 import { type Card, getMyCards } from "@/lib/cards";
+import { type CopyEdits, copyEdits, sameCard } from "@/lib/copies";
 import { LANGUAGES } from "@/lib/languages";
 import { getSets } from "@/lib/sets";
 import { forgetMine } from "@/lib/user-cache";
@@ -52,7 +53,7 @@ const cardSchema = z.object({
 
 // Adds a catalogue card to the collection or the wishlist. The API matches it against the
 // catalogues, picks the picture and the price; nothing about the card is stored from here.
-export async function addCard(input: PokemonCard, target: "collection" | "wishlist" = "collection"): Promise<Result> {
+export async function addCard(input: PokemonCard, target: "collection" | "wishlist" = "collection", collectionId?: string): Promise<Result> {
     const parsed = cardSchema.safeParse(input);
     if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
@@ -68,6 +69,8 @@ export async function addCard(input: PokemonCard, target: "collection" | "wishli
                 ...(c.rarity ? { rarity: c.rarity } : {}),
                 types: c.types ?? [],
                 collection: !wishlist,
+                // Added from a folder's own page: filed in it at once.
+                ...(collectionId && !wishlist && z.string().uuid().safeParse(collectionId).success ? { collectionId } : {}),
             },
         });
     } catch (err) {
@@ -178,6 +181,60 @@ export async function setLanguage(cardId: string, language: string | null): Prom
     if (!parsed.success) return { ok: false, error: "Invalid input." };
     try {
         await api(`/collection/items/${parsed.data.cardId}`, { method: "PATCH", body: { language: parsed.data.language } });
+    } catch (err) {
+        return failed(err);
+    }
+    await forgetMine();
+    return { ok: true };
+}
+
+// Every row of one card the person holds: the set and number name it, the name confirms it
+// (two cards of one number in one set do not happen, but the check costs nothing).
+export async function listCopies(card: Pick<Card, "set" | "number" | "name">): Promise<Card[]> {
+    if (!card.set || !card.number) return [];
+    try {
+        const { cards } = await getMyCards({ set: card.set, number: card.number, facets: false, limit: 100 });
+        return cards.filter((c) => c.owned && sameCard(c, card));
+    } catch (err) {
+        console.error("Copies unavailable:", err instanceof Error ? err.message : err);
+        return [];
+    }
+}
+
+const copyBody = z.object({ cardId: z.string().uuid(), count: z.number().int().min(1).max(999), edits: copyEdits });
+
+// One more copy of a row, as a row of its own, with these differences (none is one more of the same).
+export async function addCopy(cardId: string, edits: CopyEdits, count = 1): Promise<Result> {
+    const parsed = copyBody.safeParse({ cardId, count, edits });
+    if (!parsed.success) return { ok: false, error: "Invalid input." };
+    try {
+        await api(`/collection/items/${parsed.data.cardId}/copies`, { method: "POST", body: { ...parsed.data.edits, count: parsed.data.count } });
+    } catch (err) {
+        return failed(err);
+    }
+    await forgetMine();
+    return { ok: true };
+}
+
+// Some of a row's copies as a row of their own: the row loses `count`, the copy keeps the row's acquired date.
+export async function splitCopy(cardId: string, edits: CopyEdits, count = 1): Promise<Result> {
+    const parsed = copyBody.safeParse({ cardId, count, edits });
+    if (!parsed.success || Object.keys(parsed.data.edits).length === 0) return { ok: false, error: "Invalid input." };
+    try {
+        await api(`/collection/items/${parsed.data.cardId}/split`, { method: "POST", body: { ...parsed.data.edits, count: parsed.data.count } });
+    } catch (err) {
+        return failed(err);
+    }
+    await forgetMine();
+    return { ok: true };
+}
+
+// When a copy was pulled: an ISO date, not in the future; decides Newest first.
+export async function setAcquiredAt(cardId: string, date: string): Promise<Result> {
+    const parsed = z.object({ cardId: z.string().uuid(), date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }).safeParse({ cardId, date });
+    if (!parsed.success) return { ok: false, error: "Invalid input." };
+    try {
+        await api(`/collection/items/${parsed.data.cardId}`, { method: "PATCH", body: { acquiredAt: parsed.data.date } });
     } catch (err) {
         return failed(err);
     }
