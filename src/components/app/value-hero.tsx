@@ -40,7 +40,7 @@ export function ValueHero({
     value,
     snapshots,
 }: {
-    /** All cards first, then Favorites, then the folders. */
+    /** All cards first, then Favorites, the folders, and the wishlist last. */
     lists: ValueList[];
     /** The id of the list shown. */
     selected: string;
@@ -63,7 +63,7 @@ export function ValueHero({
             <div className="flex flex-col gap-1">
                 <div className="flex flex-wrap items-center gap-x-2">
                     <h2 id="value-heading" className="text-sm font-semibold text-tertiary">
-                        Collection value
+                        {selected === "wishlist" ? "Wishlist cost" : "Collection value"}
                     </h2>
                     <Dropdown.Root>
                         <Button color="link-gray" size="sm" iconTrailing={ChevronDown} aria-label={`Value of ${list.name}; choose a list`}>
