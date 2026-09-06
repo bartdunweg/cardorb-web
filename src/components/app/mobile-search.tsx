@@ -40,7 +40,14 @@ export function MobileSearchSheet() {
                 {/* The kit's button, so it reads as one: the same ring and press as every other control. */}
                 <Button color="secondary" size="sm" iconLeading={Scan} aria-label="Scan a card" isDisabled />
             </div>
-            <SlideoutMenu isDismissable isOpen={open} onOpenChange={setOpen}>
+            <SlideoutMenu
+                isDismissable
+                isOpen={open}
+                onOpenChange={setOpen}
+                // The same sheet a card opens: the page's own ground, the whole screen but for the page
+                // sheet's inset under the status bar.
+                dialogClassName="scrollbar-hide mt-auto h-[calc(100dvh-env(safe-area-inset-top)-0.625rem)] max-h-[calc(100dvh-env(safe-area-inset-top)-0.625rem)] bg-page backdrop-blur-none sm:h-full sm:max-h-full"
+            >
                 {({ close }) => <CollectionSearch onClose={close} />}
             </SlideoutMenu>
         </div>
@@ -72,8 +79,9 @@ function CollectionSearch({ onClose }: { onClose: () => void }) {
 
     return (
         <>
-            <SlideoutMenu.Header onClose={onClose} className="flex flex-col gap-3">
-                <AriaHeading slot="title" className="text-lg font-semibold text-primary">
+            <SlideoutMenu.Header onClose={onClose} className="flex flex-col gap-3 pr-14">
+                {/* The field is the title; the word stays for a screen reader, which names the dialog by it. */}
+                <AriaHeading slot="title" className="sr-only">
                     Search
                 </AriaHeading>
                 <Input
@@ -85,6 +93,8 @@ function CollectionSearch({ onClose }: { onClose: () => void }) {
                     ref={field}
                     wrapperClassName="rounded-full"
                 />
+                {/* Which catalogue the shelf below shows; in the head so it stays put while the shelf scrolls. */}
+                {!query.trim() ? <LanguageChips value={language} onChange={setLanguage} className="-mr-14" /> : null}
             </SlideoutMenu.Header>
             <SlideoutMenu.Content className="gap-1 pb-4">
                 {/* One live region, always mounted, so a screen reader hears the state change. */}
@@ -94,7 +104,6 @@ function CollectionSearch({ onClose }: { onClose: () => void }) {
                 {/* Nothing typed: the shelf of sets, series by series, so the sheet is Browse as well as search. */}
                 {!query.trim() ? (
                     <>
-                        <LanguageChips value={language} onChange={setLanguage} className="px-1 pb-2" />
                         {shown === null ? null : shown.unavailable ? (
                             <p className="px-1 py-6 text-center text-sm text-tertiary">The list of sets is not reachable right now.</p>
                         ) : (
