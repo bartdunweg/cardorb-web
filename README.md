@@ -81,6 +81,13 @@ under Authentication → URL Configuration → Redirect URLs, or sign-in on a de
 Rolling back: promote the previous deployment in the Vercel dashboard. That is faster than a
 revert commit.
 
+## Attribution
+
+- The holographic card effect in the card sheet is [pokemon-cards-css](https://github.com/simeydotme/pokemon-cards-css)
+  by Simon Goellner, GPL-3.0, vendored verbatim under `src/styles/vendor/pokemon-cards-css/`
+  (licence and change list beside it). Its textures under `public/holo/` credit
+  [Vecteezy](https://www.vecteezy.com/free-photos).
+
 ## Known limitations
 
 - A "collection value" tile, and sorting and filtering on the cards page, wait for the API to

@@ -1,0 +1,15 @@
+/* The driver variables' rest values. In the source these sit on :root in Card.svelte's <style>;
+   here they sit on .card, so a card renders at rest before the hook writes its first frame
+   (without them `opacity: var(--card-opacity)` is invalid and the shine shows at full strength). */
+.card {
+  --pointer-x: 50%;
+  --pointer-y: 50%;
+  --card-opacity: 0;
+  --rotate-x: 0deg;
+  --rotate-y: 0deg;
+  --background-x: var(--pointer-x);
+  --background-y: var(--pointer-y);
+  --pointer-from-center: 0;
+  --pointer-from-top: var(--pointer-from-center);
+  --pointer-from-left: var(--pointer-from-center);
+}

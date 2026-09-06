@@ -26,6 +26,7 @@ import { CopyFormDialog } from "@/components/app/copy-form-dialog";
 import { FavoriteStar } from "@/components/app/favorite-star";
 import { FlagIcon } from "@/components/app/flag-icon";
 import { FolderDialog } from "@/components/app/folder-dialog";
+import { HoloCard } from "@/components/app/holo-card";
 import { MarkOwnedDialog } from "@/components/app/mark-owned-dialog";
 import { PriceHistory } from "@/components/app/price-history";
 import { TypeIcon } from "@/components/app/type-icon";
@@ -356,7 +357,16 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                             ) : null}
                             <div className="relative px-10 pt-10 pb-6">
                                 {card?.image_url ? (
-                                    <div className="relative mx-auto aspect-card w-full max-w-44 overflow-hidden rounded-card shadow-lift-lg">
+                                    /* The card tilts and shines under the pointer (the copy's finish and the
+                                       printing's rarity pick the foil); the header's padding is the room it tilts in. */
+                                    <HoloCard
+                                        rarity={card.rarity}
+                                        finish={mine?.finish ?? card.finish ?? null}
+                                        facts={known}
+                                        number={card.number}
+                                        types={card.types}
+                                        className="mx-auto w-full max-w-44"
+                                    >
                                         <CardImage
                                             src={card.image_high_url ?? card.image_url}
                                             alt={card.name}
@@ -365,7 +375,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                             className="object-cover"
                                             priority
                                         />
-                                    </div>
+                                    </HoloCard>
                                 ) : (
                                     <div className="mx-auto flex aspect-card w-full max-w-44 flex-col items-center justify-center gap-1 rounded-card bg-quaternary p-4 text-center">
                                         <span className="text-sm font-medium text-secondary">{card?.name}</span>

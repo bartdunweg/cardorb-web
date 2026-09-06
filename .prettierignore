@@ -14,6 +14,9 @@ CONVENTIONS.md
 STATE.md
 README.md
 
+# Third-party CSS, kept verbatim with its licence (R-STRUCT-002).
+src/styles/vendor/
+
 # The Supabase CLI writes its link state here; it is not ours to format.
 supabase/.temp/
 

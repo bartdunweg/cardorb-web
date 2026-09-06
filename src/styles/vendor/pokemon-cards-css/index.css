@@ -1,0 +1,24 @@
+/*! pokemon-cards-css — © 2022 Simon Goellner (@simeydotme), GPL-3.0 — see LICENSE and README.md beside this file. */
+@import "./base.css";
+@import "./defaults.css";
+@import "./cards.css";
+@import "./effects/reverse-holo.css";
+@import "./effects/regular-holo.css";
+@import "./effects/cosmos-holo.css";
+@import "./effects/amazing-rare.css";
+@import "./effects/radiant-holo.css";
+@import "./effects/v-regular.css";
+@import "./effects/v-full-art.css";
+@import "./effects/v-max.css";
+@import "./effects/v-star.css";
+@import "./effects/trainer-full-art.css";
+@import "./effects/rainbow-holo.css";
+@import "./effects/rainbow-alt.css";
+@import "./effects/secret-rare.css";
+@import "./effects/trainer-gallery-holo.css";
+@import "./effects/trainer-gallery-v-regular.css";
+@import "./effects/trainer-gallery-v-max.css";
+@import "./effects/trainer-gallery-secret-rare.css";
+@import "./effects/shiny-rare.css";
+@import "./effects/shiny-v.css";
+@import "./effects/shiny-vmax.css";
