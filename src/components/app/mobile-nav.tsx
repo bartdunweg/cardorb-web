@@ -1,13 +1,12 @@
 "use client";
 
-import { BookOpen01, Folder, Heart, HomeLine } from "@untitledui/icons";
+import { Folder, Heart, HomeLine } from "@untitledui/icons";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cx } from "@/utils/cx";
 
 const tabs = [
     { label: "Home", href: "/dashboard", icon: HomeLine, match: (p: string) => p === "/dashboard" },
-    { label: "Browse", href: "/dashboard/sets", icon: BookOpen01, match: (p: string) => p.startsWith("/dashboard/sets") },
     {
         label: "Collection",
         href: "/dashboard/collections",
@@ -20,9 +19,9 @@ const tabs = [
 // Labels a size under the body scale, as a native tab bar writes them, so four fit with room.
 const tabClass = "pressable relative flex flex-1 flex-col items-center gap-1 rounded-full py-1.5 text-2xs font-medium transition-colors duration-150";
 
-// Bottom tab bar for mobile: Home, Browse (every set), the folders (All cards, Favorites and the
-// Pokédex among them, one level down) and the wishlist. You is the avatar in Home's bar, and the
-// card search sits at the top of Browse. The bar's side inset matches the content's padding, so
+// Bottom tab bar for mobile: Home, the folders (All cards, Favorites and the Pokédex among them,
+// one level down) and the wishlist. You is the avatar in Home's bar; the search at the top of
+// Home is also the way into every set, so Browse has no tab of its own. The bar's side inset matches the content's padding, so
 // bar and page share an edge.
 export function MobileTabBar() {
     const pathname = usePathname();
@@ -39,13 +38,13 @@ export function MobileTabBar() {
                 // lift without the scale's own rim, so it is one line.
                 className="fixed inset-x-4 bottom-[max(1.25rem,calc(env(safe-area-inset-bottom)+0.5rem))] z-40 flex items-stretch justify-around rounded-full glass p-1 shadow-lift-lg ring-1 ring-primary ring-inset sm:inset-x-6 lg:hidden"
             >
-                {/* The active tab's pill: one element behind the four, a quarter wide, slid to the tab's slot
+                {/* The active tab's pill: one element behind the three, a third wide, slid to the tab's slot
                 on a tap so the change reads as a move and not a jump. Transform only; 200 ms on the
                 on-screen curve; under reduced motion it changes place without moving. */}
                 <div
                     aria-hidden="true"
                     className={cx(
-                        "pointer-events-none absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/4)] rounded-full bg-alpha-black/8 transition-transform duration-200 ease-move motion-reduce:transition-none",
+                        "pointer-events-none absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/3)] rounded-full bg-alpha-black/8 transition-transform duration-200 ease-move motion-reduce:transition-none",
                         activeIndex < 0 && "hidden",
                     )}
                     style={{ transform: `translateX(${Math.max(0, activeIndex) * 100}%)` }}
