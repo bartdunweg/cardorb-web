@@ -1,8 +1,8 @@
 "use client";
 
-import { ChevronDown, Grid01, Rows01 } from "@untitledui/icons";
+import { Grid01, Rows01 } from "@untitledui/icons";
 import { Header as AriaHeader } from "react-aria-components";
-import { Button } from "@/components/base/buttons/button";
+import { RowButton } from "@/components/app/row-button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { CARDS_SIZE_COOKIE, CARDS_VIEW_COOKIE, type CardsSize, type CardsViewMode } from "@/lib/cards-view";
 
@@ -32,16 +32,7 @@ export function ViewMenu({
 }) {
     return (
         <Dropdown.Root>
-            <Button
-                color="secondary"
-                size="sm"
-                iconLeading={view === "grid" ? Grid01 : Rows01}
-                iconTrailing={ChevronDown}
-                className="ml-auto"
-                aria-label="View"
-            >
-                <span className="max-sm:sr-only">View</span>
-            </Button>
+            <RowButton icon={view === "grid" ? Grid01 : Rows01} label="View" menu className="ml-auto" />
             <Dropdown.Popover placement="bottom end" className="w-48">
                 <Dropdown.Menu>
                     {layouts ? (

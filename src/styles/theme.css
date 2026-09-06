@@ -112,6 +112,9 @@
     --ease-enter: cubic-bezier(0.23, 1, 0.32, 1);
     /* A sheet or drawer, in and out: the iOS drawer curve, fast off the edge and long to settle. */
     --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+    /* Moving: something already on screen going to another place (the tab bar's pill). A strong
+       ease-in-out, so it leaves and arrives with the same weight. */
+    --ease-move: cubic-bezier(0.77, 0, 0.175, 1);
 
     --animate-marquee: marquee 60s linear infinite;
     --animate-caret-blink: caret-blink 1s infinite;

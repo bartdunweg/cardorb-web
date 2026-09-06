@@ -7,6 +7,7 @@ import type {
     ModalRenderProps as AriaModalRenderProps,
 } from "react-aria-components";
 import { Dialog as AriaDialog, DialogTrigger as AriaDialogTrigger, Modal as AriaModal, ModalOverlay as AriaModalOverlay } from "react-aria-components";
+import { OverlayThemeColor } from "@/components/app/overlay-theme-color";
 import { CloseButton } from "@/components/base/buttons/close-button";
 import { cx } from "@/utils/cx";
 
@@ -25,7 +26,14 @@ export const ModalOverlay = (props: ModalOverlayProps) => {
                     typeof props.className === "function" ? props.className(state) : props.className,
                 )
             }
-        />
+        >
+            {(state) => (
+                <>
+                    <OverlayThemeColor exiting={state.isExiting} />
+                    {typeof props.children === "function" ? props.children(state) : props.children}
+                </>
+            )}
+        </AriaModalOverlay>
     );
 };
 ModalOverlay.displayName = "ModalOverlay";

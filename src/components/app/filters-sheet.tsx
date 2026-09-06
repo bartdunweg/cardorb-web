@@ -3,6 +3,7 @@
 import { type ReactNode, useState } from "react";
 import { FilterLines } from "@untitledui/icons";
 import { Heading as AriaHeading } from "react-aria-components";
+import { RowButton } from "@/components/app/row-button";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
@@ -16,15 +17,14 @@ export function FiltersSheet({ active = 0, children }: { active?: number; childr
     return (
         <>
             <div>
-                <Button color="secondary" size="sm" iconLeading={FilterLines} onClick={() => setOpen(true)}>
-                    <span className="max-sm:sr-only">Filters</span>
+                <RowButton icon={FilterLines} label="Filters" onClick={() => setOpen(true)}>
                     {active > 0 ? (
                         <Badge size="sm" color="gray" type="pill-color">
                             {active}
                             <span className="sr-only"> on</span>
                         </Badge>
                     ) : null}
-                </Button>
+                </RowButton>
                 <SlideoutMenu isDismissable isOpen={open} onOpenChange={setOpen}>
                     {({ close }) => (
                         <>

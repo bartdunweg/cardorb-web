@@ -2,6 +2,7 @@
 
 import type { DialogProps as AriaDialogProps, ModalOverlayProps as AriaModalOverlayProps } from "react-aria-components";
 import { Dialog as AriaDialog, DialogTrigger as AriaDialogTrigger, Modal as AriaModal, ModalOverlay as AriaModalOverlay } from "react-aria-components";
+import { OverlayThemeColor } from "@/components/app/overlay-theme-color";
 import { cx } from "@/utils/cx";
 
 export const DialogTrigger = AriaDialogTrigger;
@@ -21,7 +22,14 @@ export const ModalOverlay = (props: AriaModalOverlayProps) => {
                     typeof props.className === "function" ? props.className(state) : props.className,
                 )
             }
-        />
+        >
+            {(state) => (
+                <>
+                    <OverlayThemeColor exiting={state.isExiting} />
+                    {typeof props.children === "function" ? props.children(state) : props.children}
+                </>
+            )}
+        </AriaModalOverlay>
     );
 };
 
