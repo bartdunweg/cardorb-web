@@ -75,6 +75,34 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
     // The dots menu's actions: each one server call, then the page re-reads; removing closes the sheet
     // first, since the card it showed is gone.
     const [busy, setBusy] = useState(false);
+    // Copies, as the sheet shows them. Minus goes to nought and stops there: the card stays on the
+    // sheet, marked as leaving, and is removed when the sheet closes, so a slip of the thumb is
+    // undone with plus rather than with a search. Kept with the row it was read for.
+    const [copies, setCopies_] = useState<{ id: string; n: number } | null>(null);
+    const shownCopies = mine && copies?.id === mine.id ? copies.n : (mine?.quantity ?? 1);
+    const leaving = mine?.owned === true && shownCopies === 0;
+    const step = async (n: number) => {
+        if (!mine) return;
+        setCopies_({ id: mine.id, n });
+        if (n === 0) return;
+        const res = await setCopies(mine.id, n);
+        if (!res.ok) {
+            setMenuError(res.error);
+            setCopies_({ id: mine.id, n: mine.quantity ?? 1 });
+        } else router.refresh();
+    };
+    // Closing the sheet on a card at nought removes it; the list behind re-reads after.
+    const closeSheet = async () => {
+        if (leaving && mine) {
+            const res = await removeCard(mine.id);
+            if (!res.ok) {
+                setMenuError(res.error);
+                return;
+            }
+            router.refresh();
+        }
+        onClose();
+    };
     const [menuError, setMenuError] = useState<string | null>(null);
     const run = async (action: () => Promise<{ ok: true } | { ok: false; error: string }>, closes = false) => {
         setBusy(true);
@@ -145,7 +173,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
             isDismissable
             isOpen={!!card}
             onOpenChange={(open) => {
-                if (!open) onClose();
+                if (!open) void closeSheet();
             }}
             // The whole screen on a phone: the sheet is the card's page, not a panel over one, so it
             // stands on the page's own opaque ground rather than on glass: the art's fade has one
@@ -173,7 +201,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                 iconLeading={XClose}
                                 aria-label="Close"
                                 className="absolute top-3 left-3 z-10 glass text-primary ring-1 ring-glass ring-inset"
-                                onClick={close}
+                                onClick={() => void closeSheet()}
                             />
                             {mine ? (
                                 <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
@@ -403,17 +431,17 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                                         size="sm"
                                                         iconLeading={Minus}
                                                         aria-label="One copy fewer"
-                                                        isDisabled={busy || (mine.quantity ?? 1) <= 1}
-                                                        onClick={() => run(() => setCopies(mine.id, (mine.quantity ?? 1) - 1))}
+                                                        isDisabled={busy || shownCopies <= 0}
+                                                        onClick={() => step(shownCopies - 1)}
                                                     />
-                                                    <span className="min-w-4 text-center tabular-nums">{mine.quantity ?? 1}</span>
+                                                    <span className="min-w-4 text-center tabular-nums">{shownCopies}</span>
                                                     <Button
                                                         color="secondary"
                                                         size="sm"
                                                         iconLeading={Plus}
                                                         aria-label="One copy more"
                                                         isDisabled={busy}
-                                                        onClick={() => run(() => setCopies(mine.id, (mine.quantity ?? 1) + 1))}
+                                                        onClick={() => step(shownCopies + 1)}
                                                     />
                                                 </span>
                                             ) : (
@@ -421,6 +449,11 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                             )
                                         }
                                     />
+                                    {leaving ? (
+                                        <output className="block py-2 text-sm text-warning-primary">
+                                            No copies left: this card leaves your collection when you close the sheet.
+                                        </output>
+                                    ) : null}
                                     {/* A graded copy has a grade and no condition: the slab says which it is. */}
                                     {mine && mine.grade ? (
                                         <DetailRow label="Grade" value={mine.grade} />
