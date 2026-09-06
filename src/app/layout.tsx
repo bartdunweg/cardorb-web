@@ -34,9 +34,11 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+    // The page ground (theme.css --color-bg-page), so Safari's bars and the overscroll match the
+    // page: neutral 50 in the light theme, the dark ground halfway between 950 and 900.
     themeColor: [
-        { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-        { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+        { media: "(prefers-color-scheme: light)", color: "#fafafa" },
+        { media: "(prefers-color-scheme: dark)", color: "#101010" },
     ],
     colorScheme: "light dark",
 };
@@ -53,7 +55,7 @@ export default function RootLayout({
                     the CSP names its hash, so it needs no nonce and the static pages stay static. */}
                 <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
             </head>
-            <body className={cx(inter.variable, "bg-primary antialiased")}>
+            <body className={cx(inter.variable, "bg-page antialiased")}>
                 {/* No RouteProvider here: the public pages are static text with plain links, and the
                     provider's react-aria dependency belongs to the signed-in and auth layouts. */}
                 <ThemeProvider>{children}</ThemeProvider>
