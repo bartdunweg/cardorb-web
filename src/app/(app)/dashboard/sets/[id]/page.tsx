@@ -41,7 +41,7 @@ export default async function SetPage({ params }: { params: Promise<{ id: string
             <PageHeader
                 title={set.name}
                 subtitle={subtitle}
-                back={{ href: "/dashboard/sets", label: "Sets" }}
+                back={{ href: "/dashboard/sets", label: "Browse" }}
                 // The set's logo over its name, as it is printed on the pack. Decoration: the h1 says which set.
                 above={
                     set.logoUrl ? (

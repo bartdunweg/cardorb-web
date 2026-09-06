@@ -43,7 +43,7 @@ export function DexSlider({ cards, linked = true }: { cards: DexCard[]; linked?:
                 type="button"
                 aria-label="Previous card"
                 onClick={() => scroll(-1)}
-                className="absolute top-1/2 left-1 hidden size-7 -translate-y-1/2 items-center justify-center rounded-full bg-alpha-black/60 outline-focus-ring focus-visible:outline-2 lg:group-focus-within:flex lg:group-hover:flex"
+                className="absolute top-1/2 left-1 hidden size-7 -translate-y-1/2 items-center justify-center rounded-full bg-alpha-black/60 outline-focus-ring focus-visible:outline-2 lg:group-focus-within:flex lg:group-hover:flex pointer-coarse:flex"
             >
                 <ChevronLeft className="size-4 text-alpha-white" />
             </button>
@@ -51,7 +51,7 @@ export function DexSlider({ cards, linked = true }: { cards: DexCard[]; linked?:
                 type="button"
                 aria-label="Next card"
                 onClick={() => scroll(1)}
-                className="absolute top-1/2 right-1 hidden size-7 -translate-y-1/2 items-center justify-center rounded-full bg-alpha-black/60 outline-focus-ring focus-visible:outline-2 lg:group-focus-within:flex lg:group-hover:flex"
+                className="absolute top-1/2 right-1 hidden size-7 -translate-y-1/2 items-center justify-center rounded-full bg-alpha-black/60 outline-focus-ring focus-visible:outline-2 lg:group-focus-within:flex lg:group-hover:flex pointer-coarse:flex"
             >
                 <ChevronRight className="size-4 text-alpha-white" />
             </button>

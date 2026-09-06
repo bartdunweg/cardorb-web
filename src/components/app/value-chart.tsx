@@ -124,7 +124,7 @@ export function ValueChart({ snapshots }: { snapshots: ValueSnapshot[] }) {
                             return (
                                 <g key={t}>
                                     <line x1={frame.left} x2={width - frame.right} y1={y} y2={y} className="stroke-border-secondary" strokeWidth={1} />
-                                    <text x={frame.left - 8} y={y + 3.5} textAnchor="end" className="fill-text-quaternary text-xxs tabular-nums">
+                                    <text x={frame.left - 8} y={y + 3.5} textAnchor="end" className="fill-text-quaternary text-2xs tabular-nums">
                                         {euroAxis.format(t)}
                                     </text>
                                 </g>
@@ -138,7 +138,7 @@ export function ValueChart({ snapshots }: { snapshots: ValueSnapshot[] }) {
                                     x={points[i].x}
                                     y={HEIGHT - 8}
                                     textAnchor={i === 0 ? "start" : i === snapshots.length - 1 ? "end" : "middle"}
-                                    className="fill-text-quaternary text-xxs"
+                                    className="fill-text-quaternary text-2xs"
                                 >
                                     {day.format(dateOf(s))}
                                 </text>

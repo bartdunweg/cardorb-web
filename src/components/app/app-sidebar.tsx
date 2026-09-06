@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, use } from "react";
-import { BookOpen01, Folder, Heart, HomeLine, Plus, Rows01, Star01 } from "@untitledui/icons";
+import { BookOpen01, Folder, Grid01, Heart, HomeLine, Plus, Rows01, Star01 } from "@untitledui/icons";
 import { usePathname } from "next/navigation";
 import { Button as AriaButton } from "react-aria-components";
 import { AccountMenu } from "@/components/app/account-menu";
@@ -32,7 +32,7 @@ export function AppSidebar({ account, collections }: { account: Promise<Account>
         { divider: true, label: "Collection" },
         { label: "All cards", href: "/dashboard/cards", icon: Rows01 },
         { label: "Favorites", href: "/dashboard/favorites", icon: Star01 },
-        { label: "Pokédex", href: "/dashboard/pokedex", icon: Folder },
+        { label: "Pokédex", href: "/dashboard/pokedex", icon: Grid01 },
     ];
 
     return (

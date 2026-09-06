@@ -26,7 +26,7 @@ export default async function SetsPage() {
     const { series } = shelf;
 
     return (
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-6">
             {/* The title alone: how far the shelf is comes per set, on its tile, not as one number over all of them. */}
             <PageHeader title="Browse" above={<MobileTopRow />} titleOnPhone={false} />
 

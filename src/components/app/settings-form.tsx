@@ -48,7 +48,6 @@ export function SettingsForm({ profile, email, heading }: { profile: Profile; em
     const [username, setUsername] = useState(profile.username);
     const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url ?? "");
     const [isPublic, setIsPublic] = useState(profile.is_public);
-    const [wishlistPublic, setWishlistPublic] = useState(profile.wishlist_public);
     const [savingProfile, setSavingProfile] = useState(false);
     const [profileMsg, setProfileMsg] = useState<Msg>(null);
     const [uploading, setUploading] = useState(false);
@@ -121,7 +120,7 @@ export function SettingsForm({ profile, email, heading }: { profile: Profile; em
     const saveProfile = async () => {
         setSavingProfile(true);
         setProfileMsg(null);
-        const res = await updateProfile({ display_name: displayName, username, is_public: isPublic, wishlist_public: wishlistPublic });
+        const res = await updateProfile({ display_name: displayName, username, is_public: isPublic, wishlist_public: profile.wishlist_public });
         setSavingProfile(false);
         setProfileMsg(res.ok ? { type: "ok", text: "Saved." } : { type: "err", text: res.error });
     };
@@ -175,14 +174,6 @@ export function SettingsForm({ profile, email, heading }: { profile: Profile; em
                 <Input label="Display name" value={displayName} onChange={setDisplayName} placeholder="Your name" />
                 <Input label="Username" value={username} onChange={setUsername} hint="Lowercase letters, numbers and hyphens." />
                 <Toggle label="Public collection" hint="When on, anyone can view your collection." isSelected={isPublic} onChange={setIsPublic} />
-                {isPublic ? (
-                    <Toggle
-                        label="Public wishlist"
-                        hint="Show the cards you are looking for on your page too."
-                        isSelected={wishlistPublic}
-                        onChange={setWishlistPublic}
-                    />
-                ) : null}
                 {isPublic && username ? (
                     <Button href={`/user/${username}`} color="link-color" size="sm" className="self-start">
                         View your public page

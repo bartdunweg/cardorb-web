@@ -16,7 +16,7 @@ type Result = { ok: true } | { ok: false; error: string };
 
 /**
  * One card of a set, and what you can do with it from here. The tile is a menu button: a card
- * you do not hold offers the collection or the wishlist; one on the wishlist offers "Got it";
+ * you do not hold offers the collection or the wishlist; one on the wishlist offers "Mark as owned";
  * one you hold offers a copy more or less, and the way to it in Cards. Copies are only offered
  * when the card is one row, which is nearly always: a card held as two printings is managed
  * in Cards, where each printing is its own row.
@@ -65,7 +65,7 @@ export function SetCardTile({ card }: { card: SetCard }) {
                     {card.imageUrl ? (
                         <CardImage src={card.imageUrl} alt="" sizes={SIZES} className={cx("object-cover", !card.owned && "opacity-30 grayscale")} />
                     ) : (
-                        <div className="flex size-full items-center justify-center bg-quaternary p-1 text-center text-xxs text-quaternary">{card.name}</div>
+                        <div className="flex size-full items-center justify-center bg-quaternary p-1 text-center text-2xs text-quaternary">{card.name}</div>
                     )}
                     {state === "wishlist" ? (
                         <span className="absolute top-1 right-1 flex size-5 items-center justify-center rounded-full bg-primary text-fg-quaternary ring-1 ring-secondary">
@@ -90,7 +90,7 @@ export function SetCardTile({ card }: { card: SetCard }) {
                             <>
                                 {oneRow ? (
                                     <Dropdown.Item icon={Check} onAction={() => run(() => markOwned(rowId))}>
-                                        Got it
+                                        Mark as owned
                                     </Dropdown.Item>
                                 ) : null}
                                 {oneRow ? (
@@ -131,7 +131,7 @@ export function SetCardTile({ card }: { card: SetCard }) {
 
             <span className="flex items-baseline gap-1 text-xs">
                 <span className="shrink-0 text-tertiary tabular-nums">#{card.number}</span>
-                <span className={cx("truncate", card.owned ? "text-primary" : "text-quaternary")}>{card.name}</span>
+                <span className={cx("truncate", card.owned ? "text-primary" : "text-tertiary")}>{card.name}</span>
                 {card.quantity > 1 ? <span className="ml-auto shrink-0 text-tertiary tabular-nums">×{card.quantity}</span> : null}
             </span>
             {/* Announced when it appears; the tile keeps its place so the grid does not jump. */}
