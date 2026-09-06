@@ -1,8 +1,8 @@
 "use client";
 
-import { ChevronDown, SwitchVertical01 } from "@untitledui/icons";
+import { SwitchVertical01 } from "@untitledui/icons";
 import { usePathname, useRouter } from "next/navigation";
-import { Button } from "@/components/base/buttons/button";
+import { RowButton } from "@/components/app/row-button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { type ListQuery, SORT_OPTIONS, type SortOption, listHref } from "@/lib/list-query";
 
@@ -14,9 +14,7 @@ export function CardsSort({ query, options = SORT_OPTIONS }: { query: ListQuery;
     const pathname = usePathname();
     return (
         <Dropdown.Root>
-            <Button color="secondary" size="sm" iconLeading={SwitchVertical01} iconTrailing={ChevronDown} aria-label="Sort">
-                <span className="max-sm:sr-only">Sort</span>
-            </Button>
+            <RowButton icon={SwitchVertical01} label="Sort" menu />
             <Dropdown.Popover placement="bottom start" className="w-56">
                 <Dropdown.Menu
                     selectionMode="single"
