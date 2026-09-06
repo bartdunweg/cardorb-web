@@ -317,6 +317,26 @@ one `<script src=…chunks/…>` without a nonce on Collection and Browse, block
 duplicate preload of a chunk the nonced loader also fetches, so nothing breaks (the New folder
 dialog and the sheets open), but it is noise worth tracing to the streamed boundary that emits it.
 
+Afternoon of 2026-09-06 (#185, #186; cardorb-api #205–#207). The tab bar's pill slides to the
+tapped tab (transform only, 200 ms on `--ease-move`); Filters, Sort and View are `RowButton`s,
+circles on a phone; `OverlayThemeColor` sets the theme-color meta while a sheet or dialog is
+open so Safari's bars darken with the page (Safari animates the bar itself, at its own pace).
+Home leads with the value: the list's name is a menu (All cards, Favorites, each folder;
+`?value=` in the URL), the number in display size, the change over 7D/1M/3M/6M/Max in green
+or red with the sign in the text, the line edge to edge in that colour, the table behind Show as
+table; the fourth tile is Pokémon collected, counted as the Pokédex page counts. The API answers
+`GET /v1/value-history?folder=<id|favorites>` from the daily card prices (`folderSeries`);
+`listCardPrices` pages past PostgREST's 1,000-row cap (#206), and the cache key moved to v2 so
+the truncated entries did not stand for an hour (#207).
+
+Still open on the value line: the nightly cron prices a card from the Cardmarket guide alone
+(`cardPricesOf`, `snapshotOf` with `prices: false`), while the live number blends in TCGplayer
+where the guide has nothing. So a folder's line ends under its live value (Kanto: €16,710 on
+Sep 6 against €22,199 live, 52 copies unpriced on the line, none live), and the whole
+collection's line likewise. The fix is the cron writing the blended price, which means
+assembling with prices inside its 60 s; the warm cron already does that assembly every ten
+minutes, so the snapshot cron could read the memoised one.
+
 ## Open
 
 - **A revoked session stays open on the web for up to an hour (#79).** The middleware and the
