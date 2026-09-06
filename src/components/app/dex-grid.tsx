@@ -65,7 +65,7 @@ function DexTile({ slot, linked }: { slot: NamedDexSlot; linked: boolean }) {
     const picture = (
         <div className={cx("relative aspect-card w-full overflow-hidden rounded-lg", !card.imageUrl && "bg-quaternary")}>
             {card.imageUrl ? (
-                <CardImage src={card.imageHighUrl ?? card.imageUrl} alt="" quality={75} className="object-contain" />
+                <CardImage src={card.imageHighUrl ?? card.imageUrl} alt="" quality={75} className="object-cover" />
             ) : (
                 <div className="flex h-full w-full flex-col items-center justify-center gap-1 p-3 text-center">
                     <span className="line-clamp-4 text-sm font-medium text-secondary">{card.name}</span>
