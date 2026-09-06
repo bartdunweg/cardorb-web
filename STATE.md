@@ -22,6 +22,14 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **2026-09-06, the holo evening.** The card in its sheet tilts and shines like its printing:
+  `src/components/app/holo-card.tsx` around the picture, `src/lib/holo/` (rarity → effect
+  family, a Svelte-style spring, the pose maths, the hook), the effect CSS vendored verbatim
+  under `src/styles/vendor/pokemon-cards-css/` with its licence and every edit listed, the
+  eleven textures it reads under `public/holo/`. Left out: the author's per-card foil masks
+  (a private CDN, Sword & Shield only; every family runs its no-mask path, foil over the whole
+  card), the iOS gyroscope (needs a permission gesture; a finger drives it there) and a
+  cosmos foil for pre-Sword & Shield holos (one row in `variant.ts` when wanted).
 - **2026-09-05, one day, sixteen web PRs and five API PRs.** Dark mode one step above black,
   hairline borders, glass chrome, four phone tabs with You as the avatar in Home's bar, sheets on a phone, dialogs
   centred (#101, #103). Icons in buttons take the label's colour, thick glass is 92% (#103). The
@@ -56,7 +64,11 @@ which also says what is already yours), Settings (avatar through the API), publi
   tiles 40 ms, sets 30 ms); reduced motion keeps the fade. The kit's modal, sheet and dropdown
   enter and exit on `--ease-enter` (the sheet on `--ease-drawer`), never `ease-in`, and drop
   their zoom or slide under reduced motion. The command palette, hover and keyboard actions
-  stay unanimated on purpose.
+  stay unanimated on purpose, with one exception: the card in its sheet tilts and shines under
+  the pointer (`holo-card.tsx`), the foil picked by the printing's rarity and the copy's finish.
+  The CSS is Simon Goellner's pokemon-cards-css, vendored under `src/styles/vendor/` (GPL-3.0);
+  the springs and the pointer are our own hook in `src/lib/holo/`. Reduced motion draws the
+  card lit and flat, once.
 - **A folder page opens before its cards.** The five list pages (All cards, a folder, Favorites,
   Wishlist, Pokédex) no longer await the list: the title, actions and the row (search, Filters,
   Sort, View) go out at once, the count and value under the title and the cards themselves
@@ -403,6 +415,11 @@ English and Portuguese).
 
 ## Open
 
+- **The holo CSS is GPL-3.0.** GPL is about what the browser receives, not about free or
+  paid: Cardorb's stylesheet now carries GPL code, and a paying product would owe its source
+  under GPL or need a licence from the author. Accepted while Cardorb is free; before it
+  charges, swap the folder for an own implementation of the same recipe (the class names, data
+  attributes and driver variables in `defaults.css` are the contract) or write to @simeydotme.
 - **A revoked session stays open on the web for up to an hour (#79).** The middleware and the
   API both verify the token locally with `getClaims`, so a sign-out everywhere from the iOS app,
   a ban or a password change is felt on the next token refresh, not the next page; the access

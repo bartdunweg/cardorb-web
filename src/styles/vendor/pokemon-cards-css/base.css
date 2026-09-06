@@ -1,0 +1,259 @@
+/*
+
+  BASE STYLES / VARIABLES
+*/
+
+
+
+
+
+
+
+/*
+
+  SHINE LAYERS
+
+*/
+
+
+:root {
+  
+  --card-aspect: 0.718;
+  --card-radius: 4.55% / 3.5%;
+  --card-edge: hsl(47, 100%, 78%);
+  --card-back: hsl(205, 100%, 25%);
+  --card-glow: hsl(175, 100%, 90%);
+
+  --sunpillar-1: hsl(2, 100%, 73%);
+  --sunpillar-2: hsl(53, 100%, 69%);
+  --sunpillar-3: hsl(93, 100%, 69%);
+  --sunpillar-4: hsl(176, 100%, 76%);
+  --sunpillar-5: hsl(228, 100%, 74%);
+  --sunpillar-6: hsl(283, 100%, 73%);
+
+  --sunpillar-clr-1: var(--sunpillar-1);
+  --sunpillar-clr-2: var(--sunpillar-2);
+  --sunpillar-clr-3: var(--sunpillar-3);
+  --sunpillar-clr-4: var(--sunpillar-4);
+  --sunpillar-clr-5: var(--sunpillar-5);
+  --sunpillar-clr-6: var(--sunpillar-6);
+
+}
+
+.card {
+
+  /* place the card on a new transform layer and
+  make sure it has hardward acceleration... we gun'need that! */
+  -webkit-transform: translate3d(0px, 0px, 0.01px);
+  transform: translate3d(0px, 0px, 0.01px);
+  pointer-events: none;
+  
+  
+  /* every little helps! */
+  will-change: transform, visibility, z-index;
+
+  /* this prevents major problems in firefox, but also causes a bit of
+  clipping as the card animates to/from active state. worth it. */
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+}
+
+.card,
+.card * {
+  /* outline is a little trick to anti-alias */
+  outline: 1px solid transparent;
+}
+
+
+.card.water       { --card-glow: hsl(192, 97%,  60%); }
+.card.fire        { --card-glow: hsl(9,   81%,  59%); }
+.card.grass       { --card-glow: hsl(96,  81%,  65%); }
+.card.lightning   { --card-glow: hsl(54,  87%,  63%); }
+.card.psychic     { --card-glow: hsl(281, 62%,  58%); }
+.card.fighting    { --card-glow: rgb(145, 90, 39); }
+.card.darkness    { --card-glow: hsl(189, 77%,  27%); }
+.card.metal       { --card-glow: hsl(184, 20%,  70%); }
+.card.dragon      { --card-glow: hsl(51, 60%, 35%); }
+.card.fairy       { --card-glow: hsl(323, 100%, 89%); }
+
+.card,
+.card__rotator {
+  aspect-ratio: var(--card-aspect);
+  border-radius: var(--card-radius);
+}
+
+
+.card__translater,
+.card__rotator {
+  display: grid;
+  perspective: 600px;
+  will-change: transform, box-shadow;
+  transform-origin: center;
+  -webkit-transform-origin: center;
+  transform-style: preserve-3d;
+}
+
+.card__translater {
+  width: auto;
+  position: relative;
+}
+
+.card__rotator {
+  -webkit-transform: rotateY(var(--rotate-x)) rotateX(var(--rotate-y));
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+  transform: rotateY(var(--rotate-x)) rotateX(var(--rotate-y));
+  
+  /* performance */
+  pointer-events: auto;
+  /* overflow: hidden; <-- this improves perf on mobile, but breaks backface visibility. */
+  /* isolation: isolate; <-- this improves perf, but breaks backface visibility on Chrome. */
+}
+
+
+.card__rotator * {
+  width: 100%;
+  display: grid;
+  grid-area: 1/1;
+  aspect-ratio: var(--card-aspect);
+  border-radius: var(--card-radius);
+  image-rendering: optimizeQuality;
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.card__rotator img {
+  height: auto;
+  -webkit-transform: translate3d(0px, 0px, 0.01px);
+  transform: translate3d(0px, 0px, 0.01px);
+}
+
+
+.card__front,
+.card__front * {
+  backface-visibility: hidden;
+}
+
+.card__front {
+  opacity: 1;
+  -webkit-transform: translate3d(0px, 0px, 0.01px);
+  transform: translate3d(0px, 0px, 0.01px);
+}
+
+
+
+/**
+  
+Shine & Glare Effects
+
+**/
+
+.card__shine {
+
+  display: grid;
+  transform: translateZ(1px);
+  overflow: hidden;
+  z-index: 3;
+
+  background: transparent;
+  background-size: cover;
+  background-position: center;
+
+  filter: brightness(.85) contrast(2.75) saturate(.65);
+  mix-blend-mode: color-dodge;
+
+  opacity: var(--card-opacity);
+
+}
+
+.card__shine:before,
+.card__shine:after {
+
+  --sunpillar-clr-1: var(--sunpillar-5);
+  --sunpillar-clr-2: var(--sunpillar-6);
+  --sunpillar-clr-3: var(--sunpillar-1);
+  --sunpillar-clr-4: var(--sunpillar-2);
+  --sunpillar-clr-5: var(--sunpillar-3);
+  --sunpillar-clr-6: var(--sunpillar-4);
+
+  grid-area: 1/1;
+  transform: translateZ(1px);
+  border-radius: var(--card-radius);
+
+}
+
+.card__shine:after {
+
+  --sunpillar-clr-1: var( --sunpillar-6 );
+  --sunpillar-clr-2: var( --sunpillar-1 ); 
+  --sunpillar-clr-3: var( --sunpillar-2 );
+  --sunpillar-clr-4: var( --sunpillar-3 );
+  --sunpillar-clr-5: var( --sunpillar-4 );
+  --sunpillar-clr-6: var( --sunpillar-5 );
+
+  transform: translateZ(1.2px);
+  
+}
+
+.card__glare {
+
+  /* make sure the glare doesn't clip */
+  transform: translateZ(1.41px);
+  overflow: hidden;
+
+  background-image: radial-gradient(
+    farthest-corner circle at var(--pointer-x) var(--pointer-y),
+    hsla(0, 0%, 100%, 0.8) 10%,
+    hsla(0, 0%, 100%, 0.65) 20%,
+    hsla(0, 0%, 0%, 0.5) 90%
+  );
+
+  opacity: var(--card-opacity);
+  mix-blend-mode: overlay;
+  
+}
+
+
+
+
+
+
+/**
+
+  Masking Effects
+
+**/
+
+.card.masked .card__shine,
+.card.masked .card__shine:before,
+.card.masked .card__shine:after {
+
+  /** masking image for cards which are masked **/
+  -webkit-mask-image: var(--mask);
+  mask-image: var(--mask);
+	-webkit-mask-size: cover;
+  mask-size: cover;
+  -webkit-mask-position: center center;
+  mask-position: center center;
+
+}
+
+.card[data-rarity="rare holo"] .card__glare:after,
+.card[data-rarity="rare holo cosmos"] .card__glare:after,
+.card[data-rarity$="reverse holo"] .card__glare:after {
+  clip-path: var(--clip);
+}
+
+.card[data-rarity="rare holo"][data-subtypes^="stage"] .card__glare:after,
+.card[data-rarity="rare holo cosmos"][data-subtypes^="stage"] .card__glare:after,
+.card[data-rarity$="reverse holo"][data-subtypes^="stage"] .card__glare:after {
+  clip-path: var(--clip-stage);
+}
+
+.card[data-rarity="rare holo"][data-supertype="trainer"] .card__glare:after,
+.card[data-rarity="rare holo cosmos"][data-supertype="trainer"] .card__glare:after,
+.card[data-rarity$="reverse holo"][data-supertype="trainer"] .card__glare:after {
+  clip-path: var(--clip-trainer);
+}
