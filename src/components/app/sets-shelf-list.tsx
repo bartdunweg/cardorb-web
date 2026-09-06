@@ -35,7 +35,10 @@ export function SetsShelfList({ series, language = "en", onNavigate }: { series:
                                             <div className="size-full rounded-md bg-secondary" />
                                         )}
                                     </div>
-                                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-primary">{set.name}</span>
+                                    <span className="flex min-w-0 flex-1 flex-col">
+                                        <span className="truncate text-sm font-medium text-primary">{set.name}</span>
+                                        {set.localName ? <span className="truncate text-xs text-tertiary">{set.localName}</span> : null}
+                                    </span>
                                     <span className="shrink-0 text-xs text-tertiary tabular-nums">
                                         {n(set.owned)} of {n(set.total)}
                                     </span>

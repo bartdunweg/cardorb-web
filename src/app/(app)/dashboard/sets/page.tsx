@@ -92,7 +92,10 @@ function SetTile({ set, language }: { set: SetSummary; language: BrowseLanguageC
             </div>
             <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                 <div className="flex items-baseline justify-between gap-3">
-                    <span className="truncate text-sm font-semibold text-primary">{set.name}</span>
+                    <span className="flex min-w-0 flex-col">
+                        <span className="truncate text-sm font-semibold text-primary">{set.name}</span>
+                        {set.localName ? <span className="truncate text-xs text-tertiary">{set.localName}</span> : null}
+                    </span>
                     <span className="shrink-0 text-sm text-tertiary tabular-nums">
                         {n(set.owned)} of {n(set.total)}
                     </span>
