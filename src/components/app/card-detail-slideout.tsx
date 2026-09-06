@@ -2,10 +2,10 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Plus, Star01, XClose } from "@untitledui/icons";
+import { ArrowRight, Check, DotsHorizontal, Minus, Plus, Star01, Trash01, XClose } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
-import { Heading as AriaHeading } from "react-aria-components";
-import { markOwned, setFavorite } from "@/app/(app)/dashboard/cards/actions";
+import { Heading as AriaHeading, Tab as AriaTab, TabList as AriaTabList, TabPanel as AriaTabPanel, Tabs as AriaTabs } from "react-aria-components";
+import { markOwned, removeCard, setCopies, setFavorite } from "@/app/(app)/dashboard/cards/actions";
 import { type FolderChoice, listCollections, loadFacets, setCardCollection } from "@/app/(app)/dashboard/collections/actions";
 import { CardImage } from "@/components/app/card-image";
 import { FavoriteStar } from "@/components/app/favorite-star";
@@ -14,10 +14,12 @@ import { PriceHistory } from "@/components/app/price-history";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
+import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { NativeSelect } from "@/components/base/select/select-native";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
 import { matchesRule } from "@/lib/folder-rule";
 import { formatDate, formatPrice } from "@/lib/format";
+import { cx } from "@/utils/cx";
 
 function DetailRow({ label, value }: { label: string; value: ReactNode }) {
     return (
@@ -27,6 +29,14 @@ function DetailRow({ label, value }: { label: string; value: ReactNode }) {
         </div>
     );
 }
+
+// A tab under the title, the way a segmented row draws one: the chosen tab in the sheet's own ink, the
+// other quiet; a hairline under the row, the chosen tab's edge on it.
+const tabClass = ({ isSelected }: { isSelected: boolean }) =>
+    cx(
+        "-mb-px cursor-pointer border-b-2 px-1 pb-2 text-sm font-semibold outline-focus-ring transition-colors duration-150 focus-visible:outline-2",
+        isSelected ? "border-fg-brand-primary text-primary" : "border-transparent text-tertiary hover:text-secondary",
+    );
 
 type Props = { card: Card | null; onClose: () => void; readOnly?: false } | { card: PublicCard | null; onClose: () => void; readOnly: true };
 
@@ -53,6 +63,22 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
         else setStarred(!next);
     };
     const [moveError, setMoveError] = useState<string | null>(null);
+    // The dots menu's actions: each one server call, then the page re-reads; removing closes the sheet
+    // first, since the card it showed is gone.
+    const [busy, setBusy] = useState(false);
+    const [menuError, setMenuError] = useState<string | null>(null);
+    const run = async (action: () => Promise<{ ok: true } | { ok: false; error: string }>, closes = false) => {
+        setBusy(true);
+        setMenuError(null);
+        const res = await action();
+        setBusy(false);
+        if (!res.ok) {
+            setMenuError(res.error);
+            return;
+        }
+        if (closes) onClose();
+        router.refresh();
+    };
 
     // The folders and the facets are for the sheet's own controls, so they are asked for when a
     // card first opens, not when the page mounts: this sits on every list page, closed, and used
@@ -130,17 +156,55 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                             {/* Close at the left, the star at the right, on one line over the art: the two things a
                                 person does to a card's page without reading it. */}
                             <Button color="secondary" size="sm" iconLeading={XClose} aria-label="Close" className="absolute top-3 left-3" onClick={close} />
-                            {mine?.owned ? (
-                                <Button
-                                    color={isStarred ? "primary" : "secondary"}
-                                    size="sm"
-                                    iconLeading={Star01}
-                                    aria-label="Favorite"
-                                    aria-pressed={isStarred}
-                                    isLoading={starring}
-                                    onClick={toggleStar}
-                                    className="absolute top-3 right-3"
-                                />
+                            {mine ? (
+                                <div className="absolute top-3 right-3 flex items-center gap-2">
+                                    {mine.owned ? (
+                                        <Button
+                                            color={isStarred ? "primary" : "secondary"}
+                                            size="sm"
+                                            iconLeading={Star01}
+                                            aria-label="Favorite"
+                                            aria-pressed={isStarred}
+                                            isLoading={starring}
+                                            onClick={toggleStar}
+                                        />
+                                    ) : null}
+                                    {/* What else is done to a card: copies, and taking it out. A wish can be marked owned here too. */}
+                                    <Dropdown.Root>
+                                        <Button color="secondary" size="sm" iconLeading={DotsHorizontal} aria-label="More" isLoading={busy} />
+                                        <Dropdown.Popover placement="bottom end" className="w-56">
+                                            <Dropdown.Menu>
+                                                {mine.wishlist ? (
+                                                    <>
+                                                        <Dropdown.Item icon={Check} onAction={() => run(() => markOwned(mine.id), true)}>
+                                                            Mark as owned
+                                                        </Dropdown.Item>
+                                                        <Dropdown.Item icon={Trash01} onAction={() => run(() => removeCard(mine.id), true)}>
+                                                            Remove from wishlist
+                                                        </Dropdown.Item>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Dropdown.Item icon={Plus} onAction={() => run(() => setCopies(mine.id, (mine.quantity ?? 1) + 1))}>
+                                                            Add a copy
+                                                        </Dropdown.Item>
+                                                        {(mine.quantity ?? 1) > 1 ? (
+                                                            <Dropdown.Item
+                                                                icon={Minus}
+                                                                onAction={() => run(() => setCopies(mine.id, (mine.quantity ?? 1) - 1))}
+                                                            >
+                                                                Remove a copy
+                                                            </Dropdown.Item>
+                                                        ) : null}
+                                                        <Dropdown.Item icon={Trash01} onAction={() => run(() => removeCard(mine.id), true)}>
+                                                            Remove from collection
+                                                        </Dropdown.Item>
+                                                    </>
+                                                )}
+                                            </Dropdown.Menu>
+                                        </Dropdown.Popover>
+                                    </Dropdown.Root>
+                                </div>
                             ) : null}
                             <div className="relative px-10 pt-10 pb-6">
                                 {card?.image_url ? (
@@ -176,103 +240,144 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                     {formatPrice(mine.price)} <span className="text-sm font-normal text-tertiary">market price</span>
                                 </p>
                             ) : null}
-                            {/* How that price has moved: the nightly readings, under the number they explain. */}
-                            {mine?.tcg_id ? <PriceHistory tcgId={mine.tcg_id} holo={mine.finish === "reverse-holo"} /> : null}
+                            {menuError ? (
+                                <p role="alert" className="text-sm text-error-primary">
+                                    {menuError}
+                                </p>
+                            ) : null}
                         </div>
                     </SlideoutMenu.Header>
 
                     <SlideoutMenu.Content>
-                        {!readOnly &&
-                            (mine?.wishlist ? (
-                                <div className="flex flex-col gap-1.5">
-                                    <Button size="md" iconTrailing={ArrowRight} onClick={onMoveToCollection} isLoading={moving}>
-                                        Mark as owned
-                                    </Button>
-                                    {moveError ? (
-                                        <p role="alert" className="text-sm text-error-primary">
-                                            {moveError}
-                                        </p>
-                                    ) : null}
-                                </div>
-                            ) : (
-                                <div className="flex flex-col gap-1.5">
-                                    <span className="text-sm font-medium text-secondary">Folder</span>
-                                    {/* Only a folder filled by hand takes a card; a rule folder fills itself. With none yet, the
-                                        way to file this card is to make one, and the card goes straight into it. */}
-                                    {manual.length ? (
-                                        <NativeSelect
-                                            aria-label="Folder"
-                                            value={collectionId}
-                                            onChange={(event) => onCollectionChange(event.target.value)}
-                                            options={[{ label: "None", value: "" }, ...manual.map((c) => ({ label: c.name, value: c.id }))]}
-                                        />
+                        {/* Two tabs: the card's details, and its price with its line. A public view has no price, so no tabs. */}
+                        <AriaTabs className="flex flex-col gap-5">
+                            {mine ? (
+                                <AriaTabList aria-label="Card" className="flex gap-4 border-b border-secondary">
+                                    <AriaTab id="details" className={tabClass}>
+                                        Details
+                                    </AriaTab>
+                                    <AriaTab id="price" className={tabClass}>
+                                        Price
+                                    </AriaTab>
+                                </AriaTabList>
+                            ) : null}
+                            <AriaTabPanel id="details" className="flex flex-col gap-6 outline-hidden">
+                                {!readOnly &&
+                                    (mine?.wishlist ? (
+                                        <div className="flex flex-col gap-1.5">
+                                            <Button size="md" iconTrailing={ArrowRight} onClick={onMoveToCollection} isLoading={moving}>
+                                                Mark as owned
+                                            </Button>
+                                            {moveError ? (
+                                                <p role="alert" className="text-sm text-error-primary">
+                                                    {moveError}
+                                                </p>
+                                            ) : null}
+                                        </div>
                                     ) : (
-                                        <p className="text-sm text-tertiary">No folder filled by hand yet. A rule folder fills itself.</p>
-                                    )}
-                                    <FolderDialog
-                                        mode="create"
-                                        onSaved={async (id) => {
-                                            const next = await listCollections();
-                                            setCollections(next);
-                                            if (id && next.some((c) => c.id === id && !c.rule)) onCollectionChange(id);
-                                        }}
-                                    >
-                                        <Button size="sm" color="secondary" iconLeading={Plus} className="self-start">
-                                            New folder
-                                        </Button>
-                                    </FolderDialog>
-                                    {collectionError ? (
-                                        <p role="alert" className="text-sm text-error-primary">
-                                            {collectionError}
-                                        </p>
-                                    ) : null}
-                                </div>
-                            ))}
-
-                        {/* Where the card is: the folder it was filed in, every rule folder whose rule it fits, and
-                            Favorites when starred. A wish is in none of them. */}
-                        {mine ? (
-                            <div className="flex flex-col gap-1.5">
-                                <span className="text-sm font-medium text-secondary">In folders</span>
-                                <ul className="flex flex-wrap gap-1.5" aria-label="In folders">
-                                    {[
-                                        ...(isStarred ? [{ id: "favorites", name: "Favorites" }] : []),
-                                        ...collections.filter((c) => (c.rule ? matchesRule(mine, c.rule, facets) : c.id === collectionId)),
-                                    ].map(({ id, name }) => (
-                                        <li key={id}>
-                                            <Badge size="sm" color="gray" type="pill-color">
-                                                {name}
-                                            </Badge>
-                                        </li>
+                                        <div className="flex flex-col gap-1.5">
+                                            <span className="text-sm font-medium text-secondary">Folder</span>
+                                            {/* Only a folder filled by hand takes a card; a rule folder fills itself. With none yet, the
+                                        way to file this card is to make one, and the card goes straight into it. */}
+                                            {manual.length ? (
+                                                <NativeSelect
+                                                    aria-label="Folder"
+                                                    value={collectionId}
+                                                    onChange={(event) => onCollectionChange(event.target.value)}
+                                                    options={[{ label: "None", value: "" }, ...manual.map((c) => ({ label: c.name, value: c.id }))]}
+                                                />
+                                            ) : (
+                                                <p className="text-sm text-tertiary">No folder filled by hand yet. A rule folder fills itself.</p>
+                                            )}
+                                            <FolderDialog
+                                                mode="create"
+                                                onSaved={async (id) => {
+                                                    const next = await listCollections();
+                                                    setCollections(next);
+                                                    if (id && next.some((c) => c.id === id && !c.rule)) onCollectionChange(id);
+                                                }}
+                                            >
+                                                <Button size="sm" color="secondary" iconLeading={Plus} className="self-start">
+                                                    New folder
+                                                </Button>
+                                            </FolderDialog>
+                                            {collectionError ? (
+                                                <p role="alert" className="text-sm text-error-primary">
+                                                    {collectionError}
+                                                </p>
+                                            ) : null}
+                                        </div>
                                     ))}
-                                    {!isStarred && !collections.some((c) => (c.rule ? matchesRule(mine, c.rule, facets) : c.id === collectionId)) ? (
-                                        <li className="text-sm text-quaternary">None yet</li>
-                                    ) : null}
-                                </ul>
-                            </div>
-                        ) : null}
 
-                        <dl className="flex flex-col divide-y divide-secondary">
-                            <DetailRow label="Rarity" value={card?.rarity} />
-                            <DetailRow label="Generation" value={card?.gen} />
-                            <DetailRow label="Types" value={card?.types?.length ? card.types.join(", ") : null} />
-                            <DetailRow label="Quantity" value={card?.quantity ?? 1} />
-                            {mine && <DetailRow label="Condition" value={mine.condition} />}
-                            {mine && <DetailRow label="Grade" value={mine.grade} />}
-                            <DetailRow label="Finish" value={card?.finish} />
-                            {/* Personal fields stay off the public read-only view. */}
-                            {mine && <DetailRow label="Owned" value={mine.owned ? "Yes" : "No"} />}
-                            {mine && <DetailRow label="Purchase price" value={mine.purchase_price != null ? formatPrice(mine.purchase_price) : null} />}
-                            {mine && <DetailRow label="Purchase date" value={mine.purchase_date ? formatDate(mine.purchase_date) : null} />}
-                            {mine && <DetailRow label="Acquired" value={mine.acquired_at ? formatDate(mine.acquired_at) : null} />}
-                        </dl>
+                                {/* Where the card is: the folder it was filed in, every rule folder whose rule it fits, and
+                            Favorites when starred. A wish is in none of them. */}
+                                {mine ? (
+                                    <div className="flex flex-col gap-1.5">
+                                        <span className="text-sm font-medium text-secondary">In folders</span>
+                                        <ul className="flex flex-wrap gap-1.5" aria-label="In folders">
+                                            {[
+                                                ...(isStarred ? [{ id: "favorites", name: "Favorites" }] : []),
+                                                ...collections.filter((c) => (c.rule ? matchesRule(mine, c.rule, facets) : c.id === collectionId)),
+                                            ].map(({ id, name }) => (
+                                                <li key={id}>
+                                                    <Badge size="sm" color="gray" type="pill-color">
+                                                        {name}
+                                                    </Badge>
+                                                </li>
+                                            ))}
+                                            {!isStarred && !collections.some((c) => (c.rule ? matchesRule(mine, c.rule, facets) : c.id === collectionId)) ? (
+                                                <li className="text-sm text-quaternary">None yet</li>
+                                            ) : null}
+                                        </ul>
+                                    </div>
+                                ) : null}
 
-                        {mine?.notes ? (
-                            <div className="flex flex-col gap-1 border-t border-secondary pt-4">
-                                <p className="text-sm text-tertiary">Notes</p>
-                                <p className="text-sm text-primary">{mine.notes}</p>
-                            </div>
-                        ) : null}
+                                <dl className="flex flex-col divide-y divide-secondary">
+                                    <DetailRow label="Rarity" value={card?.rarity} />
+                                    <DetailRow label="Generation" value={card?.gen} />
+                                    <DetailRow label="Types" value={card?.types?.length ? card.types.join(", ") : null} />
+                                    <DetailRow label="Quantity" value={card?.quantity ?? 1} />
+                                    {mine && <DetailRow label="Condition" value={mine.condition} />}
+                                    {mine && <DetailRow label="Grade" value={mine.grade} />}
+                                    <DetailRow label="Finish" value={card?.finish} />
+                                    {/* Personal fields stay off the public read-only view. */}
+                                    {mine && <DetailRow label="Owned" value={mine.owned ? "Yes" : "No"} />}
+                                    {mine && <DetailRow label="Acquired" value={mine.acquired_at ? formatDate(mine.acquired_at) : null} />}
+                                </dl>
+
+                                {mine?.notes ? (
+                                    <div className="flex flex-col gap-1 border-t border-secondary pt-4">
+                                        <p className="text-sm text-tertiary">Notes</p>
+                                        <p className="text-sm text-primary">{mine.notes}</p>
+                                    </div>
+                                ) : null}
+                            </AriaTabPanel>
+                            {mine ? (
+                                <AriaTabPanel id="price" className="flex flex-col gap-6 outline-hidden">
+                                    {/* The line first, then the numbers around it: what one copy trades at, what all the
+                                        copies come to, what was paid, and what that bought. */}
+                                    {mine.tcg_id ? <PriceHistory tcgId={mine.tcg_id} holo={mine.finish === "reverse-holo"} tall /> : null}
+                                    <dl className="flex flex-col divide-y divide-secondary">
+                                        <DetailRow label="Market price" value={mine.price != null ? formatPrice(mine.price) : null} />
+                                        <DetailRow label="Copies" value={mine.quantity ?? 1} />
+                                        <DetailRow label="Holding value" value={mine.price != null ? formatPrice(mine.price * (mine.quantity ?? 1)) : null} />
+                                        <DetailRow label="Purchase price" value={mine.purchase_price != null ? formatPrice(mine.purchase_price) : null} />
+                                        {mine.purchase_price != null && mine.price != null ? (
+                                            <DetailRow
+                                                label="Since purchase"
+                                                value={
+                                                    <span className={mine.price - mine.purchase_price >= 0 ? "text-success-primary" : "text-error-primary"}>
+                                                        {mine.price - mine.purchase_price >= 0 ? "+" : "−"}
+                                                        {formatPrice(Math.abs(mine.price - mine.purchase_price))}
+                                                    </span>
+                                                }
+                                            />
+                                        ) : null}
+                                        <DetailRow label="Purchase date" value={mine.purchase_date ? formatDate(mine.purchase_date) : null} />
+                                    </dl>
+                                </AriaTabPanel>
+                            ) : null}
+                        </AriaTabs>
                     </SlideoutMenu.Content>
                 </>
             )}

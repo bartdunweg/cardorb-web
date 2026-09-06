@@ -15,7 +15,15 @@ const WIDTH = 320;
 const HEIGHT = 56;
 const dayYear = new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short" });
 
-export function PriceHistory({ tcgId, holo = false }: { tcgId: string; holo?: boolean }) {
+export function PriceHistory({
+    tcgId,
+    holo = false,
+    tall = false,
+}: {
+    tcgId: string;
+    holo?: boolean;
+    /** The price tab's size: twice the height. */ tall?: boolean;
+}) {
     // Kept with the id it was read for, so a sheet reopened on another card shows that card's outline, not this one's line.
     const [loaded, setLoaded] = useState<{ tcgId: string; points: PricePoint[] } | null>(null);
     const points = loaded?.tcgId === tcgId ? loaded.points : null;
@@ -54,7 +62,7 @@ export function PriceHistory({ tcgId, holo = false }: { tcgId: string; holo?: bo
 
     return (
         <figure className="flex flex-col gap-1" aria-labelledby={titleId}>
-            <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="h-14 w-full" preserveAspectRatio="none" aria-labelledby={titleId}>
+            <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className={cx("w-full", tall ? "h-28" : "h-14")} preserveAspectRatio="none" aria-labelledby={titleId}>
                 <title id={titleId}>{`Price over the last ${series.length} readings: ${formatPrice(first.value)} to ${formatPrice(last.value)}.`}</title>
                 <path d={areaPath(pts, HEIGHT)} className={cx(fill, "opacity-15")} />
                 <path
