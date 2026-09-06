@@ -344,17 +344,17 @@ the card is, attributes) and Price (the line, taller, market price, copies, hold
 purchase price, the change since purchase). `SlideoutMenu.Header` takes `close="circle"` or
 `close="none"`.
 
-Still open on the value line: the nightly cron prices a card from the Cardmarket guide alone
-(`cardPricesOf`, `snapshotOf` with `prices: false`), while the live number blends in TCGplayer
-where the guide has nothing. So a folder's line ends under its live value (Kanto: €16,710 on
-Sep 6 against €22,199 live, 52 copies unpriced on the line, none live), and the whole
-collection's line likewise, and a card's sheet says €999.61 above a line that ends at €830.97
-(Pikachu with Grey Felt Hat, Sep 6). The fix is the cron writing the blended price, which means
-assembling with prices inside its 60 s; the warm cron already does that assembly every ten
-minutes, so the snapshot cron could read the memoised one. Price history reaches back only as
-far as our own table: the first nightly per-card reading is 2026-08-16. Cardmarket's guide is
-today's file only, TCGdex and pokemontcg.io carry no history, so nothing earlier can be fetched;
-the line grows by a night a night.
+Closed later that day (cardorb-api #211): the nightly cron reads the same assembly every
+request reads (`assembleFor`), blended prices and memo included, and writes that figure for
+the collection and per card (`snapshotFromSets`, `cardPricesFromSets`), dated by the night in
+UTC. From the next run the lines end where the live number stands; readings before 2026-09-07
+are the guide-only ones. Price history reaches back only as far as our own table: the first
+nightly per-card reading is 2026-08-16. Cardmarket's guide is today's file only, TCGdex and
+pokemontcg.io carry no history, so nothing earlier can be fetched; the line grows a night a night.
+
+The card's sheet also has the kit's Tabs (#198; `components/application/tabs`), type icons
+drawn in `type-icon.tsx`, the series logo beside Generation (`seriesLogo` from the shelf), and
+the buttons over the art above the card's block (they were under it and took no taps).
 
 ## Open
 
