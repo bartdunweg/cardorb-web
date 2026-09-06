@@ -23,5 +23,6 @@ export async function loadMoreCards(input: unknown): Promise<Card[]> {
     const parsed = Input.safeParse(input);
     if (!parsed.success) return [];
     const { offset, ...filter } = parsed.data;
-    return (await getMyCards({ ...filter, limit: LIST_BATCH, offset })).cards;
+    // A batch on scroll reads the cards alone; the facets came with the first page.
+    return (await getMyCards({ ...filter, facets: false, limit: LIST_BATCH, offset })).cards;
 }
