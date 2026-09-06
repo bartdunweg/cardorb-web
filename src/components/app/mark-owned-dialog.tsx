@@ -22,6 +22,8 @@ type Props = {
     card: Card;
     folders: FolderChoice[];
     onSaved?: () => void;
+    /** The Western languages the card was printed in, when the API has said. */
+    languages?: readonly string[] | null;
 };
 
 const FINISHES = [
@@ -46,7 +48,7 @@ export function MarkOwnedDialog({ children, ...form }: Props & { children: React
     );
 }
 
-function MarkOwnedForm({ card, folders, onSaved, close }: Props & { close: () => void }) {
+function MarkOwnedForm({ card, folders, languages, onSaved, close }: Props & { close: () => void }) {
     const router = useRouter();
     const [language, setLanguage] = useState("en");
     const [condition, setCondition] = useState("Near Mint");
@@ -109,7 +111,7 @@ function MarkOwnedForm({ card, folders, onSaved, close }: Props & { close: () =>
                         className="w-auto"
                         value={language}
                         onChange={(e) => setLanguage(e.target.value)}
-                        options={languagesFor(null).map((l) => ({ label: l.label, value: l.code }))}
+                        options={languagesFor(null, languages).map((l) => ({ label: l.label, value: l.code }))}
                     />
                 </span>
             </div>

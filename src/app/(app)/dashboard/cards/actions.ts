@@ -256,6 +256,8 @@ export type CardFacts = {
     regulationMark: string | null;
     /** Cardmarket's page for the card. */
     cmUrl: string | null;
+    /** The Western languages the card was printed in; a copy can be one of these and no other. */
+    languages: string[];
 };
 
 // The card's facts for the sheet: the illustrator, HP, stage, regulation mark and the
@@ -270,6 +272,7 @@ export async function cardFacts(tcgId: string): Promise<CardFacts | null> {
             evolveFrom: c.evolveFrom ?? null,
             regulationMark: c.regulationMark ?? null,
             cmUrl: c.cmUrl ?? null,
+            languages: Array.isArray(c.languages) ? c.languages : ["en"],
         };
     } catch (err) {
         console.error("Card facts unavailable:", err instanceof Error ? err.message : err);

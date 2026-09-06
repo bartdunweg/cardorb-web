@@ -22,9 +22,17 @@ export type LanguageCode = (typeof LANGUAGES)[number]["code"];
  */
 export const WESTERN_LANGUAGES = LANGUAGES.filter((l) => ["en", "de", "fr", "it", "es", "pt", "nl"].includes(l.code));
 
-/** The languages a copy may be set to, given the catalogue it came from (null: the English one). */
-export function languagesFor(catalogue: string | null | undefined): readonly Language[] {
-    if (!catalogue || catalogue === "en") return WESTERN_LANGUAGES;
+/**
+ * The languages a copy may be set to, given the catalogue it came from (null: the English one)
+ * and, when the API has said, the Western printings the card actually has (`printed`): a promo
+ * printed in English alone offers English alone.
+ */
+export function languagesFor(catalogue: string | null | undefined, printed?: readonly string[] | null): readonly Language[] {
+    if (!catalogue || catalogue === "en") {
+        if (!printed || printed.length === 0) return WESTERN_LANGUAGES;
+        const only = WESTERN_LANGUAGES.filter((l) => printed.includes(l.code));
+        return only.length ? only : WESTERN_LANGUAGES.slice(0, 1);
+    }
     const fixed = languageOf(catalogue === "zh-tw" || catalogue === "zh-cn" ? "zh" : catalogue);
     return [fixed];
 }

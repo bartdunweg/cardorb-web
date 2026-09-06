@@ -19,5 +19,8 @@ describe("languageOf", () => {
         expect(languagesFor("ja").map((l) => l.code)).toEqual(["ja"]);
         expect(languagesFor("zh-tw").map((l) => l.code)).toEqual(["zh"]);
         expect(languagesFor("ko").map((l) => l.code)).toEqual(["ko"]);
+        // A promo printed in English and Portuguese alone offers those alone.
+        expect(languagesFor(null, ["en", "pt"]).map((l) => l.code)).toEqual(["en", "pt"]);
+        expect(languagesFor(null, []).length).toBe(7);
     });
 });
