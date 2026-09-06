@@ -336,6 +336,14 @@ first reading; Sort has Highest price and Lowest price; Show as table is gone fr
 chart. Found on the way: the API's card-price cache was keyed by person and day but not by the
 ids asked, so one card's line came back as the whole collection's (v3 key hashes the ids, #210).
 
+The card's sheet (#191–#194): the whole screen on a phone, the card first on a blurred, dimmed
+copy of its own art that fades into the sheet (`fade-to-glass-thick`); Close at the top left,
+the star and a dots menu (Add a copy, Remove a copy, Remove from collection; on a wish Mark as
+owned, Remove from wishlist) at the top right; under the title two tabs, Details (folder, where
+the card is, attributes) and Price (the line, taller, market price, copies, holding value,
+purchase price, the change since purchase). `SlideoutMenu.Header` takes `close="circle"` or
+`close="none"`.
+
 Still open on the value line: the nightly cron prices a card from the Cardmarket guide alone
 (`cardPricesOf`, `snapshotOf` with `prices: false`), while the live number blends in TCGplayer
 where the guide has nothing. So a folder's line ends under its live value (Kanto: €16,710 on
