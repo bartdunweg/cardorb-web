@@ -1,7 +1,7 @@
 "use client";
 
 import type { FC } from "react";
-import { Dataflow03, Folder, Plus, Rows01, Star01 } from "@untitledui/icons";
+import { Dataflow03, Folder, Grid01, Plus, Rows01, Star01 } from "@untitledui/icons";
 import Link from "next/link";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderDialog } from "@/components/app/folder-dialog";
@@ -66,7 +66,7 @@ export function CollectionsGrid({
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
                 <FolderCard href="/dashboard/cards" icon={Rows01} name="All cards" count={ownedCount} />
                 <FolderCard href="/dashboard/favorites" icon={Star01} name="Favorites" count={favoritesCount} />
-                <FolderCard href="/dashboard/pokedex" icon={Folder} name="Pokédex" detail="Cards by Pokémon" />
+                <FolderCard href="/dashboard/pokedex" icon={Grid01} name="Pokédex" detail="Cards by Pokémon" />
                 {collections.map((c) => (
                     <FolderCard
                         key={c.id}
@@ -85,7 +85,7 @@ export function CollectionsGrid({
                 <div className="hidden lg:contents">
                     <AppEmptyState icon="folder" title="No folders yet" description="Group your cards into folders you can jump to from the sidebar.">
                         <FolderDialog mode="create" facets={facets}>
-                            <Button iconLeading={Plus}>Create folder</Button>
+                            <Button iconLeading={Plus}>New folder</Button>
                         </FolderDialog>
                     </AppEmptyState>
                 </div>

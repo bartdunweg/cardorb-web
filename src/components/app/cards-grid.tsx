@@ -63,7 +63,7 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                                 // No art in our source (e.g. some promos) — show the name so the tile still reads as a card.
                                 <div className="flex h-full w-full flex-col items-center justify-center gap-1 p-3 text-center">
                                     <span className="line-clamp-4 text-sm font-medium text-secondary">{card.name}</span>
-                                    {card.number ? <span className="text-xxs text-quaternary">#{card.number}</span> : null}
+                                    {card.number ? <span className="text-2xs text-quaternary">#{card.number}</span> : null}
                                 </div>
                             )}
                         </div>

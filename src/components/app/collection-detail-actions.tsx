@@ -10,6 +10,7 @@ import { CardImage } from "@/components/app/card-image";
 import { FolderDialog } from "@/components/app/folder-dialog";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { Button } from "@/components/base/buttons/button";
+import { CloseButton } from "@/components/base/buttons/close-button";
 import { Input } from "@/components/base/input/input";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import type { Facets } from "@/lib/cards";
@@ -73,55 +74,63 @@ export function CollectionDetailActions({
                     <ModalOverlay>
                         <Modal className="max-w-xl">
                             <Dialog>
-                                <div className="flex max-h-[80vh] w-full max-w-xl flex-col gap-4 rounded-2xl glass-thick p-6 shadow-xl">
-                                    <AriaHeading slot="title" className="text-lg font-semibold text-primary">
-                                        Add cards to this folder
-                                    </AriaHeading>
-                                    <Input
-                                        aria-label="Search your cards"
-                                        icon={SearchLg}
-                                        placeholder="Search your cards…"
-                                        value={query}
-                                        onChange={setQuery}
-                                        wrapperClassName="rounded-full"
-                                    />
-                                    <div className="flex min-h-40 flex-col gap-1 overflow-y-auto">
-                                        {/* One live region, always mounted, so a screen reader hears the state change. */}
-                                        <output aria-live="polite" className={cx("text-center text-sm text-tertiary", searchState ? "px-1 py-6" : "sr-only")}>
-                                            {searchState}
-                                        </output>
-                                        {!loading &&
-                                            results.map((card) => {
-                                                const st = status[card.id];
-                                                return (
-                                                    <div key={card.id} className="flex items-center gap-3 rounded-lg p-2 hover:bg-secondary">
-                                                        <div className="relative h-14 w-10 shrink-0 overflow-hidden rounded bg-quaternary ring-1 ring-image ring-inset">
-                                                            {card.image_url ? (
-                                                                <CardImage src={card.image_url} alt="" sizes="40px" className="object-cover" />
-                                                            ) : null}
+                                {({ close }) => (
+                                    <div className="flex max-h-[80vh] w-full max-w-xl flex-col gap-4 rounded-2xl glass-thick p-6 shadow-xl">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <AriaHeading slot="title" className="text-lg font-semibold text-primary">
+                                                Add cards to this folder
+                                            </AriaHeading>
+                                            <CloseButton onClick={close} size="sm" className="-mt-1 -mr-1" />
+                                        </div>
+                                        <Input
+                                            aria-label="Search your cards"
+                                            icon={SearchLg}
+                                            placeholder="Search your cards…"
+                                            value={query}
+                                            onChange={setQuery}
+                                            wrapperClassName="rounded-full"
+                                        />
+                                        <div className="flex min-h-40 flex-col gap-1 overflow-y-auto">
+                                            {/* One live region, always mounted, so a screen reader hears the state change. */}
+                                            <output
+                                                aria-live="polite"
+                                                className={cx("text-center text-sm text-tertiary", searchState ? "px-1 py-6" : "sr-only")}
+                                            >
+                                                {searchState}
+                                            </output>
+                                            {!loading &&
+                                                results.map((card) => {
+                                                    const st = status[card.id];
+                                                    return (
+                                                        <div key={card.id} className="flex items-center gap-3 rounded-lg p-2 hover:bg-secondary">
+                                                            <div className="relative h-14 w-10 shrink-0 overflow-hidden rounded bg-quaternary ring-1 ring-image ring-inset">
+                                                                {card.image_url ? (
+                                                                    <CardImage src={card.image_url} alt="" sizes="40px" className="object-cover" />
+                                                                ) : null}
+                                                            </div>
+                                                            <div className="flex min-w-0 flex-1 flex-col">
+                                                                <span className="truncate text-sm font-medium text-primary">{card.name}</span>
+                                                                <span className="truncate text-xs text-tertiary">
+                                                                    {[card.set_name, card.number ? `#${card.number}` : null].filter(Boolean).join(" · ")}
+                                                                </span>
+                                                            </div>
+                                                            <Button
+                                                                size="sm"
+                                                                color={st === "done" ? "secondary" : "primary"}
+                                                                isDisabled={!!st}
+                                                                iconLeading={st === "done" ? Check : Plus}
+                                                                onClick={() => add(card)}
+                                                                // A list of buttons all named "Add" is a list of nothing to a screen reader.
+                                                                aria-label={`${addLabel(st)} ${card.name}`}
+                                                            >
+                                                                {addLabel(st)}
+                                                            </Button>
                                                         </div>
-                                                        <div className="flex min-w-0 flex-1 flex-col">
-                                                            <span className="truncate text-sm font-medium text-primary">{card.name}</span>
-                                                            <span className="truncate text-xs text-tertiary">
-                                                                {[card.set_name, card.number ? `#${card.number}` : null].filter(Boolean).join(" · ")}
-                                                            </span>
-                                                        </div>
-                                                        <Button
-                                                            size="sm"
-                                                            color={st === "done" ? "secondary" : "primary"}
-                                                            isDisabled={!!st}
-                                                            iconLeading={st === "done" ? Check : Plus}
-                                                            onClick={() => add(card)}
-                                                            // A list of buttons all named "Add" is a list of nothing to a screen reader.
-                                                            aria-label={`${addLabel(st)} ${card.name}`}
-                                                        >
-                                                            {addLabel(st)}
-                                                        </Button>
-                                                    </div>
-                                                );
-                                            })}
+                                                    );
+                                                })}
+                                        </div>
                                     </div>
-                                </div>
+                                )}
                             </Dialog>
                         </Modal>
                     </ModalOverlay>
