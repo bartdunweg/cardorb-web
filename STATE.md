@@ -297,9 +297,12 @@ From the audit of 2026-09-06 (night), still open, each one PR:
   has one). `set-card-tile.tsx:123`: a card you do not own is named in `text-quaternary`; measure
   the contrast on the off-white page, tertiary is safe. `dex-slider.tsx`: the arrows exist only on
   hover from lg, so a tablet without a mouse cannot step.
-- Six copies no source prices (Professor's Research Black Bolt ×2, Yveltal-EX XY150A, Pikachu
-  Wizards promo #1, Nidoran♀ Jungle #57, Ancient Mew ×2): a manual price field per copy, or
-  wait for pokemontcg.io, which was down most of the night.
+- Every card is priced now. Twenty-odd promos still have no Cardmarket product linked and ride on
+  TCGplayer alone (the Wizards Mewtwo, Mew, Pikachu, Electabuzz and Articuno; the Galarian birds;
+  the SM tag-team promos; Darmanitan Black Bolt 014; Fennekin MEP 080). In cardorb-api,
+  `node scripts/cardmarket-ids-fill.mjs` prints each with its candidate products and prices; pick
+  the printing by hand in `src/lib/core/cardmarket-ids.generated.json` and bump the guide-prices
+  and set-facts cache keys in `collection.ts`.
 - `text-xxs` (10 px) and `text-2xs` (11 px) are two tokens a step apart; fold the four `text-xxs`
   uses onto one or name them `3xs`/`2xs`.
 
