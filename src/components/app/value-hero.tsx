@@ -61,7 +61,7 @@ export function ValueHero({
     return (
         <section aria-labelledby="value-heading" className={cx("flex flex-col gap-4 transition-opacity duration-150", pending && "opacity-60")}>
             <div className="flex flex-col gap-1">
-                <div className="flex flex-wrap items-center gap-x-2">
+                <div className="flex items-center justify-between gap-x-2">
                     <h2 id="value-heading" className="text-sm font-semibold text-tertiary">
                         {selected === "wishlist" ? "Wishlist cost" : "Collection value"}
                     </h2>

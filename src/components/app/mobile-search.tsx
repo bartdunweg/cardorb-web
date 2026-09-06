@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Scan, SearchLg } from "@untitledui/icons";
+import { SearchLg } from "@untitledui/icons";
 import { Heading as AriaHeading } from "react-aria-components";
 import { type CardHit, searchMyCards } from "@/app/(app)/dashboard/cards/actions";
 import { listSetsShelf } from "@/app/(app)/dashboard/sets/actions";
@@ -10,7 +10,6 @@ import { CardImage } from "@/components/app/card-image";
 import { LanguageChips } from "@/components/app/language-chips";
 import { SetsShelfList } from "@/components/app/sets-shelf-list";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
-import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import type { BrowseLanguage } from "@/lib/languages";
@@ -29,17 +28,11 @@ export function MobileSearchSheet() {
                 onClick={() => setOpen(true)}
                 // The kit's Input at its lg size, as a button: the same ring, padding, type and icon as the search
                 // field on every folder page, so the two read as one control.
-                className="flex w-full pressable cursor-pointer items-center gap-2 rounded-full bg-primary py-2.5 pr-16 pl-3.5 text-md text-placeholder ring-1 ring-primary outline-focus-ring ring-inset hover:bg-secondary focus-visible:outline-2"
+                className="flex w-full pressable cursor-pointer items-center gap-2 rounded-full bg-primary py-2.5 pr-3.5 pl-3.5 text-md text-placeholder ring-1 ring-primary outline-focus-ring ring-inset hover:bg-secondary focus-visible:outline-2"
             >
                 <SearchLg className="size-5 text-fg-quaternary" />
                 <span className="flex-1 text-left">Search a card or a set</span>
             </button>
-            {/* Scan sits at the bar's right end, its own control beside the search rather than inside it
-                (a button in a button is not HTML). There is no scanner yet: the button is the place for one. */}
-            <div className="absolute top-1/2 right-1.5 -translate-y-1/2">
-                {/* The kit's button, so it reads as one: the same ring and press as every other control. */}
-                <Button color="secondary" size="sm" iconLeading={Scan} aria-label="Scan a card" isDisabled />
-            </div>
             <SlideoutMenu
                 isDismissable
                 isOpen={open}
