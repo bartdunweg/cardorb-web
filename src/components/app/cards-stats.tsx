@@ -58,15 +58,10 @@ export function CardsStats({ stats, fourth }: { stats: CardStats; fourth: ReactN
     return (
         // Two to a row on a phone, four from xl: a column of four tiles pushed the chart off the first screen.
         <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4">
-            {/* Cards owned, and how many copies that is where it is more: a hundred duplicates are
-                a fact about the collection that the card count alone does not say. */}
-            <StatCard
-                label="Owned"
-                value={count(stats.owned)}
-                detail={stats.copies > stats.owned ? `${count(stats.copies)} copies` : undefined}
-                href="/dashboard/cards"
-                delay={0}
-            />
+            {/* Every card held, a duplicate counting twice: the number of cards in the boxes, which is
+                what "owned" means to the person who owns them. The lists count printings instead — a
+                card you hold twice is one row there — so All cards can read one lower. */}
+            <StatCard label="Owned" value={count(stats.copies)} href="/dashboard/cards" delay={0} />
             <StatCard label="Wishlist" value={count(stats.wishlist)} href="/dashboard/wishlist" delay={40} />
             <StatCard label="Favorites" value={count(stats.favorites)} href="/dashboard/favorites" delay={80} />
             {fourth}

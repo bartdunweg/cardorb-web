@@ -22,26 +22,36 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
-- **2026-09-07, a collection from somewhere else.** A CSV can be imported at
-  a dialog from Settings — fullscreen on a phone — rather than a page: an import is an errand
-  you finish and leave, with no address worth sharing. An export from Dex is recognised on sight and read by its own rules; anything
-  else falls back to naming the columns yourself. Nothing is written until a preview says,
-  in words and numbers, what writing would mean. Every row is added, including cards you
-  already hold — a second copy is a normal thing to own — and how many those are is said
-  out loud, because a CSV row has no `source_id` and so the database cannot refuse the same
-  file twice. Measured on Bart's own 4,536-row export: 2,097 added, 93 of them cards he
-  already had, 2,439 checklist rows left alone. Most of the work was
-  cardorb-api#230 — the route only accepted a cookie, so it answered 401 to this app; the
-  file is UTF-16 with semicolons; `Quantity 0` meant "not owned" and was being read as
-  owned; `48/108` matched no card. That PR also fixed three set names that resolved to the
-  *wrong* set silently ("Sword & Shield Promos" found the base set), which was hurting reads,
-  not only imports. Web-side: `readCsv` sniffs the byte order mark, `ApiError` keeps the
-  failing body (the 400 carries the header row), and one call may outlive the 30 s timeout.
-  The kit's file-upload drop zone was vendored, trimmed to the drop zone alone — dropping
-  `motion` and `@untitledui/file-icons` with the file list — and given the focus ring it
-  shipped without. Every one of the 2,097 rows finds its card in the catalogue: measured
-  row by row, which is what turned up three set names resolving to the *wrong* set and an
-  EX Trainer Kit the catalogue files under its deck's Pokémon.
+- **2026-09-07, a collection from somewhere else.** A CSV can be imported from Settings — a
+  dialog, fullscreen on a phone, rather than a page: an import is an errand you finish and
+  leave, with no address worth sharing. An export from Dex is recognised on sight and read by
+  its own rules; anything else falls back to naming the columns yourself. Nothing is written
+  until a preview says, in words and numbers, what writing would mean. Every row is added,
+  including cards you already hold — a second copy is a normal thing to own — and how many
+  those are is said out loud, because a CSV row has no `source_id` and so the database cannot
+  refuse the same file twice. Measured on Bart's own 4,536-row export: 2,097 added, 93 of them
+  cards he already had, 2,439 rows that are other *printings* of cards he has, left alone.
+  Most of the work was cardorb-api#230 — the route only accepted a cookie, so it answered 401
+  to this app; the file is UTF-16 with semicolons; `Quantity 0` was being read as owned;
+  `48/108` matched no card. That PR also fixed three set names that resolved to the *wrong*
+  set silently ("Sword & Shield Promos" found the base set), which was hurting reads, not only
+  imports; every one of the 2,097 rows now finds its card in the catalogue, measured row by
+  row. cardorb-api#234 splits what a copy is *worth* (`finish`, a price key) from what it
+  *looks like* (`foil_pattern`) — the question Bart asked when a Cosmos Holo arrived as a plain
+  holo. Web-side: `readCsv` sniffs the byte order mark, `ApiError` keeps the failing body (the
+  400 carries the header row), and one call may outlive the 30 s timeout. The kit's file-upload
+  drop zone was vendored, trimmed to the drop zone alone — dropping `motion` and
+  `@untitledui/file-icons` with the file list — and given the focus ring it shipped without.
+- **2026-09-07, measuring before building.** A note field was built because the API took notes
+  and the sheet displayed them, then taken out the same day: not one of the 1,951 rows carries
+  a note. The lesson is written down here because it cost a day's PR either way — the list of
+  API fields nothing reads is a list of what is *possible*, and a field's fill rate is one query.
+  Owned counts cards held rather than printings (1,929 against All cards' 1,928), the owner's
+  own call. The public profile's Latest pull block went the same way: the list opens on the
+  newest card instead. Then the matching bug behind it all: 132 of 1,929 owned rows were
+  invisible to the catalogue join because "Set 1 Unlimited" and "Scarlet & Violet Base" have no
+  counterpart in pokemontcg.io's vocabulary (cardorb-api #231). Browse went from "Base 0 of
+  102" to "101 of 102" and Scarlet & Violet from 0 to 30 of 258.
 - **2026-09-07, the API's own data.** Four filters instead of two: the card list narrows to one
   generation or one energy type, both from the facets the list read already carries
   (`gen`/`type` in the URL, cardorb-api #226 for the query and the facets). The card sheet's
@@ -53,9 +63,11 @@ which also says what is already yours), Settings (avatar through the API), publi
   Then the notes and the flag: a copy's note is written where it is read (the sheet's Details
   tab, saved on a button) and travels with a split copy; a copy can be kept off the public page
   from the card's menu (`excluded`, answered by `GET /v1/cards` since cardorb-api #227, held in
-  the sheet's own state as the star is). The kit's `textarea` is vendored for both. Home's Owned
-  tile says how many copies that is where it is more than the cards, and a card in the Add
-  dialog says whether you already hold it and how many. No Sets tile: Browse says on purpose
+  the sheet's own state as the star is). A note field was built and taken out the same day: not
+  one of the 1,951 rows carries a note, so a writable field answered a question nobody had asked.
+  Notes stay readable where there is one, as before. A card in the Add
+  dialog says whether you already hold it and how many. Owned counts the cards held, a duplicate
+  twice (1,929 here); the lists count printings, so All cards reads one lower. No Sets tile: Browse says on purpose
   that how far the shelf is comes per set, not as one number over all of them. Settings answers
   whether a username is free while it is typed (`GET /v1/usernames/{name}`), and the public
   address under the toggle names the saved username rather than the field. A public profile
