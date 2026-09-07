@@ -174,7 +174,11 @@ export const InputBase = ({
                     onClick={() => setIsPasswordVisible(!isPasswordVisible)}
                     className={cx(
                         // min 24px box for the hit area (WCAG 2.5.8); the icon inside keeps its size.
-                        "absolute flex min-h-6 min-w-6 cursor-pointer items-center justify-center text-fg-quaternary transition duration-100 ease-linear hover:text-fg-quaternary_hover focus:text-fg-quaternary_hover focus:outline-hidden",
+                        // focus-visible, not focus, and a ring rather than nothing: `focus:outline-hidden` hid
+                        // the browser's own outline and put nothing in its place, so tabbing to this
+                        // button showed no indicator at all — measured, WCAG 2.4.7. Offset 1 rather
+                        // than the app's usual 2: it sits inside the field, whose own ring is 2px out.
+                        "absolute flex min-h-6 min-w-6 cursor-pointer items-center justify-center rounded-sm text-fg-quaternary outline-focus-ring transition duration-100 ease-linear hover:text-fg-quaternary_hover focus:text-fg-quaternary_hover focus-visible:outline-2 focus-visible:outline-offset-1",
                         sizes[inputSize].iconTrailing,
                     )}
                 >
