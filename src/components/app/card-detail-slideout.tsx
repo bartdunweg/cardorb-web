@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import {
     type CardFacts,
-    addCopy,
     cardFacts,
     listCopies,
     removeCard,
@@ -97,22 +96,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     };
     // A new copy as a row of its own, made like the row shown, pulled today; the sheet moves to
     // it so what differs can be set at once.
-    const addRow = async () => {
-        if (!mine || !card) return;
-        setBusy(true);
-        setMenuError(null);
-        const res = await addCopy(mine.id, {}, 1);
-        setBusy(false);
-        if (!res.ok) {
-            setMenuError(res.error);
-            return;
-        }
-        const rows = sortCopies(await listCopies(mine));
-        setCopiesState({ of: copiesKey(mine), rows });
-        const made = "id" in res ? rows.find((r) => r.id === res.id) : undefined;
-        if (made) setViewing({ of: card.id, row: made });
-        router.refresh();
-    };
     const [collections, setCollections] = useState<FolderChoice[]>([]);
     const [facets, setFacets] = useState<Facets | undefined>(undefined);
     const [collectionId, setCollectionId] = useState<string>("");
@@ -458,24 +441,34 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                     padding the card tilts in. */}
                                 {onPrev || onNext ? (
                                     <div className="pointer-events-none absolute inset-x-3 top-24 bottom-6 z-10 flex items-center justify-between">
-                                        <Button
-                                            color="tertiary"
-                                            size="lg"
-                                            iconLeading={ChevronLeft}
-                                            aria-label="Previous card"
-                                            isDisabled={!onPrev}
-                                            className="pointer-events-auto glass text-primary ring-1 ring-glass ring-inset"
-                                            onClick={() => onPrev?.()}
-                                        />
-                                        <Button
-                                            color="tertiary"
-                                            size="lg"
-                                            iconLeading={ChevronRight}
-                                            aria-label="Next card"
-                                            isDisabled={!onNext}
-                                            className="pointer-events-auto glass text-primary ring-1 ring-glass ring-inset"
-                                            onClick={() => onNext?.()}
-                                        />
+                                        {/* Not drawn rather than drawn dead. At the first or last card of a list a
+                                            greyed arrow is a button asking to be pressed and then refusing, and it
+                                            sits over the card while it does it. The empty span holds the other
+                                            arrow's side, so a lone Next stays on the right where it belongs. */}
+                                        {onPrev ? (
+                                            <Button
+                                                color="tertiary"
+                                                size="lg"
+                                                iconLeading={ChevronLeft}
+                                                aria-label="Previous card"
+                                                className="pointer-events-auto glass text-primary ring-1 ring-glass ring-inset"
+                                                onClick={() => onPrev()}
+                                            />
+                                        ) : (
+                                            <span />
+                                        )}
+                                        {onNext ? (
+                                            <Button
+                                                color="tertiary"
+                                                size="lg"
+                                                iconLeading={ChevronRight}
+                                                aria-label="Next card"
+                                                className="pointer-events-auto glass text-primary ring-1 ring-glass ring-inset"
+                                                onClick={() => onNext()}
+                                            />
+                                        ) : (
+                                            <span />
+                                        )}
                                     </div>
                                 ) : null}
                                 {card?.image_url ? (
@@ -531,7 +524,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                 hold yet. The form asks what the copy is like as it arrives. */}
                             {!readOnly && mine?.wishlist ? (
                                 <MarkOwnedDialog card={mine} folders={collections} languages={known?.languages} facts={known} onSaved={onClose}>
-                                    <Button size="md" iconTrailing={ArrowRight} className="mt-3 self-start">
+                                    <Button size="md" iconTrailing={ArrowRight} className="mt-3 w-full">
                                         Mark as owned
                                     </Button>
                                 </MarkOwnedDialog>
@@ -849,14 +842,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                         </ul>
                                                     </div>
                                                 ) : null}
-                                                {/* At the foot: a new copy is a row of its own, made like this one and shown at once, so
-                                                its language, condition or folder is set right here. One is different… moves some of
-                                                a row's copies to their own row. */}
-                                                <div className="flex flex-wrap gap-2 border-t border-secondary pt-4">
-                                                    <Button size="sm" color="secondary" iconLeading={Plus} isDisabled={busy} onClick={() => void addRow()}>
-                                                        Add a copy
-                                                    </Button>
-                                                    {shownCopies > 1 ? (
+                                                {/* One is different… stays inside the card, because it acts on the copy the card
+                                                is showing: it moves some of this row's copies onto a row of their own. */}
+                                                {shownCopies > 1 ? (
+                                                    <div className="flex flex-wrap gap-2 border-t border-secondary pt-4">
                                                         <CopyFormDialog
                                                             mode="split"
                                                             languages={known?.languages}
@@ -869,9 +858,27 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                                 One is different…
                                                             </Button>
                                                         </CopyFormDialog>
-                                                    ) : null}
-                                                </div>
+                                                    </div>
+                                                ) : null}
                                             </div>
+                                        ) : null}
+                                        {/* Under the card, not in it. Adding a copy makes a new row beside the ones listed
+                                            above — it is not something you do to the copy the card happens to be showing,
+                                            and sitting in that card's foot said it was. Full width, because it is the one
+                                            thing this tab is for once you have read the list. */}
+                                        {mine?.owned ? (
+                                            <CopyFormDialog
+                                                mode="add"
+                                                languages={known?.languages}
+                                                facts={known}
+                                                from={mine}
+                                                folders={collections}
+                                                onSaved={() => void reloadCopies()}
+                                            >
+                                                <Button size="md" color="secondary" iconLeading={Plus} className="w-full">
+                                                    Add a copy
+                                                </Button>
+                                            </CopyFormDialog>
                                         ) : null}
                                     </TabPanel>
                                 ) : null}

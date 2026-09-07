@@ -97,7 +97,11 @@ export const styles = sortCx({
         },
         "secondary-destructive": {
             root: [
-                "bg-primary text-error-primary ring-1 ring-error_subtle outline-error ring-inset hover:bg-error-primary hover:text-error-primary_hover data-loading:bg-error-primary",
+                // The same grey edge as `secondary`, not a red one. A bordered button in this app is
+                // a shape you recognise before you read it, and a second border colour made the
+                // shape itself carry the warning — so a delete button shouted from across the page
+                // while the word on it was doing that job already. The red is the label's.
+                "bg-primary text-error-primary ring-1 ring-primary outline-error ring-inset hover:bg-error-primary hover:text-error-primary_hover data-loading:bg-error-primary",
                 // Icon styles
             ].join(" "),
         },
