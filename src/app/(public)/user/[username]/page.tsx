@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppEmptyState } from "@/components/app/app-empty-state";
-import { CardImage } from "@/components/app/card-image";
 import { DashboardLink } from "@/components/app/dashboard-link";
 import { FolderBody } from "@/components/app/folder-body";
 import { LinkButton } from "@/components/app/link-button";
@@ -10,11 +9,10 @@ import { Avatar } from "@/components/base/avatar/avatar";
 import { type DexList, groupByDex } from "@/lib/dex-groups";
 import { datapointsLine } from "@/lib/folder-datapoints";
 import { DEFAULT_POKEDEX } from "@/lib/folder-rule";
-import { formatDate } from "@/lib/format";
-import { type ListSearchParams, PUBLIC_SORT_OPTIONS, isNarrowed, listHref, readPublicListQuery } from "@/lib/list-query";
+import { type ListSearchParams, PUBLIC_DEFAULT_SORT, PUBLIC_SORT_OPTIONS, isNarrowed, listHref, readPublicListQuery } from "@/lib/list-query";
 import { getDexNames } from "@/lib/pokedex";
 import { getViewer } from "@/lib/profile";
-import { PUBLIC_PAGE_SIZE, countPublicCards, getAllPublicCards, getLatestPull, getPublicCards, getPublicFolders, getPublicProfile } from "@/lib/public-profile";
+import { PUBLIC_PAGE_SIZE, countPublicCards, getAllPublicCards, getPublicCards, getPublicFolders, getPublicProfile } from "@/lib/public-profile";
 
 type Params = { params: Promise<{ username: string }>; searchParams: Promise<ListSearchParams> };
 
@@ -67,15 +65,13 @@ export default async function PublicProfilePage({ params, searchParams }: Params
             : null;
     // The paged read for every list, the Pokédex too: its first page carries the count and the facets
     // at once, while the slots' own read of every card streams in behind the row.
-    const [{ cards, total, facets }, folders, viewer, owned, wishes, latest] = await Promise.all([
+    const [{ cards, total, facets }, folders, viewer, owned, wishes] = await Promise.all([
         getPublicCards(decodeURIComponent(username), query),
         getPublicFolders(decodeURIComponent(username)),
         getViewer(),
         // The line under the name counts the whole collection and the wishlist, whatever list is open.
         countPublicCards(decodeURIComponent(username)),
         profile.wishlist_public ? countPublicCards(decodeURIComponent(username), "wishlist") : Promise.resolve(null),
-        // The newest card, over the whole collection: it belongs to the person, not to the list open.
-        getLatestPull(decodeURIComponent(username)),
     ]);
     // A folder in the URL that the owner does not show: the API answered the whole list; the chips say so too.
     const folder = folders.find((f) => f.id === query.folder) ?? null;
@@ -115,27 +111,6 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                     </div>
                 </div>
 
-                {/* The newest card, when there is one and nothing narrows the page: a profile opens on
-                    what somebody pulled last, the way a feed opens on the latest post. Out of the way
-                    of a search, which is a question about the whole collection rather than about today. */}
-                {latest && !narrowed && !query.folder && !query.list ? (
-                    <section
-                        aria-label="Latest pull"
-                        className="mx-auto flex w-full max-w-md arrive items-center gap-4 rounded-xl bg-primary p-3 shadow-lift-xs ring-1 ring-primary ring-inset"
-                    >
-                        <div className="relative aspect-card w-16 shrink-0 overflow-hidden rounded-card">
-                            {latest.image_url ? <CardImage src={latest.image_url} alt="" width={96} className="object-cover" /> : null}
-                        </div>
-                        <div className="flex min-w-0 flex-col gap-0.5">
-                            <span className="text-xs font-semibold text-tertiary uppercase">Latest pull</span>
-                            <span className="truncate text-sm font-medium text-primary">{latest.name}</span>
-                            <span className="truncate text-xs text-tertiary">
-                                {[latest.set_name, latest.number ? `#${latest.number}` : null, formatDate(latest.acquired_at)].filter(Boolean).join(" · ")}
-                            </span>
-                        </div>
-                    </section>
-                ) : null}
-
                 {folders.length > 0 || profile.wishlist_public || profile.favorites_public || profile.pokedex_public ? (
                     // The folders the owner shows, as chips that narrow the list; All cards first. A chip is a link,
                     // so a folder is a URL that can be shared, and the row keeps its place through a search.
@@ -147,7 +122,7 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                                 // every other control, in both themes.
                                 <LinkButton
                                     key={f.id ?? "all"}
-                                    href={listHref(base, query, { folder: f.id ?? undefined, list: undefined, page: 1 })}
+                                    href={listHref(base, query, { folder: f.id ?? undefined, list: undefined, page: 1 }, PUBLIC_DEFAULT_SORT)}
                                     size="sm"
                                     color={current ? "primary" : "secondary"}
                                     aria-current={current ? "page" : undefined}
@@ -170,7 +145,7 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                             .map(([id, label]) => (
                                 <LinkButton
                                     key={id}
-                                    href={listHref(base, query, { folder: undefined, list: id, page: 1 })}
+                                    href={listHref(base, query, { folder: undefined, list: id, page: 1 }, PUBLIC_DEFAULT_SORT)}
                                     size="sm"
                                     color={query.list === id ? "primary" : "secondary"}
                                     aria-current={query.list === id ? "page" : undefined}
@@ -188,6 +163,7 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                         basePath={base}
                         facets={facets}
                         sortOptions={PUBLIC_SORT_OPTIONS}
+                        defaultSortKey={PUBLIC_DEFAULT_SORT}
                         searchLabel="Search this collection"
                         searchPlaceholder="Search this collection"
                         pokedex={{ dex }}
@@ -200,6 +176,7 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                         basePath={base}
                         facets={facets}
                         sortOptions={PUBLIC_SORT_OPTIONS}
+                        defaultSortKey={PUBLIC_DEFAULT_SORT}
                         searchLabel="Search this collection"
                         searchPlaceholder="Search this collection"
                         cards={cards}

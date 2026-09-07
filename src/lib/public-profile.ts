@@ -1,5 +1,5 @@
 import { ApiError, api } from "@/lib/api";
-import { type PublicCard, type PublicItem, absoluteImage, publicCardFromItem } from "@/lib/api-shapes";
+import { type PublicCard, type PublicItem, publicCardFromItem } from "@/lib/api-shapes";
 import type { Facets } from "@/lib/cards";
 import type { PokedexSetting } from "@/lib/folder-rule";
 import type { ListQuery } from "@/lib/list-query";
@@ -40,40 +40,6 @@ export async function getPublicProfile(username: string): Promise<PublicProfile 
     } catch (err) {
         if (err instanceof ApiError && err.status === 404) return null;
         throw err;
-    }
-}
-
-/** The newest card the owner added and dated, for the line at the top of their page. */
-export type LatestPull = {
-    name: string;
-    number: string;
-    set_name: string;
-    rarity: string | null;
-    image_url: string | null;
-    acquired_at: string;
-};
-
-/**
- * The most recent addition, or null when there is none to show.
- *
- * Decoration on somebody else's page: a 404 (nothing dated yet) and a failure both mean the line
- * stays out, rather than a profile that will not render because one extra read went wrong.
- */
-export async function getLatestPull(username: string): Promise<LatestPull | null> {
-    try {
-        const { latestPull: p } = await api<{
-            latestPull: { name: string; number: string; setTitle: string; setName: string; rarity: string | null; image: string | null; acquiredAt: string };
-        }>(`/public/${encodeURIComponent(username)}/latest-pull`, { auth: false });
-        return {
-            name: p.name,
-            number: p.number,
-            set_name: p.setTitle || p.setName,
-            rarity: p.rarity,
-            image_url: absoluteImage(p.image),
-            acquired_at: p.acquiredAt,
-        };
-    } catch {
-        return null;
     }
 }
 

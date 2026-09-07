@@ -44,8 +44,15 @@ describe("set and rarity", () => {
 });
 
 describe("readPublicListQuery", () => {
-    it("keeps name order and drops a price or date sort back to set order", () => {
+    it("opens on the newest card, and keeps the orders a public list can do", () => {
+        // A bare URL is newest first: a profile opens on what its owner pulled last.
+        expect(readPublicListQuery({})).toMatchObject({ sortKey: "added-desc", sort: "added", order: "desc" });
         expect(readPublicListQuery({ sort: "name", q: "mew" })).toMatchObject({ sortKey: "name", sort: "name", q: "mew" });
-        expect(readPublicListQuery({ sort: "added-desc", set: "jungle" })).toMatchObject({ sortKey: "set", sort: undefined, order: undefined, set: "jungle" });
+        expect(readPublicListQuery({ sort: "set", set: "jungle" })).toMatchObject({ sortKey: "set", sort: undefined, order: undefined, set: "jungle" });
+    });
+
+    it("drops a sort the public route refuses back to the newest", () => {
+        expect(readPublicListQuery({ sort: "price-desc" })).toMatchObject({ sortKey: "added-desc", sort: "added", order: "desc" });
+        expect(readPublicListQuery({ sort: "dex" })).toMatchObject({ sortKey: "added-desc", sort: "added", order: "desc" });
     });
 });

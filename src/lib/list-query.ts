@@ -17,8 +17,8 @@ export const SORT_OPTIONS = [
 export type SortKey = (typeof SORT_OPTIONS)[number]["value"];
 export type SortOption = (typeof SORT_OPTIONS)[number];
 
-/** What a public collection can be sorted by: it carries no price and no date. */
-export const PUBLIC_SORT_OPTIONS = SORT_OPTIONS.filter((o) => o.sort === undefined || o.sort === "name");
+/** What a public collection can be sorted by: it carries no price, and its dates stay with the owner. */
+export const PUBLIC_SORT_OPTIONS = SORT_OPTIONS.filter((o) => o.sort === undefined || o.sort === "name" || o.value === "added-desc");
 export type ApiSort = "name" | "price" | "added" | "dex";
 export type ApiOrder = "asc" | "desc";
 
@@ -87,10 +87,20 @@ export function readListQuery(params: ListSearchParams): ListQuery {
     };
 }
 
-/** A public list's URL: as the owner's, except a sort the public route refuses falls back to set order. */
+/**
+ * A profile opens on what its owner pulled last, so a public list with no sort in its URL is
+ * newest first; the sort menu still offers set order and by name, and either goes in the URL.
+ */
+export const PUBLIC_DEFAULT_SORT: SortKey = "added-desc";
+
+/** A public list's URL: as the owner's, except a sort the public route refuses falls back to the default. */
 export function readPublicListQuery(params: Parameters<typeof readListQuery>[0]): ListQuery {
-    const query = readListQuery(params);
-    return PUBLIC_SORT_OPTIONS.some((o) => o.value === query.sortKey) ? query : { ...query, sortKey: "set", sort: undefined, order: undefined };
+    const asked = isSortKey(params.sort) ? params.sort : PUBLIC_DEFAULT_SORT;
+    const option = SORT_OPTIONS.find((o) => o.value === asked)!;
+    const query = { ...readListQuery(params), sortKey: asked, sort: option.sort, order: option.order };
+    if (PUBLIC_SORT_OPTIONS.some((o) => o.value === asked)) return query;
+    const fallback = SORT_OPTIONS.find((o) => o.value === PUBLIC_DEFAULT_SORT)!;
+    return { ...query, sortKey: PUBLIC_DEFAULT_SORT, sort: fallback.sort, order: fallback.order };
 }
 
 /** The same list with some of it changed; defaults stay out of the URL so the plain path stays plain. */
@@ -98,6 +108,8 @@ export function listHref(
     pathname: string,
     current: ListQuery,
     patch: Partial<Pick<ListQuery, "page" | "sortKey" | "q" | "set" | "rarity" | "gen" | "type" | "folder" | "list" | "unpriced">>,
+    /** The sort this page reads a bare URL as; anything else is written into it. */
+    defaultSortKey: SortKey = "set",
 ): string {
     const q = "q" in patch ? patch.q : current.q;
     const set = "set" in patch ? patch.set : current.set;
@@ -111,7 +123,7 @@ export function listHref(
     const page = patch.page ?? current.page;
     const p = new URLSearchParams();
     if (q) p.set("q", q);
-    if (sortKey !== "set") p.set("sort", sortKey);
+    if (sortKey !== defaultSortKey) p.set("sort", sortKey);
     if (set) p.set("set", set);
     if (rarity) p.set("rarity", rarity);
     if (gen) p.set("gen", gen);

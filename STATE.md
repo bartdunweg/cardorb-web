@@ -39,8 +39,11 @@ which also says what is already yours), Settings (avatar through the API), publi
   that how far the shelf is comes per set, not as one number over all of them. Settings answers
   whether a username is free while it is typed (`GET /v1/usernames/{name}`), and the public
   address under the toggle names the saved username rather than the field. A public profile
-  opens on the newest card its owner added (`GET /v1/public/{username}/latest-pull`), out of the
-  way of a search or a folder.
+  opens on the newest card its owner added: not as a block above the list (that was tried and
+  taken out the same evening) but as the list's own order — `sort=added` on the public route,
+  built newest-first by `publicItems()` so the dates stay off the wire (cardorb-api #228, #229).
+  A bare `/user/<name>` means newest first; the sort menu still offers set order and by name,
+  and `listHref` takes the page's own default so only the others reach the URL.
 - **2026-09-06, later the same evening.** The phone's page title sits on the bar's line beside its
   buttons where there is no Back (All cards, Wishlist, Collections); the tab bar and the sidebar
   read Home, Wishlist, All cards, then Collections / Browse; the card in its sheet starts under

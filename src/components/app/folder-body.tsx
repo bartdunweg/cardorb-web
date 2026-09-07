@@ -13,10 +13,12 @@ import { PublicCardsView } from "@/components/app/public-cards-view";
 import type { CardFilter, CardList, Facets, PublicCard } from "@/lib/cards";
 import { CARDS_SIZE_COOKIE, CARDS_VIEW_COOKIE, parseCardsSize, parseCardsView } from "@/lib/cards-view";
 import type { DexList } from "@/lib/dex-groups";
-import { type ListQuery, SORT_OPTIONS, type SortOption, isNarrowed, listHref } from "@/lib/list-query";
+import { type ListQuery, SORT_OPTIONS, type SortKey, type SortOption, isNarrowed, listHref } from "@/lib/list-query";
 
 type Common = {
     query: ListQuery;
+    /** The sort a bare URL means here: set order on your own lists, newest first on a public profile. */
+    defaultSortKey?: SortKey;
     /** Where the list lives, for page links. */
     basePath: string;
     /** The sets and rarities for the Filters sheet; a promise when they come with the list itself. */
@@ -49,7 +51,7 @@ export type FolderBodyProps = PublicBody | OwnBody;
 // and the View menu, then the list, or an empty state. The same on All cards, a folder, the
 // favorites, the wishlist and a public profile, so a person learns the row once.
 export async function FolderBody(props: FolderBodyProps) {
-    const { query, basePath, facets, sortOptions = SORT_OPTIONS, searchLabel, searchPlaceholder, empty } = props;
+    const { query, basePath, facets, sortOptions = SORT_OPTIONS, defaultSortKey = "set", searchLabel, searchPlaceholder, empty } = props;
     const narrowed = isNarrowed(query);
     const { q } = query;
 
@@ -76,7 +78,7 @@ export async function FolderBody(props: FolderBodyProps) {
                     <FiltersWhenReady query={query} facets={facets} />
                 </Suspense>
             </FiltersSheet>
-            <CardsSort key="sort" query={query} options={sortOptions} />
+            <CardsSort key="sort" query={query} options={sortOptions} defaultSortKey={defaultSortKey} />
         </>
     );
 
@@ -116,7 +118,9 @@ export async function FolderBody(props: FolderBodyProps) {
         return (
             <div className="flex flex-1 flex-col gap-4">
                 <PublicCardsView cards={cards} initialSize={size} toolbar={toolbar} empty={total === 0 ? noHits : null} />
-                {total > 0 ? <CardsPagination page={query.page} totalPages={totalPages} hrefFor={(n) => listHref(basePath, query, { page: n })} /> : null}
+                {total > 0 ? (
+                    <CardsPagination page={query.page} totalPages={totalPages} hrefFor={(n) => listHref(basePath, query, { page: n }, defaultSortKey)} />
+                ) : null}
             </div>
         );
     }
