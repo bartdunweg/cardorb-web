@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
+import { BarChart01 } from "@untitledui/icons";
 import { formatPrice } from "@/lib/format";
 import { type Frame, areaPath, linePath, nearestIndex, niceTicks, pointsFor } from "@/lib/value-chart-math";
 import type { ValueSnapshot } from "@/lib/value-history";
@@ -62,12 +63,18 @@ export function ValueChart({
     }, []);
 
     if (snapshots.length < 2) {
+        /* The height the line would have taken, and an icon over the sentence. A chart that
+           collapses to one line of text reads as a chart that failed to load, which is the wrong
+           thing to say about a card that simply has not been priced twice yet. */
         return (
-            <p className="flex items-center text-sm text-tertiary" style={{ minHeight: HEIGHT }}>
-                {snapshots.length === 0
-                    ? "No readings in this period yet; the line starts once there are two."
-                    : `One reading so far, ${formatPrice(snapshots[0].value)} on ${dayYear.format(dateOf(snapshots[0]))}. The line starts tomorrow.`}
-            </p>
+            <div className="flex flex-col items-center justify-center gap-2 text-center" style={{ minHeight: HEIGHT }}>
+                <BarChart01 aria-hidden="true" className="size-5 text-fg-quaternary" />
+                <p className="text-sm text-tertiary">
+                    {snapshots.length === 0
+                        ? "No readings in this period yet; the line starts once there are two."
+                        : `One reading so far, ${formatPrice(snapshots[0].value)} on ${dayYear.format(dateOf(snapshots[0]))}. The line starts tomorrow.`}
+                </p>
+            </div>
         );
     }
 
