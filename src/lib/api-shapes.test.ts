@@ -132,6 +132,8 @@ describe("pokemonCardFromBrowse", () => {
             wishlist: false,
             quantity: 1,
             itemIds: ["row"],
+            price: null,
+            priceHolo: null,
         });
         expect(c).toMatchObject({ set: "Scarlet & Violet", types: null, hp: null, owned: true });
     });
@@ -201,6 +203,8 @@ describe("setCardFromBrowse", () => {
                 wishlist: false,
                 quantity: 2,
                 itemIds: ["row"],
+                price: null,
+                priceHolo: null,
             }),
         ).toEqual({
             id: "sv1-1",
@@ -210,10 +214,12 @@ describe("setCardFromBrowse", () => {
             rarity: "Common",
             types: ["Grass"],
             imageUrl: "https://api.cardorb.com/p.png",
+            imageHighUrl: null,
             owned: true,
             wishlist: false,
             quantity: 2,
             itemIds: ["row"],
+            price: null,
         });
     });
 });
@@ -228,10 +234,12 @@ describe("pokemonCardFromSetCard", () => {
             rarity: null,
             types: [],
             imageUrl: null,
+            imageHighUrl: null,
             owned: false,
             wishlist: false,
             quantity: 0,
             itemIds: [],
+            price: null,
         });
         expect(card).toMatchObject({ id: "sv1-1", name: "Sprigatito", set: "Scarlet & Violet", number: "1", rarity: null, types: null, owned: false });
     });

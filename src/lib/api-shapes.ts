@@ -394,11 +394,15 @@ export type SetCard = {
     rarity: string | null;
     types: string[];
     imageUrl: string | null;
+    /** The larger scan, so a set tile is as sharp as the same card on any other overview. */
+    imageHighUrl: string | null;
     owned: boolean;
     wishlist: boolean;
     quantity: number;
     /** Every collection row this card matched: owned copies and wishes alike. */
     itemIds: string[];
+    /** One number, the way a tile shows it: null where Cardmarket does not price the card. */
+    price: number | null;
 };
 
 export const setCardFromBrowse = (c: BrowseCard): SetCard => ({
@@ -409,10 +413,13 @@ export const setCardFromBrowse = (c: BrowseCard): SetCard => ({
     rarity: c.rarity,
     types: c.types,
     imageUrl: absoluteImage(c.image),
+    imageHighUrl: absoluteImage(c.imageHigh),
     owned: c.owned,
     wishlist: c.wishlist,
     quantity: c.quantity,
     itemIds: c.itemIds,
+    // The same rule the collection uses, so one card does not carry two prices across two screens.
+    price: priceForCopy({ finish: null, price: c.price, priceHolo: c.priceHolo }),
 });
 
 /** The shape the add action takes, from a set tile. */
@@ -454,6 +461,10 @@ export const browseCardSchema = z.object({
     wishlist: z.boolean(),
     quantity: z.number(),
     itemIds: z.array(z.string()),
+    /* What the card costs, on the routes that price it — the set page. Absent from search, where
+       the answer is a name to pick rather than a shelf to read. */
+    price: nullable(apiPriceSchema),
+    priceHolo: nullable(apiPriceSchema),
 });
 export type BrowseCard = z.infer<typeof browseCardSchema>;
 
