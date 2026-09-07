@@ -58,7 +58,7 @@ export function SheetDialog({
                              * add-card-modal already draw; a sheet keeps only its top corners and
                              * clears the home indicator.
                              */
-                            <div className="flex max-h-[85dvh] w-full flex-col overflow-y-auto rounded-2xl glass-thick shadow-xl max-sm:max-h-[85dvh] max-sm:rounded-b-none max-sm:pb-[env(safe-area-inset-bottom)]">
+                            <div className="flex max-h-[85dvh] w-full flex-col overflow-y-auto rounded-2xl glass-thick shadow-xl max-sm:max-h-[85dvh] max-sm:rounded-b-none max-sm:pb-safe">
                                 {content(close)}
                             </div>
                         )}
