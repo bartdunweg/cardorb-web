@@ -754,7 +754,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                                     value={shownLanguage}
                                                                     onChange={(code) => void pickLanguage(code)}
                                                                     printed={known?.languages}
-                                                                    inside={false}
+                                                                    // A detail row, not a form field: it sits against the right edge
+                                                                    // beside its label rather than filling the sheet.
+                                                                    className="w-44"
                                                                 />
                                                             }
                                                         />
