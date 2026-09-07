@@ -19,6 +19,37 @@ const rank = (c: Card) =>
 /** English first, then by language, finish, condition and grade, so a list of copies reads the same twice. */
 export const sortCopies = (rows: Card[]) => [...rows].sort((a, b) => rank(a).localeCompare(rank(b)));
 
+/**
+ * Everything that makes one copy different from another. Two rows agreeing on all of it are the
+ * same copy twice, whatever the database happens to have stored them as.
+ */
+const sameness = (c: Card) => [rank(c), c.collection_id ?? ""].join("|");
+
+/**
+ * Copies as a person counts them: one line per kind, with how many of it there are.
+ *
+ * The rows are one per purchase, and nothing ever merged them — so four identical Holo · Near
+ * Mint copies were four lines reading "€2.81 ×1", four times, which says nothing four times.
+ * They are one line of ×4. A line keeps the rows behind it, because removing it has to remove
+ * all of them and the quantity has to be the sum rather than the first row's.
+ */
+export type CopyGroup = { key: string; shown: Card; rows: Card[]; quantity: number };
+
+export const groupCopies = (rows: Card[]): CopyGroup[] => {
+    const groups = new Map<string, CopyGroup>();
+    for (const row of sortCopies(rows)) {
+        const key = sameness(row);
+        const found = groups.get(key);
+        if (found) {
+            found.rows.push(row);
+            found.quantity += row.quantity ?? 1;
+        } else {
+            groups.set(key, { key, shown: row, rows: [row], quantity: row.quantity ?? 1 });
+        }
+    }
+    return [...groups.values()];
+};
+
 /** What a copy may differ in from the row it comes from. */
 export const copyEdits = z
     .object({
