@@ -8,7 +8,7 @@ import { formatPrice } from "@/lib/format";
 
 // Presentational table on the kit's Table. A row is the action: press or Enter opens the card;
 // selection (and the detail slideout) is owned by CardsView.
-export function CardsTable({ cards, onSelect }: { cards: Card[]; onSelect: (card: Card) => void }) {
+export function CardsTable({ cards, onSelect }: { cards: Card[]; onSelect: (card: Card, siblings: Card[]) => void }) {
     const byId = new Map(cards.map((card) => [card.id, card]));
 
     return (
@@ -17,7 +17,7 @@ export function CardsTable({ cards, onSelect }: { cards: Card[]; onSelect: (card
                 aria-label="Cards"
                 onRowAction={(key) => {
                     const card = byId.get(String(key));
-                    if (card) onSelect(card);
+                    if (card) onSelect(card, cards);
                 }}
             >
                 <Table.Header>

@@ -1,7 +1,7 @@
 "use client";
 
 import type { FC } from "react";
-import { Dataflow03, Folder, Grid01, Plus, Star01 } from "@untitledui/icons";
+import { Folder, Plus, Star01 } from "@untitledui/icons";
 import Link from "next/link";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderDialog } from "@/components/app/folder-dialog";
@@ -59,13 +59,15 @@ export function CollectionsGrid({ collections, favoritesCount }: { collections: 
                     <FolderCard href="/dashboard/favorites" icon={Star01} name="Favorites" count={favoritesCount} />
                 </div>
                 <div className="arrive" style={{ "--arrive-delay": "20ms" } as React.CSSProperties}>
-                    <FolderCard href="/dashboard/pokedex" icon={Grid01} name="Pokédex" detail="Cards by Pokémon" />
+                    {/* A folder like the ones beside it; see the note in app-sidebar.tsx. */}
+                    <FolderCard href="/dashboard/pokedex" icon={Folder} name="Pokédex" detail="Cards by Pokémon" />
                 </div>
                 {collections.map((c, i) => (
                     <div key={c.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i + 2, 8) * 20}ms` } as React.CSSProperties}>
                         <FolderCard
                             href={`/dashboard/collections/${c.id}`}
-                            icon={c.kind === "rule" ? Dataflow03 : Folder}
+                            // However it was filled, it is a folder with cards in it.
+                            icon={Folder}
                             name={c.name}
                             count={c.count}
                             detail={c.kind === "rule" ? `${c.count} card${c.count === 1 ? "" : "s"} · by rule` : undefined}
