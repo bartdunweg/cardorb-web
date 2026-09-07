@@ -733,7 +733,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                 <p className="text-sm text-tertiary">
                                                     {emptied ? "That was the last copy; it has left your collection." : "You do not hold this card yet."}
                                                 </p>
-                                                <div className="flex flex-col gap-2 sm:flex-row">
+                                                {/* Under each other, each the width of the panel: two side by side made a choice out of
+                                                    what is really two offers, and the narrower one read as the lesser. */}
+                                                <div className="flex flex-col gap-2">
                                                     <Button
                                                         size="md"
                                                         iconLeading={Plus}
