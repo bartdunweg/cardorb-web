@@ -4,13 +4,12 @@ import { type ReactNode, Suspense, use, useEffect, useRef, useState } from "reac
 import { listCopies } from "@/app/(app)/dashboard/cards/actions";
 import { CardDetailSlideout } from "@/components/app/card-detail-slideout";
 import { CardImage } from "@/components/app/card-image";
-import { GRID_COLUMNS, TILE_WIDTH } from "@/components/app/cards-grid";
 import { DexSlider } from "@/components/app/dex-slider";
 import { CardsSkeleton } from "@/components/app/skeletons";
 import { ViewMenu } from "@/components/app/view-menu";
 import type { DexCard } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
-import type { CardsSize } from "@/lib/cards-view";
+import { type CardsSize, GRID_COLUMNS, TILE_WIDTH } from "@/lib/cards-view";
 import type { DexList, NamedDexSlot } from "@/lib/dex-groups";
 import { cx } from "@/utils/cx";
 

@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CardImage } from "@/components/app/card-image";
-import { GRID_COLUMNS } from "@/components/app/cards-grid";
 import { PageHeader } from "@/components/app/page-header";
 import { SetCardTile } from "@/components/app/set-card-tile";
 import { ProgressBarBase } from "@/components/base/progress-indicators/progress-indicators";
+import { GRID_COLUMNS } from "@/lib/cards-view";
 import { isBrowseLanguage } from "@/lib/languages";
 import { CatalogueUnavailable, getSet } from "@/lib/sets";
 

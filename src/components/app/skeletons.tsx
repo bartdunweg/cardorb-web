@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
-import { GRID_COLUMNS } from "@/components/app/cards-grid";
 import { MobileTopRow } from "@/components/app/mobile-top-row";
 import { PageHeader } from "@/components/app/page-header";
 import { ListRow } from "@/components/app/skeleton-row";
+import { GRID_COLUMNS } from "@/lib/cards-view";
 
 // What a page shows while it fetches: the page's own frame, with outlines only where the data
 // will be. The title, the subtitle, Back and the row are the real components with the real words,
