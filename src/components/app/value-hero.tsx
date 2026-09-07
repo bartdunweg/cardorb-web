@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { ChevronDown } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
+import { ChartPeriods, PERIODS, type PeriodKey, isoDaysAgo } from "@/components/app/chart-periods";
 import { ValueChart } from "@/components/app/value-chart";
 import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
@@ -17,22 +18,7 @@ import { cx } from "@/utils/cx";
 
 export type ValueList = { id: string; name: string };
 
-const PERIODS = [
-    { key: "7d", label: "7D", days: 7, said: "in the last 7 days" },
-    { key: "1m", label: "1M", days: 30, said: "in the last 30 days" },
-    { key: "3m", label: "3M", days: 91, said: "in the last 3 months" },
-    { key: "6m", label: "6M", days: 182, said: "in the last 6 months" },
-    { key: "max", label: "Max", days: null, said: "since the first reading" },
-] as const;
-type PeriodKey = (typeof PERIODS)[number]["key"];
-
 const first = (keys: "all" | Set<React.Key>) => (keys === "all" ? undefined : [...keys][0]);
-
-const isoDaysAgo = (days: number) => {
-    const d = new Date();
-    d.setDate(d.getDate() - days);
-    return d.toISOString().slice(0, 10);
-};
 
 export function ValueHero({
     lists,
@@ -107,24 +93,7 @@ export function ValueHero({
             </div>
 
             <ValueChart snapshots={shown} label={`${list.name} value over time`}>
-                {/* The periods: one pressed, the pill behind it. Tapped often, so the state changes without motion. */}
-                <fieldset className="flex justify-center gap-1">
-                    <legend className="sr-only">Period</legend>
-                    {PERIODS.map((p) => (
-                        <button
-                            key={p.key}
-                            type="button"
-                            aria-pressed={p.key === period}
-                            onClick={() => setPeriod(p.key)}
-                            className={cx(
-                                "pressable rounded-full px-3 py-1.5 text-sm font-semibold outline-focus-ring transition-colors duration-150 focus-visible:outline-2",
-                                p.key === period ? "bg-alpha-black/8 text-primary" : "text-tertiary hover:text-secondary",
-                            )}
-                        >
-                            {p.label}
-                        </button>
-                    ))}
-                </fieldset>
+                <ChartPeriods period={period} onPick={setPeriod} />
             </ValueChart>
         </section>
     );

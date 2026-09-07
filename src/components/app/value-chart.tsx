@@ -31,10 +31,18 @@ const dateOf = (s: ValueSnapshot) => new Date(`${s.date}T00:00:00`);
 export function ValueChart({
     snapshots,
     label = "Collection value over time",
+    countLabel = "copies",
     children,
 }: {
     snapshots: ValueSnapshot[];
     label?: string;
+    /**
+     * What `cards` counts in the tooltip, or null to leave the line out.
+     *
+     * A collection's reading is a sum over copies and says so. One card's price is a price, and
+     * "1 copies" under it would be the chart still talking about a collection.
+     */
+    countLabel?: string | null;
     /** Under the chart, above the table: the period buttons. */
     children?: ReactNode;
 }) {
@@ -185,10 +193,12 @@ export function ValueChart({
                     >
                         <span className="font-medium text-secondary">{dayYear.format(dateOf(current))}</span>
                         <span className="text-sm font-semibold text-primary tabular-nums">{formatPrice(current.value)}</span>
-                        <span className="text-tertiary tabular-nums">
-                            {current.cards.toLocaleString("en-US")} copies
-                            {current.unpriced > 0 ? ` · ${current.unpriced.toLocaleString("en-US")} without a price` : ""}
-                        </span>
+                        {countLabel ? (
+                            <span className="text-tertiary tabular-nums">
+                                {current.cards.toLocaleString("en-US")} {countLabel}
+                                {current.unpriced > 0 ? ` · ${current.unpriced.toLocaleString("en-US")} without a price` : ""}
+                            </span>
+                        ) : null}
                     </output>
                 ) : null}
             </div>

@@ -20,6 +20,7 @@ import {
 } from "@/app/(app)/dashboard/cards/actions";
 import { type FolderChoice, listCollections, loadFacets, setCardCollection } from "@/app/(app)/dashboard/collections/actions";
 import { CardImage } from "@/components/app/card-image";
+import { CardPriceChart } from "@/components/app/card-price-chart";
 import { CONDITIONS } from "@/components/app/condition-badge";
 import { CopyFormDialog } from "@/components/app/copy-form-dialog";
 import { FlagIcon } from "@/components/app/flag-icon";
@@ -27,7 +28,6 @@ import { FolderDialog } from "@/components/app/folder-dialog";
 import { HoloCard } from "@/components/app/holo-card";
 import { LanguageSelect } from "@/components/app/language-select";
 import { MarkOwnedDialog } from "@/components/app/mark-owned-dialog";
-import { PriceHistory } from "@/components/app/price-history";
 import { SheetBar } from "@/components/app/sheet-bar";
 import { TypeIcon } from "@/components/app/type-icon";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
@@ -907,7 +907,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                     <TabPanel id="price" className="flex flex-col gap-6">
                                         {/* The line first, then the numbers around it: what one copy trades at, what all the
                                         copies come to, what was paid, and what that bought. */}
-                                        {mine.tcg_id ? <PriceHistory tcgId={mine.tcg_id} holo={isReverseFinish(mine.finish)} tall /> : null}
+                                        {mine.tcg_id ? <CardPriceChart tcgId={mine.tcg_id} holo={isReverseFinish(mine.finish)} name={card?.name} /> : null}
                                         <dl className="flex flex-col divide-y divide-secondary">
                                             <DetailRow label="Market price" value={mine.price != null ? formatPrice(mine.price) : null} />
                                             {/* What the catalogue says about the printing, once it answers: where today's
