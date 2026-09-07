@@ -3,6 +3,7 @@
 import { CardImage } from "@/components/app/card-image";
 import { FavoriteStar } from "@/components/app/favorite-star";
 import { FlagIcon } from "@/components/app/flag-icon";
+import { cardLabel } from "@/lib/card-label";
 import type { PublicCard } from "@/lib/cards";
 import type { CardsSize } from "@/lib/cards-view";
 import { formatPrice } from "@/lib/format";
@@ -79,9 +80,7 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                                     <FlagIcon language={card.language} />
                                 ) : null}
                             </span>
-                            <span className="truncate text-xs text-tertiary">
-                                {[card.set_name, card.number ? `#${card.number}` : null].filter(Boolean).join(" · ")}
-                            </span>
+                            <span className="truncate text-xs text-tertiary">{cardLabel(card, size)}</span>
                             {/* The market price carries the weight of the name, as a marketplace tile does; the set line stays quiet. */}
                             {card.price != null ? (
                                 <span className="mt-0.5 text-sm font-medium text-primary tabular-nums">

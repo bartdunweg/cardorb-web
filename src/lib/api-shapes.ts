@@ -58,6 +58,7 @@ export type CardItem = {
     number: string;
     set: string;
     setTitle: string;
+    setAbbr: string | null;
     rarity: string | null;
     gen: string | null;
     type: string | null;
@@ -89,6 +90,8 @@ export type Card = {
     id: string;
     name: string;
     set_name: string | null;
+    /** The code printed on the card: MEW, SFA, DEX. Null where the catalogue codes no set. */
+    set_abbr: string | null;
     /** The set as the API addresses it, for asking after this card's other rows. */
     set: string | null;
     number: string | null;
@@ -176,6 +179,7 @@ export const cardFromItem = (item: CardItem): Card => ({
     id: item.id,
     name: item.name,
     set_name: item.setTitle || item.set || null,
+    set_abbr: item.setAbbr ?? null,
     set: item.set || null,
     number: item.number || null,
     rarity: item.rarity,
