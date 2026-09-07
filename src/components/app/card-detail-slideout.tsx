@@ -489,8 +489,13 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                     >
                                         <CardImage
                                             src={card.image_high_url ?? card.image_url}
+                                            fallbackSrc={card.image_url}
                                             alt={card.name}
-                                            width={384}
+                                            // The box is max-w-44, so 176 CSS pixels: 384 asked for the 828 rung and
+                                            // got a 50 KB file where 24 KB shows every pixel — eagerly, on every tap,
+                                            // because this one is priority. `width` is what the layout draws, not the
+                                            // scan you want.
+                                            width={176}
                                             quality={75}
                                             className="object-cover"
                                             priority

@@ -43,6 +43,7 @@ function isOptimised(src: string): boolean {
 export function CardImage({
     src,
     alt,
+    fallbackSrc,
     className,
     priority = false,
     quality = 60,
@@ -51,6 +52,15 @@ export function CardImage({
 }: {
     src: string;
     alt: string;
+    /**
+     * What to try when the optimizer will not answer for `src`.
+     *
+     * Without it the fallback is `src` itself, unoptimized — and since the tiles began asking
+     * for the high scan that is a 133 KB original per tile against 31 KB for the low one. On a
+     * page of 129 that is 17 MB instead of 4, at exactly the moment the picture host is already
+     * struggling, which is the only moment this path runs.
+     */
+    fallbackSrc?: string;
     className?: string;
     /** Only for a picture that is on screen at load, like the one open in the detail panel. */
     priority?: boolean;
@@ -72,18 +82,20 @@ export function CardImage({
     const [gone, setGone] = useState(false);
     if (gone) return null;
     const height = ratio === "card" ? Math.round((width * 88) / 63) : width;
+    // The lighter picture on the way down, where there is one to fall back to.
+    const shown = direct ? (fallbackSrc ?? src) : src;
 
     return (
         <Image
-            src={src}
+            src={shown}
             alt={alt}
             width={width}
             height={height}
             className={`h-full w-full ${className ?? ""}`}
             priority={priority}
             quality={quality}
-            unoptimized={direct || !isOptimised(src)}
-            onError={() => (direct || !isOptimised(src) ? setGone(true) : setDirect(true))}
+            unoptimized={direct || !isOptimised(shown)}
+            onError={() => (direct || !isOptimised(shown) ? setGone(true) : setDirect(true))}
         />
     );
 }

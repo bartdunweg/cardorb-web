@@ -22,7 +22,9 @@ const nextConfig = {
         // tiles wrote fifteen candidates each: 300 KB of HTML on a public profile. No picture here
         // draws wider than a 213 px tile, so 1080 px covers a 3x screen with room to spare.
         deviceSizes: [640, 750, 828, 1080],
-        imageSizes: [64, 96, 128, 256, 384],
+        // 192 so a 96 px logo has a 2x rung of its own: without it the pair was 96 and 256, and a
+        // 48 px set logo shipped 4.4 KB where 1.35 KB draws it. Browse holds 157 of them.
+        imageSizes: [64, 96, 128, 192, 256, 384],
     },
     experimental: {
         optimizePackageImports: ["@untitledui/icons"],
