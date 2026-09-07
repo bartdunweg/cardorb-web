@@ -101,12 +101,14 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                                 listed once however many copies you have, so without this the only way to learn
                                 you own three was to open the sheet.
 
-                                Only past one. A ×1 under all 48 tiles is a column of the same character, and
-                                one is what a tile already means. */}
-                            {(card.quantity ?? 1) > 1 || card.price != null ? (
+                                Every tile, including the ones at one. It was hidden below two — a ×1 under all
+                                forty-eight of them is a column of the same character — but a number that appears
+                                only sometimes is one you have to notice the absence of, and the owner would
+                                rather read it down the column than work it out. */}
+                            {card.quantity != null || card.price != null ? (
                                 <span className="mt-0.5 flex items-baseline justify-between gap-2 text-sm font-medium tabular-nums">
                                     <span className="text-tertiary">
-                                        {(card.quantity ?? 1) > 1 ? (
+                                        {card.quantity != null ? (
                                             <>
                                                 <span className="sr-only">You hold </span>×{card.quantity}
                                             </>
