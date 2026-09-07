@@ -457,10 +457,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                     Centred on the card, not on the box, since the box also holds the
                                     padding the card tilts in. */}
                                 {onPrev || onNext ? (
-                                    <div
-                                        aria-hidden={false}
-                                        className="pointer-events-none absolute inset-x-1 top-24 bottom-6 z-10 flex items-center justify-between"
-                                    >
+                                    <div className="pointer-events-none absolute inset-x-3 top-24 bottom-6 z-10 flex items-center justify-between">
                                         <Button
                                             color="tertiary"
                                             size="lg"
