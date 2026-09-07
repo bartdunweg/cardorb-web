@@ -64,7 +64,13 @@ const plural = (n: number, one: string, many = `${one}s`) => `${n.toLocaleString
  */
 function summary(p: ImportPreview): string {
     const parts = [`${plural(p.seen - p.skipped, "card")} will be added.`];
-    if (p.skipped > 0) parts.push(`${plural(p.skipped, "row")} in the file could not be used.`);
+    // Two very different things used to share the word "skipped". Most of a Dex
+    // export is the checklist of cards you do *not* have — more than half the
+    // lines of a real file — and calling those unusable reads as an import that
+    // half failed. A row with no name is the only one that actually went wrong.
+    if (p.notOwned > 0) parts.push(`${plural(p.notOwned, "card")} in the file you do not own, left alone.`);
+    const unreadable = p.skipped - p.notOwned;
+    if (unreadable > 0) parts.push(`${plural(unreadable, "row")} could not be read.`);
     return parts.join(" ");
 }
 
@@ -167,6 +173,9 @@ function ImportForm({ close }: { close: () => void }) {
     };
 
     const writing = preview ? preview.seen - preview.skipped : 0;
+    // The sample the API sends holds the first twenty skipped rows, mixed; only
+    // the ones that actually failed are worth a line number.
+    const unreadable = preview ? preview.skippedRows.filter((s) => !s.why.startsWith("not owned")) : [];
 
     return (
         // A column with one scrolling middle: the title stays put, and so does
@@ -231,7 +240,8 @@ function ImportForm({ close }: { close: () => void }) {
                         <span className="text-tertiary">
                             {plural(result.seen, "row")} read.
                             {result.existing > 0 ? ` ${plural(result.existing, "card")} you already had, left alone.` : ""}
-                            {result.skipped > 0 ? ` ${plural(result.skipped, "row")} not used.` : ""}
+                            {result.notOwned > 0 ? ` ${plural(result.notOwned, "card")} you do not own, left alone.` : ""}
+                            {result.skipped - result.notOwned > 0 ? ` ${plural(result.skipped - result.notOwned, "row")} could not be read.` : ""}
                         </span>
                     </output>
                 ) : null}
@@ -313,19 +323,28 @@ function ImportForm({ close }: { close: () => void }) {
                             </details>
                         ) : null}
 
-                        {preview.skippedRows.length > 0 ? (
+                        {/*
+                         * Only the rows that went wrong get listed, and only when
+                         * there are any. A Dex export leaves out thousands of
+                         * cards you do not own, and listing those was twenty
+                         * identical sentences behind a disclosure — a line number
+                         * for something no line number helps with. The sentence
+                         * above already says how many. A row with no card name is
+                         * the opposite: rare, and the number is the whole point.
+                         */}
+                        {unreadable.length > 0 ? (
                             <details className="rounded-lg ring-1 ring-secondary ring-inset">
                                 <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-secondary">
-                                    Rows not used ({preview.skipped.toLocaleString("en")})
+                                    Rows that could not be read ({(preview.skipped - preview.notOwned).toLocaleString("en")})
                                 </summary>
                                 <ul className="flex flex-col gap-1 px-4 pt-1 pb-4 text-sm text-tertiary">
-                                    {preview.skippedRows.map((s) => (
+                                    {unreadable.map((s) => (
                                         <li key={s.line}>
                                             Line {s.line}: {s.why}
                                         </li>
                                     ))}
-                                    {preview.skipped > preview.skippedRows.length ? (
-                                        <li>and {(preview.skipped - preview.skippedRows.length).toLocaleString("en")} more.</li>
+                                    {preview.skipped - preview.notOwned > unreadable.length ? (
+                                        <li>and {(preview.skipped - preview.notOwned - unreadable.length).toLocaleString("en")} more.</li>
                                     ) : null}
                                 </ul>
                             </details>

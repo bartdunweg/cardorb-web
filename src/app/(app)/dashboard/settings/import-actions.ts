@@ -53,8 +53,10 @@ export type ImportRow = {
 export type ImportPreview = {
     /** Everything the file held, rows written and rows passed over alike. */
     seen: number;
-    /** Rows that could not be used, or that the file says you do not own. */
+    /** Rows not written: cards the file says you do not own, plus rows it could not read. */
     skipped: number;
+    /** Of `skipped`, the ones the file itself says you do not own. Not a problem. */
+    notOwned: number;
     /**
      * Rows naming a card the collection already holds. Said out loud, not acted
      * on — every row is added. It is the only warning there is against
@@ -69,7 +71,7 @@ export type ImportPreview = {
     skippedRows: { line: number; why: string }[];
 };
 
-export type ImportResult = { seen: number; added: number; skipped: number; existing: number };
+export type ImportResult = { seen: number; added: number; skipped: number; notOwned: number; existing: number };
 
 export type PreviewOutcome =
     | { ok: true; preview: ImportPreview }
