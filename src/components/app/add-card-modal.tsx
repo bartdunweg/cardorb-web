@@ -133,6 +133,15 @@ export function AddCardModal({
                                                         <span className="truncate text-xs text-tertiary">
                                                             {[card.set, card.number ? `#${card.number}` : null, card.rarity].filter(Boolean).join(" · ")}
                                                         </span>
+                                                        {/* What you already hold of it: adding a fourth copy on purpose is a
+                                                            different act from adding one you thought you did not have. */}
+                                                        {card.owned ? (
+                                                            <span className="truncate text-xs text-tertiary">
+                                                                In your collection{card.quantity > 1 ? ` · ${card.quantity} copies` : ""}
+                                                            </span>
+                                                        ) : card.wishlist ? (
+                                                            <span className="truncate text-xs text-tertiary">On your wishlist</span>
+                                                        ) : null}
                                                     </div>
                                                     <Button
                                                         size="sm"

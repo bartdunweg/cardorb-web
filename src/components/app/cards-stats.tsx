@@ -58,7 +58,15 @@ export function CardsStats({ stats, fourth }: { stats: CardStats; fourth: ReactN
     return (
         // Two to a row on a phone, four from xl: a column of four tiles pushed the chart off the first screen.
         <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4">
-            <StatCard label="Owned" value={count(stats.owned)} href="/dashboard/cards" delay={0} />
+            {/* Cards owned, and how many copies that is where it is more: a hundred duplicates are
+                a fact about the collection that the card count alone does not say. */}
+            <StatCard
+                label="Owned"
+                value={count(stats.owned)}
+                detail={stats.copies > stats.owned ? `${count(stats.copies)} copies` : undefined}
+                href="/dashboard/cards"
+                delay={0}
+            />
             <StatCard label="Wishlist" value={count(stats.wishlist)} href="/dashboard/wishlist" delay={40} />
             <StatCard label="Favorites" value={count(stats.favorites)} href="/dashboard/favorites" delay={80} />
             {fourth}
