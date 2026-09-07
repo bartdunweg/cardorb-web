@@ -33,15 +33,6 @@ type Props = {
     languages?: readonly string[] | null;
 };
 
-const FINISHES = [
-    { label: "Not recorded", value: "" },
-    { label: "Normal", value: "normal" },
-    { label: "Reverse holo", value: "reverse-holo" },
-    { label: "Holo", value: "holo" },
-    { label: "Poké Ball reverse", value: "poke-ball" },
-    { label: "Master Ball reverse", value: "master-ball" },
-];
-
 const today = () => new Date().toISOString().slice(0, 10);
 
 export function MarkOwnedDialog({ children, ...form }: Props & { children: ReactNode }) {
