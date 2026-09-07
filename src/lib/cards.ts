@@ -1,5 +1,5 @@
 import { api } from "@/lib/api";
-import { type Card, type CardItem, cardFromItem } from "@/lib/api-shapes";
+import { type Card, type CardItem, cardFromItem, cardsAnswer, facetsAnswer, statsAnswer } from "@/lib/api-shapes";
 import { perUser } from "@/lib/user-cache";
 
 export type { Card, PublicCard } from "@/lib/api-shapes";
@@ -21,7 +21,7 @@ export type Facets = {
  */
 export const getFacets = (): Promise<Facets> =>
     perUser("facets", async (token) => {
-        const { facets } = await api<{ facets?: Facets }>("/cards", { token, params: { owned: true, limit: 1 } });
+        const { facets } = await api("/cards", { token, params: { owned: true, limit: 1 }, schema: facetsAnswer });
         return { sets: facets?.sets ?? [], rarities: facets?.rarities ?? [], gens: facets?.gens ?? [], types: facets?.types ?? [] };
     });
 
@@ -98,14 +98,8 @@ export async function getMyCards({
             ? `cards:${JSON.stringify([q, collectionId, favoritesOnly, wishlist, sort, order, set, rarity, gen, type, number, priced, wantFacets])}`
             : null;
     const read = async (token?: string) => {
-        const { cards, total, facets, value, unpriced, catalogueUnavailable } = await api<{
-            cards: CardItem[];
-            total: number;
-            facets?: Facets;
-            value?: number;
-            unpriced?: number;
-            catalogueUnavailable?: boolean;
-        }>("/cards", {
+        const { cards, total, facets, value, unpriced, catalogueUnavailable } = await api("/cards", {
+            schema: cardsAnswer,
             token,
             params: {
                 q: q?.trim() || undefined,
@@ -157,7 +151,7 @@ export type CardStats = {
 export type ApiStats = { cards: number; copies: number; wishlist: number; favorites: number; sets: number; value: number; unpriced: number };
 
 // Kept five minutes per person: the layout and a page both ask, and every write drops the cache.
-export const getStats = () => perUser("stats", async (token) => (await api<{ stats: ApiStats }>("/stats", { token })).stats);
+export const getStats = () => perUser("stats", async (token) => (await api("/stats", { token, schema: statsAnswer })).stats);
 
 // The dashboard's numbers. "Owned" counts cards (rows), as the page always has.
 export async function getCardStats(): Promise<CardStats> {

@@ -1,4 +1,36 @@
-import type { FolderKind, FolderRule, PokedexSetting } from "@/lib/folder-rule";
+import { z } from "zod";
+import { type FolderKind, type FolderRule, type PokedexSetting, folderRuleSchema, pokedexSettingSchema } from "@/lib/folder-rule";
+
+/**
+ * The API's answers are parsed here, not cast (CLAUDE.md: zod at every boundary).
+ *
+ * `api<T>()` used to hand back `json as T`, so a field the API renamed, dropped or started
+ * sending as a string reached a component untouched and surfaced as a blank tile, a NaN or a
+ * crash three layers from the cause. These schemas turn that into one error at the edge, naming
+ * the field.
+ *
+ * Two deliberate softnesses, because a schema that is stricter than the API is an outage waiting
+ * for the next deploy:
+ *
+ * - **A missing key reads as null.** Every optional field on the wire is a field some older API
+ *   did not send; `nullable()` below accepts both and normalises to null.
+ * - **An unknown word is null, not a failure.** `finish` and `foilPattern` are vocabularies the
+ *   API may extend before this app knows the new member. A card whose finish this app cannot
+ *   name is still a card, so `vocabulary()` falls back rather than rejecting the whole answer.
+ *
+ * Structure is not soft: a missing `id`, or a `quantity` that arrives as a string, fails.
+ */
+
+/** `null` and "the key was not sent" are one answer to a screen. */
+const nullable = <T extends z.ZodType>(inner: T) => inner.nullish().transform((v) => v ?? null);
+
+/** A closed list the API may extend: an unrecognised word reads as "not recorded". */
+const vocabulary = <const T extends readonly [string, ...string[]]>(values: T) =>
+    z
+        .enum(values)
+        .nullish()
+        .catch(null)
+        .transform((v) => v ?? null);
 
 /**
  * What the API answers, and how it becomes what the screens already render.
@@ -16,14 +48,16 @@ export const absoluteImage = (image: string | null | undefined): string | null =
 // ── GET /v1/cards ─────────────────────────────────────────────────────────────────────────
 
 /** One card's Cardmarket price, in euros. `nm.mid` is the number the grid shows. */
-export type ApiPrice = {
-    low: number | null;
-    market: number | null;
-    avg30: number | null;
-    nm: { low: number; mid: number; high: number } | null;
-};
+export const apiPriceSchema = z.object({
+    low: nullable(z.number()),
+    market: nullable(z.number()),
+    avg30: nullable(z.number()),
+    nm: nullable(z.object({ low: z.number(), mid: z.number(), high: z.number() })),
+});
+export type ApiPrice = z.infer<typeof apiPriceSchema>;
 
-export type Finish = "normal" | "reverse-holo" | "holo" | "poke-ball" | "master-ball";
+export const FINISHES = ["normal", "reverse-holo", "holo", "poke-ball", "master-ball"] as const;
+export type Finish = (typeof FINISHES)[number];
 /** The finishes that are a reverse holo with a pattern (151, Prismatic Evolutions): priced and shown as a reverse. */
 export const isReverseFinish = (f: string | null | undefined): boolean => f === "reverse-holo" || f === "poke-ball" || f === "master-ball";
 /**
@@ -33,7 +67,8 @@ export const isReverseFinish = (f: string | null | undefined): boolean => f === 
  * Cardmarket publishes, and holds the ball patterns only because those two are priced apart. A
  * cosmos holo and a plain holo of one card are one product and one figure.
  */
-export type FoilPattern = "cosmos" | "cracked-ice" | "starlight" | "confetti" | "vertical-line";
+export const FOIL_PATTERNS = ["cosmos", "cracked-ice", "starlight", "confetti", "vertical-line"] as const;
+export type FoilPattern = (typeof FOIL_PATTERNS)[number];
 
 export const FOIL_PATTERN_LABELS: Record<FoilPattern, string> = {
     cosmos: "Cosmos",
@@ -52,39 +87,40 @@ export const FINISH_LABELS: Record<Finish, string> = {
     "master-ball": "Master Ball reverse",
 };
 
-export type CardItem = {
-    id: string;
-    name: string;
-    number: string;
-    set: string;
-    setTitle: string;
-    setAbbr: string | null;
-    rarity: string | null;
-    gen: string | null;
-    type: string | null;
-    image: string | null;
-    imageHigh: string | null;
-    speciesId: number | null;
-    tcgId: string | null;
-    owned: boolean;
-    finish: Finish | null;
+export const cardItemSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    number: z.string(),
+    set: z.string(),
+    setTitle: z.string(),
+    setAbbr: nullable(z.string()),
+    rarity: nullable(z.string()),
+    gen: nullable(z.string()),
+    type: nullable(z.string()),
+    image: nullable(z.string()),
+    imageHigh: nullable(z.string()),
+    speciesId: nullable(z.number()),
+    tcgId: nullable(z.string()),
+    owned: z.boolean(),
+    finish: vocabulary(FINISHES),
     /** What the foil looks like, where anything told us. Null is "not recorded". */
-    foilPattern: FoilPattern | null;
-    quantity: number;
-    condition: string | null;
-    grade: string | null;
-    language: string | null;
-    purchasePrice: number | null;
-    purchaseDate: string | null;
-    notes: string | null;
-    isFavorite: boolean;
+    foilPattern: vocabulary(FOIL_PATTERNS),
+    quantity: z.number(),
+    condition: nullable(z.string()),
+    grade: nullable(z.string()),
+    language: nullable(z.string()),
+    purchasePrice: nullable(z.number()),
+    purchaseDate: nullable(z.string()),
+    notes: nullable(z.string()),
+    isFavorite: z.boolean(),
     /** Kept off the public profile and the latest pull; absent from an API older than its #227. */
-    excluded?: boolean;
-    acquiredAt: string | null;
-    collectionId: string | null;
-    price: ApiPrice | null;
-    priceHolo: ApiPrice | null;
-};
+    excluded: z.boolean().nullish(),
+    acquiredAt: nullable(z.string()),
+    collectionId: nullable(z.string()),
+    price: nullable(apiPriceSchema),
+    priceHolo: nullable(apiPriceSchema),
+});
+export type CardItem = z.infer<typeof cardItemSchema>;
 
 export type Card = {
     id: string;
@@ -138,17 +174,18 @@ export function priceForCopy({ finish, price, priceHolo }: Pick<CardItem, "finis
  * A folder as `GET /v1/folders` sends it. `kind` and `rule` are optional on the wire: an API from
  * before rule folders sends neither, and every folder is then one filled by hand.
  */
-export type FolderItem = {
-    id: string;
-    name: string;
-    createdAt: string;
-    count: number;
-    kind?: FolderKind;
-    rule?: FolderRule | null;
-    pokedex?: PokedexSetting | null;
+export const folderItemSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    createdAt: z.string(),
+    count: z.number(),
+    kind: z.enum(["manual", "rule"]).nullish(),
+    rule: folderRuleSchema.nullish(),
+    pokedex: pokedexSettingSchema.nullish(),
     /** Shown on the public profile, as a filter over the public cards. Absent from an API before #175. */
-    isPublic?: boolean;
-};
+    isPublic: z.boolean().nullish(),
+});
+export type FolderItem = z.infer<typeof folderItemSchema>;
 
 export type Folder = {
     id: string;
@@ -228,24 +265,25 @@ export type PublicCard = Pick<
 >;
 
 /** One card on a public profile with how many copies the owner holds. Nothing private (R-API-002 there). */
-export type PublicItem = {
-    key: string;
-    name: string;
-    number: string;
-    set: string;
-    setTitle: string;
-    rarity: string | null;
-    gen: string | null;
-    type: string | null;
-    image: string | null;
+export const publicItemSchema = z.object({
+    key: z.string(),
+    name: z.string(),
+    number: z.string(),
+    set: z.string(),
+    setTitle: z.string(),
+    rarity: nullable(z.string()),
+    gen: nullable(z.string()),
+    type: nullable(z.string()),
+    image: nullable(z.string()),
     /** The larger scan; absent from an API before #179. */
-    imageHigh?: string | null;
-    speciesId: number | null;
-    tcgId: string | null;
-    copies: number;
+    imageHigh: nullable(z.string()),
+    speciesId: nullable(z.number()),
+    tcgId: nullable(z.string()),
+    copies: z.number(),
     /** One of the owned copies is starred; absent from an API before it said so. */
-    favorite?: boolean;
-};
+    favorite: z.boolean().nullish(),
+});
+export type PublicItem = z.infer<typeof publicItemSchema>;
 
 /** One tile per card; the copies held are its quantity. A wish never reaches this route. */
 export const publicCardFromItem = (item: PublicItem): PublicCard => ({
@@ -267,7 +305,13 @@ export const publicCardFromItem = (item: PublicItem): PublicCard => ({
 
 // ── GET /v1/pokedex ───────────────────────────────────────────────────────────────────────
 
-export type DexEntry = { id: number; name: string; owned: number; cards: { key: string; name: string; image: string | null }[] };
+export const dexEntrySchema = z.object({
+    id: z.number(),
+    name: z.string(),
+    owned: z.number(),
+    cards: z.array(z.object({ key: z.string(), name: z.string(), image: nullable(z.string()) })),
+});
+export type DexEntry = z.infer<typeof dexEntrySchema>;
 /** One card in a Pokédex slot. `set` and `number` name it to the API, so a tap can open that card and not its namesakes. */
 export type DexCard = { id: string; name: string; set: string | null; number: string | null; imageUrl: string | null; imageHighUrl: string | null };
 export type DexSlot = { number: number; cards: DexCard[] };
@@ -275,24 +319,25 @@ export type DexSlot = { number: number; cards: DexCard[] };
 // ── GET /v1/catalog/sets ──────────────────────────────────────────────────────────────────
 
 /** One set as the API lists it, with the viewer's own counts folded in. Newest set first. */
-export type CatalogueSet = {
-    id: string;
-    name: string;
-    series: string;
+export const catalogueSetSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    series: z.string(),
     /** "YYYY/MM/DD", as pokemontcg.io writes it. */
-    releaseDate: string | null;
+    releaseDate: nullable(z.string()),
     /** Every card in the set, secret rares included. */
-    total: number;
+    total: z.number(),
     /** The number printed on the cards; a set of 207 may print "165". */
-    printedTotal: number | null;
-    logo: string | null;
-    symbol: string | null;
+    printedTotal: nullable(z.number()),
+    logo: nullable(z.string()),
+    symbol: nullable(z.string()),
     /** The set's own name where `name` is a translation (a Japanese set); null for English. */
-    localName?: string | null;
+    localName: nullable(z.string()),
     /** Distinct cards of the set held; never more than `total` (cardorb-api#162). */
-    ownedCount: number;
-    wishlistCount: number;
-};
+    ownedCount: z.number(),
+    wishlistCount: z.number(),
+});
+export type CatalogueSet = z.infer<typeof catalogueSetSchema>;
 
 export type SetSummary = {
     id: string;
@@ -395,21 +440,22 @@ export const pokemonCardFromSetCard = (c: SetCard): PokemonCard => ({
 
 // ── GET /v1/catalog/search ────────────────────────────────────────────────────────────────
 
-export type BrowseCard = {
-    id: string;
-    number: string;
-    name: string;
-    setName: string;
-    image: string | null;
-    imageHigh: string | null;
-    rarity: string | null;
-    types: string[];
-    series: string;
-    owned: boolean;
-    wishlist: boolean;
-    quantity: number;
-    itemIds: string[];
-};
+export const browseCardSchema = z.object({
+    id: z.string(),
+    number: z.string(),
+    name: z.string(),
+    setName: z.string(),
+    image: nullable(z.string()),
+    imageHigh: nullable(z.string()),
+    rarity: nullable(z.string()),
+    types: z.array(z.string()),
+    series: z.string(),
+    owned: z.boolean(),
+    wishlist: z.boolean(),
+    quantity: z.number(),
+    itemIds: z.array(z.string()),
+});
+export type BrowseCard = z.infer<typeof browseCardSchema>;
 
 /** What the search previews render. The fields the catalogue does not carry are null, and the preview skips them. */
 export type PokemonCard = {
@@ -460,20 +506,21 @@ export const pokemonCardFromBrowse = (c: BrowseCard): PokemonCard => ({
 
 // ── GET /v1/profile ───────────────────────────────────────────────────────────────────────
 
-export type OwnProfile = {
-    username: string;
-    displayName: string | null;
-    isPublic: boolean;
+export const ownProfileSchema = z.object({
+    username: z.string(),
+    displayName: nullable(z.string()),
+    isPublic: z.boolean(),
     /** The wishlist on the public profile too. Absent from an API before #176. */
-    wishlistPublic?: boolean;
+    wishlistPublic: z.boolean().nullish(),
     /** The favorites and the Pokédex on the public profile too. Absent from an API before #187. */
-    favoritesPublic?: boolean;
-    pokedexPublic?: boolean;
-    avatarUrl: string | null;
-    onboardedAt: string | null;
-    pokedex?: PokedexSetting | null;
-    email: string;
-};
+    favoritesPublic: z.boolean().nullish(),
+    pokedexPublic: z.boolean().nullish(),
+    avatarUrl: nullable(z.string()),
+    onboardedAt: nullable(z.string()),
+    pokedex: pokedexSettingSchema.nullish(),
+    email: z.string(),
+});
+export type OwnProfile = z.infer<typeof ownProfileSchema>;
 
 export type Profile = {
     display_name: string | null;
@@ -498,4 +545,124 @@ export const profileFromOwn = (p: OwnProfile): Profile => ({
     favorites_public: p.favoritesPublic ?? false,
     pokedex_public: p.pokedexPublic ?? false,
     pokedex: p.pokedex ?? null,
+});
+
+// ── What each route answers ───────────────────────────────────────────────────────────────
+
+/**
+ * One schema per route this app calls, so `api()` has something to parse against.
+ *
+ * They are envelopes: the API wraps its lists (`{ cards, total, facets }`), and the envelope is
+ * as much a part of the contract as the rows inside it. A route that lost its `total` would
+ * otherwise reach a component as `undefined` and count as zero.
+ */
+
+/** The sets and rarities a filter menu offers. */
+export const facetsSchema = z.object({
+    sets: z.array(z.object({ name: z.string(), title: z.string() })),
+    rarities: z.array(z.string()),
+    gens: z.array(z.string()),
+    types: z.array(z.string()),
+});
+
+export const cardsAnswer = z.object({
+    cards: z.array(cardItemSchema),
+    total: z.number(),
+    facets: facetsSchema.optional(),
+    value: z.number().optional(),
+    unpriced: z.number().optional(),
+    /** The catalogue is not answering, so pictures and prices are missing rather than absent. */
+    catalogueUnavailable: z.boolean().optional(),
+});
+
+export const facetsAnswer = z.object({ facets: facetsSchema.optional() });
+
+export const statsAnswer = z.object({
+    stats: z.object({
+        cards: z.number(),
+        copies: z.number(),
+        wishlist: z.number(),
+        favorites: z.number(),
+        sets: z.number(),
+        value: z.number(),
+        unpriced: z.number(),
+    }),
+});
+
+export const foldersAnswer = z.object({ folders: z.array(folderItemSchema) });
+export const pokedexAnswer = z.object({ entries: z.array(dexEntrySchema) });
+export const catalogueSetsAnswer = z.object({ sets: z.array(catalogueSetSchema) });
+export const searchAnswer = z.object({ cards: z.array(browseCardSchema) });
+
+export const setPageAnswer = z.object({
+    /** The catalogue's own set, without the viewer's counts: those are the page's own two fields. */
+    set: catalogueSetSchema.omit({ ownedCount: true, wishlistCount: true }),
+    cards: z.array(browseCardSchema),
+    totalCount: z.number(),
+    ownedCount: z.number(),
+    hasMore: z.boolean(),
+});
+
+export const valueHistoryAnswer = z.object({
+    snapshots: z.array(
+        z.object({
+            date: z.string(),
+            value: z.number(),
+            cards: z.number(),
+            priced: z.number(),
+            unpriced: z.number(),
+        }),
+    ),
+});
+
+export const pricePointsAnswer = z.object({
+    points: z.array(z.object({ date: z.string(), market: nullable(z.number()), holo: nullable(z.number()) })),
+});
+
+export const publicCardsAnswer = z.object({
+    cards: z.array(publicItemSchema),
+    total: z.number(),
+    facets: facetsSchema.optional(),
+});
+
+export const publicTotalAnswer = z.object({ total: z.number() });
+
+export const publicFoldersAnswer = z.object({
+    folders: z.array(z.object({ id: z.string(), name: z.string(), kind: z.enum(["manual", "rule"]), count: z.number() })),
+});
+
+export const avatarAnswer = z.object({ avatarUrl: z.string() });
+export const usernameAnswer = z.object({ available: z.boolean(), reason: z.string().optional() });
+export const createdFolderAnswer = z.object({ folder: z.object({ id: z.string() }) });
+export const copyAnswer = z.object({ card: z.object({ id: nullable(z.string()) }).optional() });
+
+/** A public profile: no email, no onboarding, nothing private (R-API-002 on the API's side). */
+export const publicProfileAnswer = z.object({
+    username: z.string(),
+    displayName: nullable(z.string()),
+    avatarUrl: nullable(z.string()),
+    wishlistPublic: z.boolean().nullish(),
+    favoritesPublic: z.boolean().nullish(),
+    pokedexPublic: z.boolean().nullish(),
+    pokedex: pokedexSettingSchema.nullish(),
+});
+
+/**
+ * One card's facts, as the sheet shows them.
+ *
+ * Every field is soft: this route answers from the catalogue, which knows a different amount
+ * about every card, and the sheet already draws around what is missing. `printings` is the one
+ * that matters most — a form offers no finish that is not in it.
+ */
+export const cardFactsAnswer = z.object({
+    illustrator: nullable(z.string()),
+    hp: nullable(z.number()),
+    stage: nullable(z.string()),
+    evolveFrom: nullable(z.string()),
+    regulationMark: nullable(z.string()),
+    cmUrl: nullable(z.string()),
+    languages: z.array(z.string()).nullish(),
+    printings: z.array(z.object({ finish: z.enum(["normal", "holo", "reverse-holo"]), foilPattern: nullable(z.string()) })).nullish(),
+    price: nullable(apiPriceSchema),
+    market: nullable(z.object({ avg: nullable(z.number()), trend: nullable(z.number()), avg7: nullable(z.number()) })),
 });

@@ -1,5 +1,13 @@
 import { ApiError, api } from "@/lib/api";
-import { type PublicCard, type PublicItem, publicCardFromItem } from "@/lib/api-shapes";
+import {
+    type PublicCard,
+    type PublicItem,
+    publicCardFromItem,
+    publicCardsAnswer,
+    publicFoldersAnswer,
+    publicProfileAnswer,
+    publicTotalAnswer,
+} from "@/lib/api-shapes";
 import type { Facets } from "@/lib/cards";
 import type { PokedexSetting } from "@/lib/folder-rule";
 import type { ListQuery } from "@/lib/list-query";
@@ -19,15 +27,7 @@ export type PublicProfile = {
 // Unkeyed: the API's three public routes serve exactly this page and carry no prices.
 export async function getPublicProfile(username: string): Promise<PublicProfile | null> {
     try {
-        const p = await api<{
-            username: string;
-            displayName: string | null;
-            avatarUrl: string | null;
-            wishlistPublic?: boolean;
-            favoritesPublic?: boolean;
-            pokedexPublic?: boolean;
-            pokedex?: PokedexSetting | null;
-        }>(`/public/${encodeURIComponent(username)}/profile`, { auth: false });
+        const p = await api(`/public/${encodeURIComponent(username)}/profile`, { auth: false, schema: publicProfileAnswer });
         return {
             display_name: p.displayName,
             username: p.username,
@@ -52,9 +52,10 @@ export type PublicCardsPage = { cards: PublicCard[]; total: number; facets: Face
 // whole collection: a hundred tiles need thirty kilobytes, not nine hundred. The API publishes
 // nothing personal on it (R-API-002 there), so nothing here has to be hidden.
 export async function getPublicCards(username: string, { page, q, set, rarity, sort, order, folder, list }: ListQuery): Promise<PublicCardsPage> {
-    const { cards, total, facets } = await api<{ cards: PublicItem[]; total: number; facets?: Facets }>(`/public/${encodeURIComponent(username)}/cards`, {
+    const { cards, total, facets } = await api(`/public/${encodeURIComponent(username)}/cards`, {
         auth: false,
         params: { q, set, rarity, sort, order, collection: folder, list, limit: PUBLIC_PAGE_SIZE, offset: (page - 1) * PUBLIC_PAGE_SIZE },
+        schema: publicCardsAnswer,
     });
     // This route is cached for five minutes (no session, so `revalidate`), and an answer cached before
     // the API carried facets has none. Empty menus for those minutes, not a broken page.
@@ -72,9 +73,10 @@ const ALL_PAGE_SIZE = 500;
 // need all of them, not a page. The first page says how many there are; the rest come at once.
 export async function getAllPublicCards(username: string, query: ListQuery): Promise<{ cards: PublicCard[]; total: number; facets: Facets }> {
     const read = async (offset: number) =>
-        api<{ cards: PublicItem[]; total: number; facets?: Facets }>(`/public/${encodeURIComponent(username)}/cards`, {
+        api(`/public/${encodeURIComponent(username)}/cards`, {
             auth: false,
             params: { q: query.q, set: query.set, rarity: query.rarity, list: "pokedex", limit: ALL_PAGE_SIZE, offset },
+            schema: publicCardsAnswer,
         });
     const first = await read(0);
     const rest = await Promise.all(Array.from({ length: Math.max(0, Math.ceil(first.total / ALL_PAGE_SIZE) - 1) }, (_, i) => read((i + 1) * ALL_PAGE_SIZE)));
@@ -97,7 +99,7 @@ export type PublicFolder = { id: string; name: string; kind: "manual" | "rule"; 
 // profile without its chips is a poorer page, and an API from before the route answers 404.
 export async function getPublicFolders(username: string): Promise<PublicFolder[]> {
     try {
-        const { folders } = await api<{ folders: PublicFolder[] }>(`/public/${encodeURIComponent(username)}/folders`, { auth: false });
+        const { folders } = await api(`/public/${encodeURIComponent(username)}/folders`, { auth: false, schema: publicFoldersAnswer });
         return folders;
     } catch (err) {
         if (err instanceof ApiError && (err.status === 404 || err.status === 503)) return [];
@@ -108,6 +110,6 @@ export async function getPublicFolders(username: string): Promise<PublicFolder[]
 // How many cards a public list holds, and nothing else: one item asked for, the total read off it.
 // For the line under the name, which counts the collection and the wishlist whatever list is open.
 export async function countPublicCards(username: string, list?: "wishlist" | "favorites" | "pokedex"): Promise<number> {
-    const { total } = await api<{ total: number }>(`/public/${encodeURIComponent(username)}/cards`, { auth: false, params: { list, limit: 1 } });
+    const { total } = await api(`/public/${encodeURIComponent(username)}/cards`, { auth: false, params: { list, limit: 1 }, schema: publicTotalAnswer });
     return total;
 }

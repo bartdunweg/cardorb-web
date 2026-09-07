@@ -39,45 +39,55 @@ const request = z.object({
     map: columnMap.optional(),
 });
 
+/** `null` and "the key was not sent" are one answer here too. */
+const nullable = <T extends z.ZodType>(inner: T) => inner.nullish().transform((v) => v ?? null);
+
 /** One row as it will be stored, for the handful the preview shows. */
-export type ImportRow = {
-    name: string;
-    number: string;
-    setName: string;
-    rarity: string | null;
-    owned: boolean;
-    quantity: number | null;
-    finish: string | null;
+const importRow = z.object({
+    name: z.string(),
+    number: z.string(),
+    setName: z.string(),
+    rarity: nullable(z.string()),
+    owned: z.boolean(),
+    quantity: nullable(z.number()),
+    finish: nullable(z.string()),
     /** What the foil looks like, where the file named a pattern. Not the same as the finish. */
-    foilPattern: string | null;
-};
+    foilPattern: nullable(z.string()),
+});
+export type ImportRow = z.infer<typeof importRow>;
 
-export type ImportPreview = {
+export const importPreviewAnswer = z.object({
     /** Everything the file held, rows written and rows passed over alike. */
-    seen: number;
+    seen: z.number(),
     /** Rows not written: printings the file records as not held, plus rows it could not read. */
-    skipped: number;
+    skipped: z.number(),
     /**
-     * Of `skipped`, the printings the file itself records at zero. Not a
-     * problem: an export lists every printing of every card you hold, so most
-     * of a real file is this.
+     * Of `skipped`, the printings the file itself records at zero. Not a problem: an export
+     * lists every printing of every card you hold, so most of a real file is this.
      */
-    notOwned: number;
+    notOwned: z.number(),
     /**
-     * Rows naming a card the collection already holds. Said out loud, not acted
-     * on — every row is added. It is the only warning there is against
-     * importing the same file a second time.
+     * Rows naming a card the collection already holds. Said out loud, not acted on — every row
+     * is added. It is the only warning there is against importing the same file a second time.
      */
-    existing: number;
-    sample: ImportRow[];
+    existing: z.number(),
+    sample: z.array(importRow),
     /** Whether the file was recognised, or read by a guess at its columns. */
-    source: "dex" | "generic";
-    header: string[];
-    guessed?: ColumnMap;
-    skippedRows: { line: number; why: string }[];
-};
+    source: z.enum(["dex", "generic"]),
+    header: z.array(z.string()),
+    guessed: columnMap.optional(),
+    skippedRows: z.array(z.object({ line: z.number(), why: z.string() })),
+});
+export type ImportPreview = z.infer<typeof importPreviewAnswer>;
 
-export type ImportResult = { seen: number; added: number; skipped: number; notOwned: number; existing: number };
+export const importResultAnswer = z.object({
+    seen: z.number(),
+    added: z.number(),
+    skipped: z.number(),
+    notOwned: z.number(),
+    existing: z.number(),
+});
+export type ImportResult = z.infer<typeof importResultAnswer>;
 
 export type PreviewOutcome =
     | { ok: true; preview: ImportPreview }
@@ -102,9 +112,10 @@ export async function previewImport(input: unknown): Promise<PreviewOutcome> {
     if (!parsed.success) return { ok: false, error: parsed.error.issues[0]!.message };
 
     try {
-        const preview = await api<ImportPreview>("/import/csv", {
+        const preview = await api("/import/csv", {
             method: "POST",
             body: { csv: parsed.data.csv, map: parsed.data.map },
+            schema: importPreviewAnswer,
         });
         return { ok: true, preview };
     } catch (err) {
@@ -131,10 +142,11 @@ export async function commitImport(input: unknown): Promise<{ ok: true; result: 
     if (!parsed.success) return { ok: false, error: parsed.error.issues[0]!.message };
 
     try {
-        const result = await api<ImportResult>("/import/csv", {
+        const result = await api("/import/csv", {
             method: "POST",
             body: { csv: parsed.data.csv, map: parsed.data.map, commit: true },
             timeoutMs: 120_000,
+            schema: importResultAnswer,
         });
         await forgetMine();
         return { ok: true, result };
