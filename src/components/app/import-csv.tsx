@@ -340,12 +340,20 @@ export function ImportCsv({ history }: { history: ImportRecord[] }) {
                 </Section>
             ) : null}
 
+            {/*
+             * The history is not in a card, on purpose. The two cards above are
+             * the things being done — pick a file, decide what happens — and a
+             * third panel of the same weight competes with them for something
+             * nobody came here to read. It is a footnote: you look at it when a
+             * number surprised you, and the rest of the time it should recede.
+             */}
             {history.length > 0 ? (
-                <Section title="Past imports" description="What each run did, so a number you did not expect has an answer.">
-                    <ul className="flex flex-col gap-2 text-sm">
+                <section className="mt-2 flex flex-col gap-2">
+                    <h2 className="text-sm font-medium text-secondary">Past imports</h2>
+                    <ul className="flex flex-col gap-1.5 text-sm">
                         {history.map((run) => (
-                            <li key={run.id} className="flex flex-wrap justify-between gap-x-4 gap-y-1 border-b border-secondary pb-2 last:border-0 last:pb-0">
-                                <span className="text-secondary">
+                            <li key={run.id} className="flex flex-wrap justify-between gap-x-4">
+                                <span className="text-tertiary">
                                     {new Date(run.started_at).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}
                                 </span>
                                 <span className={run.status === "failed" ? "text-error-primary" : "text-tertiary"}>
@@ -358,7 +366,7 @@ export function ImportCsv({ history }: { history: ImportRecord[] }) {
                             </li>
                         ))}
                     </ul>
-                </Section>
+                </section>
             ) : null}
         </div>
     );
