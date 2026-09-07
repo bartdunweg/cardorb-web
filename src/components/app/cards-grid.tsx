@@ -5,7 +5,7 @@ import { FavoriteStar } from "@/components/app/favorite-star";
 import { FlagIcon } from "@/components/app/flag-icon";
 import { cardLabel } from "@/lib/card-label";
 import type { PublicCard } from "@/lib/cards";
-import type { CardsSize } from "@/lib/cards-view";
+import { type CardsSize, GRID_COLUMNS, TILE_WIDTH } from "@/lib/cards-view";
 import { formatPrice } from "@/lib/format";
 import { cx } from "@/utils/cx";
 
@@ -19,24 +19,6 @@ const FIRST_ROW = 6;
 // three and two: two across at medium read as large, and a card is legible at a quarter of the
 // width because the words under it truncate. Exported for the Pokédex, which draws the same
 // tiles so a folder reads the same whichever way it is shown.
-/**
- * The widest a tile is drawn at each size, in CSS pixels, measured on the live grid.
- *
- * This is the number that decides the file, and it was not being passed: `CardImage`'s default
- * of 256 asks for 512 at 2x, there is no 512 rung, and it rounds up to 640 — a 600 px scan at
- * 50 KB where a 192 px tile needs 384 px and 24 KB. Forty-eight tiles carried an extra 1.25 MB
- * nobody's screen could show, and the Pokédex's ninety-six carried 2.5 MB.
- *
- * `lg` genuinely wants 640: it draws at 296. The other two are thumbnails and take quality 60
- * for the same reason, which is what `set-card-tile` was already doing alone.
- */
-export const TILE_WIDTH: Record<CardsSize, number> = { sm: 128, md: 192, lg: 256 };
-
-export const GRID_COLUMNS: Record<CardsSize, string> = {
-    sm: "grid-cols-4 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8",
-    md: "grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6",
-    lg: "grid-cols-2 md:grid-cols-3 xl:grid-cols-4",
-};
 
 export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null; price?: number | null; quantity?: number | null }>({
     cards,

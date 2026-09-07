@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 import { Button as AriaButton } from "react-aria-components";
 import { addCard, markOwned, removeCard, setCopies } from "@/app/(app)/dashboard/cards/actions";
 import { CardImage } from "@/components/app/card-image";
-import { TILE_WIDTH } from "@/components/app/cards-grid";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
+import { TILE_WIDTH } from "@/lib/cards-view";
 import { formatPrice } from "@/lib/format";
 import { cx } from "@/utils/cx";
 
