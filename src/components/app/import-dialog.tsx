@@ -306,7 +306,17 @@ function ImportForm({ close }: { close: () => void }) {
                                                 <td className="py-2 pr-4 text-primary">{row.name}</td>
                                                 <td className="py-2 pr-4 text-secondary">{row.setName}</td>
                                                 <td className="py-2 pr-4 text-secondary">{row.number || "—"}</td>
-                                                <td className="py-2 pr-4 text-secondary">{row.finish ?? "—"}</td>
+                                                <td className="py-2 pr-4 text-secondary">
+                                                    {row.finish ?? "—"}
+                                                    {/*
+                                                     * The pattern under the finish, because they are
+                                                     * two answers about one copy: what it is worth,
+                                                     * and what it looks like. A cosmos holo is a holo.
+                                                     */}
+                                                    {row.foilPattern ? (
+                                                        <span className="block text-xs text-tertiary">{row.foilPattern.replace("-", " ")}</span>
+                                                    ) : null}
+                                                </td>
                                                 <td className="py-2 pr-4 text-secondary">{row.quantity ?? 1}</td>
                                                 <td className="py-2 text-secondary">{row.owned ? "Collection" : "Wishlist"}</td>
                                             </tr>

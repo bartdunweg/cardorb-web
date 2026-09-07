@@ -48,6 +48,8 @@ export type ImportRow = {
     owned: boolean;
     quantity: number | null;
     finish: string | null;
+    /** What the foil looks like, where the file named a pattern. Not the same as the finish. */
+    foilPattern: string | null;
 };
 
 export type ImportPreview = {

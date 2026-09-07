@@ -26,6 +26,23 @@ export type ApiPrice = {
 export type Finish = "normal" | "reverse-holo" | "holo" | "poke-ball" | "master-ball";
 /** The finishes that are a reverse holo with a pattern (151, Prismatic Evolutions): priced and shown as a reverse. */
 export const isReverseFinish = (f: string | null | undefined): boolean => f === "reverse-holo" || f === "poke-ball" || f === "master-ball";
+/**
+ * What the foil on a copy looks like, which is not what it is worth.
+ *
+ * A separate field from `finish` because finish is a price key: it picks between the two series
+ * Cardmarket publishes, and holds the ball patterns only because those two are priced apart. A
+ * cosmos holo and a plain holo of one card are one product and one figure.
+ */
+export type FoilPattern = "cosmos" | "cracked-ice" | "starlight" | "confetti" | "vertical-line";
+
+export const FOIL_PATTERN_LABELS: Record<FoilPattern, string> = {
+    cosmos: "Cosmos",
+    "cracked-ice": "Cracked ice",
+    starlight: "Starlight",
+    confetti: "Confetti",
+    "vertical-line": "Vertical line",
+};
+
 /** What a copy's finish is called in copy. */
 export const FINISH_LABELS: Record<Finish, string> = {
     normal: "Normal",
@@ -50,6 +67,8 @@ export type CardItem = {
     tcgId: string | null;
     owned: boolean;
     finish: Finish | null;
+    /** What the foil looks like, where anything told us. Null is "not recorded". */
+    foilPattern: FoilPattern | null;
     quantity: number;
     condition: string | null;
     grade: string | null;
@@ -85,6 +104,7 @@ export type Card = {
     grade: string | null;
     language: string | null;
     finish: string | null;
+    foil_pattern: string | null;
     purchase_price: number | null;
     purchase_date: string | null;
     acquired_at: string | null;
@@ -169,6 +189,7 @@ export const cardFromItem = (item: CardItem): Card => ({
     grade: item.grade,
     language: item.language,
     finish: item.finish,
+    foil_pattern: item.foilPattern,
     purchase_price: item.purchasePrice,
     purchase_date: item.purchaseDate,
     acquired_at: item.acquiredAt,

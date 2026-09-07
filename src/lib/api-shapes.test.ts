@@ -37,6 +37,7 @@ describe("cardFromItem", () => {
             tcgId: "base1-58",
             owned: false,
             finish: null,
+            foilPattern: null,
             quantity: 1,
             condition: null,
             grade: null,
@@ -101,7 +102,14 @@ describe("publicCardFromItem", () => {
             tcgId: "base1-58",
             copies: 3,
         });
-        expect(card).toMatchObject({ id: "Base Set-58", set_name: "Base Set", quantity: 3, types: ["Lightning"], finish: null, tcg_id: "base1-58" });
+        expect(card).toMatchObject({
+            id: "Base Set-58",
+            set_name: "Base Set",
+            quantity: 3,
+            types: ["Lightning"],
+            finish: null,
+            tcg_id: "base1-58",
+        });
         expect(card.image_url).toMatch(/^https:\/\/.*\/api\/cover\?url=x$/);
     });
 });
