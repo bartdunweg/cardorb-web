@@ -403,6 +403,8 @@ export type SetCard = {
     itemIds: string[];
     /** One number, the way a tile shows it: null where Cardmarket does not price the card. */
     price: number | null;
+    /** The catalogue id everything priced is keyed by; null where the two catalogues never met. */
+    tcgId: string | null;
 };
 
 export const setCardFromBrowse = (c: BrowseCard): SetCard => ({
@@ -420,6 +422,7 @@ export const setCardFromBrowse = (c: BrowseCard): SetCard => ({
     itemIds: c.itemIds,
     // The same rule the collection uses, so one card does not carry two prices across two screens.
     price: priceForCopy({ finish: null, price: c.price, priceHolo: c.priceHolo }),
+    tcgId: c.tcgId,
 });
 
 /** The shape the add action takes, from a set tile. */
@@ -461,6 +464,10 @@ export const browseCardSchema = z.object({
     wishlist: z.boolean(),
     quantity: z.number(),
     itemIds: z.array(z.string()),
+    /* The same card's TCGdex id, where the two catalogues could be matched. The English path
+       numbers a card `me5-85` and everything priced is keyed `me05-085`; the set page carries it
+       so a sheet opened on a card nobody holds can still ask for its price line. */
+    tcgId: nullable(z.string()),
     /* What the card costs, on the routes that price it — the set page. Absent from search, where
        the answer is a name to pick rather than a shelf to read. */
     price: nullable(apiPriceSchema),
