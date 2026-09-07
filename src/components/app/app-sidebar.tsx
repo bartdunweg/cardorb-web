@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, use } from "react";
-import { BookOpen01, Dataflow03, Folder, Grid01, Heart, HomeLine, Plus, Rows01, Star01 } from "@untitledui/icons";
+import { BookOpen01, Folder, Heart, HomeLine, Plus, Rows01, Star01 } from "@untitledui/icons";
 import { usePathname } from "next/navigation";
 import { Button as AriaButton } from "react-aria-components";
 import { AccountMenu } from "@/components/app/account-menu";
@@ -40,12 +40,15 @@ export function AppSidebar({ account, collections }: { account: Promise<Account>
 
     const navItems: (NavItemType | NavItemDividerType)[] = [
         { label: "Home", href: "/dashboard", icon: HomeLine },
+        { label: "Browse", href: "/dashboard/sets", icon: BookOpen01 },
         { label: "Wishlist", href: "/dashboard/wishlist", icon: Heart },
         { label: "All cards", href: "/dashboard/cards", icon: Rows01 },
-        { label: "Browse", href: "/dashboard/sets", icon: BookOpen01 },
         { divider: true, label: "Collections" },
         { label: "Favorites", href: "/dashboard/favorites", icon: Star01 },
-        { label: "Pokédex", href: "/dashboard/pokedex", icon: Grid01 },
+        // A folder like the ones below it. The Pokédex is one of the two that are
+        // always there, not a different kind of thing, and drawing it as a grid
+        // said otherwise.
+        { label: "Pokédex", href: "/dashboard/pokedex", icon: Folder },
     ];
 
     return (
@@ -96,7 +99,13 @@ function FolderRows({ collections, activeUrl }: { collections: Promise<FolderLin
                 const href = `/dashboard/collections/${c.id}`;
                 return (
                     <li key={c.id} className="arrive py-px">
-                        <NavItemBase type="link" icon={c.kind === "rule" ? Dataflow03 : Folder} href={href} current={activeUrl === href}>
+                        {/*
+                         * A folder, however it was filled. A rule folder used to
+                         * draw a flowchart, which named the mechanism rather than
+                         * the thing: from the sidebar it is a folder with cards in
+                         * it, and how they got there is the folder's own business.
+                         */}
+                        <NavItemBase type="link" icon={Folder} href={href} current={activeUrl === href}>
                             {c.name}
                         </NavItemBase>
                     </li>
