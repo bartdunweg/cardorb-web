@@ -156,3 +156,26 @@ describe("holoVariant", () => {
         expect(holoVariant("Rare", null, null, { types: null }).typeClasses).toEqual([]);
     });
 });
+
+describe("a copy that knows its own foil", () => {
+    /**
+     * The era is a guess and it is wrong on modern cosmos cards. Three rows of a real Dex
+     * export are Scarlet & Violet holos whose foil is cosmos; the era alone draws them with
+     * Sword & Shield's sheen, which is the wrong picture of a card somebody owns.
+     */
+    it("uses the recorded pattern over the era", () => {
+        const era = { gen: "Scarlet & Violet" };
+        expect(holoVariant("Rare Holo", "holo", null, era).rarity).toBe("rare holo");
+        expect(holoVariant("Rare Holo", "holo", null, era, "cosmos").rarity).toBe("rare holo cosmos");
+    });
+
+    it("still guesses from the era where nothing recorded a pattern", () => {
+        expect(holoVariant("Rare Holo", "holo", null, { gen: "Black & White" }).rarity).toBe("rare holo cosmos");
+        expect(holoVariant("Rare Holo", "holo", null, { gen: "Black & White" }, null).rarity).toBe("rare holo cosmos");
+    });
+
+    it("says nothing new about a card that is not a plain holo", () => {
+        // A secret rare has its own effect; a foil pattern does not reach into it.
+        expect(holoVariant("Secret Rare", "holo", null, { gen: "Scarlet & Violet" }, "cosmos").rarity).toBe("rare secret");
+    });
+});

@@ -28,6 +28,20 @@ type Props = {
     languages?: readonly string[] | null;
 };
 
+/**
+ * The foil's pattern, which is not the finish. One card is commonly held both
+ * ways — 115 in a real collection are, and a few in two patterns at once — so
+ * it is a choice about this copy rather than a fact about the card.
+ */
+const PATTERNS = [
+    { label: "Not recorded", value: "" },
+    { label: "Cosmos", value: "cosmos" },
+    { label: "Cracked ice", value: "cracked-ice" },
+    { label: "Starlight", value: "starlight" },
+    { label: "Confetti", value: "confetti" },
+    { label: "Vertical line", value: "vertical-line" },
+];
+
 const FINISHES = [
     { label: "Not recorded", value: "" },
     { label: "Normal", value: "normal" },
@@ -58,6 +72,7 @@ function CopyForm({ mode, from, folders, languages, onSaved, close }: Props & { 
     const [condition, setCondition] = useState(from.grade ? "" : (from.condition ?? ""));
     const [grade, setGrade] = useState(from.grade ?? "");
     const [finish, setFinish] = useState(from.finish ?? "");
+    const [pattern, setPattern] = useState(from.foil_pattern ?? "");
     const [folder, setFolder] = useState(from.collection_id ?? "");
     const [price, setPrice] = useState(from.purchase_price != null ? String(from.purchase_price) : "");
     const [saving, setSaving] = useState(false);
@@ -74,6 +89,8 @@ function CopyForm({ mode, from, folders, languages, onSaved, close }: Props & { 
         if (gr !== (from.grade ?? null)) out.grade = gr;
         const fin = (finish || null) as CopyEdits["finish"];
         if (fin !== (from.finish ?? null)) out.finish = fin;
+        const pat = (pattern || null) as CopyEdits["foilPattern"];
+        if (pat !== (from.foil_pattern ?? null)) out.foilPattern = pat;
         if ((folder || null) !== (from.collection_id ?? null)) out.collectionId = folder || null;
         const p = price.trim() === "" ? null : Number(price);
         if (p !== null && !Number.isFinite(p)) return out;
@@ -168,6 +185,19 @@ function CopyForm({ mode, from, folders, languages, onSaved, close }: Props & { 
             <div className="flex items-center justify-between gap-4 text-sm font-medium text-secondary">
                 Finish
                 <NativeSelect aria-label="Finish" size="sm" className="w-auto" value={finish} onChange={(e) => setFinish(e.target.value)} options={FINISHES} />
+            </div>
+
+            {/* Under the finish, because it is the second half of the same question. */}
+            <div className="flex items-center justify-between gap-4 text-sm font-medium text-secondary">
+                Foil pattern
+                <NativeSelect
+                    aria-label="Foil pattern"
+                    size="sm"
+                    className="w-auto"
+                    value={pattern}
+                    onChange={(e) => setPattern(e.target.value)}
+                    options={PATTERNS}
+                />
             </div>
 
             <div className="flex items-center justify-between gap-4 text-sm font-medium text-secondary">

@@ -15,6 +15,7 @@ import { cx } from "@/utils/cx";
 export function HoloCard({
     rarity,
     finish,
+    foilPattern = null,
     facts,
     number,
     types,
@@ -25,6 +26,8 @@ export function HoloCard({
 }: {
     rarity: string | null;
     finish: string | null;
+    /** What this copy's foil is, where anything recorded it; it overrules the guess from `gen`. */
+    foilPattern?: string | null;
     facts: { stage: string | null; hp?: number | null } | null;
     number: string | null;
     types: string[] | null;
@@ -40,7 +43,7 @@ export function HoloCard({
     useHoloTilt(card, surface, { orientationGranted: tilt });
     // Where a starry foil starts: once per card, so it does not jump on a re-render.
     const [seed] = useState(() => ({ x: Math.random(), y: Math.random() }));
-    const v = holoVariant(rarity, finish, facts, { number, types, gen });
+    const v = holoVariant(rarity, finish, facts, { number, types, gen }, foilPattern);
 
     return (
         <div

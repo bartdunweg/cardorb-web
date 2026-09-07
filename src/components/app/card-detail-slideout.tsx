@@ -38,7 +38,7 @@ import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { NativeSelect } from "@/components/base/select/select-native";
-import { FINISH_LABELS, type Finish, isReverseFinish } from "@/lib/api-shapes";
+import { FINISH_LABELS, FOIL_PATTERN_LABELS, type Finish, type FoilPattern, isReverseFinish } from "@/lib/api-shapes";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
 import { sortCopies } from "@/lib/copies";
 import { matchesRule } from "@/lib/folder-rule";
@@ -421,6 +421,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                     <HoloCard
                                         rarity={card.rarity}
                                         finish={mine?.finish ?? card.finish ?? null}
+                                        // A public profile is not told what somebody's copy looks
+                                        // like, so there is nothing to narrow to there.
+                                        foilPattern={mine?.foil_pattern ?? ("foil_pattern" in card ? card.foil_pattern : null)}
                                         facts={known}
                                         number={card.number}
                                         types={card.types}
@@ -584,8 +587,14 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                                                     <FlagIcon language={row.language} />
                                                                     <span className="min-w-0 flex-1 truncate">
                                                                         {[
+                                                                            // The finish, then the foil's pattern where anything
+                                                                            // recorded one: "Holo · Cosmos". Two facts about this
+                                                                            // copy — what it is worth, and what it looks like.
                                                                             row.finish && row.finish !== "normal"
                                                                                 ? (FINISH_LABELS[row.finish as Finish] ?? null)
+                                                                                : null,
+                                                                            row.foil_pattern
+                                                                                ? (FOIL_PATTERN_LABELS[row.foil_pattern as FoilPattern] ?? null)
                                                                                 : null,
                                                                             row.grade ?? row.condition,
                                                                             folderName,

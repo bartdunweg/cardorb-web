@@ -26,6 +26,16 @@ type Props = {
     languages?: readonly string[] | null;
 };
 
+/** The foil's pattern; see the note in copy-form-dialog.tsx for why it is its own field. */
+const PATTERNS = [
+    { label: "Not recorded", value: "" },
+    { label: "Cosmos", value: "cosmos" },
+    { label: "Cracked ice", value: "cracked-ice" },
+    { label: "Starlight", value: "starlight" },
+    { label: "Confetti", value: "confetti" },
+    { label: "Vertical line", value: "vertical-line" },
+];
+
 const FINISHES = [
     { label: "Not recorded", value: "" },
     { label: "Normal", value: "normal" },
@@ -56,6 +66,7 @@ function MarkOwnedForm({ card, folders, languages, onSaved, close }: Props & { c
     const [condition, setCondition] = useState("Near Mint");
     const [grade, setGrade] = useState("");
     const [finish, setFinish] = useState(card.finish ?? "");
+    const [pattern, setPattern] = useState(card.foil_pattern ?? "");
     const [folder, setFolder] = useState("");
     const [price, setPrice] = useState("");
     const [date, setDate] = useState(today());
@@ -71,6 +82,7 @@ function MarkOwnedForm({ card, folders, languages, onSaved, close }: Props & { c
             condition: grade.trim() ? null : condition || null,
             grade: grade.trim() || null,
             finish: (finish || null) as CopyEdits["finish"],
+            foilPattern: (pattern || null) as CopyEdits["foilPattern"],
             collectionId: folder || null,
             purchasePrice: price.trim() === "" ? null : Number(price),
             acquiredAt: date || today(),
@@ -139,6 +151,18 @@ function MarkOwnedForm({ card, folders, languages, onSaved, close }: Props & { c
             <div className={row}>
                 Finish
                 <NativeSelect aria-label="Finish" size="sm" className="w-auto" value={finish} onChange={(e) => setFinish(e.target.value)} options={FINISHES} />
+            </div>
+
+            <div className="flex items-center justify-between gap-4 text-sm font-medium text-secondary">
+                Foil pattern
+                <NativeSelect
+                    aria-label="Foil pattern"
+                    size="sm"
+                    className="w-auto"
+                    value={pattern}
+                    onChange={(e) => setPattern(e.target.value)}
+                    options={PATTERNS}
+                />
             </div>
 
             <div className={row}>

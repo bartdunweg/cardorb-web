@@ -22,6 +22,26 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **2026-09-07, a collection from somewhere else.** A CSV can be imported from Settings — a
+  dialog, fullscreen on a phone, rather than a page: an import is an errand you finish and
+  leave, with no address worth sharing. An export from Dex is recognised on sight and read by
+  its own rules; anything else falls back to naming the columns yourself. Nothing is written
+  until a preview says, in words and numbers, what writing would mean. Every row is added,
+  including cards you already hold — a second copy is a normal thing to own — and how many
+  those are is said out loud, because a CSV row has no `source_id` and so the database cannot
+  refuse the same file twice. Measured on Bart's own 4,536-row export: 2,097 added, 93 of them
+  cards he already had, 2,439 rows that are other *printings* of cards he has, left alone.
+  Most of the work was cardorb-api#230 — the route only accepted a cookie, so it answered 401
+  to this app; the file is UTF-16 with semicolons; `Quantity 0` was being read as owned;
+  `48/108` matched no card. That PR also fixed three set names that resolved to the *wrong*
+  set silently ("Sword & Shield Promos" found the base set), which was hurting reads, not only
+  imports; every one of the 2,097 rows now finds its card in the catalogue, measured row by
+  row. cardorb-api#234 splits what a copy is *worth* (`finish`, a price key) from what it
+  *looks like* (`foil_pattern`) — the question Bart asked when a Cosmos Holo arrived as a plain
+  holo. Web-side: `readCsv` sniffs the byte order mark, `ApiError` keeps the failing body (the
+  400 carries the header row), and one call may outlive the 30 s timeout. The kit's file-upload
+  drop zone was vendored, trimmed to the drop zone alone — dropping `motion` and
+  `@untitledui/file-icons` with the file list — and given the focus ring it shipped without.
 - **2026-09-07, measuring before building.** A note field was built because the API took notes
   and the sheet displayed them, then taken out the same day: not one of the 1,951 rows carries
   a note. The lesson is written down here because it cost a day's PR either way — the list of

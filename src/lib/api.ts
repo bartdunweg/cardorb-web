@@ -25,6 +25,15 @@ export class ApiError extends Error {
     constructor(
         public readonly status: number,
         message: string,
+        /**
+         * Whatever else the failing answer carried, for the rare route that
+         * says something useful in the body of a refusal. The CSV import's 400
+         * sends back the file's header row and the columns it guessed at —
+         * exactly what the screen needs to draw the mapping it is asking about —
+         * and reading only `error` threw that away, leaving the client to ask a
+         * question it had already been handed the answer to.
+         */
+        public readonly details?: unknown,
     ) {
         super(message);
         this.name = "ApiError";
@@ -41,6 +50,14 @@ type Init = {
     auth?: boolean;
     /** A token resolved earlier, for a call made inside a cache scope where `cookies()` is refused. */
     token?: string;
+    /**
+     * Longer than API_TIMEOUT_MS, for the one call that legitimately outlives it.
+     * Committing a CSV import is thousands of inserts and the route allows five
+     * minutes for them; timing out at thirty seconds would abandon a write that
+     * is going to finish anyway and report it as a failure, which is the worst
+     * thing this app could say about an operation nobody can undo.
+     */
+    timeoutMs?: number;
 };
 
 /**
@@ -86,7 +103,7 @@ export async function api<T>(path: string, init: Init = {}): Promise<T> {
             method: init.method ?? "GET",
             headers,
             body: init.body !== undefined ? JSON.stringify(init.body) : undefined,
-            signal: AbortSignal.timeout(API_TIMEOUT_MS),
+            signal: AbortSignal.timeout(init.timeoutMs ?? API_TIMEOUT_MS),
             ...(withAuth ? { cache: "no-store" } : { next: { revalidate: 300 } }),
         });
         const json: unknown = await res.json().catch(() => null);
@@ -94,7 +111,7 @@ export async function api<T>(path: string, init: Init = {}): Promise<T> {
     });
     if (!res.ok) {
         const message = (json as { error?: unknown } | null)?.error;
-        throw new ApiError(res.status, typeof message === "string" ? message : `The API answered ${res.status}.`);
+        throw new ApiError(res.status, typeof message === "string" ? message : `The API answered ${res.status}.`, json ?? undefined);
     }
     return json as T;
 }
