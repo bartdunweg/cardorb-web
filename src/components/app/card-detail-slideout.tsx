@@ -402,7 +402,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                             </>
                         }
                     />
-                    <SlideoutMenu.Header onClose={close} close="none" className="px-0 pt-0">
+                    <SlideoutMenu.Header onClose={close} close="none" className="px-0 pt-0 md:px-0">
                         {/* The card first, on a blurred, dimmed copy of itself: the art sets the header's colour,
                             the way a product page takes its hero's. The copy is decoration and says nothing. */}
                         <div className="relative w-full overflow-hidden rounded-t-2xl sm:rounded-none">
