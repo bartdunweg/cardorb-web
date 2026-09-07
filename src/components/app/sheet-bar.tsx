@@ -56,7 +56,9 @@ export function SheetBar({
             {/* Three columns, the outer two equal, so the name is centred on the bar and not between
                 one button and two. */}
             <div className="relative grid h-17 grid-cols-[1fr_auto_1fr] items-center px-3">
-                <div aria-hidden="true" className="pointer-events-none absolute inset-0 fade-from-page" style={{ opacity: "var(--bar)" }} />
+                {/* Past the bar, not only behind it: the ground is 68px of bar plus a tail below it, so the
+                    fade has room to finish instead of ending at the bar's own edge. */}
+                <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 -bottom-8 fade-from-page" style={{ opacity: "var(--bar)" }} />
                 {/* A gap, because these are glass: three translucent circles touching read as one
                     smear rather than three buttons, and each carries its own faint ring. */}
                 <div className="relative flex items-center gap-3 justify-self-start">{left}</div>
