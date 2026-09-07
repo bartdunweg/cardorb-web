@@ -248,7 +248,14 @@ export const FileUploadDropZone = ({
                         htmlFor={id}
                         className="flex cursor-pointer rounded-md outline-focus-ring peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2"
                     >
-                        <Button color="link-color" size="md" isDisabled={isDisabled} onClick={() => inputRef.current?.click()}>
+                        {/*
+                         * tabIndex -1, and no onClick. The label already
+                         * forwards a click to the input above, so this button was
+                         * a second tab stop that opened the same picker — and a
+                         * screen reader named the upload control twice. The input
+                         * is the control; this is what you see of it.
+                         */}
+                        <Button color="link-color" size="md" isDisabled={isDisabled} tabIndex={-1}>
                             Click to upload <span className="md:hidden">and attach files</span>
                         </Button>
                     </label>

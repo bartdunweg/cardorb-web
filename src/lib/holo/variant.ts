@@ -146,14 +146,23 @@ export function holoVariant(
     finish: string | null | undefined,
     facts: { stage: string | null; hp?: number | null } | null | undefined,
     card: { number?: string | null; types?: string[] | null; gen?: string | null } = {},
+    /** What the copy itself says its foil is, where anything recorded it. */
+    foilPattern?: string | null,
 ): HoloVariant {
     const key = (rarity ?? "").trim().toLowerCase();
     let family = FAMILY[key] ?? "common";
     // A Poké Ball or Master Ball copy is a reverse holo with a pattern: the reverse effect, for now without the pattern.
     if ((finish === "reverse-holo" || finish === "poke-ball" || finish === "master-ball") && REVERSIBLE.has(family)) family = `${family} reverse holo`;
     else if (finish === "holo" && PLAIN.has(family)) family = "rare holo";
-    // The sheen is Sword & Shield's; every holo before it was the starry cosmos foil.
-    if (family === "rare holo" && card.gen && !SHEEN_ERAS.has(card.gen.trim().toLowerCase())) family = "rare holo cosmos";
+    // The sheen is Sword & Shield's; every holo before it was the starry cosmos foil. That is a
+    // guess from the era, and it is only a guess: modern sets print cosmos cards too. A copy that
+    // was told what its foil is overrules it, the way the finish overrules the rarity above —
+    // three cards in a real Dex export are Scarlet & Violet cosmos holos, which the era alone
+    // draws as a sheen.
+    if (family === "rare holo") {
+        const eraSaysCosmos = Boolean(card.gen) && !SHEEN_ERAS.has((card.gen ?? "").trim().toLowerCase());
+        if (foilPattern === "cosmos" || (eraSaysCosmos && !foilPattern)) family = "rare holo cosmos";
+    }
 
     // A trainer (or an energy) has no HP and no stage; the catalogue's facts say so once they land.
     const fullArtTrainer = key === "full art trainer";
