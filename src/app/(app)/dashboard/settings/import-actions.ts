@@ -53,9 +53,13 @@ export type ImportRow = {
 export type ImportPreview = {
     /** Everything the file held, rows written and rows passed over alike. */
     seen: number;
-    /** Rows not written: cards the file says you do not own, plus rows it could not read. */
+    /** Rows not written: printings the file records as not held, plus rows it could not read. */
     skipped: number;
-    /** Of `skipped`, the ones the file itself says you do not own. Not a problem. */
+    /**
+     * Of `skipped`, the printings the file itself records at zero. Not a
+     * problem: an export lists every printing of every card you hold, so most
+     * of a real file is this.
+     */
     notOwned: number;
     /**
      * Rows naming a card the collection already holds. Said out loud, not acted

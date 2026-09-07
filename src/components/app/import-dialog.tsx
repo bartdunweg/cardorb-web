@@ -64,11 +64,26 @@ const plural = (n: number, one: string, many = `${one}s`) => `${n.toLocaleString
  */
 function summary(p: ImportPreview): string {
     const parts = [`${plural(p.seen - p.skipped, "card")} will be added.`];
-    // Two very different things used to share the word "skipped". Most of a Dex
-    // export is the checklist of cards you do *not* have — more than half the
-    // lines of a real file — and calling those unusable reads as an import that
-    // half failed. A row with no name is the only one that actually went wrong.
-    if (p.notOwned > 0) parts.push(`${plural(p.notOwned, "card")} in the file you do not own, left alone.`);
+    /*
+     * Three things used to be one word, "skipped", and each rewording of it was
+     * still wrong until somebody looked at what those rows actually are.
+     *
+     * They are not cards you do not own. In a real 4,536-row export every one
+     * of the 2,440 was another *printing* of a card its owner does have: an
+     * Espeon he holds as Normal also arrives as Reverse Holo, National
+     * Championships and National Championships (Staff), each at zero. So the
+     * sentence names the printing, not the card, and says where they came
+     * from — because "2,439 cards you do not own" is a number that makes a
+     * person ask where those came from, and the answer should not be a
+     * conversation.
+     */
+    if (p.notOwned > 0) {
+        parts.push(
+            p.source === "dex"
+                ? `Dex also lists ${plural(p.notOwned, "printing")} you do not have — those are left alone.`
+                : `${plural(p.notOwned, "row")} the file marks as not owned, left alone.`,
+        );
+    }
     const unreadable = p.skipped - p.notOwned;
     if (unreadable > 0) parts.push(`${plural(unreadable, "row")} could not be read.`);
     return parts.join(" ");
