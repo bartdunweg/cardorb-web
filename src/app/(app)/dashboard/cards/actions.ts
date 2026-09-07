@@ -159,6 +159,41 @@ export async function setFavorite(cardId: string, isFavorite: boolean): Promise<
     return { ok: true };
 }
 
+/** What is true of this copy and no other, in your own words; empty clears it. */
+export async function setNotes(cardId: string, notes: string): Promise<Result> {
+    const parsed = z.object({ cardId: z.string().uuid(), notes: z.string().trim().max(500) }).safeParse({ cardId, notes });
+    if (!parsed.success) return { ok: false, error: "Keep a note under 500 characters." };
+
+    try {
+        await api(`/collection/items/${parsed.data.cardId}`, { method: "PATCH", body: { notes: parsed.data.notes || null } });
+    } catch (err) {
+        return failed(err);
+    }
+
+    await forgetMine();
+    return { ok: true };
+}
+
+/**
+ * Keep this copy off the public profile, or put it back.
+ *
+ * The API and the public routes have honoured the flag since it existed; this is the switch. It
+ * is per copy, not per card: a graded one can stay private while the plain one is shown.
+ */
+export async function setExcluded(cardId: string, excluded: boolean): Promise<Result> {
+    const parsed = z.object({ cardId: z.string().uuid(), excluded: z.boolean() }).safeParse({ cardId, excluded });
+    if (!parsed.success) return { ok: false, error: "Invalid card." };
+
+    try {
+        await api(`/collection/items/${parsed.data.cardId}`, { method: "PATCH", body: { excluded: parsed.data.excluded } });
+    } catch (err) {
+        return failed(err);
+    }
+
+    await forgetMine();
+    return { ok: true };
+}
+
 /** One reading of a card's price, from GET /v1/cards/{tcgId}/prices. Euros; null where Cardmarket published nothing. */
 export type PricePoint = { date: string; market: number | null; holo: number | null };
 

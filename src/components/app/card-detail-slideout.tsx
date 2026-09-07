@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { ArrowRight, DotsHorizontal, Minus, Phone01, Plus, Star01, Trash01, XClose } from "@untitledui/icons";
+import { ArrowRight, DotsHorizontal, Eye, EyeOff, Minus, Phone01, Plus, Star01, Trash01, XClose } from "@untitledui/icons";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
@@ -16,8 +16,10 @@ import {
     setAcquiredAt,
     setCondition,
     setCopies,
+    setExcluded,
     setFavorite,
     setLanguage,
+    setNotes,
 } from "@/app/(app)/dashboard/cards/actions";
 import { type FolderChoice, listCollections, loadFacets, setCardCollection } from "@/app/(app)/dashboard/collections/actions";
 import { CardImage } from "@/components/app/card-image";
@@ -37,6 +39,7 @@ import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { NativeSelect } from "@/components/base/select/select-native";
+import { TextArea } from "@/components/base/textarea/textarea";
 import { FINISH_LABELS, type Finish, isReverseFinish } from "@/lib/api-shapes";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
 import { sortCopies } from "@/lib/copies";
@@ -47,6 +50,52 @@ import { languagesFor } from "@/lib/languages";
 import { cx } from "@/utils/cx";
 
 // `late`: a row the catalogue sends a hop after the sheet has settled arrives like the rest of what streams in.
+/**
+ * The note on this copy, written where it is read. Saved on a button rather than as you type: a
+ * note is finished when the person says so, and a save on every keystroke would write a hundred
+ * rows for one sentence. The button appears only once the text differs from what is stored.
+ */
+function NoteField({ card }: { card: Card }) {
+    const router = useRouter();
+    const [text, setText] = useState(card.notes ?? "");
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [saved, setSaved] = useState<string | null>(null);
+    const stored = saved ?? card.notes ?? "";
+    const changed = text.trim() !== stored.trim();
+
+    const save = async () => {
+        setSaving(true);
+        setError(null);
+        const res = await setNotes(card.id, text.trim());
+        setSaving(false);
+        if (!res.ok) {
+            setError(res.error);
+            return;
+        }
+        setSaved(text.trim());
+        router.refresh();
+    };
+
+    return (
+        <>
+            <TextArea label="Notes" size="sm" rows={2} placeholder="Signed, creased corner, traded with…" value={text} onChange={setText} maxLength={500} />
+            {error ? (
+                <p role="alert" className="text-sm text-error-primary">
+                    {error}
+                </p>
+            ) : null}
+            {changed ? (
+                <div className="flex arrive justify-end">
+                    <Button size="sm" color="secondary" isLoading={saving} onClick={() => void save()}>
+                        Save note
+                    </Button>
+                </div>
+            ) : null}
+        </>
+    );
+}
+
 function DetailRow({ label, value, late = false }: { label: string; value: ReactNode; late?: boolean }) {
     return (
         <div className={cx("flex items-start justify-between gap-4 py-3", late && "arrive")}>
@@ -111,6 +160,20 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
         if (res.ok) router.refresh();
         else setStarred(!next);
     };
+    // Hidden from the public page, kept here so the menu answers the tap: the sheet's row is the
+    // one the grid handed over and a server refresh does not reach it, the same reason the star
+    // keeps its own. Kept with the row it was set for.
+    const [hiddenRow, setHiddenRow] = useState<{ id: string; excluded: boolean } | null>(null);
+    const isHidden = mine ? (hiddenRow?.id === mine.id ? hiddenRow.excluded : mine.excluded) : false;
+    const toggleHidden = async () => {
+        if (!mine) return;
+        const next = !isHidden;
+        setHiddenRow({ id: mine.id, excluded: next });
+        const res = await setExcluded(mine.id, next);
+        if (res.ok) router.refresh();
+        else setHiddenRow({ id: mine.id, excluded: !next });
+    };
+
     // The generation's logo, asked for when a card opens; kept with the series it was read for.
     const [logo, setLogo] = useState<{ series: string; url: string | null } | null>(null);
     const gen = card?.gen ?? null;
@@ -370,6 +433,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                                                     Remove a copy
                                                                 </Dropdown.Item>
                                                             ) : null}
+                                                            {/* Per copy, not per card: a graded one can stay private while the plain one shows. */}
+                                                            <Dropdown.Item icon={isHidden ? Eye : EyeOff} onAction={() => void toggleHidden()}>
+                                                                {isHidden ? "Show on public page" : "Hide from public page"}
+                                                            </Dropdown.Item>
                                                             <Dropdown.Item icon={Trash01} onAction={() => run(() => removeCard(mine.id), true)}>
                                                                 Remove from collection
                                                             </Dropdown.Item>
@@ -528,10 +595,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                         {readOnly ? <DetailRow label="Finish" value={card?.finish} /> : null}
                                     </dl>
 
-                                    {mine?.notes ? (
-                                        <div className="flex flex-col gap-1 border-t border-secondary pt-4">
-                                            <p className="text-sm text-tertiary">Notes</p>
-                                            <p className="text-sm text-primary">{mine.notes}</p>
+                                    {mine ? (
+                                        <div className="flex flex-col gap-2 border-t border-secondary pt-4">
+                                            <NoteField key={mine.id} card={mine} />
                                         </div>
                                     ) : null}
                                 </TabPanel>
