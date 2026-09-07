@@ -111,8 +111,9 @@ export async function previewImport(input: unknown): Promise<PreviewOutcome> {
  * Two minutes rather than the usual thirty seconds. The API allows itself five
  * for this and a few thousand inserts can use them; giving up at thirty would
  * abandon a write that is going to finish anyway and report it as a failure —
- * on the one operation in this app that nobody can undo. The screen says to
- * check the history if this times out, rather than inviting a second run.
+ * on the one operation in this app that nobody can undo. On a timeout the
+ * screen says the write may still be finishing, rather than inviting a second
+ * run that would double everything the first one wrote.
  */
 export async function commitImport(input: unknown): Promise<{ ok: true; result: ImportResult } | { ok: false; error: string }> {
     const parsed = request.safeParse(input);
@@ -135,7 +136,7 @@ export async function commitImport(input: unknown): Promise<{ ok: true; result: 
         if (err instanceof Error && err.name === "TimeoutError") {
             return {
                 ok: false,
-                error: "That import is taking longer than expected. It may still be running — check the history below before trying again.",
+                error: "That import is taking longer than expected. It may still be finishing — close this, reload, and check your cards before trying again.",
             };
         }
         return failed(err);

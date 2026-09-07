@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Monitor04, Moon01, Sun } from "@untitledui/icons";
 import { checkUsername, removeAvatar, updateEmail, updatePassword, updateProfile, uploadAvatar } from "@/app/(app)/dashboard/settings/actions";
 import { signOut } from "@/app/(auth)/actions";
-import { LinkButton } from "@/components/app/link-button";
+import { ImportDialog } from "@/components/app/import-dialog";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Button } from "@/components/base/buttons/button";
@@ -279,9 +279,11 @@ export function SettingsForm({ profile, email, heading }: { profile: Profile; em
 
             <Section title="Import" description="Bring a collection in from Dex, Notion or a spreadsheet.">
                 <div>
-                    <LinkButton href="/dashboard/import" color="secondary" size="md">
-                        Import a CSV file
-                    </LinkButton>
+                    <ImportDialog>
+                        <Button color="secondary" size="md">
+                            Import a CSV file
+                        </Button>
+                    </ImportDialog>
                 </div>
             </Section>
 

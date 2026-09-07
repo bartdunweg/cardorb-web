@@ -23,8 +23,8 @@ which also says what is already yours), Settings (avatar through the API), publi
 ## Last session
 
 - **2026-09-07, a collection from somewhere else.** A CSV can be imported at
-  `/dashboard/import`, reached from Settings (no fifth tab; the phone's pill is sized on a
-  quarter). An export from Dex is recognised on sight and read by its own rules; anything
+  a dialog from Settings — fullscreen on a phone — rather than a page: an import is an errand
+  you finish and leave, with no address worth sharing. An export from Dex is recognised on sight and read by its own rules; anything
   else falls back to naming the columns yourself. Nothing is written until a preview says,
   in words and numbers, what writing would mean — including how many of the cards you
   already hold, which are skipped by default, because a CSV row has no `source_id` and so
@@ -38,7 +38,9 @@ which also says what is already yours), Settings (avatar through the API), publi
   failing body (the 400 carries the header row), and one call may outlive the 30 s timeout.
   The kit's file-upload drop zone was vendored, trimmed to the drop zone alone — dropping
   `motion` and `@untitledui/file-icons` with the file list — and given the focus ring it
-  shipped without.
+  shipped without. Every one of the 2,097 rows finds its card in the catalogue: measured
+  row by row, which is what turned up three set names resolving to the *wrong* set and an
+  EX Trainer Kit the catalogue files under its deck's Pokémon.
 - **2026-09-07, the API's own data.** Four filters instead of two: the card list narrows to one
   generation or one energy type, both from the facets the list read already carries
   (`gen`/`type` in the URL, cardorb-api #226 for the query and the facets). The card sheet's
