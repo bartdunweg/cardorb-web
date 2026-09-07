@@ -210,6 +210,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     // undone with plus rather than with a search. Kept with the row it was read for.
     const [copyCount, setCopies_] = useState<{ id: string; n: number } | null>(null);
     const shownCopies = mine && copyCount?.id === mine.id ? copyCount.n : (mine?.quantity ?? 1);
+    /* Every copy of this card, not just the row on screen: the tab says how many there are before
+       anybody opens it. The listed rows once they are read, the shown row's own count until then. */
+    const heldTotal = copies ? copies.reduce((n, r) => n + (r.quantity ?? 1), 0) : shownCopies;
     const leaving = mine?.owned === true && shownCopies === 0;
     const step = async (n: number) => {
         if (!mine) return;
@@ -552,7 +555,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                             <Tabs className="flex flex-col gap-5">
                                 <TabList aria-label="Card" type="underline" size="sm" className={mine ? undefined : "sr-only"}>
                                     <Tab id="details" label="Details" />
-                                    {mine?.owned ? <Tab id="copies" label="Copies" /> : null}
+                                    {mine?.owned ? <Tab id="copies" label="Copies" badge={heldTotal > 1 ? heldTotal : undefined} /> : null}
                                     {mine ? <Tab id="price" label="Price" /> : null}
                                 </TabList>
                                 <TabPanel id="details" className="flex flex-col gap-6">

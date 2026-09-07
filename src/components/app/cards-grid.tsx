@@ -38,7 +38,7 @@ export const GRID_COLUMNS: Record<CardsSize, string> = {
     lg: "grid-cols-2 md:grid-cols-3 xl:grid-cols-4",
 };
 
-export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null; price?: number | null }>({
+export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null; price?: number | null; quantity?: number | null }>({
     cards,
     onSelect,
     size = "md",
@@ -96,11 +96,28 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                                 ) : null}
                             </span>
                             <span className="truncate text-xs text-tertiary">{cardLabel(card, size)}</span>
-                            {/* The market price carries the weight of the name, as a marketplace tile does; the set line stays quiet. */}
-                            {card.price != null ? (
-                                <span className="mt-0.5 text-sm font-medium text-primary tabular-nums">
-                                    <span className="sr-only">Market price </span>
-                                    {formatPrice(card.price)}
+                            {/* How many you hold, then what one is worth: the count on the left and the price
+                                against the right edge, so a column of tiles reads down either side. A card is
+                                listed once however many copies you have, so without this the only way to learn
+                                you own three was to open the sheet.
+
+                                Only past one. A ×1 under all 48 tiles is a column of the same character, and
+                                one is what a tile already means. */}
+                            {(card.quantity ?? 1) > 1 || card.price != null ? (
+                                <span className="mt-0.5 flex items-baseline justify-between gap-2 text-sm font-medium tabular-nums">
+                                    <span className="text-tertiary">
+                                        {(card.quantity ?? 1) > 1 ? (
+                                            <>
+                                                <span className="sr-only">You hold </span>×{card.quantity}
+                                            </>
+                                        ) : null}
+                                    </span>
+                                    {card.price != null ? (
+                                        <span className="text-primary">
+                                            <span className="sr-only">Market price </span>
+                                            {formatPrice(card.price)}
+                                        </span>
+                                    ) : null}
                                 </span>
                             ) : null}
                         </div>
