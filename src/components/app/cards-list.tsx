@@ -40,7 +40,20 @@ export function CardsList({
     empty: ReactNode;
 }) {
     const first = use(list);
-    const [cards, setCards] = useState(first.cards);
+    /* The server's first page, and whatever scrolling has appended to it — two things, not one
+       array copied once. `useState(first.cards)` took that copy on the first render and kept it,
+       so a card removed from the sheet was still on the list behind after the page re-read: the
+       refresh handed down a new first page and nothing was listening.
+       Reset during render rather than in an effect, which is the shape React asks for and the one
+       this repo's lint allows. */
+    const [appended, setAppended] = useState<Card[]>([]);
+    const [seed, setSeed] = useState(first.cards);
+    if (seed !== first.cards) {
+        setSeed(first.cards);
+        setAppended([]);
+    }
+    const cards = appended.length ? [...first.cards, ...appended] : first.cards;
+    const setCards = (next: (have: Card[]) => Card[]) => setAppended((have) => next([...first.cards, ...have]).slice(first.cards.length));
     const [failed, setFailed] = useState(false);
     const [pending, startTransition] = useTransition();
     const sentinel = useRef<HTMLDivElement>(null);
