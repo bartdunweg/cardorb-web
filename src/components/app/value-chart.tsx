@@ -124,7 +124,11 @@ export function ValueChart({
                         aria-labelledby={svgTitleId}
                         aria-describedby={descId}
                         tabIndex={0}
-                        className="block rounded-md outline-focus-ring focus-visible:outline-2"
+                        // outline-hidden, or Safari draws its own light-blue ring the moment the chart
+                        // is clicked: the app's ring is set at focus-visible only, and a plain
+                        // click focus left the element with no outline of ours for the browser to
+                        // replace. Same guard the kit puts on its select and its inputs.
+                        className="block rounded-md outline-hidden outline-focus-ring focus-visible:outline-2"
                         onMouseMove={(e) => pick(e.clientX)}
                         onMouseLeave={() => setActive(null)}
                         onTouchStart={(e) => pick(e.touches[0].clientX)}

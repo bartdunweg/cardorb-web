@@ -57,7 +57,9 @@ export function SheetBar({
                 one button and two. */}
             <div className="relative grid h-17 grid-cols-[1fr_auto_1fr] items-center px-3">
                 <div aria-hidden="true" className="pointer-events-none absolute inset-0 fade-from-page" style={{ opacity: "var(--bar)" }} />
-                <div className="relative flex justify-self-start">{left}</div>
+                {/* A gap, because these are glass: three translucent circles touching read as one
+                    smear rather than three buttons, and each carries its own faint ring. */}
+                <div className="relative flex items-center gap-3 justify-self-start">{left}</div>
                 {/* Decoration: the heading below is the title, this is it shown again where it can be read. */}
                 <p aria-hidden="true" className="relative min-w-0 truncate text-center text-md font-semibold text-primary" style={{ opacity: "var(--bar)" }}>
                     {title}
