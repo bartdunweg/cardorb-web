@@ -125,10 +125,14 @@ export function ValueChart({
                         aria-describedby={descId}
                         tabIndex={0}
                         // outline-hidden, or Safari draws its own light-blue ring the moment the chart
-                        // is clicked: the app's ring is set at focus-visible only, and a plain
-                        // click focus left the element with no outline of ours for the browser to
-                        // replace. Same guard the kit puts on its select and its inputs.
-                        className="block rounded-md outline-hidden outline-focus-ring focus-visible:outline-2"
+                        // is clicked: our ring is set at focus-visible only, and a plain click focus
+                        // left the element with no outline of ours for the browser to replace.
+                        //
+                        // outline-solid is not decoration. outline-hidden sets --tw-outline-style to
+                        // none, and outline-2 only sets the width from that variable, so without it
+                        // the keyboard ring is 2px of nothing — measured. The kit gets away with a
+                        // bare outline-hidden because its focus indicator is a ring, not an outline.
+                        className="block rounded-md outline-hidden outline-focus-ring focus-visible:outline-2 focus-visible:outline-solid"
                         onMouseMove={(e) => pick(e.clientX)}
                         onMouseLeave={() => setActive(null)}
                         onTouchStart={(e) => pick(e.touches[0].clientX)}
