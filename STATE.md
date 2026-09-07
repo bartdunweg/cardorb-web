@@ -22,6 +22,45 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **2026-09-08, the words the app uses for itself.** It said Collection for two things: your whole
+  collection was "All cards", and the binders you make were "Collections" — the singular and the
+  plural of one word meaning a page and a list of other pages. All cards is **Collection** now and
+  a folder is a **Binder**, one word with a singular and a plural. The `collections` table, the
+  route and the API path keep their names: those are addresses, and one is a contract the iOS app
+  reads. CLAUDE.md already drew that line and now says the new words (#295).
+- **2026-09-08, the price label named its input.** Every figure showed as "Market price" and none
+  was one: it is the market price through the measured band in the API's `price-basis.mjs` —
+  above €20 about a quarter higher, between €5 and €20 about an eighth *lower*, unchanged below
+  that, where there is no band. Measured here: 197 cards above €20 carry €19,418 of market and
+  show €24,758; 96 between €5 and €20 carry €985 and show €852. The band is careful work, fitted
+  on cards checked by hand, and answers a better question than the trend — a trend is dragged down
+  by played copies and a binder is mostly Near Mint. So the number stayed and the word changed to
+  **Near Mint price** (#294). **Still open, and bigger than the label:** condition and grade do not
+  reach the price at all, so a Poor copy and a PSA 10 show what a Near Mint one does. Neither
+  Cardmarket nor TCGplayer publishes either — checked, both feeds carry printing and no condition.
+  PokemonPriceTracker does, RAW and PSA, at $9.99 a month, but from the American market.
+- **2026-09-08, one card is one tile.** The list returned an item per stored row, so a card held
+  four times drew four identical tiles and paging, totals and the counts all treated them as four
+  things. Grouped where the list is built, on everything that makes a copy different — not on
+  purchase price or date, which are facts about a transaction (cardorb-api #247). The tile carries
+  the count beside the price, at ×1 too: a number that only sometimes appears is one whose absence
+  you have to notice. All cards went from 1,932 to 1,915, which is the honest count.
+- **2026-09-08, a night of things that failed silently.** None of these threw, logged or turned a
+  check red. `GRID_COLUMNS` lived in a `"use client"` file, so the set page — a server component —
+  read it as `undefined` and set `className="grid gap-4 undefined"`: one card per row at 639 px
+  (#286). A card removed from the sheet stayed on the list behind, because `useState(first.cards)`
+  takes the server's page once and never looks again (#292). The minus on a copy answered a press
+  with nothing when the group could not be found (#284). Tiles asked the image optimizer for 640 px
+  to fill 192: measured 60.3 KB against 19.8 KB, so a list carried ~1.9 MB and the Pokédex ~3.9 MB
+  of pixels no screen could show (#274). The lesson each time was the same: green is not evidence.
+- **2026-09-08, the card sheet became one thing.** It opens on **Your copies** for a card you hold
+  and for one you do not — where it says so and offers the collection or the wishlist, which is
+  what a set page is full of and what the sheet had no answer for. The last minus may empty a card
+  again, because the panel now answers at once with the two ways back rather than removing it when
+  the sheet closes. Tapping a card on a set page opens the sheet instead of a menu; the menu is a
+  dots button beside the plus, both under the picture rather than over the art. Prev and next work
+  there too (#287, #288, #290, #291, #293).
+
 - **2026-09-07, one package manager.** The API installed with npm and the web app with pnpm, for
   no reason either of them chose, so every instruction spanning both had to say which. Both are
   pnpm now (cardorb-api #245): `packageManager` pins 11.22.0, `pnpm-workspace.yaml` names the one
