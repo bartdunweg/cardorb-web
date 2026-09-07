@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { ArrowRight, ChevronLeft, ChevronRight, DotsHorizontal, Eye, EyeOff, Minus, Phone01, Plus, Star01, Trash01, XClose } from "@untitledui/icons";
+import { ArrowRight, ChevronLeft, ChevronRight, DotsHorizontal, Minus, Phone01, Plus, Star01, Trash01, XClose } from "@untitledui/icons";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
@@ -16,7 +16,6 @@ import {
     setAcquiredAt,
     setCondition,
     setCopies,
-    setExcluded,
     setFavorite,
     setLanguage,
 } from "@/app/(app)/dashboard/cards/actions";
@@ -24,7 +23,6 @@ import { type FolderChoice, listCollections, loadFacets, setCardCollection } fro
 import { CardImage } from "@/components/app/card-image";
 import { CONDITIONS } from "@/components/app/condition-badge";
 import { CopyFormDialog } from "@/components/app/copy-form-dialog";
-import { FavoriteStar } from "@/components/app/favorite-star";
 import { FlagIcon } from "@/components/app/flag-icon";
 import { FolderDialog } from "@/components/app/folder-dialog";
 import { HoloCard } from "@/components/app/holo-card";
@@ -132,20 +130,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         if (res.ok) router.refresh();
         else setStarred(!next);
     };
-    // Hidden from the public page, kept here so the menu answers the tap: the sheet's row is the
-    // one the grid handed over and a server refresh does not reach it, the same reason the star
-    // keeps its own. Kept with the row it was set for.
-    const [hiddenRow, setHiddenRow] = useState<{ id: string; excluded: boolean } | null>(null);
-    const isHidden = mine ? (hiddenRow?.id === mine.id ? hiddenRow.excluded : mine.excluded) : false;
-    const toggleHidden = async () => {
-        if (!mine) return;
-        const next = !isHidden;
-        setHiddenRow({ id: mine.id, excluded: next });
-        const res = await setExcluded(mine.id, next);
-        if (res.ok) router.refresh();
-        else setHiddenRow({ id: mine.id, excluded: !next });
-    };
-
     // The generation's logo, asked for when a card opens; kept with the series it was read for.
     const [logo, setLogo] = useState<{ series: string; url: string | null } | null>(null);
     const gen = card?.gen ?? null;
@@ -219,8 +203,13 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const askTilt = async () => {
         if (await requestOrientation()) setTiltGranted(true);
     };
+    const canTilt = tiltNeedsAsk && !tiltGranted;
+    // In the dots menu, where the card's other actions are — a bar button of its own spent one of
+    // the four places up there on a thing an iPhone asks once and never again. Where there is no
+    // menu (somebody else's card, a read-only sheet) it stays a button, because otherwise it has
+    // nowhere to live and the tilt is exactly what you want on a card you are being shown.
     const tiltButton =
-        tiltNeedsAsk && !tiltGranted ? (
+        canTilt && !mine ? (
             <Button
                 color="tertiary"
                 size="lg"
@@ -390,30 +379,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                     className="glass text-primary ring-1 ring-glass ring-inset"
                                     onClick={() => void closeSheet()}
                                 />
-                                {/* Through the list without going back to it. Left of the title beside
-                                    Close, because they are about this sheet rather than about the card. */}
-                                {onPrev || onNext ? (
-                                    <>
-                                        <Button
-                                            color="tertiary"
-                                            size="lg"
-                                            iconLeading={ChevronLeft}
-                                            aria-label="Previous card"
-                                            isDisabled={!onPrev}
-                                            className="glass text-primary ring-1 ring-glass ring-inset"
-                                            onClick={() => onPrev?.()}
-                                        />
-                                        <Button
-                                            color="tertiary"
-                                            size="lg"
-                                            iconLeading={ChevronRight}
-                                            aria-label="Next card"
-                                            isDisabled={!onNext}
-                                            className="glass text-primary ring-1 ring-glass ring-inset"
-                                            onClick={() => onNext?.()}
-                                        />
-                                    </>
-                                ) : null}
                             </>
                         }
                         right={
@@ -445,34 +410,24 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                             />
                                             <Dropdown.Popover placement="bottom end" className="w-56">
                                                 <Dropdown.Menu>
-                                                    {mine.wishlist ? (
-                                                        <>
-                                                            <Dropdown.Item icon={Trash01} onAction={() => run(() => removeCard(mine.id), true)}>
-                                                                Remove from wishlist
-                                                            </Dropdown.Item>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Dropdown.Item icon={Plus} onAction={() => run(() => setCopies(mine.id, (mine.quantity ?? 1) + 1))}>
-                                                                Add a copy
-                                                            </Dropdown.Item>
-                                                            {(mine.quantity ?? 1) > 1 ? (
-                                                                <Dropdown.Item
-                                                                    icon={Minus}
-                                                                    onAction={() => run(() => setCopies(mine.id, (mine.quantity ?? 1) - 1))}
-                                                                >
-                                                                    Remove a copy
-                                                                </Dropdown.Item>
-                                                            ) : null}
-                                                            {/* Per copy, not per card: a graded one can stay private while the plain one shows. */}
-                                                            <Dropdown.Item icon={isHidden ? Eye : EyeOff} onAction={() => void toggleHidden()}>
-                                                                {isHidden ? "Show on public page" : "Hide from public page"}
-                                                            </Dropdown.Item>
-                                                            <Dropdown.Item icon={Trash01} onAction={() => run(() => removeCard(mine.id), true)}>
-                                                                Remove from collection
-                                                            </Dropdown.Item>
-                                                        </>
-                                                    )}
+                                                    {/* Once the card can follow the phone, the browser has been asked and
+                                                        the question does not come back. */}
+                                                    {canTilt ? (
+                                                        <Dropdown.Item icon={Phone01} onAction={() => void askTilt()}>
+                                                            Tilt with your phone
+                                                        </Dropdown.Item>
+                                                    ) : null}
+                                                    {/* Copies are counted in the Copies tab, with the rest of what a copy is.
+                                                        Adding and removing one here as well was a second place for the same
+                                                        number, and the one that showed no other copy while it did it.
+
+                                                        "Hide from public page" is gone because it hid nothing: `forPublic()`
+                                                        strips the flag rather than filtering on it, and the only reader left
+                                                        was the latest-pull block, which the profile no longer shows. What
+                                                        does keep cards off a public profile is a folder's own switch. */}
+                                                    <Dropdown.Item icon={Trash01} onAction={() => run(() => removeCard(mine.id), true)}>
+                                                        {mine.wishlist ? "Remove from wishlist" : "Remove from collection"}
+                                                    </Dropdown.Item>
                                                 </Dropdown.Menu>
                                             </Dropdown.Popover>
                                         </Dropdown.Root>
@@ -495,6 +450,37 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                 end at 66px (top-3 plus a 44px button); pt-16 left eight pixels under them,
                                 which read as the card being pinned to the bar rather than sitting below it. */}
                             <div className="relative px-10 pt-24 pb-6">
+                                {/* Through the list without going back to it. Beside the card rather than
+                                    in the bar: the card is 176px in a panel more than twice that, so the
+                                    room either side of it was already there, and here an arrow points at
+                                    the thing it changes instead of sitting among the sheet's own buttons.
+                                    Centred on the card, not on the box, since the box also holds the
+                                    padding the card tilts in. */}
+                                {onPrev || onNext ? (
+                                    <div
+                                        aria-hidden={false}
+                                        className="pointer-events-none absolute inset-x-1 top-24 bottom-6 z-10 flex items-center justify-between"
+                                    >
+                                        <Button
+                                            color="tertiary"
+                                            size="lg"
+                                            iconLeading={ChevronLeft}
+                                            aria-label="Previous card"
+                                            isDisabled={!onPrev}
+                                            className="pointer-events-auto glass text-primary ring-1 ring-glass ring-inset"
+                                            onClick={() => onPrev?.()}
+                                        />
+                                        <Button
+                                            color="tertiary"
+                                            size="lg"
+                                            iconLeading={ChevronRight}
+                                            aria-label="Next card"
+                                            isDisabled={!onNext}
+                                            className="pointer-events-auto glass text-primary ring-1 ring-glass ring-inset"
+                                            onClick={() => onNext?.()}
+                                        />
+                                    </div>
+                                ) : null}
                                 {card?.image_url ? (
                                     /* The card tilts and shines under the pointer (the copy's finish and the
                                        printing's rarity pick the foil); the header's padding is the room it tilts in. */
@@ -530,8 +516,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                         </div>
                         <div className="flex flex-col px-4 pt-4 md:px-6">
                             <AriaHeading ref={titleRef} slot="title" className="text-lg font-semibold text-primary">
+                                {/* No star here. The bar above carries it as a button you can press;
+                                    a second one under the title said the same thing and did nothing. */}
                                 {card?.name}
-                                {isStarred && mine ? <FavoriteStar /> : null}
                             </AriaHeading>
                             <p className="text-sm text-tertiary">
                                 {[card?.set_name, card?.number ? `#${card.number}` : null].filter(Boolean).join(" · ") || "—"}
