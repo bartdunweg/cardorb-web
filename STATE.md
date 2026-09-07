@@ -35,9 +35,9 @@ which also says what is already yours), Settings (avatar through the API), publi
   from the card's menu (`excluded`, answered by `GET /v1/cards` since cardorb-api #227, held in
   the sheet's own state as the star is). A note field was built and taken out the same day: not
   one of the 1,951 rows carries a note, so a writable field answered a question nobody had asked.
-  Notes stay readable where there is one, as before. Home's Owned
-  tile says how many copies that is where it is more than the cards, and a card in the Add
-  dialog says whether you already hold it and how many. No Sets tile: Browse says on purpose
+  Notes stay readable where there is one, as before. A card in the Add
+  dialog says whether you already hold it and how many. Owned counts the cards held, a duplicate
+  twice (1,929 here); the lists count printings, so All cards reads one lower. No Sets tile: Browse says on purpose
   that how far the shelf is comes per set, not as one number over all of them. Settings answers
   whether a username is free while it is typed (`GET /v1/usernames/{name}`), and the public
   address under the toggle names the saved username rather than the field. A public profile
