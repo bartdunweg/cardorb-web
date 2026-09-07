@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button as AriaButton } from "react-aria-components";
 import { addCard, markOwned, removeCard, setCopies } from "@/app/(app)/dashboard/cards/actions";
 import { CardImage } from "@/components/app/card-image";
+import { TILE_WIDTH } from "@/components/app/cards-grid";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
 import { formatPrice } from "@/lib/format";
@@ -24,7 +25,15 @@ type Result = { ok: true } | { ok: false; error: string };
  * which card this is and whether it is yours, so the grey is never the only signal.
  */
 /** `readOnly`: another language's catalogue, which the collection cannot take yet; the tile shows and does nothing. */
-export function SetCardTile({ card, readOnly = false }: { card: SetCard; readOnly?: boolean }) {
+export function SetCardTile({
+    card,
+    readOnly = false,
+    priority = false,
+}: {
+    card: SetCard;
+    readOnly?: boolean;
+    /** On screen at load: the first row, which holds the largest paint. */ priority?: boolean;
+}) {
     const router = useRouter();
     const [pending, startTransition] = useTransition();
     const [error, setError] = useState<string | null>(null);
@@ -69,7 +78,14 @@ export function SetCardTile({ card, readOnly = false }: { card: SetCard; readOnl
                            every other list in the app reads as a shelf, and dimming a card to 30% grey
                            is the one presentation that hides the thing you came to look at — what you
                            are missing. What you hold is said by the mark in the corner instead. */
-                        <CardImage src={card.imageHighUrl ?? card.imageUrl} alt="" width={160} className="object-cover" />
+                        <CardImage
+                            src={card.imageHighUrl ?? card.imageUrl}
+                            fallbackSrc={card.imageUrl}
+                            alt=""
+                            width={TILE_WIDTH.md}
+                            priority={priority}
+                            className="object-cover"
+                        />
                     ) : (
                         <div className="flex size-full flex-col items-center justify-center gap-1 p-3 text-center">
                             <span className="line-clamp-4 text-sm font-medium text-secondary">{card.name}</span>

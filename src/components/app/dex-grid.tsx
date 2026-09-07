@@ -4,7 +4,7 @@ import { type ReactNode, Suspense, use, useEffect, useRef, useState } from "reac
 import { listCopies } from "@/app/(app)/dashboard/cards/actions";
 import { CardDetailSlideout } from "@/components/app/card-detail-slideout";
 import { CardImage } from "@/components/app/card-image";
-import { GRID_COLUMNS } from "@/components/app/cards-grid";
+import { GRID_COLUMNS, TILE_WIDTH } from "@/components/app/cards-grid";
 import { DexSlider } from "@/components/app/dex-slider";
 import { CardsSkeleton } from "@/components/app/skeletons";
 import { ViewMenu } from "@/components/app/view-menu";
@@ -121,7 +121,14 @@ function DexTile({ slot, onSelect }: { slot: NamedDexSlot; onSelect?: (card: Dex
     const picture = (
         <div className={cx("relative aspect-card w-full overflow-hidden rounded-card", !card.imageUrl && "bg-quaternary")}>
             {card.imageUrl ? (
-                <CardImage src={card.imageHighUrl ?? card.imageUrl} alt="" quality={75} className="object-cover" />
+                <CardImage
+                    src={card.imageHighUrl ?? card.imageUrl}
+                    fallbackSrc={card.imageUrl}
+                    width={TILE_WIDTH.md}
+                    alt=""
+                    quality={60}
+                    className="object-cover"
+                />
             ) : (
                 <div className="flex h-full w-full flex-col items-center justify-center gap-1 p-3 text-center">
                     <span className="line-clamp-4 text-sm font-medium text-secondary">{card.name}</span>

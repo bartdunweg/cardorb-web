@@ -53,7 +53,7 @@ export default async function SetPage({ params, searchParams }: { params: Promis
                 above={
                     set.logoUrl ? (
                         <div className="relative h-14 w-48 max-w-full">
-                            <CardImage src={set.logoUrl} alt="" width={384} ratio="square" className="object-contain object-left" />
+                            <CardImage src={set.logoUrl} alt="" width={192} ratio="square" className="object-contain object-left" />
                         </div>
                     ) : undefined
                 }
@@ -67,7 +67,8 @@ export default async function SetPage({ params, searchParams }: { params: Promis
                 {/* The first two rows arrive 20 ms apart, the rest together; the same wave as a folder's cards. */}
                 {set.cards.map((card, i) => (
                     <li key={card.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i, 16) * 20}ms` } as React.CSSProperties}>
-                        <SetCardTile card={card} readOnly={language !== "en"} />
+                        {/* The first row is on screen at load and holds the largest paint, the same rule cards-grid follows. */}
+                        <SetCardTile card={card} readOnly={language !== "en"} priority={i < 6} />
                     </li>
                 ))}
             </ul>
