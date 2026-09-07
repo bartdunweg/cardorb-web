@@ -578,11 +578,14 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                         {/* The list before its panels, and only once there is a card: a panel without its tab is
                             what react-aria warns about, and the sheet is mounted closed on every list page. A public
                             view has Details alone; the list is drawn all the same, so the panel has its tab. */}
+                        {/* On a card you hold, what you hold comes first: you opened it to see your own copies,
+                            and the catalogue's facts about the printing answer a different question. A card you do
+                            not hold has no such tab, and then Details is the front of the sheet as before. */}
                         {card ? (
-                            <Tabs className="flex flex-col gap-5">
+                            <Tabs className="flex flex-col gap-5" defaultSelectedKey={mine?.owned ? "copies" : "details"}>
                                 <TabList aria-label="Card" type="underline" size="sm" className={mine ? undefined : "sr-only"}>
-                                    <Tab id="details" label="Details" />
                                     {mine?.owned ? <Tab id="copies" label="Your copies" badge={heldTotal > 1 ? heldTotal : undefined} /> : null}
+                                    <Tab id="details" label="Details" />
                                     {mine ? <Tab id="price" label="Price" /> : null}
                                 </TabList>
                                 <TabPanel id="details" className="flex flex-col gap-6">
