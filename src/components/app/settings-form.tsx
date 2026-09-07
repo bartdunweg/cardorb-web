@@ -7,7 +7,7 @@ import { Button as AriaButton, Heading as AriaHeading } from "react-aria-compone
 import { checkUsername, removeAvatar, updateEmail, updatePassword, updateProfile, uploadAvatar } from "@/app/(app)/dashboard/settings/actions";
 import { signOut } from "@/app/(auth)/actions";
 import { ImportDialog } from "@/components/app/import-dialog";
-import { SettingsGroup, SettingsLinkRow, SettingsRow } from "@/components/app/settings-rows";
+import { SettingsGroup, SettingsLinkRow, SettingsRow, SheetHeader } from "@/components/app/settings-rows";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Button } from "@/components/base/buttons/button";
@@ -194,12 +194,9 @@ export function SettingsForm({ profile, email, heading }: { profile: Profile; em
                 <SettingsRow
                     icon={User01}
                     label="Manage profile"
-                    content={() => (
+                    content={(close) => (
                         <div className="flex flex-col gap-5 p-5">
-                            <AriaHeading slot="title" className="text-lg font-semibold text-primary">
-                                Manage profile
-                            </AriaHeading>
-                            <p className="text-sm text-tertiary">This is how you appear in Cardorb.</p>
+                            <SheetHeader title="Manage profile" description="This is how you appear in Cardorb." close={close} />
                             <div className="flex items-center gap-4">
                                 <Avatar src={avatarUrl || undefined} alt={displayName || username} size="xl" />
                                 <div className="flex flex-col gap-2">
@@ -259,7 +256,12 @@ export function SettingsForm({ profile, email, heading }: { profile: Profile; em
                                 </Button>
                             ) : null}
                             <StatusText msg={profileMsg} />
-                            <div>
+                            {/* Cancel beside Save, because a sheet on a phone has no page
+                                beside it to tap and Escape is not a thing anybody sees. */}
+                            <div className="flex justify-end gap-3">
+                                <Button color="secondary" onClick={close} isDisabled={savingProfile}>
+                                    Cancel
+                                </Button>
                                 <Button onClick={saveProfile} isLoading={savingProfile}>
                                     Save changes
                                 </Button>
@@ -270,12 +272,9 @@ export function SettingsForm({ profile, email, heading }: { profile: Profile; em
                 <SettingsRow
                     icon={Lock01}
                     label="Password"
-                    content={() => (
+                    content={(close) => (
                         <div className="flex flex-col gap-5 p-5">
-                            <AriaHeading slot="title" className="text-lg font-semibold text-primary">
-                                Password
-                            </AriaHeading>
-                            <p className="text-sm text-tertiary">Set a new password for your account.</p>
+                            <SheetHeader title="Password" description="Set a new password for your account." close={close} />
                             <Input
                                 label="Current password"
                                 type="password"
@@ -294,7 +293,10 @@ export function SettingsForm({ profile, email, heading }: { profile: Profile; em
                                 autoComplete="new-password"
                             />
                             <StatusText msg={pwMsg} />
-                            <div>
+                            <div className="flex justify-end gap-3">
+                                <Button color="secondary" onClick={close} isDisabled={savingPw}>
+                                    Cancel
+                                </Button>
                                 <Button onClick={savePassword} isLoading={savingPw}>
                                     Update password
                                 </Button>
@@ -309,12 +311,9 @@ export function SettingsForm({ profile, email, heading }: { profile: Profile; em
                     icon={Sun}
                     label="Theme"
                     value={THEME_LABELS[currentTheme] ?? null}
-                    content={() => (
+                    content={(close) => (
                         <div className="flex flex-col gap-5 p-5">
-                            <AriaHeading slot="title" className="text-lg font-semibold text-primary">
-                                Theme
-                            </AriaHeading>
-                            <p className="text-sm text-tertiary">Choose how Cardorb looks.</p>
+                            <SheetHeader title="Theme" description="Choose how Cardorb looks." close={close} />
                             <ButtonGroup
                                 selectionMode="single"
                                 disallowEmptySelection
@@ -334,6 +333,12 @@ export function SettingsForm({ profile, email, heading }: { profile: Profile; em
                                     System
                                 </ButtonGroupItem>
                             </ButtonGroup>
+                            <div className="flex justify-end">
+                                {/* It applies the moment it is picked, so there is nothing to confirm. */}
+                                <Button color="secondary" onClick={close}>
+                                    Done
+                                </Button>
+                            </div>
                         </div>
                     )}
                 />

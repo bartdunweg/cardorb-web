@@ -3,8 +3,9 @@
 import type { FC, ReactNode } from "react";
 import { ChevronRight } from "@untitledui/icons";
 import Link from "next/link";
-import { Button as AriaButton } from "react-aria-components";
+import { Button as AriaButton, Heading as AriaHeading } from "react-aria-components";
 import { SheetDialog } from "@/components/app/sheet-dialog";
+import { CloseButton } from "@/components/base/buttons/close-button";
 import { cx } from "@/utils/cx";
 
 /**
@@ -103,5 +104,26 @@ export function SettingsLinkRow({
             <RowBody icon={icon} label={label} value={value} />
             {external ? <span className="sr-only">(opens in a new tab)</span> : null}
         </Link>
+    );
+}
+
+/**
+ * A sheet's title, and the way back out of it.
+ *
+ * Every sheet needs one and the first three did not have one: the forms were moved into sheets
+ * with their Save button and nothing else, so a phone — where there is no dimmed page beside the
+ * sheet to tap — had no way to leave without saving. Escape worked and nothing said so.
+ */
+export function SheetHeader({ title, description, close }: { title: string; description?: string; close: () => void }) {
+    return (
+        <div className="flex items-start justify-between gap-4">
+            <div className="flex min-w-0 flex-col gap-1">
+                <AriaHeading slot="title" className="text-lg font-semibold text-primary">
+                    {title}
+                </AriaHeading>
+                {description ? <p className="text-sm text-tertiary">{description}</p> : null}
+            </div>
+            <CloseButton onClick={close} size="sm" className="-mt-1 -mr-1" />
+        </div>
     );
 }
