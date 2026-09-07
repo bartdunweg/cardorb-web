@@ -122,8 +122,18 @@ export function SetCardTile({
                     picture's corner, over the art you came to look at, and on a grid of 129 that is
                     129 things floating on top of the cards. Under it they are still one press away
                     and the card is whole. */}
-                <div className="mt-0.5 flex items-center justify-between gap-2">
-                    <span className="text-sm font-medium text-primary tabular-nums">
+                <div className="mt-0.5 flex items-center gap-2">
+                    {/* The same two numbers a tile carries on every other list: how many you hold on
+                        the left, what one is worth on the right. A set page was the one place that
+                        said only the price, so a card you held four of looked like a card you held. */}
+                    <span className="text-sm font-medium text-tertiary tabular-nums">
+                        {card.owned && card.quantity > 0 ? (
+                            <>
+                                <span className="sr-only">You hold </span>×{card.quantity}
+                            </>
+                        ) : null}
+                    </span>
+                    <span className="ml-auto text-sm font-medium text-primary tabular-nums">
                         {card.price != null ? (
                             <>
                                 <span className="sr-only">Market price </span>
