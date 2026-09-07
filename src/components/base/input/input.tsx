@@ -247,6 +247,12 @@ export interface InputProps
             | "inputClassName"
             | "iconClassName"
             | "tooltipClassName"
+            // Changed from the kit: `min` and `max`, so a date field can name its bounds. React
+            // Aria's TextField does not forward them, and without them the picker offers days that
+            // cannot be answers — a card acquired next Tuesday. A re-fetch through the Untitled UI
+            // CLI or MCP overwrites this; re-apply it.
+            | "min"
+            | "max"
         > {
     /** Label text for the input */
     label?: string;
@@ -273,6 +279,8 @@ export const Input = ({
     wrapperClassName,
     tooltipClassName,
     type = "text",
+    min,
+    max,
     ...props
 }: InputProps) => {
     return (
@@ -299,6 +307,8 @@ export const Input = ({
                             tooltipClassName,
                             tooltip,
                             type,
+                            min,
+                            max,
                         }}
                     />
 

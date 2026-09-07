@@ -35,6 +35,7 @@ import { Tab, TabList, TabPanel, Tabs } from "@/components/application/tabs/tabs
 import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
+import { Input } from "@/components/base/input/input";
 import { NativeSelect } from "@/components/base/select/select-native";
 import { FINISH_LABELS, FOIL_PATTERN_LABELS, type Finish, type FoilPattern, isReverseFinish } from "@/lib/api-shapes";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
@@ -760,17 +761,18 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                             label="Acquired"
                                                             value={
                                                                 mine.owned ? (
-                                                                    <input
+                                                                    /* The kit's Input, the way mark-owned-dialog already asks for this
+                                                                       same date. It was a raw input styled by hand and read as a smaller
+                                                                       control in a column of larger ones — the two places that ask for an
+                                                                       acquired date now ask the same way. */
+                                                                    <Input
                                                                         type="date"
                                                                         aria-label="Acquired"
-                                                                        // The metrics NativeSelect size="sm" uses, so the date sits at the same
-                                                                        // height and radius as the Language and Condition rows above it. It was a
-                                                                        // hand-styled input and read as a smaller control in a column of larger ones.
-                                                                        className="rounded-lg bg-primary py-2 pl-3 text-sm font-medium text-primary ring-1 ring-primary outline-hidden transition duration-100 ease-linear ring-inset focus-visible:ring-2 focus-visible:ring-brand"
+                                                                        size="sm"
+                                                                        className="w-auto"
                                                                         value={mine.acquired_at ? mine.acquired_at.slice(0, 10) : ""}
                                                                         max={new Date().toISOString().slice(0, 10)}
-                                                                        onChange={(e) => {
-                                                                            const date = e.target.value;
+                                                                        onChange={(date) => {
                                                                             if (date) void run(() => setAcquiredAt(mine.id, date));
                                                                         }}
                                                                     />

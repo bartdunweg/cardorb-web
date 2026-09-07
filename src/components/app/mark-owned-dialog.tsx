@@ -262,7 +262,17 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
 
             <div className={row}>
                 Got it on
-                <Input type="date" aria-label="Got it on" size="sm" className="w-full" value={date} onChange={setDate} />
+                {/* No future days: a card you hold was got in the past. The sheet's own Acquired row has
+                    always said so; this one had not. */}
+                <Input
+                    type="date"
+                    aria-label="Got it on"
+                    size="sm"
+                    className="w-full"
+                    max={new Date().toISOString().slice(0, 10)}
+                    value={date}
+                    onChange={setDate}
+                />
             </div>
 
             {error ? (
