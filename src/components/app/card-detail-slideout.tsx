@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useRef, useState } from "react";
-import { ArrowRight, DotsHorizontal, Minus, Plus, Star01, Trash01, XClose } from "@untitledui/icons";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { ArrowRight, DotsHorizontal, Minus, Phone01, Plus, Star01, Trash01, XClose } from "@untitledui/icons";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
@@ -41,6 +41,7 @@ import type { Card, Facets, PublicCard } from "@/lib/cards";
 import { sortCopies } from "@/lib/copies";
 import { matchesRule } from "@/lib/folder-rule";
 import { formatDate, formatPrice } from "@/lib/format";
+import { orientationNeedsPermission, requestOrientation } from "@/lib/holo/orientation";
 import { languagesFor } from "@/lib/languages";
 import { cx } from "@/utils/cx";
 
@@ -137,6 +138,29 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
         };
     }, [tcgId]);
     const known = facts?.tcgId === tcgId ? facts.facts : null;
+    // On an iPhone the card can follow the phone's tilt once the browser has asked; a Tilt button
+    // in the bar is the tap it asks from. The question is the browser's, read as an external store,
+    // false on the server, so both renders agree.
+    const tiltNeedsAsk = useSyncExternalStore(
+        () => () => {},
+        () => orientationNeedsPermission(),
+        () => false,
+    );
+    const [tiltGranted, setTiltGranted] = useState(false);
+    const askTilt = async () => {
+        if (await requestOrientation()) setTiltGranted(true);
+    };
+    const tiltButton =
+        tiltNeedsAsk && !tiltGranted ? (
+            <Button
+                color="tertiary"
+                size="lg"
+                iconLeading={Phone01}
+                aria-label="Tilt with your phone"
+                className="glass text-primary ring-1 ring-glass ring-inset"
+                onClick={() => void askTilt()}
+            />
+        ) : null;
     // The dots menu's actions: each one server call, then the page re-reads; removing closes the sheet
     // first, since the card it showed is gone.
     const [busy, setBusy] = useState(false);
@@ -298,61 +322,64 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                             />
                         }
                         right={
-                            mine ? (
-                                <>
-                                    {mine.owned ? (
-                                        <Button
-                                            color={isStarred ? "primary" : "tertiary"}
-                                            size="lg"
-                                            iconLeading={Star01}
-                                            aria-label="Favorite"
-                                            aria-pressed={isStarred}
-                                            isLoading={starring}
-                                            onClick={toggleStar}
-                                            className={isStarred ? undefined : "glass text-primary ring-1 ring-glass ring-inset"}
-                                        />
-                                    ) : null}
-                                    {/* What else is done to a card: copies, and taking it out. A wish can be marked owned here too. */}
-                                    <Dropdown.Root>
-                                        <Button
-                                            color="tertiary"
-                                            size="lg"
-                                            iconLeading={DotsHorizontal}
-                                            aria-label="More"
-                                            isLoading={busy}
-                                            className="glass text-primary ring-1 ring-glass ring-inset"
-                                        />
-                                        <Dropdown.Popover placement="bottom end" className="w-56">
-                                            <Dropdown.Menu>
-                                                {mine.wishlist ? (
-                                                    <>
-                                                        <Dropdown.Item icon={Trash01} onAction={() => run(() => removeCard(mine.id), true)}>
-                                                            Remove from wishlist
-                                                        </Dropdown.Item>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Dropdown.Item icon={Plus} onAction={() => run(() => setCopies(mine.id, (mine.quantity ?? 1) + 1))}>
-                                                            Add a copy
-                                                        </Dropdown.Item>
-                                                        {(mine.quantity ?? 1) > 1 ? (
-                                                            <Dropdown.Item
-                                                                icon={Minus}
-                                                                onAction={() => run(() => setCopies(mine.id, (mine.quantity ?? 1) - 1))}
-                                                            >
-                                                                Remove a copy
+                            <>
+                                {tiltButton}
+                                {mine ? (
+                                    <>
+                                        {mine.owned ? (
+                                            <Button
+                                                color={isStarred ? "primary" : "tertiary"}
+                                                size="lg"
+                                                iconLeading={Star01}
+                                                aria-label="Favorite"
+                                                aria-pressed={isStarred}
+                                                isLoading={starring}
+                                                onClick={toggleStar}
+                                                className={isStarred ? undefined : "glass text-primary ring-1 ring-glass ring-inset"}
+                                            />
+                                        ) : null}
+                                        {/* What else is done to a card: copies, and taking it out. A wish can be marked owned here too. */}
+                                        <Dropdown.Root>
+                                            <Button
+                                                color="tertiary"
+                                                size="lg"
+                                                iconLeading={DotsHorizontal}
+                                                aria-label="More"
+                                                isLoading={busy}
+                                                className="glass text-primary ring-1 ring-glass ring-inset"
+                                            />
+                                            <Dropdown.Popover placement="bottom end" className="w-56">
+                                                <Dropdown.Menu>
+                                                    {mine.wishlist ? (
+                                                        <>
+                                                            <Dropdown.Item icon={Trash01} onAction={() => run(() => removeCard(mine.id), true)}>
+                                                                Remove from wishlist
                                                             </Dropdown.Item>
-                                                        ) : null}
-                                                        <Dropdown.Item icon={Trash01} onAction={() => run(() => removeCard(mine.id), true)}>
-                                                            Remove from collection
-                                                        </Dropdown.Item>
-                                                    </>
-                                                )}
-                                            </Dropdown.Menu>
-                                        </Dropdown.Popover>
-                                    </Dropdown.Root>
-                                </>
-                            ) : null
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Dropdown.Item icon={Plus} onAction={() => run(() => setCopies(mine.id, (mine.quantity ?? 1) + 1))}>
+                                                                Add a copy
+                                                            </Dropdown.Item>
+                                                            {(mine.quantity ?? 1) > 1 ? (
+                                                                <Dropdown.Item
+                                                                    icon={Minus}
+                                                                    onAction={() => run(() => setCopies(mine.id, (mine.quantity ?? 1) - 1))}
+                                                                >
+                                                                    Remove a copy
+                                                                </Dropdown.Item>
+                                                            ) : null}
+                                                            <Dropdown.Item icon={Trash01} onAction={() => run(() => removeCard(mine.id), true)}>
+                                                                Remove from collection
+                                                            </Dropdown.Item>
+                                                        </>
+                                                    )}
+                                                </Dropdown.Menu>
+                                            </Dropdown.Popover>
+                                        </Dropdown.Root>
+                                    </>
+                                ) : null}
+                            </>
                         }
                     />
                     <SlideoutMenu.Header onClose={close} close="none" className="px-0 pt-0">
@@ -378,6 +405,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                         number={card.number}
                                         types={card.types}
                                         gen={card.gen}
+                                        tilt={tiltGranted}
                                         className="mx-auto w-full max-w-44"
                                     >
                                         <CardImage

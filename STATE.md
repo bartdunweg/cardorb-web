@@ -38,7 +38,9 @@ which also says what is already yours), Settings (avatar through the API), publi
   status now `arrive` like their siblings; the holo card lets go 150 ms after the pointer
   leaves, not 500; the page bar's fades ease on `--ease-enter`. Rejected on purpose: the search
   hits and chips (keyboard-driven), the value chart's range switch (data being read), a sliding
-  tab underline, a skeleton cross-fade.
+  tab underline, a skeleton cross-fade. On an iPhone a Tilt button in the sheet's bar asks the
+  one-time gyroscope permission (`src/lib/holo/orientation.ts`); after it the phone drives the
+  card, as Android does without asking.
 - **2026-09-06, the search evening.** A search can be narrowed by chips once something is
   typed (#240): under the field a row that scrolls sideways, Set and Rarity on the phone's
   search sheet (the sets and rarities you hold, from the facets), Set and Type in the desktop

@@ -19,6 +19,7 @@ export function HoloCard({
     number,
     types,
     gen,
+    tilt = false,
     className,
     children,
 }: {
@@ -29,12 +30,14 @@ export function HoloCard({
     types: string[] | null;
     /** The series the card was printed in; the picture's window and the holo's pattern follow it. */
     gen: string | null;
+    /** True once the phone may be read (iOS asks first); the hook attaches the sensor when it flips. */
+    tilt?: boolean;
     className?: string;
     children: ReactNode;
 }) {
     const card = useRef<HTMLDivElement>(null);
     const surface = useRef<HTMLDivElement>(null);
-    useHoloTilt(card, surface);
+    useHoloTilt(card, surface, { orientationGranted: tilt });
     // Where a starry foil starts: once per card, so it does not jump on a re-render.
     const [seed] = useState(() => ({ x: Math.random(), y: Math.random() }));
     const v = holoVariant(rarity, finish, facts, { number, types, gen });
