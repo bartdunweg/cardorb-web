@@ -8,7 +8,7 @@ export default async function CollectionsPage() {
     return (
         <div className="flex flex-1 flex-col gap-6">
             <PageHeader
-                title="Collections"
+                title="Binders"
                 actions={
                     <div className="max-lg:hidden">
                         <NewCollectionButton />

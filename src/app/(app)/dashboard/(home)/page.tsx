@@ -71,7 +71,7 @@ async function ValueSection({ selected, total }: { selected: string; total: numb
     ]);
     // The wishlist last: its number is what the cards you lack would cost, not what you hold.
     const lists: ValueList[] = [
-        { id: "all", name: "All cards" },
+        { id: "all", name: "Collection" },
         { id: "favorites", name: "Favorites" },
         ...folders.map((f) => ({ id: f.id, name: f.name })),
         { id: "wishlist", name: "Wishlist" },

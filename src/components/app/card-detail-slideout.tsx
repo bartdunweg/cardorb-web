@@ -944,12 +944,12 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                     {/* The folder this copy is filed in. Only a folder filled by hand takes a card; a rule
                                         folder fills itself. With none yet, the way to file it is to make one. */}
                                                     <DetailRow
-                                                        label="Folder"
+                                                        label="Binder"
                                                         value={
                                                             <span className="flex flex-col items-end gap-2">
                                                                 {manual.length ? (
                                                                     <NativeSelect
-                                                                        aria-label="Folder"
+                                                                        aria-label="Binder"
                                                                         size="sm"
                                                                         className="w-auto max-w-48"
                                                                         value={collectionId}
@@ -969,7 +969,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                                     }}
                                                                 >
                                                                     <Button size="sm" color="link-gray" iconLeading={Plus}>
-                                                                        New folder
+                                                                        New binder
                                                                     </Button>
                                                                 </FolderDialog>
                                                                 {collectionError ? (
@@ -985,8 +985,8 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                             Favorites when starred. A wish is in none of them. */}
                                                 {mine ? (
                                                     <div className="flex flex-col gap-1.5">
-                                                        <span className="text-sm font-medium text-secondary">In folders</span>
-                                                        <ul className="flex flex-wrap gap-1.5" aria-label="In folders">
+                                                        <span className="text-sm font-medium text-secondary">In binders</span>
+                                                        <ul className="flex flex-wrap gap-1.5" aria-label="In binders">
                                                             {[
                                                                 ...(isStarred ? [{ id: "favorites", name: "Favorites" }] : []),
                                                                 ...collections.filter((c) =>

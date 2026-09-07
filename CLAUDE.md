@@ -50,14 +50,16 @@ to this.
 
 ## Domain
 
-- **Collection** — everything you own, as a list of folders: All cards, Favorites, the Pokédex,
-  and the ones you make. Browse (every set there has been) and the wishlist sit beside it, not
-  in it. In copy the word means only what you own.
-- **Folder** — an entry under Collections: two that are always there (Favorites, Pokédex) and
-  the ones you make, by hand or by rule. All cards stands beside them, a tab and a sidebar
-  item of its own. The `collections` table and the `/collections` routes are the ones you
-  make; in copy one entry is a "Folder" and the list of them is "Collections", nothing else.
-  On desktop the sidebar's Collections section is the list; on a phone the Collections tab is.
+- **Collection** — everything you own. That is the word on screen for the whole of it, and the
+  page that lists every card you hold; Browse (every set there has been) and the wishlist sit
+  beside it, not in it.
+- **Binder** — one place you put cards: two that are always there (Favorites, Pokédex) and the
+  ones you make, by hand or by rule. In copy one is a "Binder" and the list of them is
+  "Binders", nothing else — one word with a singular and a plural, where it used to be a
+  "Folder" inside "Collections" and the app said Collection for two different things.
+  The `collections` table, the `/collections` routes and the API's own path keep their names:
+  those are addresses, and one of them is a contract the iOS app reads.
+  On desktop the sidebar's Binders section is the list; on a phone the Binders tab is.
 - **Owned / wishlist** — mutually exclusive. A card you do not own is on the wishlist, nowhere
   else. Collection views and stats exclude wishlist cards.
 - **Favorite** — a flag on a card you own, shown as a folder that is always there.

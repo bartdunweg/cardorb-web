@@ -35,10 +35,10 @@ export function NewCollectionButton({ compact }: { compact?: boolean }) {
     return (
         <FolderDialog mode="create">
             {compact ? (
-                <Button iconLeading={Plus} size="lg" aria-label="New folder" />
+                <Button iconLeading={Plus} size="lg" aria-label="New binder" />
             ) : (
                 <Button iconLeading={Plus} size="md">
-                    New folder
+                    New binder
                 </Button>
             )}
         </FolderDialog>
@@ -80,9 +80,9 @@ export function CollectionsGrid({ collections, favoritesCount }: { collections: 
                 // On a phone the hub above is the page and the plus beside the title is the way in; the
                 // empty state would only push the tab bar's worth of nothing under two tiles.
                 <div className="hidden lg:contents">
-                    <AppEmptyState icon="folder" title="No folders yet" description="Group your cards into folders you can jump to from the sidebar.">
+                    <AppEmptyState icon="folder" title="No binders yet" description="Group your cards into binders you can jump to from the sidebar.">
                         <FolderDialog mode="create">
-                            <Button iconLeading={Plus}>New folder</Button>
+                            <Button iconLeading={Plus}>New binder</Button>
                         </FolderDialog>
                     </AppEmptyState>
                 </div>
