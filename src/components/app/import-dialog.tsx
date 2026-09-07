@@ -8,6 +8,7 @@ import { LinkButton } from "@/components/app/link-button";
 import { FileUploadDropZone } from "@/components/application/file-upload/file-upload-base";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { Button } from "@/components/base/buttons/button";
+import { CloseButton } from "@/components/base/buttons/close-button";
 import { Checkbox } from "@/components/base/checkbox/checkbox";
 import { NativeSelect } from "@/components/base/select/select-native";
 import { MAX_CSV_BYTES, readCsv } from "@/lib/csv-file";
@@ -191,11 +192,20 @@ function ImportForm({ close }: { close: () => void }) {
         // screen — the one control that must never be out of sight. The numbers
         // are the overlay's own padding, p-4 and sm:p-8.
         <div className="flex max-h-[calc(100dvh-2rem)] w-full flex-col overflow-hidden rounded-xl bg-primary shadow-lg ring-1 ring-secondary max-sm:h-dvh max-sm:max-h-dvh max-sm:rounded-none sm:max-h-[calc(100dvh-4rem)]">
-            <div className="flex flex-col gap-1 px-5 pt-5 pb-4 sm:px-6 sm:pt-6">
-                <AriaHeading slot="title" className="text-lg font-semibold text-primary">
-                    Import a collection
-                </AriaHeading>
-                <p className="text-sm text-tertiary">A CSV export from Dex, Notion, or any spreadsheet with a card name and a set. Up to 2 MB.</p>
+            <div className="flex items-start justify-between gap-4 px-5 pt-5 pb-4 sm:px-6 sm:pt-6">
+                <div className="flex flex-col gap-1">
+                    <AriaHeading slot="title" className="text-lg font-semibold text-primary">
+                        Import a collection
+                    </AriaHeading>
+                    <p className="text-sm text-tertiary">A CSV export from Dex, Notion, or any spreadsheet with a card name and a set. Up to 2 MB.</p>
+                </div>
+                {/*
+                 * Escape closes this and so does Cancel, but on a phone the dialog is
+                 * the whole screen: no dimmed page beside it to tap, no Escape key, and
+                 * the footer is a scroll away while a long file is being read. The cross
+                 * is the way out that is always where you expect it.
+                 */}
+                <CloseButton onClick={close} size="sm" className="-mt-1 -mr-1" />
             </div>
 
             <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-5 pb-4 sm:px-6">
