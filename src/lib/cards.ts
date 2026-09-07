@@ -143,6 +143,8 @@ export async function getMyCards({
 
 export type CardStats = {
     owned: number;
+    /** Copies held, which is more than the cards owned wherever a card is held twice. */
+    copies: number;
     wishlist: number;
     favorites: number;
     /** Today's value of every copy held, in euros. A whole-collection figure the API adds up (R-DATA-006 there). */
@@ -159,7 +161,7 @@ export const getStats = () => perUser("stats", async (token) => (await api<{ sta
 // The dashboard's numbers. "Owned" counts cards (rows), as the page always has.
 export async function getCardStats(): Promise<CardStats> {
     const stats = await getStats();
-    return { owned: stats.cards, wishlist: stats.wishlist, favorites: stats.favorites, value: stats.value, unpriced: stats.unpriced };
+    return { owned: stats.cards, copies: stats.copies, wishlist: stats.wishlist, favorites: stats.favorites, value: stats.value, unpriced: stats.unpriced };
 }
 
 /**

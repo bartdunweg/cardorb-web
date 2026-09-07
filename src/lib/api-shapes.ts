@@ -365,6 +365,7 @@ export const pokemonCardFromSetCard = (c: SetCard): PokemonCard => ({
     nationalPokedexNumbers: null,
     owned: c.owned,
     wishlist: c.wishlist,
+    quantity: c.quantity ?? 0,
 });
 
 // ── GET /v1/catalog/search ────────────────────────────────────────────────────────────────
@@ -406,6 +407,8 @@ export type PokemonCard = {
     /** Already in the collection or on the wishlist, so the button can say so. */
     owned: boolean;
     wishlist: boolean;
+    /** Copies already held: "you have three of this" is a different answer from "you have it". */
+    quantity: number;
 };
 
 export const pokemonCardFromBrowse = (c: BrowseCard): PokemonCard => ({
@@ -427,6 +430,7 @@ export const pokemonCardFromBrowse = (c: BrowseCard): PokemonCard => ({
     nationalPokedexNumbers: null,
     owned: c.owned,
     wishlist: c.wishlist,
+    quantity: c.quantity ?? 0,
 });
 
 // ── GET /v1/profile ───────────────────────────────────────────────────────────────────────
