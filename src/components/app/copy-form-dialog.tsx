@@ -11,6 +11,7 @@ import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/applica
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { NativeSelect } from "@/components/base/select/select-native";
+import { TextArea } from "@/components/base/textarea/textarea";
 import type { Card } from "@/lib/api-shapes";
 import type { CopyEdits } from "@/lib/copies";
 import { languageOf, languagesFor } from "@/lib/languages";
@@ -60,6 +61,7 @@ function CopyForm({ mode, from, folders, languages, onSaved, close }: Props & { 
     const [finish, setFinish] = useState(from.finish ?? "");
     const [folder, setFolder] = useState(from.collection_id ?? "");
     const [price, setPrice] = useState(from.purchase_price != null ? String(from.purchase_price) : "");
+    const [notes, setNotes] = useState(from.notes ?? "");
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const manual = folders.filter((f) => !f.rule);
@@ -78,6 +80,8 @@ function CopyForm({ mode, from, folders, languages, onSaved, close }: Props & { 
         const p = price.trim() === "" ? null : Number(price);
         if (p !== null && !Number.isFinite(p)) return out;
         if (p !== (from.purchase_price ?? null)) out.purchasePrice = p;
+        const note = notes.trim() || null;
+        if (note !== (from.notes ?? null)) out.notes = note;
         return out;
     };
     const changes = edits();
@@ -186,6 +190,9 @@ function CopyForm({ mode, from, folders, languages, onSaved, close }: Props & { 
                 Purchase price
                 <Input type="number" aria-label="Purchase price" size="sm" className="w-28" placeholder="0.00" value={price} onChange={setPrice} />
             </div>
+
+            {/* What is true of this copy and no other: signed, a bent corner, who it came from. */}
+            <TextArea label="Notes" size="sm" rows={2} placeholder="Signed, creased corner, traded with…" value={notes} onChange={setNotes} maxLength={500} />
 
             {error ? (
                 <p role="alert" className="text-sm text-error-primary">

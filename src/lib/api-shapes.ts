@@ -58,6 +58,8 @@ export type CardItem = {
     purchaseDate: string | null;
     notes: string | null;
     isFavorite: boolean;
+    /** Kept off the public profile and the latest pull; absent from an API older than its #227. */
+    excluded?: boolean;
     acquiredAt: string | null;
     collectionId: string | null;
     price: ApiPrice | null;
@@ -77,6 +79,8 @@ export type Card = {
     quantity: number | null;
     owned: boolean | null;
     is_favorite: boolean | null;
+    /** Kept off the public profile and the latest pull. */
+    excluded: boolean;
     condition: string | null;
     grade: string | null;
     language: string | null;
@@ -160,6 +164,7 @@ export const cardFromItem = (item: CardItem): Card => ({
     quantity: item.quantity,
     owned: item.owned,
     is_favorite: item.isFavorite,
+    excluded: item.excluded ?? false,
     condition: item.condition,
     grade: item.grade,
     language: item.language,

@@ -20,6 +20,7 @@ export const copyEdits = z
         condition: z.string().trim().max(40).nullable(),
         grade: z.string().trim().max(40).nullable(),
         finish: z.enum(["normal", "reverse-holo", "holo", "poke-ball", "master-ball"]).nullable(),
+        notes: z.string().trim().max(500).nullable(),
         collectionId: z.string().uuid().nullable(),
         purchasePrice: z.number().min(0).nullable(),
         purchaseDate: z.string().nullable(),

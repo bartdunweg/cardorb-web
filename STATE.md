@@ -30,6 +30,10 @@ which also says what is already yours), Settings (avatar through the API), publi
   silently on Browse (paged now, ten pages at most), and `catalogueUnavailable` was ignored, so
   an outage looked like an empty collection; a line over the list says so. A copy can be a Poké
   Ball or Master Ball reverse (cardorb-api #225); **the migration still has to be pushed**.
+  Then the notes and the flag: a copy's note is written where it is read (the sheet's Details
+  tab, saved on a button) and travels with a split copy; a copy can be kept off the public page
+  from the card's menu (`excluded`, answered by `GET /v1/cards` since cardorb-api #227, held in
+  the sheet's own state as the star is). The kit's `textarea` is vendored for both.
 - **2026-09-06, later the same evening.** The phone's page title sits on the bar's line beside its
   buttons where there is no Back (All cards, Wishlist, Collections); the tab bar and the sidebar
   read Home, Wishlist, All cards, then Collections / Browse; the card in its sheet starts under
