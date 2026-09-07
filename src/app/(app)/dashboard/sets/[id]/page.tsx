@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CardImage } from "@/components/app/card-image";
+import { GRID_COLUMNS } from "@/components/app/cards-grid";
 import { PageHeader } from "@/components/app/page-header";
 import { SetCardTile } from "@/components/app/set-card-tile";
 import { ProgressBarBase } from "@/components/base/progress-indicators/progress-indicators";
@@ -60,7 +61,9 @@ export default async function SetPage({ params, searchParams }: { params: Promis
                 <ProgressBarBase value={set.owned} max={set.total || 1} className="mt-2 max-w-md" aria-label={`${set.name} completion`} />
             </PageHeader>
 
-            <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
+            {/* The same grid as every other overview, at the same size: a set was denser than any
+                list in the app, which is what made it read as a checklist rather than a shelf. */}
+            <ul className={`grid gap-4 ${GRID_COLUMNS.md}`}>
                 {/* The first two rows arrive 20 ms apart, the rest together; the same wave as a folder's cards. */}
                 {set.cards.map((card, i) => (
                     <li key={card.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i, 16) * 20}ms` } as React.CSSProperties}>

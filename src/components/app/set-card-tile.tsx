@@ -8,6 +8,7 @@ import { addCard, markOwned, removeCard, setCopies } from "@/app/(app)/dashboard
 import { CardImage } from "@/components/app/card-image";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
+import { formatPrice } from "@/lib/format";
 import { cx } from "@/utils/cx";
 
 type Result = { ok: true } | { ok: false; error: string };
@@ -47,28 +48,43 @@ export function SetCardTile({ card, readOnly = false }: { card: SetCard; readOnl
     }[state];
 
     return (
-        <div className="flex flex-col gap-1.5">
+        <div className="relative flex flex-col gap-1.5">
             <Dropdown.Root>
                 <AriaButton
                     isDisabled={pending || readOnly}
                     aria-label={`${card.name} #${card.number}, ${stateLabel}`}
                     className={({ isPressed, isFocusVisible }) =>
                         cx(
-                            "relative block aspect-card w-full cursor-pointer overflow-hidden rounded-card ring-1 ring-secondary outline-focus-ring ring-inset",
-                            !card.owned && "bg-secondary",
-                            (isPressed || isFocusVisible) && "outline-2 outline-offset-2",
+                            // The shared tile's own frame: a card is its own surface, so nothing of ours
+                            // sits behind it and the grey box is only for a card with no picture.
+                            "relative block aspect-card w-full cursor-pointer overflow-hidden rounded-card outline-offset-2 outline-focus-ring",
+                            !card.imageUrl && "bg-quaternary",
+                            (isPressed || isFocusVisible) && "outline-2",
                             pending && "cursor-progress",
                         )
                     }
                 >
                     {card.imageUrl ? (
-                        <CardImage src={card.imageUrl} alt="" width={160} className={cx("object-cover", !card.owned && "opacity-30 grayscale")} />
+                        /* In full colour, whether or not it is yours. A set read as a checklist while
+                           every other list in the app reads as a shelf, and dimming a card to 30% grey
+                           is the one presentation that hides the thing you came to look at — what you
+                           are missing. What you hold is said by the mark in the corner instead. */
+                        <CardImage src={card.imageHighUrl ?? card.imageUrl} alt="" width={160} className="object-cover" />
                     ) : (
-                        <div className="flex size-full items-center justify-center bg-quaternary p-1 text-center text-2xs text-quaternary">{card.name}</div>
+                        <div className="flex size-full flex-col items-center justify-center gap-1 p-3 text-center">
+                            <span className="line-clamp-4 text-sm font-medium text-secondary">{card.name}</span>
+                            <span className="text-2xs text-quaternary">#{card.number}</span>
+                        </div>
                     )}
-                    {state === "wishlist" ? (
-                        <span className="absolute top-1 right-1 flex size-5 items-center justify-center rounded-full bg-primary text-fg-quaternary ring-1 ring-secondary">
-                            <Heart className="size-3" aria-hidden="true" />
+                    {state !== "missing" ? (
+                        <span
+                            className={cx(
+                                "absolute top-1.5 right-1.5 flex h-5 min-w-5 items-center justify-center gap-0.5 rounded-full px-1 text-2xs font-semibold shadow-xs",
+                                state === "owned" ? "bg-primary-solid text-primary_on-brand" : "bg-primary text-fg-quaternary ring-1 ring-secondary",
+                            )}
+                        >
+                            {state === "owned" ? <Check className="size-3" aria-hidden="true" /> : <Heart className="size-3" aria-hidden="true" />}
+                            {state === "owned" && card.quantity > 1 ? <span className="tabular-nums">{card.quantity}</span> : null}
                         </span>
                     ) : null}
                 </AriaButton>
@@ -128,11 +144,45 @@ export function SetCardTile({ card, readOnly = false }: { card: SetCard; readOnl
                 </Dropdown.Popover>
             </Dropdown.Root>
 
-            <span className="flex items-baseline gap-1 text-xs">
-                <span className="shrink-0 text-tertiary tabular-nums">#{card.number}</span>
-                <span className={cx("truncate", card.owned ? "text-primary" : "text-tertiary")}>{card.name}</span>
-                {card.quantity > 1 ? <span className="ml-auto shrink-0 text-tertiary tabular-nums">×{card.quantity}</span> : null}
-            </span>
+            {/* One tap to own it, for the card you do not have. The menu behind the tile still offers
+                the wishlist and everything else; this is the one answer common enough to deserve a
+                button, and it sits outside the tile's own button because a button inside a button is
+                not a thing a browser will render. */}
+            {state === "missing" && !readOnly ? (
+                <AriaButton
+                    isDisabled={pending}
+                    aria-label={`Add ${card.name} #${card.number} to your collection`}
+                    onPress={() => run(() => addCard(pokemonCardFromSetCard(card), "collection"))}
+                    className={({ isFocusVisible, isHovered }) =>
+                        cx(
+                            // size-7, not size-6: 24px clears WCAG 2.5.8's minimum by nothing at all, and this
+                            // is a thumb target on a phone, in a grid of 129 of them, a tap either side of the
+                            // card it belongs to.
+                            "absolute top-1.5 right-1.5 flex size-7 cursor-pointer items-center justify-center rounded-full glass text-primary shadow-xs ring-1 ring-glass outline-offset-2 outline-focus-ring ring-inset",
+                            isHovered && "bg-primary_hover",
+                            isFocusVisible && "outline-2",
+                            pending && "cursor-progress opacity-50",
+                        )
+                    }
+                >
+                    <Plus className="size-3.5" aria-hidden="true" />
+                </AriaButton>
+            ) : null}
+
+            {/* The same three lines as every other overview: the name, the set's code and number,
+                the market price. A set page that reads like the collection's own lists. */}
+            <div className="flex flex-col">
+                <span className="truncate text-sm font-medium text-primary">{card.name}</span>
+                {/* The number alone, not the set's code: every card here is from the same set, so
+                    repeating it on all 120 tiles says nothing the page's own title has not. */}
+                <span className="truncate text-xs text-tertiary tabular-nums">#{card.number}</span>
+                {card.price != null ? (
+                    <span className="mt-0.5 text-sm font-medium text-primary tabular-nums">
+                        <span className="sr-only">Market price </span>
+                        {formatPrice(card.price)}
+                    </span>
+                ) : null}
+            </div>
             {/* Announced when it appears; the tile keeps its place so the grid does not jump. */}
             {error ? (
                 <p role="alert" className="text-xs text-error-primary">
