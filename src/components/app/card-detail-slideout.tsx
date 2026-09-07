@@ -763,7 +763,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                     and nothing merged them, so four identical Holo · Near Mint copies were four lines
                                     saying "€2.81 ×1" — the same nothing, four times. A tap shows that kind and its
                                     fields; Add a copy at the foot asks what the new one is. */}
-                                        {mine?.owned ? (
+                                        {mine?.owned && !emptied ? (
                                             <div className="flex flex-col gap-3 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary ring-inset">
                                                 <ul className="flex flex-col divide-y divide-secondary" aria-label="Copies">
                                                     {groupCopies(copies ?? [mine]).map((group, i) => {
@@ -1009,7 +1009,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                             above — it is not something you do to the copy the card happens to be showing,
                                             and sitting in that card's foot said it was. Full width, because it is the one
                                             thing this tab is for once you have read the list. */}
-                                        {mine?.owned ? (
+                                        {mine?.owned && !emptied ? (
                                             <CopyFormDialog
                                                 mode="add"
                                                 languages={known?.languages}
