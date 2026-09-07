@@ -2,10 +2,12 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
-import { Monitor04, Moon01, Sun } from "@untitledui/icons";
+import { ChevronRight, Code01, File02, Lock01, Monitor04, Moon01, Sun, UploadCloud01, User01 } from "@untitledui/icons";
+import { Button as AriaButton, Heading as AriaHeading } from "react-aria-components";
 import { checkUsername, removeAvatar, updateEmail, updatePassword, updateProfile, uploadAvatar } from "@/app/(app)/dashboard/settings/actions";
 import { signOut } from "@/app/(auth)/actions";
 import { ImportDialog } from "@/components/app/import-dialog";
+import { SettingsGroup, SettingsLinkRow, SettingsRow } from "@/components/app/settings-rows";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Button } from "@/components/base/buttons/button";
@@ -17,17 +19,8 @@ import { useTheme } from "@/providers/theme";
 
 type Msg = { type: "ok" | "err"; text: string } | null;
 
-function Section({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
-    return (
-        <section className="flex flex-col gap-4 rounded-xl bg-primary p-5 shadow-lift-xs ring-1 ring-primary ring-inset">
-            <div className="flex flex-col gap-0.5">
-                <h2 className="text-md font-semibold text-primary">{title}</h2>
-                {description ? <p className="text-sm text-tertiary">{description}</p> : null}
-            </div>
-            {children}
-        </section>
-    );
-}
+/** What the theme row says it currently is, without opening it. */
+const THEME_LABELS: Record<string, string> = { light: "Light", dark: "Dark", system: "System" };
 
 const AVATAR_TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
@@ -188,131 +181,185 @@ export function SettingsForm({ profile, email, heading }: { profile: Profile; em
                 </div>
             )}
 
-            <Section title="Profile" description="This is how you appear in Cardorb.">
-                <div className="flex items-center gap-4">
-                    <Avatar src={avatarUrl || undefined} alt={displayName || username} size="xl" />
-                    <div className="flex flex-col gap-2">
-                        <div className="flex gap-2">
-                            <Button size="sm" color="secondary" onClick={() => fileRef.current?.click()} isLoading={uploading}>
-                                Upload
-                            </Button>
-                            {avatarUrl ? (
-                                <Button size="sm" color="secondary-destructive" onClick={onRemoveAvatar} isDisabled={uploading}>
-                                    Remove
+            {/* Who you are, before anything you can change about it. */}
+            <div className="flex items-center gap-4 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary ring-inset">
+                <Avatar src={avatarUrl || undefined} alt={displayName || username} size="lg" />
+                <div className="flex min-w-0 flex-col">
+                    <span className="truncate text-md font-semibold text-primary">{displayName || username || "Your profile"}</span>
+                    <span className="truncate text-sm text-tertiary">{email}</span>
+                </div>
+            </div>
+
+            <SettingsGroup title="Account">
+                <SettingsRow
+                    icon={User01}
+                    label="Manage profile"
+                    content={() => (
+                        <div className="flex flex-col gap-5 p-5">
+                            <AriaHeading slot="title" className="text-lg font-semibold text-primary">
+                                Manage profile
+                            </AriaHeading>
+                            <p className="text-sm text-tertiary">This is how you appear in Cardorb.</p>
+                            <div className="flex items-center gap-4">
+                                <Avatar src={avatarUrl || undefined} alt={displayName || username} size="xl" />
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex gap-2">
+                                        <Button size="sm" color="secondary" onClick={() => fileRef.current?.click()} isLoading={uploading}>
+                                            Upload
+                                        </Button>
+                                        {avatarUrl ? (
+                                            <Button size="sm" color="secondary-destructive" onClick={onRemoveAvatar} isDisabled={uploading}>
+                                                Remove
+                                            </Button>
+                                        ) : null}
+                                    </div>
+                                    <p className="text-xs text-tertiary">JPG, PNG or WebP.</p>
+                                </div>
+                                <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={onPickFile} className="hidden" />
+                            </div>
+                            <Input label="Display name" value={displayName} onChange={setDisplayName} placeholder="Your name" />
+                            <Input
+                                label="Username"
+                                value={username}
+                                onChange={setUsername}
+                                isInvalid={nameAnswer ? !nameAnswer.available : undefined}
+                                hint={
+                                    nameAnswer
+                                        ? nameAnswer.available
+                                            ? `${username.trim().toLowerCase()} is free.`
+                                            : nameAnswer.reason
+                                        : "Lowercase letters, numbers and hyphens."
+                                }
+                            />
+                            <Input
+                                label="Email"
+                                type="email"
+                                value={emailValue}
+                                onChange={setEmailValue}
+                                autoComplete="email"
+                                hint="A new address takes effect once you confirm it from your inbox."
+                            />
+                            <Toggle
+                                label="Public collection"
+                                // With the toggle on, the address people can open, so it can be read and copied from here.
+                                // The saved name, not the field: an address only exists once the name is claimed.
+                                hint={
+                                    isPublic && profile.username
+                                        ? `Anyone can view your collection at ${publicUrl(profile.username)}.`
+                                        : "When on, anyone can view your collection."
+                                }
+                                isSelected={isPublic}
+                                onChange={setIsPublic}
+                                // The kit's toggle is as wide as its words; the address has to wrap on a phone.
+                                className="w-full"
+                            />
+                            {isPublic && profile.username ? (
+                                <Button href={`/user/${profile.username}`} color="secondary" size="sm" className="self-start">
+                                    View your public page
                                 </Button>
                             ) : null}
+                            <StatusText msg={profileMsg} />
+                            <div>
+                                <Button onClick={saveProfile} isLoading={savingProfile}>
+                                    Save changes
+                                </Button>
+                            </div>
                         </div>
-                        <p className="text-xs text-tertiary">JPG, PNG or WebP.</p>
-                    </div>
-                    <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={onPickFile} className="hidden" />
-                </div>
-                <Input label="Display name" value={displayName} onChange={setDisplayName} placeholder="Your name" />
-                <Input
-                    label="Username"
-                    value={username}
-                    onChange={setUsername}
-                    isInvalid={nameAnswer ? !nameAnswer.available : undefined}
-                    hint={
-                        nameAnswer
-                            ? nameAnswer.available
-                                ? `${username.trim().toLowerCase()} is free.`
-                                : nameAnswer.reason
-                            : "Lowercase letters, numbers and hyphens."
-                    }
+                    )}
                 />
-                <Input
-                    label="Email"
-                    type="email"
-                    value={emailValue}
-                    onChange={setEmailValue}
-                    autoComplete="email"
-                    hint="A new address takes effect once you confirm it from your inbox."
+                <SettingsRow
+                    icon={Lock01}
+                    label="Password"
+                    content={() => (
+                        <div className="flex flex-col gap-5 p-5">
+                            <AriaHeading slot="title" className="text-lg font-semibold text-primary">
+                                Password
+                            </AriaHeading>
+                            <p className="text-sm text-tertiary">Set a new password for your account.</p>
+                            <Input
+                                label="Current password"
+                                type="password"
+                                value={pwCurrent}
+                                onChange={setPwCurrent}
+                                placeholder="••••••••"
+                                autoComplete="current-password"
+                            />
+                            <Input label="New password" type="password" value={pw} onChange={setPw} placeholder="••••••••" autoComplete="new-password" />
+                            <Input
+                                label="Confirm new password"
+                                type="password"
+                                value={pw2}
+                                onChange={setPw2}
+                                placeholder="••••••••"
+                                autoComplete="new-password"
+                            />
+                            <StatusText msg={pwMsg} />
+                            <div>
+                                <Button onClick={savePassword} isLoading={savingPw}>
+                                    Update password
+                                </Button>
+                            </div>
+                        </div>
+                    )}
                 />
-                <Toggle
-                    label="Public collection"
-                    // With the toggle on, the address people can open, so it can be read and copied from here.
-                    // The saved name, not the field: an address only exists once the name is claimed.
-                    hint={
-                        isPublic && profile.username
-                            ? `Anyone can view your collection at ${publicUrl(profile.username)}.`
-                            : "When on, anyone can view your collection."
-                    }
-                    isSelected={isPublic}
-                    onChange={setIsPublic}
-                    // The kit's toggle is as wide as its words; the address has to wrap on a phone.
-                    className="w-full"
+            </SettingsGroup>
+
+            <SettingsGroup title="Preferences">
+                <SettingsRow
+                    icon={Sun}
+                    label="Theme"
+                    value={THEME_LABELS[currentTheme] ?? null}
+                    content={() => (
+                        <div className="flex flex-col gap-5 p-5">
+                            <AriaHeading slot="title" className="text-lg font-semibold text-primary">
+                                Theme
+                            </AriaHeading>
+                            <p className="text-sm text-tertiary">Choose how Cardorb looks.</p>
+                            <ButtonGroup
+                                selectionMode="single"
+                                disallowEmptySelection
+                                selectedKeys={new Set([currentTheme])}
+                                onSelectionChange={(keys) => {
+                                    const key = [...keys][0];
+                                    if (isTheme(key)) setTheme(key);
+                                }}
+                            >
+                                <ButtonGroupItem id="light" iconLeading={Sun}>
+                                    Light
+                                </ButtonGroupItem>
+                                <ButtonGroupItem id="dark" iconLeading={Moon01}>
+                                    Dark
+                                </ButtonGroupItem>
+                                <ButtonGroupItem id="system" iconLeading={Monitor04}>
+                                    System
+                                </ButtonGroupItem>
+                            </ButtonGroup>
+                        </div>
+                    )}
                 />
-                {isPublic && profile.username ? (
-                    <Button href={`/user/${profile.username}`} color="secondary" size="sm" className="self-start">
-                        View your public page
-                    </Button>
-                ) : null}
-                <StatusText msg={profileMsg} />
-                <div>
-                    <Button onClick={saveProfile} isLoading={savingProfile}>
-                        Save changes
-                    </Button>
-                </div>
-            </Section>
+            </SettingsGroup>
 
-            <Section title="Appearance" description="Choose how Cardorb looks.">
-                <ButtonGroup
-                    selectionMode="single"
-                    disallowEmptySelection
-                    selectedKeys={new Set([currentTheme])}
-                    onSelectionChange={(keys) => {
-                        const key = [...keys][0];
-                        if (isTheme(key)) setTheme(key);
-                    }}
-                >
-                    <ButtonGroupItem id="light" iconLeading={Sun}>
-                        Light
-                    </ButtonGroupItem>
-                    <ButtonGroupItem id="dark" iconLeading={Moon01}>
-                        Dark
-                    </ButtonGroupItem>
-                    <ButtonGroupItem id="system" iconLeading={Monitor04}>
-                        System
-                    </ButtonGroupItem>
-                </ButtonGroup>
-            </Section>
+            <SettingsGroup title="Collection">
+                {/* Already a dialog of its own, so it is the trigger rather than the content. */}
+                <ImportDialog>
+                    <AriaButton className="flex w-full cursor-pointer items-center gap-3 px-4 py-3.5 text-left outline-focus-ring transition duration-100 ease-linear hover:bg-primary_hover focus-visible:z-10 focus-visible:outline-2 focus-visible:-outline-offset-2">
+                        <UploadCloud01 aria-hidden="true" className="size-5 shrink-0 text-fg-quaternary" />
+                        <span className="flex-1 truncate text-md text-primary">Import a CSV file</span>
+                        <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-fg-quaternary" />
+                    </AriaButton>
+                </ImportDialog>
+            </SettingsGroup>
 
-            <Section title="Import" description="Bring a collection in from Dex, Notion or a spreadsheet.">
-                <div>
-                    <ImportDialog>
-                        <Button color="secondary" size="md">
-                            Import a CSV file
-                        </Button>
-                    </ImportDialog>
-                </div>
-            </Section>
+            <SettingsGroup title="Support">
+                <SettingsLinkRow icon={Code01} label="API reference" href="/docs/api" />
+                <SettingsLinkRow icon={File02} label="Terms" href="/terms" />
+            </SettingsGroup>
 
-            <Section title="Password" description="Set a new password for your account.">
-                <Input
-                    label="Current password"
-                    type="password"
-                    value={pwCurrent}
-                    onChange={setPwCurrent}
-                    placeholder="••••••••"
-                    autoComplete="current-password"
-                />
-                <Input label="New password" type="password" value={pw} onChange={setPw} placeholder="••••••••" autoComplete="new-password" />
-                <Input label="Confirm new password" type="password" value={pw2} onChange={setPw2} placeholder="••••••••" autoComplete="new-password" />
-                <StatusText msg={pwMsg} />
-                <div>
-                    <Button onClick={savePassword} isLoading={savingPw}>
-                        Update password
-                    </Button>
-                </div>
-            </Section>
-
-            <Section title="Account">
-                <form action={signOut}>
-                    <Button type="submit" color="secondary-destructive">
-                        Sign out
-                    </Button>
-                </form>
-            </Section>
+            <form action={signOut}>
+                <Button type="submit" color="secondary-destructive" className="w-full sm:w-auto">
+                    Sign out
+                </Button>
+            </form>
         </div>
     );
 }
