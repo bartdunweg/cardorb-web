@@ -25,6 +25,7 @@ import { CopyFormDialog } from "@/components/app/copy-form-dialog";
 import { FlagIcon } from "@/components/app/flag-icon";
 import { FolderDialog } from "@/components/app/folder-dialog";
 import { HoloCard } from "@/components/app/holo-card";
+import { LanguageSelect } from "@/components/app/language-select";
 import { MarkOwnedDialog } from "@/components/app/mark-owned-dialog";
 import { PriceHistory } from "@/components/app/price-history";
 import { SheetBar } from "@/components/app/sheet-bar";
@@ -34,6 +35,7 @@ import { Tab, TabList, TabPanel, Tabs } from "@/components/application/tabs/tabs
 import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
+import { Input } from "@/components/base/input/input";
 import { NativeSelect } from "@/components/base/select/select-native";
 import { FINISH_LABELS, FOIL_PATTERN_LABELS, type Finish, type FoilPattern, isReverseFinish } from "@/lib/api-shapes";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
@@ -41,7 +43,6 @@ import { sortCopies } from "@/lib/copies";
 import { matchesRule } from "@/lib/folder-rule";
 import { formatDate, formatPrice } from "@/lib/format";
 import { orientationNeedsPermission, requestOrientation } from "@/lib/holo/orientation";
-import { languagesFor } from "@/lib/languages";
 import { cx } from "@/utils/cx";
 
 // `late`: a row the catalogue sends a hop after the sheet has settled arrives like the rest of what streams in.
@@ -96,6 +97,23 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     };
     // A new copy as a row of its own, made like the row shown, pulled today; the sheet moves to
     // it so what differs can be set at once.
+    /* One copy of several. The sheet stays open on whatever is left, so removing the row you were
+       reading moves you to the first one rather than closing the card out from under you. */
+    const dropCopy = async (row: Card) => {
+        if (!mine || !card) return;
+        setBusy(true);
+        setMenuError(null);
+        const res = await removeCard(row.id);
+        setBusy(false);
+        if (!res.ok) {
+            setMenuError(res.error);
+            return;
+        }
+        const rows = sortCopies(await listCopies(mine));
+        setCopiesState({ of: copiesKey(mine), rows });
+        if (row.id === mine.id && rows[0]) setViewing({ of: card.id, row: rows[0] });
+        router.refresh();
+    };
     const [collections, setCollections] = useState<FolderChoice[]>([]);
     const [facets, setFacets] = useState<Facets | undefined>(undefined);
     const [collectionId, setCollectionId] = useState<string>("");
@@ -205,19 +223,19 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     // The dots menu's actions: each one server call, then the page re-reads; removing closes the sheet
     // first, since the card it showed is gone.
     const [busy, setBusy] = useState(false);
-    // Copies, as the sheet shows them. Minus goes to nought and stops there: the card stays on the
-    // sheet, marked as leaving, and is removed when the sheet closes, so a slip of the thumb is
-    // undone with plus rather than with a search. Kept with the row it was read for.
+    /* Copies, as the sheet shows them. Minus stops at one: whether you hold a card and how many
+       of it you hold are two facts, and the counter had been quietly doing the first one's job —
+       stepping to nought marked the card as leaving and removed it when the sheet closed. A copy
+       goes with the bin on its own line; the card goes with Remove from collection. Kept with the
+       row it was read for. */
     const [copyCount, setCopies_] = useState<{ id: string; n: number } | null>(null);
     const shownCopies = mine && copyCount?.id === mine.id ? copyCount.n : (mine?.quantity ?? 1);
     /* Every copy of this card, not just the row on screen: the tab says how many there are before
        anybody opens it. The listed rows once they are read, the shown row's own count until then. */
     const heldTotal = copies ? copies.reduce((n, r) => n + (r.quantity ?? 1), 0) : shownCopies;
-    const leaving = mine?.owned === true && shownCopies === 0;
     const step = async (n: number) => {
-        if (!mine) return;
+        if (!mine || n < 1) return;
         setCopies_({ id: mine.id, n });
-        if (n === 0) return;
         const res = await setCopies(mine.id, n);
         if (!res.ok) {
             setMenuError(res.error);
@@ -254,18 +272,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
             void reloadCopies();
         }
     };
-    // Closing the sheet on a card at nought removes it; the list behind re-reads after.
     const closeSheet = async () => {
         // The next card, or this one again, opens on its own row.
         setViewing(null);
-        if (leaving && mine) {
-            const res = await removeCard(mine.id);
-            if (!res.ok) {
-                setMenuError(res.error);
-                return;
-            }
-            router.refresh();
-        }
         onClose();
     };
     const [menuError, setMenuError] = useState<string | null>(null);
@@ -555,7 +564,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                             <Tabs className="flex flex-col gap-5">
                                 <TabList aria-label="Card" type="underline" size="sm" className={mine ? undefined : "sr-only"}>
                                     <Tab id="details" label="Details" />
-                                    {mine?.owned ? <Tab id="copies" label="Copies" badge={heldTotal > 1 ? heldTotal : undefined} /> : null}
+                                    {mine?.owned ? <Tab id="copies" label="Your copies" badge={heldTotal > 1 ? heldTotal : undefined} /> : null}
                                     {mine ? <Tab id="price" label="Price" /> : null}
                                 </TabList>
                                 <TabPanel id="details" className="flex flex-col gap-6">
@@ -637,7 +646,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                             // The row the sheet opened on is already there; the other copies arrive.
                                                             <li
                                                                 key={row.id}
-                                                                className={cx(!current && "arrive")}
+                                                                className={cx("flex items-center gap-1", !current && "arrive")}
                                                                 style={{ "--arrive-delay": `${Math.min(i, 8) * 20}ms` } as React.CSSProperties}
                                                             >
                                                                 <button
@@ -673,6 +682,19 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                                     ) : null}
                                                                     <span className="text-tertiary tabular-nums">×{row.quantity ?? 1}</span>
                                                                 </button>
+                                                                {/* Removing a copy is a thing you do to that copy, so it belongs on that copy's
+                                                                    line — outside the button that shows it, because a button inside a button is
+                                                                    not a thing a browser will render. */}
+                                                                {!readOnly ? (
+                                                                    <Button
+                                                                        color="tertiary-destructive"
+                                                                        size="sm"
+                                                                        iconLeading={Trash01}
+                                                                        aria-label={`Remove this copy${row.language && row.language !== "en" ? ` (${row.language})` : ""}`}
+                                                                        isDisabled={busy}
+                                                                        onClick={() => void dropCopy(row)}
+                                                                    />
+                                                                ) : null}
                                                             </li>
                                                         );
                                                     })}
@@ -691,7 +713,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                                         size="sm"
                                                                         iconLeading={Minus}
                                                                         aria-label="One copy fewer"
-                                                                        isDisabled={busy || shownCopies <= 0}
+                                                                        isDisabled={busy || shownCopies <= 1}
                                                                         onClick={() => step(shownCopies - 1)}
                                                                     />
                                                                     <span className="min-w-4 text-center tabular-nums">{shownCopies}</span>
@@ -709,31 +731,18 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                             )
                                                         }
                                                     />
-                                                    {leaving ? (
-                                                        <output className="block py-2 text-sm text-warning-primary">
-                                                            No copies left: this card leaves your collection when you close the sheet.
-                                                        </output>
-                                                    ) : null}
                                                     {/* The printing's language, with its flag; an owner picks it here, a reader sees it. Not
                                         recorded reads as English, which nearly every card is. */}
                                                     {mine ? (
                                                         <DetailRow
                                                             label="Language"
                                                             value={
-                                                                <span className="flex items-center justify-end gap-2">
-                                                                    <FlagIcon language={shownLanguage} size="md" labelled />
-                                                                    <NativeSelect
-                                                                        aria-label="Language"
-                                                                        size="sm"
-                                                                        className="w-auto"
-                                                                        value={shownLanguage}
-                                                                        onChange={(event) => void pickLanguage(event.target.value)}
-                                                                        options={languagesFor(null, known?.languages).map((l) => ({
-                                                                            label: l.label,
-                                                                            value: l.code,
-                                                                        }))}
-                                                                    />
-                                                                </span>
+                                                                <LanguageSelect
+                                                                    value={shownLanguage}
+                                                                    onChange={(code) => void pickLanguage(code)}
+                                                                    printed={known?.languages}
+                                                                    inside={false}
+                                                                />
                                                             }
                                                         />
                                                     ) : null}
@@ -768,14 +777,18 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                             label="Acquired"
                                                             value={
                                                                 mine.owned ? (
-                                                                    <input
+                                                                    /* The kit's Input, the way mark-owned-dialog already asks for this
+                                                                       same date. It was a raw input styled by hand and read as a smaller
+                                                                       control in a column of larger ones — the two places that ask for an
+                                                                       acquired date now ask the same way. */
+                                                                    <Input
                                                                         type="date"
                                                                         aria-label="Acquired"
-                                                                        className="rounded-md bg-primary px-2 py-1 text-sm text-primary ring-1 ring-primary outline-focus-ring ring-inset focus-visible:outline-2"
+                                                                        size="sm"
+                                                                        className="w-auto"
                                                                         value={mine.acquired_at ? mine.acquired_at.slice(0, 10) : ""}
                                                                         max={new Date().toISOString().slice(0, 10)}
-                                                                        onChange={(e) => {
-                                                                            const date = e.target.value;
+                                                                        onChange={(date) => {
                                                                             if (date) void run(() => setAcquiredAt(mine.id, date));
                                                                         }}
                                                                     />

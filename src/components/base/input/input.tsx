@@ -247,6 +247,14 @@ export interface InputProps
             | "inputClassName"
             | "iconClassName"
             | "tooltipClassName"
+            // Changed from the kit: `min`, `max` and `step`, so a number or date field can name
+            // its bounds. React Aria's TextField does not forward them, and without them a control
+            // offers answers it will not accept — a card acquired next Tuesday, a purchase price
+            // below nothing, a dex number past 1025 that zod refuses on save. A re-fetch through
+            // the Untitled UI CLI or MCP overwrites this; re-apply it.
+            | "min"
+            | "max"
+            | "step"
         > {
     /** Label text for the input */
     label?: string;
@@ -273,6 +281,9 @@ export const Input = ({
     wrapperClassName,
     tooltipClassName,
     type = "text",
+    min,
+    max,
+    step,
     ...props
 }: InputProps) => {
     return (
@@ -299,6 +310,9 @@ export const Input = ({
                             tooltipClassName,
                             tooltip,
                             type,
+                            min,
+                            max,
+                            step,
                         }}
                     />
 

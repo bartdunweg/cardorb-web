@@ -35,8 +35,26 @@ export function DexRangeFields({ label, anyLabel, dex, onChange }: { label: stri
                 ]}
             />
             <div className="flex gap-2">
-                <Input aria-label="From dex number" type="number" placeholder="From" value={dex.from} onChange={(v) => onChange({ ...dex, from: v })} />
-                <Input aria-label="To dex number" type="number" placeholder="To" value={dex.to} onChange={(v) => onChange({ ...dex, to: v })} />
+                <Input
+                    aria-label="From dex number"
+                    type="number"
+                    // The range zod already refuses outside: a field that takes 9999 and fails on save
+                    // is a field that asked a question it was never going to accept an answer to.
+                    min={1}
+                    max={NATIONAL_DEX_MAX}
+                    placeholder="From"
+                    value={dex.from}
+                    onChange={(v) => onChange({ ...dex, from: v })}
+                />
+                <Input
+                    aria-label="To dex number"
+                    type="number"
+                    min={1}
+                    max={NATIONAL_DEX_MAX}
+                    placeholder="To"
+                    value={dex.to}
+                    onChange={(v) => onChange({ ...dex, to: v })}
+                />
             </div>
         </div>
     );

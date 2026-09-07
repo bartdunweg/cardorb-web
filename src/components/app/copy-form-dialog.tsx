@@ -8,8 +8,8 @@ import type { CardFacts } from "@/app/(app)/dashboard/cards/actions";
 import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { CONDITIONS } from "@/components/app/condition-badge";
 import { finishOptions, patternOptions, soleOption } from "@/components/app/copy-fields";
-import { FlagIcon } from "@/components/app/flag-icon";
 import { GRADERS, GRADES, gradeLabel, splitGrade } from "@/components/app/graded";
+import { LanguageSelect } from "@/components/app/language-select";
 import { SheetDialog } from "@/components/app/sheet-dialog";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Button } from "@/components/base/buttons/button";
@@ -17,7 +17,7 @@ import { Input } from "@/components/base/input/input";
 import { NativeSelect } from "@/components/base/select/select-native";
 import type { Card } from "@/lib/api-shapes";
 import type { CopyEdits } from "@/lib/copies";
-import { languageOf, languagesFor } from "@/lib/languages";
+import { languageOf } from "@/lib/languages";
 
 // A copy that differs from the row it comes from. `add`: one more, pulled today, in the
 // language, condition, finish, folder and at the price given. `split`: some of this row's
@@ -155,19 +155,7 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
                  * anything drawn here. Emoji flags would fit in the list and were tried; they
                  * are a different picture on every platform and sit badly beside the app's own.
                  */}
-                <span className="relative block">
-                    <FlagIcon language={language} size="md" className="pointer-events-none absolute top-1/2 left-3 z-10 -translate-y-1/2" />
-                    <NativeSelect
-                        aria-label="Language"
-                        size="sm"
-                        // Room for the flag sitting inside the box.
-                        selectClassName="pl-9"
-                        className="w-full"
-                        value={language}
-                        onChange={(e) => setLanguage(e.target.value as typeof language)}
-                        options={languagesFor(null, languages).map((l) => ({ label: l.label, value: l.code }))}
-                    />
-                </span>
+                <LanguageSelect value={language} onChange={(code) => setLanguage(code as typeof language)} printed={languages} />
             </div>
 
             {/*
@@ -284,7 +272,17 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
 
             <div className={row}>
                 Purchase price
-                <Input type="number" aria-label="Purchase price" size="sm" className="w-28" placeholder="0.00" value={price} onChange={setPrice} />
+                <Input
+                    type="number"
+                    aria-label="Purchase price"
+                    size="sm"
+                    className="w-28"
+                    min={0}
+                    step="0.01"
+                    placeholder="0.00"
+                    value={price}
+                    onChange={setPrice}
+                />
             </div>
 
             {error ? (
