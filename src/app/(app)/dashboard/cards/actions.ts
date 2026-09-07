@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { ApiError, api } from "@/lib/api";
-import { type BrowseCard, type PokemonCard, cardFactsAnswer, copyAnswer, pokemonCardFromBrowse, pricePointsAnswer, searchAnswer } from "@/lib/api-shapes";
+import { type PokemonCard, cardFactsAnswer, copyAnswer, pokemonCardFromBrowse, pricePointsAnswer, searchAnswer } from "@/lib/api-shapes";
 import { type Card, getMyCards } from "@/lib/cards";
 import { type CopyEdits, copyEdits, sameCard } from "@/lib/copies";
 import { WESTERN_LANGUAGES } from "@/lib/languages";
