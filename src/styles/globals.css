@@ -75,9 +75,12 @@
     background-image: linear-gradient(to bottom, transparent, var(--color-bg-page) 70%);
 }
 
-/* The same fade the other way up: the ground of a bar at the top of a scrolling sheet. */
+/* The same fade the other way up: the ground of a bar at the top of a scrolling sheet.
+   The stop is low and the box it fills reaches past the bar, because the eye reads the end of a
+   gradient, not its start: at 70 % the whole change happened in the last twenty pixels and a line
+   of text came out from under it all at once. Below, it is the last quarter that does the work. */
 @utility fade-from-page {
-    background-image: linear-gradient(to top, transparent, var(--color-bg-page) 70%);
+    background-image: linear-gradient(to top, transparent, var(--color-bg-page) 78%);
 }
 
 /* A card's corners: a printed card is rounded at about 4.8 % of its width, and a scan carries
