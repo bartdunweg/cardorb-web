@@ -9,7 +9,6 @@ import { FileUploadDropZone } from "@/components/application/file-upload/file-up
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { Button } from "@/components/base/buttons/button";
 import { CloseButton } from "@/components/base/buttons/close-button";
-import { Checkbox } from "@/components/base/checkbox/checkbox";
 import { NativeSelect } from "@/components/base/select/select-native";
 import { MAX_CSV_BYTES, readCsv } from "@/lib/csv-file";
 
@@ -63,17 +62,8 @@ const plural = (n: number, one: string, many = `${one}s`) => `${n.toLocaleString
  * being answered is "what happens if I press the button", and a row of figures
  * makes the reader do the arithmetic that decides whether to trust it.
  */
-function summary(p: ImportPreview, includeExisting: boolean): string {
-    const adding = p.seen - p.skipped - p.existing;
-    const writing = includeExisting ? adding + p.existing : adding;
-    const parts = [`${plural(writing, "card")} will be added.`];
-    if (p.existing > 0) {
-        parts.push(
-            includeExisting
-                ? `${plural(p.existing, "card")} you already have will be added again.`
-                : `${plural(p.existing, "card")} you already have, skipped.`,
-        );
-    }
+function summary(p: ImportPreview): string {
+    const parts = [`${plural(p.seen - p.skipped, "card")} will be added.`];
     if (p.skipped > 0) parts.push(`${plural(p.skipped, "row")} in the file could not be used.`);
     return parts.join(" ");
 }
@@ -100,7 +90,6 @@ function ImportForm({ close }: { close: () => void }) {
     const [preview, setPreview] = useState<ImportPreview | null>(null);
     const [map, setMap] = useState<ColumnMap>({});
     const [header, setHeader] = useState<string[]>([]);
-    const [includeExisting, setIncludeExisting] = useState(false);
     const [busy, setBusy] = useState<"reading" | "importing" | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [result, setResult] = useState<ImportResult | null>(null);
@@ -111,7 +100,6 @@ function ImportForm({ close }: { close: () => void }) {
         setError(null);
         setMap({});
         setHeader([]);
-        setIncludeExisting(false);
     };
 
     const run = async (text: string, columns: ColumnMap) => {
@@ -164,7 +152,7 @@ function ImportForm({ close }: { close: () => void }) {
         if (!csv) return;
         setBusy("importing");
         setError(null);
-        const outcome = await commitImport({ csv, map: Object.keys(map).length ? map : undefined, includeExisting });
+        const outcome = await commitImport({ csv, map: Object.keys(map).length ? map : undefined });
         setBusy(null);
 
         if (!outcome.ok) {
@@ -178,8 +166,7 @@ function ImportForm({ close }: { close: () => void }) {
         router.refresh();
     };
 
-    const adding = preview ? preview.seen - preview.skipped - preview.existing : 0;
-    const writing = includeExisting && preview ? adding + preview.existing : adding;
+    const writing = preview ? preview.seen - preview.skipped : 0;
 
     return (
         // A column with one scrolling middle: the title stays put, and so does
@@ -253,7 +240,7 @@ function ImportForm({ close }: { close: () => void }) {
                     <div className="flex arrive flex-col gap-4">
                         <div className="flex flex-col gap-1">
                             <p aria-live="polite" className="text-sm font-medium text-primary">
-                                {summary(preview, includeExisting)}
+                                {summary(preview)}
                             </p>
                             <p className="text-sm text-tertiary">
                                 {preview.source === "dex"
@@ -344,13 +331,20 @@ function ImportForm({ close }: { close: () => void }) {
                             </details>
                         ) : null}
 
+                        {/*
+                         * Not a choice, a warning. Every row is added, because a
+                         * file is a list of copies somebody has and a second copy
+                         * is a normal thing to own. But nothing in the database
+                         * refuses the same file twice, and there is no undo — so
+                         * the number that would say "you are about to do this
+                         * again" has to be on screen before the button is.
+                         */}
                         {preview.existing > 0 ? (
-                            <Checkbox
-                                isSelected={includeExisting}
-                                onChange={setIncludeExisting}
-                                label="Add cards I already have as well"
-                                hint="Off by default. Turning this on gives you a second copy of each; there is no undo."
-                            />
+                            <p className="rounded-lg bg-secondary px-4 py-3 text-sm text-secondary">
+                                <span className="font-medium text-primary">{plural(preview.existing, "card")} you already have</span>{" "}
+                                {preview.existing === 1 ? "is" : "are"} in this file, and will be added again as extra copies. If you have imported this file
+                                before, that is what this number is telling you — there is no undo.
+                            </p>
                         ) : null}
                     </div>
                 ) : null}

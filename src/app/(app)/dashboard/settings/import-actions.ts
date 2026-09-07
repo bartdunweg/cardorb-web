@@ -37,7 +37,6 @@ export type ColumnMap = z.infer<typeof columnMap>;
 const request = z.object({
     csv: z.string().trim().min(1, "That file is empty.").max(MAX_CSV_BYTES, "That file is too large. The limit is 2 MB."),
     map: columnMap.optional(),
-    includeExisting: z.boolean().optional(),
 });
 
 /** One row as it will be stored, for the handful the preview shows. */
@@ -56,7 +55,11 @@ export type ImportPreview = {
     seen: number;
     /** Rows that could not be used, or that the file says you do not own. */
     skipped: number;
-    /** Rows naming a card the collection already holds. */
+    /**
+     * Rows naming a card the collection already holds. Said out loud, not acted
+     * on — every row is added. It is the only warning there is against
+     * importing the same file a second time.
+     */
     existing: number;
     sample: ImportRow[];
     /** Whether the file was recognised, or read by a guess at its columns. */
@@ -122,12 +125,7 @@ export async function commitImport(input: unknown): Promise<{ ok: true; result: 
     try {
         const result = await api<ImportResult>("/import/csv", {
             method: "POST",
-            body: {
-                csv: parsed.data.csv,
-                map: parsed.data.map,
-                commit: true,
-                includeExisting: parsed.data.includeExisting === true,
-            },
+            body: { csv: parsed.data.csv, map: parsed.data.map, commit: true },
             timeoutMs: 120_000,
         });
         await forgetMine();

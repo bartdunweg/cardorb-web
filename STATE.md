@@ -26,10 +26,11 @@ which also says what is already yours), Settings (avatar through the API), publi
   a dialog from Settings — fullscreen on a phone — rather than a page: an import is an errand
   you finish and leave, with no address worth sharing. An export from Dex is recognised on sight and read by its own rules; anything
   else falls back to naming the columns yourself. Nothing is written until a preview says,
-  in words and numbers, what writing would mean — including how many of the cards you
-  already hold, which are skipped by default, because a CSV row has no `source_id` and so
-  the database cannot refuse the same file twice. Measured on Bart's own 4,536-row export:
-  2,004 new, 93 already held, 2,439 checklist rows left alone. Most of the work was
+  in words and numbers, what writing would mean. Every row is added, including cards you
+  already hold — a second copy is a normal thing to own — and how many those are is said
+  out loud, because a CSV row has no `source_id` and so the database cannot refuse the same
+  file twice. Measured on Bart's own 4,536-row export: 2,097 added, 93 of them cards he
+  already had, 2,439 checklist rows left alone. Most of the work was
   cardorb-api#230 — the route only accepted a cookie, so it answered 401 to this app; the
   file is UTF-16 with semicolons; `Quantity 0` meant "not owned" and was being read as
   owned; `48/108` matched no card. That PR also fixed three set names that resolved to the
