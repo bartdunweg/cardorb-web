@@ -36,7 +36,17 @@ export function CardsView({
 }) {
     const [view, setView] = useState(initialView);
     const [size, setSize] = useState(initialSize);
-    const [selected, setSelected] = useState<Card | null>(null);
+    /*
+     * The card the sheet is on, and the list it came from, so it can step to the next one without
+     * going back to the grid. Kept together: the list is what was on screen when the card was
+     * picked, and a later page of results should not move somebody's Next somewhere else.
+     */
+    const [selected, setSelected] = useState<{ card: Card; siblings: Card[] } | null>(null);
+    const at = selected ? selected.siblings.findIndex((c) => c.id === selected.card.id) : -1;
+    const step = (by: number) => {
+        const next = at >= 0 ? selected?.siblings[at + by] : undefined;
+        return next ? () => setSelected({ card: next, siblings: selected!.siblings }) : null;
+    };
 
     return (
         // A column that grows: an empty state under the row takes the rest of the page and sits in the middle of it.
@@ -48,10 +58,19 @@ export function CardsView({
             </div>
 
             <Suspense fallback={<CardsSkeleton />}>
-                <CardsList list={list} filter={filter} narrowed={narrowed} view={view} size={size} onSelect={setSelected} noHits={noHits} empty={empty} />
+                <CardsList
+                    list={list}
+                    filter={filter}
+                    narrowed={narrowed}
+                    view={view}
+                    size={size}
+                    onSelect={(card, siblings) => setSelected({ card, siblings })}
+                    noHits={noHits}
+                    empty={empty}
+                />
             </Suspense>
 
-            <CardDetailSlideout card={selected} onClose={() => setSelected(null)} />
+            <CardDetailSlideout card={selected?.card ?? null} onClose={() => setSelected(null)} onPrev={step(-1)} onNext={step(1)} />
         </div>
     );
 }

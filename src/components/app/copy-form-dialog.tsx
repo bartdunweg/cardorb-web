@@ -34,15 +34,6 @@ type Props = {
     facts?: CardFacts | null;
 };
 
-const FINISHES = [
-    { label: "Not recorded", value: "" },
-    { label: "Normal", value: "normal" },
-    { label: "Reverse holo", value: "reverse-holo" },
-    { label: "Holo", value: "holo" },
-    { label: "Poké Ball reverse", value: "poke-ball" },
-    { label: "Master Ball reverse", value: "master-ball" },
-];
-
 export function CopyFormDialog({ children, ...form }: Props & { children: ReactNode }) {
     return (
         <SheetDialog className="sm:max-w-md" content={(close) => <CopyForm {...form} close={close} />}>
