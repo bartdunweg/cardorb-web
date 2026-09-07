@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
+import { BarChart01 } from "@untitledui/icons";
 import { formatPrice } from "@/lib/format";
 import { type Frame, areaPath, linePath, nearestIndex, niceTicks, pointsFor } from "@/lib/value-chart-math";
 import type { ValueSnapshot } from "@/lib/value-history";
@@ -31,10 +32,18 @@ const dateOf = (s: ValueSnapshot) => new Date(`${s.date}T00:00:00`);
 export function ValueChart({
     snapshots,
     label = "Collection value over time",
+    countLabel = "copies",
     children,
 }: {
     snapshots: ValueSnapshot[];
     label?: string;
+    /**
+     * What `cards` counts in the tooltip, or null to leave the line out.
+     *
+     * A collection's reading is a sum over copies and says so. One card's price is a price, and
+     * "1 copies" under it would be the chart still talking about a collection.
+     */
+    countLabel?: string | null;
     /** Under the chart, above the table: the period buttons. */
     children?: ReactNode;
 }) {
@@ -54,12 +63,18 @@ export function ValueChart({
     }, []);
 
     if (snapshots.length < 2) {
+        /* The height the line would have taken, and an icon over the sentence. A chart that
+           collapses to one line of text reads as a chart that failed to load, which is the wrong
+           thing to say about a card that simply has not been priced twice yet. */
         return (
-            <p className="flex items-center text-sm text-tertiary" style={{ minHeight: HEIGHT }}>
-                {snapshots.length === 0
-                    ? "No readings in this period yet; the line starts once there are two."
-                    : `One reading so far, ${formatPrice(snapshots[0].value)} on ${dayYear.format(dateOf(snapshots[0]))}. The line starts tomorrow.`}
-            </p>
+            <div className="flex flex-col items-center justify-center gap-2 text-center" style={{ minHeight: HEIGHT }}>
+                <BarChart01 aria-hidden="true" className="size-5 text-fg-quaternary" />
+                <p className="text-sm text-tertiary">
+                    {snapshots.length === 0
+                        ? "No readings in this period yet; the line starts once there are two."
+                        : `One reading so far, ${formatPrice(snapshots[0].value)} on ${dayYear.format(dateOf(snapshots[0]))}. The line starts tomorrow.`}
+                </p>
+            </div>
         );
     }
 
@@ -185,10 +200,12 @@ export function ValueChart({
                     >
                         <span className="font-medium text-secondary">{dayYear.format(dateOf(current))}</span>
                         <span className="text-sm font-semibold text-primary tabular-nums">{formatPrice(current.value)}</span>
-                        <span className="text-tertiary tabular-nums">
-                            {current.cards.toLocaleString("en-US")} copies
-                            {current.unpriced > 0 ? ` · ${current.unpriced.toLocaleString("en-US")} without a price` : ""}
-                        </span>
+                        {countLabel ? (
+                            <span className="text-tertiary tabular-nums">
+                                {current.cards.toLocaleString("en-US")} {countLabel}
+                                {current.unpriced > 0 ? ` · ${current.unpriced.toLocaleString("en-US")} without a price` : ""}
+                            </span>
+                        ) : null}
                     </output>
                 ) : null}
             </div>
