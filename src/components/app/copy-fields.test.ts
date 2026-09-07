@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CardFacts } from "@/app/(app)/dashboard/cards/actions";
-import { finishOptions, patternOptions } from "./copy-fields";
+import { finishOptions, patternOptions, soleOption } from "./copy-fields";
 
 type Printing = CardFacts["printings"][number];
 
@@ -69,5 +69,19 @@ describe("patternOptions", () => {
     it("keeps a pattern already recorded, whatever the catalogue says", () => {
         expect(values(patternOptions(facts(HORSEA), "normal", "starlight"))).toEqual(["", "starlight"]);
         expect(values(patternOptions(facts([]), "normal", "cosmos"))).toHaveLength(6);
+    });
+});
+
+describe("soleOption", () => {
+    it("finds the one answer where there is only one", () => {
+        // A holo-only card: "not recorded" and "holo" are the same card, so the question
+        // invites somebody to leave out something already known.
+        expect(soleOption(finishOptions(facts([{ finish: "holo", foilPattern: null }]), null))).toMatchObject({ value: "holo" });
+    });
+
+    it("is nothing where there is a real choice, or none at all", () => {
+        expect(soleOption(finishOptions(facts(HORSEA), null))).toBeNull();
+        expect(soleOption(finishOptions(facts([]), null))).toBeNull();
+        expect(soleOption([])).toBeNull();
     });
 });

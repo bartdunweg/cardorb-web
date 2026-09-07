@@ -29,6 +29,19 @@ import { FOIL_PATTERN_LABELS, type FoilPattern } from "@/lib/api-shapes";
 
 export type Options = { label: string; value: string }[];
 
+/**
+ * The one answer, where a list has only one.
+ *
+ * A select holding "Not recorded" and a single real value is not a choice, and asking it is
+ * worse than not asking: on a card that only ever existed as a holo, "not recorded" and "holo"
+ * are the same card, so the question invites somebody to leave out something we know. The form
+ * states it instead, and saves it — which is not a guess, it is the only possibility.
+ */
+export const soleOption = (options: Options): { label: string; value: string } | null => {
+    const real = options.filter((o) => o.value !== "");
+    return options.length === real.length + 1 && real.length === 1 ? real[0]! : null;
+};
+
 const NOT_RECORDED = { label: "Not recorded", value: "" };
 
 const FINISHES = [

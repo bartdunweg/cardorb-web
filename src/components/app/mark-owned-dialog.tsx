@@ -8,7 +8,7 @@ import type { CardFacts } from "@/app/(app)/dashboard/cards/actions";
 import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { CardImage } from "@/components/app/card-image";
 import { CONDITIONS } from "@/components/app/condition-badge";
-import { finishOptions, patternOptions } from "@/components/app/copy-fields";
+import { finishOptions, patternOptions, soleOption } from "@/components/app/copy-fields";
 import { FlagIcon } from "@/components/app/flag-icon";
 import { GRADERS, GRADES, gradeLabel, splitGrade } from "@/components/app/graded";
 import { SheetDialog } from "@/components/app/sheet-dialog";
@@ -77,8 +77,8 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
             language,
             condition: graded ? null : condition || null,
             grade: graded ? gradeLabel(grader, gradeValue) : null,
-            finish: (finish || null) as CopyEdits["finish"],
-            foilPattern: (pattern || null) as CopyEdits["foilPattern"],
+            finish: (effectiveFinish || null) as CopyEdits["finish"],
+            foilPattern: (effectivePattern || null) as CopyEdits["foilPattern"],
             collectionId: folder || null,
             purchasePrice: price.trim() === "" ? null : Number(price),
             acquiredAt: date || today(),
@@ -100,8 +100,15 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
     // on a desktop as on a phone.
     const row = "flex flex-col gap-1.5 text-sm font-medium text-secondary";
 
+    // A card the catalogue says exists in one finish only is not a question. The row states
+    // it and the save records it, which is not a guess — it is the only possibility.
+    const finishes = finishOptions(facts, card.finish ?? null);
+    const soleFinish = soleOption(finishes);
+    const effectiveFinish = finish || soleFinish?.value || "";
     // The pattern list follows the finish: cosmos on a holo is not cosmos on a normal.
-    const patterns = patternOptions(facts, finish, card.foil_pattern ?? null);
+    const patterns = patternOptions(facts, effectiveFinish, card.foil_pattern ?? null);
+    const solePattern = soleOption(patterns);
+    const effectivePattern = pattern || solePattern?.value || "";
 
     return (
         <form
@@ -219,20 +226,32 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
                 </div>
             )}
 
-            <div className={row}>
-                Finish
-                <NativeSelect
-                    aria-label="Finish"
-                    size="sm"
-                    className="w-full"
-                    value={finish}
-                    onChange={(e) => setFinish(e.target.value)}
-                    options={finishOptions(facts, card.finish ?? null)}
-                />
-            </div>
+            {soleFinish ? (
+                <div className={row}>
+                    Finish
+                    <span className="text-secondary">{soleFinish.label}</span>
+                </div>
+            ) : (
+                <div className={row}>
+                    Finish
+                    <NativeSelect
+                        aria-label="Finish"
+                        size="sm"
+                        className="w-full"
+                        value={finish}
+                        onChange={(e) => setFinish(e.target.value)}
+                        options={finishes}
+                    />
+                </div>
+            )}
             {/* A card with no foil at all has no pattern to record — the one thing about a
     pattern any catalogue is certain of. */}
-            {patterns.length ? (
+            {solePattern ? (
+                <div className={row}>
+                    Foil pattern
+                    <span className="text-secondary">{solePattern.label}</span>
+                </div>
+            ) : patterns.length ? (
                 <div className={row}>
                     Foil pattern
                     <NativeSelect

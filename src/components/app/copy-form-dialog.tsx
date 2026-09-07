@@ -7,7 +7,7 @@ import { addCopy, splitCopy } from "@/app/(app)/dashboard/cards/actions";
 import type { CardFacts } from "@/app/(app)/dashboard/cards/actions";
 import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { CONDITIONS } from "@/components/app/condition-badge";
-import { finishOptions, patternOptions } from "@/components/app/copy-fields";
+import { finishOptions, patternOptions, soleOption } from "@/components/app/copy-fields";
 import { FlagIcon } from "@/components/app/flag-icon";
 import { GRADERS, GRADES, gradeLabel, splitGrade } from "@/components/app/graded";
 import { SheetDialog } from "@/components/app/sheet-dialog";
@@ -71,6 +71,16 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
     const manual = folders.filter((f) => !f.rule);
 
     // Only what differs goes over the wire: the row's own values are the copy's by default.
+    // A card the catalogue says exists in one finish only is not a question. The row states
+    // it and the save records it, which is not a guess — it is the only possibility.
+    const finishes = finishOptions(facts, from.finish ?? null);
+    const soleFinish = soleOption(finishes);
+    const effectiveFinish = finish || soleFinish?.value || "";
+    // The pattern list follows the finish: cosmos on a holo is not cosmos on a normal.
+    const patterns = patternOptions(facts, effectiveFinish, from.foil_pattern ?? null);
+    const solePattern = soleOption(patterns);
+    const effectivePattern = pattern || solePattern?.value || "";
+
     const edits = (): CopyEdits => {
         const out: CopyEdits = {};
         if (language !== languageOf(from.language).code) out.language = language;
@@ -78,9 +88,9 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
         if (cond !== (from.condition ?? null)) out.condition = cond;
         const gr = graded ? gradeLabel(grader, gradeValue) : null;
         if (gr !== (from.grade ?? null)) out.grade = gr;
-        const fin = (finish || null) as CopyEdits["finish"];
+        const fin = (effectiveFinish || null) as CopyEdits["finish"];
         if (fin !== (from.finish ?? null)) out.finish = fin;
-        const pat = (pattern || null) as CopyEdits["foilPattern"];
+        const pat = (effectivePattern || null) as CopyEdits["foilPattern"];
         if (pat !== (from.foil_pattern ?? null)) out.foilPattern = pat;
         if ((folder || null) !== (from.collection_id ?? null)) out.collectionId = folder || null;
         const p = price.trim() === "" ? null : Number(price);
@@ -111,9 +121,6 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
     // nothing — a select whose own text runs under its chevron looks broken and is the same
     // on a desktop as on a phone.
     const row = "flex flex-col gap-1.5 text-sm font-medium text-secondary";
-
-    // The pattern list follows the finish: cosmos on a holo is not cosmos on a normal.
-    const patterns = patternOptions(facts, finish, from.foil_pattern ?? null);
 
     return (
         <form
@@ -232,21 +239,33 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
                 </div>
             )}
 
-            <div className={row}>
-                Finish
-                <NativeSelect
-                    aria-label="Finish"
-                    size="sm"
-                    className="w-full"
-                    value={finish}
-                    onChange={(e) => setFinish(e.target.value)}
-                    options={finishOptions(facts, from.finish ?? null)}
-                />
-            </div>
+            {soleFinish ? (
+                <div className={row}>
+                    Finish
+                    <span className="text-secondary">{soleFinish.label}</span>
+                </div>
+            ) : (
+                <div className={row}>
+                    Finish
+                    <NativeSelect
+                        aria-label="Finish"
+                        size="sm"
+                        className="w-full"
+                        value={finish}
+                        onChange={(e) => setFinish(e.target.value)}
+                        options={finishes}
+                    />
+                </div>
+            )}
 
             {/* A card with no foil at all has no pattern to record — the one thing about a
                 pattern any catalogue is certain of. */}
-            {patterns.length ? (
+            {solePattern ? (
+                <div className={row}>
+                    Foil pattern
+                    <span className="text-secondary">{solePattern.label}</span>
+                </div>
+            ) : patterns.length ? (
                 <div className={row}>
                     Foil pattern
                     <NativeSelect
