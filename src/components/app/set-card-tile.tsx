@@ -155,7 +155,10 @@ export function SetCardTile({ card, readOnly = false }: { card: SetCard; readOnl
                     onPress={() => run(() => addCard(pokemonCardFromSetCard(card), "collection"))}
                     className={({ isFocusVisible, isHovered }) =>
                         cx(
-                            "absolute top-1.5 right-1.5 flex size-6 cursor-pointer items-center justify-center rounded-full glass text-primary shadow-xs ring-1 ring-glass outline-offset-2 outline-focus-ring ring-inset",
+                            // size-7, not size-6: 24px clears WCAG 2.5.8's minimum by nothing at all, and this
+                            // is a thumb target on a phone, in a grid of 129 of them, a tap either side of the
+                            // card it belongs to.
+                            "absolute top-1.5 right-1.5 flex size-7 cursor-pointer items-center justify-center rounded-full glass text-primary shadow-xs ring-1 ring-glass outline-offset-2 outline-focus-ring ring-inset",
                             isHovered && "bg-primary_hover",
                             isFocusVisible && "outline-2",
                             pending && "cursor-progress opacity-50",
