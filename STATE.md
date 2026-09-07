@@ -22,6 +22,23 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **2026-09-07, a collection from somewhere else.** A CSV can be imported at
+  `/dashboard/import`, reached from Settings (no fifth tab; the phone's pill is sized on a
+  quarter). An export from Dex is recognised on sight and read by its own rules; anything
+  else falls back to naming the columns yourself. Nothing is written until a preview says,
+  in words and numbers, what writing would mean — including how many of the cards you
+  already hold, which are skipped by default, because a CSV row has no `source_id` and so
+  the database cannot refuse the same file twice. Measured on Bart's own 4,536-row export:
+  2,004 new, 93 already held, 2,439 checklist rows left alone. Most of the work was
+  cardorb-api#230 — the route only accepted a cookie, so it answered 401 to this app; the
+  file is UTF-16 with semicolons; `Quantity 0` meant "not owned" and was being read as
+  owned; `48/108` matched no card. That PR also fixed three set names that resolved to the
+  *wrong* set silently ("Sword & Shield Promos" found the base set), which was hurting reads,
+  not only imports. Web-side: `readCsv` sniffs the byte order mark, `ApiError` keeps the
+  failing body (the 400 carries the header row), and one call may outlive the 30 s timeout.
+  The kit's file-upload drop zone was vendored, trimmed to the drop zone alone — dropping
+  `motion` and `@untitledui/file-icons` with the file list — and given the focus ring it
+  shipped without.
 - **2026-09-07, the API's own data.** Four filters instead of two: the card list narrows to one
   generation or one energy type, both from the facets the list read already carries
   (`gen`/`type` in the URL, cardorb-api #226 for the query and the facets). The card sheet's
