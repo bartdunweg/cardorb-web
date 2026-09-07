@@ -25,7 +25,7 @@ export function CardsTable({ cards, onSelect }: { cards: Card[]; onSelect: (card
                     <Table.Head id="set" label="Set" />
                     <Table.Head id="number" label="Number" />
                     <Table.Head id="rarity" label="Rarity" />
-                    <Table.Head id="price" label="Market price" className="text-right" />
+                    <Table.Head id="price" label="Near Mint price" className="text-right" />
                     <Table.Head id="quantity" label="Quantity" className="text-right" />
                 </Table.Header>
                 <Table.Body items={cards}>

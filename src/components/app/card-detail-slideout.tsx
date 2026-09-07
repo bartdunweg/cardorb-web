@@ -1034,7 +1034,12 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                         copies come to, what was paid, and what that bought. */}
                                         {mine.tcg_id ? <CardPriceChart tcgId={mine.tcg_id} holo={isReverseFinish(mine.finish)} name={card?.name} /> : null}
                                         <dl className="flex flex-col divide-y divide-secondary">
-                                            <DetailRow label="Market price" value={mine.price != null ? formatPrice(mine.price) : null} />
+                                            {/* Near Mint, not market: the figure is the market price put through a measured band —
+                                                above €20 about a quarter higher, between €5 and €20 about an eighth lower,
+                                                and unchanged below that. A trend price is dragged down by played copies;
+                                                this is an estimate of what a Near Mint one does. The old label named the
+                                                input rather than the answer. */}
+                                            <DetailRow label="Near Mint price" value={mine.price != null ? formatPrice(mine.price) : null} />
                                             {/* What the catalogue says about the printing, once it answers: where today's
                                                 figure sits against the week and the month, and the band a copy is listed in. */}
                                             {known?.market?.trend != null ? <DetailRow label="Trend" value={formatPrice(known.market.trend)} late /> : null}

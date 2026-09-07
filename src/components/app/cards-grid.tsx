@@ -98,7 +98,7 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                                     </span>
                                     {card.price != null ? (
                                         <span className="text-primary">
-                                            <span className="sr-only">Market price </span>
+                                            <span className="sr-only">Near Mint price </span>
                                             {formatPrice(card.price)}
                                         </span>
                                     ) : null}
