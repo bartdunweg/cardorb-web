@@ -1,6 +1,7 @@
 "use client";
 
 import { type RefObject, useEffect } from "react";
+import { orientationAllowed } from "./orientation";
 import { type Pose, REST, STATIC_POSE, cssVars, poseFromOrientation, poseFromPointer } from "./pose";
 import { Spring } from "./spring";
 
@@ -10,9 +11,10 @@ import { Spring } from "./spring";
  * render.
  *
  * A pointer over the surface drives three springs (tilt, light, foil offset) with the source
- * effect's stiffness; when it leaves, a beat later, a softer spring lets the card settle flat. On a phone that has no permission prompt for it (Android), the gyroscope drives the same
- * springs while nothing touches the card; a finger over it wins. iOS asks permission for the
- * gyroscope inside a gesture, which the sheet's opening is not, so there a finger drives it.
+ * effect's stiffness; when it leaves, a beat later, a softer spring lets the card settle flat.
+ * On a phone the gyroscope drives the same springs while nothing touches the card, once the
+ * browser allows it (Android at once; iOS after the Tilt button's tap, see orientation.ts); a
+ * finger over the card wins.
  *
  * Reduced motion: the card is drawn once, lit from the top left and flat, and nothing listens.
  */
@@ -23,12 +25,15 @@ const SNAP = { stiffness: 0.01, damping: 0.06 };
 const RELEASE_MS = 150;
 
 export type HoloTiltOptions = {
-    /** "auto" reads the phone's tilt where the browser allows it without asking. */
+    /** "auto" reads the phone's tilt where the browser allows it; "off" never does. */
     orientation?: "auto" | "off";
+    /** Flip it when permission was just granted, so the hook attaches the sensor. */
+    orientationGranted?: boolean;
 };
 
 export function useHoloTilt(card: RefObject<HTMLElement | null>, surface: RefObject<HTMLElement | null>, options: HoloTiltOptions = {}): void {
     const orientation = options.orientation ?? "auto";
+    const orientationGranted = options.orientationGranted ?? false;
 
     useEffect(() => {
         const el = card.current;
@@ -130,10 +135,7 @@ export function useHoloTilt(card: RefObject<HTMLElement | null>, surface: RefObj
             if (pointerOn) return;
             drive(poseFromOrientation(e.gamma - base.gamma, e.beta - base.beta));
         };
-        const askless =
-            orientation === "auto" &&
-            "DeviceOrientationEvent" in window &&
-            typeof (DeviceOrientationEvent as unknown as { requestPermission?: unknown }).requestPermission !== "function";
+        const askless = orientation === "auto" && orientationAllowed();
         if (askless) window.addEventListener("deviceorientation", onOrientation, true);
 
         const onVisibility = () => {
@@ -161,5 +163,5 @@ export function useHoloTilt(card: RefObject<HTMLElement | null>, surface: RefObj
             if (askless) window.removeEventListener("deviceorientation", onOrientation, true);
             document.removeEventListener("visibilitychange", onVisibility);
         };
-    }, [card, surface, orientation]);
+    }, [card, surface, orientation, orientationGranted]);
 }
