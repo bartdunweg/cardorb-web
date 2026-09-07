@@ -296,12 +296,11 @@ export type CardFacts = {
     /** The Western languages the card was printed in; a copy can be one of these and no other. */
     languages: string[];
     /**
-     * Which printings of this card exist. A form offers no finish that is false
-     * here — every finish this app can store is not every finish this card was
-     * made in, and a reverse holo of a card never printed as one is an option
-     * nobody can honestly pick.
+     * Every printing of this card that exists: what each one is, and what its foil looks like.
+     * A form offers no finish and no pattern that is not here — and offers everything where the
+     * list is empty, because empty is the catalogue having no answer rather than none existing.
      */
-    variants: { normal: boolean; holo: boolean; reverse: boolean };
+    printings: { finish: "normal" | "holo" | "reverse-holo"; foilPattern: string | null }[];
     /** The catalogue's own price for the printing: the market figure, its floor and its Near Mint band. */
     price: { low: number | null; market: number | null; avg30: number | null; nm: { low: number; mid: number; high: number } | null } | null;
     /** Cardmarket's averages: the all-time average, the trend, and the last seven days. */
@@ -322,9 +321,7 @@ export async function cardFacts(tcgId: string): Promise<CardFacts | null> {
             regulationMark: c.regulationMark ?? null,
             cmUrl: c.cmUrl ?? null,
             languages: Array.isArray(c.languages) ? c.languages : ["en"],
-            // All three where the catalogue says nothing, so an answer we do not
-            // have never takes an option away.
-            variants: c.variants ?? { normal: true, holo: true, reverse: true },
+            printings: Array.isArray(c.printings) ? c.printings : [],
             price: c.price ?? null,
             market: c.market ?? null,
         };

@@ -7,7 +7,7 @@ import { addCopy, splitCopy } from "@/app/(app)/dashboard/cards/actions";
 import type { CardFacts } from "@/app/(app)/dashboard/cards/actions";
 import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { CONDITIONS } from "@/components/app/condition-badge";
-import { finishOptions, hasFoil } from "@/components/app/copy-fields";
+import { finishOptions, patternOptions } from "@/components/app/copy-fields";
 import { FlagIcon } from "@/components/app/flag-icon";
 import { GRADERS, GRADES, gradeLabel, splitGrade } from "@/components/app/graded";
 import { SheetDialog } from "@/components/app/sheet-dialog";
@@ -33,20 +33,6 @@ type Props = {
     /** What the catalogue says this card is, so no impossible printing is offered. */
     facts?: CardFacts | null;
 };
-
-/**
- * The foil's pattern, which is not the finish. One card is commonly held both
- * ways — 115 in a real collection are, and a few in two patterns at once — so
- * it is a choice about this copy rather than a fact about the card.
- */
-const PATTERNS = [
-    { label: "Not recorded", value: "" },
-    { label: "Cosmos", value: "cosmos" },
-    { label: "Cracked ice", value: "cracked-ice" },
-    { label: "Starlight", value: "starlight" },
-    { label: "Confetti", value: "confetti" },
-    { label: "Vertical line", value: "vertical-line" },
-];
 
 const FINISHES = [
     { label: "Not recorded", value: "" },
@@ -126,6 +112,9 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
     // on a desktop as on a phone.
     const row = "flex flex-col gap-1.5 text-sm font-medium text-secondary";
 
+    // The pattern list follows the finish: cosmos on a holo is not cosmos on a normal.
+    const patterns = patternOptions(facts, finish, from.foil_pattern ?? null);
+
     return (
         <form
             className="flex flex-col gap-5 p-5"
@@ -193,8 +182,10 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
                 Condition
                 <ButtonGroup
                     size="sm"
-                    // Its own class is `w-max`; the row is full width and so is everything in it.
-                    className="w-full *:flex-1"
+                    // Its own class is `w-max`, so the row's width has to be given; the halves
+                    // then share it. justify-center because the kit's item is `items-center`
+                    // and nothing else — stretched, its word sat against the left edge.
+                    className="w-full *:flex-1 *:justify-center"
                     selectionMode="single"
                     disallowEmptySelection
                     selectedKeys={new Set([graded ? "graded" : "raw"])}
@@ -255,7 +246,7 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
 
             {/* A card with no foil at all has no pattern to record — the one thing about a
                 pattern any catalogue is certain of. */}
-            {hasFoil(facts, from.foil_pattern ?? null) ? (
+            {patterns.length ? (
                 <div className={row}>
                     Foil pattern
                     <NativeSelect
@@ -264,7 +255,7 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
                         className="w-full"
                         value={pattern}
                         onChange={(e) => setPattern(e.target.value)}
-                        options={PATTERNS}
+                        options={patterns}
                     />
                 </div>
             ) : null}

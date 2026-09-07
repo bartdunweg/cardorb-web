@@ -8,7 +8,7 @@ import type { CardFacts } from "@/app/(app)/dashboard/cards/actions";
 import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { CardImage } from "@/components/app/card-image";
 import { CONDITIONS } from "@/components/app/condition-badge";
-import { finishOptions, hasFoil } from "@/components/app/copy-fields";
+import { finishOptions, patternOptions } from "@/components/app/copy-fields";
 import { FlagIcon } from "@/components/app/flag-icon";
 import { GRADERS, GRADES, gradeLabel, splitGrade } from "@/components/app/graded";
 import { SheetDialog } from "@/components/app/sheet-dialog";
@@ -32,16 +32,6 @@ type Props = {
     facts?: CardFacts | null;
     languages?: readonly string[] | null;
 };
-
-/** The foil's pattern; see the note in copy-form-dialog.tsx for why it is its own field. */
-const PATTERNS = [
-    { label: "Not recorded", value: "" },
-    { label: "Cosmos", value: "cosmos" },
-    { label: "Cracked ice", value: "cracked-ice" },
-    { label: "Starlight", value: "starlight" },
-    { label: "Confetti", value: "confetti" },
-    { label: "Vertical line", value: "vertical-line" },
-];
 
 const FINISHES = [
     { label: "Not recorded", value: "" },
@@ -110,6 +100,9 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
     // on a desktop as on a phone.
     const row = "flex flex-col gap-1.5 text-sm font-medium text-secondary";
 
+    // The pattern list follows the finish: cosmos on a holo is not cosmos on a normal.
+    const patterns = patternOptions(facts, finish, card.foil_pattern ?? null);
+
     return (
         <form
             className="flex flex-col gap-5 p-5"
@@ -176,8 +169,10 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
                 Condition
                 <ButtonGroup
                     size="sm"
-                    // Its own class is `w-max`; the row is full width and so is everything in it.
-                    className="w-full *:flex-1"
+                    // Its own class is `w-max`, so the row's width has to be given; the halves
+                    // then share it. justify-center because the kit's item is `items-center`
+                    // and nothing else — stretched, its word sat against the left edge.
+                    className="w-full *:flex-1 *:justify-center"
                     selectionMode="single"
                     disallowEmptySelection
                     selectedKeys={new Set([graded ? "graded" : "raw"])}
@@ -237,7 +232,7 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
             </div>
             {/* A card with no foil at all has no pattern to record — the one thing about a
     pattern any catalogue is certain of. */}
-            {hasFoil(facts, card.foil_pattern ?? null) ? (
+            {patterns.length ? (
                 <div className={row}>
                     Foil pattern
                     <NativeSelect
@@ -246,7 +241,7 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
                         className="w-full"
                         value={pattern}
                         onChange={(e) => setPattern(e.target.value)}
-                        options={PATTERNS}
+                        options={patterns}
                     />
                 </div>
             ) : null}

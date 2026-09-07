@@ -1,51 +1,73 @@
 import { describe, expect, it } from "vitest";
 import type { CardFacts } from "@/app/(app)/dashboard/cards/actions";
-import { finishOptions, hasFoil } from "./copy-fields";
+import { finishOptions, patternOptions } from "./copy-fields";
 
-const facts = (variants: { normal: boolean; holo: boolean; reverse: boolean }): CardFacts => ({ variants, languages: ["en"] }) as CardFacts;
+type Printing = CardFacts["printings"][number];
+
+const facts = (printings: Printing[]) => ({ printings, languages: ["en"] }) as unknown as CardFacts;
 
 const values = (o: { value: string }[]) => o.map((x) => x.value);
 
+/** A Horsea of Shrouded Fable, as TCGdex lists it. Its cosmos is on the holo and nowhere else. */
+const HORSEA: Printing[] = [
+    { finish: "normal", foilPattern: null },
+    { finish: "holo", foilPattern: "cosmos" },
+    { finish: "reverse-holo", foilPattern: null },
+];
+
 describe("finishOptions", () => {
     it("offers only the printings the card was made in", () => {
-        // Espeon of Dark Explorers: normal and nothing else, whatever an export
-        // may list beside it.
-        expect(values(finishOptions(facts({ normal: true, holo: false, reverse: false }), null))).toEqual(["", "normal"]);
+        // Espeon of Dark Explorers: normal and nothing else, whatever an export lists beside it.
+        expect(values(finishOptions(facts([{ finish: "normal", foilPattern: null }]), null))).toEqual(["", "normal"]);
     });
 
     it("offers the patterned reverses only where a reverse exists", () => {
-        // TCGdex does not name the ball prints, so the honest test is the one
-        // they share: no reverse, no patterned reverse.
-        expect(values(finishOptions(facts({ normal: true, holo: false, reverse: true }), null))).toEqual([
-            "",
-            "normal",
-            "reverse-holo",
-            "poke-ball",
-            "master-ball",
-        ]);
-        expect(values(finishOptions(facts({ normal: false, holo: true, reverse: false }), null))).toEqual(["", "holo"]);
+        expect(values(finishOptions(facts(HORSEA), null))).toEqual(["", "normal", "reverse-holo", "holo", "poke-ball", "master-ball"]);
+        expect(values(finishOptions(facts([{ finish: "holo", foilPattern: null }]), null))).toEqual(["", "holo"]);
     });
 
     it("offers everything when the catalogue says nothing", () => {
+        expect(values(finishOptions(facts([]), null))).toHaveLength(6);
         expect(values(finishOptions(null, null))).toHaveLength(6);
     });
 
     it("keeps a finish already recorded, even where the catalogue denies it", () => {
-        // A select whose value is not among its options shows blank, and saving
-        // the form would then clear an answer somebody gave on purpose.
-        expect(values(finishOptions(facts({ normal: true, holo: false, reverse: false }), "reverse-holo"))).toEqual(["", "normal", "reverse-holo"]);
+        // A select whose value is not among its options shows blank, and saving the form would
+        // then clear an answer somebody gave on purpose.
+        expect(values(finishOptions(facts([{ finish: "normal", foilPattern: null }]), "reverse-holo"))).toEqual(["", "normal", "reverse-holo"]);
     });
 });
 
-describe("hasFoil", () => {
-    it("is false only for a card with no foil at all", () => {
-        expect(hasFoil(facts({ normal: true, holo: false, reverse: false }), null)).toBe(false);
-        expect(hasFoil(facts({ normal: true, holo: false, reverse: true }), null)).toBe(true);
-        expect(hasFoil(facts({ normal: false, holo: true, reverse: false }), null)).toBe(true);
+describe("patternOptions", () => {
+    it("follows the finish, because a foil belongs to a printing", () => {
+        // Horsea's cosmos is on its holo. Beside its normal it was never made.
+        expect(values(patternOptions(facts(HORSEA), "holo", null))).toEqual(["", "cosmos"]);
+        expect(patternOptions(facts(HORSEA), "normal", null)).toEqual([]);
+        expect(patternOptions(facts(HORSEA), "reverse-holo", null)).toEqual([]);
     });
 
-    it("stays true where something is already recorded, or nothing is known", () => {
-        expect(hasFoil(facts({ normal: true, holo: false, reverse: false }), "cosmos")).toBe(true);
-        expect(hasFoil(null, null)).toBe(true);
+    it("asks about a plain reverse for the patterned ones", () => {
+        const pikachu: Printing[] = [
+            { finish: "normal", foilPattern: null },
+            { finish: "reverse-holo", foilPattern: "cosmos" },
+        ];
+
+        expect(values(patternOptions(facts(pikachu), "poke-ball", null))).toEqual(["", "cosmos"]);
+    });
+
+    it("is nothing where the card has no patterned printing at all", () => {
+        expect(patternOptions(facts([{ finish: "holo", foilPattern: null }]), "holo", null)).toEqual([]);
+    });
+
+    it("offers them all where the catalogue has no answer, except beside a plain normal", () => {
+        // Empty is "no answer", not "none exist"; most cards carry no foil field yet, and hiding
+        // the picker on that basis would stop somebody recording a card they are holding.
+        expect(values(patternOptions(facts([]), "holo", null))).toHaveLength(6);
+        expect(patternOptions(facts([]), "normal", null)).toEqual([]);
+    });
+
+    it("keeps a pattern already recorded, whatever the catalogue says", () => {
+        expect(values(patternOptions(facts(HORSEA), "normal", "starlight"))).toEqual(["", "starlight"]);
+        expect(values(patternOptions(facts([]), "normal", "cosmos"))).toHaveLength(6);
     });
 });
