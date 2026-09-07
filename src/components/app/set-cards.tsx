@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { listCopies } from "@/app/(app)/dashboard/cards/actions";
 import { CardDetailSlideout } from "@/components/app/card-detail-slideout";
 import { SetCardTile } from "@/components/app/set-card-tile";
-import type { SetCard } from "@/lib/api-shapes";
+import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
 import { GRID_COLUMNS } from "@/lib/cards-view";
 
@@ -21,6 +21,8 @@ import { GRID_COLUMNS } from "@/lib/cards-view";
  */
 export function SetCards({ cards, readOnly, firstRow = 6 }: { cards: SetCard[]; readOnly: boolean; firstRow?: number }) {
     const [selected, setSelected] = useState<Card | null>(null);
+    // The catalogue card behind an open sheet, so a card nobody holds can still be taken from it.
+    const [addable, setAddable] = useState<SetCard | null>(null);
     // One at a time: a second tap while the first is still reading the copies would open the wrong card.
     const opening = useRef<string | null>(null);
 
@@ -32,10 +34,12 @@ export function SetCards({ cards, readOnly, firstRow = 6 }: { cards: SetCard[]; 
                 const rows = await listCopies({ set: card.setName, number: card.number, name: card.name });
                 const row = rows[0];
                 if (row) {
+                    setAddable(null);
                     setSelected(row);
                     return;
                 }
             }
+            setAddable(card);
             setSelected(fromCatalogue(card));
         } finally {
             opening.current = null;
@@ -53,8 +57,16 @@ export function SetCards({ cards, readOnly, firstRow = 6 }: { cards: SetCard[]; 
                     </li>
                 ))}
             </ul>
-            {/* Read-only: what the sheet can change belongs to a row, and a card you do not hold has none. */}
-            <CardDetailSlideout card={selected} onClose={() => setSelected(null)} readOnly />
+            {/* A card you hold opens on its row and can be changed. One you do not opens on the
+                printing, with the two ways to take it — the sheet is where you looked for them. */}
+            <CardDetailSlideout
+                card={selected}
+                onClose={() => {
+                    setSelected(null);
+                    setAddable(null);
+                }}
+                addable={addable ? pokemonCardFromSetCard(addable) : null}
+            />
         </>
     );
 }
