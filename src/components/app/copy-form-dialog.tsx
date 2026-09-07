@@ -7,7 +7,7 @@ import { addCopy, splitCopy } from "@/app/(app)/dashboard/cards/actions";
 import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { CONDITIONS } from "@/components/app/condition-badge";
 import { FlagIcon } from "@/components/app/flag-icon";
-import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
+import { SheetDialog } from "@/components/app/sheet-dialog";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { NativeSelect } from "@/components/base/select/select-native";
@@ -53,14 +53,9 @@ const FINISHES = [
 
 export function CopyFormDialog({ children, ...form }: Props & { children: ReactNode }) {
     return (
-        <DialogTrigger>
+        <SheetDialog className="sm:max-w-md" content={(close) => <CopyForm {...form} close={close} />}>
             {children}
-            <ModalOverlay>
-                <Modal className="max-w-md">
-                    <Dialog>{({ close }) => <CopyForm {...form} close={close} />}</Dialog>
-                </Modal>
-            </ModalOverlay>
-        </DialogTrigger>
+        </SheetDialog>
     );
 }
 
