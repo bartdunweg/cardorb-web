@@ -4,12 +4,21 @@ import { SwitchVertical01 } from "@untitledui/icons";
 import { usePathname, useRouter } from "next/navigation";
 import { RowButton } from "@/components/app/row-button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
-import { type ListQuery, SORT_OPTIONS, type SortOption, listHref } from "@/lib/list-query";
+import { type ListQuery, SORT_OPTIONS, type SortKey, type SortOption, listHref } from "@/lib/list-query";
 
 // The sort of a card list, a menu button beside Filters and View. A choice goes into the URL
 // (page back to one), and the server page re-asks the API in that order; nothing is sorted in
 // the browser. A public list hands in the shorter option list it can offer.
-export function CardsSort({ query, options = SORT_OPTIONS }: { query: ListQuery; options?: readonly SortOption[] }) {
+export function CardsSort({
+    query,
+    options = SORT_OPTIONS,
+    defaultSortKey = "set",
+}: {
+    query: ListQuery;
+    options?: readonly SortOption[];
+    /** What a bare URL means on this page; the others are written into it. */
+    defaultSortKey?: SortKey;
+}) {
     const router = useRouter();
     const pathname = usePathname();
     return (
@@ -22,8 +31,8 @@ export function CardsSort({ query, options = SORT_OPTIONS }: { query: ListQuery;
                     selectedKeys={new Set([query.sortKey])}
                     onSelectionChange={(keys) => {
                         const key = keys === "all" ? undefined : [...keys][0];
-                        const sortKey = options.find((o) => o.value === key)?.value ?? "set";
-                        router.replace(listHref(pathname, query, { sortKey, page: 1 }), { scroll: false });
+                        const sortKey = options.find((o) => o.value === key)?.value ?? defaultSortKey;
+                        router.replace(listHref(pathname, query, { sortKey, page: 1 }, defaultSortKey), { scroll: false });
                     }}
                 >
                     {options.map((o) => (
