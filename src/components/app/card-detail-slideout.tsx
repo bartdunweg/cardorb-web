@@ -2,12 +2,13 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { ArrowRight, ChevronLeft, ChevronRight, DotsHorizontal, Minus, Phone01, Plus, Star01, Trash01, XClose } from "@untitledui/icons";
+import { ArrowRight, ChevronLeft, ChevronRight, DotsHorizontal, Heart, Minus, Phone01, Plus, Star01, Trash01, XClose } from "@untitledui/icons";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import {
     type CardFacts,
+    addCard,
     cardFacts,
     listCopies,
     removeCard,
@@ -37,7 +38,7 @@ import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Input } from "@/components/base/input/input";
 import { NativeSelect } from "@/components/base/select/select-native";
-import { FINISH_LABELS, FOIL_PATTERN_LABELS, type Finish, type FoilPattern, isReverseFinish } from "@/lib/api-shapes";
+import { FINISH_LABELS, FOIL_PATTERN_LABELS, type Finish, type FoilPattern, type PokemonCard, isReverseFinish } from "@/lib/api-shapes";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
 import { groupCopies, sortCopies } from "@/lib/copies";
 import { matchesRule } from "@/lib/folder-rule";
@@ -75,9 +76,19 @@ const FACTS_SEEN = new Map<string, CardFacts | null>();
  */
 type Neighbours = { onPrev?: (() => void) | null; onNext?: (() => void) | null };
 
-type Props = ({ card: Card | null; onClose: () => void; readOnly?: false } | { card: PublicCard | null; onClose: () => void; readOnly: true }) & Neighbours;
+/**
+ * `addable`: the catalogue card behind this sheet, for one that is neither held nor wished.
+ *
+ * The sheet is built around a row somebody owns, so a card with no row had nothing to offer and
+ * opened as something to read. A set page is full of those.
+ */
+type Addable = { addable?: PokemonCard | null };
 
-export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, onNext }: Props) {
+type Props = ({ card: Card | null; onClose: () => void; readOnly?: false } | { card: PublicCard | null; onClose: () => void; readOnly: true }) &
+    Neighbours &
+    Addable;
+
+export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, onNext, addable }: Props) {
     const router = useRouter();
     // The owner's fields exist only on the editable view; the public view never receives them.
     // The row the sheet shows: the one it opened on, or another copy of the card tapped in the
@@ -122,6 +133,55 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         setCopiesState({ of: copiesKey(mine), rows });
         if (group.some((r) => r.id === mine.id) && rows[0]) setViewing({ of: card.id, row: rows[0] });
         router.refresh();
+    };
+    /* A card the sheet has just emptied stays on screen as a card you could take again, so the
+       last minus is not a door slamming. The set page hands one of these in; everywhere else the
+       card on screen is enough to build it. */
+    const [removed, setRemoved] = useState<string | null>(null);
+    const emptied = !!card && removed === card.id;
+    /* Read-only sheets never take a card, so the public shape is not asked to answer for one. */
+    const own = readOnly ? null : (card as Card | null);
+    const takeable: PokemonCard | null =
+        addable ??
+        (own
+            ? {
+                  id: own.id,
+                  name: own.name,
+                  set: own.set ?? own.set_name ?? "",
+                  number: own.number ?? "",
+                  rarity: own.rarity,
+                  image: own.image_url,
+                  supertype: null,
+                  subtypes: null,
+                  hp: null,
+                  types: own.types?.length ? own.types : null,
+                  artist: null,
+                  series: null,
+                  releaseDate: null,
+                  setPrintedTotal: null,
+                  flavorText: null,
+                  nationalPokedexNumbers: null,
+                  owned: false,
+                  wishlist: false,
+                  quantity: 0,
+              }
+            : null);
+
+    /* Taking a card the sheet was only showing. The list behind re-reads, and the sheet closes:
+       what it was showing is not what it is now, and the row it became has its own copies. */
+    const add = async (list: "collection" | "wishlist") => {
+        if (!takeable) return;
+        setBusy(true);
+        setMenuError(null);
+        const res = await addCard(takeable, list);
+        setBusy(false);
+        if (!res.ok) {
+            setMenuError(res.error);
+            return;
+        }
+        setRemoved(null);
+        router.refresh();
+        onClose();
     };
     const [collections, setCollections] = useState<FolderChoice[]>([]);
     const [facets, setFacets] = useState<Facets | undefined>(undefined);
@@ -255,13 +315,12 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
            the one on screen — and if the group cannot be found at all (the listed copies are from
            before a write, so the shown row is not among them), say so rather than doing nothing.
            A button that answers a press with silence is the worst of the three outcomes. */
-        const spare = shownGroup?.rows.find((r) => r.id !== mine.id);
-        if (!spare) {
-            setMenuError("Could not tell which copy to remove. Reopen the card and try again.");
-            void reloadCopies();
-            return;
-        }
+        /* The last one may go: the panel answers at once with the two ways to take it back, so
+           this is not the door it used to be, when nought meant the card left on closing. */
+        const spare = shownGroup?.rows.find((r) => r.id !== mine.id) ?? mine;
+        const last = (shownGroup?.rows.length ?? 1) <= 1;
         await dropCopies([spare]);
+        if (last && card) setRemoved(card.id);
     };
     const step = async (n: number) => {
         if (!mine || n < 1) return;
@@ -594,9 +653,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                             and the catalogue's facts about the printing answer a different question. A card you do
                             not hold has no such tab, and then Details is the front of the sheet as before. */}
                         {card ? (
-                            <Tabs className="flex flex-col gap-5" defaultSelectedKey={mine?.owned ? "copies" : "details"}>
+                            <Tabs className="flex flex-col gap-5" defaultSelectedKey={mine ? "copies" : "details"}>
                                 <TabList aria-label="Card" type="underline" size="sm" className={mine ? undefined : "sr-only"}>
-                                    {mine?.owned ? <Tab id="copies" label="Your copies" badge={heldTotal > 1 ? heldTotal : undefined} /> : null}
+                                    {mine ? <Tab id="copies" label="Your copies" badge={mine.owned && heldTotal > 1 ? heldTotal : undefined} /> : null}
                                     <Tab id="details" label="Details" />
                                     {mine ? <Tab id="price" label="Price" /> : null}
                                 </TabList>
@@ -664,8 +723,39 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                         </div>
                                     ) : null}
                                 </TabPanel>
-                                {mine?.owned ? (
+                                {mine ? (
                                     <TabPanel id="copies" className="flex flex-col gap-6">
+                                        {/* None yet, and the two ways to change that. This tab answers "what do I
+                                            have of this", and for a card you do not hold the honest answer is
+                                            nothing — followed by the offer, which is what you opened it for. */}
+                                        {takeable && (emptied || (!mine.owned && !mine.wishlist)) ? (
+                                            <div className="flex flex-col gap-3 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary ring-inset">
+                                                <p className="text-sm text-tertiary">
+                                                    {emptied ? "That was the last copy; it has left your collection." : "You do not hold this card yet."}
+                                                </p>
+                                                <div className="flex flex-col gap-2 sm:flex-row">
+                                                    <Button
+                                                        size="md"
+                                                        iconLeading={Plus}
+                                                        className="w-full"
+                                                        isDisabled={busy}
+                                                        onClick={() => void add("collection")}
+                                                    >
+                                                        Add to collection
+                                                    </Button>
+                                                    <Button
+                                                        size="md"
+                                                        color="secondary"
+                                                        iconLeading={Heart}
+                                                        className="w-full"
+                                                        isDisabled={busy}
+                                                        onClick={() => void add("wishlist")}
+                                                    >
+                                                        Add to wishlist
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        ) : null}
                                         {/* The copies you hold of this card, one line per *kind*: the language's flag, the
                                     finish, the condition or grade, the folder and how many. Rows are one per purchase
                                     and nothing merged them, so four identical Holo · Near Mint copies were four lines
@@ -759,7 +849,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                                         size="sm"
                                                                         iconLeading={Minus}
                                                                         aria-label="One copy fewer"
-                                                                        isDisabled={busy || heldOfThisKind <= 1}
+                                                                        isDisabled={busy || heldOfThisKind < 1}
                                                                         onClick={() => void stepDown()}
                                                                     />
                                                                     <span className="min-w-4 text-center tabular-nums">{heldOfThisKind}</span>

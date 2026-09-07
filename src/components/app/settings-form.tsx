@@ -2,12 +2,13 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
-import { ChevronRight, Code01, File02, Lock01, Monitor04, Moon01, Sun, UploadCloud01, User01 } from "@untitledui/icons";
-import { Button as AriaButton, Heading as AriaHeading } from "react-aria-components";
+import { ChevronRight, Code01, File02, Lock01, Monitor04, Moon01, Sun, UploadCloud01 } from "@untitledui/icons";
+import { Button as AriaButton } from "react-aria-components";
 import { checkUsername, removeAvatar, updateEmail, updatePassword, updateProfile, uploadAvatar } from "@/app/(app)/dashboard/settings/actions";
 import { signOut } from "@/app/(auth)/actions";
 import { ImportDialog } from "@/components/app/import-dialog";
 import { SettingsGroup, SettingsLinkRow, SettingsRow, SheetHeader } from "@/components/app/settings-rows";
+import { SheetDialog } from "@/components/app/sheet-dialog";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Button } from "@/components/base/buttons/button";
@@ -18,9 +19,6 @@ import { isTheme } from "@/lib/theme-script";
 import { useTheme } from "@/providers/theme";
 
 type Msg = { type: "ok" | "err"; text: string } | null;
-
-/** What the theme row says it currently is, without opening it. */
-const THEME_LABELS: Record<string, string> = { light: "Light", dark: "Dark", system: "System" };
 
 const AVATAR_TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
@@ -173,7 +171,7 @@ export function SettingsForm({ profile, email, heading }: { profile: Profile; em
     };
 
     return (
-        <div className="flex max-w-2xl flex-col gap-6">
+        <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
             {heading ?? (
                 <div className="flex flex-col gap-1">
                     <h1 className="text-display-xs font-semibold text-primary">Settings</h1>
@@ -181,19 +179,17 @@ export function SettingsForm({ profile, email, heading }: { profile: Profile; em
                 </div>
             )}
 
-            {/* Who you are, before anything you can change about it. */}
+            {/* Who you are, before anything you can change about it — and the way to change it, on
+                the card that shows it. It was a row in the list below, one line under the picture of
+                the thing it edits. */}
             <div className="flex items-center gap-4 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary ring-inset">
                 <Avatar src={avatarUrl || undefined} alt={displayName || username} size="lg" />
                 <div className="flex min-w-0 flex-col">
                     <span className="truncate text-md font-semibold text-primary">{displayName || username || "Your profile"}</span>
                     <span className="truncate text-sm text-tertiary">{email}</span>
                 </div>
-            </div>
-
-            <SettingsGroup title="Account">
-                <SettingsRow
-                    icon={User01}
-                    label="Manage profile"
+                <SheetDialog
+                    className="sm:max-w-md"
                     content={(close) => (
                         <div className="flex flex-col gap-5 p-5">
                             <SheetHeader title="Manage profile" description="This is how you appear in Cardorb." close={close} />
@@ -268,7 +264,14 @@ export function SettingsForm({ profile, email, heading }: { profile: Profile; em
                             </div>
                         </div>
                     )}
-                />
+                >
+                    <Button size="sm" color="secondary" className="ml-auto shrink-0">
+                        Manage
+                    </Button>
+                </SheetDialog>
+            </div>
+
+            <SettingsGroup title="Account">
                 <SettingsRow
                     icon={Lock01}
                     label="Password"
@@ -306,43 +309,34 @@ export function SettingsForm({ profile, email, heading }: { profile: Profile; em
                 />
             </SettingsGroup>
 
-            <SettingsGroup title="Preferences">
-                <SettingsRow
-                    icon={Sun}
-                    label="Theme"
-                    value={THEME_LABELS[currentTheme] ?? null}
-                    content={(close) => (
-                        <div className="flex flex-col gap-5 p-5">
-                            <SheetHeader title="Theme" description="Choose how Cardorb looks." close={close} />
-                            <ButtonGroup
-                                selectionMode="single"
-                                disallowEmptySelection
-                                selectedKeys={new Set([currentTheme])}
-                                onSelectionChange={(keys) => {
-                                    const key = [...keys][0];
-                                    if (isTheme(key)) setTheme(key);
-                                }}
-                            >
-                                <ButtonGroupItem id="light" iconLeading={Sun}>
-                                    Light
-                                </ButtonGroupItem>
-                                <ButtonGroupItem id="dark" iconLeading={Moon01}>
-                                    Dark
-                                </ButtonGroupItem>
-                                <ButtonGroupItem id="system" iconLeading={Monitor04}>
-                                    System
-                                </ButtonGroupItem>
-                            </ButtonGroup>
-                            <div className="flex justify-end">
-                                {/* It applies the moment it is picked, so there is nothing to confirm. */}
-                                <Button color="secondary" onClick={close}>
-                                    Done
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-                />
-            </SettingsGroup>
+            {/* The theme is three buttons and they fit, so they are on the page rather than behind a
+                row that opens a sheet to show them. A row that hides one control is a door in front
+                of a light switch. */}
+            <section className="flex flex-col gap-2">
+                <h2 className="px-1 text-sm font-medium text-tertiary">Preferences</h2>
+                <div className="flex flex-col gap-3 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary ring-inset">
+                    <span className="text-md text-primary">Theme</span>
+                    <ButtonGroup
+                        selectionMode="single"
+                        disallowEmptySelection
+                        selectedKeys={new Set([currentTheme])}
+                        onSelectionChange={(keys) => {
+                            const key = [...keys][0];
+                            if (isTheme(key)) setTheme(key);
+                        }}
+                    >
+                        <ButtonGroupItem id="light" iconLeading={Sun}>
+                            Light
+                        </ButtonGroupItem>
+                        <ButtonGroupItem id="dark" iconLeading={Moon01}>
+                            Dark
+                        </ButtonGroupItem>
+                        <ButtonGroupItem id="system" iconLeading={Monitor04}>
+                            System
+                        </ButtonGroupItem>
+                    </ButtonGroup>
+                </div>
+            </section>
 
             <SettingsGroup title="Collection">
                 {/* Already a dialog of its own, so it is the trigger rather than the content. */}
