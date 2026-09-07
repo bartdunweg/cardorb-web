@@ -33,7 +33,9 @@ which also says what is already yours), Settings (avatar through the API), publi
   Then the notes and the flag: a copy's note is written where it is read (the sheet's Details
   tab, saved on a button) and travels with a split copy; a copy can be kept off the public page
   from the card's menu (`excluded`, answered by `GET /v1/cards` since cardorb-api #227, held in
-  the sheet's own state as the star is). The kit's `textarea` is vendored for both. Home's Owned
+  the sheet's own state as the star is). A note field was built and taken out the same day: not
+  one of the 1,951 rows carries a note, so a writable field answered a question nobody had asked.
+  Notes stay readable where there is one, as before. Home's Owned
   tile says how many copies that is where it is more than the cards, and a card in the Add
   dialog says whether you already hold it and how many. No Sets tile: Browse says on purpose
   that how far the shelf is comes per set, not as one number over all of them. Settings answers

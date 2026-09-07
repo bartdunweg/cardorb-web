@@ -159,21 +159,6 @@ export async function setFavorite(cardId: string, isFavorite: boolean): Promise<
     return { ok: true };
 }
 
-/** What is true of this copy and no other, in your own words; empty clears it. */
-export async function setNotes(cardId: string, notes: string): Promise<Result> {
-    const parsed = z.object({ cardId: z.string().uuid(), notes: z.string().trim().max(500) }).safeParse({ cardId, notes });
-    if (!parsed.success) return { ok: false, error: "Keep a note under 500 characters." };
-
-    try {
-        await api(`/collection/items/${parsed.data.cardId}`, { method: "PATCH", body: { notes: parsed.data.notes || null } });
-    } catch (err) {
-        return failed(err);
-    }
-
-    await forgetMine();
-    return { ok: true };
-}
-
 /**
  * Keep this copy off the public profile, or put it back.
  *
