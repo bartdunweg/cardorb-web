@@ -19,7 +19,7 @@ export const copyEdits = z
         language: z.enum(WESTERN_LANGUAGES.map((l) => l.code) as [string, ...string[]]).nullable(),
         condition: z.string().trim().max(40).nullable(),
         grade: z.string().trim().max(40).nullable(),
-        finish: z.enum(["normal", "reverse-holo", "holo"]).nullable(),
+        finish: z.enum(["normal", "reverse-holo", "holo", "poke-ball", "master-ball"]).nullable(),
         collectionId: z.string().uuid().nullable(),
         purchasePrice: z.number().min(0).nullable(),
         purchaseDate: z.string().nullable(),

@@ -23,7 +23,17 @@ export type ApiPrice = {
     nm: { low: number; mid: number; high: number } | null;
 };
 
-export type Finish = "normal" | "reverse-holo" | "holo";
+export type Finish = "normal" | "reverse-holo" | "holo" | "poke-ball" | "master-ball";
+/** The finishes that are a reverse holo with a pattern (151, Prismatic Evolutions): priced and shown as a reverse. */
+export const isReverseFinish = (f: string | null | undefined): boolean => f === "reverse-holo" || f === "poke-ball" || f === "master-ball";
+/** What a copy's finish is called in copy. */
+export const FINISH_LABELS: Record<Finish, string> = {
+    normal: "Normal",
+    "reverse-holo": "Reverse holo",
+    holo: "Holo",
+    "poke-ball": "Poké Ball reverse",
+    "master-ball": "Master Ball reverse",
+};
 
 export type CardItem = {
     id: string;
@@ -92,8 +102,8 @@ export type Card = {
  * one; the Near Mint midpoint is preferred, the market price is the fallback.
  */
 export function priceForCopy({ finish, price, priceHolo }: Pick<CardItem, "finish" | "price" | "priceHolo">): number | null {
-    // The API's rule (cards.ts variantPrice): only a reverse holo takes the foil price.
-    const chosen = (finish === "reverse-holo" ? priceHolo : null) ?? price;
+    // The API's rule (cards.ts variantPrice): only a reverse holo, patterned or not, takes the foil price.
+    const chosen = (isReverseFinish(finish) ? priceHolo : null) ?? price;
     return chosen?.nm?.mid ?? chosen?.market ?? null;
 }
 

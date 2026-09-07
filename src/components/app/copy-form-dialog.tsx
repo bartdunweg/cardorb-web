@@ -33,6 +33,8 @@ const FINISHES = [
     { label: "Normal", value: "normal" },
     { label: "Reverse holo", value: "reverse-holo" },
     { label: "Holo", value: "holo" },
+    { label: "Poké Ball reverse", value: "poke-ball" },
+    { label: "Master Ball reverse", value: "master-ball" },
 ];
 
 export function CopyFormDialog({ children, ...form }: Props & { children: ReactNode }) {

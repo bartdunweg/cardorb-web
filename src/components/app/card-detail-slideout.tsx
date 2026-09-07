@@ -37,6 +37,7 @@ import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { NativeSelect } from "@/components/base/select/select-native";
+import { FINISH_LABELS, type Finish, isReverseFinish } from "@/lib/api-shapes";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
 import { sortCopies } from "@/lib/copies";
 import { matchesRule } from "@/lib/folder-rule";
@@ -564,11 +565,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                                                     <FlagIcon language={row.language} />
                                                                     <span className="min-w-0 flex-1 truncate">
                                                                         {[
-                                                                            row.finish === "reverse-holo"
-                                                                                ? "Reverse holo"
-                                                                                : row.finish === "holo"
-                                                                                  ? "Holo"
-                                                                                  : null,
+                                                                            row.finish && row.finish !== "normal"
+                                                                                ? (FINISH_LABELS[row.finish as Finish] ?? null)
+                                                                                : null,
                                                                             row.grade ?? row.condition,
                                                                             folderName,
                                                                         ]
@@ -787,7 +786,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                     <TabPanel id="price" className="flex flex-col gap-6">
                                         {/* The line first, then the numbers around it: what one copy trades at, what all the
                                         copies come to, what was paid, and what that bought. */}
-                                        {mine.tcg_id ? <PriceHistory tcgId={mine.tcg_id} holo={mine.finish === "reverse-holo"} tall /> : null}
+                                        {mine.tcg_id ? <PriceHistory tcgId={mine.tcg_id} holo={isReverseFinish(mine.finish)} tall /> : null}
                                         <dl className="flex flex-col divide-y divide-secondary">
                                             <DetailRow label="Market price" value={mine.price != null ? formatPrice(mine.price) : null} />
                                             <DetailRow label="Copies" value={mine.quantity ?? 1} />
