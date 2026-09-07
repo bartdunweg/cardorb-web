@@ -33,7 +33,7 @@ export function CardsList({
     narrowed: boolean;
     view: CardsViewMode;
     size: CardsSize;
-    onSelect: (card: Card) => void;
+    onSelect: (card: Card, siblings: Card[]) => void;
     /** When a search or a filter finds nothing. */
     noHits: ReactNode;
     /** When the folder holds nothing at all. */
