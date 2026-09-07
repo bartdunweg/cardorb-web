@@ -25,6 +25,7 @@ import { CopyFormDialog } from "@/components/app/copy-form-dialog";
 import { FlagIcon } from "@/components/app/flag-icon";
 import { FolderDialog } from "@/components/app/folder-dialog";
 import { HoloCard } from "@/components/app/holo-card";
+import { LanguageSelect } from "@/components/app/language-select";
 import { MarkOwnedDialog } from "@/components/app/mark-owned-dialog";
 import { PriceHistory } from "@/components/app/price-history";
 import { SheetBar } from "@/components/app/sheet-bar";
@@ -41,7 +42,6 @@ import { sortCopies } from "@/lib/copies";
 import { matchesRule } from "@/lib/folder-rule";
 import { formatDate, formatPrice } from "@/lib/format";
 import { orientationNeedsPermission, requestOrientation } from "@/lib/holo/orientation";
-import { languagesFor } from "@/lib/languages";
 import { cx } from "@/utils/cx";
 
 // `late`: a row the catalogue sends a hop after the sheet has settled arrives like the rest of what streams in.
@@ -720,20 +720,12 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                         <DetailRow
                                                             label="Language"
                                                             value={
-                                                                <span className="flex items-center justify-end gap-2">
-                                                                    <FlagIcon language={shownLanguage} size="md" labelled />
-                                                                    <NativeSelect
-                                                                        aria-label="Language"
-                                                                        size="sm"
-                                                                        className="w-auto"
-                                                                        value={shownLanguage}
-                                                                        onChange={(event) => void pickLanguage(event.target.value)}
-                                                                        options={languagesFor(null, known?.languages).map((l) => ({
-                                                                            label: l.label,
-                                                                            value: l.code,
-                                                                        }))}
-                                                                    />
-                                                                </span>
+                                                                <LanguageSelect
+                                                                    value={shownLanguage}
+                                                                    onChange={(code) => void pickLanguage(code)}
+                                                                    printed={known?.languages}
+                                                                    inside={false}
+                                                                />
                                                             }
                                                         />
                                                     ) : null}
@@ -771,7 +763,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                                     <input
                                                                         type="date"
                                                                         aria-label="Acquired"
-                                                                        className="rounded-md bg-primary px-2 py-1 text-sm text-primary ring-1 ring-primary outline-focus-ring ring-inset focus-visible:outline-2"
+                                                                        // The metrics NativeSelect size="sm" uses, so the date sits at the same
+                                                                        // height and radius as the Language and Condition rows above it. It was a
+                                                                        // hand-styled input and read as a smaller control in a column of larger ones.
+                                                                        className="rounded-lg bg-primary py-2 pl-3 text-sm font-medium text-primary ring-1 ring-primary outline-hidden transition duration-100 ease-linear ring-inset focus-visible:ring-2 focus-visible:ring-brand"
                                                                         value={mine.acquired_at ? mine.acquired_at.slice(0, 10) : ""}
                                                                         max={new Date().toISOString().slice(0, 10)}
                                                                         onChange={(e) => {
