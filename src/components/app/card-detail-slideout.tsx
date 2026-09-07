@@ -458,24 +458,34 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                     padding the card tilts in. */}
                                 {onPrev || onNext ? (
                                     <div className="pointer-events-none absolute inset-x-3 top-24 bottom-6 z-10 flex items-center justify-between">
-                                        <Button
-                                            color="tertiary"
-                                            size="lg"
-                                            iconLeading={ChevronLeft}
-                                            aria-label="Previous card"
-                                            isDisabled={!onPrev}
-                                            className="pointer-events-auto glass text-primary ring-1 ring-glass ring-inset"
-                                            onClick={() => onPrev?.()}
-                                        />
-                                        <Button
-                                            color="tertiary"
-                                            size="lg"
-                                            iconLeading={ChevronRight}
-                                            aria-label="Next card"
-                                            isDisabled={!onNext}
-                                            className="pointer-events-auto glass text-primary ring-1 ring-glass ring-inset"
-                                            onClick={() => onNext?.()}
-                                        />
+                                        {/* Not drawn rather than drawn dead. At the first or last card of a list a
+                                            greyed arrow is a button asking to be pressed and then refusing, and it
+                                            sits over the card while it does it. The empty span holds the other
+                                            arrow's side, so a lone Next stays on the right where it belongs. */}
+                                        {onPrev ? (
+                                            <Button
+                                                color="tertiary"
+                                                size="lg"
+                                                iconLeading={ChevronLeft}
+                                                aria-label="Previous card"
+                                                className="pointer-events-auto glass text-primary ring-1 ring-glass ring-inset"
+                                                onClick={() => onPrev()}
+                                            />
+                                        ) : (
+                                            <span />
+                                        )}
+                                        {onNext ? (
+                                            <Button
+                                                color="tertiary"
+                                                size="lg"
+                                                iconLeading={ChevronRight}
+                                                aria-label="Next card"
+                                                className="pointer-events-auto glass text-primary ring-1 ring-glass ring-inset"
+                                                onClick={() => onNext()}
+                                            />
+                                        ) : (
+                                            <span />
+                                        )}
                                     </div>
                                 ) : null}
                                 {card?.image_url ? (
@@ -531,7 +541,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                 hold yet. The form asks what the copy is like as it arrives. */}
                             {!readOnly && mine?.wishlist ? (
                                 <MarkOwnedDialog card={mine} folders={collections} languages={known?.languages} facts={known} onSaved={onClose}>
-                                    <Button size="md" iconTrailing={ArrowRight} className="mt-3 self-start">
+                                    <Button size="md" iconTrailing={ArrowRight} className="mt-3 w-full">
                                         Mark as owned
                                     </Button>
                                 </MarkOwnedDialog>
