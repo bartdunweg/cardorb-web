@@ -275,10 +275,15 @@ export type CardFacts = {
     cmUrl: string | null;
     /** The Western languages the card was printed in; a copy can be one of these and no other. */
     languages: string[];
+    /** The catalogue's own price for the printing: the market figure, its floor and its Near Mint band. */
+    price: { low: number | null; market: number | null; avg30: number | null; nm: { low: number; mid: number; high: number } | null } | null;
+    /** Cardmarket's averages: the all-time average, the trend, and the last seven days. */
+    market: { avg: number | null; trend: number | null; avg7: number | null } | null;
 };
 
-// The card's facts for the sheet: the illustrator, HP, stage, regulation mark and the
-// Cardmarket page. Null when the catalogue cannot answer; the sheet is open for the row, not for these.
+// The card's facts for the sheet: the illustrator, HP, stage, regulation mark, the Cardmarket page
+// and what the catalogue says the printing is worth. Null when the catalogue cannot answer; the
+// sheet is open for the row, not for these.
 export async function cardFacts(tcgId: string): Promise<CardFacts | null> {
     try {
         const c = await api<Partial<CardFacts>>(`/cards/${encodeURIComponent(tcgId)}`);
@@ -290,6 +295,8 @@ export async function cardFacts(tcgId: string): Promise<CardFacts | null> {
             regulationMark: c.regulationMark ?? null,
             cmUrl: c.cmUrl ?? null,
             languages: Array.isArray(c.languages) ? c.languages : ["en"],
+            price: c.price ?? null,
+            market: c.market ?? null,
         };
     } catch (err) {
         console.error("Card facts unavailable:", err instanceof Error ? err.message : err);

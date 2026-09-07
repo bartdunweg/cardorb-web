@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { folderRuleSchema, matchesRule, pokedexSettingSchema, ruleChips, ruleSummary } from "./folder-rule";
 
-const facets = { sets: [{ name: "sv04", title: "Paradox Rift" }], rarities: ["Common", "Illustration Rare"] };
+const facets = { sets: [{ name: "sv04", title: "Paradox Rift" }], rarities: ["Common", "Illustration Rare"], gens: [], types: [] };
 
 describe("ruleSummary", () => {
     it("names a generation when the range is one, and the numbers otherwise", () => {

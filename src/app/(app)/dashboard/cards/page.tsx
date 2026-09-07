@@ -11,8 +11,8 @@ import { type ListSearchParams, isNarrowed, readListQuery } from "@/lib/list-que
 // answers. The facets for the Filters menu are a cached read, five minutes per person.
 export default async function CardsPage({ searchParams }: { searchParams: Promise<ListSearchParams> }) {
     const query = readListQuery(await searchParams);
-    const { q, sort, order, set, rarity, unpriced } = query;
-    const filter: CardFilter = { q, sort, order, set, rarity, ...(unpriced ? { priced: false } : {}) };
+    const { q, sort, order, set, rarity, gen, type, unpriced } = query;
+    const filter: CardFilter = { q, sort, order, set, rarity, gen, type, ...(unpriced ? { priced: false } : {}) };
     const narrowed = isNarrowed(query);
     const list = getMyCards(filter);
     const datapoints = list.then((r) => ({ total: r.total, narrowed, value: r.value, unpriced: r.unpriced }));
