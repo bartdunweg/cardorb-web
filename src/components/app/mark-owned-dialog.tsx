@@ -4,10 +4,15 @@ import { type ReactNode, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import { markOwnedWith } from "@/app/(app)/dashboard/cards/actions";
+import type { CardFacts } from "@/app/(app)/dashboard/cards/actions";
 import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
+import { CardImage } from "@/components/app/card-image";
 import { CONDITIONS } from "@/components/app/condition-badge";
+import { finishOptions, hasFoil } from "@/components/app/copy-fields";
 import { FlagIcon } from "@/components/app/flag-icon";
+import { GRADERS, GRADES, gradeLabel, splitGrade } from "@/components/app/graded";
 import { SheetDialog } from "@/components/app/sheet-dialog";
+import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { NativeSelect } from "@/components/base/select/select-native";
@@ -23,6 +28,8 @@ type Props = {
     folders: FolderChoice[];
     onSaved?: () => void;
     /** The Western languages the card was printed in, when the API has said. */
+    /** What the catalogue says this card is, so no impossible printing is offered. */
+    facts?: CardFacts | null;
     languages?: readonly string[] | null;
 };
 
@@ -55,11 +62,15 @@ export function MarkOwnedDialog({ children, ...form }: Props & { children: React
     );
 }
 
-function MarkOwnedForm({ card, folders, languages, onSaved, close }: Props & { close: () => void }) {
+function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Props & { close: () => void }) {
     const router = useRouter();
     const [language, setLanguage] = useState("en");
     const [condition, setCondition] = useState("Near Mint");
-    const [grade, setGrade] = useState("");
+    // The one column holds "PSA 10"; the form asks it as two questions and a switch.
+    const initialGrade = splitGrade(card.grade);
+    const [graded, setGraded] = useState(Boolean((card.grade ?? "").trim()));
+    const [grader, setGrader] = useState(initialGrade.grader || GRADERS[0]);
+    const [gradeValue, setGradeValue] = useState(initialGrade.grade || GRADES[0]);
     const [finish, setFinish] = useState(card.finish ?? "");
     const [pattern, setPattern] = useState(card.foil_pattern ?? "");
     const [folder, setFolder] = useState("");
@@ -74,8 +85,8 @@ function MarkOwnedForm({ card, folders, languages, onSaved, close }: Props & { c
         setError(null);
         const edits: CopyEdits = {
             language,
-            condition: grade.trim() ? null : condition || null,
-            grade: grade.trim() || null,
+            condition: graded ? null : condition || null,
+            grade: graded ? gradeLabel(grader, gradeValue) : null,
             finish: (finish || null) as CopyEdits["finish"],
             foilPattern: (pattern || null) as CopyEdits["foilPattern"],
             collectionId: folder || null,
@@ -93,7 +104,11 @@ function MarkOwnedForm({ card, folders, languages, onSaved, close }: Props & { c
         close();
     };
 
-    const row = "flex items-center justify-between gap-4 text-sm font-medium text-secondary";
+    // Label above a full-width field, at every width. Side by side was the old shape and it
+    // squeezed: this dialog is 448px whatever the screen is, so a viewport breakpoint fixes
+    // nothing — a select whose own text runs under its chevron looks broken and is the same
+    // on a desktop as on a phone.
+    const row = "flex flex-col gap-1.5 text-sm font-medium text-secondary";
 
     return (
         <form
@@ -103,21 +118,47 @@ function MarkOwnedForm({ card, folders, languages, onSaved, close }: Props & { c
                 void save();
             }}
         >
-            <div className="flex flex-col gap-1">
-                <AriaHeading slot="title" className="text-lg font-semibold text-primary">
-                    Got it
-                </AriaHeading>
-                <p className="text-sm text-tertiary">{card.name} leaves your wishlist and joins your collection. Say what the copy is like.</p>
+            {/*
+             * The card, not the transaction. "Got it" named the moment and buried what you are
+             * looking at in a sentence below it, which is the wrong way round on a form that asks
+             * you to describe a copy: the scan and the set are how you check you have the right
+             * one in your hand before you answer anything.
+             */}
+            <div className="flex items-center gap-3">
+                {card.image_url ? (
+                    // The box sizes the picture, not the class on it: CardImage fills its parent
+                    // by design, and says so. rounded-card is the corner a real card has, and it
+                    // is what every other place this app draws one uses.
+                    <div className="aspect-card w-14 shrink-0 overflow-hidden rounded-card">
+                        <CardImage src={card.image_url} alt="" width={112} />
+                    </div>
+                ) : null}
+                <div className="flex min-w-0 flex-col gap-0.5">
+                    <AriaHeading slot="title" className="truncate text-lg font-semibold text-primary">
+                        {card.name}
+                    </AriaHeading>
+                    <p className="truncate text-sm text-tertiary">{[card.set_name, card.number ? `#${card.number}` : null].filter(Boolean).join(" · ")}</p>
+                </div>
             </div>
+            <p className="-mt-2 text-sm text-tertiary">Say what your copy is like. It leaves the wishlist and joins your collection.</p>
 
             <div className={row}>
                 Language
-                <span className="flex items-center gap-2">
-                    <FlagIcon language={language} size="md" labelled />
+                {/*
+                 * The flag inside the control, before the word. It cannot go in the list: an
+                 * <option> holds text and nothing else, and this stays a native select on
+                 * purpose — on a phone that is the operating system's own wheel, which beats
+                 * anything drawn here. Emoji flags would fit in the list and were tried; they
+                 * are a different picture on every platform and sit badly beside the app's own.
+                 */}
+                <span className="relative block">
+                    <FlagIcon language={language} size="md" className="pointer-events-none absolute top-1/2 left-3 z-10 -translate-y-1/2" />
                     <NativeSelect
                         aria-label="Language"
                         size="sm"
-                        className="w-auto"
+                        // Room for the flag sitting inside the box.
+                        selectClassName="pl-9"
+                        className="w-full"
                         value={language}
                         onChange={(e) => setLanguage(e.target.value)}
                         options={languagesFor(null, languages).map((l) => ({ label: l.label, value: l.code }))}
@@ -125,47 +166,97 @@ function MarkOwnedForm({ card, folders, languages, onSaved, close }: Props & { c
                 </span>
             </div>
 
+            {/*
+             * Raw or graded, and then only the question that follows. The rule was always here —
+             * every list shows `grade ?? condition`, and the condition select disabled itself the
+             * moment a grade was typed — but you found it by bumping into it. A slab has a grade
+             * and no condition; a loose card has a condition and no grade.
+             */}
             <div className={row}>
                 Condition
-                <NativeSelect
-                    aria-label="Condition"
+                <ButtonGroup
                     size="sm"
-                    className="w-auto"
-                    value={condition}
-                    disabled={grade.trim() !== ""}
-                    onChange={(e) => setCondition(e.target.value)}
-                    options={[{ label: "Not recorded", value: "" }, ...CONDITIONS.map((c) => ({ label: c, value: c }))]}
-                />
+                    // Its own class is `w-max`; the row is full width and so is everything in it.
+                    className="w-full *:flex-1"
+                    selectionMode="single"
+                    disallowEmptySelection
+                    selectedKeys={new Set([graded ? "graded" : "raw"])}
+                    onSelectionChange={(keys) => setGraded([...keys][0] === "graded")}
+                >
+                    <ButtonGroupItem id="raw">Raw</ButtonGroupItem>
+                    <ButtonGroupItem id="graded">Graded</ButtonGroupItem>
+                </ButtonGroup>
             </div>
 
-            <div className={row}>
-                Grade
-                <Input aria-label="Grade" size="sm" className="w-40" placeholder="PSA 10" value={grade} onChange={setGrade} />
-            </div>
+            {graded ? (
+                <div className={row}>
+                    Grade
+                    <span className="flex w-full gap-2">
+                        <NativeSelect
+                            aria-label="Grading company"
+                            size="sm"
+                            className="w-full"
+                            value={grader}
+                            onChange={(e) => setGrader(e.target.value)}
+                            options={GRADERS.map((g) => ({ label: g, value: g }))}
+                        />
+                        <NativeSelect
+                            aria-label="Grade"
+                            size="sm"
+                            className="w-full"
+                            value={gradeValue}
+                            onChange={(e) => setGradeValue(e.target.value)}
+                            options={GRADES.map((g) => ({ label: g, value: g }))}
+                        />
+                    </span>
+                </div>
+            ) : (
+                <div className={row}>
+                    Kept as
+                    <NativeSelect
+                        aria-label="Condition"
+                        size="sm"
+                        className="w-full"
+                        value={condition}
+                        onChange={(e) => setCondition(e.target.value)}
+                        options={[{ label: "Not recorded", value: "" }, ...CONDITIONS.map((c) => ({ label: c, value: c }))]}
+                    />
+                </div>
+            )}
 
             <div className={row}>
                 Finish
-                <NativeSelect aria-label="Finish" size="sm" className="w-auto" value={finish} onChange={(e) => setFinish(e.target.value)} options={FINISHES} />
-            </div>
-
-            <div className="flex items-center justify-between gap-4 text-sm font-medium text-secondary">
-                Foil pattern
                 <NativeSelect
-                    aria-label="Foil pattern"
+                    aria-label="Finish"
                     size="sm"
-                    className="w-auto"
-                    value={pattern}
-                    onChange={(e) => setPattern(e.target.value)}
-                    options={PATTERNS}
+                    className="w-full"
+                    value={finish}
+                    onChange={(e) => setFinish(e.target.value)}
+                    options={finishOptions(facts, card.finish ?? null)}
                 />
             </div>
+            {/* A card with no foil at all has no pattern to record — the one thing about a
+    pattern any catalogue is certain of. */}
+            {hasFoil(facts, card.foil_pattern ?? null) ? (
+                <div className={row}>
+                    Foil pattern
+                    <NativeSelect
+                        aria-label="Foil pattern"
+                        size="sm"
+                        className="w-full"
+                        value={pattern}
+                        onChange={(e) => setPattern(e.target.value)}
+                        options={PATTERNS}
+                    />
+                </div>
+            ) : null}
 
             <div className={row}>
                 Folder
                 <NativeSelect
                     aria-label="Folder"
                     size="sm"
-                    className="w-auto max-w-48"
+                    className="w-full"
                     value={folder}
                     onChange={(e) => setFolder(e.target.value)}
                     options={[{ label: "None", value: "" }, ...manual.map((f) => ({ label: f.name, value: f.id }))]}
@@ -179,7 +270,7 @@ function MarkOwnedForm({ card, folders, languages, onSaved, close }: Props & { c
 
             <div className={row}>
                 Got it on
-                <Input type="date" aria-label="Got it on" size="sm" className="w-40" value={date} onChange={setDate} />
+                <Input type="date" aria-label="Got it on" size="sm" className="w-full" value={date} onChange={setDate} />
             </div>
 
             {error ? (
