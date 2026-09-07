@@ -1,4 +1,5 @@
 import { cache } from "react";
+import type { ZodType, output } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { timed } from "@/lib/timing";
 
@@ -40,6 +41,21 @@ export class ApiError extends Error {
     }
 }
 
+/**
+ * The answer did not look like what the route promised.
+ *
+ * Its own class, and status 500 rather than 502, because 502 already means something here: the
+ * catalogue is down, and `sets.ts` shows a shelf's own message for it. A shape this app cannot
+ * read is a different failure with a different fix, and quietly borrowing the catalogue's
+ * status would send someone looking at the wrong system.
+ */
+export class ApiShapeError extends ApiError {
+    constructor(message: string, issues: unknown) {
+        super(500, message, issues);
+        this.name = "ApiShapeError";
+    }
+}
+
 type Params = Record<string, string | number | boolean | undefined>;
 
 type Init = {
@@ -58,6 +74,18 @@ type Init = {
      * thing this app could say about an operation nobody can undo.
      */
     timeoutMs?: number;
+    /**
+     * What the answer must look like. Given one, `api()` parses instead of casting.
+     *
+     * CLAUDE.md asks for zod at every boundary and this was the boundary that had none:
+     * `json as T` told TypeScript a shape and checked nothing, so a field the API renamed or
+     * started sending as a string arrived in a component untouched. It surfaced as a blank
+     * tile or a NaN, three layers from the cause. Parsing here turns that into one 502 that
+     * names the field.
+     *
+     * Optional so a route can still be added without one; every route this app calls has one.
+     */
+    schema?: ZodType;
 };
 
 /**
@@ -82,7 +110,14 @@ export const session = cache(async (): Promise<{ userId: string; token: string }
 /** The session's access token, once per request. Null when nobody is signed in. */
 export const accessToken = async (): Promise<string | null> => (await session())?.token ?? null;
 
-export async function api<T>(path: string, init: Init = {}): Promise<T> {
+/**
+ * Given a schema, the answer's type comes from the schema — there is no second place to state
+ * it and so no way for the two to disagree. Without one, a caller still names the type it
+ * expects and gets the old cast; every route this app calls passes a schema.
+ */
+export async function api<S extends ZodType>(path: string, init: Init & { schema: S }): Promise<output<S>>;
+export async function api<T>(path: string, init?: Init): Promise<T>;
+export async function api(path: string, init: Init = {}): Promise<unknown> {
     const url = new URL(`${API_URL}${path}`);
     for (const [key, value] of Object.entries(init.params ?? {})) {
         if (value !== undefined) url.searchParams.set(key, String(value));
@@ -113,5 +148,14 @@ export async function api<T>(path: string, init: Init = {}): Promise<T> {
         const message = (json as { error?: unknown } | null)?.error;
         throw new ApiError(res.status, typeof message === "string" ? message : `The API answered ${res.status}.`, json ?? undefined);
     }
-    return json as T;
+    if (!init.schema) return json;
+
+    const parsed = init.schema.safeParse(json);
+    if (parsed.success) return parsed.data;
+
+    // The first issue names the field, which is the whole point of parsing here rather than
+    // letting the value travel three layers and surface as a blank tile.
+    const issue = parsed.error.issues[0];
+    const where = issue?.path.length ? issue.path.join(".") : "the answer";
+    throw new ApiShapeError(`The API answered something unexpected (${where}: ${issue?.message ?? "invalid"}).`, parsed.error.issues);
 }

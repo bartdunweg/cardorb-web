@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { ApiError, api } from "@/lib/api";
+import { createdFolderAnswer, foldersAnswer } from "@/lib/api-shapes";
 import { type Facets, getFacets } from "@/lib/cards";
 import { type FolderRule, type PokedexSetting, folderRuleSchema, pokedexSettingSchema } from "@/lib/folder-rule";
 import { forgetMine } from "@/lib/user-cache";
@@ -24,7 +25,8 @@ export async function createCollection(name: string, rule?: FolderRule, pokedex?
     if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
     try {
-        const { folder } = await api<{ folder: { id: string } }>("/folders", {
+        const { folder } = await api("/folders", {
+            schema: createdFolderAnswer,
             method: "POST",
             body: {
                 name: parsed.data.name,
@@ -85,7 +87,7 @@ export async function loadFacets(): Promise<Facets> {
 // filed; the rule folders say, by their rule, whether they hold it.
 export async function listCollections(): Promise<FolderChoice[]> {
     try {
-        const { folders } = await api<{ folders: { id: string; name: string; rule?: FolderRule | null }[] }>("/folders");
+        const { folders } = await api("/folders", { schema: foldersAnswer });
         return folders.map((f) => ({ id: f.id, name: f.name, rule: f.rule ?? null }));
     } catch {
         return [];

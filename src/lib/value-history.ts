@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { valueHistoryAnswer } from "@/lib/api-shapes";
 import { perUser } from "@/lib/user-cache";
 
 /** One nightly reading of what the collection was worth (GET /v1/value-history). */
@@ -19,6 +20,6 @@ export type ValueSnapshot = {
 // it starts where those do, a few weeks back, rather than with the first nightly reading.
 export async function getValueHistory(folder?: string): Promise<ValueSnapshot[]> {
     const path = folder ? `/value-history?folder=${encodeURIComponent(folder)}` : "/value-history";
-    const { snapshots } = await perUser(`value-history:${folder ?? "all"}`, (token) => api<{ snapshots: ValueSnapshot[] }>(path, { token }));
+    const { snapshots } = await perUser(`value-history:${folder ?? "all"}`, (token) => api(path, { token, schema: valueHistoryAnswer }));
     return snapshots;
 }

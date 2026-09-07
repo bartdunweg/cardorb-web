@@ -1,5 +1,5 @@
 import { ApiError, api } from "@/lib/api";
-import { type Folder, type FolderItem, folderFromApi } from "@/lib/api-shapes";
+import { type Folder, type FolderItem, folderFromApi, foldersAnswer } from "@/lib/api-shapes";
 import { getStats } from "@/lib/cards";
 import type { FolderKind, FolderRule, PokedexSetting } from "@/lib/folder-rule";
 import { perUser } from "@/lib/user-cache";
@@ -10,7 +10,7 @@ export type CollectionSummary = { id: string; name: string; count: number; kind:
 // screens keep calling them collections. Kept five minutes per person: the layout asks on every
 // screen, and every write to a folder or a card drops the cache.
 const folders = (): Promise<Folder[]> =>
-    perUser("folders", async (token) => (await api<{ folders: FolderItem[] }>("/folders", { token })).folders.map(folderFromApi));
+    perUser("folders", async (token) => (await api("/folders", { token, schema: foldersAnswer })).folders.map(folderFromApi));
 
 export async function getMyCollections(): Promise<{ collections: CollectionSummary[]; ownedCount: number; favoritesCount: number }> {
     const [list, stats] = await Promise.all([folders(), getStats()]);

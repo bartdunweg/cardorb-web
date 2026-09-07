@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { pokedexAnswer } from "@/lib/api-shapes";
 import type { DexEntry } from "@/lib/api-shapes";
 import { perUser } from "@/lib/user-cache";
 
@@ -8,6 +9,6 @@ import { perUser } from "@/lib/user-cache";
  * per person like the folders and the stats; every write drops the tag.
  */
 export async function getDexNames(): Promise<Map<number, string>> {
-    const entries = await perUser("pokedex", async (token) => (await api<{ entries: DexEntry[] }>("/pokedex", { token })).entries);
+    const entries = await perUser("pokedex", async (token) => (await api("/pokedex", { token, schema: pokedexAnswer })).entries);
     return new Map(entries.map((e) => [e.id, e.name]));
 }

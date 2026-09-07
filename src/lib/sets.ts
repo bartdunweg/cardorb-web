@@ -1,5 +1,14 @@
 import { ApiError, api } from "@/lib/api";
-import { type BrowseCard, type CatalogueSet, type SetCard, absoluteImage, seriesFromSets, setCardFromBrowse } from "@/lib/api-shapes";
+import {
+    type BrowseCard,
+    type CatalogueSet,
+    type SetCard,
+    absoluteImage,
+    catalogueSetsAnswer,
+    seriesFromSets,
+    setCardFromBrowse,
+    setPageAnswer,
+} from "@/lib/api-shapes";
 import type { BrowseLanguage } from "@/lib/languages";
 import { perUser } from "@/lib/user-cache";
 
@@ -23,7 +32,7 @@ export async function getSets(language: BrowseLanguage = "en") {
     try {
         const sets = await perUser(
             `sets:${language}`,
-            async (token) => (await api<{ sets: CatalogueSet[] }>("/catalog/sets", { token, params: language === "en" ? {} : { language } })).sets,
+            async (token) => (await api("/catalog/sets", { token, params: language === "en" ? {} : { language }, schema: catalogueSetsAnswer })).sets,
         );
         return seriesFromSets(sets);
     } catch (err) {
@@ -59,8 +68,9 @@ export async function getSet(id: string, language: BrowseLanguage = "en"): Promi
             hasMore: boolean;
         };
         const read = (page: number) =>
-            api<Page>(`/catalog/sets/${encodeURIComponent(id)}`, {
+            api(`/catalog/sets/${encodeURIComponent(id)}`, {
                 params: { pageSize: PAGE, ...(page > 1 ? { page } : {}), ...(language === "en" ? {} : { language }) },
+                schema: setPageAnswer,
             });
         // The catalogue answers 250 cards at a time. Most sets fit in one; the ones that do not (a
         // Scarlet & Violet set with its secrets) used to lose their tail silently, under a count that

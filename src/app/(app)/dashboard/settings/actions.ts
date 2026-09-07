@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { ApiError, api } from "@/lib/api";
+import { avatarAnswer, usernameAnswer } from "@/lib/api-shapes";
 import { type PokedexSetting, pokedexSettingSchema } from "@/lib/folder-rule";
 import { createClient } from "@/lib/supabase/server";
 import { forgetMine } from "@/lib/user-cache";
@@ -55,7 +56,7 @@ export async function checkUsername(name: string): Promise<{ available: boolean;
     const parsed = profileSchema.shape.username.safeParse(name);
     if (!parsed.success) return { available: false, reason: parsed.error.issues[0].message };
     try {
-        return await api<{ available: boolean; reason?: string }>(`/usernames/${encodeURIComponent(parsed.data)}`);
+        return await api(`/usernames/${encodeURIComponent(parsed.data)}`, { schema: usernameAnswer });
     } catch {
         // The check is a courtesy; Save is the answer that counts, and it says why on a 409.
         return null;
@@ -72,7 +73,7 @@ export async function uploadAvatar(image: string): Promise<ActionResult & { avat
     if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
     try {
-        const { avatarUrl } = await api<{ avatarUrl: string }>("/profile/avatar", { method: "POST", body: { image: parsed.data } });
+        const { avatarUrl } = await api("/profile/avatar", { method: "POST", body: { image: parsed.data }, schema: avatarAnswer });
         await forgetMine();
         return { ok: true, avatarUrl };
     } catch (err) {

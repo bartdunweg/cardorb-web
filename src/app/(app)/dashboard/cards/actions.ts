@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { ApiError, api } from "@/lib/api";
-import { type BrowseCard, type PokemonCard, pokemonCardFromBrowse } from "@/lib/api-shapes";
+import { type BrowseCard, type PokemonCard, cardFactsAnswer, copyAnswer, pokemonCardFromBrowse, pricePointsAnswer, searchAnswer } from "@/lib/api-shapes";
 import { type Card, getMyCards } from "@/lib/cards";
 import { type CopyEdits, copyEdits, sameCard } from "@/lib/copies";
 import { WESTERN_LANGUAGES } from "@/lib/languages";
@@ -53,7 +53,7 @@ export async function searchPokemon(query: string, filters: CatalogueFilters = {
     if (!params) return [];
 
     try {
-        const { cards } = await api<{ cards: BrowseCard[] }>("/catalog/search", { params });
+        const { cards } = await api("/catalog/search", { params, schema: searchAnswer });
         return cards.map(pokemonCardFromBrowse);
     } catch {
         return [];
@@ -187,7 +187,7 @@ export type PricePoint = { date: string; market: number | null; holo: number | n
 // the card, not for its line.
 export async function cardPriceHistory(tcgId: string): Promise<PricePoint[]> {
     try {
-        const { points } = await api<{ points: PricePoint[] }>(`/cards/${encodeURIComponent(tcgId)}/prices`);
+        const { points } = await api(`/cards/${encodeURIComponent(tcgId)}/prices`, { schema: pricePointsAnswer });
         return points;
     } catch (err) {
         console.error("Price history unavailable:", err instanceof Error ? err.message : err);
@@ -246,9 +246,10 @@ export async function addCopy(cardId: string, edits: CopyEdits, count = 1): Prom
     if (!parsed.success) return { ok: false, error: "Invalid input." };
     let id: string | undefined;
     try {
-        const res = await api<{ card?: { id?: string | null } }>(`/collection/items/${parsed.data.cardId}/copies`, {
+        const res = await api(`/collection/items/${parsed.data.cardId}/copies`, {
             method: "POST",
             body: { ...parsed.data.edits, count: parsed.data.count },
+            schema: copyAnswer,
         });
         id = res.card?.id ?? undefined;
     } catch (err) {
@@ -312,7 +313,7 @@ export type CardFacts = {
 // sheet is open for the row, not for these.
 export async function cardFacts(tcgId: string): Promise<CardFacts | null> {
     try {
-        const c = await api<Partial<CardFacts>>(`/cards/${encodeURIComponent(tcgId)}`);
+        const c = await api(`/cards/${encodeURIComponent(tcgId)}`, { schema: cardFactsAnswer });
         return {
             illustrator: c.illustrator ?? null,
             hp: c.hp ?? null,
