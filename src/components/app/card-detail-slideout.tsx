@@ -239,6 +239,18 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     /* Every copy of this card, not just the row on screen: the tab says how many there are before
        anybody opens it. The listed rows once they are read, the shown row's own count until then. */
     const heldTotal = copies ? copies.reduce((n, r) => n + (r.quantity ?? 1), 0) : shownCopies;
+    /* The group the sheet has opened on: the rows that differ from this one in nothing. Its total
+       is what the line above the fields says, so the stepper says it too. */
+    const shownGroup = mine ? groupCopies(copies ?? [mine]).find((g) => g.rows.some((r) => r.id === mine.id)) : undefined;
+    const heldOfThisKind = shownGroup?.quantity ?? shownCopies;
+    /* One fewer of this kind: off the row on screen while it holds more than one, otherwise a
+       whole row of the group goes, since four identical copies are four rows of one. */
+    const stepDown = async () => {
+        if (!mine) return;
+        if (shownCopies > 1) return await step(shownCopies - 1);
+        const spare = shownGroup?.rows.find((r) => r.id !== mine.id);
+        if (spare) await dropCopies([spare]);
+    };
     const step = async (n: number) => {
         if (!mine || n < 1) return;
         setCopies_({ id: mine.id, n });
@@ -714,8 +726,14 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                 </ul>
                                                 {/* This copy: everything that belongs to the row shown, not to the card. */}
                                                 <dl className="flex flex-col divide-y divide-secondary">
-                                                    {/* Copies, with a step either way for an owner: the number is the row's own, the
-                                        buttons the same call the menu makes. */}
+                                                    {/* Copies, with a step either way. The number is the *group's*, because the line
+                                        above says the same thing and two numbers for one fact in one panel is a
+                                        panel arguing with itself — it read "×4" over "Quantity 1", the group over
+                                        the one row the sheet had opened on.
+
+                                        Plus adds to the row on screen. Minus takes from it while it holds more
+                                        than one, and otherwise drops a whole row of the group, because four rows
+                                        of one is what four identical copies actually are in the store. */}
                                                     <DetailRow
                                                         label="Quantity"
                                                         value={
@@ -726,10 +744,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                                         size="sm"
                                                                         iconLeading={Minus}
                                                                         aria-label="One copy fewer"
-                                                                        isDisabled={busy || shownCopies <= 1}
-                                                                        onClick={() => step(shownCopies - 1)}
+                                                                        isDisabled={busy || heldOfThisKind <= 1}
+                                                                        onClick={() => void stepDown()}
                                                                     />
-                                                                    <span className="min-w-4 text-center tabular-nums">{shownCopies}</span>
+                                                                    <span className="min-w-4 text-center tabular-nums">{heldOfThisKind}</span>
                                                                     <Button
                                                                         color="secondary"
                                                                         size="sm"
