@@ -107,7 +107,12 @@ export const Toggle = ({ label, hint, className, size = "sm", slim, ...ariaSwitc
             {...ariaSwitchProps}
             className={(state) =>
                 cx(
-                    "flex w-max items-start",
+                    // Changed from the kit: w-full where there are words, w-max where there are not.
+                    // `w-max` sizes the switch to its own content, so a hint longer than the box it
+                    // sits in pushed the whole control past the edge of the dialog rather than
+                    // wrapping — every Toggle with a hint, not just the one it was noticed on. A
+                    // re-fetch through the Untitled UI CLI or MCP overwrites this; re-apply it.
+                    label || hint ? "flex w-full items-start" : "flex w-max items-start",
                     state.isDisabled && "cursor-not-allowed",
                     styles[size].root,
                     typeof className === "function" ? className(state) : className,

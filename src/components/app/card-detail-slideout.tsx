@@ -39,7 +39,7 @@ import { Input } from "@/components/base/input/input";
 import { NativeSelect } from "@/components/base/select/select-native";
 import { FINISH_LABELS, FOIL_PATTERN_LABELS, type Finish, type FoilPattern, isReverseFinish } from "@/lib/api-shapes";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
-import { sortCopies } from "@/lib/copies";
+import { groupCopies, sortCopies } from "@/lib/copies";
 import { matchesRule } from "@/lib/folder-rule";
 import { formatDate, formatPrice } from "@/lib/format";
 import { orientationNeedsPermission, requestOrientation } from "@/lib/holo/orientation";
@@ -99,19 +99,25 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     // it so what differs can be set at once.
     /* One copy of several. The sheet stays open on whatever is left, so removing the row you were
        reading moves you to the first one rather than closing the card out from under you. */
-    const dropCopy = async (row: Card) => {
-        if (!mine || !card) return;
+    /* A line is a kind of copy, so the bin on it removes every row behind it. Removing one of four
+       identical rows would leave a line still saying ×3 and nothing to show for the press. */
+    const dropCopies = async (group: Card[]) => {
+        if (!mine || !card || !group.length) return;
         setBusy(true);
         setMenuError(null);
-        const res = await removeCard(row.id);
-        setBusy(false);
-        if (!res.ok) {
-            setMenuError(res.error);
-            return;
+        for (const row of group) {
+            const res = await removeCard(row.id);
+            if (!res.ok) {
+                setBusy(false);
+                setMenuError(res.error);
+                void reloadCopies();
+                return;
+            }
         }
+        setBusy(false);
         const rows = sortCopies(await listCopies(mine));
         setCopiesState({ of: copiesKey(mine), rows });
-        if (row.id === mine.id && rows[0]) setViewing({ of: card.id, row: rows[0] });
+        if (group.some((r) => r.id === mine.id) && rows[0]) setViewing({ of: card.id, row: rows[0] });
         router.refresh();
     };
     const [collections, setCollections] = useState<FolderChoice[]>([]);
@@ -633,19 +639,22 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                 </TabPanel>
                                 {mine?.owned ? (
                                     <TabPanel id="copies" className="flex flex-col gap-6">
-                                        {/* The copies you hold of this card, one line per row: the language's flag, the finish,
-                                    the condition or grade, the folder and the count. A tap shows that row and its fields;
-                                    Add a copy at the foot makes a new row and shows it. */}
+                                        {/* The copies you hold of this card, one line per *kind*: the language's flag, the
+                                    finish, the condition or grade, the folder and how many. Rows are one per purchase
+                                    and nothing merged them, so four identical Holo · Near Mint copies were four lines
+                                    saying "€2.81 ×1" — the same nothing, four times. A tap shows that kind and its
+                                    fields; Add a copy at the foot asks what the new one is. */}
                                         {mine?.owned ? (
                                             <div className="flex flex-col gap-3 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary ring-inset">
                                                 <ul className="flex flex-col divide-y divide-secondary" aria-label="Copies">
-                                                    {(copies ?? [mine]).map((row, i) => {
+                                                    {groupCopies(copies ?? [mine]).map((group, i) => {
+                                                        const row = group.shown;
                                                         const folderName = collections.find((c) => c.id === row.collection_id)?.name;
-                                                        const current = row.id === mine.id;
+                                                        const current = group.rows.some((r) => r.id === mine.id);
                                                         return (
                                                             // The row the sheet opened on is already there; the other copies arrive.
                                                             <li
-                                                                key={row.id}
+                                                                key={group.key}
                                                                 className={cx("flex items-center gap-1", !current && "arrive")}
                                                                 style={{ "--arrive-delay": `${Math.min(i, 8) * 20}ms` } as React.CSSProperties}
                                                             >
@@ -680,7 +689,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                                     {row.price != null ? (
                                                                         <span className="text-tertiary tabular-nums">{formatPrice(row.price)}</span>
                                                                     ) : null}
-                                                                    <span className="text-tertiary tabular-nums">×{row.quantity ?? 1}</span>
+                                                                    <span className="text-tertiary tabular-nums">×{group.quantity}</span>
                                                                 </button>
                                                                 {/* Removing a copy is a thing you do to that copy, so it belongs on that copy's
                                                                     line — outside the button that shows it, because a button inside a button is
@@ -690,9 +699,13 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                                         color="tertiary-destructive"
                                                                         size="sm"
                                                                         iconLeading={Trash01}
-                                                                        aria-label={`Remove this copy${row.language && row.language !== "en" ? ` (${row.language})` : ""}`}
+                                                                        aria-label={
+                                                                            group.quantity > 1
+                                                                                ? `Remove all ${group.quantity} of these copies`
+                                                                                : "Remove this copy"
+                                                                        }
                                                                         isDisabled={busy}
-                                                                        onClick={() => void dropCopy(row)}
+                                                                        onClick={() => void dropCopies(group.rows)}
                                                                     />
                                                                 ) : null}
                                                             </li>
