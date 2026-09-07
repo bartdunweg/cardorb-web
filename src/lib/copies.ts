@@ -7,7 +7,14 @@ export const sameCard = (a: Pick<Card, "set" | "number" | "name">, b: Pick<Card,
     a.set === b.set && (a.number ?? "") === (b.number ?? "") && a.name === b.name;
 
 const rank = (c: Card) =>
-    [languageOf(c.language).code === "en" ? "0" : "1", languageOf(c.language).label, c.finish ?? "", c.condition ?? "", c.grade ?? ""].join("|");
+    [
+        languageOf(c.language).code === "en" ? "0" : "1",
+        languageOf(c.language).label,
+        c.finish ?? "",
+        c.foil_pattern ?? "",
+        c.condition ?? "",
+        c.grade ?? "",
+    ].join("|");
 
 /** English first, then by language, finish, condition and grade, so a list of copies reads the same twice. */
 export const sortCopies = (rows: Card[]) => [...rows].sort((a, b) => rank(a).localeCompare(rank(b)));
@@ -20,6 +27,7 @@ export const copyEdits = z
         condition: z.string().trim().max(40).nullable(),
         grade: z.string().trim().max(40).nullable(),
         finish: z.enum(["normal", "reverse-holo", "holo", "poke-ball", "master-ball"]).nullable(),
+        foilPattern: z.enum(["cosmos", "cracked-ice", "starlight", "confetti", "vertical-line"]).nullable(),
         collectionId: z.string().uuid().nullable(),
         purchasePrice: z.number().min(0).nullable(),
         purchaseDate: z.string().nullable(),
