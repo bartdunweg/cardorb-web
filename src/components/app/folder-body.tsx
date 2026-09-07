@@ -135,6 +135,12 @@ export async function FolderBody(props: FolderBodyProps) {
 
     return (
         <div className="flex flex-1 flex-col gap-4">
+            {/* The catalogue is a source, not the collection: when it is unreachable the rows are still
+                yours, without their scans and prices. Said once, over the list, rather than left to look
+                like a broken page. */}
+            <Suspense fallback={null}>
+                <CatalogueNotice list={props.list} />
+            </Suspense>
             <CardsView
                 key={key}
                 list={props.list}
@@ -150,7 +156,16 @@ export async function FolderBody(props: FolderBodyProps) {
     );
 }
 
-const NO_FACETS: Facets = { sets: [], rarities: [] };
+async function CatalogueNotice({ list }: { list: Promise<CardList> }) {
+    if (!(await list).catalogueUnavailable) return null;
+    return (
+        <output className="arrive rounded-lg bg-secondary px-4 py-3 text-sm text-secondary">
+            The card catalogue is not answering, so these cards have no pictures or prices right now. Your collection is unchanged; try again in a minute.
+        </output>
+    );
+}
+
+const NO_FACETS: Facets = { sets: [], rarities: [], gens: [], types: [] };
 
 // The Filters sheet's fields once the sets and rarities are known: they ride with the list's first
 // page, so a page no longer waits for a second read before its first byte.

@@ -31,6 +31,10 @@ export type ListQuery = {
     /** One set, as the API names it; the API matches it whole. */
     set: string | undefined;
     rarity: string | undefined;
+    /** One generation, as the catalogue names its series; the API matches it whole. */
+    gen: string | undefined;
+    /** One energy type, as the catalogue names it; the API matches it whole. */
+    type: string | undefined;
     /** A public profile's folder, by id; the owner's own lists carry the folder in the path instead. */
     folder: string | undefined;
     /** A public profile's wishlist, favorites or Pokédex instead of its collection. */
@@ -44,10 +48,21 @@ const PUBLIC_LISTS = ["wishlist", "favorites", "pokedex"] as const;
 export type PublicList = (typeof PUBLIC_LISTS)[number];
 
 /** What a list page reads from its URL. */
-export type ListSearchParams = { page?: string; sort?: string; q?: string; set?: string; rarity?: string; folder?: string; list?: string; unpriced?: string };
+export type ListSearchParams = {
+    page?: string;
+    sort?: string;
+    q?: string;
+    set?: string;
+    rarity?: string;
+    gen?: string;
+    type?: string;
+    folder?: string;
+    list?: string;
+    unpriced?: string;
+};
 
 /** A search or a filter is on. */
-export const isNarrowed = (q: ListQuery): boolean => [q.q, q.set, q.rarity, q.unpriced].some(Boolean);
+export const isNarrowed = (q: ListQuery): boolean => [q.q, q.set, q.rarity, q.gen, q.type, q.unpriced].some(Boolean);
 
 const isSortKey = (v: unknown): v is SortKey => SORT_OPTIONS.some((o) => o.value === v);
 
@@ -64,6 +79,8 @@ export function readListQuery(params: ListSearchParams): ListQuery {
         q: text(params.q),
         set: text(params.set),
         rarity: text(params.rarity),
+        gen: text(params.gen),
+        type: text(params.type),
         folder: text(params.folder),
         list: (PUBLIC_LISTS as readonly string[]).includes(params.list ?? "") ? (params.list as PublicList) : undefined,
         unpriced: params.unpriced === "1",
@@ -80,11 +97,13 @@ export function readPublicListQuery(params: Parameters<typeof readListQuery>[0])
 export function listHref(
     pathname: string,
     current: ListQuery,
-    patch: Partial<Pick<ListQuery, "page" | "sortKey" | "q" | "set" | "rarity" | "folder" | "list" | "unpriced">>,
+    patch: Partial<Pick<ListQuery, "page" | "sortKey" | "q" | "set" | "rarity" | "gen" | "type" | "folder" | "list" | "unpriced">>,
 ): string {
     const q = "q" in patch ? patch.q : current.q;
     const set = "set" in patch ? patch.set : current.set;
     const rarity = "rarity" in patch ? patch.rarity : current.rarity;
+    const gen = "gen" in patch ? patch.gen : current.gen;
+    const type = "type" in patch ? patch.type : current.type;
     const folder = "folder" in patch ? patch.folder : current.folder;
     const list = "list" in patch ? patch.list : current.list;
     const unpriced = "unpriced" in patch ? patch.unpriced : current.unpriced;
@@ -95,6 +114,8 @@ export function listHref(
     if (sortKey !== "set") p.set("sort", sortKey);
     if (set) p.set("set", set);
     if (rarity) p.set("rarity", rarity);
+    if (gen) p.set("gen", gen);
+    if (type) p.set("type", type);
     if (folder) p.set("folder", folder);
     if (list) p.set("list", list);
     if (unpriced) p.set("unpriced", "1");

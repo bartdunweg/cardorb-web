@@ -58,7 +58,11 @@ export async function getPublicCards(username: string, { page, q, set, rarity, s
     });
     // This route is cached for five minutes (no session, so `revalidate`), and an answer cached before
     // the API carried facets has none. Empty menus for those minutes, not a broken page.
-    return { cards: cards.map(publicCardFromItem), total, facets: facets ?? { sets: [], rarities: [] } };
+    return {
+        cards: cards.map(publicCardFromItem),
+        total,
+        facets: { sets: facets?.sets ?? [], rarities: facets?.rarities ?? [], gens: facets?.gens ?? [], types: facets?.types ?? [] },
+    };
 }
 
 /** The maximum the public route hands out at once; the Pokédex needs every card, so it pages through at this size. */
@@ -77,7 +81,12 @@ export async function getAllPublicCards(username: string, query: ListQuery): Pro
     return {
         cards: [first, ...rest].flatMap((p) => p.cards).map(publicCardFromItem),
         total: first.total,
-        facets: first.facets ?? { sets: [], rarities: [] },
+        facets: {
+            sets: first.facets?.sets ?? [],
+            rarities: first.facets?.rarities ?? [],
+            gens: first.facets?.gens ?? [],
+            types: first.facets?.types ?? [],
+        },
     };
 }
 

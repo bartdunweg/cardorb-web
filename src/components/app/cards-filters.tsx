@@ -6,15 +6,17 @@ import { NativeSelect } from "@/components/base/select/select-native";
 import type { Facets } from "@/lib/cards";
 import { type ListQuery, listHref } from "@/lib/list-query";
 
-// Two menus beside the search: one set, one rarity, each with "All" on top. A choice goes into
-// the URL (page back to one) and the server page asks the API; the API matches a set or a
-// rarity whole. "Clear filters" shows only while one is on, so the row stays quiet otherwise.
-// Renders its pieces into the caller's row (`display: contents`), so one row holds them all.
+// Four menus beside the search: set, rarity, generation, type, each with "All" on top. A choice
+// goes into the URL (page back to one) and the server page asks the API, which matches each one
+// whole. A menu the collection has nothing for stays out: a collection of one era offers no era.
+// "Clear filters" shows only while one is on, so the row stays quiet otherwise. Renders its
+// pieces into the caller's row (`display: contents`), so one row holds them all.
 export function CardsFilters({ query, facets }: { query: ListQuery; facets: Facets }) {
     const router = useRouter();
     const pathname = usePathname();
-    const go = (patch: Partial<Pick<ListQuery, "set" | "rarity">>) => router.replace(listHref(pathname, query, { ...patch, page: 1 }), { scroll: false });
-    const active = Boolean(query.set || query.rarity);
+    const go = (patch: Partial<Pick<ListQuery, "set" | "rarity" | "gen" | "type">>) =>
+        router.replace(listHref(pathname, query, { ...patch, page: 1 }), { scroll: false });
+    const active = Boolean(query.set || query.rarity || query.gen || query.type);
 
     return (
         <div className="contents">
@@ -34,8 +36,28 @@ export function CardsFilters({ query, facets }: { query: ListQuery; facets: Face
                 onChange={(event) => go({ rarity: event.target.value || undefined })}
                 options={[{ label: "All rarities", value: "" }, ...facets.rarities.map((r) => ({ label: r, value: r }))]}
             />
+            {facets.gens.length > 1 || query.gen ? (
+                <NativeSelect
+                    aria-label="Generation"
+                    size="sm"
+                    className="w-auto"
+                    value={query.gen ?? ""}
+                    onChange={(event) => go({ gen: event.target.value || undefined })}
+                    options={[{ label: "All generations", value: "" }, ...facets.gens.map((g) => ({ label: g, value: g }))]}
+                />
+            ) : null}
+            {facets.types.length > 1 || query.type ? (
+                <NativeSelect
+                    aria-label="Type"
+                    size="sm"
+                    className="w-auto"
+                    value={query.type ?? ""}
+                    onChange={(event) => go({ type: event.target.value || undefined })}
+                    options={[{ label: "All types", value: "" }, ...facets.types.map((t) => ({ label: t, value: t }))]}
+                />
+            ) : null}
             {active ? (
-                <Button color="link-gray" size="sm" onClick={() => go({ set: undefined, rarity: undefined })}>
+                <Button color="link-gray" size="sm" onClick={() => go({ set: undefined, rarity: undefined, gen: undefined, type: undefined })}>
                     Clear filters
                 </Button>
             ) : null}

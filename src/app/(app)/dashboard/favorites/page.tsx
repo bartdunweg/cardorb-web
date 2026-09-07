@@ -9,8 +9,8 @@ import { getMyProfile } from "@/lib/profile";
 // API for owned copies only; a wish cannot carry a star here. The list itself is not awaited: see cards/page.tsx.
 export default async function FavoritesPage({ searchParams }: { searchParams: Promise<ListSearchParams> }) {
     const query = readListQuery(await searchParams);
-    const { q, sort, order, set, rarity, unpriced } = query;
-    const filter: CardFilter = { favoritesOnly: true, q, sort, order, set, rarity, ...(unpriced ? { priced: false } : {}) };
+    const { q, sort, order, set, rarity, gen, type, unpriced } = query;
+    const filter: CardFilter = { favoritesOnly: true, q, sort, order, set, rarity, gen, type, ...(unpriced ? { priced: false } : {}) };
     const narrowed = isNarrowed(query);
     const list = getMyCards(filter);
     const datapoints = list.then((r) => ({ total: r.total, narrowed, value: r.value, unpriced: r.unpriced }));

@@ -18,8 +18,8 @@ import { getMyProfile } from "@/lib/profile";
 // progress bar take their places when the last page of cards is in.
 export default async function PokedexPage({ searchParams }: { searchParams: Promise<ListSearchParams> }) {
     const query = readListQuery(await searchParams);
-    const { q, sort, order, set, rarity, unpriced } = query;
-    const filter: CardFilter = { q, sort, order, set, rarity, ...(unpriced ? { priced: false } : {}) };
+    const { q, sort, order, set, rarity, gen, type, unpriced } = query;
+    const filter: CardFilter = { q, sort, order, set, rarity, gen, type, ...(unpriced ? { priced: false } : {}) };
     const narrowed = isNarrowed(query);
     const me = await getMyProfile();
     const setting = me.profile?.pokedex ?? DEFAULT_POKEDEX;
@@ -68,7 +68,7 @@ export default async function PokedexPage({ searchParams }: { searchParams: Prom
     );
 }
 
-const NO_FACETS: Facets = { sets: [], rarities: [] };
+const NO_FACETS: Facets = { sets: [], rarities: [], gens: [], types: [] };
 
 // The dialog with the rarities it lists, once the list has said which there are.
 async function SettingsWhenReady({ facets, ...rest }: { facets: Promise<Facets> } & Omit<Parameters<typeof PokedexSettingsDialog>[0], "facets">) {

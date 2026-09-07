@@ -789,6 +789,24 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                         {mine.tcg_id ? <PriceHistory tcgId={mine.tcg_id} holo={isReverseFinish(mine.finish)} tall /> : null}
                                         <dl className="flex flex-col divide-y divide-secondary">
                                             <DetailRow label="Market price" value={mine.price != null ? formatPrice(mine.price) : null} />
+                                            {/* What the catalogue says about the printing, once it answers: where today's
+                                                figure sits against the week and the month, and the band a copy is listed in. */}
+                                            {known?.market?.trend != null ? <DetailRow label="Trend" value={formatPrice(known.market.trend)} late /> : null}
+                                            {known?.market?.avg7 != null ? (
+                                                <DetailRow label="7-day average" value={formatPrice(known.market.avg7)} late />
+                                            ) : null}
+                                            {known?.price?.avg30 != null ? (
+                                                <DetailRow label="30-day average" value={formatPrice(known.price.avg30)} late />
+                                            ) : null}
+                                            {known?.price?.nm ? (
+                                                <DetailRow
+                                                    label="Near Mint range"
+                                                    value={`${formatPrice(known.price.nm.low)} – ${formatPrice(known.price.nm.high)}`}
+                                                    late
+                                                />
+                                            ) : known?.price?.low != null ? (
+                                                <DetailRow label="Lowest listing" value={formatPrice(known.price.low)} late />
+                                            ) : null}
                                             <DetailRow label="Copies" value={mine.quantity ?? 1} />
                                             <DetailRow
                                                 label="Holding value"

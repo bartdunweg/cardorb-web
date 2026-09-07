@@ -22,6 +22,14 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **2026-09-07, the API's own data.** Four filters instead of two: the card list narrows to one
+  generation or one energy type, both from the facets the list read already carries
+  (`gen`/`type` in the URL, cardorb-api #226 for the query and the facets). The card sheet's
+  Price tab shows the catalogue's trend, its seven- and thirty-day averages and the Near Mint
+  band beside the market price. Two bugs closed: a set of more than 250 cards lost its tail
+  silently on Browse (paged now, ten pages at most), and `catalogueUnavailable` was ignored, so
+  an outage looked like an empty collection; a line over the list says so. A copy can be a Poké
+  Ball or Master Ball reverse (cardorb-api #225); **the migration still has to be pushed**.
 - **2026-09-06, later the same evening.** The phone's page title sits on the bar's line beside its
   buttons where there is no Back (All cards, Wishlist, Collections); the tab bar and the sidebar
   read Home, Wishlist, All cards, then Collections / Browse; the card in its sheet starts under

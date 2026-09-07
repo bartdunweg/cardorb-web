@@ -77,7 +77,7 @@ export async function loadFacets(): Promise<Facets> {
     try {
         return await getFacets();
     } catch {
-        return { sets: [], rarities: [] };
+        return { sets: [], rarities: [], gens: [], types: [] };
     }
 }
 

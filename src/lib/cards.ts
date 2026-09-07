@@ -5,7 +5,14 @@ import { perUser } from "@/lib/user-cache";
 export type { Card, PublicCard } from "@/lib/api-shapes";
 
 /** What a filter menu offers: the sets you hold a card of, in set order, and the rarities, A to Z. */
-export type Facets = { sets: { name: string; title: string }[]; rarities: string[] };
+export type Facets = {
+    sets: { name: string; title: string }[];
+    rarities: string[];
+    /** In the collection's own order, which is the catalogue's series order and so chronological. */
+    gens: string[];
+    /** A to Z. */
+    types: string[];
+};
 
 /**
  * The sets and rarities you hold a card of, for a rule's fields and the search's chips. Five
@@ -15,10 +22,10 @@ export type Facets = { sets: { name: string; title: string }[]; rarities: string
 export const getFacets = (): Promise<Facets> =>
     perUser("facets", async (token) => {
         const { facets } = await api<{ facets?: Facets }>("/cards", { token, params: { owned: true, limit: 1 } });
-        return facets ?? { sets: [], rarities: [] };
+        return { sets: facets?.sets ?? [], rarities: facets?.rarities ?? [], gens: facets?.gens ?? [], types: facets?.types ?? [] };
     });
 
-/** Which cards a list asks for: the folder, the search, the sort and the two filters. Plain data, so a page can hand it to the client for the next batch. */
+/** Which cards a list asks for: the folder, the search, the sort and the filters. Plain data, so a page can hand it to the client for the next batch. */
 export type CardFilter = {
     /** False from a caller that will not read the facets (a further batch on scroll): the API skips that pass. */
     facets?: boolean;
@@ -30,6 +37,10 @@ export type CardFilter = {
     order?: "asc" | "desc";
     set?: string;
     rarity?: string;
+    /** One generation, whole, as the catalogue names its series. */
+    gen?: string;
+    /** One energy type, whole, as the catalogue names it. */
+    type?: string;
     /** A card number, whole; with `set` it names one card's every row. */
     number?: string;
     /** true: copies with a price; false: the ones nothing prices. */
@@ -59,6 +70,8 @@ export async function getMyCards({
     order,
     set,
     rarity,
+    gen,
+    type,
     number,
     priced,
     facets: wantFacets,
@@ -69,7 +82,12 @@ export async function getMyCards({
     value: number | null;
     /** Copies in the filtered list without a price. */
     unpriced: number;
-    /** The sets and rarities held, over the whole collection whatever the filters: what the two menus offer. */
+    /**
+     * The catalogue could not be reached: these are the rows alone, with no scan and no price.
+     * A page says so, because a collection with no pictures is otherwise read as a broken app.
+     */
+    catalogueUnavailable: boolean;
+    /** The sets, rarities, generations and types held, over the whole collection whatever the filters: what the menus offer. */
     facets: Facets;
 }> {
     // The first batch of a list is the read every list page waits on; per person and five
@@ -77,34 +95,48 @@ export async function getMyCards({
     // (forgetMine). Further batches and the odd sizes (a count, a whole Pokédex) go straight.
     const key =
         offset === 0 && limit === LIST_BATCH
-            ? `cards:${JSON.stringify([q, collectionId, favoritesOnly, wishlist, sort, order, set, rarity, number, priced, wantFacets])}`
+            ? `cards:${JSON.stringify([q, collectionId, favoritesOnly, wishlist, sort, order, set, rarity, gen, type, number, priced, wantFacets])}`
             : null;
     const read = async (token?: string) => {
-        const { cards, total, facets, value, unpriced } = await api<{ cards: CardItem[]; total: number; facets?: Facets; value?: number; unpriced?: number }>(
-            "/cards",
-            {
-                token,
-                params: {
-                    q: q?.trim() || undefined,
-                    owned: !wishlist,
-                    favorite: favoritesOnly ? true : undefined,
-                    collection: collectionId,
-                    sort,
-                    order,
-                    set,
-                    rarity,
-                    number,
-                    priced,
-                    // The API skips its facets pass when told nobody will read them.
-                    facets: wantFacets === false ? 0 : undefined,
-                    limit,
-                    offset,
-                },
+        const { cards, total, facets, value, unpriced, catalogueUnavailable } = await api<{
+            cards: CardItem[];
+            total: number;
+            facets?: Facets;
+            value?: number;
+            unpriced?: number;
+            catalogueUnavailable?: boolean;
+        }>("/cards", {
+            token,
+            params: {
+                q: q?.trim() || undefined,
+                owned: !wishlist,
+                favorite: favoritesOnly ? true : undefined,
+                collection: collectionId,
+                sort,
+                order,
+                set,
+                rarity,
+                gen,
+                type,
+                number,
+                priced,
+                // The API skips its facets pass when told nobody will read them.
+                facets: wantFacets === false ? 0 : undefined,
+                limit,
+                offset,
             },
-        );
+        });
         // The API has carried facets since its #161, the same day as this read; an older deploy or a
-        // rollback answers without them. Empty menus then, not a Cards page that throws on facets.sets.
-        return { cards: cards.map(cardFromItem), total, value: value ?? null, unpriced: unpriced ?? 0, facets: facets ?? { sets: [], rarities: [] } };
+        // rollback answers without them, and one older than its #226 without gens and types. Empty
+        // menus then, not a Cards page that throws on facets.sets.
+        return {
+            cards: cards.map(cardFromItem),
+            total,
+            value: value ?? null,
+            unpriced: unpriced ?? 0,
+            catalogueUnavailable: catalogueUnavailable === true,
+            facets: { sets: facets?.sets ?? [], rarities: facets?.rarities ?? [], gens: facets?.gens ?? [], types: facets?.types ?? [] },
+        };
     };
     return key ? perUser(key, read) : read();
 }

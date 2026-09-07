@@ -25,7 +25,7 @@ type FormProps = {
     onSaved?: (id: string | undefined) => void;
 };
 
-const NO_FACETS: Facets = { sets: [], rarities: [] };
+const NO_FACETS: Facets = { sets: [], rarities: [], gens: [], types: [] };
 
 // One dialog for a folder's name and its rule: New folder (by hand or by rule) and, on the
 // folder's page, Rename or Edit rule. A folder keeps its kind, so edit mode never shows the
