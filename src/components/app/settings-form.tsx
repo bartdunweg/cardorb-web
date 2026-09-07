@@ -1,9 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Monitor04, Moon01, Sun } from "@untitledui/icons";
-import { removeAvatar, updateEmail, updatePassword, updateProfile, uploadAvatar } from "@/app/(app)/dashboard/settings/actions";
+import { checkUsername, removeAvatar, updateEmail, updatePassword, updateProfile, uploadAvatar } from "@/app/(app)/dashboard/settings/actions";
 import { signOut } from "@/app/(auth)/actions";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
@@ -56,6 +56,25 @@ export function SettingsForm({ profile, email, heading }: { profile: Profile; em
     const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url ?? "");
     const [isPublic, setIsPublic] = useState(profile.is_public);
     const [emailValue, setEmailValue] = useState(email ?? "");
+    // Whether the name is free, asked a beat after the typing stops. The name it was asked for
+    // rides along, so an answer that arrives after another keystroke is ignored rather than shown.
+    const [nameCheck, setNameCheck] = useState<{ name: string; available: boolean; reason?: string } | null>(null);
+    useEffect(() => {
+        const wanted = username.trim().toLowerCase();
+        // The stale answer is not cleared here: `nameAnswer` below only shows one that names the
+        // text as it stands, so an old answer is invisible without a second render to drop it.
+        if (!wanted || wanted === profile.username) return;
+        let live = true;
+        const timer = setTimeout(async () => {
+            const answer = await checkUsername(wanted);
+            if (live && answer) setNameCheck({ name: wanted, ...answer });
+        }, 400);
+        return () => {
+            live = false;
+            clearTimeout(timer);
+        };
+    }, [username, profile.username]);
+    const nameAnswer = nameCheck?.name === username.trim().toLowerCase() ? nameCheck : null;
     const [savingProfile, setSavingProfile] = useState(false);
     const [profileMsg, setProfileMsg] = useState<Msg>(null);
     const [uploading, setUploading] = useState(false);
@@ -187,7 +206,19 @@ export function SettingsForm({ profile, email, heading }: { profile: Profile; em
                     <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={onPickFile} className="hidden" />
                 </div>
                 <Input label="Display name" value={displayName} onChange={setDisplayName} placeholder="Your name" />
-                <Input label="Username" value={username} onChange={setUsername} hint="Lowercase letters, numbers and hyphens." />
+                <Input
+                    label="Username"
+                    value={username}
+                    onChange={setUsername}
+                    isInvalid={nameAnswer ? !nameAnswer.available : undefined}
+                    hint={
+                        nameAnswer
+                            ? nameAnswer.available
+                                ? `${username.trim().toLowerCase()} is free.`
+                                : nameAnswer.reason
+                            : "Lowercase letters, numbers and hyphens."
+                    }
+                />
                 <Input
                     label="Email"
                     type="email"
@@ -199,14 +230,19 @@ export function SettingsForm({ profile, email, heading }: { profile: Profile; em
                 <Toggle
                     label="Public collection"
                     // With the toggle on, the address people can open, so it can be read and copied from here.
-                    hint={isPublic && username ? `Anyone can view your collection at ${publicUrl(username)}.` : "When on, anyone can view your collection."}
+                    // The saved name, not the field: an address only exists once the name is claimed.
+                    hint={
+                        isPublic && profile.username
+                            ? `Anyone can view your collection at ${publicUrl(profile.username)}.`
+                            : "When on, anyone can view your collection."
+                    }
                     isSelected={isPublic}
                     onChange={setIsPublic}
                     // The kit's toggle is as wide as its words; the address has to wrap on a phone.
                     className="w-full"
                 />
-                {isPublic && username ? (
-                    <Button href={`/user/${username}`} color="secondary" size="sm" className="self-start">
+                {isPublic && profile.username ? (
+                    <Button href={`/user/${profile.username}`} color="secondary" size="sm" className="self-start">
                         View your public page
                     </Button>
                 ) : null}
