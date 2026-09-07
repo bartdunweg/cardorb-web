@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode, useState } from "react";
+import { Minus, Plus } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import { addCopy, splitCopy } from "@/app/(app)/dashboard/cards/actions";
@@ -91,6 +92,9 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
     };
     const changes = edits();
     const differs = Object.keys(changes).length > 0;
+    /* How many this form may claim: anything up to 999 when adding, and all but one of the row
+       being split, since a split that leaves nothing behind is a move. */
+    const ceiling = mode === "add" ? 999 : Math.max(1, total - 1);
     const canSplit = mode === "add" || (count >= 1 && count < total);
 
     const save = async () => {
@@ -135,14 +139,37 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
             {mode === "split" || total > 0 ? (
                 <div className={row}>
                     {mode === "add" ? "How many" : `How many of the ${total}`}
-                    <Input
-                        type="number"
-                        aria-label="How many"
-                        size="sm"
-                        className="w-24"
-                        value={String(count)}
-                        onChange={(v) => setCount(Math.max(1, Math.min(mode === "add" ? 999 : total - 1, Number(v) || 1)))}
-                    />
+                    {/* The same minus, number, plus as the card sheet's Quantity row: one control for
+                        one question, wherever it is asked. Typing still works — a number field is
+                        faster than nine presses — but the common answer is one or two either way. */}
+                    <span className="flex items-center gap-2">
+                        <Button
+                            color="secondary"
+                            size="sm"
+                            iconLeading={Minus}
+                            aria-label="One fewer"
+                            isDisabled={count <= 1}
+                            onClick={() => setCount(count - 1)}
+                        />
+                        <Input
+                            type="number"
+                            aria-label="How many"
+                            size="sm"
+                            className="w-16"
+                            min={1}
+                            max={ceiling}
+                            value={String(count)}
+                            onChange={(v) => setCount(Math.max(1, Math.min(ceiling, Number(v) || 1)))}
+                        />
+                        <Button
+                            color="secondary"
+                            size="sm"
+                            iconLeading={Plus}
+                            aria-label="One more"
+                            isDisabled={count >= ceiling}
+                            onClick={() => setCount(count + 1)}
+                        />
+                    </span>
                 </div>
             ) : null}
 

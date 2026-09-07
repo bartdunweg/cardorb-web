@@ -105,16 +105,19 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         if (!mine || !card || !group.length) return;
         setBusy(true);
         setMenuError(null);
-        for (const row of group) {
-            const res = await removeCard(row.id);
-            if (!res.ok) {
-                setBusy(false);
-                setMenuError(res.error);
-                void reloadCopies();
-                return;
-            }
-        }
+        /* At once, not one after another. Each of these is a round trip from the browser through
+           the app to the API and on to the database in another region, so a group of four in a
+           `for await` was four of those in a queue — the wait grew with the number of copies, on
+           the one action where the number of copies is the whole point. They touch different rows,
+           so nothing is racing. */
+        const results = await Promise.all(group.map((row) => removeCard(row.id)));
         setBusy(false);
+        const failed = results.find((r) => !r.ok);
+        if (failed && !failed.ok) {
+            setMenuError(failed.error);
+            void reloadCopies();
+            return;
+        }
         const rows = sortCopies(await listCopies(mine));
         setCopiesState({ of: copiesKey(mine), rows });
         if (group.some((r) => r.id === mine.id) && rows[0]) setViewing({ of: card.id, row: rows[0] });
@@ -248,8 +251,17 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const stepDown = async () => {
         if (!mine) return;
         if (shownCopies > 1) return await step(shownCopies - 1);
+        /* The shown row holds one, so one fewer means a whole row of this kind goes. Any row but
+           the one on screen — and if the group cannot be found at all (the listed copies are from
+           before a write, so the shown row is not among them), say so rather than doing nothing.
+           A button that answers a press with silence is the worst of the three outcomes. */
         const spare = shownGroup?.rows.find((r) => r.id !== mine.id);
-        if (spare) await dropCopies([spare]);
+        if (!spare) {
+            setMenuError("Could not tell which copy to remove. Reopen the card and try again.");
+            void reloadCopies();
+            return;
+        }
+        await dropCopies([spare]);
     };
     const step = async (n: number) => {
         if (!mine || n < 1) return;
@@ -897,24 +909,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                                 <li className="text-sm text-quaternary">None yet</li>
                                                             ) : null}
                                                         </ul>
-                                                    </div>
-                                                ) : null}
-                                                {/* One is different… stays inside the card, because it acts on the copy the card
-                                                is showing: it moves some of this row's copies onto a row of their own. */}
-                                                {shownCopies > 1 ? (
-                                                    <div className="flex flex-wrap gap-2 border-t border-secondary pt-4">
-                                                        <CopyFormDialog
-                                                            mode="split"
-                                                            languages={known?.languages}
-                                                            facts={known}
-                                                            from={{ ...mine, quantity: shownCopies }}
-                                                            folders={collections}
-                                                            onSaved={() => void reloadCopies()}
-                                                        >
-                                                            <Button size="sm" color="secondary">
-                                                                One is different…
-                                                            </Button>
-                                                        </CopyFormDialog>
                                                     </div>
                                                 ) : null}
                                             </div>
