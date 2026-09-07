@@ -1,16 +1,15 @@
 "use client";
 
-import { ChevronSelectorVertical, Eye, LogOut01, Moon01, Settings01 } from "@untitledui/icons";
+import { ChevronSelectorVertical, Eye, LogOut01, Settings01 } from "@untitledui/icons";
 import { Button as AriaButton } from "react-aria-components";
 import { signOut } from "@/app/(auth)/actions";
 import { AvatarLabelGroup } from "@/components/base/avatar/avatar-label-group";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
-import { useTheme } from "@/providers/theme";
 import { cx } from "@/utils/cx";
 
 type Account = { name: string; email: string; avatarUrl: string | null; publicUrl?: string | null };
 
-// Account card that opens a dropdown with Settings, a real dark-mode Toggle, and Sign out.
+// Account card that opens a dropdown with the public profile, Settings and Sign out.
 export function AccountMenu({ account }: { account: Account }) {
     return (
         <Dropdown.Root>
@@ -28,7 +27,10 @@ export function AccountMenu({ account }: { account: Account }) {
                 </div>
             </AriaButton>
 
-            <Dropdown.Popover className="w-64">
+            {/* The card sits at the sidebar's foot, so the menu opens upward. Left to react-aria's flip
+                it sometimes measures the sliver of space under the card first and never flips back,
+                and the menu opens off the bottom of the screen. */}
+            <Dropdown.Popover placement="top left" className="w-64">
                 <Dropdown.Menu>
                     <AccountMenuItems publicUrl={account.publicUrl} />
                 </Dropdown.Menu>
@@ -37,14 +39,10 @@ export function AccountMenu({ account }: { account: Account }) {
     );
 }
 
-// The account's own entries: the public profile, Settings (where the profile lives), the dark-mode
-// toggle, Sign out. Rendered inside a Dropdown.Menu here; the phone reaches them on the You page.
+// The account's own entries: the public profile, Settings (where the profile lives, and with it
+// the choice between light and dark) and Sign out. Rendered inside a Dropdown.Menu here; the phone
+// reaches them on the You page.
 export function AccountMenuItems({ publicUrl }: { publicUrl?: string | null } = {}) {
-    const { resolvedTheme, setTheme } = useTheme();
-    // The theme is undefined on the server and the first client render alike, so reading it
-    // directly matches on both and resolves after hydration — no mount flag, no mismatch.
-    const isDark = resolvedTheme === "dark";
-
     return (
         <>
             {/* The page others see, for the person whose it is; absent while the profile is private. */}
@@ -56,19 +54,6 @@ export function AccountMenuItems({ publicUrl }: { publicUrl?: string | null } = 
             <Dropdown.Item icon={Settings01} href="/dashboard/settings">
                 Settings
             </Dropdown.Item>
-
-            <Dropdown.Section
-                selectionMode="multiple"
-                selectedKeys={isDark ? new Set(["dark-mode"]) : new Set<string>()}
-                onSelectionChange={(keys) => {
-                    const dark = keys === "all" || (keys instanceof Set && keys.has("dark-mode"));
-                    setTheme(dark ? "dark" : "light");
-                }}
-            >
-                <Dropdown.Item id="dark-mode" icon={Moon01} selectionIndicator="toggle">
-                    Dark mode
-                </Dropdown.Item>
-            </Dropdown.Section>
 
             <Dropdown.Separator />
 
