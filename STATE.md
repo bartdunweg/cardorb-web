@@ -22,6 +22,50 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **2026-09-07, one package manager.** The API installed with npm and the web app with pnpm, for
+  no reason either of them chose, so every instruction spanning both had to say which. Both are
+  pnpm now (cardorb-api #245): `packageManager` pins 11.22.0, `pnpm-workspace.yaml` names the one
+  dependency whose install script has to run, CI installs `--frozen-lockfile` and caches the
+  store, and Prettier ignores the lockfile it kept reflowing. Vercel reads the lockfile to pick
+  an installer, so the deploy followed without being told. **A monorepo is parked, not rejected:**
+  merging web and API is worth it — one PR, one preview, one review for a change that today
+  needs two of each, and one contract instead of 476 hand-kept lines mirroring a 2,169-line
+  OpenAPI file — but the mobile apps stay out, because Swift and Kotlin share no tooling with
+  this and an app ships through review days later, so nothing about it can be atomic anyway.
+  This was the step that makes that merge a move rather than a migration.
+
+- **2026-09-07, a collection that looked like it hung.** Asking pokemontcg.io for one set's
+  dollar prices reads up to four pages, two attempts each, twelve seconds a request: ninety-seven
+  seconds for one set, twice that for a set with a gallery. `usdForSet()` already falls quiet for
+  ten minutes after a failure, but only once it has been told there was one, so a cold instance
+  paid all of it before the brake it already had could come on — and that host is answering 500s
+  and timeouts this week. Eight seconds for the lot now, around the outside of the call
+  (`PTCG_PRICES_BUDGET_MS`, cardorb-api #243). The first version of that deadline covered the
+  paging alone and left `find()` and `findGallery()` outside it, which read the same set's card
+  names from the same host; a test that never answers a request found it. A wall on the outside
+  cannot be got round by whichever inner path is slow.
+- **2026-09-07, both repositories are public, and CI runs again.** GitHub Actions is free and
+  unlimited on a public repository, which is what the billing block had been failing every run
+  over in two seconds since 2026-09-04. Before the switch, `gitleaks git` over the whole history
+  of both repositories: 499 MB, no findings — `verify.sh` runs `gitleaks dir`, the working tree
+  only, so nothing had ever checked what going public would actually expose. The first honest run
+  found a break that had been there since the flags went in: `tsc --noEmit` fails on eleven
+  `flag-icons` SVGs unless a build has already written `next-env.d.ts`, which no CI machine has
+  and every developer's does. `types/next-images.d.ts` is in git now (web #267).
+- **2026-09-07, a set is a shelf.** Every card you did not own was dimmed to 30% grey, which made
+  the one thing a set page is for — what you are still missing — the one thing you could not look
+  at. Full colour now, with a solid tick and the count in the corner for what you hold and a plus
+  for what you do not. Same tile, grid and size as every other overview; the second line is the
+  number rather than the set's code, since every card there is from one set (web #266).
+- **2026-09-07, a price that was always null.** The set route was given Cardmarket's number per
+  card (cardorb-api #241) and it never once arrived: pokemontcg.io numbers a card `me5-85` and
+  everything priced in that repo is keyed the TCGdex way, `me05-085`. Nothing failed. The tests
+  passed because they mocked the price source, so they proved the field was attached and never
+  that the key was one anything answers to; the screen said zero prices on 129 tiles.
+  `withTcgdexScans()` already matches every card to its TCGdex twin for the artwork, so the id
+  travels with the pictures now (#242), held by tests on the real function (#244). **A green test
+  against a mocked boundary says nothing about the boundary.**
+
 - **2026-09-07, the answers are checked now.** `api<T>()` ended in `json as T`, which is the one
   boundary CLAUDE.md's "zod at every boundary" did not cover: a field the API renamed, dropped or
   began sending as a string travelled untouched into a component and surfaced as a blank tile or
@@ -249,8 +293,6 @@ which also says what is already yours), Settings (avatar through the API), publi
   Paldea Evolved #227 Illustration rare. Corrected in the database by hand: the app has no field
   for a card's set or number. The API's collection cache is an hour; a direct database change
   shows after that.
-- **Open:** Ancient Mew (Miscellaneous Promos #001) has no scan in any catalogue; it needs one of
-  the owner's own under the API's `public/artwork`.
 
 - **Every kit Button is a pill** (`shape="pill"` default, `shape="rect"` by hand), and so are
   `ButtonUtility` and `CloseButton`; the marker line at the top of each changed kit file says so
@@ -415,8 +457,6 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 Backlog from the review, ranked. Each is one PR.
 
-- Ancient Mew (Miscellaneous Promos #001) has no scan anywhere; a scan of the owner's own copy
-  goes under the API's `public/artwork` with a lookup by tcgId in the resolver.
 
 From the audit of 2026-09-06 (night): everything shipped that night (#166–#173; cardorb-api
 #194–#201). Every card in the collection has a Cardmarket product linked and a price. The SM
@@ -581,5 +621,3 @@ is personal use only. `scripts/backfill-card-prices.mjs` in the API reruns the f
   card columns only, the `avatars` bucket has type and size limits, the SECURITY DEFINER functions
   are not callable by anon. The advisor still lists few MFA options and `citext` in `public`;
   neither is on the list.
-- Rotate the Supabase service-role key that was once pasted in chat: Project Settings → API →
-  Reset next to `service_role`, then the API's Vercel env. The web app never uses it.
