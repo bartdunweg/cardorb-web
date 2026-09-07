@@ -22,6 +22,16 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **2026-09-07, measuring before building.** A note field was built because the API took notes
+  and the sheet displayed them, then taken out the same day: not one of the 1,951 rows carries
+  a note. The lesson is written down here because it cost a day's PR either way — the list of
+  API fields nothing reads is a list of what is *possible*, and a field's fill rate is one query.
+  Owned counts cards held rather than printings (1,929 against All cards' 1,928), the owner's
+  own call. The public profile's Latest pull block went the same way: the list opens on the
+  newest card instead. Then the matching bug behind it all: 132 of 1,929 owned rows were
+  invisible to the catalogue join because "Set 1 Unlimited" and "Scarlet & Violet Base" have no
+  counterpart in pokemontcg.io's vocabulary (cardorb-api #231). Browse went from "Base 0 of
+  102" to "101 of 102" and Scarlet & Violet from 0 to 30 of 258.
 - **2026-09-07, the API's own data.** Four filters instead of two: the card list narrows to one
   generation or one energy type, both from the facets the list read already carries
   (`gen`/`type` in the URL, cardorb-api #226 for the query and the facets). The card sheet's
