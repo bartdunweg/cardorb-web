@@ -28,6 +28,7 @@ describe("cardFromItem", () => {
             number: "58",
             set: "base1",
             setTitle: "Base Set",
+            setAbbr: "BS",
             rarity: "Common",
             gen: "Gen 1",
             type: "Lightning",
