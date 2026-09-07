@@ -15,12 +15,16 @@ interface NativeSelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>
 }
 
 const styles = {
+    // Changed from the kit: room on the right for the chevron. It is positioned absolutely at
+    // right-2.5 and the box had padding on the left only, so "Near Mint" ran under its own arrow.
+    // `lg` already had px-3.5 on both sides, which is why only these two showed it. A re-fetch
+    // through the Untitled UI CLI or MCP overwrites this; re-apply it.
     sm: {
-        root: "py-2 pl-3 text-sm",
+        root: "py-2 pr-8 pl-3 text-sm",
         icon: "size-4 right-2.5 stroke-[2.25px]",
     },
     md: {
-        root: "py-2 pl-3 text-md",
+        root: "py-2 pr-9 pl-3 text-md",
         icon: "size-4 stroke-[2.25px] right-3",
     },
     lg: {
