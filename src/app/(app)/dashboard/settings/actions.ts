@@ -44,6 +44,24 @@ export async function updateProfile(input: unknown): Promise<ActionResult> {
     return { ok: true };
 }
 
+/**
+ * Is this name free? The API answers either way with 200 and a reason for a no.
+ *
+ * Asked while the field is being typed in, so the answer is known before Save rather than after
+ * a 409. A name the field's own rule already refuses is not sent: the shape is the same rule the
+ * API applies, and there is no point asking about "A".
+ */
+export async function checkUsername(name: string): Promise<{ available: boolean; reason?: string } | null> {
+    const parsed = profileSchema.shape.username.safeParse(name);
+    if (!parsed.success) return { available: false, reason: parsed.error.issues[0].message };
+    try {
+        return await api<{ available: boolean; reason?: string }>(`/usernames/${encodeURIComponent(parsed.data)}`);
+    } catch {
+        // The check is a courtesy; Save is the answer that counts, and it says why on a 409.
+        return null;
+    }
+}
+
 // An image as a data URL, at most 2 MB decoded; the API stores it and answers with the address.
 export async function uploadAvatar(image: string): Promise<ActionResult & { avatarUrl?: string }> {
     const parsed = z
