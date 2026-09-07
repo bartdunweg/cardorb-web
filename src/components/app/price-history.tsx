@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
+import { BarChart01 } from "@untitledui/icons";
 import { type PricePoint, cardPriceHistory } from "@/app/(app)/dashboard/cards/actions";
 import { formatPrice } from "@/lib/format";
 import { areaPath, linePath, pointsFor } from "@/lib/value-chart-math";
@@ -45,7 +46,16 @@ export function PriceHistory({
     const series = points
         .map((p) => ({ date: p.date, value: (holo ? p.holo : null) ?? p.market }))
         .filter((p): p is { date: string; value: number } => p.value != null);
-    if (series.length < 2) return <p className="text-sm text-tertiary">No price history yet; a reading is taken every night.</p>;
+    if (series.length < 2)
+        /* The height the line would have taken, rather than one line of text where a chart was:
+           a tab that collapses to a sentence reads as a tab that failed to load. The icon says
+           what is missing without repeating the sentence under it. */
+        return (
+            <div className={cx("flex flex-col items-center justify-center gap-2 text-center", tall ? "h-28" : "h-14")}>
+                <BarChart01 aria-hidden="true" className="size-5 text-fg-quaternary" />
+                <p className="text-sm text-tertiary">No price history yet; a reading is taken every night.</p>
+            </div>
+        );
 
     const first = series[0];
     const last = series[series.length - 1];

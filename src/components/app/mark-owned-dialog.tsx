@@ -257,7 +257,17 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
 
             <div className={row}>
                 Purchase price
-                <Input type="number" aria-label="Purchase price" size="sm" className="w-28" placeholder="0.00" value={price} onChange={setPrice} />
+                <Input
+                    type="number"
+                    aria-label="Purchase price"
+                    size="sm"
+                    className="w-28"
+                    min={0}
+                    step="0.01"
+                    placeholder="0.00"
+                    value={price}
+                    onChange={setPrice}
+                />
             </div>
 
             <div className={row}>
