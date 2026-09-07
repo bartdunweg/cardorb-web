@@ -729,7 +729,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                             have of this", and for a card you do not hold the honest answer is
                                             nothing — followed by the offer, which is what you opened it for. */}
                                         {takeable && (emptied || (!mine.owned && !mine.wishlist)) ? (
-                                            <div className="flex flex-col gap-3 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary ring-inset">
+                                            /* No card around it. A card in this app holds what you have of
+                                               something, and this is the panel saying you have none — a box
+                                               drawn around that reads as a copy with nothing in it. */
+                                            <div className="flex flex-col gap-3">
                                                 <p className="text-sm text-tertiary">
                                                     {emptied ? "That was the last copy; it has left your collection." : "You do not hold this card yet."}
                                                 </p>
