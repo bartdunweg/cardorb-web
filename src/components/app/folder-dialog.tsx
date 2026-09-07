@@ -110,7 +110,7 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
         else router.refresh();
     };
 
-    const title = mode === "create" ? "New folder" : kind === "rule" ? "Edit rule" : "Edit folder";
+    const title = mode === "create" ? "New binder" : kind === "rule" ? "Edit rule" : "Edit folder";
     const setOptions = facets.sets.filter((s) => !sets.includes(s.name));
     const rarityOptions = facets.rarities.filter((r) => !rarities.includes(r));
     const titleOf = (name: string) => facets.sets.find((s) => s.name === name)?.title ?? name;

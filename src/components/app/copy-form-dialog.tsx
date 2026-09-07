@@ -288,7 +288,7 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
             <div className={row}>
                 Folder
                 <NativeSelect
-                    aria-label="Folder"
+                    aria-label="Binder"
                     size="sm"
                     className="w-full"
                     value={folder}

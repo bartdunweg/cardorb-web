@@ -246,7 +246,7 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
             <div className={row}>
                 Folder
                 <NativeSelect
-                    aria-label="Folder"
+                    aria-label="Binder"
                     size="sm"
                     className="w-full"
                     value={folder}

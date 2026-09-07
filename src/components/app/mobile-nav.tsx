@@ -8,9 +8,9 @@ import { cx } from "@/utils/cx";
 const tabs = [
     { label: "Home", href: "/dashboard", icon: HomeLine, match: (p: string) => p === "/dashboard" },
     { label: "Wishlist", href: "/dashboard/wishlist", icon: Heart, match: (p: string) => p.startsWith("/dashboard/wishlist") },
-    { label: "All cards", href: "/dashboard/cards", icon: Rows01, match: (p: string) => p.startsWith("/dashboard/cards") },
+    { label: "Collection", href: "/dashboard/cards", icon: Rows01, match: (p: string) => p.startsWith("/dashboard/cards") },
     {
-        label: "Collections",
+        label: "Binders",
         href: "/dashboard/collections",
         icon: Folder,
         match: (p: string) => ["/dashboard/collections", "/dashboard/favorites", "/dashboard/pokedex"].some((h) => p.startsWith(h)),

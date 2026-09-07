@@ -118,7 +118,7 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                     // The folders the owner shows, as chips that narrow the list; All cards first. A chip is a link,
                     // so a folder is a URL that can be shared, and the row keeps its place through a search.
                     <nav aria-label="Folders" className="flex flex-wrap gap-2">
-                        {[{ id: null as string | null, name: "All cards", count: null as number | null }, ...folders].map((f) => {
+                        {[{ id: null as string | null, name: "Collection", count: null as number | null }, ...folders].map((f) => {
                             const current = query.list === undefined && (folder?.id ?? null) === f.id;
                             return (
                                 // The kit's button as a link, primary for the one in view: the same pill and colours as

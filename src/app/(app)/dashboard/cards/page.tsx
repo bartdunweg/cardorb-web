@@ -21,7 +21,7 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
 
     return (
         <FolderPage
-            title="All cards"
+            title="Collection"
             datapoints={datapoints}
             add={(compact) => <AddCardModal compact={compact} />}
             query={query}

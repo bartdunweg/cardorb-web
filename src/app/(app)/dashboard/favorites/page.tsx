@@ -20,7 +20,7 @@ export default async function FavoritesPage({ searchParams }: { searchParams: Pr
     return (
         <FolderPage
             title="Favorites"
-            back={{ href: "/dashboard/collections", label: "Collections" }}
+            back={{ href: "/dashboard/collections", label: "Binders" }}
             datapoints={datapoints}
             settings={(compact) => <ListSettingsDialog list="favorites" title="Favorites" isPublic={profile?.favorites_public ?? false} compact={compact} />}
             query={query}

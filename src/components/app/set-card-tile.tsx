@@ -208,7 +208,7 @@ export function SetCardTile({
                                                 </Dropdown.Item>
                                             ) : null}
                                             <Dropdown.Item icon={Rows01} href={`/dashboard/cards?q=${encodeURIComponent(card.name)}`}>
-                                                Open in All cards
+                                                Open in Collection
                                             </Dropdown.Item>
                                         </>
                                     ) : null}

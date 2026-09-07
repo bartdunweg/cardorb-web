@@ -42,8 +42,8 @@ export function AppSidebar({ account, collections }: { account: Promise<Account>
         { label: "Home", href: "/dashboard", icon: HomeLine },
         { label: "Browse", href: "/dashboard/sets", icon: BookOpen01 },
         { label: "Wishlist", href: "/dashboard/wishlist", icon: Heart },
-        { label: "All cards", href: "/dashboard/cards", icon: Rows01 },
-        { divider: true, label: "Collections" },
+        { label: "Collection", href: "/dashboard/cards", icon: Rows01 },
+        { divider: true, label: "Binders" },
         { label: "Favorites", href: "/dashboard/favorites", icon: Star01 },
         // A folder like the ones below it. The Pokédex is one of the two that are
         // always there, not a different kind of thing, and drawing it as a grid
@@ -73,7 +73,7 @@ export function AppSidebar({ account, collections }: { account: Promise<Account>
                                         className="mr-2 size-5 shrink-0 text-fg-quaternary transition-inherit-all group-hover:text-fg-quaternary_hover"
                                     />
                                     <span className="flex-1 text-left text-sm font-semibold text-secondary transition-inherit-all group-hover:text-secondary_hover">
-                                        New folder
+                                        New binder
                                     </span>
                                 </AriaButton>
                             </FolderDialog>
