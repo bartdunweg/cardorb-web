@@ -134,6 +134,7 @@ describe("pokemonCardFromBrowse", () => {
             itemIds: ["row"],
             price: null,
             priceHolo: null,
+            tcgId: null,
         });
         expect(c).toMatchObject({ set: "Scarlet & Violet", types: null, hp: null, owned: true });
     });
@@ -205,6 +206,7 @@ describe("setCardFromBrowse", () => {
                 itemIds: ["row"],
                 price: null,
                 priceHolo: null,
+                tcgId: null,
             }),
         ).toEqual({
             id: "sv1-1",
@@ -220,6 +222,7 @@ describe("setCardFromBrowse", () => {
             quantity: 2,
             itemIds: ["row"],
             price: null,
+            tcgId: null,
         });
     });
 });
@@ -240,6 +243,7 @@ describe("pokemonCardFromSetCard", () => {
             quantity: 0,
             itemIds: [],
             price: null,
+            tcgId: null,
         });
         expect(card).toMatchObject({ id: "sv1-1", name: "Sprigatito", set: "Scarlet & Violet", number: "1", rarity: null, types: null, owned: false });
     });
