@@ -384,7 +384,12 @@
     /* Glass, two weights, both derived from bg-primary so they follow the theme on their own. Thin
        is for bars content scrolls under; thick is for a sheet, dialog or popover that holds content
        of its own. The `glass` and `glass-thick` utilities add the blur. */
-    --color-bg-glass: color-mix(in oklab, var(--color-bg-primary) 85%, transparent);
+    /* 62 %, not 85 %. At 85 the buttons over a card's art read as solid — very dark on a dark
+       theme, very light on a light one — and the blur behind them had almost nothing to blur.
+       The picture shows through now and the ground still carries the icon: 20 px of blur and
+       180 % saturation do the legibility, not opacity. `glass-thick` stays where it is; that one
+       is a sheet's own ground and has words on it. */
+    --color-bg-glass: color-mix(in oklab, var(--color-bg-primary) 62%, transparent);
     --color-bg-glass-thick: color-mix(in oklab, var(--color-bg-primary) 96%, transparent);
     --color-bg-primary: var(--color-white);
     --color-bg-tertiary: var(--color-neutral-100);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { listCopies } from "@/app/(app)/dashboard/cards/actions";
 import { CardDetailSlideout } from "@/components/app/card-detail-slideout";
 import { SetCardTile } from "@/components/app/set-card-tile";
@@ -23,27 +23,32 @@ export function SetCards({ cards, readOnly, firstRow = 6 }: { cards: SetCard[]; 
     const [selected, setSelected] = useState<Card | null>(null);
     // The catalogue card behind an open sheet, so a card nobody holds can still be taken from it.
     const [addable, setAddable] = useState<SetCard | null>(null);
-    // One at a time: a second tap while the first is still reading the copies would open the wrong card.
-    const opening = useRef<string | null>(null);
-
+    /* Where in the set the open card is, so the sheet can offer the one either side. The set page
+       had no arrows at all: you left the sheet, found the next card and opened it again, on a page
+       whose whole point is going through a set in order. */
+    const [at, setAt] = useState(-1);
     const open = async (card: SetCard) => {
-        if (opening.current === card.id) return;
-        opening.current = card.id;
-        try {
-            if (card.owned || card.wishlist) {
-                const rows = await listCopies({ set: card.setName, number: card.number, name: card.name });
-                const row = rows[0];
-                if (row) {
-                    setAddable(null);
-                    setSelected(row);
-                    return;
-                }
-            }
-            setAddable(card);
-            setSelected(fromCatalogue(card));
-        } finally {
-            opening.current = null;
+        setAt(cards.findIndex((c) => c.id === card.id));
+        /* The card you hold opens on its row; the catalogue's own is shown while that is read, so
+           the sheet is never blank waiting for it. No guard against a second tap: opening the same
+           card twice costs one read and lands on the same card, and the ref that used to prevent
+           it could not be reached from an arrow without being touched during render. */
+        setAddable(card.owned || card.wishlist ? null : card);
+        setSelected(fromCatalogue(card));
+        if (!card.owned && !card.wishlist) return;
+        const rows = await listCopies({ set: card.setName, number: card.number, name: card.name });
+        const row = rows[0];
+        if (row) {
+            setAddable(null);
+            setSelected(row);
         }
+    };
+
+    /* Null rather than a dead button at either end: the sheet draws no arrow where there is
+       nothing to go to, the same rule the card lists follow. */
+    const step = (by: number) => {
+        const next = at >= 0 ? cards[at + by] : undefined;
+        return next ? () => void open(next) : null;
     };
 
     return (
@@ -64,8 +69,11 @@ export function SetCards({ cards, readOnly, firstRow = 6 }: { cards: SetCard[]; 
                 onClose={() => {
                     setSelected(null);
                     setAddable(null);
+                    setAt(-1);
                 }}
                 addable={addable ? pokemonCardFromSetCard(addable) : null}
+                onPrev={step(-1)}
+                onNext={step(1)}
             />
         </>
     );
