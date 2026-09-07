@@ -31,7 +31,10 @@ export async function generateMetadata({ params, searchParams }: Params): Promis
         title: name,
         description,
         alternates: { canonical },
-        openGraph: { title: `${name}'s collection`, description, url: canonical, images: ["/opengraph-image"] },
+        // `type` and `siteName` are repeated here rather than inherited: a page-level `openGraph`
+        // replaces the root's wholesale, so without these two the one page people actually
+        // paste into a chat was the only one shipping neither.
+        openGraph: { type: "profile", siteName: "Cardorb", title: `${name}'s collection`, description, url: canonical, images: ["/opengraph-image"] },
     };
 }
 
