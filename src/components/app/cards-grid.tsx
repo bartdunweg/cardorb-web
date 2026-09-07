@@ -30,7 +30,8 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
     size = "md",
 }: {
     cards: T[];
-    onSelect: (card: T) => void;
+    /** The card, and the list it was picked from, so a sheet knows what is either side of it. */
+    onSelect: (card: T, siblings: T[]) => void;
     size?: CardsSize;
 }) {
     return (
@@ -44,7 +45,7 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                 <div key={card.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i, 12) * 20}ms` } as React.CSSProperties}>
                     <button
                         type="button"
-                        onClick={() => onSelect(card)}
+                        onClick={() => onSelect(card, cards)}
                         // The picture and its words, nothing around them: a card is its own surface, and a tile behind it read as
                         // a second one. The focus ring follows the picture's corners.
                         className="flex h-full w-full pressable cursor-pointer flex-col gap-2 rounded-lg text-left outline-offset-2 outline-focus-ring focus-visible:outline-2"

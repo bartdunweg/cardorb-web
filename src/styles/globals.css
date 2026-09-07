@@ -58,6 +58,19 @@
 /* Fade to page: under the floating tab bar, from nothing to the page's own ground, so the page runs
    out under the bar instead of ending on it, and Safari, which takes its bottom bar's colour from
    the page's bottom edge, finds the ground there rather than whatever scrolled under. */
+/*
+ * The strip a phone's home indicator sits over, as padding.
+ *
+ * Named here rather than written as `pb-[env(safe-area-inset-bottom)]` at the
+ * call site, which the arbitrary-value rule refuses in src/components/app —
+ * rightly, because a spacing value outside the scale is usually somebody
+ * nudging a layout. This is not a nudge; it is a device measurement, and it has
+ * exactly one meaning wherever it appears.
+ */
+@utility pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
 @utility fade-to-page {
     background-image: linear-gradient(to bottom, transparent, var(--color-bg-page) 70%);
 }
