@@ -295,6 +295,13 @@ export type CardFacts = {
     cmUrl: string | null;
     /** The Western languages the card was printed in; a copy can be one of these and no other. */
     languages: string[];
+    /**
+     * Which printings of this card exist. A form offers no finish that is false
+     * here — every finish this app can store is not every finish this card was
+     * made in, and a reverse holo of a card never printed as one is an option
+     * nobody can honestly pick.
+     */
+    variants: { normal: boolean; holo: boolean; reverse: boolean };
     /** The catalogue's own price for the printing: the market figure, its floor and its Near Mint band. */
     price: { low: number | null; market: number | null; avg30: number | null; nm: { low: number; mid: number; high: number } | null } | null;
     /** Cardmarket's averages: the all-time average, the trend, and the last seven days. */
@@ -315,6 +322,9 @@ export async function cardFacts(tcgId: string): Promise<CardFacts | null> {
             regulationMark: c.regulationMark ?? null,
             cmUrl: c.cmUrl ?? null,
             languages: Array.isArray(c.languages) ? c.languages : ["en"],
+            // All three where the catalogue says nothing, so an answer we do not
+            // have never takes an option away.
+            variants: c.variants ?? { normal: true, holo: true, reverse: true },
             price: c.price ?? null,
             market: c.market ?? null,
         };

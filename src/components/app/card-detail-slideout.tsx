@@ -466,7 +466,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                             {/* A wish becomes a copy here, above the tabs: the one thing to do with a card you do not
                                 hold yet. The form asks what the copy is like as it arrives. */}
                             {!readOnly && mine?.wishlist ? (
-                                <MarkOwnedDialog card={mine} folders={collections} languages={known?.languages} onSaved={onClose}>
+                                <MarkOwnedDialog card={mine} folders={collections} languages={known?.languages} facts={known} onSaved={onClose}>
                                     <Button size="md" iconTrailing={ArrowRight} className="mt-3 self-start">
                                         Mark as owned
                                     </Button>
@@ -796,6 +796,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false }: Props) {
                                                         <CopyFormDialog
                                                             mode="split"
                                                             languages={known?.languages}
+                                                            facts={known}
                                                             from={{ ...mine, quantity: shownCopies }}
                                                             folders={collections}
                                                             onSaved={() => void reloadCopies()}
