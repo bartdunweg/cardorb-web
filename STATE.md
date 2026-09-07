@@ -22,6 +22,41 @@ which also says what is already yours), Settings (avatar through the API), publi
 
 ## Last session
 
+- **2026-09-07, the answers are checked now.** `api<T>()` ended in `json as T`, which is the one
+  boundary CLAUDE.md's "zod at every boundary" did not cover: a field the API renamed, dropped or
+  began sending as a string travelled untouched into a component and surfaced as a blank tile or
+  a NaN, three layers from its cause. All 24 calls carry a schema, and the type is `z.infer` of
+  it, so where a shape used to be written twice (CardItem, FolderItem, PublicItem, CatalogueSet,
+  BrowseCard, OwnProfile, ImportPreview) there is now one source. Two softnesses on purpose: a
+  key an older API never sent reads as null, and an unrecognised `finish` or `foilPattern` reads
+  as null rather than failing — a vocabulary the API may extend first should not empty a list.
+  Structure is not soft, and a failure is an `ApiShapeError` naming the field, status 500 because
+  502 already means "the catalogue is down" in sets.ts. Parsing 2,000 cards costs 8 ms against
+  page times of 145–400 ms (web #263).
+- **2026-09-07, a cache key that was not bumped.** The set codes from #238 never reached a tile:
+  the set-facts key stayed at v14, so every entry written before that deploy was a `SetFacts`
+  without the field and `setAbbr` arrived as null — for a day, per set, with nothing to see but
+  the old behaviour. TCGdex answers "PBL" for Pitch Black (me05) and production still said null;
+  the same collection against a local API with a cold cache said "PBL 085". v15 (cardorb-api
+  #239). The second time a fix has sat behind an unbumped key, so the rule is written down now:
+  cardorb-api's `CLAUDE.md`, under the caching note.
+- **2026-09-07, the card sheet's controls.** Previous and next moved out of the bar to either
+  side of the card, where the room already was — 64 px each side of a 176 px card, centred on the
+  card rather than on the box, and holding the bar's own 12 px from the edge. Tilt went into the
+  dots menu (and stays a button only where there is no menu, on somebody else's card). Add and
+  remove a copy left that menu, because the Copies tab counts copies. "Hide from public page"
+  left it too, because it hid nothing: `forPublic()` sets `excluded: false` — it strips the flag
+  rather than filtering on it — and the only reader left was the latest pull, which the profile
+  no longer shows. What keeps cards off a public profile is a folder's own switch, and there is
+  now no way in this app to set `excluded` at all. The favourite star is the text's colour rather
+  than quaternary grey, and is gone from the sheet's title where it repeated the bar's button
+  (web #264, and #262 before it for the bar's spacing and the chart's focus ring).
+- **2026-09-07, the set's code under a small card.** A tile four across on a phone said
+  "Ascended Heroes · #276" and truncated; it says "DRI 230" now, which is what is printed on the
+  card. The full name stays on a large tile and on the card's own page. Settings became a list of
+  rows that open a sheet, rather than five cards with every field of every one of them on screen
+  (web #259, #260, #261).
+
 - **2026-09-07, a collection from somewhere else.** A CSV can be imported from Settings — a
   dialog, fullscreen on a phone, rather than a page: an import is an errand you finish and
   leave, with no address worth sharing. An export from Dex is recognised on sight and read by
@@ -542,10 +577,6 @@ is personal use only. `scripts/backfill-card-prices.mjs` in the API reruns the f
   token lives 3600 s by Supabase's default. Accepted for the 70 to 360 ms `getUser` cost per page.
   To shorten the window: lower the JWT expiry in the Supabase project (Auth → Sessions), which
   both apps follow without a change.
-- **API answers are cast, not parsed.** `api<T>()` returns `json as T`; the mappers in
-  `api-shapes.ts` pick fields but no zod schema checks an answer, though CLAUDE.md says zod at
-  every boundary. The one field that has bitten (`facets`) has a default. A zod pass per route is
-  the honest fix; until then a drifted API field reaches the mapper unchecked.
 - Supabase side is recorded in `docs/supabase.md`: anon holds column-level SELECT on the public
   card columns only, the `avatars` bucket has type and size limits, the SECURITY DEFINER functions
   are not callable by anon. The advisor still lists few MFA options and `citext` in `public`;
