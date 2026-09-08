@@ -8,655 +8,91 @@ Rewrite it in place. This file has no history worth keeping; the history is in g
 
 ## Now
 
-Trading card management web app on Next.js 16 + React 19 + Tailwind 4 + Untitled UI (PRO).
-**Live at https://cardorb.com** on Vercel project `cardorb`, `main` is production.
+A Pokémon card collection on Next.js 16 + React 19 + Tailwind 4 + Untitled UI (PRO).
+**Live at https://cardorb.com**, Vercel project `cardorb`, `main` is production.
 
-**Since 2026-09-02 this app reads and writes cards, folders and profiles through the Card Orb API**
-(`bartdunweg/cardorb-api`, api.cardorb.com), the same API the iOS app uses (R-DATA-003). Supabase
-is touched directly for auth and the session only; the same project signs both, so the session's
-access token is the API's bearer. `src/lib/api.ts` is the client, `src/lib/api-shapes.ts` turns
-the API's answers into what the screens already render (tested). `scripts/verify.sh` fails on a
-`.from("` outside `src/lib/supabase/`. Live: landing, app shell, Home, Cards, Collections
-(folders in the API), Favorites, Wishlist, Pokédex, Sets, command-palette search (the API's catalogue,
-which also says what is already yours), Settings (avatar through the API), public profile.
+Cards, binders and profiles are read and written through the Card Orb API
+(`bartdunweg/cardorb-api`, api.cardorb.com), the same API the iOS app uses (R-DATA-003).
+Supabase is auth and the session only; the same project signs both, so the session's access
+token is the API's bearer. `src/lib/api.ts` is the client, `src/lib/api-shapes.ts` turns the
+API's answers into what the screens render, zod at every boundary.
+
+Live: landing, Home, Collection, Browse, Binders, Favorites, wishlist, Pokédex, set pages,
+command-palette search, Settings, public profile, and `/dashboard/design` — the design system,
+reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
-- **2026-09-08, the words the app uses for itself.** It said Collection for two things: your whole
-  collection was "All cards", and the binders you make were "Collections" — the singular and the
-  plural of one word meaning a page and a list of other pages. All cards is **Collection** now and
-  a folder is a **Binder**, one word with a singular and a plural. The `collections` table, the
-  route and the API path keep their names: those are addresses, and one is a contract the iOS app
-  reads. CLAUDE.md already drew that line and now says the new words (#295).
-- **2026-09-08, the price label named its input.** Every figure showed as "Market price" and none
-  was one: it is the market price through the measured band in the API's `price-basis.mjs` —
-  above €20 about a quarter higher, between €5 and €20 about an eighth *lower*, unchanged below
-  that, where there is no band. Measured here: 197 cards above €20 carry €19,418 of market and
-  show €24,758; 96 between €5 and €20 carry €985 and show €852. The band is careful work, fitted
-  on cards checked by hand, and answers a better question than the trend — a trend is dragged down
-  by played copies and a binder is mostly Near Mint. So the number stayed and the word changed to
-  **Near Mint price** (#294). **Still open, and bigger than the label:** condition and grade do not
-  reach the price at all, so a Poor copy and a PSA 10 show what a Near Mint one does. Neither
-  Cardmarket nor TCGplayer publishes either — checked, both feeds carry printing and no condition.
-  PokemonPriceTracker does, RAW and PSA, at $9.99 a month, but from the American market.
-- **2026-09-08, one card is one tile.** The list returned an item per stored row, so a card held
-  four times drew four identical tiles and paging, totals and the counts all treated them as four
-  things. Grouped where the list is built, on everything that makes a copy different — not on
-  purchase price or date, which are facts about a transaction (cardorb-api #247). The tile carries
-  the count beside the price, at ×1 too: a number that only sometimes appears is one whose absence
-  you have to notice. All cards went from 1,932 to 1,915, which is the honest count.
-- **2026-09-08, a night of things that failed silently.** None of these threw, logged or turned a
-  check red. `GRID_COLUMNS` lived in a `"use client"` file, so the set page — a server component —
-  read it as `undefined` and set `className="grid gap-4 undefined"`: one card per row at 639 px
-  (#286). A card removed from the sheet stayed on the list behind, because `useState(first.cards)`
-  takes the server's page once and never looks again (#292). The minus on a copy answered a press
-  with nothing when the group could not be found (#284). Tiles asked the image optimizer for 640 px
-  to fill 192: measured 60.3 KB against 19.8 KB, so a list carried ~1.9 MB and the Pokédex ~3.9 MB
-  of pixels no screen could show (#274). The lesson each time was the same: green is not evidence.
-- **2026-09-08, the card sheet became one thing.** It opens on **Your copies** for a card you hold
-  and for one you do not — where it says so and offers the collection or the wishlist, which is
-  what a set page is full of and what the sheet had no answer for. The last minus may empty a card
-  again, because the panel now answers at once with the two ways back rather than removing it when
-  the sheet closes. Tapping a card on a set page opens the sheet instead of a menu; the menu is a
-  dots button beside the plus, both under the picture rather than over the art. Prev and next work
-  there too (#287, #288, #290, #291, #293).
+**2026-09-08.** Six pull requests, and two audits on ground nobody had looked at.
 
-- **2026-09-07, one package manager.** The API installed with npm and the web app with pnpm, for
-  no reason either of them chose, so every instruction spanning both had to say which. Both are
-  pnpm now (cardorb-api #245): `packageManager` pins 11.22.0, `pnpm-workspace.yaml` names the one
-  dependency whose install script has to run, CI installs `--frozen-lockfile` and caches the
-  store, and Prettier ignores the lockfile it kept reflowing. Vercel reads the lockfile to pick
-  an installer, so the deploy followed without being told. **A monorepo is parked, not rejected:**
-  merging web and API is worth it — one PR, one preview, one review for a change that today
-  needs two of each, and one contract instead of 476 hand-kept lines mirroring a 2,169-line
-  OpenAPI file — but the mobile apps stay out, because Swift and Kotlin share no tooling with
-  this and an app ships through review days later, so nothing about it can be atomic anyway.
-  This was the step that makes that merge a move rather than a migration.
-
-- **2026-09-07, a collection that looked like it hung.** Asking pokemontcg.io for one set's
-  dollar prices reads up to four pages, two attempts each, twelve seconds a request: ninety-seven
-  seconds for one set, twice that for a set with a gallery. `usdForSet()` already falls quiet for
-  ten minutes after a failure, but only once it has been told there was one, so a cold instance
-  paid all of it before the brake it already had could come on — and that host is answering 500s
-  and timeouts this week. Eight seconds for the lot now, around the outside of the call
-  (`PTCG_PRICES_BUDGET_MS`, cardorb-api #243). The first version of that deadline covered the
-  paging alone and left `find()` and `findGallery()` outside it, which read the same set's card
-  names from the same host; a test that never answers a request found it. A wall on the outside
-  cannot be got round by whichever inner path is slow.
-- **2026-09-07, both repositories are public, and CI runs again.** GitHub Actions is free and
-  unlimited on a public repository, which is what the billing block had been failing every run
-  over in two seconds since 2026-09-04. Before the switch, `gitleaks git` over the whole history
-  of both repositories: 499 MB, no findings — `verify.sh` runs `gitleaks dir`, the working tree
-  only, so nothing had ever checked what going public would actually expose. The first honest run
-  found a break that had been there since the flags went in: `tsc --noEmit` fails on eleven
-  `flag-icons` SVGs unless a build has already written `next-env.d.ts`, which no CI machine has
-  and every developer's does. `types/next-images.d.ts` is in git now (web #267).
-- **2026-09-07, a set is a shelf.** Every card you did not own was dimmed to 30% grey, which made
-  the one thing a set page is for — what you are still missing — the one thing you could not look
-  at. Full colour now, with a solid tick and the count in the corner for what you hold and a plus
-  for what you do not. Same tile, grid and size as every other overview; the second line is the
-  number rather than the set's code, since every card there is from one set (web #266).
-- **2026-09-07, a price that was always null.** The set route was given Cardmarket's number per
-  card (cardorb-api #241) and it never once arrived: pokemontcg.io numbers a card `me5-85` and
-  everything priced in that repo is keyed the TCGdex way, `me05-085`. Nothing failed. The tests
-  passed because they mocked the price source, so they proved the field was attached and never
-  that the key was one anything answers to; the screen said zero prices on 129 tiles.
-  `withTcgdexScans()` already matches every card to its TCGdex twin for the artwork, so the id
-  travels with the pictures now (#242), held by tests on the real function (#244). **A green test
-  against a mocked boundary says nothing about the boundary.**
-
-- **2026-09-07, the answers are checked now.** `api<T>()` ended in `json as T`, which is the one
-  boundary CLAUDE.md's "zod at every boundary" did not cover: a field the API renamed, dropped or
-  began sending as a string travelled untouched into a component and surfaced as a blank tile or
-  a NaN, three layers from its cause. All 24 calls carry a schema, and the type is `z.infer` of
-  it, so where a shape used to be written twice (CardItem, FolderItem, PublicItem, CatalogueSet,
-  BrowseCard, OwnProfile, ImportPreview) there is now one source. Two softnesses on purpose: a
-  key an older API never sent reads as null, and an unrecognised `finish` or `foilPattern` reads
-  as null rather than failing — a vocabulary the API may extend first should not empty a list.
-  Structure is not soft, and a failure is an `ApiShapeError` naming the field, status 500 because
-  502 already means "the catalogue is down" in sets.ts. Parsing 2,000 cards costs 8 ms against
-  page times of 145–400 ms (web #263).
-- **2026-09-07, a cache key that was not bumped.** The set codes from #238 never reached a tile:
-  the set-facts key stayed at v14, so every entry written before that deploy was a `SetFacts`
-  without the field and `setAbbr` arrived as null — for a day, per set, with nothing to see but
-  the old behaviour. TCGdex answers "PBL" for Pitch Black (me05) and production still said null;
-  the same collection against a local API with a cold cache said "PBL 085". v15 (cardorb-api
-  #239). The second time a fix has sat behind an unbumped key, so the rule is written down now:
-  cardorb-api's `CLAUDE.md`, under the caching note.
-- **2026-09-07, the card sheet's controls.** Previous and next moved out of the bar to either
-  side of the card, where the room already was — 64 px each side of a 176 px card, centred on the
-  card rather than on the box, and holding the bar's own 12 px from the edge. Tilt went into the
-  dots menu (and stays a button only where there is no menu, on somebody else's card). Add and
-  remove a copy left that menu, because the Copies tab counts copies. "Hide from public page"
-  left it too, because it hid nothing: `forPublic()` sets `excluded: false` — it strips the flag
-  rather than filtering on it — and the only reader left was the latest pull, which the profile
-  no longer shows. What keeps cards off a public profile is a folder's own switch, and there is
-  now no way in this app to set `excluded` at all. The favourite star is the text's colour rather
-  than quaternary grey, and is gone from the sheet's title where it repeated the bar's button
-  (web #264, and #262 before it for the bar's spacing and the chart's focus ring).
-- **2026-09-07, the set's code under a small card.** A tile four across on a phone said
-  "Ascended Heroes · #276" and truncated; it says "DRI 230" now, which is what is printed on the
-  card. The full name stays on a large tile and on the card's own page. Settings became a list of
-  rows that open a sheet, rather than five cards with every field of every one of them on screen
-  (web #259, #260, #261).
-
-- **2026-09-07, a collection from somewhere else.** A CSV can be imported from Settings — a
-  dialog, fullscreen on a phone, rather than a page: an import is an errand you finish and
-  leave, with no address worth sharing. An export from Dex is recognised on sight and read by
-  its own rules; anything else falls back to naming the columns yourself. Nothing is written
-  until a preview says, in words and numbers, what writing would mean. Every row is added,
-  including cards you already hold — a second copy is a normal thing to own — and how many
-  those are is said out loud, because a CSV row has no `source_id` and so the database cannot
-  refuse the same file twice. Measured on Bart's own 4,536-row export: 2,097 added, 93 of them
-  cards he already had, 2,439 rows that are other *printings* of cards he has, left alone.
-  Most of the work was cardorb-api#230 — the route only accepted a cookie, so it answered 401
-  to this app; the file is UTF-16 with semicolons; `Quantity 0` was being read as owned;
-  `48/108` matched no card. That PR also fixed three set names that resolved to the *wrong*
-  set silently ("Sword & Shield Promos" found the base set), which was hurting reads, not only
-  imports; every one of the 2,097 rows now finds its card in the catalogue, measured row by
-  row. cardorb-api#234 splits what a copy is *worth* (`finish`, a price key) from what it
-  *looks like* (`foil_pattern`) — the question Bart asked when a Cosmos Holo arrived as a plain
-  holo. Web-side: `readCsv` sniffs the byte order mark, `ApiError` keeps the failing body (the
-  400 carries the header row), and one call may outlive the 30 s timeout. The kit's file-upload
-  drop zone was vendored, trimmed to the drop zone alone — dropping `motion` and
-  `@untitledui/file-icons` with the file list — and given the focus ring it shipped without.
-- **2026-09-07, measuring before building.** A note field was built because the API took notes
-  and the sheet displayed them, then taken out the same day: not one of the 1,951 rows carries
-  a note. The lesson is written down here because it cost a day's PR either way — the list of
-  API fields nothing reads is a list of what is *possible*, and a field's fill rate is one query.
-  Owned counts cards held rather than printings (1,929 against All cards' 1,928), the owner's
-  own call. The public profile's Latest pull block went the same way: the list opens on the
-  newest card instead. Then the matching bug behind it all: 132 of 1,929 owned rows were
-  invisible to the catalogue join because "Set 1 Unlimited" and "Scarlet & Violet Base" have no
-  counterpart in pokemontcg.io's vocabulary (cardorb-api #231). Browse went from "Base 0 of
-  102" to "101 of 102" and Scarlet & Violet from 0 to 30 of 258.
-- **2026-09-07, the API's own data.** Four filters instead of two: the card list narrows to one
-  generation or one energy type, both from the facets the list read already carries
-  (`gen`/`type` in the URL, cardorb-api #226 for the query and the facets). The card sheet's
-  Price tab shows the catalogue's trend, its seven- and thirty-day averages and the Near Mint
-  band beside the market price. Two bugs closed: a set of more than 250 cards lost its tail
-  silently on Browse (paged now, ten pages at most), and `catalogueUnavailable` was ignored, so
-  an outage looked like an empty collection; a line over the list says so. A copy can be a Poké
-  Ball or Master Ball reverse (cardorb-api #225); **the migration still has to be pushed**.
-  Then the notes and the flag: a copy's note is written where it is read (the sheet's Details
-  tab, saved on a button) and travels with a split copy; a copy can be kept off the public page
-  from the card's menu (`excluded`, answered by `GET /v1/cards` since cardorb-api #227, held in
-  the sheet's own state as the star is). A note field was built and taken out the same day: not
-  one of the 1,951 rows carries a note, so a writable field answered a question nobody had asked.
-  Notes stay readable where there is one, as before. A card in the Add
-  dialog says whether you already hold it and how many. Owned counts the cards held, a duplicate
-  twice (1,929 here); the lists count printings, so All cards reads one lower. No Sets tile: Browse says on purpose
-  that how far the shelf is comes per set, not as one number over all of them. Settings answers
-  whether a username is free while it is typed (`GET /v1/usernames/{name}`), and the public
-  address under the toggle names the saved username rather than the field. A public profile
-  opens on the newest card its owner added: not as a block above the list (that was tried and
-  taken out the same evening) but as the list's own order — `sort=added` on the public route,
-  built newest-first by `publicItems()` so the dates stay off the wire (cardorb-api #228, #229).
-  A bare `/user/<name>` means newest first; the sort menu still offers set order and by name,
-  and `listHref` takes the page's own default so only the others reach the URL.
-- **2026-09-06, later the same evening.** The phone's page title sits on the bar's line beside its
-  buttons where there is no Back (All cards, Wishlist, Collections); the tab bar and the sidebar
-  read Home, Wishlist, All cards, then Collections / Browse; the card in its sheet starts under
-  the button row; a finger on the card drives the card alone (`touch-action: none`); Home's
-  skeleton moved into a `(home)` route group so it is no longer the first loading boundary
-  under `/dashboard`, which the router showed while a folder page (a dynamic route, prefetched
-  only to the first boundary) was fetched; the foil window table covers e-Card, Diamond &
-  Pearl, Platinum, HeartGold SoulSilver, Black & White and XY too; Settings shows the public
-  address under the toggle and "View your public page" as a secondary button. The phone's page
-  bar is fixed to the screen like the tab bar (it was `sticky` inside the header, so it left with
-  the header), with a spacer in the flow; collapsed, it stands on a fade from the page's ground.
-  An animation sweep of the day's surfaces found four unwired spots and one hang, all fixed:
-  the catalogue rows and the copies in the card sheet, the Collections tiles and the Settings
-  status now `arrive` like their siblings; the holo card lets go 150 ms after the pointer
-  leaves, not 500; the page bar's fades ease on `--ease-enter`. Rejected on purpose: the search
-  hits and chips (keyboard-driven), the value chart's range switch (data being read), a sliding
-  tab underline, a skeleton cross-fade. On an iPhone a Tilt button in the sheet's bar asks the
-  one-time gyroscope permission (`src/lib/holo/orientation.ts`); after it the phone drives the
-  card, as Android does without asking.
-- **2026-09-06, the search evening.** A search can be narrowed by chips once something is
-  typed (#240): under the field a row that scrolls sideways, Set and Rarity on the phone's
-  search sheet (the sets and rarities you hold, from the facets), Set and Type in the desktop
-  palette (every set the catalogue knows, the eleven energy types in `src/lib/card-types.ts`).
-  `FilterChip` (`src/components/app/filter-chip.tsx`) opens its choices as a sheet from the
-  bottom under `sm` and as a popover from `sm`, with a field over a list of twelve or more; its
-  choices are plain buttons on purpose, because the palette's autocomplete claims any listbox
-  inside it. `useDebouncedSearch` takes filters beside the term; a chip on its own lists the set
-  with nothing typed. The catalogue search uses the API's fielded mode with a filter on, and
-  cardorb-api#223 quotes the set's name there (pokemontcg.io split "Base Set 2" on its spaces
-  and answered 502). Two things found on the way: `getFacets` read the session inside the
-  cache, where there is none, so every reader had empty menus (the card sheet's rule folders
-  too); and the palette registered an empty hotkey that pulled focus back to its input on any
-  key, so nothing beside the input worked by keyboard. Rarity is not a catalogue chip yet: the
-  API's fielded search has no rarity field. The Browser pane's Enter never clicks a native
-  button and its dialog counts go stale while the pane is hidden; that is in memory, not here.
-- **2026-09-06, the holo evening.** The card in its sheet tilts and shines like its printing:
-  `src/components/app/holo-card.tsx` around the picture, `src/lib/holo/` (rarity → effect
-  family, a Svelte-style spring, the pose maths, the hook), the effect CSS vendored verbatim
-  under `src/styles/vendor/pokemon-cards-css/` with its licence and every edit listed, the
-  eleven textures it reads under `public/holo/`. Left out: the author's per-card foil masks
-  (a private CDN, Sword & Shield only; every family runs its no-mask path, foil over the whole
-  card) and the iOS gyroscope (needs a permission gesture; a finger drives it there). Then the
-  era templates: the foil window measured per era on TCGdex scans (Sword & Shield, Scarlet &
-  Violet and Mega Evolution share the CSS's own window; XY and Sun & Moon sit within a percent
-  of it; the Wizards frame gets its own, trainers a fifth of the way down), a trainer known
-  from the facts (no HP, no stage), and every holo before Sword & Shield on the starry cosmos
-  foil.
-- **2026-09-05, one day, sixteen web PRs and five API PRs.** Dark mode one step above black,
-  hairline borders, glass chrome, four phone tabs with You as the avatar in Home's bar, sheets on a phone, dialogs
-  centred (#101, #103). Icons in buttons take the label's colour, thick glass is 92% (#103). The
-  collection is folders: All cards, Favorites, Pokédex and the ones you make, flat under one
-  heading, with New folder at its end; Home, Browse (sets) and Wishlist sit beside it (#104,
-  #106, #108, #109, #110). A folder can fill itself from a rule: dex range, sets, rarities
-  (#105; cardorb-api#166, #167). Every folder page has one shape: title, what it holds and is
-  worth, actions, one row (search, Filters, Sort, View), the list; Pokédex is a folder setting,
-  "Pokédex number" a sort (#111, #113, #114; cardorb-api#168). Controls draw one hairline ring,
-  surfaces a shadow (#115); the sidebar and the tab bar draw the control's ring over a lift
-  without a rim (`shadow-lift-lg`), so their edge is the inputs' line. A card can be starred from its sheet (#116). Home's search bar is
-  the larger pill with a scan button (#107). A review of the day found three blocking defects
-  in each repository, fixed in cardorb-api#169 and the PR after #116: the toolbar kept its
-  place in the tree, the New folder dialog forgets its last folder, rule chips and "In
-  folders" read set titles; a rule folder keeps its matches with `owned=false`, a folder body
-  may be 8 kB, the folder list flags a catalogue outage. Open: GitHub Actions is blocked on
-  billing, so merges go on the local gate; `UNTITLED_UI_TOKEN` is unset, so PRO filled icons
-  cannot be added; the light theme has not had a design pass.
-- **A set page is a checklist.** Every tile is a menu: a card you lack goes to the collection or
-  the wishlist, a wished card is "Got it" or removed, an owned card gains or loses a copy or is
-  removed, and each opens its place in Cards or Wishlist. Copies are offered only when the card is
-  one collection row; two printings are managed in Cards. New actions `setCopies` and `removeCard`
-  in `cards/actions.ts`; the item DELETE needs a JSON content type, so it sends `{}`.
-- **A folder can be public.** The folder dialog has "Show on my public profile" (`isPublic`
-  on the API's folders, cardorb-api#175); a public profile lists those folders as chips over
-  the list (All cards first, each with its card count, `GET /v1/public/<username>/folders`)
-  and `?folder=<id>` narrows the list through the API's `collection` parameter. The wishlist
-  and a Pokédex "full art only" setting are asked for next.
-- **What streams in arrives; what opens follows one curve.** `arrive` (globals.css) fades what
-  lands after the page is standing up 4 px into place, 200 ms on `--ease-enter`, from
-  `@starting-style`, with `--arrive-delay` for a row's stagger (cards 20 ms to the 12th, stat
-  tiles 40 ms, sets 30 ms); reduced motion keeps the fade. The kit's modal, sheet and dropdown
-  enter and exit on `--ease-enter` (the sheet on `--ease-drawer`), never `ease-in`, and drop
-  their zoom or slide under reduced motion. The command palette, hover and keyboard actions
-  stay unanimated on purpose, with one exception: the card in its sheet tilts and shines under
-  the pointer (`holo-card.tsx`), the foil picked by the printing's rarity and the copy's finish.
-  The CSS is Simon Goellner's pokemon-cards-css, vendored under `src/styles/vendor/` (GPL-3.0);
-  the springs and the pointer are our own hook in `src/lib/holo/`. Reduced motion draws the
-  card lit and flat, once.
-- **A folder page opens before its cards.** The five list pages (All cards, a folder, Favorites,
-  Wishlist, Pokédex) no longer await the list: the title, actions and the row (search, Filters,
-  Sort, View) go out at once, the count and value under the title and the cards themselves
-  stream in from one promise (`FolderPage` takes `datapoints` as a promise, `CardsView` and
-  `DexView` a promise they `use()` under Suspense). The first batch is 48 cards (`LIST_BATCH`);
-  `CardsList` asks for the next 48 through the `loadMoreCards` server action when a sentinel
-  comes within a screen, with a Show more button as the manual way. `?page=` is gone from the
-  owner's lists; the public profile still pages by URL. The card sheet asks for the folder list
-  and the facets when a card first opens, not when the page mounts.
-- **The app frame streams before its reads.** The app layout no longer awaits the profile and
-  the folders: it hands their promises to the sidebar and the tab bar, which draw the frame at
-  once and fill the folder rows and the account card through Suspense (`use()`) when each read
-  lands, so the page's loading.tsx shows while the API answers instead of a blank tab. A
-  `SessionGuard` inside its own Suspense awaits both, redirects to /login on a 401 while streaming,
-  and logs any other failure, so the root error page no longer sees layout reads.
-- **The app frame survives a folder read that fails.** The layout asks for the folder names only
-  (`getMyFolders`), no longer the stats of the whole collection, and draws the sidebar without
-  folders when that read fails; a 401 still goes to /login. On 2026-09-04 a TCGdex outage made
-  every collection read a 503 and this one read took every screen down with it.
-- **A Sets page** (`/dashboard/sets`) shows every set the catalogue knows, grouped by series, with
-  how much of each is in the binder; a set opens as a grid of all its cards, yours in colour, the
-  missing ones grey (`GET /catalog/sets`, `GET /catalog/sets/:id`, `src/lib/sets.ts`). The API
-  counts distinct cards per set since cardorb-api#162, so the list shows its number as is. Set
-  logos come from images.scrydex.com, now an allowed image host.
-- **next-themes is gone.** React 19 logged "Encountered a script tag while rendering React
-  component" on every page: the package renders its boot script inside a component. Now
-  `src/lib/theme-script.ts` holds the script as a string literal, the root layout emits it once
-  in `<head>`, the CSP allows it by hash, and `src/providers/theme.tsx` is one `ThemeProvider`
-  in the root layout (useSyncExternalStore, no effects on mount). The auth layout is
-  `force-dynamic` so Next signs its own scripts with the request nonce; `x-nonce` is no longer
-  passed around. `ThemeToggle` (unused) and the `light-mode` class (unselected) went with it.
-- **`@strakzat/eslint-config-ui` comes from npm now** (0.4.0, public, MIT; strakzat/meridian#39).
-  No `.npmrc`, no `NPM_RC` on Vercel, no `PACKAGES_TOKEN` in CI: the private GitHub Packages
-  registry wanted a token even to read, and a preview build that changed the lockfile failed on
-  it. `pnpm-workspace.yaml` exempts the version from pnpm's day-old rule. vitest and Prettier skip
-  `.claude/**` like ESLint does.
-
-- **A public profile can be searched, filtered and sorted** like the owner's Cards page: `q`,
-  set, rarity, and set order or name (a public page has no price and no date). The API's public
-  cards route took the keys and answers with `facets` over the whole collection, one spelling
-  per rarity (cardorb-api#159, #160). Search, filters and sort share one row; on Cards, search
-  and filters do (#69, #70, #72). The default sort is called "Newest set first", which is what
-  the API has always done (#71).
-- **The proxy lives in `src/proxy.ts`.** `middleware.ts` at the root ran in production only:
-  with the app under `src/`, the dev server looks beside it. Now every local check sees the
-  nonce policy on `/login`. The public pages' `frame-ancestors` rule is set there too, since a
-  header from `next.config.mjs` replaced the proxy's in development. ESLint skips `.claude/**`,
-  where Claude Code keeps worktrees of other branches inside the checkout (#73).
-- **Flamigo** was filed as Paldean Fates #211 (Shiny rare) since the import; the owner has the
-  Paldea Evolved #227 Illustration rare. Corrected in the database by hand: the app has no field
-  for a card's set or number. The API's collection cache is an hour; a direct database change
-  shows after that.
-
-- **Every kit Button is a pill** (`shape="pill"` default, `shape="rect"` by hand), and so are
-  `ButtonUtility` and `CloseButton`; the marker line at the top of each changed kit file says so
-  (#61, #66).
-- **Sign-up asks for an email and a password.** `usernameFromEmail` gives the profile its
-  username from the first moment (local part, database shape, four random characters); the
-  display name waits for Settings. Settings validates a username as the database does: lowercase,
-  digits, hyphens (#62, #63).
-- **The public profile is lighter**: the avatar goes through the image optimizer (a 90 KB PNG
-  became 1.5 KB AVIF), card thumbnails are AVIF at quality 60. Lighthouse mobile, warm: 93, LCP
-  3.2 → 2.7 s, 989 → 612 KiB. The first request after a deploy is slow while the optimizer
-  encodes (#64).
-- **A signed-in person sees their account menu on a public profile**, through `getViewer()` and
-  the shared `PublicTopBar` (#65).
-
-- **The public pages share one top bar** (`src/components/app/public-top-bar.tsx`): wordmark,
-  Sign in, Get started as pills; the hero keeps one Get started; the landing has a one-row footer
-  with Privacy and Terms. The API reference is not linked from the landing, since the API serves
-  only our own apps. Sign in replaced Log in everywhere; `/login` stays (#59).
-- **The cards table is the kit's `Table`**, fetched through the Untitled UI MCP; the row is the
-  action. The three kit files this project changed (`input`, `progress-indicators`, `toggle`) say
-  so at the top: the CLI overwrites them on the next `add`, and did. R-UI-002 now names
-  `AppEmptyState` and why it exists (#58).
-- Footer links on the landing and the legal pages went from 20 to 24 px tall (WCAG 2.5.8).
-
-- **Lighthouse on the live site** (mobile, 3 September 2026): landing 98, login 97, public
-  profile 87 with LCP 4.0 s. From it: a `<main>` landmark on the landing and the auth screens, a
-  24 px hit area on the password toggle, and the first row of card tiles fetched with priority.
-  Left as they are: the avatar from Supabase storage is served with a one-hour cache (their
-  header), and the optimizer's thumbnails could compress harder (`quality`), each worth ~100 KB
-  on the profile page.
-- **Three review agents over today's diff** (conventions, security, design and copy) and the PRs
-  from them: a new search starts on page one, the panel's folder select checks the answer, no
-  Supabase env closes the dashboard instead of opening it; four response headers; copy that
-  agrees with itself (Sign in, Mark as owned, empty states); every list page carries its count in
-  the header line and Sort in the header's actions; each page shape has its own loading outline
-  (`src/components/app/skeletons.tsx`). Not taken up: a nonce-based `script-src`, and whether a
-  starred wishlist card belongs on Favorites (CLAUDE.md says a favourite is a card you own).
-- **`~/Documents` is synced by iCloud Drive** (Desktop & Documents). That is where the
-  `name 2.ts` copies come from, in the working tree and inside `.next` and `node_modules`; the
-  gate refuses tracked ones. Moving `Projects` out of `~/Documents` ends it.
-- **Home shows the collection's value over time.** `src/components/app/value-chart.tsx` draws
-  the nightly readings from `GET /v1/value-history` (`src/lib/value-history.ts`, kept per person
-  like the stats) as one line in hand-drawn SVG — a chart library would weigh more than the rest of
-  Home — with a hover and keyboard layer, a tooltip per reading, and the same numbers under "Show
-  as table". The axis spans the readings rather than starting at zero, or a month's movement is
-  a flat line. The arithmetic is `src/lib/value-chart-math.ts`, tested. Checked at desktop and
-  375 px, light and dark, with a throwaway route that is not committed. Fewer than two readings
-  shows a sentence instead of a line.
-- **R-SEC-002 moved to `cardorb-api`.** It said every "my data" query filters on `user_id`; this
-  app has made no database query since R-DATA-003, so the rule and the "Watch out for" line that
-  repeated it are gone here. The API, which runs those queries, carries it as its own rule now.
-- **A page header that behaves like a phone screen (#46).** `src/components/app/page-header.tsx`
-  on the seven dashboard pages with a title: on a phone a bar stays at the top with Back to the
-  parent page (Collections, Cards or Home) on the left, and once the large title scrolls out the
-  bar shows it small in the centre. The tab bar stays. From `lg` up nothing changes. Bart's four
-  answers: large title that hands over on scroll; every page where it makes sense; keep the tab bar;
-  Back goes to the parent. Checked on a 375-px viewport with a throwaway route, not committed.
-- **Set and rarity filters on Cards.** Two menus under the search, "All sets" and "All rarities"
-  on top, a "Clear filters" link while one is on. The lists came from the grouped collection
-  (`src/lib/facets.ts`) until #78; now the API's `/cards` answer carries them as `facets`.
-  The choice lives in the URL beside the sort (`set=`, `rarity=`, the API matches them whole).
-- **Supabase, through its connection (cardorb-api#153).** The revoke of 2026-09-02 had also taken
-  EXECUTE on `handle_new_user()` from `supabase_auth_admin`, the role the `auth.users` trigger runs
-  as, so every signup since would have failed at the trigger; nobody signed up in between. One grant
-  to that role, applied. Same PR: every RLS policy reads `auth.uid()` once per query instead of per
-  row, and `collections.user_id` and `imports.user_id` got the index the advisor asked for.
-  Advisors after: performance clean; security still names leaked password protection (dashboard).
-- **A "Sort" menu on every card list** (Cards, Favorites, Wishlist, a folder): set order, name,
-  price both ways, newest or oldest first, through `sort=`/`order=` on `GET /v1/cards`
-  (cardorb-api#151). The choice lives in the URL (`src/lib/list-query.ts`, tested), so a sorted
-  page is a link.
-- **Home shows what the collection is worth (#38, cardorb-api#149/#150).** `GET /v1/stats`
-  carries `value` (euros, printing by printing, over the whole collection) and `unpriced`; the
-  fourth tile on Home shows the amount and, only when it applies, how many copies have no price.
-  cardorb-api#149 merged with a red check by mistake — a failed force-push left the test fix
-  behind — and #150 is that fix; the route code was right throughout.
-- **README on the documentation template (#34)**, and the GitHub About box in the house style:
-  no technology in the description or the topics. `scripts/verify.sh` now fails on a tracked
-  Finder copy (`name 2.ts`): six had reached main on 2 September 2026, all byte-identical to
-  their originals; removed.
-- **Time limits on every outbound call (#35, cardorb-api#148).** `src/lib/api.ts` gives the API
-  thirty seconds; the API gives each catalogue eight. Before, a server that accepted the
-  connection and never answered — TCGdex on 2026-09-02 — held a page until Vercel's five-minute
-  limit. The performance review's list is now closed; what remains of it is the check a signed-in
-  visit gives the per-person cache (#26).
-- **One `useDebouncedSearch`** (`src/hooks`, tested with fake timers) replaces the four copies of
-  "wait for the typing to pause, ask once, ignore a late answer" in the add-card modal, the
-  folder's add-cards dialog, the mobile search and the command palette. Same minimum lengths and
-  delays as before. `cards-search` is a different thing (it pushes `?q=` to the URL) and stays.
-- **The kit holds what is imported.** 200 of 252 vendored Untitled UI files were reachable from
-  nothing (computed from the import graph out of `src/app`, `src/components/app`, `src/providers`
-  and `src/lib`) and they kept seven dependencies alive: `motion`, `recharts`,
-  `embla-carousel-react`, `qr-code-styling`, `input-otp`, `@untitledui/file-icons`,
-  `@react-aria/utils`. Gone, with the policy written under R-STRUCT-001: only what is imported
-  stays, a component needed later comes back through the Untitled UI MCP.
-- **Empty states without the kit's module.** `AppEmptyState` draws the "lg" empty state itself:
-  the kit's `EmptyState` imports every file-type icon for a variant nobody uses, and that put
-  60 KB (gzip) of SVG on every page that can be empty. Measured from the client-reference
-  manifests: Cards 201 → 159 KB gzip, Wishlist the same; Home stays 132, the landing 38. The
-  budget of 150 KB is a marketing-site bar; the dashboard shell (sidebar, command menu, dropdowns,
-  all react-aria) is 132 of it, and the rest of Cards is the add-card modal and the detail panel.
-- **The public page reads the paged route (#29).** `/user/[username]` asks
-  `GET /v1/public/<username>/cards?limit=100`, thirty kilobytes instead of the whole collection's
-  nine hundred; `publicCardFromItem()` in `api-shapes.ts` makes the tile. The set count on the
-  profile line comes from the same answer (`sets`, added in cardorb-api#147). That API PR also
-  stops a TCGdex outage from being cached as "no pictures" for a day, which is what emptied the
-  newest set's tiles on 2026-09-02. Left alone on purpose: JS on first load is 228 KB Brotli, of
-  which 40 KB is the polyfill only old browsers download and ~150 KB is React, Next and React
-  Aria under Untitled UI — nothing to cut without leaving the kit.
-- **Four small things a user meets.** Deleting a folder asks first and says the cards stay. The
-  name asked at sign-up travels as user metadata and, when a session comes back, is set on the
-  profile straight away. Favorites, Wishlist, a folder and the public profile page on `?page=`
-  through one `CardsPagination`, the same as Cards; the profile's canonical names its page. The
-  three `scripts/backfill-*.mjs` are gone: they wrote to the database directly, against
-  R-DATA-003, for columns nothing reads any more.
-- **The landing prerenders and the public pages carry their metadata.** The signed-in redirect on
-  `/`, `/login` and `/signup` lives in the middleware now, so `page.tsx` at the root touches no
-  session and builds static. `robots.ts`, `sitemap.ts` (the six public pages) and a generated
-  `opengraph-image`; own titles and descriptions for `/login` and `/signup`; a canonical on every
-  public page; the profile page gets its own OG title and the brand only once. Preview deploys
-  carry `noindex`. Dev port is 3210: the portfolio project's server took 3111 and 3112.
-- **Mobbin pattern check** over every page (Bart wants this as a standing check, see memory). Three
-  PRs came out of it: the market price carries the name's weight on the tile and sits under the
-  title in the panel; the public profile shows display name, handle and "cards · sets"; the
-  Pokédex has a progress bar and the Cards count sits by the search. Settings, forgot-password and
-  Home already follow their references. Still open from the check: sort and set/rarity filters on
-  Cards, which need parameters on `GET /v1/cards` first.
-- **Card pictures through the image optimizer, and the functions in Dublin (#21).** A performance
-  review found the pictures came straight from `assets.tcgdex.net` — one server in France, no CDN,
-  unreachable that day — and the functions ran in `iad1` while the API sits in `dub1`. Every card
-  `<img>` is now `CardImage` (`src/components/app/card-image.tsx`) over `next/image`, with the
-  allowed hosts in `next.config.mjs`; `vercel.json` pins `regions: ["dub1"]`. One thumbnail went
-  from 176 KB PNG to 23 KB WebP.
-- **The layout's answers are kept per person (#26).** Profile, folders and stats go through
-  `perUser()` in `src/lib/user-cache.ts`: five minutes under one tag per user id, and every
-  server action that writes calls `forgetMine()`, which drops the tag with `updateTag` and
-  revalidates the layout. `src/app/(app)/dashboard/loading.tsx` shows the outline of a grid while a
-  page still fetches. Not measured with a session; the first signed-in visit after deploy is the
-  check that a write shows up on the next screen. Still open: JS on first load is 228 KB Brotli
-  against a 150 KB budget (settled in #29's note above).
-- **"Forgot password?" on `/login`** leads to `/forgot-password`: one email field, and
-  `requestPasswordReset` calls Supabase's `resetPasswordForEmail`. The answer is the same for a
-  known and an unknown address. The link in the email lands on `/auth/confirm` like every other.
-- **Prices on the cards.** `priceForCopy` in `src/lib/api-shapes.ts` picks one number per copy from
-  the API's `price`/`priceHolo` (the Near Mint midpoint, else the market price; a holo or
-  reverse-holo copy takes the holo price) and `formatPrice` writes it as `€12.50`. Shown on the grid
-  tile, as a "Price" column in the table and as a "Price" row in the detail panel. The public
-  profile still carries no price: its routes never send one.
-- **The API reference lives here now**, at `/docs/api`: `src/lib/api-reference.ts` reads the
-  contract from `https://api.cardorb.com/openapi.yaml` (fetched once an hour) and the page draws
-  it in the legal-page shell, which gained an optional version line and an "API" footer link.
-  `api.cardorb.com/` redirects here.
-- **The web app moved onto the API.** `lib/cards.ts`, `collections.ts`, `profile.ts`,
-  `public-profile.ts`, `pokedex.ts` and every server action call `api.cardorb.com`; `pokemontcg.ts`
-  is gone (the API matches a card against three catalogues and picks the picture and the price).
-  Adding a card sends name, set and number; the API does the rest. The Pokédex comes from the
-  catalogues rather than a stored number. The public page reads the three unkeyed public routes.
-- Earlier the same day: `/auth/confirm` and `/reset-password` (#15), where every auth email lands.
+- **The app answers when you cannot see the answer** (#297, #301, #302). There is a toast, with
+  one rule: a change you can see gets none. Nine files wire it. `Undo` on removing a card puts
+  the row back **whole** — the API's delete hands back the row it removed and a create can now
+  carry an acquired date (cardorb-api#248), so nothing is kept anywhere. Deliberately not a soft
+  delete: that would put "deleted" behind every read in a database the iOS app also reads.
+- **Every control belongs to the design system** (#299, #300). R-UI-001 says the whole rule now
+  and `verify.sh` enforces it: `scripts/kit-drift.mjs --check` against a baseline that only
+  shrinks. **The baseline is zero.** What the kit has, we use; what it does not, is a named
+  component of ours marked as ours — `CardTile`, `CopyRow`, `SearchTrigger`, `FormError`,
+  `AuthShell`. `/dashboard/design` shows all 29, each labelled.
+- **A profile turned private stayed publicly readable for five minutes** (#299). Public reads
+  carry `public:<username>` now and every write drops it.
+- **The session cookie was readable by any script** (#300). Measured on the running app, not
+  reasoned about. `@supabase/ssr` defaults to `httpOnly: false` for its browser client; we have
+  none. The public profile also had no script policy, on a premise that was wrong — it does not
+  prerender, it reads cookies, so it takes a nonce like every other per-request route.
+- **Accessibility** (#301, #302). Thirteen findings, **none of which `jsx-a11y` could catch**.
+  Two Level A: no skip link, and the card sheet's arrow keys stealing ← and → from the tabs and
+  the price chart, which made that chart's text alternative unreachable. Also: a checkbox and a
+  radio were **invisible when selected in the dark theme** (1.02:1, now 20.12:1) — found by
+  building the design page, and live in `rarity-picker` and every selectable table row.
+- **Forty kilobytes off ten routes** that cannot open a card sheet (#299), and the day's
+  deduplication: eleven copies of one alert paragraph, four identical auth shells (286 → 168
+  lines), ten of one number formatter, eight of one facets literal.
 
 ## Next
 
-Backlog from the review, ranked. Each is one PR.
-
-
-From the audit of 2026-09-06 (night): everything shipped that night (#166–#173; cardorb-api
-#194–#201). Every card in the collection has a Cardmarket product linked and a price. The SM
-tag-team promos SM168, SM201, SM230, SM240 and SM241 were picked among several products of one
-name by their place in the expansion's id sequence; if one of them shows a price that does not
-match Cardmarket's page, the other candidates are in `node scripts/cardmarket-ids-fill.mjs`'s
-output before the id was set (git history of `cardmarket-ids.generated.json`).
-
-Load time (2026-09-06, morning; web #175–#178, cardorb-api #202–#203). Measured on production
-from the Browser pane, warm, whole HTML fetched:
-
-| page | before | after |
-|---|---|---|
-| Home | 164 ms, 68 KB | 157 ms, 70 KB |
-| Collection | 198 ms, 70 KB | 145 ms, 73 KB |
-| Browse | 439 ms, 670 KB | 222 ms, 582 KB |
-| All cards | 626 ms, 215 KB | 244 ms, 190 KB |
-| Pokédex | 1363 ms, 1.6 MB | 362 ms, 1.17 MB |
-
-What did it: skeletons that are the page's frame; two srcset candidates per picture instead
-of nine; no page waits for the facets before its first byte, Browse and Collection stream; the
-Pokédex reads its cards in one request; the API keeps an assembled collection per instance for
-ten minutes by the rows' version. The first request after an API deploy still rebuilds every
-set (13 s measured once): `unstable_cache` keys carry the function's source, so a deploy that
-touches collection.ts empties the set-facts entries. A warm-up cron every ten minutes covers
-it (cardorb-api, `/api/v1/cron/warm`).
-
-Then (#180–#182): the router keeps a shown page for a minute (`staleTimes.dynamic`), the tab bar's
-links prefetch the whole page and the sidebar prefetches its seven routes once, a list's first
-batch is a per-person cache read, and nothing under a title moves when the count lands (the
-count line's outline keeps its height; the Pokédex's count is two lines always). A soft
-navigation between the tabs commits in about 25 ms with no request (MutationObserver; a timer
-poll in the Browser pane reads 1 s for everything, which is the pane's throttling, not the page).
-
-Load time, closed on 2026-09-06 evening (#211): the Pokédex draws ninety-six slots at a time, a
-screen ahead of a sentinel (`DexGrid`); its HTML went from 1.17 MB to 411 KB in the dev pane,
-688 `<img>` tags to 59. The CSP noise is traced: on production two `<script src=… async>`
-tags for streamed chunks carry no nonce (Next emits them for a Suspense boundary's chunk
-preload); the nonced loader fetches the same chunks, so nothing breaks. A Next fix or a
-`script-src-elem` with the chunk host would silence it; left as is.
-
-Also that evening (#210, #212): a folder filled by hand takes a card straight from its own
-page (filed in it at once); the sheet shows the illustrator, HP, stage, regulation mark and a
-link to the Cardmarket page, from `GET /v1/cards/{tcgId}` (`cardFacts`).
-
-Afternoon of 2026-09-06 (#185, #186; cardorb-api #205–#207). The tab bar's pill slides to the
-tapped tab (transform only, 200 ms on `--ease-move`); Filters, Sort and View are `RowButton`s,
-circles on a phone; `OverlayThemeColor` sets the theme-color meta while a sheet or dialog is
-open so Safari's bars darken with the page (Safari animates the bar itself, at its own pace).
-Home leads with the value: the list's name is a menu (All cards, Favorites, each folder;
-`?value=` in the URL), the number in display size, the change over 7D/1M/3M/6M/Max in green
-or red with the sign in the text, the line edge to edge in that colour, the table behind Show as
-table; the fourth tile is Pokémon collected, counted as the Pokédex page counts. The API answers
-`GET /v1/value-history?folder=<id|favorites>` from the daily card prices (`folderSeries`);
-`listCardPrices` pages past PostgREST's 1,000-row cap (#206), and the cache key moved to v2 so
-the truncated entries did not stand for an hour (#207).
-
-Later that afternoon (#188, #189; cardorb-api #208–#210): the value menu offers the wishlist
-("Wishlist cost": every wish once, `?folder=wishlist`); a card's sheet shows its price over the
-last ninety days (`PriceHistory`, `GET /v1/cards/{tcgId}/prices`) with the change since the
-first reading; Sort has Highest price and Lowest price; Show as table is gone from the value
-chart. Found on the way: the API's card-price cache was keyed by person and day but not by the
-ids asked, so one card's line came back as the whole collection's (v3 key hashes the ids, #210).
-
-The card's sheet (#191–#194): the whole screen on a phone, the card first on a blurred, dimmed
-copy of its own art that fades into the sheet (`fade-to-glass-thick`); Close at the top left,
-the star and a dots menu (Add a copy, Remove a copy, Remove from collection; on a wish Mark as
-owned, Remove from wishlist) at the top right; under the title two tabs, Details (folder, where
-the card is, attributes) and Price (the line, taller, market price, copies, holding value,
-purchase price, the change since purchase). `SlideoutMenu.Header` takes `close="circle"` or
-`close="none"`.
-
-Closed later that day (cardorb-api #211): the nightly cron reads the same assembly every
-request reads (`assembleFor`), blended prices and memo included, and writes that figure for
-the collection and per card (`snapshotFromSets`, `cardPricesFromSets`), dated by the night in
-UTC. From the next run the lines end where the live number stands; readings before 2026-09-07
-are the guide-only ones. Price history reaches back only as far as our own table: the first
-nightly per-card reading is 2026-08-16. Cardmarket's guide is today's file only, TCGdex and
-pokemontcg.io carry no history, so nothing earlier can be fetched; the line grows a night a night.
-
-The card's sheet also has the kit's Tabs (#198; `components/application/tabs`), type icons
-drawn in `type-icon.tsx`, the series logo beside Generation (`seriesLogo` from the shelf), and
-the buttons over the art above the card's block (they were under it and took no taps).
-
-Copies (evening of 2026-09-06; web #207–#208, cardorb-api #214–#215). A `cards` row is still
-N identical copies; a copy that differs gets a row of its own. API: `language` on every card
-shape (en, de, fr, it, es, pt, nl, ja, ko, zh, null reads as English); `POST
-/v1/collection/items/{id}/copies` (one more, the differences applied, pulled now) and
-`…/split` (some of a row's copies to a row of their own, the source's acquired date kept;
-`split_card` in Postgres does both writes in one transaction); `GET /v1/cards?set=&number=`
-names one card's every row; a draft may carry `collectionId`; PATCH takes `acquiredAt`. Web:
-the sheet's Copies tile (flag, finish, condition or grade, folder, count; a tap shows that
-row; One more, Different…, One is different…), `CopyFormDialog`, `FlagIcon` from ten
-`flag-icons` SVGs (not the stylesheet, which pulls in five hundred), the Generation row as the
-series' logo alone, Acquired as a date field, a flag on a non-English tile. A card added from a manual
-folder's page is filed in it (#210).
-
-Languages, step 1 (evening of 2026-09-06; cardorb-api #216, web this PR). The shelf and a set
-page can be another language's catalogue: `GET /v1/catalog/sets?language=ja|zh-tw|zh-cn|ko`
-and `…/sets/{id}?language=` read TCGdex's own catalogues (184 Japanese sets, 98 and 57
-Chinese, 95 Korean), names in that language only (there is no English name for a Japanese set),
-scans at the address every TCGdex scan has. On the web: a row of flag chips (`LanguageChips`)
-on Browse (`?language=` in the URL) and in the search sheet's shelf; set pages carry the
-language; another language's tiles are read-only. Step 2, not done: adding such a card to the
-collection (the assembly resolves facts by English set name against TCGdex `en`; it needs the
-row's language to pick the catalogue), search per language, and prices (Japanese cards have
-Cardmarket product ids in TCGdex's pricing block; Chinese have next to none). Home's search sits
-in the bar with the avatar, lists every set until something is typed, and Browse left the tab
-bar (#223–#225).
-
-Later that evening (web #227–#235, cardorb-api #217–#222). Japanese sets are named in English
-where the translation list knows them (`set-names.ja.json`, 164 of 184; Chinese and Korean take
-it for the ids they share, plus `set-names.zh.json` and `set-names.zh-cn.json`), the set's own
-name beside it as `localName`. No logo exists for those sets anywhere; the first card stood in
-for a while and read as the wrong thing, so the box stays empty. Another language's catalogue
-carries no ownership marks until the index knows languages (a Japanese "Black Bolt" counted the
-English cards). The language chips say the word in full and scroll on one line. The search opens
-the same full sheet a card does, without a title, the chips in its head; the sheets' shadow box
-and the card's head are rounded like the sheet. A copy's language follows its catalogue
-(`languagesFor`): the Western printings for an English-catalogue card, one fixed language for
-the others, and only the printings the card has, which `GET /v1/cards/{tcgId}` reports as
-`languages` by asking each Western TCGdex catalogue for the id (Pikachu with Grey Felt Hat:
-English and Portuguese).
-
-Navigation, the evening of 2026-09-06 (this PR). All cards is a tab of its own beside Home on
-the phone; the tab bar reads Home, Wishlist, All cards, Collections (Wishlist second, the
-owner's call later that evening). The sidebar's top group is Home, Wishlist, All cards, Browse; under the Collections
-heading Favorites, the Pokédex and the folders you made. The phone's Collections page lost its
-All cards tile, and the pages under it say Back to Collections. A page bar's buttons (Back, the
-plus, the dots) are 44 px, the avatar's and Home's search's size. The card sheet scrolls as one
-page, art and all; a sticky bar (`sheet-bar.tsx`) holds Close, the star and the menu, and takes
-the card's name and the page's colour as the title slides under it, the page bar's collapse for
-a sheet. The fill under a chart's line runs out to nothing at the bottom. The Supabase migration
-history of the API project is in step with its files again (`supabase migration repair`: two
-entries recorded under the timestamp of their apply, three applied by hand, all five marked).
-
-Price history, later that night (cardorb-api #224; web #238). A card's line goes back to
-November 2022 where the American market has it: the API's prices route answers every reading,
-and `card_prices` carries `source`: the nightly Cardmarket guide from 2026-08-16, before it
-TCGplayer's market price weekly from February 2024 (tcgcsv.com's archive) and weekly averages
-of TCGplayer sales from November 2022 to November 2023 (tcgdex/price-history, older sets),
-dollars turned into euros at each day's ECB rate. One line, no second market on screen; the
-two markets disagree card by card (a Base Set Charizard: ~€340 Cardmarket, ~€770 from
-TCGplayer), so a line can step at 2026-08-16, accepted until a calibration pass. Nobody sells
-Cardmarket's own past: PokemonPriceTracker has 12 months in beta at $99 a month, pokedata.io
-is personal use only. `scripts/backfill-card-prices.mjs` in the API reruns the fill.
+- **Condition and grade do not reach the price.** A Poor copy and a PSA 10 show what a Near Mint
+  one does. Neither Cardmarket nor TCGplayer publishes either — checked, both feeds carry
+  printing and no condition. PokemonPriceTracker does, RAW and PSA, at $9.99 a month, from the
+  American market. Needs a decision before it needs code.
+- **Languages, step 2.** Another language's catalogue is read-only: you cannot add such a card
+  (the assembly resolves facts by English set name against TCGdex `en` and needs the row's
+  language to pick the catalogue), search is not per language, and prices exist for Japanese
+  (Cardmarket ids in TCGdex's pricing block) but next to none for Chinese.
+- **No rate limiting anywhere.** `readListQuery` accepts any page number with no ceiling, and
+  `?list=pokedex` fans one anonymous request out to `ceil(total / 500)` API calls. An
+  unauthenticated walk of `?page=&q=` bills Vercel and can push the API over. Cap the page,
+  answer empty past the total, add a Vercel Firewall rule on `/user/*`.
+- **The public Pokédex tab breaks for a logged-out visitor.** `lib/pokedex.ts:12` reads the dex
+  names through `perUser`, which throws 401 without a session, on a page anyone can open.
+- **The avatar upload trusts the declared type** and its 4,000,000-character cap decodes to ~3 MB
+  while the message says 2 MB. Small — the bucket is another origin — but both are one line.
+- **JS on first load is 228 KB Brotli** against a 150 KB budget.
 
 ## Open
 
-- **The holo CSS is GPL-3.0.** GPL is about what the browser receives, not about free or
-  paid: Cardorb's stylesheet now carries GPL code, and a paying product would owe its source
-  under GPL or need a licence from the author. Accepted while Cardorb is free; before it
-  charges, swap the folder for an own implementation of the same recipe (the class names, data
-  attributes and driver variables in `defaults.css` are the contract) or write to @simeydotme.
-- **A revoked session stays open on the web for up to an hour (#79).** The middleware and the
-  API both verify the token locally with `getClaims`, so a sign-out everywhere from the iOS app,
-  a ban or a password change is felt on the next token refresh, not the next page; the access
-  token lives 3600 s by Supabase's default. Accepted for the 70 to 360 ms `getUser` cost per page.
-  To shorten the window: lower the JWT expiry in the Supabase project (Auth → Sessions), which
-  both apps follow without a change.
-- Supabase side is recorded in `docs/supabase.md`: anon holds column-level SELECT on the public
-  card columns only, the `avatars` bucket has type and size limits, the SECURITY DEFINER functions
-  are not callable by anon. The advisor still lists few MFA options and `citext` in `public`;
-  neither is on the list.
+- **The holo CSS is GPL-3.0.** Accepted while Cardorb is free; before it charges, swap the folder
+  for an own implementation of the same recipe or write to @simeydotme.
+- **A revoked session stays open on the web for up to an hour (#79).** Both the middleware and
+  the API verify the token locally with `getClaims`, so a sign-out everywhere, a ban or a
+  password change is felt on the next token refresh. To shorten it: lower the JWT expiry in the
+  Supabase project.
+- **A privacy flip made in the iOS app is invisible here for five minutes.** `forgetMine()` drops
+  the public tag on writes made *through this app*; the same API serves iOS and invalidates
+  nothing here. Wants a revalidation webhook from cardorb-api.
+- **Two accessibility gaps, both written down rather than hidden.** Clearing a search back to the
+  full list is still silent (the list is keyed, so the live region is replaced, not updated), and
+  Chrome still exposes the sidebar kit's unnamed `<aside>` as a nested `complementary` inside the
+  `<nav>` — HTML-AAM says `generic`; removing it needs the vendored file.
+- **Not verified, and each needs a running system**: that cardorb-api scopes
+  `/v1/collection/items/{id}` by `id AND user_id` rather than id alone (a card id from a public
+  profile is in that page's payload, so a signed-in stranger has one to hand); that Vercel sets
+  HSTS; and that the `/api/v1/*` rewrite, which sends cookies to api.cardorb.com from our origin,
+  never meets a route there that accepts a cookie as a credential.
+- **`img-src` allows all of `https://*.supabase.co`.** Images only, and the optimizer pins the
+  path, but it should name our project.
+- Supabase's own side is in `docs/supabase.md`. The advisor still lists few MFA options and
+  `citext` in `public`; neither is on the list.
+- Accepted accessibility decisions live in `docs/accessibility-decisions.md` and are not raised
+  again. Deliberate departures from the kit carry `kit-drift: <why>` in a comment; two exist.
