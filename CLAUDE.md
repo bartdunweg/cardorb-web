@@ -37,6 +37,14 @@ src/
 
 Absolute imports through `@/`. Untitled UI import and composition conventions: `docs/untitledui.md`.
 
+**`/dashboard/design`** is the design system: every component the app uses, each marked as the
+kit's or ours, and the list of controls still built by hand. It is reached by typing the address —
+deliberately not in the sidebar, the tab bar or the prefetch list, because it is a tool for
+building the app and not a page of it. Signing in is the only gate it has, which is enough:
+nothing on it is anyone's data. Its "still built by hand" list reads
+`scripts/kit-drift-baseline.json`, the file `verify.sh` enforces (R-UI-001), so the page cannot
+quietly stop being true.
+
 ## How the skills relate
 
 Pinned skills from other authors lead on craft. Meridian's skills state this
