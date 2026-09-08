@@ -644,6 +644,12 @@ export const statsAnswer = z.object({
 
 export const foldersAnswer = z.object({ folders: z.array(folderItemSchema) });
 export const pokedexAnswer = z.object({ entries: z.array(dexEntrySchema) });
+/**
+ * Every Pokémon's name by national number, and nothing else. The route that also says how many
+ * of each you own is a different one and needs a session; this is a catalogue, so a stranger
+ * looking at a public profile can read it too.
+ */
+export const speciesAnswer = z.object({ entries: z.array(z.object({ id: z.number(), name: z.string() })) });
 export const catalogueSetsAnswer = z.object({ sets: z.array(catalogueSetSchema) });
 export const searchAnswer = z.object({ cards: z.array(browseCardSchema) });
 

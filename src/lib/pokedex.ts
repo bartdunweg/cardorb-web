@@ -1,14 +1,19 @@
 import { api } from "@/lib/api";
-import { pokedexAnswer } from "@/lib/api-shapes";
-import type { DexEntry } from "@/lib/api-shapes";
-import { perUser } from "@/lib/user-cache";
+import { speciesAnswer } from "@/lib/api-shapes";
 
 /**
- * Every Pokémon's name by national number, for the slots a folder has no card of. The API decides
- * which card is which Pokémon, from the catalogues rather than a stored number. Kept five minutes
- * per person like the folders and the stats; every write drops the tag.
+ * Every Pokémon's name by national number, for the slots a binder has no card of.
+ *
+ * From the catalogue route, which needs no session — and that is the whole point. This read
+ * `/pokedex` before, which answers every slot *with how many cards the caller owns* and is
+ * authorised for exactly that reason. On a public profile there is no caller: the read threw a
+ * 401, the page swallowed it, and a stranger opening somebody's public Pokédex was shown "No
+ * cards found" as though the collection were empty. The names are nobody's data, so they have
+ * their own route now (cardorb-api#249).
+ *
+ * One answer for everybody, so it is not kept per person either.
  */
 export async function getDexNames(): Promise<Map<number, string>> {
-    const entries = await perUser("pokedex", async (token) => (await api("/pokedex", { token, schema: pokedexAnswer })).entries);
+    const { entries } = await api("/public/species", { auth: false, schema: speciesAnswer });
     return new Map(entries.map((e) => [e.id, e.name]));
 }
