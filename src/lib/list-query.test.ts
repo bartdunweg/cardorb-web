@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { listHref, readListQuery, readPublicListQuery } from "./list-query";
+import { MAX_PAGE, listHref, readListQuery, readPublicListQuery } from "./list-query";
 
 describe("readListQuery", () => {
     it("reads page and sort, and falls back to set order and page one for anything else", () => {
@@ -20,6 +20,22 @@ describe("readListQuery", () => {
             unpriced: false,
         });
         expect(readListQuery({})).toMatchObject({ page: 1, sortKey: "set" });
+    });
+});
+
+describe("the page ceiling", () => {
+    it("caps a page nobody could have reached", () => {
+        // Every distinct page is a cache miss and one call to an API in another region, and
+        // `?page=` was unbounded on a page a stranger can open.
+        expect(readListQuery({ page: "999999999" }).page).toBe(MAX_PAGE);
+        expect(readListQuery({ page: String(MAX_PAGE + 1) }).page).toBe(MAX_PAGE);
+    });
+
+    it("leaves a page somebody could have reached alone", () => {
+        expect(readListQuery({ page: "7" }).page).toBe(7);
+        expect(readListQuery({ page: String(MAX_PAGE) }).page).toBe(MAX_PAGE);
+        expect(readListQuery({ page: "-3" }).page).toBe(1);
+        expect(readListQuery({ page: "nonsense" }).page).toBe(1);
     });
 });
 
