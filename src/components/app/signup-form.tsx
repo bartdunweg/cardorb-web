@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { CheckCircle } from "@untitledui/icons";
+import { CheckCircle, Circle } from "@untitledui/icons";
 import { type AuthState, signUp } from "@/app/(auth)/actions";
 import { AuthEmailField, AuthShell } from "@/components/app/auth-shell";
 import { FormError } from "@/components/app/form-error";
@@ -9,12 +9,12 @@ import { Button } from "@/components/base/buttons/button";
 import { HintText } from "@/components/base/input/hint-text";
 import { InputBase, TextField } from "@/components/base/input/input";
 import { Label } from "@/components/base/input/label";
-import { cx } from "@/utils/cx";
 
 // Clean, single-column sign-up: the form centered in the viewport, no marketing panel.
 export const SignupForm = () => {
     const [password, setPassword] = useState("");
     const [state, formAction, pending] = useActionState<AuthState, FormData>(signUp, undefined);
+    const long = password.length >= 8;
 
     return (
         <AuthShell
@@ -29,13 +29,15 @@ export const SignupForm = () => {
                         <Label isRequired={false}>Password</Label>
                         <InputBase type="password" autoComplete="new-password" placeholder="••••••••••••" inputClassName="placeholder:text-placeholder/50" />
                         <HintText className="flex items-center gap-1">
-                            <CheckCircle
-                                className={cx(
-                                    "size-4 text-fg-quaternary group-invalid:text-fg-error-secondary",
-                                    password.length >= 8 && "text-fg-success-primary",
-                                )}
-                            />
+                            {/* The glyph itself changes, not only its colour: an empty circle while the rule is
+                                unmet, a tick once it is. Green alone said it to whoever could see green. */}
+                            {long ? (
+                                <CheckCircle className="size-4 text-fg-success-primary" />
+                            ) : (
+                                <Circle className="size-4 text-fg-quaternary group-invalid:text-fg-error-secondary" />
+                            )}
                             Must be at least 8 characters.
+                            <span className="sr-only">{long ? " — met" : " — not met"}</span>
                         </HintText>
                     </TextField>
                 </div>

@@ -97,26 +97,58 @@ export function CardsList({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [more, pending, failed, cards.length]);
 
-    if (first.total === 0) return <div className="flex flex-1 flex-col">{narrowed ? noHits : empty}</div>;
+    /* The count a screen reader hears. The zero case is in it, and the region is the first thing
+       returned rather than the last: it used to sit after the list, behind the early return that a
+       search to nothing takes, so the region that would have said "no cards" was the one thing the
+       empty list unmounted. */
+    const announcement = pending
+        ? "Loading more cards…"
+        : first.total === 0
+          ? narrowed
+              ? "No cards found."
+              : ""
+          : `Showing ${cards.length} of ${first.total} cards`;
+
+    /* Moving it above the early return is not enough on its own. `folder-body.tsx` keys the whole
+       view on the list's URL, so a search does not update this component, it replaces it — and a
+       live region that arrives with its text already in it is never read out. Where a search brought
+       us here (`narrowed`), the region is therefore mounted empty and the sentence written a beat
+       later, so what a screen reader sees is a region that was already standing and then changed.
+       A plain effect is not enough either: React commits the insert and the text in one batch, which
+       is one mutation record and one region-with-content again. Landing on a whole folder writes the
+       count straight away instead, so arriving somewhere is not narrated; the node then stays put,
+       and Show more speaks by changing it. */
+    const [ready, setReady] = useState(false);
+    useEffect(() => {
+        const t = setTimeout(() => setReady(true), 100);
+        return () => clearTimeout(t);
+    }, []);
 
     return (
         <>
-            {view === "grid" ? <CardsGrid cards={cards} onSelect={onSelect} size={size} /> : <CardsTable cards={cards} onSelect={onSelect} />}
-            {pending ? <CardsSkeleton count={6} /> : null}
-            {/* Where the next batch is asked for. Also the manual way in: a browser without the observer, or a
-                reader who would rather press. One button through loading and failure alike, so a keyboard
-                that pressed it keeps its place; it unmounts only when the last card is in. */}
-            {more ? (
-                <div ref={sentinel} className="flex flex-col items-center gap-3 py-2">
-                    {failed ? <p className="text-sm text-tertiary">The next cards did not load.</p> : null}
-                    <Button color={failed ? "secondary" : "tertiary"} size="sm" onClick={loadMore} aria-disabled={pending || undefined}>
-                        {pending ? "Loading…" : failed ? "Try again" : "Show more"}
-                    </Button>
-                </div>
-            ) : null}
+            {/* sr-only is position: absolute, so it is not a flex item and adds neither height nor gap. */}
             <p aria-live="polite" className="sr-only">
-                {pending ? "Loading more cards…" : `Showing ${cards.length} of ${first.total} cards`}
+                {narrowed && !ready ? "" : announcement}
             </p>
+            {first.total === 0 ? (
+                <div className="flex flex-1 flex-col">{narrowed ? noHits : empty}</div>
+            ) : (
+                <>
+                    {view === "grid" ? <CardsGrid cards={cards} onSelect={onSelect} size={size} /> : <CardsTable cards={cards} onSelect={onSelect} />}
+                    {pending ? <CardsSkeleton count={6} /> : null}
+                    {/* Where the next batch is asked for. Also the manual way in: a browser without the observer, or a
+                        reader who would rather press. One button through loading and failure alike, so a keyboard
+                        that pressed it keeps its place; it unmounts only when the last card is in. */}
+                    {more ? (
+                        <div ref={sentinel} className="flex flex-col items-center gap-3 py-2">
+                            {failed ? <p className="text-sm text-tertiary">The next cards did not load.</p> : null}
+                            <Button color={failed ? "secondary" : "tertiary"} size="sm" onClick={loadMore} aria-disabled={pending || undefined}>
+                                {pending ? "Loading…" : failed ? "Try again" : "Show more"}
+                            </Button>
+                        </div>
+                    ) : null}
+                </>
+            )}
         </>
     );
 }

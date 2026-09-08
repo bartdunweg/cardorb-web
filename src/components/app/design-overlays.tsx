@@ -85,7 +85,9 @@ export const overlaySections: SectionSpec[] = [
                                             </AriaHeading>
                                             <p className="text-sm text-tertiary">Pitch Black · #085</p>
                                         </SlideoutMenu.Header>
-                                        <SlideoutMenu.Content>
+                                        {/* role="presentation": the page has a <main> already. */}
+                                        {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- the rule offers <img alt="">, which this is not: the role is here only to stop the kit's default role="main". */}
+                                        <SlideoutMenu.Content role="presentation">
                                             <p className="text-sm text-tertiary">
                                                 Content scrolls between a header that stays and a footer that stays. In the app this is where the tabs of a card
                                                 live.

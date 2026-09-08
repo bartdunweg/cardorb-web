@@ -102,7 +102,11 @@ export function SetCardTile({
                     <span
                         className={cx(
                             "absolute top-1.5 right-1.5 flex h-5 min-w-5 items-center justify-center gap-0.5 rounded-full px-1 text-2xs font-semibold shadow-xs",
-                            state === "owned" ? "bg-primary-solid text-primary_on-brand" : "bg-primary text-fg-quaternary ring-1 ring-secondary",
+                            // The wishlist heart is a meaningful graphic — on a grid of 129 tiles it is
+                            // the one mark that says "you already want this" — so it owes 3:1 against the
+                            // tile it sits on. fg-quaternary is 2.58:1 on white; fg-tertiary clears it in
+                            // both themes.
+                            state === "owned" ? "bg-primary-solid text-primary_on-brand" : "bg-primary text-fg-tertiary ring-1 ring-secondary",
                         )}
                     >
                         {state === "owned" ? <Check className="size-3" aria-hidden="true" /> : <Heart className="size-3" aria-hidden="true" />}

@@ -48,38 +48,48 @@ export function AppSidebar({ account, collections }: { account: Promise<Account>
     return (
         <>
             <PrefetchRoutes hrefs={SIDEBAR_ROUTES} />
-            <SidebarNavigationSectionDividers
-                activeUrl={pathname}
-                items={navItems}
-                hideMobileHeader
-                search={<SidebarSearchTrigger />}
-                afterItems={
-                    <>
+            {/* The kit's root is an <aside>, so on desktop the whole navigation was a complementary
+                landmark and "jump to navigation" found nothing at all. The kit file is not ours to edit,
+                so the landmark is made from here, named as the phone's tab bar is. HTML-AAM says an
+                unnamed <aside> inside a <nav> maps to generic; Chrome has not shipped that yet and still
+                exposes it, so the sidebar reads as a navigation landmark with a nameless complementary
+                inside it until it does — one landmark too many, where before there was no navigation at
+                all. max-lg:hidden because both children are already hidden below lg: without it an empty
+                second "Primary" would stand beside the tab bar's. */}
+            <nav aria-label="Primary" className="max-lg:hidden">
+                <SidebarNavigationSectionDividers
+                    activeUrl={pathname}
+                    items={navItems}
+                    hideMobileHeader
+                    search={<SidebarSearchTrigger />}
+                    afterItems={
+                        <>
+                            <Suspense fallback={null}>
+                                <FolderRows collections={collections} activeUrl={pathname} />
+                            </Suspense>
+                            {/* An item like the others: the same padding, icon size and type, at the list's end. */}
+                            <li className="py-px">
+                                <FolderDialog mode="create">
+                                    <AriaButton className="group relative flex max-h-9 w-full cursor-pointer items-center rounded-md bg-primary p-2 outline-focus-ring transition duration-100 ease-linear select-none hover:bg-primary_hover focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2">
+                                        <Plus
+                                            aria-hidden="true"
+                                            className="mr-2 size-5 shrink-0 text-fg-quaternary transition-inherit-all group-hover:text-fg-quaternary_hover"
+                                        />
+                                        <span className="flex-1 text-left text-sm font-semibold text-secondary transition-inherit-all group-hover:text-secondary_hover">
+                                            New binder
+                                        </span>
+                                    </AriaButton>
+                                </FolderDialog>
+                            </li>
+                        </>
+                    }
+                    footer={
                         <Suspense fallback={null}>
-                            <FolderRows collections={collections} activeUrl={pathname} />
+                            <AccountSlot account={account} />
                         </Suspense>
-                        {/* An item like the others: the same padding, icon size and type, at the list's end. */}
-                        <li className="py-px">
-                            <FolderDialog mode="create">
-                                <AriaButton className="group relative flex max-h-9 w-full cursor-pointer items-center rounded-md bg-primary p-2 outline-focus-ring transition duration-100 ease-linear select-none hover:bg-primary_hover focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2">
-                                    <Plus
-                                        aria-hidden="true"
-                                        className="mr-2 size-5 shrink-0 text-fg-quaternary transition-inherit-all group-hover:text-fg-quaternary_hover"
-                                    />
-                                    <span className="flex-1 text-left text-sm font-semibold text-secondary transition-inherit-all group-hover:text-secondary_hover">
-                                        New binder
-                                    </span>
-                                </AriaButton>
-                            </FolderDialog>
-                        </li>
-                    </>
-                }
-                footer={
-                    <Suspense fallback={null}>
-                        <AccountSlot account={account} />
-                    </Suspense>
-                }
-            />
+                    }
+                />
+            </nav>
         </>
     );
 }
