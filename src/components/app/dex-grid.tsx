@@ -143,6 +143,7 @@ export function DexView({
     dex,
     narrowed,
     initialSize = "md",
+    listKey,
     toolbar,
     noHits,
     empty,
@@ -151,6 +152,8 @@ export function DexView({
     dex: Promise<DexList>;
     narrowed: boolean;
     initialSize?: CardsSize;
+    /** The list's URL, keying the slots and nothing above them. See `CardsView`. */
+    listKey?: string;
     toolbar?: ReactNode;
     /** Whether a tile leads into the owner's collection; not on a public page. */
     linked?: boolean;
@@ -167,7 +170,7 @@ export function DexView({
                 <ViewMenu view="grid" size={size} onView={() => {}} onSize={setSize} layouts={false} />
             </div>
             <Suspense fallback={<CardsSkeleton />}>
-                <DexSlots dex={dex} size={size} narrowed={narrowed} noHits={noHits} empty={empty} linked={linked} />
+                <DexSlots key={listKey} dex={dex} size={size} narrowed={narrowed} noHits={noHits} empty={empty} linked={linked} />
             </Suspense>
         </div>
     );
