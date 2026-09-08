@@ -39,9 +39,13 @@ export async function updateProfile(input: unknown): Promise<ActionResult> {
         await api("/username", { method: "POST", body: { username: p.username } });
     } catch (err) {
         return failed(err);
+    } finally {
+        // Two writes, so a failure is not the same as nothing having happened: the name can land
+        // and the username then come back 409. Dropping the cache only when both succeed left the
+        // sidebar showing the old name for five minutes while the API already held the new one.
+        await forgetMine();
     }
 
-    await forgetMine();
     return { ok: true };
 }
 
@@ -74,10 +78,13 @@ export async function uploadAvatar(image: string): Promise<ActionResult & { avat
 
     try {
         const { avatarUrl } = await api("/profile/avatar", { method: "POST", body: { image: parsed.data }, schema: avatarAnswer });
-        await forgetMine();
         return { ok: true, avatarUrl };
     } catch (err) {
         return failed(err);
+    } finally {
+        // The picture is stored before the answer is parsed, so an answer this app cannot read
+        // (ApiShapeError) is still a write that happened. Drop the cache on the way out either way.
+        await forgetMine();
     }
 }
 

@@ -2,7 +2,17 @@
 
 import { z } from "zod";
 import { ApiError, api } from "@/lib/api";
-import { type PokemonCard, cardFactsAnswer, copyAnswer, pokemonCardFromBrowse, pricePointsAnswer, searchAnswer } from "@/lib/api-shapes";
+import {
+    type PokemonCard,
+    type RemovedCard,
+    cardFactsAnswer,
+    copyAnswer,
+    pokemonCardFromBrowse,
+    pricePointsAnswer,
+    removedAnswer,
+    removedCardSchema,
+    searchAnswer,
+} from "@/lib/api-shapes";
 import { type Card, getMyCards } from "@/lib/cards";
 import { type CopyEdits, copyEdits, sameCard } from "@/lib/copies";
 import { WESTERN_LANGUAGES } from "@/lib/languages";
@@ -115,12 +125,68 @@ export async function setCopies(cardId: string, quantity: number): Promise<Resul
 
 // Removes one row: an owned copy or a wish. The API wants a JSON content type on a delete, so
 // the body is an empty object.
-export async function removeCard(cardId: string): Promise<Result> {
+export async function removeCard(cardId: string): Promise<Result & { card?: RemovedCard }> {
     const parsed = z.string().uuid().safeParse(cardId);
     if (!parsed.success) return { ok: false, error: "Invalid card." };
 
+    /* The row as it was, handed back by the delete because that is the last moment it exists.
+       It is what an undo puts back, and nothing is kept anywhere for it — the caller holds it
+       for as long as its toast is on screen and then it is gone, which is the honest lifetime
+       of a way back.
+
+       An API that has not deployed this yet answers without a card. A removal is still a
+       removal then; it just cannot be undone, so `card` is optional rather than required. */
+    let card: RemovedCard | undefined;
     try {
-        await api(`/collection/items/${parsed.data}`, { method: "DELETE", body: {} });
+        const answer = await api(`/collection/items/${parsed.data}`, { method: "DELETE", body: {}, schema: removedAnswer });
+        card = answer.card ?? undefined;
+    } catch (err) {
+        return failed(err);
+    }
+
+    await forgetMine();
+    return { ok: true, card };
+}
+
+/**
+ * Puts a removed row back, whole: an ordinary create carrying every field the delete handed
+ * back, `acquiredAt` among them, so the copy does not claim to have been pulled today.
+ *
+ * The row that comes back has a new id. Nothing outside the row refers to one, and the screen
+ * that offered the undo has moved on by the time it lands.
+ */
+export async function restoreCard(input: RemovedCard): Promise<Result> {
+    const parsed = removedCardSchema.safeParse(input);
+    if (!parsed.success) return { ok: false, error: "That card cannot be put back." };
+
+    const c = parsed.data;
+    try {
+        await api("/cards", {
+            method: "POST",
+            body: {
+                name: c.name,
+                set: c.setName,
+                number: c.number,
+                types: c.types ?? [],
+                // `collection` is the API's word for owned; a wish goes back to the wishlist.
+                collection: c.owned,
+                ...(c.rarity ? { rarity: c.rarity } : {}),
+                ...(c.gen ? { gen: c.gen } : {}),
+                ...(c.finish ? { finish: c.finish } : {}),
+                ...(c.foilPattern ? { foilPattern: c.foilPattern } : {}),
+                ...(c.quantity ? { quantity: c.quantity } : {}),
+                ...(c.condition ? { condition: c.condition } : {}),
+                ...(c.grade ? { grade: c.grade } : {}),
+                ...(c.language ? { language: c.language } : {}),
+                ...(c.purchasePrice != null ? { purchasePrice: c.purchasePrice } : {}),
+                ...(c.purchaseDate ? { purchaseDate: c.purchaseDate } : {}),
+                ...(c.notes ? { notes: c.notes } : {}),
+                ...(c.isFavorite ? { isFavorite: true } : {}),
+                ...(c.excluded ? { excluded: true } : {}),
+                ...(c.acquiredAt ? { acquiredAt: c.acquiredAt } : {}),
+                ...(c.collectionId ? { collectionId: c.collectionId } : {}),
+            },
+        });
     } catch (err) {
         return failed(err);
     }
@@ -151,26 +217,6 @@ export async function setFavorite(cardId: string, isFavorite: boolean): Promise<
 
     try {
         await api(`/collection/items/${parsed.data.cardId}`, { method: "PATCH", body: { isFavorite: parsed.data.isFavorite } });
-    } catch (err) {
-        return failed(err);
-    }
-
-    await forgetMine();
-    return { ok: true };
-}
-
-/**
- * Keep this copy off the public profile, or put it back.
- *
- * The API and the public routes have honoured the flag since it existed; this is the switch. It
- * is per copy, not per card: a graded one can stay private while the plain one is shown.
- */
-export async function setExcluded(cardId: string, excluded: boolean): Promise<Result> {
-    const parsed = z.object({ cardId: z.string().uuid(), excluded: z.boolean() }).safeParse({ cardId, excluded });
-    if (!parsed.success) return { ok: false, error: "Invalid card." };
-
-    try {
-        await api(`/collection/items/${parsed.data.cardId}`, { method: "PATCH", body: { excluded: parsed.data.excluded } });
     } catch (err) {
         return failed(err);
     }
@@ -254,8 +300,11 @@ export async function addCopy(cardId: string, edits: CopyEdits, count = 1): Prom
         id = res.card?.id ?? undefined;
     } catch (err) {
         return failed(err);
+    } finally {
+        // The row is inserted before the answer is parsed, so an answer this app cannot read
+        // (ApiShapeError) is still a copy that exists. The cache goes whatever the POST returned.
+        await forgetMine();
     }
-    await forgetMine();
     return id ? { ok: true, id } : { ok: true };
 }
 

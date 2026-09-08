@@ -117,6 +117,15 @@ direct_db() {
 run "no-direct-db" direct_db
 
 # shellcheck disable=SC2329  # invoked indirectly, through `run` below.
+# R-UI-001: a control the kit already has, built by hand again. The baseline is what is already
+# there, so this fails on new drift only and the number can go one way. A site with a reason
+# written above it (`kit-drift: <why>`) is a decision and is not counted.
+kit_drift() {
+  node scripts/kit-drift.mjs --check
+}
+run "kit-drift" kit_drift
+
+# shellcheck disable=SC2329  # invoked indirectly, through `run` below.
 # Finder makes "name 2.ts" beside a file it could not overwrite; two of them reached a commit on
 # 2026-09-02. A tracked file whose name ends in a space and a number is one of those, never ours.
 finder_copies() {

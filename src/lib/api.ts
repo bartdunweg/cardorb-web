@@ -62,7 +62,7 @@ type Init = {
     method?: "GET" | "POST" | "PATCH" | "DELETE";
     body?: unknown;
     params?: Params;
-    /** false for the three unkeyed public routes; they are also cached for five minutes. */
+    /** false for the three unkeyed public routes; they are also cached for five minutes, under `tags`. */
     auth?: boolean;
     /** A token resolved earlier, for a call made inside a cache scope where `cookies()` is refused. */
     token?: string;
@@ -74,6 +74,14 @@ type Init = {
      * thing this app could say about an operation nobody can undo.
      */
     timeoutMs?: number;
+    /**
+     * What the cached answer is filed under, so a write can throw it away before its five
+     * minutes are up. Only the public routes have any: a call with a session is `no-store`,
+     * where a tag would name nothing. Without one, a public route that stopped being public
+     * kept answering from the cache for the rest of the window — the profile turned private
+     * and still readable, which is the one thing a public page must get right.
+     */
+    tags?: string[];
     /**
      * What the answer must look like. Given one, `api()` parses instead of casting.
      *
@@ -139,7 +147,7 @@ export async function api(path: string, init: Init = {}): Promise<unknown> {
             headers,
             body: init.body !== undefined ? JSON.stringify(init.body) : undefined,
             signal: AbortSignal.timeout(init.timeoutMs ?? API_TIMEOUT_MS),
-            ...(withAuth ? { cache: "no-store" } : { next: { revalidate: 300 } }),
+            ...(withAuth ? { cache: "no-store" } : { next: { revalidate: 300, tags: init.tags } }),
         });
         const json: unknown = await res.json().catch(() => null);
         return { res, json };

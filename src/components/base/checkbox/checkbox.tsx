@@ -1,5 +1,7 @@
 "use client";
 
+// Changed from the kit: the tick and the dash are black in dark mode, where the selected box is
+// white. A re-fetch through the Untitled UI CLI or MCP overwrites this; re-apply it.
 import type { ReactNode, Ref } from "react";
 import { Checkbox as AriaCheckbox, type CheckboxProps as AriaCheckboxProps } from "react-aria-components";
 import { cx } from "@/utils/cx";
@@ -31,7 +33,9 @@ export const CheckboxBase = ({ className, isSelected, isDisabled, isIndeterminat
                 viewBox="0 0 14 14"
                 fill="none"
                 className={cx(
-                    "pointer-events-none absolute h-3 w-2.5 text-fg-white opacity-0 transition-inherit-all",
+                    // Brand-solid is near-white in dark mode, so a selected box is white — flip the
+                    // tick to black there or it disappears, the way the Toggle's knob already does.
+                    "pointer-events-none absolute h-3 w-2.5 text-fg-white opacity-0 transition-inherit-all dark:text-black",
                     size === "md" && "size-3.5",
                     isIndeterminate && "opacity-100",
                 )}
@@ -44,7 +48,7 @@ export const CheckboxBase = ({ className, isSelected, isDisabled, isIndeterminat
                 viewBox="0 0 14 14"
                 fill="none"
                 className={cx(
-                    "pointer-events-none absolute size-3 text-fg-white opacity-0 transition-inherit-all",
+                    "pointer-events-none absolute size-3 text-fg-white opacity-0 transition-inherit-all dark:text-black",
                     size === "md" && "size-3.5",
                     isSelected && !isIndeterminate && "opacity-100",
                 )}

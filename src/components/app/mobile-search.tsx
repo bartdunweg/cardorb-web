@@ -2,11 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { SearchLg } from "@untitledui/icons";
+import dynamic from "next/dynamic";
 import { Heading as AriaHeading } from "react-aria-components";
 import { type CardHit, type MyCardsFilters, searchMyCards } from "@/app/(app)/dashboard/cards/actions";
 import { loadFacets } from "@/app/(app)/dashboard/collections/actions";
 import { listSetsShelf } from "@/app/(app)/dashboard/sets/actions";
-import { CardDetailSlideout } from "@/components/app/card-detail-slideout";
 import { CardImage } from "@/components/app/card-image";
 import { FilterChip, FilterChipRow } from "@/components/app/filter-chip";
 import { LanguageChips } from "@/components/app/language-chips";
@@ -18,6 +18,12 @@ import type { Facets } from "@/lib/cards";
 import type { BrowseLanguage } from "@/lib/languages";
 import type { SetSeries } from "@/lib/sets";
 import { cx } from "@/utils/cx";
+
+// The card sheet, fetched when a hit is tapped rather than with the page. It is the app's largest
+// client chunk (the slideout, the holo card and the mark-owned dialog, ~40 KB gzip), and importing
+// it here put that chunk on every page the sheet lives in — Browse and Binders among them, where no
+// card sheet can open at all. `ssr: false` because the sheet only ever exists after a tap.
+const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-slideout").then((m) => m.CardDetailSlideout), { ssr: false });
 
 // The collection search on a phone: a search-field-looking bar at the top of Home that opens a
 // bottom sheet with the field and the hits. The desktop sidebar has its own trigger and palette.

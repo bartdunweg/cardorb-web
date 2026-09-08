@@ -148,7 +148,6 @@ export async function commitImport(input: unknown): Promise<{ ok: true; result: 
             timeoutMs: 120_000,
             schema: importResultAnswer,
         });
-        await forgetMine();
         return { ok: true, result };
     } catch (err) {
         if (err instanceof Error && err.name === "TimeoutError") {
@@ -158,5 +157,12 @@ export async function commitImport(input: unknown): Promise<{ ok: true; result: 
             };
         }
         return failed(err);
+    } finally {
+        // Whatever happened, including the timeout: two minutes is short of the five the API
+        // allows itself, so a give-up here is precisely the case where the rows did land. Leaving
+        // the cached counts alone would show the person their collection from before the import,
+        // exactly as they were told to go and check it, and invite a second run of the one action
+        // in this app that cannot be undone. Dropping a cache after a write is never wrong.
+        await forgetMine();
     }
 }

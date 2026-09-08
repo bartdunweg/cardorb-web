@@ -122,6 +122,41 @@ export const cardItemSchema = z.object({
 });
 export type CardItem = z.infer<typeof cardItemSchema>;
 
+/**
+ * The row a DELETE hands back, as it was the moment before it went.
+ *
+ * Not `cardItemSchema`: that is the assembled item a list reads, with the set's title, the
+ * pictures and the prices the API works out. This is the stored row itself — the only thing an
+ * undo needs, because putting it back is an ordinary create of exactly these fields.
+ *
+ * Everything is optional and forgiving on purpose. An API that has not deployed this yet answers
+ * `{ ok: true }` with no card, and a removal must still be a removal; it just cannot be undone.
+ */
+export const removedCardSchema = z.object({
+    name: z.string(),
+    number: z.string(),
+    setName: z.string(),
+    rarity: nullable(z.string()).optional(),
+    gen: nullable(z.string()).optional(),
+    types: z.array(z.string()).optional(),
+    owned: z.boolean(),
+    excluded: z.boolean().nullish(),
+    acquiredAt: nullable(z.string()).optional(),
+    finish: vocabulary(FINISHES).optional(),
+    foilPattern: vocabulary(FOIL_PATTERNS).optional(),
+    quantity: z.number().optional(),
+    condition: nullable(z.string()).optional(),
+    grade: nullable(z.string()).optional(),
+    language: nullable(z.string()).optional(),
+    purchasePrice: nullable(z.number()).optional(),
+    purchaseDate: nullable(z.string()).optional(),
+    notes: nullable(z.string()).optional(),
+    isFavorite: z.boolean().optional(),
+    collectionId: nullable(z.string()).optional(),
+});
+export type RemovedCard = z.infer<typeof removedCardSchema>;
+export const removedAnswer = z.object({ card: removedCardSchema.nullish() });
+
 export type Card = {
     id: string;
     name: string;

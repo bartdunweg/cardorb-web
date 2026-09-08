@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AddCardModal } from "@/components/app/add-card-modal";
 import { AppEmptyState } from "@/components/app/app-empty-state";
@@ -10,6 +11,14 @@ import { type DexList, groupByDex } from "@/lib/dex-groups";
 import { ruleChips } from "@/lib/folder-rule";
 import { type ListSearchParams, isNarrowed, readListQuery } from "@/lib/list-query";
 import { getDexNames } from "@/lib/pokedex";
+
+// The binder's own name in the tab. `getCollection` reads the folder list, which is cached five
+// minutes per person, so this is the same read the page makes and costs nothing extra.
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+    const { id } = await params;
+    const collection = await getCollection(id);
+    return { title: collection?.name ?? "Binder" };
+}
 
 // A folder of your own: filed by hand, or filled by its rule; as a list, or as a Pokédex. The
 // folder itself and the facets are cached reads; the cards are not awaited (see cards/page.tsx).

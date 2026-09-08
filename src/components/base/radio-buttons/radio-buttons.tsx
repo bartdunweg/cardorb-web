@@ -1,5 +1,7 @@
 "use client";
 
+// Changed from the kit: the selected dot is black in dark mode, where the ring is white. A
+// re-fetch through the Untitled UI CLI or MCP overwrites this; re-apply it.
 import { type ReactNode, type Ref, createContext, useContext } from "react";
 import {
     Radio as AriaRadio,
@@ -36,7 +38,15 @@ export const RadioButtonBase = ({ className, isFocusVisible, isSelected, isDisab
                 className,
             )}
         >
-            <div className={cx("size-1.5 rounded-full bg-fg-white opacity-0 transition-inherit-all", size === "md" && "size-2", isSelected && "opacity-100")} />
+            <div
+                className={cx(
+                    // Brand-solid is near-white in dark mode, so a selected ring is white — flip the
+                    // dot to black there or it disappears, the way the Toggle's knob already does.
+                    "size-1.5 rounded-full bg-fg-white opacity-0 transition-inherit-all dark:bg-black",
+                    size === "md" && "size-2",
+                    isSelected && "opacity-100",
+                )}
+            />
         </div>
     );
 };

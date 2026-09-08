@@ -12,6 +12,7 @@ import {
     cardFacts,
     listCopies,
     removeCard,
+    restoreCard,
     seriesLogo,
     setAcquiredAt,
     setCondition,
@@ -40,7 +41,7 @@ import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Input } from "@/components/base/input/input";
 import { NativeSelect } from "@/components/base/select/select-native";
 import { Tooltip } from "@/components/base/tooltip/tooltip";
-import { FINISH_LABELS, FOIL_PATTERN_LABELS, type Finish, type FoilPattern, type PokemonCard, isReverseFinish } from "@/lib/api-shapes";
+import { FINISH_LABELS, FOIL_PATTERN_LABELS, type Finish, type FoilPattern, type PokemonCard, type RemovedCard, isReverseFinish } from "@/lib/api-shapes";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
 import { groupCopies, sortCopies } from "@/lib/copies";
 import { matchesRule } from "@/lib/folder-rule";
@@ -130,6 +131,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
             void reloadCopies();
             return;
         }
+        offerUndo(
+            results.flatMap((r) => (r.ok && r.card ? [r.card] : [])),
+            group.length > 1 ? `${group.length} copies removed` : "Copy removed",
+        );
         const rows = sortCopies(await listCopies(mine));
         setCopiesState({ of: copiesKey(mine), rows });
         if (group.some((r) => r.id === mine.id) && rows[0]) setViewing({ of: card.id, row: rows[0] });
@@ -372,6 +377,42 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         setViewing(null);
         onClose();
     };
+    /* A way back that puts the row back whole. The rows live only in this closure, for as long as
+       the toast is up: the API keeps nothing, so an undo nobody presses costs nothing and leaves
+       nothing behind. An API that has not deployed the change yet hands back no row, and then
+       there is nothing to offer — the removal stands and says so without an Undo, which is better
+       than a button that would quietly create a card missing everything it held. */
+    const offerUndo = (rows: RemovedCard[], done: string) => {
+        if (!rows.length) return notify.done(done);
+        notify.done(done, {
+            undo: {
+                label: "Put back",
+                onUndo: () => {
+                    void Promise.all(rows.map((row) => restoreCard(row))).then((results) => {
+                        const failed = results.find((r) => !r.ok);
+                        if (failed && !failed.ok) notify.failed("That did not go back", { description: failed.error });
+                        else notify.done(rows.length > 1 ? `${rows.length} copies are back` : "It is back");
+                        router.refresh();
+                        void reloadCopies();
+                    });
+                },
+            },
+        });
+    };
+
+    const removeAndOffer = async (id: string, wishlist: boolean) => {
+        setBusy(true);
+        const res = await removeCard(id);
+        setBusy(false);
+        if (!res.ok) {
+            notify.failed(wishlist ? "That card is still on your wishlist" : "That card is still in your collection", { description: res.error });
+            return;
+        }
+        onClose();
+        router.refresh();
+        offerUndo(res.card ? [res.card] : [], wishlist ? "Removed from your wishlist" : "Removed from your collection");
+    };
+
     /* Every failure in here is a toast, and none of them is a line in the header any more. This
        sheet is the whole page on a phone: an error paragraph beside the title is off screen for
        every control below the fold — the bin sits in the Copies tab — and for an action that
@@ -539,18 +580,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                         strips the flag rather than filtering on it, and the only reader left
                                                         was the latest-pull block, which the profile no longer shows. What
                                                         does keep cards off a public profile is a folder's own switch. */}
-                                                    <Dropdown.Item
-                                                        icon={Trash01}
-                                                        onAction={() =>
-                                                            run(() => removeCard(mine.id), {
-                                                                closes: true,
-                                                                done: mine.wishlist ? "Removed from your wishlist" : "Removed from your collection",
-                                                                failed: mine.wishlist
-                                                                    ? "That card is still on your wishlist"
-                                                                    : "That card is still in your collection",
-                                                            })
-                                                        }
-                                                    >
+                                                    <Dropdown.Item icon={Trash01} onAction={() => void removeAndOffer(mine.id, !!mine.wishlist)}>
                                                         {mine.wishlist ? "Remove from wishlist" : "Remove from collection"}
                                                     </Dropdown.Item>
                                                 </Dropdown.Menu>

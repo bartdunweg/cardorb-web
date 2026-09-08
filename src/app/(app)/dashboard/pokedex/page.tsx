@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { AddCardModal } from "@/components/app/add-card-modal";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderPage } from "@/components/app/folder-page";
@@ -9,6 +10,10 @@ import { DEFAULT_POKEDEX } from "@/lib/folder-rule";
 import { type ListSearchParams, isNarrowed, readListQuery } from "@/lib/list-query";
 import { getDexNames } from "@/lib/pokedex";
 import { getMyProfile } from "@/lib/profile";
+
+// The tab's name, which the root layout's template finishes as “… · Cardorb”: without it every
+// tab and every history entry read “Cardorb”. The word is the one the navigation uses for this page.
+export const metadata: Metadata = { title: "Pokédex" };
 
 // The built-in Pokédex: every card you own, shown as a Pokédex, with the setting from your profile:
 // the range you collect and whether the missing ones show.
