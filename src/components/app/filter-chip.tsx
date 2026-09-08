@@ -20,13 +20,12 @@ export function FilterChipRow({ onClear, className, children }: { onClear?: () =
         <div className={cx("scrollbar-hide flex w-full max-w-full min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto", className)}>
             {children}
             {onClear ? (
-                <button
-                    type="button"
-                    onClick={onClear}
+                <AriaButton
+                    onPress={onClear}
                     className="shrink-0 pressable cursor-pointer rounded-full px-2 py-1.5 text-xs font-semibold whitespace-nowrap text-tertiary outline-focus-ring transition-colors duration-150 hover:text-secondary focus-visible:outline-2"
                 >
                     Clear
-                </button>
+                </AriaButton>
             ) : null}
         </div>
     );
@@ -87,9 +86,11 @@ export function FilterChip({
 
     return (
         <>
-            <button type="button" aria-haspopup="dialog" aria-expanded={open} aria-label={name} onClick={() => setOpen(true)} className={chipClass}>
+            {/* The same button the sm branch above opens its menu with; here it opens the sheet, so it
+                says so itself rather than through a DialogTrigger. */}
+            <AriaButton aria-haspopup="dialog" aria-expanded={open} aria-label={name} onPress={() => setOpen(true)} className={chipClass}>
                 {chipContent}
-            </button>
+            </AriaButton>
             <SlideoutMenu isDismissable isOpen={open} onOpenChange={setOpen} dialogClassName="max-h-[70dvh]">
                 {({ close }) => (
                     <>

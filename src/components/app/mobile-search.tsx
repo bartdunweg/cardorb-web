@@ -3,13 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { SearchLg } from "@untitledui/icons";
 import dynamic from "next/dynamic";
-import { Heading as AriaHeading } from "react-aria-components";
+import { Button as AriaButton, Heading as AriaHeading } from "react-aria-components";
 import { type CardHit, type MyCardsFilters, searchMyCards } from "@/app/(app)/dashboard/cards/actions";
 import { loadFacets } from "@/app/(app)/dashboard/collections/actions";
 import { listSetsShelf } from "@/app/(app)/dashboard/sets/actions";
 import { CardImage } from "@/components/app/card-image";
 import { FilterChip, FilterChipRow } from "@/components/app/filter-chip";
 import { LanguageChips } from "@/components/app/language-chips";
+import { SearchTrigger } from "@/components/app/search-trigger";
 import { SetsShelfList } from "@/components/app/sets-shelf-list";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Input } from "@/components/base/input/input";
@@ -32,16 +33,10 @@ export function MobileSearchSheet() {
 
     return (
         <div className="relative lg:hidden">
-            <button
-                type="button"
-                onClick={() => setOpen(true)}
-                // The kit's Input at its lg size, as a button: the same ring, padding, type and icon as the search
-                // field on every folder page, so the two read as one control.
-                className="flex w-full pressable cursor-pointer items-center gap-2 rounded-full bg-primary py-2.5 pr-3.5 pl-3.5 text-md text-placeholder ring-1 ring-primary outline-focus-ring ring-inset hover:bg-secondary focus-visible:outline-2"
-            >
-                <SearchLg className="size-5 text-fg-quaternary" />
-                <span className="flex-1 text-left">Search a card or a set</span>
-            </button>
+            {/* The kit's Input at its lg size, as a button: the same ring, padding, type and icon as the
+                search field on every folder page, so the two read as one control. The sidebar's trigger
+                is the same component a size down. */}
+            <SearchTrigger size="md" label="Search a card or a set" onPress={() => setOpen(true)} />
             <SlideoutMenu
                 isDismissable
                 isOpen={open}
@@ -149,10 +144,11 @@ function CollectionSearch({ onClose }: { onClose: () => void }) {
                 ) : null}
                 {!loading &&
                     results.map((card) => (
-                        <button
+                        // A hit is a row, not a tile: the picture at the left of its words, the way the
+                        // palette lists them on a desktop. The kit's button (react-aria), as the chips are.
+                        <AriaButton
                             key={card.id}
-                            type="button"
-                            onClick={() => setSelected(card)}
+                            onPress={() => setSelected(card)}
                             className="flex pressable items-center gap-3 rounded-lg p-2 text-left transition-colors hover:bg-secondary"
                         >
                             <div className="relative h-14 w-10 shrink-0 overflow-hidden rounded bg-quaternary ring-1 ring-image ring-inset">
@@ -164,7 +160,7 @@ function CollectionSearch({ onClose }: { onClose: () => void }) {
                                     {[card.set_name, card.number ? `#${card.number}` : null].filter(Boolean).join(" · ")}
                                 </span>
                             </div>
-                        </button>
+                        </AriaButton>
                     ))}
             </SlideoutMenu.Content>
             <CardDetailSlideout card={selected} onClose={() => setSelected(null)} />
