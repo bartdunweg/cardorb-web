@@ -29,7 +29,9 @@ export function RowButton({
             size="sm"
             iconLeading={icon}
             iconTrailing={menu ? <ChevronDown data-icon="trailing" className={cx(styles.common.icon, "max-sm:hidden")} /> : undefined}
-            aria-label={label}
+            // No aria-label: it would override everything inside the button, and the badge under
+            // `children` is the part that says the list is narrowed. The word below is `sr-only` on a
+            // phone and visible from sm, so the name is "Filters 3 on" at either width.
             // The kit wraps children in a span with its own padding, beside a gap; with the word read
             // out only, that was 8 px of nothing and a 44 by 36 pill. No text padding and no gap on a
             // phone, the padding back from sm, so the button is a 36 px circle until the word shows.

@@ -127,7 +127,11 @@ function CollectionSearch({ onClose }: { onClose: () => void }) {
                     <LanguageChips value={language} onChange={setLanguage} className="-mr-14" />
                 )}
             </SlideoutMenu.Header>
-            <SlideoutMenu.Content className="gap-1 pb-4">
+            {/* role="presentation", not the kit's default "main": the page already has a <main>, and a
+                second unlabelled one is a landmark that leads nowhere. role={undefined} would not do it —
+                the kit defaults the parameter. */}
+            {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- the rule offers <img alt="">, which this is not: the role is here only to stop the kit's default role="main". */}
+            <SlideoutMenu.Content role="presentation" className="gap-1 pb-4">
                 {/* One live region, always mounted, so a screen reader hears the state change. */}
                 <output aria-live="polite" className={cx("text-center text-sm text-tertiary", searchState ? "px-1 py-6" : "sr-only")}>
                     {searchState}
@@ -149,7 +153,9 @@ function CollectionSearch({ onClose }: { onClose: () => void }) {
                         <AriaButton
                             key={card.id}
                             onPress={() => setSelected(card)}
-                            className="flex pressable items-center gap-3 rounded-lg p-2 text-left transition-colors hover:bg-secondary"
+                            // outline-focus-ring + focus-visible:outline-2, as every other tile and chip in
+                            // the app: these rows were the one pressable of ours left on the browser's own ring.
+                            className="flex pressable items-center gap-3 rounded-lg p-2 text-left outline-focus-ring transition-colors hover:bg-secondary focus-visible:outline-2"
                         >
                             <div className="relative h-14 w-10 shrink-0 overflow-hidden rounded bg-quaternary ring-1 ring-image ring-inset">
                                 {card.image_url ? <CardImage src={card.image_url} alt="" width={64} className="object-cover" /> : null}

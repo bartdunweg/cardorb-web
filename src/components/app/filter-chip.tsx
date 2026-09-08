@@ -99,7 +99,9 @@ export function FilterChip({
                                 {label}
                             </AriaHeading>
                         </SlideoutMenu.Header>
-                        <SlideoutMenu.Content className="pb-4">
+                        {/* role="presentation", not the kit's default "main": the page already has a <main>. */}
+                        {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- the rule offers <img alt="">, which this is not: the role is here only to stop the kit's default role="main". */}
+                        <SlideoutMenu.Content role="presentation" className="pb-4">
                             <Choices label={label} any={any} value={value} options={options} onPick={pick} />
                         </SlideoutMenu.Content>
                     </>
@@ -132,6 +134,12 @@ function Choices({
     const field = useRef<HTMLInputElement>(null);
     useEffect(() => field.current?.focus(), []);
 
+    // What the field did, for a screen reader: a 200-set list narrowing to three, or to none, was
+    // silent — the count was nowhere and "Nothing by that name." was plain text nobody announced.
+    // Always mounted, the way the search sheet's own region is: one that appears with its text in
+    // it is never read out.
+    const narrowedTo = !needle ? "" : shown.length === 0 ? "Nothing by that name." : `${shown.length} of ${options.length} shown`;
+
     return (
         <div className="flex min-h-0 flex-col gap-2">
             {searchable ? (
@@ -154,13 +162,17 @@ function Choices({
                     />
                 </div>
             ) : null}
+            {/* Under the field it was typed into, so it is the message and the announcement both, rather
+                than a second copy of one of them. */}
+            <output aria-live="polite" className={cx("shrink-0 text-center text-sm text-tertiary", shown.length === 0 && narrowedTo ? "px-2 py-4" : "sr-only")}>
+                {narrowedTo}
+            </output>
             <fieldset id={listId} className="flex min-h-0 flex-col overflow-y-auto sm:p-1">
                 <legend className="sr-only">{label}</legend>
                 <Choice label={any} pressed={value === undefined} onClick={() => onPick(undefined)} />
                 {shown.map((o) => (
                     <Choice key={o.value} label={o.label} hint={o.hint} pressed={o.value === value} onClick={() => onPick(o.value)} />
                 ))}
-                {needle && shown.length === 0 ? <p className="px-2 py-4 text-center text-sm text-tertiary">Nothing by that name.</p> : null}
             </fieldset>
         </div>
     );
