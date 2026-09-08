@@ -1,151 +1,160 @@
 "use client";
 
-import { Copy01, DotsHorizontal, Heart, Star01, Trash01 } from "@untitledui/icons";
-import { notify } from "@/components/app/toast";
-import { Badge } from "@/components/base/badges/badges";
+import { type ReactNode, useEffect, useState } from "react";
+import { ChevronDown } from "@untitledui/icons";
 import { Button } from "@/components/base/buttons/button";
-import { ButtonUtility } from "@/components/base/buttons/button-utility";
-import { CloseButton } from "@/components/base/buttons/close-button";
-import { Input } from "@/components/base/input/input";
-import { Tooltip } from "@/components/base/tooltip/tooltip";
-import { FeaturedIcon } from "@/components/foundations/featured-icon/featured-icon";
+import { cx } from "@/utils/cx";
+import { actionSections } from "./design-actions";
+import { displaySections } from "./design-display";
+import { formSections } from "./design-forms";
+import { ourSections } from "./design-ours";
+import { overlaySections } from "./design-overlays";
+import { Section, type SectionSpec } from "./design-section";
 
 /**
- * The live half of the design system page: the things you have to press to judge.
+ * The design system page, shaped like a component library: one section per component, every
+ * variant of it side by side, and an index that says where you are.
  *
  * Everything in here is drawn by the component the app actually uses, never by a copy made for
- * the page — a gallery of look-alikes is worse than no gallery, because it agrees with you.
+ * the page — a gallery of look-alikes is worse than no gallery, because it agrees with you. Which
+ * is also why nothing on this page is a screenshot: a disabled button is disabled, a dropdown
+ * opens, a toast appears.
+ *
+ * The navigation is an in-page index rather than a rail of its own. The app already has a
+ * sidebar from `lg`, and a second full-height column beside it reads as a nested app; so on
+ * `xl` the index is a sticky column on the *right* of the content, the side nothing else is
+ * using, and below `xl` it is a button at the top of the page that opens the same list — not
+ * sticky, because on a phone the page header's own bar is already fixed over the top.
  */
 
-export function KitGallery() {
+const groups: { title: string; sections: SectionSpec[] }[] = [
+    { title: "Actions", sections: actionSections },
+    { title: "Forms", sections: formSections },
+    { title: "Data display", sections: displaySections },
+    { title: "Overlays", sections: overlaySections },
+    { title: "Ours", sections: ourSections },
+];
+
+/** The section the page ends on, rendered by the page itself because it reads the baseline file. */
+const drift = { id: "still-by-hand", title: "Still built by hand" };
+
+const ids = [...groups.flatMap((group) => group.sections.map((section) => section.id)), drift.id];
+
+export function KitGallery({ children }: { children?: ReactNode }) {
+    const active = useActiveSection();
+
     return (
-        <div className="flex flex-col gap-10">
-            <Row title="Button" from="components/base/buttons/button">
-                <Button size="md">Primary</Button>
-                <Button size="md" color="secondary">
-                    Secondary
-                </Button>
-                <Button size="md" color="tertiary">
-                    Tertiary
-                </Button>
-                <Button size="md" color="primary-destructive">
-                    Destructive
-                </Button>
-                <Button size="md" color="link-color">
-                    Link
-                </Button>
-                <Button size="md" iconLeading={Star01}>
-                    With an icon
-                </Button>
-                <Button size="md" isLoading>
-                    Working
-                </Button>
-                <Button size="md" isDisabled>
-                    Disabled
-                </Button>
-            </Row>
+        <div className="flex flex-col gap-10 xl:flex-row-reverse xl:items-start xl:gap-12">
+            <Index active={active} />
 
-            <Row title="Button, the sizes" from="components/base/buttons/button">
-                <Button size="sm">sm</Button>
-                <Button size="md">md</Button>
-                <Button size="lg">lg</Button>
-                <Button size="xl">xl</Button>
-            </Row>
-
-            <Row
-                title="ButtonUtility"
-                from="components/base/buttons/button-utility"
-                note="An icon-only button that takes its tooltip and its accessible name from one string. This is the component the app should reach for and mostly does not: sixteen icon buttons are a Button with a hand-written aria-label instead."
-            >
-                <ButtonUtility icon={Star01} tooltip="Add to Favorites" size="sm" />
-                <ButtonUtility icon={Heart} tooltip="Add to wishlist" size="sm" color="tertiary" />
-                <ButtonUtility icon={DotsHorizontal} tooltip="More actions" size="xs" />
-                <ButtonUtility icon={Copy01} tooltip="One copy more" size="xs" color="tertiary" />
-            </Row>
-
-            <Row title="Tooltip" from="components/base/tooltip" note="Hover or tab to it. Wraps any focusable thing; ButtonUtility does it for you.">
-                <Tooltip title="Previous card (←)">
-                    <Button size="md" color="secondary">
-                        Hover me
-                    </Button>
-                </Tooltip>
-                <Tooltip title="Near Mint price" description="The market price through a measured band, not the market price itself." arrow>
-                    <Button size="md" color="secondary">
-                        With a description
-                    </Button>
-                </Tooltip>
-            </Row>
-
-            <Row title="FeaturedIcon" from="components/foundations/featured-icon">
-                <FeaturedIcon icon={Star01} color="brand" theme="outline" size="md" />
-                <FeaturedIcon icon={Trash01} color="error" theme="outline" size="md" />
-                <FeaturedIcon icon={Heart} color="success" theme="outline" size="md" />
-                <FeaturedIcon icon={Star01} color="gray" theme="modern" size="md" />
-            </Row>
-
-            <Row title="CloseButton" from="components/base/buttons/close-button">
-                <CloseButton size="sm" label="Close" />
-                <CloseButton size="md" label="Close" />
-            </Row>
-
-            <Row title="Input" from="components/base/input/input">
-                <div className="w-full max-w-80">
-                    <Input label="Display name" placeholder="Your name" hint="Shown on your public profile." />
-                </div>
-                <div className="w-full max-w-80">
-                    <Input label="Acquired" type="date" size="sm" />
-                </div>
-            </Row>
-
-            <Row
-                title="Toast"
-                from="components/app/toast"
-                ours
-                note="Ours, because Untitled UI ships no snackbar — the nearest thing in the catalogue is application/alerts, which puts a Dismiss text button beside the close cross. The box is made of that alert's parts: FeaturedIcon, Button, CloseButton."
-            >
-                <Button size="md" color="secondary" onClick={() => notify.done("Filed in Kanto", { description: "Fomantis · Pitch Black #085" })}>
-                    Show a success
-                </Button>
-                <Button
-                    size="md"
-                    color="secondary"
-                    onClick={() => notify.failed("That card was not added to your collection", { description: "The catalogue is not answering." })}
-                >
-                    Show a failure
-                </Button>
-                <Button
-                    size="md"
-                    color="secondary"
-                    onClick={() =>
-                        notify.done("Removed from your collection", {
-                            description: "Fomantis · Pitch Black #085",
-                            undo: { onUndo: () => notify.done("Put back") },
-                        })
-                    }
-                >
-                    Show an undo
-                </Button>
-            </Row>
+            <div className="flex min-w-0 flex-1 flex-col gap-14">
+                {groups.map((group) => (
+                    <div key={group.title} className="flex flex-col gap-10">
+                        <h2 className="text-sm font-semibold tracking-wider text-tertiary uppercase">{group.title}</h2>
+                        {group.sections.map((section) => (
+                            <Section key={section.id} spec={section} />
+                        ))}
+                    </div>
+                ))}
+                {children}
+            </div>
         </div>
     );
 }
 
-function Row({ title, from, note, ours = false, children }: { title: string; from: string; note?: string; ours?: boolean; children: React.ReactNode }) {
+/**
+ * The index, in two shapes.
+ *
+ * From `xl` it is a rail stuck to the very top of the window and scrollable inside itself, not
+ * offset to `top-8`: the list is taller than a laptop screen, and a sticky column taller than the
+ * viewport hides its own tail — the last five components were unreachable. The 32 px that used to
+ * be the offset is padding inside the scroller instead.
+ *
+ * Below `xl` it starts closed behind a button. Open, this list is 900 px tall, which on a phone is
+ * a whole screen of index before the first component — a table of contents nobody asked to read.
+ */
+function Index({ active }: { active: string }) {
+    const [open, setOpen] = useState(false);
+
     return (
-        <section className="flex flex-col gap-3">
-            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <h3 className="text-md font-semibold text-primary">{title}</h3>
-                {/* The label is the point of the page: at a glance, whose component is this. The
-                    kit's Badge, after the hand-rolled chip that was here measured 2.7:1 and 2.9:1
-                    against its own background — under AA, on the one word the page exists to say,
-                    on a page about not building what the kit already has. */}
-                <Badge type="pill-color" size="sm" color={ours ? "warning" : "success"}>
-                    {ours ? "Ours" : "Untitled UI"}
-                </Badge>
-                <code className="text-xs text-tertiary">{from}</code>
+        <nav aria-label="Components" className="shrink-0 xl:sticky xl:top-0 xl:max-h-dvh xl:w-56 xl:overflow-y-auto xl:py-8">
+            <Button
+                color="secondary"
+                size="sm"
+                className="xl:hidden"
+                iconTrailing={<ChevronDown data-icon="trailing" className={cx("size-5 shrink-0 transition-transform duration-150", open && "-scale-y-100")} />}
+                aria-expanded={open}
+                aria-controls="design-index"
+                onClick={() => setOpen(!open)}
+            >
+                {open ? "Hide the index" : "Jump to a component"}
+            </Button>
+
+            <div
+                id="design-index"
+                className={cx(
+                    "flex-col gap-4 max-xl:mt-3 max-xl:rounded-xl max-xl:bg-primary max-xl:p-4 max-xl:ring-1 max-xl:ring-secondary",
+                    open ? "flex" : "hidden xl:flex",
+                )}
+            >
+                {[...groups, { title: "The gap", sections: [drift] }].map((group) => (
+                    <div key={group.title} className="flex min-w-0 flex-col gap-1.5">
+                        <p className="text-xs font-semibold tracking-wider text-secondary uppercase">{group.title}</p>
+                        <ul className="flex flex-wrap gap-1 xl:flex-col xl:flex-nowrap xl:gap-y-0.5">
+                            {group.sections.map((section) => (
+                                <li key={section.id} className="min-w-0">
+                                    <IndexLink id={section.id} title={section.title} active={active === section.id} onGo={() => setOpen(false)} />
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                ))}
             </div>
-            {note ? <p className="max-w-2xl text-sm text-tertiary">{note}</p> : null}
-            <div className="flex flex-wrap items-center gap-3 rounded-xl bg-primary p-5 ring-1 ring-secondary">{children}</div>
-        </section>
+        </nav>
     );
+}
+
+function IndexLink({ id, title, active, onGo }: { id: string; title: string; active: boolean; onGo: () => void }) {
+    return (
+        <a
+            href={`#${id}`}
+            aria-current={active ? "true" : undefined}
+            onClick={onGo}
+            className={cx(
+                "block truncate rounded-md px-2 py-1 text-sm outline-focus-ring transition-colors duration-100 hover:bg-secondary hover:text-secondary focus-visible:outline-2",
+                active ? "bg-secondary font-semibold text-primary" : "text-tertiary",
+            )}
+        >
+            {title}
+        </a>
+    );
+}
+
+/**
+ * Which section the page is on. An IntersectionObserver rather than a scroll listener: it costs
+ * nothing between changes, and the callback then measures every section once to pick the last
+ * one whose top has passed under the header, which is the one a reader would say they are in.
+ */
+function useActiveSection() {
+    const [active, setActive] = useState(ids[0]);
+
+    useEffect(() => {
+        const elements = ids.map((id) => document.getElementById(id)).filter((el): el is HTMLElement => el !== null);
+        if (elements.length === 0 || typeof IntersectionObserver === "undefined") return;
+
+        const pick = () => {
+            let current = elements[0].id;
+            for (const element of elements) {
+                if (element.getBoundingClientRect().top <= 120) current = element.id;
+            }
+            setActive(current);
+        };
+
+        const observer = new IntersectionObserver(pick, { rootMargin: "-120px 0px 0px 0px", threshold: [0, 1] });
+        elements.forEach((element) => observer.observe(element));
+        pick();
+        return () => observer.disconnect();
+    }, []);
+
+    return active;
 }
