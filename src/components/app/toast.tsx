@@ -32,8 +32,10 @@ type Options = {
 };
 
 // Long enough to read the sentence; longer when there is a decision in it, because an undo you
-// notice only after it has gone is not a way back.
-const DURATION = { done: 4000, failed: 8000, undo: 10000 };
+// notice only after it has gone is not a way back. A failure does not leave on its own at all: it
+// is the only report that a write did not happen, and if it goes while you are looking elsewhere
+// the screen is left saying nothing is wrong. It goes when you say so.
+const DURATION = { done: 4000, failed: Number.POSITIVE_INFINITY, undo: 10000 };
 
 function show(tone: Tone, title: string, options: Options = {}) {
     return sonner.custom((toastId) => <ToastCard tone={tone} toastId={toastId} title={title} {...options} />, {

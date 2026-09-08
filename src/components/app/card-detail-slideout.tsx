@@ -379,7 +379,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
        which renders against the control it belongs to. */
     const run = async (
         action: () => Promise<{ ok: true } | { ok: false; error: string }>,
-        opts: { closes?: boolean; done?: string; failed: string } = { failed: "That did not save" },
+        opts: { closes?: boolean; done?: string; failed: string; onFailed?: () => void } = { failed: "That did not save" },
     ) => {
         setBusy(true);
         const res = await action();
@@ -388,6 +388,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
             // The title is the app's own sentence; the API's is the line under it, where it reads
             // as the reason rather than as the app talking.
             notify.failed(opts.failed, { description: res.error });
+            opts.onFailed?.();
             return;
         }
         if (opts.closes) onClose();
@@ -429,6 +430,16 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         setCollectionId(mine?.collection_id ?? "");
         setStarred(null);
     }
+
+    /* A date field the browser owns: React hands it a value, and after that the segments the user
+       arrows through are the input's own. When nothing is written the value prop has not changed,
+       so nothing puts the field back, and it sits there showing a date the store never took.
+       Bumping this remounts it on the value that is actually stored. */
+    const [dateKey, setDateKey] = useState(0);
+    const resetDate = () => setDateKey((k) => k + 1);
+    // Local, not UTC: at 01:00 in Amsterdam `toISOString()` still says yesterday, and a card
+    // pulled tonight would be a date the field refuses.
+    const today = new Date().toLocaleDateString("en-CA");
 
     const titleRef = useRef<HTMLHeadingElement>(null);
     const [collectionError, setCollectionError] = useState<string | null>(null);
@@ -967,18 +978,30 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                                        control in a column of larger ones — the two places that ask for an
                                                                        acquired date now ask the same way. */
                                                                     <Input
+                                                                        key={dateKey}
                                                                         type="date"
                                                                         aria-label="Acquired"
                                                                         size="sm"
                                                                         className="w-auto"
                                                                         value={mine.acquired_at ? mine.acquired_at.slice(0, 10) : ""}
-                                                                        max={new Date().toISOString().slice(0, 10)}
+                                                                        max={today}
+                                                                        /* `max` is a form-validation rule, and nothing here is a form: the browser
+                                                                           happily arrows a native date field past it. So the future is turned away
+                                                                           where it is asked for rather than reported after the API refuses it —
+                                                                           a card you have not pulled yet is not a date anybody meant to type.
+                                                                           Not snapped back mid-typing, which would fight a year being corrected
+                                                                           digit by digit; the field is put back when it is left. */
                                                                         onChange={(date) => {
-                                                                            if (date)
-                                                                                void run(() => setAcquiredAt(mine.id, date), {
-                                                                                    done: "Acquired date saved",
-                                                                                    failed: "The acquired date did not save",
-                                                                                });
+                                                                            if (!date || date > today) return;
+                                                                            void run(() => setAcquiredAt(mine.id, date), {
+                                                                                done: "Acquired date saved",
+                                                                                failed: "The acquired date did not save",
+                                                                                onFailed: resetDate,
+                                                                            });
+                                                                        }}
+                                                                        onBlur={(e) => {
+                                                                            const stored = mine.acquired_at ? mine.acquired_at.slice(0, 10) : "";
+                                                                            if ((e.target as HTMLInputElement).value !== stored) resetDate();
                                                                         }}
                                                                     />
                                                                 ) : mine.acquired_at ? (
