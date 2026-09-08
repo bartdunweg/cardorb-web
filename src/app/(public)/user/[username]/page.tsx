@@ -117,7 +117,7 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                 {folders.length > 0 || profile.wishlist_public || profile.favorites_public || profile.pokedex_public ? (
                     // The folders the owner shows, as chips that narrow the list; All cards first. A chip is a link,
                     // so a folder is a URL that can be shared, and the row keeps its place through a search.
-                    <nav aria-label="Folders" className="flex flex-wrap gap-2">
+                    <nav aria-label="Binders" className="flex flex-wrap gap-2">
                         {[{ id: null as string | null, name: "Collection", count: null as number | null }, ...folders].map((f) => {
                             const current = query.list === undefined && (folder?.id ?? null) === f.id;
                             return (

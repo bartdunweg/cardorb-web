@@ -30,6 +30,7 @@ import { HoloCard } from "@/components/app/holo-card";
 import { LanguageSelect } from "@/components/app/language-select";
 import { MarkOwnedDialog } from "@/components/app/mark-owned-dialog";
 import { SheetBar } from "@/components/app/sheet-bar";
+import { notify } from "@/components/app/toast";
 import { TypeIcon } from "@/components/app/type-icon";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Tab, TabList, TabPanel, Tabs } from "@/components/application/tabs/tabs";
@@ -38,6 +39,7 @@ import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Input } from "@/components/base/input/input";
 import { NativeSelect } from "@/components/base/select/select-native";
+import { Tooltip } from "@/components/base/tooltip/tooltip";
 import { FINISH_LABELS, FOIL_PATTERN_LABELS, type Finish, type FoilPattern, type PokemonCard, isReverseFinish } from "@/lib/api-shapes";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
 import { groupCopies, sortCopies } from "@/lib/copies";
@@ -115,7 +117,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const dropCopies = async (group: Card[]) => {
         if (!mine || !card || !group.length) return;
         setBusy(true);
-        setMenuError(null);
         /* At once, not one after another. Each of these is a round trip from the browser through
            the app to the API and on to the database in another region, so a group of four in a
            `for await` was four of those in a queue — the wait grew with the number of copies, on
@@ -125,7 +126,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         setBusy(false);
         const failed = results.find((r) => !r.ok);
         if (failed && !failed.ok) {
-            setMenuError(failed.error);
+            notify.failed(group.length > 1 ? "Those copies were not removed" : "That copy was not removed", { description: failed.error });
             void reloadCopies();
             return;
         }
@@ -172,16 +173,18 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const add = async (list: "collection" | "wishlist") => {
         if (!takeable) return;
         setBusy(true);
-        setMenuError(null);
         const res = await addCard(takeable, list);
         setBusy(false);
         if (!res.ok) {
-            setMenuError(res.error);
+            notify.failed(list === "wishlist" ? "That card was not added to your wishlist" : "That card was not added to your collection", {
+                description: res.error,
+            });
             return;
         }
         setRemoved(null);
         router.refresh();
         onClose();
+        notify.done(list === "wishlist" ? "Added to your wishlist" : "Added to your collection", { description: takeable.name });
     };
     const [collections, setCollections] = useState<FolderChoice[]>([]);
     const [facets, setFacets] = useState<Facets | undefined>(undefined);
@@ -198,7 +201,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         const res = await setFavorite(mine.id, next);
         setStarring(false);
         if (res.ok) router.refresh();
-        else setStarred(!next);
+        else {
+            setStarred(!next);
+            notify.failed(next ? "That card is not a Favorite" : "That card is still a Favorite", { description: res.error });
+        }
     };
     // The generation's logo, asked for when a card opens; kept with the series it was read for.
     const [logo, setLogo] = useState<{ series: string; url: string | null } | null>(null);
@@ -327,7 +333,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         setCopies_({ id: mine.id, n });
         const res = await setCopies(mine.id, n);
         if (!res.ok) {
-            setMenuError(res.error);
+            notify.failed("The number of copies did not change", { description: res.error });
             setCopies_({ id: mine.id, n: mine.quantity ?? 1 });
         } else {
             router.refresh();
@@ -342,7 +348,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         setLanguage_({ id: mine.id, code });
         const res = await setLanguage(mine.id, code);
         if (!res.ok) {
-            setMenuError(res.error);
+            notify.failed("The language did not change", { description: res.error });
             setLanguage_(null);
         } else router.refresh();
     };
@@ -354,7 +360,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         setCondition_({ id: mine.id, value });
         const res = await setCondition(mine.id, value || null);
         if (!res.ok) {
-            setMenuError(res.error);
+            notify.failed("The condition did not change", { description: res.error });
             setCondition_(null);
         } else {
             router.refresh();
@@ -366,19 +372,28 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         setViewing(null);
         onClose();
     };
-    const [menuError, setMenuError] = useState<string | null>(null);
-    const run = async (action: () => Promise<{ ok: true } | { ok: false; error: string }>, closes = false) => {
+    /* Every failure in here is a toast, and none of them is a line in the header any more. This
+       sheet is the whole page on a phone: an error paragraph beside the title is off screen for
+       every control below the fold — the bin sits in the Copies tab — and for an action that
+       closes the sheet it was never read at all. The one that stayed inline is the Binder select's,
+       which renders against the control it belongs to. */
+    const run = async (
+        action: () => Promise<{ ok: true } | { ok: false; error: string }>,
+        opts: { closes?: boolean; done?: string; failed: string } = { failed: "That did not save" },
+    ) => {
         setBusy(true);
-        setMenuError(null);
         const res = await action();
         setBusy(false);
         if (!res.ok) {
-            setMenuError(res.error);
+            // The title is the app's own sentence; the API's is the line under it, where it reads
+            // as the reason rather than as the app talking.
+            notify.failed(opts.failed, { description: res.error });
             return;
         }
-        if (closes) onClose();
+        if (opts.closes) onClose();
         router.refresh();
         void reloadCopies();
+        if (opts.done) notify.done(opts.done);
     };
 
     // The folders and the facets are for the sheet's own controls, so they are asked for when a
@@ -426,6 +441,8 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         const res = await setCardCollection(card.id, value || null);
         if (res.ok) {
             router.refresh();
+            const into = manual.find((c) => c.id === value);
+            notify.done(into ? `Filed in ${into.name}` : "Taken out of that Binder");
         } else {
             // The select must not keep showing a folder the card never moved to.
             setCollectionId(before);
@@ -471,16 +488,18 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                 {mine ? (
                                     <>
                                         {mine.owned ? (
-                                            <Button
-                                                color={isStarred ? "primary" : "tertiary"}
-                                                size="lg"
-                                                iconLeading={Star01}
-                                                aria-label="Favorite"
-                                                aria-pressed={isStarred}
-                                                isLoading={starring}
-                                                onClick={toggleStar}
-                                                className={isStarred ? undefined : "glass text-primary ring-1 ring-glass ring-inset"}
-                                            />
+                                            <Tooltip title={isStarred ? "Remove from Favorites" : "Add to Favorites"}>
+                                                <Button
+                                                    color={isStarred ? "primary" : "tertiary"}
+                                                    size="lg"
+                                                    iconLeading={Star01}
+                                                    aria-label="Favorite"
+                                                    aria-pressed={isStarred}
+                                                    isLoading={starring}
+                                                    onClick={toggleStar}
+                                                    className={isStarred ? undefined : "glass text-primary ring-1 ring-glass ring-inset"}
+                                                />
+                                            </Tooltip>
                                         ) : null}
                                         {/* What else is done to a card: copies, and taking it out. A wish can be marked owned here too. */}
                                         <Dropdown.Root>
@@ -509,7 +528,18 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                         strips the flag rather than filtering on it, and the only reader left
                                                         was the latest-pull block, which the profile no longer shows. What
                                                         does keep cards off a public profile is a folder's own switch. */}
-                                                    <Dropdown.Item icon={Trash01} onAction={() => run(() => removeCard(mine.id), true)}>
+                                                    <Dropdown.Item
+                                                        icon={Trash01}
+                                                        onAction={() =>
+                                                            run(() => removeCard(mine.id), {
+                                                                closes: true,
+                                                                done: mine.wishlist ? "Removed from your wishlist" : "Removed from your collection",
+                                                                failed: mine.wishlist
+                                                                    ? "That card is still on your wishlist"
+                                                                    : "That card is still in your collection",
+                                                            })
+                                                        }
+                                                    >
                                                         {mine.wishlist ? "Remove from wishlist" : "Remove from collection"}
                                                     </Dropdown.Item>
                                                 </Dropdown.Menu>
@@ -547,26 +577,30 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                             sits over the card while it does it. The empty span holds the other
                                             arrow's side, so a lone Next stays on the right where it belongs. */}
                                         {onPrev ? (
-                                            <Button
-                                                color="tertiary"
-                                                size="lg"
-                                                iconLeading={ChevronLeft}
-                                                aria-label="Previous card"
-                                                className="pointer-events-auto glass text-primary ring-1 ring-glass ring-inset"
-                                                onClick={() => onPrev()}
-                                            />
+                                            <Tooltip title="Previous card (←)">
+                                                <Button
+                                                    color="tertiary"
+                                                    size="lg"
+                                                    iconLeading={ChevronLeft}
+                                                    aria-label="Previous card"
+                                                    className="pointer-events-auto glass text-primary ring-1 ring-glass ring-inset"
+                                                    onClick={() => onPrev()}
+                                                />
+                                            </Tooltip>
                                         ) : (
                                             <span />
                                         )}
                                         {onNext ? (
-                                            <Button
-                                                color="tertiary"
-                                                size="lg"
-                                                iconLeading={ChevronRight}
-                                                aria-label="Next card"
-                                                className="pointer-events-auto glass text-primary ring-1 ring-glass ring-inset"
-                                                onClick={() => onNext()}
-                                            />
+                                            <Tooltip title="Next card (→)">
+                                                <Button
+                                                    color="tertiary"
+                                                    size="lg"
+                                                    iconLeading={ChevronRight}
+                                                    aria-label="Next card"
+                                                    className="pointer-events-auto glass text-primary ring-1 ring-glass ring-inset"
+                                                    onClick={() => onNext()}
+                                                />
+                                            </Tooltip>
                                         ) : (
                                             <span />
                                         )}
@@ -634,11 +668,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                         Mark as owned
                                     </Button>
                                 </MarkOwnedDialog>
-                            ) : null}
-                            {menuError ? (
-                                <p role="alert" className="text-sm text-error-primary">
-                                    {menuError}
-                                </p>
                             ) : null}
                         </div>
                     </SlideoutMenu.Header>
@@ -817,18 +846,27 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                                     line — outside the button that shows it, because a button inside a button is
                                                                     not a thing a browser will render. */}
                                                                 {!readOnly ? (
-                                                                    <Button
-                                                                        color="tertiary-destructive"
-                                                                        size="sm"
-                                                                        iconLeading={Trash01}
-                                                                        aria-label={
+                                                                    <Tooltip
+                                                                        title={
                                                                             group.quantity > 1
                                                                                 ? `Remove all ${group.quantity} of these copies`
                                                                                 : "Remove this copy"
                                                                         }
-                                                                        isDisabled={busy}
-                                                                        onClick={() => void dropCopies(group.rows)}
-                                                                    />
+                                                                        placement="left"
+                                                                    >
+                                                                        <Button
+                                                                            color="tertiary-destructive"
+                                                                            size="sm"
+                                                                            iconLeading={Trash01}
+                                                                            aria-label={
+                                                                                group.quantity > 1
+                                                                                    ? `Remove all ${group.quantity} of these copies`
+                                                                                    : "Remove this copy"
+                                                                            }
+                                                                            isDisabled={busy}
+                                                                            onClick={() => void dropCopies(group.rows)}
+                                                                        />
+                                                                    </Tooltip>
                                                                 ) : null}
                                                             </li>
                                                         );
@@ -849,23 +887,27 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                         value={
                                                             mine?.owned ? (
                                                                 <span className="flex items-center gap-2">
-                                                                    <Button
-                                                                        color="secondary"
-                                                                        size="sm"
-                                                                        iconLeading={Minus}
-                                                                        aria-label="One copy fewer"
-                                                                        isDisabled={busy || heldOfThisKind < 1}
-                                                                        onClick={() => void stepDown()}
-                                                                    />
+                                                                    <Tooltip title={heldOfThisKind <= 1 ? "Remove this copy" : "One copy fewer"}>
+                                                                        <Button
+                                                                            color="secondary"
+                                                                            size="sm"
+                                                                            iconLeading={Minus}
+                                                                            aria-label="One copy fewer"
+                                                                            isDisabled={busy || heldOfThisKind < 1}
+                                                                            onClick={() => void stepDown()}
+                                                                        />
+                                                                    </Tooltip>
                                                                     <span className="min-w-4 text-center tabular-nums">{heldOfThisKind}</span>
-                                                                    <Button
-                                                                        color="secondary"
-                                                                        size="sm"
-                                                                        iconLeading={Plus}
-                                                                        aria-label="One copy more"
-                                                                        isDisabled={busy}
-                                                                        onClick={() => step(shownCopies + 1)}
-                                                                    />
+                                                                    <Tooltip title="One copy more">
+                                                                        <Button
+                                                                            color="secondary"
+                                                                            size="sm"
+                                                                            iconLeading={Plus}
+                                                                            aria-label="One copy more"
+                                                                            isDisabled={busy}
+                                                                            onClick={() => step(shownCopies + 1)}
+                                                                        />
+                                                                    </Tooltip>
                                                                 </span>
                                                             ) : (
                                                                 (card?.quantity ?? 1)
@@ -932,7 +974,11 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                                         value={mine.acquired_at ? mine.acquired_at.slice(0, 10) : ""}
                                                                         max={new Date().toISOString().slice(0, 10)}
                                                                         onChange={(date) => {
-                                                                            if (date) void run(() => setAcquiredAt(mine.id, date));
+                                                                            if (date)
+                                                                                void run(() => setAcquiredAt(mine.id, date), {
+                                                                                    done: "Acquired date saved",
+                                                                                    failed: "The acquired date did not save",
+                                                                                });
                                                                         }}
                                                                     />
                                                                 ) : mine.acquired_at ? (

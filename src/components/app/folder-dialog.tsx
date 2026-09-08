@@ -6,6 +6,7 @@ import { Heading as AriaHeading } from "react-aria-components";
 import { createCollection, loadFacets, updateCollection } from "@/app/(app)/dashboard/collections/actions";
 import { DexRangeFields, dexDraft, dexFromDraft } from "@/components/app/dex-range-fields";
 import { RarityPicker } from "@/components/app/rarity-picker";
+import { notify } from "@/components/app/toast";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { BadgeWithButton } from "@/components/base/badges/badges";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
@@ -104,10 +105,21 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
         // A new rule folder is worth seeing filled; a renamed one is where it was. An opener that
         // asked for the id stays where it is and gets it.
         if (onSaved) {
+            // No toast: the opener puts the new binder in front of you — the card sheet's select
+            // switches to it the moment this returns.
             onSaved(res.id);
             router.refresh();
-        } else if (mode === "create" && kind === "rule" && res.id) router.push(`/dashboard/collections/${res.id}`);
-        else router.refresh();
+        } else if (mode === "create" && kind === "rule" && res.id) {
+            // No toast either: the page you land on, filled, is the answer.
+            router.push(`/dashboard/collections/${res.id}`);
+        } else {
+            // Nothing here moves. A new binder joins a list you are not looking at, and a rename
+            // swaps one word in a header that is easy to miss.
+            notify.done(
+                mode === "create" ? `${name} is in your Binders now` : folder!.name !== name ? `This binder is called ${name} now` : `${name} is saved`,
+            );
+            router.refresh();
+        }
     };
 
     const title = mode === "create" ? "New binder" : kind === "rule" ? "Edit rule" : "Edit folder";

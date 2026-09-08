@@ -8,6 +8,7 @@ import { type CardHit, searchMyCards } from "@/app/(app)/dashboard/cards/actions
 import { deleteCollection, setCardCollection } from "@/app/(app)/dashboard/collections/actions";
 import { CardImage } from "@/components/app/card-image";
 import { FolderDialog } from "@/components/app/folder-dialog";
+import { notify } from "@/components/app/toast";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { Button } from "@/components/base/buttons/button";
 import { CloseButton } from "@/components/base/buttons/close-button";
@@ -42,11 +43,14 @@ export function CollectionDetailActions({
             setStatus((s) => ({ ...s, [card.id]: "done" }));
             router.refresh();
         } else {
+            // The button falls back to "Add" on its own, which reads as a missed click; the toast
+            // is the only thing that says the card is not in this Binder.
             setStatus((s) => {
                 const next = { ...s };
                 delete next[card.id];
                 return next;
             });
+            notify.failed(`${card.name} was not added to ${folder.name}`, { description: res.error });
         }
     };
 
@@ -54,8 +58,13 @@ export function CollectionDetailActions({
     const del = async () => {
         setDeleting(true);
         const res = await deleteCollection(collectionId);
+        // On success the list you land on is the answer. On failure the dialog just sits there
+        // with its button ready again, saying nothing.
         if (res.ok) router.push("/dashboard/collections");
-        else setDeleting(false);
+        else {
+            setDeleting(false);
+            notify.failed(`${folder.name} was not deleted`, { description: res.error });
+        }
     };
 
     return (
@@ -63,7 +72,7 @@ export function CollectionDetailActions({
             {/* A rule folder decides its own contents: its action is the rule, not a search box. */}
             <FolderDialog mode="edit" folder={folder} facets={facets}>
                 <Button color="secondary" size="md" iconLeading={Edit03}>
-                    {folder.kind === "rule" ? "Edit rule" : "Edit folder"}
+                    {folder.kind === "rule" ? "Edit rule" : "Edit binder"}
                 </Button>
             </FolderDialog>
             {folder.kind === "rule" ? null : (
@@ -78,7 +87,7 @@ export function CollectionDetailActions({
                                     <div className="flex max-h-[80vh] w-full max-w-xl flex-col gap-4 rounded-2xl glass-thick p-6 shadow-xl">
                                         <div className="flex items-start justify-between gap-3">
                                             <AriaHeading slot="title" className="text-lg font-semibold text-primary">
-                                                Add cards to this folder
+                                                Add cards to this binder
                                             </AriaHeading>
                                             <CloseButton onClick={close} size="sm" className="-mt-1 -mr-1" />
                                         </div>
@@ -147,12 +156,12 @@ export function CollectionDetailActions({
                             {({ close }) => (
                                 <div className="flex w-full max-w-sm flex-col gap-4 rounded-2xl glass-thick p-6 shadow-xl">
                                     <AriaHeading slot="title" className="text-lg font-semibold text-primary">
-                                        Delete this folder?
+                                        Delete this binder?
                                     </AriaHeading>
                                     <p className="text-sm text-tertiary">
                                         {folder.kind === "rule"
-                                            ? "Only this folder and its rule go. The cards stay where they are."
-                                            : "The cards stay in your collection. Only this folder goes, and it cannot be brought back."}
+                                            ? "Only this binder and its rule go. The cards stay where they are."
+                                            : "The cards stay in your collection. Only this binder goes, and it cannot be brought back."}
                                     </p>
                                     <div className="flex justify-end gap-2">
                                         <Button color="secondary" onClick={close}>
