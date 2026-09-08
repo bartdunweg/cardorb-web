@@ -1,3 +1,4 @@
+import { updateTag } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // React's `cache` only memoises inside a render; here one memo stands in for one request.
@@ -14,15 +15,22 @@ vi.mock("next/cache", () => ({
     updateTag: vi.fn(),
     revalidatePath: vi.fn(),
 }));
+/** The one API call `forgetMine` makes: the profile it reads its own username off. */
+const { readProfile } = vi.hoisted(() => ({ readProfile: vi.fn(async () => ({ username: "Bart" })) }));
 vi.mock("@/lib/api", () => ({
     ApiError: class extends Error {},
+    api: readProfile,
     session: async () => ({ userId: "u1", token: "t" }),
 }));
 
-const { forgetMine, perUser } = await import("@/lib/user-cache");
+const { forgetMine, perUser, publicTag } = await import("@/lib/user-cache");
 
 describe("perUser", () => {
-    beforeEach(() => memo.clear());
+    beforeEach(() => {
+        memo.clear();
+        vi.mocked(updateTag).mockClear();
+        readProfile.mockClear();
+    });
 
     it("reads a name once per request, whoever asks", async () => {
         const load = vi.fn(async () => 42);
@@ -46,5 +54,37 @@ describe("perUser", () => {
         await forgetMine();
         await perUser("stats", load);
         expect(load).toHaveBeenCalledTimes(2);
+    });
+});
+
+describe("forgetMine", () => {
+    beforeEach(() => {
+        memo.clear();
+        vi.mocked(updateTag).mockClear();
+        readProfile.mockClear();
+        readProfile.mockResolvedValue({ username: "Bart" });
+    });
+
+    it("drops the public pages of the writer's own name, not only their own screens", async () => {
+        await forgetMine();
+        expect(vi.mocked(updateTag).mock.calls.flat()).toEqual(["user:u1", "public:bart"]);
+    });
+
+    it("reads the name before dropping the tag it is cached under", async () => {
+        await forgetMine();
+        // The other way round the read would miss and cost a call on every single write.
+        expect(readProfile.mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(updateTag).mock.invocationCallOrder[0]);
+    });
+
+    it("still drops the writer's own tag when the name cannot be read", async () => {
+        readProfile.mockRejectedValue(new Error("the API is down"));
+        await expect(forgetMine()).resolves.toBeUndefined();
+        expect(vi.mocked(updateTag).mock.calls.flat()).toEqual(["user:u1"]);
+    });
+});
+
+describe("publicTag", () => {
+    it("is one tag however the link was capitalised", () => {
+        expect(publicTag("Bart")).toBe(publicTag("bart"));
     });
 });

@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { revalidatePath, unstable_cache, updateTag } from "next/cache";
-import { ApiError, session } from "@/lib/api";
+import { ApiError, api, session } from "@/lib/api";
+import { ownProfileSchema } from "@/lib/api-shapes";
 import { elapsed, logTiming } from "@/lib/timing";
 
 /**
@@ -24,6 +25,19 @@ import { elapsed, logTiming } from "@/lib/timing";
 const FIVE_MINUTES = 300;
 
 export const userTag = (userId: string) => `user:${userId}`;
+
+/**
+ * What the public pages of one person are filed under. Those are read without a session, so they
+ * live in the Data Cache for five minutes (`api()` with `auth: false`) rather than under
+ * `userTag`, and nothing dropped them: a profile switched to private, or a copy hidden from it,
+ * stayed readable to a visitor for the rest of the window.
+ *
+ * By username, not by id. The read has only the name — a visitor has no session to turn into an
+ * id, and asking the API who owns the name would cost the very round trip the cache exists to
+ * save. So the translating happens on the writing side, where a name is one cached read away
+ * (`forgetMine`). Lower-cased because the API stores names lower-cased while a link may not.
+ */
+export const publicTag = (username: string) => `public:${username.toLowerCase()}`;
 
 /** The reads in flight for this request, by name. React's `cache` keeps one map per request. */
 const inFlight = cache(() => new Map<string, Promise<unknown>>());
@@ -72,8 +86,32 @@ async function perUserUncached<T>(name: string, load: (token: string) => Promise
  */
 export async function forgetMine(): Promise<void> {
     const s = await session();
-    if (s) updateTag(userTag(s.userId));
+    if (s) {
+        // Before the tag goes: dropping it first would make this read a miss and cost a call.
+        // The name it returns is the one from before the write, which is exactly the name whose
+        // public pages are now stale — a rename leaves nothing cached under the new one.
+        const username = await myUsername();
+        updateTag(userTag(s.userId));
+        if (username) updateTag(publicTag(username));
+    }
     // The render after this action runs in the same request; it must not get a read from before the write.
     inFlight().clear();
     revalidatePath("/dashboard", "layout");
+}
+
+/**
+ * The writer's own username, for `publicTag`.
+ *
+ * Through the same cache entry `getMyProfile()` fills — same name, same schema, so the two share
+ * one value rather than making a second — which the layout filled on the render before this
+ * write, so it is a cache read and not a call. Best effort: a name that cannot be read only means
+ * the public pages keep their five minutes, and a write that succeeded must not fail over it.
+ */
+async function myUsername(): Promise<string | null> {
+    try {
+        const own = await perUser("profile", (token) => api("/profile", { token, schema: ownProfileSchema }));
+        return own.username || null;
+    } catch {
+        return null;
+    }
 }

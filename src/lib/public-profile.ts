@@ -11,7 +11,16 @@ import {
 import type { Facets } from "@/lib/cards";
 import type { PokedexSetting } from "@/lib/folder-rule";
 import type { ListQuery } from "@/lib/list-query";
+import { publicTag } from "@/lib/user-cache";
 
+/**
+ * What a visitor sees of someone else's collection, read from the API's public routes.
+ *
+ * Every read here is unkeyed, so it is cached for five minutes, and every one carries the owner's
+ * tag (`publicTag`): the moment they make the profile private, or take a copy off it, the write
+ * drops the lot. Without the tag the page went on answering out of the cache — a profile turned
+ * private and still readable for five minutes, which is the one thing a public page must get right.
+ */
 export type PublicProfile = {
     display_name: string | null;
     username: string | null;
@@ -27,7 +36,7 @@ export type PublicProfile = {
 // Unkeyed: the API's three public routes serve exactly this page and carry no prices.
 export async function getPublicProfile(username: string): Promise<PublicProfile | null> {
     try {
-        const p = await api(`/public/${encodeURIComponent(username)}/profile`, { auth: false, schema: publicProfileAnswer });
+        const p = await api(`/public/${encodeURIComponent(username)}/profile`, { auth: false, tags: [publicTag(username)], schema: publicProfileAnswer });
         return {
             display_name: p.displayName,
             username: p.username,
@@ -54,6 +63,7 @@ export type PublicCardsPage = { cards: PublicCard[]; total: number; facets: Face
 export async function getPublicCards(username: string, { page, q, set, rarity, sort, order, folder, list }: ListQuery): Promise<PublicCardsPage> {
     const { cards, total, facets } = await api(`/public/${encodeURIComponent(username)}/cards`, {
         auth: false,
+        tags: [publicTag(username)],
         params: { q, set, rarity, sort, order, collection: folder, list, limit: PUBLIC_PAGE_SIZE, offset: (page - 1) * PUBLIC_PAGE_SIZE },
         schema: publicCardsAnswer,
     });
@@ -75,6 +85,7 @@ export async function getAllPublicCards(username: string, query: ListQuery): Pro
     const read = async (offset: number) =>
         api(`/public/${encodeURIComponent(username)}/cards`, {
             auth: false,
+            tags: [publicTag(username)],
             params: { q: query.q, set: query.set, rarity: query.rarity, list: "pokedex", limit: ALL_PAGE_SIZE, offset },
             schema: publicCardsAnswer,
         });
@@ -99,7 +110,11 @@ export type PublicFolder = { id: string; name: string; kind: "manual" | "rule"; 
 // profile without its chips is a poorer page, and an API from before the route answers 404.
 export async function getPublicFolders(username: string): Promise<PublicFolder[]> {
     try {
-        const { folders } = await api(`/public/${encodeURIComponent(username)}/folders`, { auth: false, schema: publicFoldersAnswer });
+        const { folders } = await api(`/public/${encodeURIComponent(username)}/folders`, {
+            auth: false,
+            tags: [publicTag(username)],
+            schema: publicFoldersAnswer,
+        });
         return folders;
     } catch (err) {
         if (err instanceof ApiError && (err.status === 404 || err.status === 503)) return [];
@@ -110,6 +125,11 @@ export async function getPublicFolders(username: string): Promise<PublicFolder[]
 // How many cards a public list holds, and nothing else: one item asked for, the total read off it.
 // For the line under the name, which counts the collection and the wishlist whatever list is open.
 export async function countPublicCards(username: string, list?: "wishlist" | "favorites" | "pokedex"): Promise<number> {
-    const { total } = await api(`/public/${encodeURIComponent(username)}/cards`, { auth: false, params: { list, limit: 1 }, schema: publicTotalAnswer });
+    const { total } = await api(`/public/${encodeURIComponent(username)}/cards`, {
+        auth: false,
+        tags: [publicTag(username)],
+        params: { list, limit: 1 },
+        schema: publicTotalAnswer,
+    });
     return total;
 }
