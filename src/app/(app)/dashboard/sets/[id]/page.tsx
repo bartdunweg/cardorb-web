@@ -5,10 +5,9 @@ import { CardImage } from "@/components/app/card-image";
 import { PageHeader } from "@/components/app/page-header";
 import { SetCards } from "@/components/app/set-cards";
 import { ProgressBarBase } from "@/components/base/progress-indicators/progress-indicators";
+import { formatCount } from "@/lib/format";
 import { isBrowseLanguage } from "@/lib/languages";
 import { CatalogueUnavailable, getSet, getSets } from "@/lib/sets";
-
-const n = (value: number) => value.toLocaleString("en-US");
 
 // The set's own name in the tab, so a history of open sets is readable.
 //
@@ -65,7 +64,7 @@ export default async function SetPage({ params, searchParams }: { params: Promis
 
     const released = releaseLabel(set.releaseDate);
     // The set's own name first where the title is a translation: that is what the pack says.
-    const subtitle = [set.localName, set.series, released ? `released ${released}` : null, `${n(set.owned)} of ${n(set.total)} cards`]
+    const subtitle = [set.localName, set.series, released ? `released ${released}` : null, `${formatCount(set.owned)} of ${formatCount(set.total)} cards`]
         .filter(Boolean)
         .join(" · ");
 

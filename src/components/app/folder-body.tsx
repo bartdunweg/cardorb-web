@@ -10,9 +10,10 @@ import { CardsView } from "@/components/app/cards-view";
 import { DexView } from "@/components/app/dex-grid";
 import { FiltersSheet } from "@/components/app/filters-sheet";
 import { PublicCardsView } from "@/components/app/public-cards-view";
-import type { CardFilter, CardList, Facets, PublicCard } from "@/lib/cards";
+import type { CardFilter, CardList, PublicCard } from "@/lib/cards";
 import { CARDS_SIZE_COOKIE, CARDS_VIEW_COOKIE, parseCardsSize, parseCardsView } from "@/lib/cards-view";
 import type { DexList } from "@/lib/dex-groups";
+import { type Facets, NO_FACETS } from "@/lib/facets";
 import { type ListQuery, SORT_OPTIONS, type SortKey, type SortOption, isNarrowed, listHref } from "@/lib/list-query";
 
 type Common = {
@@ -168,8 +169,6 @@ async function CatalogueNotice({ list }: { list: Promise<CardList> }) {
         </output>
     );
 }
-
-const NO_FACETS: Facets = { sets: [], rarities: [], gens: [], types: [] };
 
 // The Filters sheet's fields once the sets and rarities are known: they ride with the list's first
 // page, so a page no longer waits for a second read before its first byte.

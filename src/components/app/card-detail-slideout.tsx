@@ -25,7 +25,7 @@ import { CardImage } from "@/components/app/card-image";
 import { CardPriceChart } from "@/components/app/card-price-chart";
 import { CONDITIONS } from "@/components/app/condition-badge";
 import { CopyFormDialog } from "@/components/app/copy-form-dialog";
-import { FlagIcon } from "@/components/app/flag-icon";
+import { CopyRow } from "@/components/app/copy-row";
 import { FolderDialog } from "@/components/app/folder-dialog";
 import { HoloCard } from "@/components/app/holo-card";
 import { LanguageSelect } from "@/components/app/language-select";
@@ -850,18 +850,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                                 className={cx("flex items-center gap-1", !current && "arrive")}
                                                                 style={{ "--arrive-delay": `${Math.min(i, 8) * 20}ms` } as React.CSSProperties}
                                                             >
-                                                                <button
-                                                                    type="button"
-                                                                    aria-current={current ? "true" : undefined}
-                                                                    onClick={() => card && setViewing({ of: card.id, row })}
-                                                                    className={cx(
-                                                                        "flex w-full items-center gap-2 py-2 text-left text-sm outline-focus-ring focus-visible:outline-2",
-                                                                        current ? "text-primary" : "text-secondary hover:text-primary",
-                                                                    )}
-                                                                >
-                                                                    <FlagIcon language={row.language} />
-                                                                    <span className="min-w-0 flex-1 truncate">
-                                                                        {[
+                                                                <CopyRow
+                                                                    language={row.language}
+                                                                    label={
+                                                                        [
                                                                             // The finish, then the foil's pattern where anything
                                                                             // recorded one: "Holo · Cosmos". Two facts about this
                                                                             // copy — what it is worth, and what it looks like.
@@ -875,14 +867,13 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                                             folderName,
                                                                         ]
                                                                             .filter(Boolean)
-                                                                            .join(" · ") || "Copy"}
-                                                                    </span>
-                                                                    {/* The copy's own price: a reverse holo has the foil's, the rest the plain one. */}
-                                                                    {row.price != null ? (
-                                                                        <span className="text-tertiary tabular-nums">{formatPrice(row.price)}</span>
-                                                                    ) : null}
-                                                                    <span className="text-tertiary tabular-nums">×{group.quantity}</span>
-                                                                </button>
+                                                                            .join(" · ") || "Copy"
+                                                                    }
+                                                                    price={row.price}
+                                                                    quantity={group.quantity}
+                                                                    current={current}
+                                                                    onSelect={() => card && setViewing({ of: card.id, row })}
+                                                                />
                                                                 {/* Removing a copy is a thing you do to that copy, so it belongs on that copy's
                                                                     line — outside the button that shows it, because a button inside a button is
                                                                     not a thing a browser will render. */}

@@ -2,12 +2,12 @@
 
 import type { ReactNode } from "react";
 import { createContext, useContext, useEffect, useState } from "react";
-import { SearchLg } from "@untitledui/icons";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { type CatalogueFilters, type PokemonCard, addCard, searchPokemon } from "@/app/(app)/dashboard/cards/actions";
 import { listSetsShelf } from "@/app/(app)/dashboard/sets/actions";
 import type { FilterOption } from "@/components/app/filter-chip";
+import { SearchTrigger } from "@/components/app/search-trigger";
 import { notify } from "@/components/app/toast";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 
@@ -23,16 +23,7 @@ export const useCommandSearch = () => useContext(CommandSearchContext);
 // A search-field-looking button that opens the command palette (used in the desktop sidebar).
 export function SidebarSearchTrigger() {
     const { open } = useCommandSearch();
-    return (
-        <button
-            type="button"
-            onClick={open}
-            className="flex w-full pressable cursor-pointer items-center gap-2 rounded-full bg-primary px-3 py-2 text-sm text-tertiary ring-1 ring-primary outline-focus-ring ring-inset hover:bg-secondary focus-visible:outline-2"
-        >
-            <SearchLg className="size-5 text-fg-quaternary" />
-            <span className="flex-1 text-left">Search</span>
-        </button>
-    );
+    return <SearchTrigger label="Search" onPress={open} />;
 }
 
 // Renders the single command palette and provides open() to descendants. It searches the whole

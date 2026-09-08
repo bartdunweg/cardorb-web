@@ -6,9 +6,12 @@ import { BOOT_SCRIPT_HASH } from "@/lib/theme-script";
  * signs its own scripts with the nonce; the one inline script of ours, the theme boot script in
  * the root layout, is allowed by its hash instead, so it needs nothing per request.
  *
- * The public pages are not covered: they prerender, and a nonce is per request. They get
- * `frame-ancestors 'none'` from the proxy, and every path, including the ones the proxy's matcher
- * skips, gets X-Frame-Options from next.config.mjs.
+ * The public profile is covered too, and was not: this said the public pages prerender, and
+ * `/user/[username]` does not — it reads cookies for the viewer, so it renders per request and a
+ * nonce is there for the asking. It was the one page missing a script policy while rendering
+ * another person's chosen words and a hundred catalogue card names. The pages that really do
+ * prerender — the landing page, the legal pages, the docs — cannot take one, and keep
+ * `frame-ancestors 'none'` from the proxy; every path gets X-Frame-Options from next.config.mjs.
  */
 
 /**
@@ -22,6 +25,10 @@ export const NONCE_ROUTES: RegExp[] = [
     /^\/dashboard(\/(cards|collections|design|favorites|pokedex|sets|settings|wishlist|you))?$/,
     /^\/dashboard\/(collections|sets)\/[^/]+$/,
     /^\/(login|signup|forgot-password|reset-password)$/,
+    // A username that belongs to nobody renders `notFound()` inside this same per-request render,
+    // so Next signs that page's scripts with the same nonce. It is not the prerendered 404 the
+    // paths below fall to.
+    /^\/user\/[^/]+$/,
 ];
 
 export const needsNonce = (pathname: string): boolean => NONCE_ROUTES.some((route) => route.test(pathname));

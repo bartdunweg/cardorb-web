@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { CardImage } from "@/components/app/card-image";
+import { formatCount } from "@/lib/format";
 import type { BrowseLanguage } from "@/lib/languages";
 import type { SetSeries } from "@/lib/sets";
 import { cx } from "@/utils/cx";
-
-const n = (v: number) => v.toLocaleString("en-US");
 
 // Every set there has been, as a list under the search: series by series, each set a row with
 // its logo, name and how many of it you hold, leading to the set's page. The same shelf Browse
@@ -42,7 +41,7 @@ export function SetsShelfList({ series, language = "en", onNavigate }: { series:
                                         {set.localName ? <span className="truncate text-xs text-tertiary">{set.localName}</span> : null}
                                     </span>
                                     <span className="shrink-0 text-xs text-tertiary tabular-nums">
-                                        {n(set.owned)} of {n(set.total)}
+                                        {formatCount(set.owned)} of {formatCount(set.total)}
                                     </span>
                                 </Link>
                             </li>

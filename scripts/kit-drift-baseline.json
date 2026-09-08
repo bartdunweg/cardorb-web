@@ -1,14 +1,3 @@
 {
-    "files": {
-        "src/components/app/card-detail-slideout.tsx": 1,
-        "src/components/app/cards-grid.tsx": 1,
-        "src/components/app/chart-periods.tsx": 1,
-        "src/components/app/command-search.tsx": 1,
-        "src/components/app/dex-grid.tsx": 2,
-        "src/components/app/dex-slider.tsx": 3,
-        "src/components/app/filter-chip.tsx": 2,
-        "src/components/app/language-chips.tsx": 1,
-        "src/components/app/mobile-search.tsx": 2,
-        "src/components/app/top-cards-row.tsx": 1
-    }
+    "files": {}
 }

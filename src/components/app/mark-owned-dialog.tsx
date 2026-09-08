@@ -9,6 +9,7 @@ import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { CardImage } from "@/components/app/card-image";
 import { CONDITIONS } from "@/components/app/condition-badge";
 import { finishOptions, patternOptions, soleOption } from "@/components/app/copy-fields";
+import { FormError } from "@/components/app/form-error";
 import { GRADERS, GRADES, gradeLabel, splitGrade } from "@/components/app/graded";
 import { LanguageSelect } from "@/components/app/language-select";
 import { SheetDialog } from "@/components/app/sheet-dialog";
@@ -18,6 +19,7 @@ import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { NativeSelect } from "@/components/base/select/select-native";
 import type { Card } from "@/lib/api-shapes";
+import { cardLabel } from "@/lib/card-label";
 import type { CopyEdits } from "@/lib/copies";
 
 // A wish becomes a copy you hold. The moment to say what it is: language, condition (Near Mint
@@ -132,7 +134,7 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
                     <AriaHeading slot="title" className="truncate text-lg font-semibold text-primary">
                         {card.name}
                     </AriaHeading>
-                    <p className="truncate text-sm text-tertiary">{[card.set_name, card.number ? `#${card.number}` : null].filter(Boolean).join(" · ")}</p>
+                    <p className="truncate text-sm text-tertiary">{cardLabel(card, "lg")}</p>
                 </div>
             </div>
             <p className="-mt-2 text-sm text-tertiary">Say what your copy is like. It leaves the wishlist and joins your collection.</p>
@@ -290,11 +292,7 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
                 />
             </div>
 
-            {error ? (
-                <p role="alert" className="text-sm text-error-primary">
-                    {error}
-                </p>
-            ) : null}
+            <FormError error={error} />
 
             <div className="flex justify-end gap-2">
                 <Button color="secondary" size="sm" onClick={close}>

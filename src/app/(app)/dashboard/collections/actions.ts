@@ -3,7 +3,8 @@
 import { z } from "zod";
 import { ApiError, api } from "@/lib/api";
 import { createdFolderAnswer, foldersAnswer } from "@/lib/api-shapes";
-import { type Facets, getFacets } from "@/lib/cards";
+import { getFacets } from "@/lib/cards";
+import { type Facets, NO_FACETS } from "@/lib/facets";
 import { type FolderRule, type PokedexSetting, folderRuleSchema, pokedexSettingSchema } from "@/lib/folder-rule";
 import { forgetMine } from "@/lib/user-cache";
 
@@ -79,7 +80,7 @@ export async function loadFacets(): Promise<Facets> {
     try {
         return await getFacets();
     } catch {
-        return { sets: [], rarities: [], gens: [], types: [] };
+        return NO_FACETS;
     }
 }
 

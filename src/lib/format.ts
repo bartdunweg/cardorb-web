@@ -30,3 +30,11 @@ const wholeEuros = new Intl.NumberFormat("en-US", { style: "currency", currency:
 export function formatValue(value: number | null | undefined): string {
     return value == null ? "" : wholeEuros.format(value);
 }
+
+const counts = new Intl.NumberFormat("en-US");
+
+// Formats a count as "1,025": every number the app says out loud is grouped, so 1025 cards and
+// 1,025 Pokémon never sit on the same screen written two ways.
+export function formatCount(value: number): string {
+    return counts.format(value);
+}

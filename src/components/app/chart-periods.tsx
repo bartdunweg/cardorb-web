@@ -1,5 +1,6 @@
 "use client";
 
+import { Button as AriaButton } from "react-aria-components";
 import { cx } from "@/utils/cx";
 
 /**
@@ -45,18 +46,19 @@ export function ChartPeriods({ period, onPick, className }: { period: PeriodKey;
         <fieldset className={cx("flex justify-center gap-1", className)}>
             <legend className="sr-only">Period</legend>
             {PERIODS.map((p) => (
-                <button
+                // The kit's button (react-aria), which answers Enter and Space itself, as the chips do.
+                // Not its ButtonGroup: that is a bordered segment, and this is a pill behind a word.
+                <AriaButton
                     key={p.key}
-                    type="button"
                     aria-pressed={p.key === period}
-                    onClick={() => onPick(p.key)}
+                    onPress={() => onPick(p.key)}
                     className={cx(
                         "pressable rounded-full px-3 py-1.5 text-sm font-semibold outline-focus-ring transition-colors duration-150 focus-visible:outline-2",
                         p.key === period ? "bg-alpha-black/8 text-primary" : "text-tertiary hover:text-secondary",
                     )}
                 >
                     {p.label}
-                </button>
+                </AriaButton>
             ))}
         </fieldset>
     );

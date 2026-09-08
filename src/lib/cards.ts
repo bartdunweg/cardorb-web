@@ -1,18 +1,12 @@
 import { api } from "@/lib/api";
 import { type Card, type CardItem, cardFromItem, cardsAnswer, facetsAnswer, statsAnswer } from "@/lib/api-shapes";
+import { type Facets, facetsFrom } from "@/lib/facets";
 import { perUser } from "@/lib/user-cache";
 
 export type { Card, PublicCard } from "@/lib/api-shapes";
-
-/** What a filter menu offers: the sets you hold a card of, in set order, and the rarities, A to Z. */
-export type Facets = {
-    sets: { name: string; title: string }[];
-    rarities: string[];
-    /** In the collection's own order, which is the catalogue's series order and so chronological. */
-    gens: string[];
-    /** A to Z. */
-    types: string[];
-};
+// The type lives in `@/lib/facets` with NO_FACETS and facetsFrom, which a client component has to
+// be able to import: this module reaches the API and so the session, and cannot cross that line.
+export type { Facets } from "@/lib/facets";
 
 /**
  * The sets and rarities you hold a card of, for a rule's fields and the search's chips. Five
@@ -22,7 +16,7 @@ export type Facets = {
 export const getFacets = (): Promise<Facets> =>
     perUser("facets", async (token) => {
         const { facets } = await api("/cards", { token, params: { owned: true, limit: 1 }, schema: facetsAnswer });
-        return { sets: facets?.sets ?? [], rarities: facets?.rarities ?? [], gens: facets?.gens ?? [], types: facets?.types ?? [] };
+        return facetsFrom(facets);
     });
 
 /** Which cards a list asks for: the folder, the search, the sort and the filters. Plain data, so a page can hand it to the client for the next batch. */
@@ -120,16 +114,13 @@ export async function getMyCards({
                 offset,
             },
         });
-        // The API has carried facets since its #161, the same day as this read; an older deploy or a
-        // rollback answers without them, and one older than its #226 without gens and types. Empty
-        // menus then, not a Cards page that throws on facets.sets.
         return {
             cards: cards.map(cardFromItem),
             total,
             value: value ?? null,
             unpriced: unpriced ?? 0,
             catalogueUnavailable: catalogueUnavailable === true,
-            facets: { sets: facets?.sets ?? [], rarities: facets?.rarities ?? [], gens: facets?.gens ?? [], types: facets?.types ?? [] },
+            facets: facetsFrom(facets),
         };
     };
     return key ? perUser(key, read) : read();

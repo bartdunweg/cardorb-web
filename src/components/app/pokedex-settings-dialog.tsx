@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import { updateListPublic, updatePokedexSetting } from "@/app/(app)/dashboard/settings/actions";
 import { DexRangeFields, dexDraft, dexFromDraft } from "@/components/app/dex-range-fields";
+import { FormError } from "@/components/app/form-error";
 import { RarityPicker } from "@/components/app/rarity-picker";
 import { notify } from "@/components/app/toast";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
@@ -107,11 +108,7 @@ export function PokedexSettingsDialog({
                                     isSelected={shown}
                                     onChange={setShown}
                                 />
-                                {error ? (
-                                    <p role="alert" className="text-sm text-error-primary">
-                                        {error}
-                                    </p>
-                                ) : null}
+                                <FormError error={error} />
                                 <div className="flex justify-end gap-2">
                                     <Button color="secondary" onClick={close}>
                                         Cancel

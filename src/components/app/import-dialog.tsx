@@ -4,6 +4,7 @@ import { type ReactNode, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import { type ColumnMap, type ImportPreview, type ImportResult, commitImport, previewImport } from "@/app/(app)/dashboard/settings/import-actions";
+import { FormError } from "@/components/app/form-error";
 import { LinkButton } from "@/components/app/link-button";
 import { FileUploadDropZone } from "@/components/application/file-upload/file-upload-base";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
@@ -243,11 +244,7 @@ function ImportForm({ close }: { close: () => void }) {
                  * cannot see the panel appear still needs to be told the import
                  * finished, and what it did.
                  */}
-                {error ? (
-                    <p role="alert" className="arrive text-sm text-error-primary">
-                        {error}
-                    </p>
-                ) : null}
+                <FormError error={error} arrive />
 
                 {result ? (
                     <output className="flex arrive flex-col gap-1 text-sm">

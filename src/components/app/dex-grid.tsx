@@ -4,9 +4,11 @@ import { type ReactNode, Suspense, use, useEffect, useRef, useState } from "reac
 import { listCopies } from "@/app/(app)/dashboard/cards/actions";
 import { CardDetailSlideout } from "@/components/app/card-detail-slideout";
 import { CardImage } from "@/components/app/card-image";
+import { CardTile } from "@/components/app/card-tile";
 import { DexSlider } from "@/components/app/dex-slider";
 import { CardsSkeleton } from "@/components/app/skeletons";
 import { ViewMenu } from "@/components/app/view-menu";
+import { Button } from "@/components/base/buttons/button";
 import type { DexCard } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
 import { type CardsSize, GRID_COLUMNS, TILE_WIDTH } from "@/lib/cards-view";
@@ -71,13 +73,11 @@ export function DexGrid({ slots, size = "md", linked = true }: { slots: NamedDex
             </div>
             {more ? (
                 <div ref={sentinel} className="flex justify-center py-2">
-                    <button
-                        type="button"
-                        className="text-sm text-tertiary outline-focus-ring focus-visible:outline-2"
-                        onClick={() => setShown((n) => n + DEX_BATCH)}
-                    >
+                    {/* The way on when the sentinel is never seen — a keyboard, or an observer the
+                        browser does not have. The kit's quietest button: the same grey word it was. */}
+                    <Button color="link-gray" size="sm" onClick={() => setShown((n) => n + DEX_BATCH)}>
                         Show more
-                    </button>
+                    </Button>
                 </div>
             ) : null}
             {linked ? <CardDetailSlideout card={selected} onClose={() => setSelected(null)} /> : null}
@@ -98,22 +98,20 @@ function DexTile({ slot, onSelect }: { slot: NamedDexSlot; onSelect?: (card: Dex
 
     if (held === 0) {
         return (
-            <div className="flex flex-col gap-2">
-                <div className="flex aspect-card w-full items-center justify-center rounded-card bg-tertiary">
-                    <span className="text-sm font-medium text-quaternary tabular-nums">{dexNumber(slot.number)}</span>
-                </div>
-                {words}
-            </div>
+            <CardTile
+                picture={
+                    <div className="flex aspect-card w-full items-center justify-center rounded-card bg-tertiary">
+                        <span className="text-sm font-medium text-quaternary tabular-nums">{dexNumber(slot.number)}</span>
+                    </div>
+                }
+                words={words}
+            />
         );
     }
 
+    // The slider is the press target here, one card at a time, so the tile around it is not one.
     if (held > 1) {
-        return (
-            <div className="flex flex-col gap-2">
-                <DexSlider cards={slot.cards} onSelect={onSelect} />
-                {words}
-            </div>
-        );
+        return <CardTile picture={<DexSlider cards={slot.cards} onSelect={onSelect} />} words={words} />;
     }
 
     const card = slot.cards[0]!;
@@ -135,24 +133,7 @@ function DexTile({ slot, onSelect }: { slot: NamedDexSlot; onSelect?: (card: Dex
             )}
         </div>
     );
-    if (!onSelect) {
-        return (
-            <div className="flex flex-col gap-2">
-                {picture}
-                {words}
-            </div>
-        );
-    }
-    return (
-        <button
-            type="button"
-            onClick={() => onSelect(card)}
-            className="flex w-full pressable cursor-pointer flex-col gap-2 rounded-lg text-left outline-offset-2 outline-focus-ring focus-visible:outline-2"
-        >
-            {picture}
-            {words}
-        </button>
-    );
+    return <CardTile picture={picture} words={words} onSelect={onSelect ? () => onSelect(card) : undefined} />;
 }
 
 // The Pokédex body under the shared row: the View menu offers the size alone, a slot being

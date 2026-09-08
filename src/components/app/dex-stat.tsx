@@ -2,6 +2,7 @@ import { StatCard } from "@/components/app/cards-stats";
 import { getAllMyCards } from "@/lib/cards";
 import { groupByDex } from "@/lib/dex-groups";
 import { DEFAULT_POKEDEX } from "@/lib/folder-rule";
+import { formatCount } from "@/lib/format";
 import { getDexNames } from "@/lib/pokedex";
 import { getMyProfile } from "@/lib/profile";
 
@@ -13,13 +14,5 @@ export async function DexStat() {
     const setting = me.profile?.pokedex ?? DEFAULT_POKEDEX;
     const { caught, range } = groupByDex(all.cards, names, setting);
     const total = range.to - range.from + 1;
-    return (
-        <StatCard
-            label="Pokémon collected"
-            value={caught.toLocaleString("en-US")}
-            detail={`of ${total.toLocaleString("en-US")}`}
-            href="/dashboard/pokedex"
-            delay={120}
-        />
-    );
+    return <StatCard label="Pokémon collected" value={formatCount(caught)} detail={`of ${formatCount(total)}`} href="/dashboard/pokedex" delay={120} />;
 }

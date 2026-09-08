@@ -5,6 +5,7 @@ import { DotsHorizontal, Settings01 } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import { updateListPublic } from "@/app/(app)/dashboard/settings/actions";
+import { FormError } from "@/components/app/form-error";
 import { notify } from "@/components/app/toast";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { Button } from "@/components/base/buttons/button";
@@ -75,11 +76,7 @@ export function ListSettingsDialog({
                                     isSelected={shown}
                                     onChange={setShown}
                                 />
-                                {error ? (
-                                    <p role="alert" className="text-sm text-error-primary">
-                                        {error}
-                                    </p>
-                                ) : null}
+                                <FormError error={error} />
                                 <div className="flex justify-end gap-2">
                                     <Button color="secondary" onClick={close}>
                                         Cancel

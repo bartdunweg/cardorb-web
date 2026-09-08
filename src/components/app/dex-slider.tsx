@@ -2,7 +2,9 @@
 
 import { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "@untitledui/icons";
+import { Button as AriaButton } from "react-aria-components";
 import { CardImage } from "@/components/app/card-image";
+import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import type { DexCard } from "@/lib/api-shapes";
 import { TILE_WIDTH } from "@/lib/cards-view";
 import { cx } from "@/utils/cx";
@@ -45,22 +47,28 @@ export function DexSlider({ cards, onSelect }: { cards: DexCard[]; onSelect?: (c
                 ))}
             </div>
 
-            <button
-                type="button"
-                aria-label="Previous card"
+            {/* The kit's icon button, which names itself after its tooltip — the same words the arrow
+                was already labelled with. Its xs size is this circle exactly: a 16 px chevron in 6 px
+                of padding. The black disc, the show-on-hover and the focus ring's own offset are this
+                slider's: an offset ring is clipped by the picture box a pixel or two away. */}
+            <ButtonUtility
+                size="xs"
+                color="tertiary"
+                icon={ChevronLeft}
+                tooltip="Previous card"
+                tooltipPlacement="left"
                 onClick={() => scroll(-1)}
-                className="absolute top-1/2 left-1 hidden size-7 -translate-y-1/2 items-center justify-center rounded-full bg-alpha-black/60 outline-focus-ring focus-visible:outline-2 lg:group-focus-within:flex lg:group-hover:flex pointer-coarse:flex"
-            >
-                <ChevronLeft className="size-4 text-alpha-white" />
-            </button>
-            <button
-                type="button"
-                aria-label="Next card"
+                className="absolute top-1/2 left-1 hidden -translate-y-1/2 bg-alpha-black/60 text-alpha-white transition-none hover:bg-alpha-black/60 hover:text-alpha-white focus-visible:outline-offset-0 lg:group-focus-within:inline-flex lg:group-hover:inline-flex pointer-coarse:inline-flex"
+            />
+            <ButtonUtility
+                size="xs"
+                color="tertiary"
+                icon={ChevronRight}
+                tooltip="Next card"
+                tooltipPlacement="right"
                 onClick={() => scroll(1)}
-                className="absolute top-1/2 right-1 hidden size-7 -translate-y-1/2 items-center justify-center rounded-full bg-alpha-black/60 outline-focus-ring focus-visible:outline-2 lg:group-focus-within:flex lg:group-hover:flex pointer-coarse:flex"
-            >
-                <ChevronRight className="size-4 text-alpha-white" />
-            </button>
+                className="absolute top-1/2 right-1 hidden -translate-y-1/2 bg-alpha-black/60 text-alpha-white transition-none hover:bg-alpha-black/60 hover:text-alpha-white focus-visible:outline-offset-0 lg:group-focus-within:inline-flex lg:group-hover:inline-flex pointer-coarse:inline-flex"
+            />
         </div>
     );
 }
@@ -69,9 +77,9 @@ export function DexSlider({ cards, onSelect }: { cards: DexCard[]; onSelect?: (c
 function Slide({ onSelect, children }: { onSelect?: () => void; children: React.ReactNode }) {
     const className = "relative size-full shrink-0 snap-start";
     return onSelect ? (
-        <button type="button" onClick={onSelect} className={cx(className, "cursor-pointer outline-focus-ring focus-visible:outline-2")}>
+        <AriaButton onPress={onSelect} className={cx(className, "cursor-pointer outline-focus-ring focus-visible:outline-2")}>
             {children}
-        </button>
+        </AriaButton>
     ) : (
         <div className={className}>{children}</div>
     );

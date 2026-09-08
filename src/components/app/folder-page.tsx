@@ -52,7 +52,7 @@ export function FolderPage({
                         {subtitle ? <span className="block">{subtitle}</span> : null}
                         <Suspense fallback={<CountOutline lines={datapointLines} />}>
                             {/* The outline keeps the line's height, so the row and the cards do not move when the numbers land. */}
-                            <DatapointsText datapoints={datapoints} lines={datapointLines} />
+                            <DatapointsText datapoints={datapoints} />
                         </Suspense>
                     </>
                 }
@@ -85,7 +85,7 @@ export function FolderPage({
     );
 }
 
-async function DatapointsText({ datapoints }: { datapoints: Datapoints | Promise<Datapoints>; lines: 1 | 2 }) {
+async function DatapointsText({ datapoints }: { datapoints: Datapoints | Promise<Datapoints> }) {
     return (
         <>
             {datapointsLines(await datapoints).map((line) => (
