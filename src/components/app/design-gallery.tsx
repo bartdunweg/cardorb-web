@@ -2,6 +2,7 @@
 
 import { Copy01, DotsHorizontal, Heart, Star01, Trash01 } from "@untitledui/icons";
 import { notify } from "@/components/app/toast";
+import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { CloseButton } from "@/components/base/buttons/close-button";
@@ -134,16 +135,13 @@ function Row({ title, from, note, ours = false, children }: { title: string; fro
         <section className="flex flex-col gap-3">
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 <h3 className="text-md font-semibold text-primary">{title}</h3>
-                {/* The label is the point of the page: at a glance, whose component is this. */}
-                <span
-                    className={
-                        ours
-                            ? "rounded-full bg-warning-secondary px-2 py-0.5 text-xs font-medium text-warning-primary"
-                            : "rounded-full bg-success-secondary px-2 py-0.5 text-xs font-medium text-success-primary"
-                    }
-                >
+                {/* The label is the point of the page: at a glance, whose component is this. The
+                    kit's Badge, after the hand-rolled chip that was here measured 2.7:1 and 2.9:1
+                    against its own background — under AA, on the one word the page exists to say,
+                    on a page about not building what the kit already has. */}
+                <Badge type="pill-color" size="sm" color={ours ? "warning" : "success"}>
                     {ours ? "Ours" : "Untitled UI"}
-                </span>
+                </Badge>
                 <code className="text-xs text-tertiary">{from}</code>
             </div>
             {note ? <p className="max-w-2xl text-sm text-tertiary">{note}</p> : null}

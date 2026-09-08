@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { KitGallery } from "@/components/app/design-gallery";
 import { PageHeader } from "@/components/app/page-header";
+import { Badge } from "@/components/base/badges/badges";
 import baseline from "../../../../../scripts/kit-drift-baseline.json";
 
 export const metadata: Metadata = { title: "Design system" };
@@ -37,7 +38,9 @@ export default function DesignSystemPage() {
                 <section className="flex flex-col gap-3">
                     <div className="flex flex-wrap items-baseline gap-x-3">
                         <h3 className="text-md font-semibold text-primary">Still built by hand</h3>
-                        <span className="rounded-full bg-error-secondary px-2 py-0.5 text-xs font-medium text-error-primary">{total} left</span>
+                        <Badge type="pill-color" size="sm" color="error">
+                            {total} left
+                        </Badge>
                     </div>
                     <p className="max-w-2xl text-sm text-tertiary">
                         A bare <code className="text-xs">&lt;button&gt;</code> or <code className="text-xs">&lt;input&gt;</code> where the kit has a component.
