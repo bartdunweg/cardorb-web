@@ -19,6 +19,7 @@ export function CardsView({
     narrowed,
     initialView,
     initialSize = "md",
+    listKey,
     toolbar,
     noHits,
     empty,
@@ -28,6 +29,13 @@ export function CardsView({
     narrowed: boolean;
     initialView: CardsViewMode;
     initialSize?: CardsSize;
+    /**
+     * The list's URL. It keys the list and nothing above it: a new search is a new list, with its
+     * own first batch and nothing scrolled-to from the last one — but the row over it, the search
+     * field included, must not be rebuilt, or the caret leaves the box on every keystroke that
+     * lands. It used to key this whole component, which is exactly what happened.
+     */
+    listKey?: string;
     toolbar?: ReactNode;
     /** Drawn in the list's place when the filters find nothing, so the row above keeps its place in the tree. */
     noHits: ReactNode;
@@ -59,6 +67,7 @@ export function CardsView({
 
             <Suspense fallback={<CardsSkeleton />}>
                 <CardsList
+                    key={listKey}
                     list={list}
                     filter={filter}
                     narrowed={narrowed}

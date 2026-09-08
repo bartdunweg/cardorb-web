@@ -97,7 +97,7 @@ export async function FolderBody(props: FolderBodyProps) {
         return (
             <div className="flex flex-1 flex-col gap-4">
                 <DexView
-                    key={listHref(basePath, query, {})}
+                    listKey={listHref(basePath, query, {})}
                     dex={props.pokedex.dex}
                     narrowed={narrowed}
                     initialSize={size}
@@ -126,14 +126,14 @@ export async function FolderBody(props: FolderBodyProps) {
         );
     }
 
-    // Keyed on the list's URL: a new search or sort is a new list, with its own first batch and
-    // nothing scrolled-to from the last one.
+    // The list's URL. What it keys is the list itself, never the row above it: keying the view
+    // rebuilt the search field on every committed keystroke and the caret went with it.
     const key = listHref(basePath, query, {});
 
     if (props.pokedex) {
         return (
             <div className="flex flex-1 flex-col gap-4">
-                <DexView key={key} dex={props.pokedex.dex} narrowed={narrowed} initialSize={size} toolbar={toolbar} noHits={noHits} empty={empty} />
+                <DexView listKey={key} dex={props.pokedex.dex} narrowed={narrowed} initialSize={size} toolbar={toolbar} noHits={noHits} empty={empty} />
             </div>
         );
     }
@@ -147,7 +147,7 @@ export async function FolderBody(props: FolderBodyProps) {
                 <CatalogueNotice list={props.list} />
             </Suspense>
             <CardsView
-                key={key}
+                listKey={key}
                 list={props.list}
                 filter={props.filter}
                 narrowed={narrowed}

@@ -21,7 +21,7 @@ const FIRST_ROW = 6;
 // width because the words under it truncate. Exported for the Pokédex, which draws the same
 // tiles so a folder reads the same whichever way it is shown.
 
-export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null; price?: number | null; quantity?: number | null }>({
+export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null; price?: number | null; quantity?: number | null; owned?: boolean | null }>({
     cards,
     onSelect,
     size = "md",
@@ -91,7 +91,11 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                                         <span className="text-tertiary">
                                             {card.quantity != null ? (
                                                 <>
-                                                    <span className="sr-only">You hold </span>×{card.quantity}
+                                                    {/* On the wishlist the number is not a holding: a screen reader
+                                                        was told "You hold ×1" about the one kind of card you have
+                                                        said you do not. `owned` is absent on a public profile, where
+                                                        every card shown is one somebody holds. */}
+                                                    <span className="sr-only">{card.owned === false ? "On your wishlist, " : "You hold "}</span>×{card.quantity}
                                                 </>
                                             ) : null}
                                         </span>
