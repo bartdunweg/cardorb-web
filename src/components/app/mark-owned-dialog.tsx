@@ -12,6 +12,7 @@ import { finishOptions, patternOptions, soleOption } from "@/components/app/copy
 import { GRADERS, GRADES, gradeLabel, splitGrade } from "@/components/app/graded";
 import { LanguageSelect } from "@/components/app/language-select";
 import { SheetDialog } from "@/components/app/sheet-dialog";
+import { notify } from "@/components/app/toast";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
@@ -80,6 +81,10 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
             return;
         }
         onSaved?.();
+        // This form and the sheet behind it both close, so the card is gone from the screen a
+        // moment after the save; where it went — off the wishlist, into the Collection — is on a
+        // page the user is not on.
+        notify.done(`${card.name} is in your collection now`);
         router.refresh();
         close();
     };

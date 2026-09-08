@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import { type PokemonCard, addCard, searchPokemon } from "@/app/(app)/dashboard/cards/actions";
 import { CardImage } from "@/components/app/card-image";
+import { notify } from "@/components/app/toast";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Button } from "@/components/base/buttons/button";
@@ -57,11 +58,14 @@ export function AddCardModal({
             setStatus((s) => ({ ...s, [key]: "done" }));
             router.refresh();
         } else {
+            // The button falls back to "Add" on its own, which reads as a missed click; the toast
+            // is the only thing that says the card is not there.
             setStatus((s) => {
                 const next = { ...s };
                 delete next[key];
                 return next;
             });
+            notify.failed(`${card.name} was not added to your ${target === "wishlist" ? "wishlist" : "collection"}`, { description: res.error });
         }
     };
 

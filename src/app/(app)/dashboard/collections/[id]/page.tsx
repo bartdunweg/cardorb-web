@@ -37,7 +37,7 @@ export default async function CollectionDetailPage({ params, searchParams }: { p
     const empty = collection.rule ? (
         <AppEmptyState icon="folder" title="Nothing matches yet" description="Cards you own that fit the rule show up here" />
     ) : (
-        <AppEmptyState icon="folder" title="No cards in this folder" description="Use “Add cards” to fill it" />
+        <AppEmptyState icon="folder" title="No cards in this binder" description="Use “Add cards” to fill it" />
     );
     const common = {
         title: collection.name,

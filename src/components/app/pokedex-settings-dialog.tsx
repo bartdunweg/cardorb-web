@@ -7,6 +7,7 @@ import { Heading as AriaHeading } from "react-aria-components";
 import { updateListPublic, updatePokedexSetting } from "@/app/(app)/dashboard/settings/actions";
 import { DexRangeFields, dexDraft, dexFromDraft } from "@/components/app/dex-range-fields";
 import { RarityPicker } from "@/components/app/rarity-picker";
+import { notify } from "@/components/app/toast";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { Button } from "@/components/base/buttons/button";
 import { Toggle } from "@/components/base/toggle/toggle";
@@ -44,13 +45,25 @@ export function PokedexSettingsDialog({
             ...(range ? { dex: range } : {}),
             ...(rarities.length ? { rarities } : {}),
         });
-        const shownRes = res.ok && shown !== isPublic ? await updateListPublic({ list: "pokedex", shown }) : res;
+        if (!res.ok) {
+            setSaving(false);
+            setError(res.error);
+            return;
+        }
+        const changingShown = shown !== isPublic;
+        const shownRes = changingShown ? await updateListPublic({ list: "pokedex", shown }) : res;
         setSaving(false);
         if (!shownRes.ok) {
-            setError(shownRes.error);
+            // Two writes, and the first one has already landed. A bare error here reads as "nothing
+            // saved", and the range you just typed would be typed again over the copy that is
+            // already stored.
+            setError(`The range and rarities were saved. The public profile setting was not: ${shownRes.error}`);
             return;
         }
         close();
+        // The grid behind answers for the range and the rarities by redrawing. The public flag
+        // shows nowhere but /user/[username], so it is the half that needs saying.
+        if (changingShown) notify.done(shown ? "Your Pokédex shows on your public profile now" : "Your Pokédex no longer shows on your public profile");
         router.refresh();
     };
 
@@ -90,7 +103,7 @@ export function PokedexSettingsDialog({
                                 <RarityPicker label="Rarities that count" options={facets.rarities} selected={rarities} onChange={setRarities} />
                                 <Toggle
                                     label="Show on my public profile"
-                                    hint="As a chip beside your folders on your page, drawn the way you see it here. Only while your profile is public."
+                                    hint="As a chip beside your binders on your page, drawn the way you see it here. Only while your profile is public."
                                     isSelected={shown}
                                     onChange={setShown}
                                 />

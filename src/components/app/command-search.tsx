@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { type CatalogueFilters, type PokemonCard, addCard, searchPokemon } from "@/app/(app)/dashboard/cards/actions";
 import { listSetsShelf } from "@/app/(app)/dashboard/sets/actions";
 import type { FilterOption } from "@/components/app/filter-chip";
+import { notify } from "@/components/app/toast";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 
 export type AddStatus = "idle" | "adding" | "added";
@@ -70,11 +71,14 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
             setStatus((s) => ({ ...s, [card.id]: "added" }));
             router.refresh();
         } else {
+            // The row goes back to "Add", which reads as a missed click; the toast is the only
+            // thing that says the card is not there.
             setStatus((s) => {
                 const next = { ...s };
                 delete next[card.id];
                 return next;
             });
+            notify.failed(`${card.name} was not added to your collection`, { description: res.error });
         }
     };
 

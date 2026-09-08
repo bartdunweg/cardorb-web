@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { AppSidebar } from "@/components/app/app-sidebar";
 import { CommandSearchProvider } from "@/components/app/command-search";
 import { MobileTabBar } from "@/components/app/mobile-nav";
+import { Toasts } from "@/components/app/toast";
 import { ApiError } from "@/lib/api";
 import { getMyFolders } from "@/lib/collections";
 import { type Account, accountFrom, getMyProfile } from "@/lib/profile";
@@ -46,6 +47,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                         </main>
                     </div>
                     <MobileTabBar />
+                    <Toasts />
                 </div>
             </CommandSearchProvider>
         </RouteProvider>

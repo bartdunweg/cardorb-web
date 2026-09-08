@@ -5,6 +5,7 @@ import { DotsHorizontal, Settings01 } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import { updateListPublic } from "@/app/(app)/dashboard/settings/actions";
+import { notify } from "@/components/app/toast";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { Button } from "@/components/base/buttons/button";
 import { Toggle } from "@/components/base/toggle/toggle";
@@ -39,6 +40,9 @@ export function ListSettingsDialog({
             return;
         }
         close();
+        // The whole of this setting lands on /user/[username]; this page looks the same either
+        // way, so the toast is the only place the new state is ever said.
+        notify.done(shown ? `${title} shows on your public profile now` : `${title} no longer shows on your public profile`);
         router.refresh();
     };
 
@@ -67,7 +71,7 @@ export function ListSettingsDialog({
                                 </AriaHeading>
                                 <Toggle
                                     label="Show on my public profile"
-                                    hint="As a chip beside your folders on your page. Only while your profile is public."
+                                    hint="As a chip beside your binders on your page. Only while your profile is public."
                                     isSelected={shown}
                                     onChange={setShown}
                                 />

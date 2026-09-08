@@ -15,3 +15,12 @@ File and line, the finding in one clause, why it is accepted, and the date.
   a decision about the design system rather than about this screen. The control is not
   identified by that line — a cloud icon, "Click to upload or drag and drop" and a hint
   sit inside it — so nothing is carried by the border alone. 2026-09-07.
+
+- `src/components/app/toast.tsx:104` — the toast's close button is last in the page's tab
+  order (measured: 66 of 67 focusable elements), and while the card sheet is open its
+  react-aria focus trap puts the toast out of reach entirely. Accepted: the toast is
+  announced by its `aria-live="polite"` region either way, so nothing is missed, only
+  slow to dismiss; Escape closes the sheet and the toast is reachable straight after.
+  Moving the toaster inside every modal — or giving it a working skip-to hotkey, sonner's
+  own ⌥+T did not fire here — is a change to how overlays are built rather than to this
+  screen. Revisit when the first modal needs a toast of its own. 2026-09-08.
