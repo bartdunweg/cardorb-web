@@ -265,7 +265,16 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         const onKey = (e: KeyboardEvent) => {
             if (e.metaKey || e.ctrlKey || e.altKey) return;
             const el = e.target as HTMLElement | null;
-            if (el?.closest("input, textarea, select, [contenteditable='true']")) return;
+            /* Not only the fields: react-aria's tab list moves between tabs with the arrow keys,
+               and the price chart's arrows are the only way to reach its individual figures — the
+               whole of its text alternative. Both sat under this handler, so on the Price tab a
+               right arrow threw you onto another card instead of reading the next price. */
+            if (
+                el?.closest(
+                    "input, textarea, select, [contenteditable='true'], [role='tab'], [role='tablist'], [role='menu'], [role='menuitem'], [role='listbox'], [role='option'], [role='slider'], [tabindex]:not([tabindex='-1']) svg, figure",
+                )
+            )
+                return;
             if (e.key === "ArrowLeft") onPrev?.();
             if (e.key === "ArrowRight") onNext?.();
         };
@@ -686,6 +695,13 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                             </div>
                         </div>
                         <div className="flex flex-col px-4 pt-4 md:px-6">
+                            {/* Prev and next swap the whole sheet for another card while focus stays on
+                                the button that did it, and a dialog that is already open does not
+                                announce its name changing. So the sheet says which card it is now.
+                                Always mounted, or the first change would be silent too. */}
+                            <output aria-live="polite" className="sr-only">
+                                {card ? [card.name, card.set_name, card.number ? `#${card.number}` : null].filter(Boolean).join(", ") : ""}
+                            </output>
                             <AriaHeading ref={titleRef} slot="title" className="text-lg font-semibold text-primary">
                                 {/* No star here. The bar above carries it as a button you can press;
                                     a second one under the title said the same thing and did nothing. */}
@@ -714,7 +730,11 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                     </SlideoutMenu.Header>
 
                     {/* No scroll box of its own: the sheet is the page, and the whole of it scrolls, art and all. */}
-                    <SlideoutMenu.Content className="h-auto w-full flex-none overflow-visible pt-6 pb-6">
+                    {/* role="presentation": the kit defaults this to `main`, and the page already has
+                        one. Two unlabelled main landmarks is worse than none, and a dialog needs no
+                        landmark inside it — react-aria names the dialog from its own heading. */}
+                    {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- the rule offers <img alt="">, which this is not: the role is here only to stop the kit's default role="main". */}
+                    <SlideoutMenu.Content role="presentation" className="h-auto w-full flex-none overflow-visible pt-6 pb-6">
                         {/* Two tabs: the card's details, and its price with its line. A public view has no price, so no tabs. */}
                         {/* The list before its panels, and only once there is a card: a panel without its tab is
                             what react-aria warns about, and the sheet is mounted closed on every list page. A public
@@ -724,7 +744,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                             not hold has no such tab, and then Details is the front of the sheet as before. */}
                         {card ? (
                             <Tabs className="flex flex-col gap-5" defaultSelectedKey={mine ? "copies" : "details"}>
-                                <TabList aria-label="Card" type="underline" size="sm" className={mine ? undefined : "sr-only"}>
+                                {/* `hidden`, not `sr-only`: on a card you do not hold there is one tab and
+                                    nothing to choose, and sr-only leaves it in the tab order — a keyboard
+                                    user landed on a tab that was not on the screen. */}
+                                <TabList aria-label="Card" type="underline" size="sm" className={mine ? undefined : "hidden"}>
                                     {mine ? <Tab id="copies" label="Your copies" badge={mine.owned && heldTotal > 1 ? heldTotal : undefined} /> : null}
                                     <Tab id="details" label="Details" />
                                     {mine ? <Tab id="price" label="Price" /> : null}

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { AppSidebar } from "@/components/app/app-sidebar";
 import { CommandSearchProvider } from "@/components/app/command-search";
 import { MobileTabBar } from "@/components/app/mobile-nav";
+import { MAIN_ID, SkipToContent } from "@/components/app/skip-to-content";
 import { Toasts } from "@/components/app/toast";
 import { ApiError } from "@/lib/api";
 import { getMyFolders } from "@/lib/collections";
@@ -39,10 +40,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 {/* A page a shade off white, so the surfaces on it (tiles, inputs, the chart) read as white
                     things lying on it. In dark the page stays the darkest layer; a lighter page there would
                     turn the surfaces into holes. */}
+                <SkipToContent />
                 <div className="flex min-h-dvh flex-col overflow-x-clip bg-page">
                     <div className="flex flex-1 flex-col lg:flex-row">
                         <AppSidebar account={account} collections={collections} />
-                        <main className="flex min-w-0 flex-1 flex-col">
+                        {/* tabIndex -1 so focus can be sent here after a navigation without putting
+                            the element itself in the tab order. */}
+                        <main id={MAIN_ID} tabIndex={-1} className="flex min-w-0 flex-1 flex-col outline-none">
                             <div className="mx-auto flex w-full max-w-container flex-1 flex-col px-4 pt-4 pb-28 sm:px-6 sm:py-8 lg:pb-8">{children}</div>
                         </main>
                     </div>
