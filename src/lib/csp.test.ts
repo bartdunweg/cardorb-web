@@ -34,10 +34,17 @@ describe("needsNonce", () => {
         for (const route of routes) expect(needsNonce(route), route).toBe(true);
     });
 
-    it("covers nothing public", () => {
+    it("covers the public profile, which renders per request", () => {
+        expect(needsNonce("/user/bart")).toBe(true);
+        expect(needsNonce("/user/some.name-1")).toBe(true);
+    });
+
+    it("covers nothing that prerenders", () => {
         expect(needsNonce("/")).toBe(false);
-        expect(needsNonce("/user/bart")).toBe(false);
+        expect(needsNonce("/privacy")).toBe(false);
         expect(needsNonce("/dashboards")).toBe(false);
+        // A path under the profile is no route, so it falls to the prerendered 404.
+        expect(needsNonce("/user/bart/cards")).toBe(false);
     });
 
     it("leaves a path that is no route to the prerendered 404 page, which has no nonce", () => {

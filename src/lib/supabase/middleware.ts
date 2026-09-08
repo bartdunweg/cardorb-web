@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
+import { COOKIE_OPTIONS } from "@/lib/supabase/cookie-options";
 import { elapsed, logTiming } from "@/lib/timing";
 
 // Public by default (landing, login, signup). Only these prefixes require a session.
@@ -29,6 +30,7 @@ export async function updateSession(request: NextRequest) {
     let supabaseResponse = NextResponse.next({ request });
 
     const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+        cookieOptions: COOKIE_OPTIONS,
         cookies: {
             getAll() {
                 return request.cookies.getAll();
