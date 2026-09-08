@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { BrowseLanguage } from "@/components/app/browse-language";
@@ -10,6 +11,10 @@ import { ProgressBarBase } from "@/components/base/progress-indicators/progress-
 import { type BrowseLanguage as BrowseLanguageCode, isBrowseLanguage } from "@/lib/languages";
 import { CatalogueUnavailable, type SetSummary, getSets } from "@/lib/sets";
 import { cx } from "@/utils/cx";
+
+// The tab's name, which the root layout's template finishes as “… · Cardorb”: without it every
+// tab and every history entry read “Cardorb”. The word is the one the navigation uses for this page.
+export const metadata: Metadata = { title: "Browse" };
 
 const n = (value: number) => value.toLocaleString("en-US");
 
@@ -85,7 +90,10 @@ function SetTile({ set, language }: { set: SetSummary; language: BrowseLanguageC
             <div className="relative flex size-12 shrink-0 items-center justify-center">
                 {set.logoUrl ? (
                     // The logo is decoration: the name beside it says which set this is.
-                    <CardImage src={set.logoUrl} alt="" width={96} ratio="square" className="object-contain" />
+                    // The width is the box's own (size-12 = 48), not double it: the optimizer already
+                    // asks for 2x on top, and 96 here fetched the 192 px file for a 48 px logo —
+                    // sixteen times the pixels, on 157 tiles.
+                    <CardImage src={set.logoUrl} alt="" width={48} ratio="square" className="object-contain" />
                 ) : (
                     <div className="size-full rounded-md bg-secondary" />
                 )}

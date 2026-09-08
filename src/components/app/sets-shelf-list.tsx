@@ -30,7 +30,9 @@ export function SetsShelfList({ series, language = "en", onNavigate }: { series:
                                 >
                                     <div className="relative flex size-10 shrink-0 items-center justify-center">
                                         {set.logoUrl ? (
-                                            <CardImage src={set.logoUrl} alt="" width={96} ratio="square" className="object-contain" />
+                                            // The box's own width (size-10 = 40), not double it: the optimizer
+                                            // adds the 2x candidate itself, so 96 fetched a 192 px file per row.
+                                            <CardImage src={set.logoUrl} alt="" width={40} ratio="square" className="object-contain" />
                                         ) : (
                                             <div className="size-full rounded-md bg-secondary" />
                                         )}

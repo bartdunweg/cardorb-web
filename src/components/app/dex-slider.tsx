@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "@untitledui/icons";
 import { CardImage } from "@/components/app/card-image";
 import type { DexCard } from "@/lib/api-shapes";
+import { TILE_WIDTH } from "@/lib/cards-view";
 import { cx } from "@/utils/cx";
 
 // One Pokédex number held as several cards: a horizontal scroll-snap slider in a card tile's
@@ -23,7 +24,18 @@ export function DexSlider({ cards, onSelect }: { cards: DexCard[]; onSelect?: (c
                 {cards.map((card) => (
                     <Slide key={card.id} onSelect={onSelect ? () => onSelect(card) : undefined}>
                         {card.imageUrl ? (
-                            <CardImage src={card.imageHighUrl ?? card.imageUrl} quality={75} alt={card.name} className="object-cover" />
+                            // The same box as a one-card slot in the grid beside it (dex-grid.tsx), so the same
+                            // hint: without it CardImage's default of 256 asked for the 640 rung for a 192 px
+                            // tile — and a slot with five cards paid it five times. `fallbackSrc` keeps a
+                            // catalogue that will not answer to the low scan rather than the 133 KB original.
+                            <CardImage
+                                src={card.imageHighUrl ?? card.imageUrl}
+                                fallbackSrc={card.imageUrl}
+                                width={TILE_WIDTH.md}
+                                quality={60}
+                                alt={card.name}
+                                className="object-cover"
+                            />
                         ) : (
                             <div className="flex size-full items-center justify-center bg-quaternary p-3 text-center text-sm font-medium text-secondary">
                                 {card.name}

@@ -1,9 +1,11 @@
-"use client";
-
 import type { ReactNode } from "react";
 import Link from "next/link";
 import type { CardStats } from "@/lib/cards";
 import { cx } from "@/utils/cx";
+
+// No "use client": there is nothing client about these tiles — a link, a class name and two
+// strings — and the directive made a hydration root out of markup that never changes. Both
+// callers are Server Components, and `fourth` crosses as a rendered node either way.
 
 // Stat card after Untitled UI's Metric, without its featured icon: the label and the number say it.
 // A link to the list it counts: the tile is the shortest way to All cards, the wishlist, Favorites

@@ -1,10 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { CardDetailSlideout } from "@/components/app/card-detail-slideout";
+import dynamic from "next/dynamic";
 import { CardImage } from "@/components/app/card-image";
 import type { Card } from "@/lib/api-shapes";
 import { formatPrice } from "@/lib/format";
+
+// The card sheet, fetched on the tap that opens it: it is the app's largest client chunk and the
+// row is drawn long before anyone touches a tile. `ssr: false` — the sheet is nothing until then.
+const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-slideout").then((m) => m.CardDetailSlideout), { ssr: false });
 
 // The dearest cards as a row that scrolls sideways, each a tile that opens the card's sheet.
 // Scroll-snap per tile, the page's side padding bled through so the row runs edge to edge on

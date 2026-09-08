@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
 import { AddCardModal } from "@/components/app/add-card-modal";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderPage } from "@/components/app/folder-page";
 import { type CardFilter, getMyCards } from "@/lib/cards";
 import { type ListSearchParams, isNarrowed, readListQuery } from "@/lib/list-query";
+
+// The tab's name, which the root layout's template finishes as “… · Cardorb”: without it every
+// tab and every history entry read “Cardorb”. The word is the one the navigation uses for this page.
+export const metadata: Metadata = { title: "Collection" };
 
 // Every card you own: the whole collection as one list, a tab of its own beside Home.
 //

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { AddCardModal } from "@/components/app/add-card-modal";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderPage } from "@/components/app/folder-page";
@@ -5,6 +6,10 @@ import { ListSettingsDialog } from "@/components/app/list-settings-dialog";
 import { type CardFilter, getMyCards } from "@/lib/cards";
 import { type ListSearchParams, isNarrowed, readListQuery } from "@/lib/list-query";
 import { getMyProfile } from "@/lib/profile";
+
+// The tab's name, which the root layout's template finishes as “… · Cardorb”: without it every
+// tab and every history entry read “Cardorb”. The word is the one the navigation uses for this page.
+export const metadata: Metadata = { title: "Wishlist" };
 
 // Cards you want but do not own. Outside the collection, so the API is asked for the wishes only.
 // The list itself is not awaited: see cards/page.tsx.

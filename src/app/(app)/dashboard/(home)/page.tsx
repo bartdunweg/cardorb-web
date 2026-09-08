@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { CardsStats, StatCard } from "@/components/app/cards-stats";
 import { DexStat } from "@/components/app/dex-stat";
 import { MobileTopRow } from "@/components/app/mobile-top-row";
@@ -10,6 +11,10 @@ import { YouLink } from "@/components/app/you-link";
 import { getCardStats, getMyCards } from "@/lib/cards";
 import { getMyFolders } from "@/lib/collections";
 import { getValueHistory } from "@/lib/value-history";
+
+// The tab's name, which the root layout's template finishes as “… · Cardorb”: without it every
+// tab and every history entry read “Cardorb”. The word is the one the navigation uses for this page.
+export const metadata: Metadata = { title: "Home" };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

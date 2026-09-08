@@ -24,16 +24,10 @@ type FolderLink = { id: string; name: string; kind: "manual" | "rule" };
 //
 // The folders and the account arrive as promises: the layout hands them over without waiting, so
 // the frame is on screen while the API answers, and each slot fills in on its own.
-// The pages the sidebar leads to, fetched ahead so a click draws them at once.
-const SIDEBAR_ROUTES = [
-    "/dashboard",
-    "/dashboard/collections",
-    "/dashboard/cards",
-    "/dashboard/favorites",
-    "/dashboard/pokedex",
-    "/dashboard/sets",
-    "/dashboard/wishlist",
-];
+// The pages the sidebar leads to, fetched ahead so a click draws them at once. The Pokédex is not
+// among them: it reads every card you own, up to 2,000 per request, and paying for that on the
+// chance of a click made the page you are on wait for it.
+const SIDEBAR_ROUTES = ["/dashboard", "/dashboard/collections", "/dashboard/cards", "/dashboard/favorites", "/dashboard/sets", "/dashboard/wishlist"];
 
 export function AppSidebar({ account, collections }: { account: Promise<Account>; collections: Promise<FolderLink[]> }) {
     const pathname = usePathname();

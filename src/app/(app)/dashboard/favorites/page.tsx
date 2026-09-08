@@ -1,9 +1,14 @@
+import type { Metadata } from "next";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderPage } from "@/components/app/folder-page";
 import { ListSettingsDialog } from "@/components/app/list-settings-dialog";
 import { type CardFilter, getMyCards } from "@/lib/cards";
 import { type ListSearchParams, isNarrowed, readListQuery } from "@/lib/list-query";
 import { getMyProfile } from "@/lib/profile";
+
+// The tab's name, which the root layout's template finishes as “… · Cardorb”: without it every
+// tab and every history entry read “Cardorb”. The word is the one the navigation uses for this page.
+export const metadata: Metadata = { title: "Favorites" };
 
 // Starred cards you own. A favourite is a flag on a card in the collection (CLAUDE.md), so this asks the
 // API for owned copies only; a wish cannot carry a star here. The list itself is not awaited: see cards/page.tsx.

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CardImage } from "@/components/app/card-image";
@@ -5,9 +6,35 @@ import { PageHeader } from "@/components/app/page-header";
 import { SetCards } from "@/components/app/set-cards";
 import { ProgressBarBase } from "@/components/base/progress-indicators/progress-indicators";
 import { isBrowseLanguage } from "@/lib/languages";
-import { CatalogueUnavailable, getSet } from "@/lib/sets";
+import { CatalogueUnavailable, getSet, getSets } from "@/lib/sets";
 
 const n = (value: number) => value.toLocaleString("en-US");
+
+// The set's own name in the tab, so a history of open sets is readable.
+//
+// The shelf, not getSet: the shelf is one cached read per person (five minutes), while getSet pages
+// through every card in the set — up to ten requests, and it is not deduplicated, so asking it here
+// would read the whole set twice to write a title. A catalogue that will not answer is the page's
+// story to tell, not the tab's, so it falls back to the plain word.
+export async function generateMetadata({
+    params,
+    searchParams,
+}: {
+    params: Promise<{ id: string }>;
+    searchParams: Promise<{ language?: string }>;
+}): Promise<Metadata> {
+    const { id } = await params;
+    const { language: raw } = await searchParams;
+    const language = isBrowseLanguage(raw) ? raw : "en";
+    try {
+        const { series } = await getSets(language);
+        const set = series.flatMap((group) => group.sets).find((s) => s.id === id);
+        if (set) return { title: set.name };
+    } catch {
+        // Fall through to the plain title.
+    }
+    return { title: "Set" };
+}
 
 /** "2024/01/26" as the catalogue writes it, read out as "26 January 2024". */
 function releaseLabel(date: string | null): string | null {
