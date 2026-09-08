@@ -139,9 +139,10 @@ function Choices({
                         aria-hidden="true"
                         className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-fg-quaternary sm:left-4.5"
                     />
+                    {/* kit-drift: the kit's TextField answers to the command palette's autocomplete, which
+                        steals what is typed here. */}
                     <input
                         type="search"
-                        // A plain field: the kit's TextField would answer to the palette's autocomplete (see FilterChip).
                         aria-label={`Find a ${label.toLowerCase()}`}
                         aria-controls={listId}
                         ref={field}

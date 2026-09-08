@@ -208,6 +208,8 @@ export function SettingsForm({ profile, email, heading }: { profile: Profile; em
                                     </div>
                                     <p className="text-xs text-tertiary">JPG, PNG or WebP.</p>
                                 </div>
+                                {/* kit-drift: nobody sees this one. It is the hidden file input the Change button
+                                    clicks; the kit's FileUpload is a drop zone, which is a different thing. */}
                                 <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={onPickFile} className="hidden" />
                             </div>
                             <Input label="Display name" value={displayName} onChange={setDisplayName} placeholder="Your name" />
