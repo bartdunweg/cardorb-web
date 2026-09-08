@@ -9,6 +9,7 @@ import { Avatar } from "@/components/base/avatar/avatar";
 import { type DexList, groupByDex } from "@/lib/dex-groups";
 import { datapointsLine } from "@/lib/folder-datapoints";
 import { DEFAULT_POKEDEX } from "@/lib/folder-rule";
+import { formatCount } from "@/lib/format";
 import { type ListSearchParams, PUBLIC_DEFAULT_SORT, PUBLIC_SORT_OPTIONS, isNarrowed, listHref, readPublicListQuery } from "@/lib/list-query";
 import { getDexNames } from "@/lib/pokedex";
 import { getViewer } from "@/lib/profile";
@@ -91,12 +92,23 @@ export default async function PublicProfilePage({ params, searchParams }: Params
         );
     // The handle sits under a display name, as a profile page does; with no display name it is the name.
     const handle = profile.display_name && profile.username ? `@${profile.username}` : null;
+    // The row above the list is the same whichever way the cards are drawn; only what it draws differs.
+    const body = {
+        // `true` and not `boolean`: FolderBody's props are a union, and the read-only arm is picked by it.
+        readOnly: true as const,
+        query,
+        basePath: base,
+        facets,
+        sortOptions: PUBLIC_SORT_OPTIONS,
+        defaultSortKey: PUBLIC_DEFAULT_SORT,
+        searchLabel: "Search this collection",
+        searchPlaceholder: "Search this collection",
+        empty: emptyState,
+    };
     // With a search or a filter on, the count is what matched; otherwise the collection and the wishlist.
     const counts = narrowed
         ? datapointsLine({ total, narrowed })
-        : [datapointsLine({ total: owned, narrowed: false }), wishes != null ? `${wishes.toLocaleString("en-US")} on the wishlist` : null]
-              .filter(Boolean)
-              .join(" · ");
+        : [datapointsLine({ total: owned, narrowed: false }), wishes != null ? `${formatCount(wishes)} on the wishlist` : null].filter(Boolean).join(" · ");
 
     return (
         <div className="flex min-h-dvh flex-col bg-page">
@@ -131,7 +143,7 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                                     aria-current={current ? "page" : undefined}
                                 >
                                     {f.name}
-                                    {f.count != null ? <span className="ml-1.5 tabular-nums opacity-70">{f.count.toLocaleString("en-US")}</span> : null}
+                                    {f.count != null ? <span className="ml-1.5 tabular-nums opacity-70">{formatCount(f.count)}</span> : null}
                                 </LinkButton>
                             );
                         })}
@@ -159,35 +171,7 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                     </nav>
                 ) : null}
 
-                {dex ? (
-                    <FolderBody
-                        readOnly
-                        query={query}
-                        basePath={base}
-                        facets={facets}
-                        sortOptions={PUBLIC_SORT_OPTIONS}
-                        defaultSortKey={PUBLIC_DEFAULT_SORT}
-                        searchLabel="Search this collection"
-                        searchPlaceholder="Search this collection"
-                        pokedex={{ dex }}
-                        empty={emptyState}
-                    />
-                ) : (
-                    <FolderBody
-                        readOnly
-                        query={query}
-                        basePath={base}
-                        facets={facets}
-                        sortOptions={PUBLIC_SORT_OPTIONS}
-                        defaultSortKey={PUBLIC_DEFAULT_SORT}
-                        searchLabel="Search this collection"
-                        searchPlaceholder="Search this collection"
-                        cards={cards}
-                        total={total}
-                        pageSize={PUBLIC_PAGE_SIZE}
-                        empty={emptyState}
-                    />
-                )}
+                {dex ? <FolderBody {...body} pokedex={{ dex }} /> : <FolderBody {...body} cards={cards} total={total} pageSize={PUBLIC_PAGE_SIZE} />}
             </main>
         </div>
     );

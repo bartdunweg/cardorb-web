@@ -6,6 +6,7 @@ import { ChevronRight, Code01, File02, Lock01, Monitor04, Moon01, Sun, UploadClo
 import { Button as AriaButton } from "react-aria-components";
 import { checkUsername, removeAvatar, updateEmail, updatePassword, updateProfile, uploadAvatar } from "@/app/(app)/dashboard/settings/actions";
 import { signOut } from "@/app/(auth)/actions";
+import { FormError } from "@/components/app/form-error";
 import { ImportDialog } from "@/components/app/import-dialog";
 import { SettingsGroup, SettingsLinkRow, SettingsRow, SheetHeader } from "@/components/app/settings-rows";
 import { SheetDialog } from "@/components/app/sheet-dialog";
@@ -34,11 +35,7 @@ function StatusText({ msg }: { msg: Msg }) {
     // <output> carries the status role natively; an error is an alert so it interrupts.
     // Either arrives rather than snapping in under the buttons; the roles are untouched by the fade.
     if (msg.type === "ok") return <output className="arrive text-sm text-success-primary">{msg.text}</output>;
-    return (
-        <p role="alert" className="arrive text-sm text-error-primary">
-            {msg.text}
-        </p>
-    );
+    return <FormError error={msg.text} arrive />;
 }
 
 // `heading` replaces the Settings title: the You page puts the account there instead.

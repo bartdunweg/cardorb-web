@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDate, formatPrice } from "./format";
+import { formatCount, formatDate, formatPrice } from "./format";
 
 describe("formatDate", () => {
     it("reads a date-only string as a local day, so it does not slip a day", () => {
@@ -16,5 +16,14 @@ describe("formatPrice", () => {
         expect(formatPrice(0.07)).toBe("€0.07");
         expect(formatPrice(null)).toBe("");
         expect(formatPrice(undefined)).toBe("");
+    });
+});
+
+describe("formatCount", () => {
+    it("groups thousands, so a count reads the same wherever the app says it", () => {
+        expect(formatCount(1025)).toBe("1,025");
+        expect(formatCount(0)).toBe("0");
+        expect(formatCount(999)).toBe("999");
+        expect(formatCount(1234567)).toBe("1,234,567");
     });
 });

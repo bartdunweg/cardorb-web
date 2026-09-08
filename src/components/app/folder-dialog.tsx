@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import { createCollection, loadFacets, updateCollection } from "@/app/(app)/dashboard/collections/actions";
 import { DexRangeFields, dexDraft, dexFromDraft } from "@/components/app/dex-range-fields";
+import { FormError } from "@/components/app/form-error";
 import { RarityPicker } from "@/components/app/rarity-picker";
 import { notify } from "@/components/app/toast";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
@@ -14,7 +15,7 @@ import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { NativeSelect } from "@/components/base/select/select-native";
 import { Toggle } from "@/components/base/toggle/toggle";
-import type { Facets } from "@/lib/cards";
+import { type Facets, NO_FACETS } from "@/lib/facets";
 import { type FolderKind, type FolderRule, type PokedexSetting, ruleSummary } from "@/lib/folder-rule";
 
 type FolderShape = { id: string; name: string; kind: FolderKind; rule: FolderRule | null; pokedex: PokedexSetting | null; isPublic: boolean };
@@ -25,8 +26,6 @@ type FormProps = {
     /** Told the new folder's id, when the opener wants to use it (the card sheet files the card in it). */
     onSaved?: (id: string | undefined) => void;
 };
-
-const NO_FACETS: Facets = { sets: [], rarities: [], gens: [], types: [] };
 
 // One dialog for a folder's name and its rule: New folder (by hand or by rule) and, on the
 // folder's page, Rename or Edit rule. A folder keeps its kind, so edit mode never shows the
@@ -240,11 +239,7 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
                 isSelected={isPublic}
                 onChange={setIsPublic}
             />
-            {error ? (
-                <p role="alert" className="text-sm text-error-primary">
-                    {error}
-                </p>
-            ) : null}
+            <FormError error={error} />
             <div className="flex justify-end gap-2">
                 <Button color="secondary" onClick={close}>
                     Cancel

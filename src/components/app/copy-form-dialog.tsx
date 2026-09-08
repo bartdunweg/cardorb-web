@@ -9,6 +9,7 @@ import type { CardFacts } from "@/app/(app)/dashboard/cards/actions";
 import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { CONDITIONS } from "@/components/app/condition-badge";
 import { finishOptions, patternOptions, soleOption } from "@/components/app/copy-fields";
+import { FormError } from "@/components/app/form-error";
 import { GRADERS, GRADES, gradeLabel, splitGrade } from "@/components/app/graded";
 import { LanguageSelect } from "@/components/app/language-select";
 import { SheetDialog } from "@/components/app/sheet-dialog";
@@ -312,11 +313,7 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
                 />
             </div>
 
-            {error ? (
-                <p role="alert" className="text-sm text-error-primary">
-                    {error}
-                </p>
-            ) : null}
+            <FormError error={error} />
 
             <div className="flex justify-end gap-2">
                 <Button color="secondary" size="sm" onClick={close}>

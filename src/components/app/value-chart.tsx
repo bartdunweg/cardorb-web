@@ -2,7 +2,7 @@
 
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { BarChart01 } from "@untitledui/icons";
-import { formatPrice } from "@/lib/format";
+import { formatCount, formatPrice } from "@/lib/format";
 import { type Frame, areaPath, linePath, nearestIndex, niceTicks, pointsFor } from "@/lib/value-chart-math";
 import type { ValueSnapshot } from "@/lib/value-history";
 import { cx } from "@/utils/cx";
@@ -202,8 +202,8 @@ export function ValueChart({
                         <span className="text-sm font-semibold text-primary tabular-nums">{formatPrice(current.value)}</span>
                         {countLabel ? (
                             <span className="text-tertiary tabular-nums">
-                                {current.cards.toLocaleString("en-US")} {countLabel}
-                                {current.unpriced > 0 ? ` · ${current.unpriced.toLocaleString("en-US")} without a price` : ""}
+                                {formatCount(current.cards)} {countLabel}
+                                {current.unpriced > 0 ? ` · ${formatCount(current.unpriced)} without a price` : ""}
                             </span>
                         ) : null}
                     </output>

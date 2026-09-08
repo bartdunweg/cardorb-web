@@ -8,6 +8,7 @@ import { MobileTopRow } from "@/components/app/mobile-top-row";
 import { PageHeader } from "@/components/app/page-header";
 import { SetsOutline } from "@/components/app/skeletons";
 import { ProgressBarBase } from "@/components/base/progress-indicators/progress-indicators";
+import { formatCount } from "@/lib/format";
 import { type BrowseLanguage as BrowseLanguageCode, isBrowseLanguage } from "@/lib/languages";
 import { CatalogueUnavailable, type SetSummary, getSets } from "@/lib/sets";
 import { cx } from "@/utils/cx";
@@ -15,8 +16,6 @@ import { cx } from "@/utils/cx";
 // The tab's name, which the root layout's template finishes as “… · Cardorb”: without it every
 // tab and every history entry read “Cardorb”. The word is the one the navigation uses for this page.
 export const metadata: Metadata = { title: "Browse" };
-
-const n = (value: number) => value.toLocaleString("en-US");
 
 export default async function SetsPage({ searchParams }: { searchParams: Promise<{ language?: string }> }) {
     const { language: raw } = await searchParams;
@@ -105,10 +104,14 @@ function SetTile({ set, language }: { set: SetSummary; language: BrowseLanguageC
                         {set.localName ? <span className="truncate text-xs text-tertiary">{set.localName}</span> : null}
                     </span>
                     <span className="shrink-0 text-sm text-tertiary tabular-nums">
-                        {n(set.owned)} of {n(set.total)}
+                        {formatCount(set.owned)} of {formatCount(set.total)}
                     </span>
                 </div>
-                <ProgressBarBase value={set.owned} max={set.total || 1} aria-label={`${set.name}: ${n(set.owned)} of ${n(set.total)} cards`} />
+                <ProgressBarBase
+                    value={set.owned}
+                    max={set.total || 1}
+                    aria-label={`${set.name}: ${formatCount(set.owned)} of ${formatCount(set.total)} cards`}
+                />
             </div>
         </Link>
     );

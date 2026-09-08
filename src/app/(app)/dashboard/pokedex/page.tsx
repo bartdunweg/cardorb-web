@@ -4,8 +4,9 @@ import { AddCardModal } from "@/components/app/add-card-modal";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderPage } from "@/components/app/folder-page";
 import { PokedexSettingsDialog } from "@/components/app/pokedex-settings-dialog";
-import { type CardFilter, type Facets, getAllMyCards } from "@/lib/cards";
+import { type CardFilter, getAllMyCards } from "@/lib/cards";
 import { type DexList, groupByDex } from "@/lib/dex-groups";
+import { type Facets, NO_FACETS } from "@/lib/facets";
 import { DEFAULT_POKEDEX } from "@/lib/folder-rule";
 import { type ListSearchParams, isNarrowed, readListQuery } from "@/lib/list-query";
 import { getDexNames } from "@/lib/pokedex";
@@ -72,8 +73,6 @@ export default async function PokedexPage({ searchParams }: { searchParams: Prom
         />
     );
 }
-
-const NO_FACETS: Facets = { sets: [], rarities: [], gens: [], types: [] };
 
 // The dialog with the rarities it lists, once the list has said which there are.
 async function SettingsWhenReady({ facets, ...rest }: { facets: Promise<Facets> } & Omit<Parameters<typeof PokedexSettingsDialog>[0], "facets">) {

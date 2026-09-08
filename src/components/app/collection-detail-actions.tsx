@@ -14,6 +14,7 @@ import { Button } from "@/components/base/buttons/button";
 import { CloseButton } from "@/components/base/buttons/close-button";
 import { Input } from "@/components/base/input/input";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
+import { cardLabel } from "@/lib/card-label";
 import type { Facets } from "@/lib/cards";
 import type { FolderKind, FolderRule, PokedexSetting } from "@/lib/folder-rule";
 import { cx } from "@/utils/cx";
@@ -119,9 +120,7 @@ export function CollectionDetailActions({
                                                             </div>
                                                             <div className="flex min-w-0 flex-1 flex-col">
                                                                 <span className="truncate text-sm font-medium text-primary">{card.name}</span>
-                                                                <span className="truncate text-xs text-tertiary">
-                                                                    {[card.set_name, card.number ? `#${card.number}` : null].filter(Boolean).join(" · ")}
-                                                                </span>
+                                                                <span className="truncate text-xs text-tertiary">{cardLabel(card, "lg")}</span>
                                                             </div>
                                                             <Button
                                                                 size="sm"

@@ -5,12 +5,17 @@ import { Download01, FilterLines, Grid01, Plus } from "@untitledui/icons";
 import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { AppEmptyState } from "./app-empty-state";
+import { AuthEmailField, AuthShell } from "./auth-shell";
 import { CardImage } from "./card-image";
+import { CardTile } from "./card-tile";
+import { CopyRow } from "./copy-row";
 import { Cell, Group, Panel, type SectionSpec } from "./design-section";
 import { FilterChip, FilterChipRow } from "./filter-chip";
 import { FlagIcon } from "./flag-icon";
+import { FormError } from "./form-error";
 import { LinkButton } from "./link-button";
 import { RowButton } from "./row-button";
+import { SearchTrigger } from "./search-trigger";
 import { notify } from "./toast";
 
 /** A picture the catalogue serves, so CardImage is drawn by the path it actually uses. */
@@ -47,6 +52,27 @@ export const ourSections: SectionSpec[] = [
                         New binder
                     </Button>
                 </AppEmptyState>
+            </div>
+        ),
+    },
+    {
+        id: "auth-shell",
+        title: "AuthShell",
+        from: "components/app/auth-shell",
+        ours: true,
+        note: "The frame the four signed-out pages share: the wordmark, a heading, a line under it, then the form, then the one link to the other page. Ours because the kit's sign-in screens are page templates, not a component — the four pages were the same thirteen lines of markup four times. The window's own height and background come from the route's layout, so here it stands on a surface of its own.",
+        render: (
+            <div className="flex min-h-140 flex-col rounded-xl bg-primary ring-1 ring-secondary">
+                <AuthShell
+                    title="Sign in"
+                    subtitle="Welcome back. Enter your details."
+                    footer={{ question: "Don't have an account?", href: "#auth-shell", label: "Sign up" }}
+                >
+                    <div className="flex flex-col gap-6">
+                        <AuthEmailField />
+                        <Button size="lg">Sign in</Button>
+                    </div>
+                </AuthShell>
             </div>
         ),
     },
@@ -91,6 +117,101 @@ export const ourSections: SectionSpec[] = [
         ),
     },
     {
+        id: "card-tile",
+        title: "CardTile",
+        from: "components/app/card-tile",
+        ours: true,
+        note: "A card's picture with its words under it, as one thing you press. The kit has no clickable tile — its cards are containers, not controls — and this shape is drawn in the collection's grid, in a Pokédex slot and in the row of dearest cards on Home. One component, so the press, the focus ring and the radius cannot drift apart between them. Without onSelect it is the same tile with nothing to press, which is what a public Pokédex needs.",
+        render: (
+            <Panel>
+                <Group title="States" hint="press them" cols="tight">
+                    <Cell label="onSelect">
+                        <div className="w-28">
+                            <CardTile
+                                onSelect={() => notify.done("Charizard, Base Set")}
+                                picture={
+                                    <div className="relative aspect-card w-full overflow-hidden rounded-card">
+                                        <CardImage src={CHARIZARD} fallbackSrc={CHARIZARD_LOW} alt="" width={128} className="object-cover" />
+                                    </div>
+                                }
+                                words={
+                                    <div className="flex flex-col">
+                                        <span className="truncate text-sm font-medium text-primary">Charizard</span>
+                                        <span className="truncate text-xs text-tertiary">Base Set · #4</span>
+                                    </div>
+                                }
+                            />
+                        </div>
+                    </Cell>
+                    <Cell label="no onSelect">
+                        <div className="w-28">
+                            <CardTile
+                                picture={
+                                    <div className="flex aspect-card w-full items-center justify-center rounded-card bg-tertiary">
+                                        <span className="text-sm font-medium text-quaternary tabular-nums">#004</span>
+                                    </div>
+                                }
+                                words={
+                                    <div className="flex flex-col">
+                                        <span className="truncate text-sm font-medium text-tertiary">Charmander</span>
+                                        <span className="truncate text-xs text-tertiary">#004 · Missing</span>
+                                    </div>
+                                }
+                            />
+                        </div>
+                    </Cell>
+                    <Cell label='className="gap-1.5 rounded-card"'>
+                        <div className="w-28">
+                            <CardTile
+                                onSelect={() => notify.done("Charizard, Base Set")}
+                                className="gap-1.5 rounded-card"
+                                picture={
+                                    <div className="relative aspect-card w-full overflow-hidden rounded-card bg-quaternary">
+                                        <CardImage src={CHARIZARD} fallbackSrc={CHARIZARD_LOW} alt="" width={128} className="object-cover" />
+                                    </div>
+                                }
+                                words={
+                                    <>
+                                        <span className="w-full truncate text-xs font-medium text-primary">Charizard</span>
+                                        <span className="text-xs text-tertiary tabular-nums">€ 249,00</span>
+                                    </>
+                                }
+                            />
+                        </div>
+                    </Cell>
+                </Group>
+            </Panel>
+        ),
+    },
+    {
+        id: "copy-row",
+        title: "CopyRow",
+        from: "components/app/copy-row",
+        ours: true,
+        note: "One line of the Copies panel in a card's sheet: the language's flag, what kind of copy it is, what one is worth and how many you hold. The kit has no clickable row — its table rows are cells — and a list item that is itself the control is not a shape it draws. The sheet works out what the line says; the row draws it and takes the press.",
+        render: (
+            <Panel>
+                <Group title="States" cols="single">
+                    <Cell label="current" span="full">
+                        <div className="w-full">
+                            <CopyRow language="en" label="Holo · Cosmos · Near Mint" price={249} quantity={2} current onSelect={() => {}} />
+                        </div>
+                    </Cell>
+                    <Cell label="another kind" span="full">
+                        <div className="w-full">
+                            <CopyRow language="ja" label="Reverse Holo · PSA 9 · Kanto" price={31.5} quantity={1} current={false} onSelect={() => {}} />
+                        </div>
+                    </Cell>
+                    <Cell label="nothing recorded" span="full">
+                        <div className="w-full">
+                            <CopyRow language={null} label="Copy" quantity={4} current={false} onSelect={() => {}} />
+                        </div>
+                    </Cell>
+                </Group>
+            </Panel>
+        ),
+    },
+    {
         id: "filter-chip",
         title: "FilterChip",
         from: "components/app/filter-chip",
@@ -120,6 +241,28 @@ export const ourSections: SectionSpec[] = [
                             <FlagIcon language={language} size="md" />
                         </Cell>
                     ))}
+                </Group>
+            </Panel>
+        ),
+    },
+    {
+        id: "form-error",
+        title: "FormError",
+        from: "components/app/form-error",
+        ours: true,
+        note: "Why a save or a sign-in did not go through, under the fields and above the button. Ours because the kit's HintText belongs to a field: a form can fail with every field in it valid, and the sentence then has nowhere to hang. It announces itself as an alert, and draws nothing when there is no error.",
+        render: (
+            <Panel>
+                <Group title="States" cols="wide">
+                    <Cell label="error" span="full">
+                        <FormError error="That email and password do not match an account." />
+                    </Cell>
+                    <Cell label="arrive" span="full">
+                        <FormError error="The catalogue is not answering. Your collection is unchanged." arrive />
+                    </Cell>
+                    <Cell label="error={null}" span="full">
+                        <FormError error={null} />
+                    </Cell>
                 </Group>
             </Panel>
         ),
@@ -196,6 +339,29 @@ export const ourSections: SectionSpec[] = [
                     </Cell>
                     <Cell label="isDisabled">
                         <RowButton icon={Download01} label="Export" isDisabled />
+                    </Cell>
+                </Group>
+            </Panel>
+        ),
+    },
+    {
+        id: "search-trigger",
+        title: "SearchTrigger",
+        from: "components/app/search-trigger",
+        ours: true,
+        note: "A button dressed as the search field, for the two places that open a search instead of taking one: the palette's trigger in the desktop sidebar and the bar at the top of Home on a phone. The kit's Input is a field, and a field that answers a tap by opening a dialog is a lie to anything that reads it. The md size is that Input at its lg size, which is why it carries the placeholder's grey.",
+        render: (
+            <Panel>
+                <Group title="Sizes" cols="wide">
+                    <Cell label='size="sm" — the sidebar' span="full">
+                        <div className="w-full max-w-72">
+                            <SearchTrigger label="Search" onPress={() => notify.done("The palette would open")} />
+                        </div>
+                    </Cell>
+                    <Cell label='size="md" — the phone bar' span="full">
+                        <div className="w-full max-w-72">
+                            <SearchTrigger size="md" label="Search a card or a set" onPress={() => notify.done("The sheet would open")} />
+                        </div>
                     </Cell>
                 </Group>
             </Panel>

@@ -8,7 +8,7 @@ import {
     publicProfileAnswer,
     publicTotalAnswer,
 } from "@/lib/api-shapes";
-import type { Facets } from "@/lib/cards";
+import { type Facets, facetsFrom } from "@/lib/facets";
 import type { PokedexSetting } from "@/lib/folder-rule";
 import type { ListQuery } from "@/lib/list-query";
 import { publicTag } from "@/lib/user-cache";
@@ -67,12 +67,10 @@ export async function getPublicCards(username: string, { page, q, set, rarity, s
         params: { q, set, rarity, sort, order, collection: folder, list, limit: PUBLIC_PAGE_SIZE, offset: (page - 1) * PUBLIC_PAGE_SIZE },
         schema: publicCardsAnswer,
     });
-    // This route is cached for five minutes (no session, so `revalidate`), and an answer cached before
-    // the API carried facets has none. Empty menus for those minutes, not a broken page.
     return {
         cards: cards.map(publicCardFromItem),
         total,
-        facets: { sets: facets?.sets ?? [], rarities: facets?.rarities ?? [], gens: facets?.gens ?? [], types: facets?.types ?? [] },
+        facets: facetsFrom(facets),
     };
 }
 
@@ -94,12 +92,7 @@ export async function getAllPublicCards(username: string, query: ListQuery): Pro
     return {
         cards: [first, ...rest].flatMap((p) => p.cards).map(publicCardFromItem),
         total: first.total,
-        facets: {
-            sets: first.facets?.sets ?? [],
-            rarities: first.facets?.rarities ?? [],
-            gens: first.facets?.gens ?? [],
-            types: first.facets?.types ?? [],
-        },
+        facets: facetsFrom(first.facets),
     };
 }
 
