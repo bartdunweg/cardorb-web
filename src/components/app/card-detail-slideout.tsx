@@ -45,7 +45,7 @@ import { FINISH_LABELS, FOIL_PATTERN_LABELS, type Finish, type FoilPattern, type
 import type { Card, Facets, PublicCard } from "@/lib/cards";
 import { groupCopies, sortCopies } from "@/lib/copies";
 import { matchesRule } from "@/lib/folder-rule";
-import { formatDate, formatPrice } from "@/lib/format";
+import { formatDate, formatPrice, today } from "@/lib/format";
 import { orientationNeedsPermission, requestOrientation } from "@/lib/holo/orientation";
 import { cx } from "@/utils/cx";
 
@@ -489,7 +489,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const resetDate = () => setDateKey((k) => k + 1);
     // Local, not UTC: at 01:00 in Amsterdam `toISOString()` still says yesterday, and a card
     // pulled tonight would be a date the field refuses.
-    const today = new Date().toLocaleDateString("en-CA");
+    const todaysDate = today();
 
     const titleRef = useRef<HTMLHeadingElement>(null);
     const [collectionError, setCollectionError] = useState<string | null>(null);
@@ -1028,7 +1028,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                                         size="sm"
                                                                         className="w-auto"
                                                                         value={mine.acquired_at ? mine.acquired_at.slice(0, 10) : ""}
-                                                                        max={today}
+                                                                        max={todaysDate}
                                                                         /* `max` is a form-validation rule, and nothing here is a form: the browser
                                                                            happily arrows a native date field past it. So the future is turned away
                                                                            where it is asked for rather than reported after the API refuses it —
@@ -1036,7 +1036,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                                            Not snapped back mid-typing, which would fight a year being corrected
                                                                            digit by digit; the field is put back when it is left. */
                                                                         onChange={(date) => {
-                                                                            if (!date || date > today) return;
+                                                                            if (!date || date > todaysDate) return;
                                                                             void run(() => setAcquiredAt(mine.id, date), {
                                                                                 done: "Acquired date saved",
                                                                                 failed: "The acquired date did not save",

@@ -38,3 +38,15 @@ const counts = new Intl.NumberFormat("en-US");
 export function formatCount(value: number): string {
     return counts.format(value);
 }
+
+/**
+ * Today, as a date field writes it: `YYYY-MM-DD` in the reader's own timezone.
+ *
+ * Two versions of this existed and disagreed. `toISOString().slice(0, 10)` is UTC, so between
+ * midnight and 02:00 in Amsterdam it answers yesterday — a card marked owned just after midnight
+ * was recorded as got the day before. The date on screen is the reader's date.
+ */
+export function today(): string {
+    // en-CA is the locale that writes a date the way an <input type="date"> reads one.
+    return new Date().toLocaleDateString("en-CA");
+}

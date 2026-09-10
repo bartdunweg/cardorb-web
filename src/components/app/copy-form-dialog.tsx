@@ -19,6 +19,7 @@ import { Input } from "@/components/base/input/input";
 import { NativeSelect } from "@/components/base/select/select-native";
 import type { Card } from "@/lib/api-shapes";
 import type { CopyEdits } from "@/lib/copies";
+import { today } from "@/lib/format";
 import { languageOf } from "@/lib/languages";
 
 // A copy that differs from the row it comes from. `add`: one more, pulled today, in the
@@ -59,6 +60,9 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
     const [pattern, setPattern] = useState(from.foil_pattern ?? "");
     const [folder, setFolder] = useState(from.collection_id ?? "");
     const [price, setPrice] = useState(from.purchase_price != null ? String(from.purchase_price) : "");
+    /* Only asked when adding. A split keeps the row's own date — those copies were already yours,
+       they are only being told apart now — and the API is left to say so. */
+    const [acquired, setAcquired] = useState(today());
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const manual = folders.filter((f) => !f.rule);
@@ -101,7 +105,13 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
     const save = async () => {
         setSaving(true);
         setError(null);
-        const res = mode === "add" ? await addCopy(from.id, changes, count) : await splitCopy(from.id, changes, count);
+        // Kept out of `changes`, which decides whether Save is allowed: a date is a fact about
+        // getting the card, not a way this copy differs from the row, and today's date standing in
+        // the field must not count as a difference by itself.
+        const res =
+            mode === "add"
+                ? await addCopy(from.id, { ...changes, ...(acquired ? { acquiredAt: acquired } : {}) }, count)
+                : await splitCopy(from.id, changes, count);
         setSaving(false);
         if (!res.ok) {
             setError(res.error);
@@ -312,6 +322,26 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
                     onChange={setPrice}
                 />
             </div>
+
+            {mode === "add" ? (
+                <div className={row}>
+                    Acquired
+                    {/* No future days: a card you hold was got in the past. Turned away where it is
+                        asked for rather than after the API refuses it. */}
+                    <Input
+                        type="date"
+                        aria-label="Acquired"
+                        size="sm"
+                        className="w-44"
+                        max={today()}
+                        value={acquired}
+                        onChange={(date) => {
+                            if (typeof date === "string" && date > today()) return;
+                            setAcquired(typeof date === "string" ? date : "");
+                        }}
+                    />
+                </div>
+            ) : null}
 
             <FormError error={error} />
 
