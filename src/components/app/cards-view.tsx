@@ -1,12 +1,16 @@
 "use client";
 
 import { type ReactNode, Suspense, useState } from "react";
-import { CardDetailSlideout } from "@/components/app/card-detail-slideout";
+import dynamic from "next/dynamic";
 import { CardsList } from "@/components/app/cards-list";
 import { CardsSkeleton } from "@/components/app/skeletons";
 import { ViewMenu } from "@/components/app/view-menu";
 import type { Card, CardFilter, CardList } from "@/lib/cards";
 import type { CardsSize, CardsViewMode } from "@/lib/cards-view";
+
+// The card sheet, fetched on the tap that opens it: it is the app's largest client chunk and the
+// grid is drawn long before anyone touches a tile. `ssr: false` — the sheet is nothing until then.
+const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-slideout").then((m) => m.CardDetailSlideout), { ssr: false });
 
 // Wraps the card list with the shared detail slideout and the View menu. The page reads the
 // layout and size from cookies and hands them in, so the HTML already shows the chosen view.

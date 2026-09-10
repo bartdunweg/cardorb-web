@@ -47,6 +47,7 @@ export function CardImage({
     className,
     priority = false,
     quality = 60,
+    sizes,
     width = 256,
     ratio = "card",
 }: {
@@ -64,6 +65,8 @@ export function CardImage({
     className?: string;
     /** Only for a picture that is on screen at load, like the one open in the detail panel. */
     priority?: boolean;
+    /** How wide the tile really is, per breakpoint. Without it the browser picks by pixel density and ignores the box. */
+    sizes?: string;
     /** 60 for a thumbnail; 75 for a tile drawn large enough to show the difference (next.config.mjs lists both). */
     quality?: 60 | 75;
     /**
@@ -92,6 +95,7 @@ export function CardImage({
             width={width}
             height={height}
             className={`h-full w-full ${className ?? ""}`}
+            sizes={sizes}
             priority={priority}
             quality={quality}
             unoptimized={direct || !isOptimised(shown)}
