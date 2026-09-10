@@ -23,16 +23,20 @@ type Result = { ok: true } | { ok: false; error: string };
  *
  * The picture carries no text of its own — the caption under it and the button's name say
  * which card this is and whether it is yours, so the grey is never the only signal.
+ *
+ * `language` is the shelf this tile is on, carried into the add so the API can find the card in
+ * its own catalogue. It replaces `readOnly`: another language's cards could be looked at and not
+ * taken, because the collection resolved a card by its English set name and a Japanese set has
+ * none. Now the catalogue's own id says which card it is (cardorb-api#257).
  */
-/** `readOnly`: another language's catalogue, which the collection cannot take yet; the tile shows and does nothing. */
 export function SetCardTile({
     card,
-    readOnly = false,
+    language = "en",
     priority = false,
     onOpen,
 }: {
     card: SetCard;
-    readOnly?: boolean;
+    language?: string;
     /** On screen at load: the first row, which holds the largest paint. */ priority?: boolean;
     /** Tapping the picture: the page opens the card, the tile only says which. */
     onOpen?: (card: SetCard) => void;
@@ -152,7 +156,7 @@ export function SetCardTile({
                     longer the answer to tapping the card. */}
                         <Dropdown.Root>
                             <AriaButton
-                                isDisabled={pending || readOnly}
+                                isDisabled={pending}
                                 aria-label={`What to do with ${card.name} #${card.number}`}
                                 className={({ isFocusVisible, isHovered }) =>
                                     cx(
@@ -160,7 +164,6 @@ export function SetCardTile({
                                         isHovered && "bg-primary_hover",
                                         isFocusVisible && "outline-2",
                                         pending && "cursor-progress opacity-50",
-                                        readOnly && "hidden",
                                     )
                                 }
                             >
@@ -170,10 +173,13 @@ export function SetCardTile({
                                 <Dropdown.Menu>
                                     {state === "missing" ? (
                                         <>
-                                            <Dropdown.Item icon={Plus} onAction={() => run(() => addCard(pokemonCardFromSetCard(card), "collection"))}>
+                                            <Dropdown.Item
+                                                icon={Plus}
+                                                onAction={() => run(() => addCard(pokemonCardFromSetCard(card, language), "collection"))}
+                                            >
                                                 Add to collection
                                             </Dropdown.Item>
-                                            <Dropdown.Item icon={Heart} onAction={() => run(() => addCard(pokemonCardFromSetCard(card), "wishlist"))}>
+                                            <Dropdown.Item icon={Heart} onAction={() => run(() => addCard(pokemonCardFromSetCard(card, language), "wishlist"))}>
                                                 Add to wishlist
                                             </Dropdown.Item>
                                         </>
@@ -224,11 +230,11 @@ export function SetCardTile({
                     the wishlist and everything else; this is the one answer common enough to deserve a
                     button, and it sits outside the tile's own button because a button inside a button is
                     not a thing a browser will render. */}
-                        {state === "missing" && !readOnly ? (
+                        {state === "missing" ? (
                             <AriaButton
                                 isDisabled={pending}
                                 aria-label={`Add ${card.name} #${card.number} to your collection`}
-                                onPress={() => run(() => addCard(pokemonCardFromSetCard(card), "collection"))}
+                                onPress={() => run(() => addCard(pokemonCardFromSetCard(card, language), "collection"))}
                                 className={({ isFocusVisible, isHovered }) =>
                                     cx(
                                         // size-7, not size-6: 24px clears WCAG 2.5.8's minimum by nothing at all, and this
