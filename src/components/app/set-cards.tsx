@@ -23,7 +23,7 @@ const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-sl
  * not hold has no row, so it opens on what the set page already has: the printing, read-only,
  * with its price line. Adding it is the plus and the menu beside it, which is where it was.
  */
-export function SetCards({ cards, readOnly, firstRow = 6 }: { cards: SetCard[]; readOnly: boolean; firstRow?: number }) {
+export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetCard[]; language?: string; firstRow?: number }) {
     const [selected, setSelected] = useState<Card | null>(null);
     // The catalogue card behind an open sheet, so a card nobody holds can still be taken from it.
     const [addable, setAddable] = useState<SetCard | null>(null);
@@ -62,7 +62,7 @@ export function SetCards({ cards, readOnly, firstRow = 6 }: { cards: SetCard[]; 
             <ul className={`grid gap-4 ${GRID_COLUMNS.md}`}>
                 {cards.map((card, i) => (
                     <li key={card.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i, 16) * 20}ms` } as React.CSSProperties}>
-                        <SetCardTile card={card} readOnly={readOnly} priority={i < firstRow} onOpen={open} />
+                        <SetCardTile card={card} language={language} priority={i < firstRow} onOpen={open} />
                     </li>
                 ))}
             </ul>
@@ -75,7 +75,7 @@ export function SetCards({ cards, readOnly, firstRow = 6 }: { cards: SetCard[]; 
                     setAddable(null);
                     setAt(-1);
                 }}
-                addable={addable ? pokemonCardFromSetCard(addable) : null}
+                addable={addable ? pokemonCardFromSetCard(addable, language) : null}
                 onPrev={step(-1)}
                 onNext={step(1)}
             />

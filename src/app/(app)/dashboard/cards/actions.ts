@@ -76,6 +76,16 @@ const cardSchema = z.object({
     number: z.string().trim(),
     rarity: z.string().nullable(),
     types: z.array(z.string()).nullable(),
+    /**
+     * The catalogue's own id, and which catalogue it belongs to.
+     *
+     * Both optional, because everything added before today has neither and the API still resolves
+     * those by set name. They are how a card from the Japanese, Korean or Chinese shelves is
+     * findable at all: those sets have no English name, so the name the API would look up does
+     * not exist. Together they say "this row is that card, in that catalogue" (cardorb-api#257).
+     */
+    tcgId: z.string().trim().min(1).optional(),
+    language: z.string().trim().min(2).max(5).optional(),
 });
 
 // Adds a catalogue card to the collection or the wishlist. The API matches it against the
@@ -94,6 +104,10 @@ export async function addCard(input: PokemonCard, target: "collection" | "wishli
                 set: c.set,
                 number: c.number,
                 ...(c.rarity ? { rarity: c.rarity } : {}),
+                // Only when the card came from another language's shelf. An English card carries
+                // neither and is resolved the way every row before it was.
+                ...(c.tcgId ? { tcgId: c.tcgId } : {}),
+                ...(c.language && c.language !== "en" ? { language: c.language } : {}),
                 types: c.types ?? [],
                 collection: !wishlist,
                 // Added from a folder's own page: filed in it at once.

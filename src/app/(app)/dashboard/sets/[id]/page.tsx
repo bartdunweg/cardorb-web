@@ -86,7 +86,7 @@ export default async function SetPage({ params, searchParams }: { params: Promis
                 <ProgressBarBase value={set.owned} max={set.total || 1} className="mt-2 max-w-md" aria-label={`${set.name} completion`} />
             </PageHeader>
 
-            <SetCards cards={set.cards} readOnly={language !== "en"} />
+            <SetCards cards={set.cards} language={language} />
         </div>
     );
 }

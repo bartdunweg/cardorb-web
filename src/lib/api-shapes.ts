@@ -461,7 +461,17 @@ export const setCardFromBrowse = (c: BrowseCard): SetCard => ({
 });
 
 /** The shape the add action takes, from a set tile. */
-export const pokemonCardFromSetCard = (c: SetCard): PokemonCard => ({
+/**
+ * A catalogue card as the add path wants it.
+ *
+ * `language` is the shelf it was read from, not a property of the card, so it is passed in
+ * rather than read off it: the same printing is on the English shelf and on none of the others.
+ * With `tcgId` it is the whole of what lets the API find a Japanese card, whose set has no
+ * English name to look up (cardorb-api#257).
+ */
+export const pokemonCardFromSetCard = (c: SetCard, language?: string): PokemonCard => ({
+    tcgId: c.tcgId,
+    language: language && language !== "en" ? language : null,
     id: c.id,
     name: c.name,
     set: c.setName,
@@ -528,6 +538,14 @@ export type PokemonCard = {
     setPrintedTotal: number | null;
     flavorText: string | null;
     nationalPokedexNumbers: number[] | null;
+    /**
+     * The catalogue's own id, and which catalogue it came from. Both null for an English card,
+     * which the API still finds by set name the way every row before today was found. For a card
+     * off the Japanese, Korean or Chinese shelves they are the only way to find it at all: those
+     * sets have no English name to look up (cardorb-api#257).
+     */
+    tcgId?: string | null;
+    language?: string | null;
     /** Already in the collection or on the wishlist, so the button can say so. */
     owned: boolean;
     wishlist: boolean;
