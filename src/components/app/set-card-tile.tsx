@@ -8,7 +8,7 @@ import { addCard, markOwned, removeCard, setCopies } from "@/app/(app)/dashboard
 import { CardImage } from "@/components/app/card-image";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
-import { TILE_WIDTH } from "@/lib/cards-view";
+import { TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
 import { formatPrice } from "@/lib/format";
 import { cx } from "@/utils/cx";
 
@@ -89,6 +89,7 @@ export function SetCardTile({
                         fallbackSrc={card.imageUrl}
                         alt=""
                         width={TILE_WIDTH.md}
+                        sizes={TILE_SIZES.md}
                         priority={priority}
                         className="object-cover"
                     />

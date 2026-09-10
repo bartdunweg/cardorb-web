@@ -39,6 +39,25 @@ export const parseCardsSize = (raw: string | undefined): CardsSize => (raw === "
  */
 export const TILE_WIDTH: Record<CardsSize, number> = { sm: 128, md: 192, lg: 256 };
 
+/**
+ * How wide a tile actually is, as the browser must be told it.
+ *
+ * `TILE_WIDTH` above is the widest a tile is ever drawn — on a desktop. Handed to `next/image`
+ * as `width` with no `sizes`, it is not a width at all: the browser gets 1x and 2x candidates
+ * and picks by pixel density alone, so a phone drawing a 104 px tile asked for 384 px. Measured
+ * on a public profile at 375 px: 20.4 KB a tile where 256 px costs 10.3 KB, across a hundred
+ * tiles a megabyte nobody's screen could show.
+ *
+ * These follow `GRID_COLUMNS` below, one clause per breakpoint, rounded up rather than down: too
+ * large costs bytes, too small is a blurry card. The cost is a longer srcset in the HTML —
+ * measured at about 10 KB Brotli a page, against the megabyte it saves.
+ */
+export const TILE_SIZES: Record<CardsSize, string> = {
+    sm: "(min-width: 1280px) 128px, (min-width: 1024px) 13vw, (min-width: 768px) 15vw, 23vw",
+    md: "(min-width: 1280px) 192px, (min-width: 1024px) 19vw, (min-width: 768px) 23vw, 31vw",
+    lg: "(min-width: 1280px) 256px, (min-width: 768px) 31vw, 47vw",
+};
+
 export const GRID_COLUMNS: Record<CardsSize, string> = {
     sm: "grid-cols-4 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8",
     md: "grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6",

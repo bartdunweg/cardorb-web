@@ -1,12 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { listCopies } from "@/app/(app)/dashboard/cards/actions";
-import { CardDetailSlideout } from "@/components/app/card-detail-slideout";
 import { SetCardTile } from "@/components/app/set-card-tile";
 import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
 import { GRID_COLUMNS } from "@/lib/cards-view";
+
+// The card sheet, fetched on the tap that opens it: it is the app's largest client chunk and the
+// grid is drawn long before anyone touches a tile. `ssr: false` — the sheet is nothing until then.
+const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-slideout").then((m) => m.CardDetailSlideout), { ssr: false });
 
 /**
  * A set's cards, and the sheet a tap opens.

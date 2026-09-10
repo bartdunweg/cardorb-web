@@ -1,8 +1,8 @@
 "use client";
 
 import { type ReactNode, Suspense, use, useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { listCopies } from "@/app/(app)/dashboard/cards/actions";
-import { CardDetailSlideout } from "@/components/app/card-detail-slideout";
 import { CardImage } from "@/components/app/card-image";
 import { CardTile } from "@/components/app/card-tile";
 import { DexSlider } from "@/components/app/dex-slider";
@@ -11,9 +11,13 @@ import { ViewMenu } from "@/components/app/view-menu";
 import { Button } from "@/components/base/buttons/button";
 import type { DexCard } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
-import { type CardsSize, GRID_COLUMNS, TILE_WIDTH } from "@/lib/cards-view";
+import { type CardsSize, GRID_COLUMNS, TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
 import type { DexList, NamedDexSlot } from "@/lib/dex-groups";
 import { cx } from "@/utils/cx";
+
+// The card sheet, fetched on the tap that opens it: it is the app's largest client chunk and the
+// grid is drawn long before anyone touches a tile. `ssr: false` — the sheet is nothing until then.
+const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-slideout").then((m) => m.CardDetailSlideout), { ssr: false });
 
 /** The width a tile draws its picture at, per breakpoint: the same as a card in a list. */
 
@@ -122,6 +126,7 @@ function DexTile({ slot, onSelect }: { slot: NamedDexSlot; onSelect?: (card: Dex
                     src={card.imageHighUrl ?? card.imageUrl}
                     fallbackSrc={card.imageUrl}
                     width={TILE_WIDTH.md}
+                    sizes={TILE_SIZES.md}
                     alt=""
                     quality={60}
                     className="object-cover"

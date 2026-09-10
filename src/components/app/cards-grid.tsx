@@ -6,7 +6,7 @@ import { FavoriteStar } from "@/components/app/favorite-star";
 import { FlagIcon } from "@/components/app/flag-icon";
 import { cardLabel } from "@/lib/card-label";
 import type { PublicCard } from "@/lib/cards";
-import { type CardsSize, GRID_COLUMNS, TILE_WIDTH } from "@/lib/cards-view";
+import { type CardsSize, GRID_COLUMNS, TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
 import { formatPrice } from "@/lib/format";
 import { cx } from "@/utils/cx";
 
@@ -51,6 +51,7 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                                         src={card.image_high_url ?? card.image_url}
                                         fallbackSrc={card.image_url}
                                         width={TILE_WIDTH[size]}
+                                        sizes={TILE_SIZES[size]}
                                         quality={size === "lg" ? 75 : 60}
                                         alt=""
                                         className="object-cover"
