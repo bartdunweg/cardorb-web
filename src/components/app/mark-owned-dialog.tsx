@@ -21,6 +21,7 @@ import { NativeSelect } from "@/components/base/select/select-native";
 import type { Card } from "@/lib/api-shapes";
 import { cardLabel } from "@/lib/card-label";
 import type { CopyEdits } from "@/lib/copies";
+import { today } from "@/lib/format";
 
 // A wish becomes a copy you hold. The moment to say what it is: language, condition (Near Mint
 // unless said), finish, folder, what you paid and the day you got it (today unless said). One
@@ -34,8 +35,6 @@ type Props = {
     facts?: CardFacts | null;
     languages?: readonly string[] | null;
 };
-
-const today = () => new Date().toISOString().slice(0, 10);
 
 export function MarkOwnedDialog({ children, ...form }: Props & { children: ReactNode }) {
     return (
