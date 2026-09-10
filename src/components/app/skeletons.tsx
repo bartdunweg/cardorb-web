@@ -92,6 +92,26 @@ export function ListSkeleton({
     );
 }
 
+/**
+ * A page of panels rather than a grid: Settings and You, which both read the profile before they
+ * can draw anything. Their titles are known without the read — "Settings" is always "Settings" —
+ * so the frame carries the real heading and leaves only the panels outlined.
+ */
+export function PanelsSkeleton({ title, subtitle, panels = 3 }: { title: string; subtitle?: string; panels?: number }) {
+    return (
+        <SkeletonFrame>
+            <PageHeader title={title} subtitle={subtitle ?? <Line className="h-5 w-56" />} back={{ href: "/dashboard", label: "Home" }} />
+            <div className="flex flex-col gap-6">
+                {Array.from({ length: panels }, (_, i) => (
+                    <Outline key={i} className="h-40 w-full">
+                        <span className="sr-only" />
+                    </Outline>
+                ))}
+            </div>
+        </SkeletonFrame>
+    );
+}
+
 /** Home: the title, the value section's outline, then the four stat tiles in their grid. */
 export function HomeSkeleton() {
     return (
