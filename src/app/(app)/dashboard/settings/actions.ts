@@ -67,14 +67,44 @@ export async function checkUsername(name: string): Promise<{ available: boolean;
     }
 }
 
+/**
+ * Two megabytes of picture, and it has to be one.
+ *
+ * The cap is on the data URL's characters, and base64 spends four of them on every three bytes,
+ * so the number has to be worked out rather than guessed: it read 4,000,000, which is nearly
+ * three megabytes, under a message promising two.
+ */
+const AVATAR_BYTES = 2 * 1024 * 1024;
+const AVATAR_CHARS = Math.ceil(AVATAR_BYTES / 3) * 4 + 64; // + room for the `data:image/…;base64,` prefix
+
+/** What the first bytes of a file of that type actually look like. */
+const SIGNATURES: Record<string, (b: Uint8Array) => boolean> = {
+    png: (b) => b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47,
+    jpeg: (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff,
+    // RIFF....WEBP: the four bytes at 8 are the form, the size sits between.
+    webp: (b) => b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 && b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50,
+};
+
 // An image as a data URL, at most 2 MB decoded; the API stores it and answers with the address.
 export async function uploadAvatar(image: string): Promise<ActionResult & { avatarUrl?: string }> {
     const parsed = z
         .string()
         .regex(/^data:image\/(png|jpeg|webp);base64,/, "Use a JPG, PNG or WebP image.")
-        .max(4_000_000, "Keep the image under 2 MB.")
+        .max(AVATAR_CHARS, "Keep the image under 2 MB.")
         .safeParse(image);
     if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+
+    /* The prefix is a claim, not a fact: it is written by whatever posted this, and Supabase's
+       bucket matches on the declared type too, so nothing downstream reads the bytes either.
+       Read them here. Sixteen bytes is past every signature we accept. */
+    const declared = /^data:image\/(png|jpeg|webp);base64,/.exec(parsed.data)![1];
+    let head: Uint8Array;
+    try {
+        head = Uint8Array.from(atob(parsed.data.slice(parsed.data.indexOf(",") + 1, parsed.data.indexOf(",") + 25)), (c) => c.charCodeAt(0));
+    } catch {
+        return { ok: false, error: "That file could not be read as an image." };
+    }
+    if (!SIGNATURES[declared](head)) return { ok: false, error: "That file is not the kind of image it says it is." };
 
     try {
         const { avatarUrl } = await api("/profile/avatar", { method: "POST", body: { image: parsed.data }, schema: avatarAnswer });

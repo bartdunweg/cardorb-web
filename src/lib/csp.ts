@@ -33,8 +33,16 @@ export const NONCE_ROUTES: RegExp[] = [
 
 export const needsNonce = (pathname: string): boolean => NONCE_ROUTES.some((route) => route.test(pathname));
 
+/**
+ * The avatar bucket, and only ours. It read `https://*.supabase.co`, which let any Supabase
+ * project's public bucket be embedded on cardorb.com. Taken from the environment rather than
+ * written down, so a preview or a second project needs no edit here; the wildcard stands only if
+ * the variable is missing, which is a build that cannot talk to Supabase anyway.
+ */
+const SUPABASE_HOST = process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin : "https://*.supabase.co";
+
 const IMAGE_HOSTS = [
-    "https://*.supabase.co",
+    SUPABASE_HOST,
     "https://api.cardorb.com",
     "https://assets.tcgdex.net",
     "https://images.pokemontcg.io",

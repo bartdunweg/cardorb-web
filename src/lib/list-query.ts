@@ -67,12 +67,18 @@ export const isNarrowed = (q: ListQuery): boolean => [q.q, q.set, q.rarity, q.ge
 const isSortKey = (v: unknown): v is SortKey => SORT_OPTIONS.some((o) => o.value === v);
 
 /** The list's URL, read forgivingly: nonsense means the default, never an error page. */
+/** A hundred cards a page, so this is a million cards in. Nobody's collection is a tenth of it. */
+export const MAX_PAGE = 10_000;
+
 export function readListQuery(params: ListSearchParams): ListQuery {
     const sortKey = isSortKey(params.sort) ? params.sort : "set";
     const option = SORT_OPTIONS.find((o) => o.value === sortKey)!;
     const text = (v: string | undefined) => v?.trim().slice(0, 100) || undefined;
     return {
-        page: Math.max(1, Number(params.page) || 1),
+        // Capped: every distinct page is a cache miss and one call to an API in another region,
+        // and nothing here has ten thousand pages. Unbounded, `?page=` was a free way for anyone
+        // to walk the public profile and bill both.
+        page: Math.min(MAX_PAGE, Math.max(1, Number(params.page) || 1)),
         sortKey,
         sort: option.sort,
         order: option.order,
