@@ -60,7 +60,7 @@ function CardPreview({
     return (
         <div
             ref={box}
-            className="flex w-full flex-col gap-4 overflow-y-auto border-secondary p-6 max-md:border-t max-sm:absolute max-sm:inset-0 max-sm:z-10 max-sm:border-t-0 max-sm:bg-page md:max-h-[70vh] md:w-90 md:border-l"
+            className="flex w-full flex-col gap-4 overflow-y-auto border-secondary p-6 max-md:border-t max-sm:absolute max-sm:inset-0 max-sm:z-10 max-sm:border-t-0 max-sm:bg-primary md:max-h-[70vh] md:w-90 md:border-l"
         >
             <Button
                 color="secondary"
@@ -298,18 +298,17 @@ export function CommandSearchMenu({
                     ) : null}
                 </div>
             }
-            // On a phone the palette hangs from the top, under the status bar, rather than floating in the
-            // middle: the keyboard takes the lower half the moment the field is focused, and a centred
-            // card was half under it (Bart's call, 2026-09-11; Meetup, Places and corner hang theirs the
-            // same way). From sm up it stays centred, the page's focus while it is open.
             // On a phone the palette is the whole screen, edge to edge, sliding up from the bottom as
-            // the card sheet does, on the page's own ground: a card floating in the middle felt like a
-            // modal, and the keyboard took its lower half the moment the field was focused (Bart's call,
-            // 2026-09-11). From sm up it stays the centred card, the page's focus while it is open.
+            // the card sheet does: a card floating in the middle felt like a modal, and the keyboard took
+            // its lower half the moment the field was focused (Bart's call, 2026-09-11). It keeps the
+            // desktop card's own ground, not the page's: on the page's grey the field's white read as a
+            // rounded card of its own at the top, a sheet's head over a list, where it is one surface
+            // (Bart's call, 2026-09-11). From sm up it stays the centred card, the page's focus while
+            // it is open.
             overlayClassName="max-sm:items-stretch max-sm:p-0"
             dialogClassName={cx(
                 "max-w-[calc(100vw-2rem)]",
-                "max-sm:h-dvh max-sm:max-h-dvh max-sm:max-w-full max-sm:rounded-none max-sm:bg-page max-sm:pt-safe max-sm:pb-safe max-sm:backdrop-blur-none",
+                "max-sm:h-dvh max-sm:max-h-dvh max-sm:max-w-full max-sm:rounded-none max-sm:pt-safe max-sm:pb-safe max-sm:shadow-none max-sm:backdrop-blur-none",
                 "max-sm:slide-in-from-bottom max-sm:slide-out-to-bottom max-sm:zoom-in-100 max-sm:zoom-out-100 motion-reduce:max-sm:slide-in-from-bottom-0 motion-reduce:max-sm:slide-out-to-bottom-0",
             )}
         >

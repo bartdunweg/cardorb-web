@@ -147,7 +147,10 @@ const CommandMenuRoot = ({
                             shortcutKeys={shortcut ? [shortcut] : undefined}
                             placeholder={placeholder}
                             ref={mergeRefs([inputRef, useHotkeysRef])}
-                            className="relative outline-hidden! after:absolute after:bottom-0 after:left-0 after:h-px after:w-full after:bg-border-secondary"
+                            // max-sm:rounded-none (ours): the card's overflow-hidden clips the field's corners on
+                            // a desktop; on a phone the palette is the square whole screen, and a rounded field
+                            // at its top read as a sheet's head.
+                            className="relative outline-hidden! after:absolute after:bottom-0 after:left-0 after:h-px after:w-full after:bg-border-secondary max-sm:rounded-none"
                         />
                     </AriaTextField>
                     {children}
