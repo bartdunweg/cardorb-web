@@ -140,9 +140,11 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
     };
 
     const title = mode === "create" ? "New binder" : kind === "rule" ? "Edit rule" : "Edit binder";
-    const setOptions = facets.sets.filter((s) => !sets.includes(s.name));
+    // A rule names a set by its official name (the API matches either); a rule written before
+    // 2026-09-11 may carry the name the card was filed under, and reads as the title all the same.
+    const setOptions = facets.sets.filter((s) => !sets.includes(s.title) && !sets.includes(s.name));
     const rarityOptions = facets.rarities.filter((r) => !rarities.includes(r));
-    const titleOf = (name: string) => facets.sets.find((s) => s.name === name)?.title ?? name;
+    const titleOf = (name: string) => facets.sets.find((s) => s.name === name || s.title === name)?.title ?? name;
 
     return (
         <div className="flex max-h-[85dvh] w-full max-w-md flex-col gap-4 overflow-y-auto rounded-2xl glass-thick p-6 shadow-xl">
@@ -183,7 +185,7 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
                             }}
                             options={[
                                 { label: !loaded ? "Loading sets…" : sets.length ? "Add another set" : "Any set", value: "" },
-                                ...setOptions.map((s) => ({ label: s.title, value: s.name })),
+                                ...setOptions.map((s) => ({ label: s.title, value: s.title })),
                             ]}
                         />
                         {sets.length ? (
