@@ -57,6 +57,21 @@ for the failures that leave no trace — and everything both passes found is clo
   sampled Japanese cards, whole sets at a time; Limitless has them at a guessable address, and
   a set TCGdex has not photographed now shows those. One probe per set. Chinese (44 of 60
   missing) and Korean are not on Limitless; the odd gap in a photographed Japanese set stays.
+- **Search, the English shelf and the second-market price left pokemontcg.io** (cardorb-api#260,
+  #266, #268, #270). Measured on 2026-09-11: that host answered 500 or 502 to three requests in
+  five, so a search for "charizard" failed all three attempts about half the time — and the web
+  turned the failure into "No cards found". TCGdex answers the same questions in ~200 ms: search
+  by name with the set and the type as filters, the 203 English sets with logos and release dates,
+  and TCGplayer's price relayed per card. Set ids are TCGdex's now (`sv03.5`, `me05`); the old
+  ids still open the same page. TCGdex also carries Pokémon TCG Pocket, the mobile game's fifteen
+  sets — Bart's call: left out of the shelf, the set pages and the search. Ownership on the shelf
+  joins by set id, checked against the old counts (Black Bolt 170 of 172, 151 207 of 207). Only
+  set logos and a scan fallback still ask pokemontcg.io, behind a day-long cache.
+- **A failed search is not an empty one** (#312, #316, #317, #318). Every search box says "The
+  card service didn't answer" with Try again where it used to say "No cards found"; the palette
+  says how many it found, loads the next twenty as you scroll, and can add to the wishlist. The
+  keyboard stays in the field after a button. Measured in the pane against a dead API URL and
+  then the live one.
 - **A card with no picture lies face down** (#314). Bart's call: the official back from
   tcg.pokemon.com, a static file, in the set page, the grid, the Pokédex and the sheet, where a
   grey box with the name in it read as "nothing here". `CardImage` draws it itself once both of
