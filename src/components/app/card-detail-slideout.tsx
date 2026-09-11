@@ -41,6 +41,7 @@ import { type CopyGroup, groupCopies, sortCopies } from "@/lib/copies";
 import { matchesRule } from "@/lib/folder-rule";
 import { formatDate, formatPrice } from "@/lib/format";
 import { orientationNeedsPermission, requestOrientation } from "@/lib/holo/orientation";
+import { priceChange } from "@/lib/price-change";
 import { settleLatest } from "@/lib/settle-latest";
 import { cx } from "@/utils/cx";
 
@@ -270,6 +271,8 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
      * to it. Opened a second time there is no gap, so nothing animates.
      */
     const known = tcgId ? (facts?.tcgId === tcgId ? facts.facts : (FACTS_SEEN.get(tcgId) ?? null)) : null;
+    // The line beside the price in the header, from the same answer: no request of its own.
+    const change = mine ? priceChange(mine.price, known?.price?.avg30) : null;
 
     /*
      * The arrow keys, which is how anybody who is already looking at a list expects to move
@@ -812,9 +815,28 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                             </p>
                             {/* The price sits under the title, where a product panel puts it, not among the attributes. */}
                             {mine?.price != null ? (
-                                <p className="text-md font-semibold text-primary tabular-nums">
-                                    {formatPrice(mine.price)}
-                                    <span className="sr-only"> market price</span>
+                                <p className="flex items-baseline gap-2 text-md font-semibold text-primary tabular-nums">
+                                    <span>
+                                        {formatPrice(mine.price)}
+                                        <span className="sr-only"> market price</span>
+                                    </span>
+                                    {/* Beside it, which way it moved: the Near Mint price against the catalogue's
+                                        30-day average, the way an asset page puts the change next to the price so a
+                                        glance says up or down. The sign is in the text, so colour is never the only
+                                        carrier; a screen reader gets it spelled out ("Up €0.12, 5 percent…") from a
+                                        span of its own, because a bare span takes no aria-label. `arrive` because
+                                        the average comes with the catalogue's answer, a beat after the sheet. */}
+                                    {change ? (
+                                        <span
+                                            className={cx(
+                                                "arrive text-sm font-medium",
+                                                change.direction === "up" ? "text-success-primary" : "text-error-primary",
+                                            )}
+                                        >
+                                            <span aria-hidden="true">{change.text}</span>
+                                            <span className="sr-only">{change.label}</span>
+                                        </span>
+                                    ) : null}
                                 </p>
                             ) : null}
                             {/* A wish becomes a copy here, above the tabs: the one thing to do with a card you do not
