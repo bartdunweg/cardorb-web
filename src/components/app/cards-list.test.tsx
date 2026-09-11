@@ -16,6 +16,8 @@ vi.mock("@/app/(app)/dashboard/list-actions", () => ({ loadMoreCards: vi.fn() })
 vi.mock("@/app/(app)/dashboard/cards/actions", () => ({ markOwnedWith: vi.fn(), cardFacts: vi.fn().mockResolvedValue(null) }));
 vi.mock("@/app/(app)/dashboard/collections/actions", () => ({ listCollections: vi.fn().mockResolvedValue([]) }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+// jsdom has no matchMedia; the Got it form's date picker reads the breakpoint through it.
+vi.stubGlobal("matchMedia", () => ({ matches: true, addEventListener() {}, removeEventListener() {} }));
 
 const card: Card = {
     id: "9b2f4d1e-3c5a-4e7b-8f90-1a2b3c4d5e6f",

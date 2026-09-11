@@ -61,7 +61,7 @@ export const ourSections: SectionSpec[] = [
         title: "AcquiredDatePicker",
         from: "components/app/acquired-date-picker",
         ours: true,
-        note: "The kit's DatePicker with the app's two rules on it: the day is the YYYY-MM-DD string the API speaks, and the calendar ends at today, since a card you hold was got in the past. The day is handed on when Apply is pressed, so the copy card can save from it directly.",
+        note: "The kit's DatePicker with the app's two rules on it: the day is the YYYY-MM-DD string the API speaks, and the calendar ends at today, since a card you hold was got in the past. The day is handed on when Apply is pressed, so the copy card can save from it directly. On a phone the calendar is a sheet from the bottom instead of the kit's popover, which had nowhere to hang inside a form inside a sheet.",
         render: (
             <Panel>
                 <Group title="States" cols="wide">
