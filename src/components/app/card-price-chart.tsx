@@ -1,42 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { type PricePoint, cardPriceHistory } from "@/app/(app)/dashboard/cards/actions";
+import type { PricePoint } from "@/app/(app)/dashboard/cards/actions";
+import { knownPriceHistory, preloadPriceHistory } from "@/components/app/card-memo";
 import { ChartPeriods, type PeriodKey, withinPeriod } from "@/components/app/chart-periods";
 import { CHART_HEIGHT, ValueChart } from "@/components/app/value-chart";
 import type { ValueSnapshot } from "@/lib/value-history";
-
-/**
- * A card's price line, kept for as long as the page lives — the same memo the sheet keeps for a
- * card's facts, for the same reason: the readings do not change while somebody browses, and the
- * Price tab should not open on "No readings" for half a second before the line lands.
- *
- * The sheet calls `preloadPriceHistory` the moment it opens on a card, so by the time the tab is
- * clicked the answer is usually here. An empty answer is kept too: a card nobody has priced
- * should not be asked about again every time its tab opens.
- */
-const PRICES_SEEN = new Map<string, PricePoint[]>();
-const PRICES_ASKED = new Map<string, Promise<PricePoint[]>>();
-
-export function preloadPriceHistory(tcgId: string): Promise<PricePoint[]> {
-    const seen = PRICES_SEEN.get(tcgId);
-    if (seen) return Promise.resolve(seen);
-    const asked = PRICES_ASKED.get(tcgId);
-    if (asked) return asked;
-    const p = cardPriceHistory(tcgId).then((points) => {
-        PRICES_SEEN.set(tcgId, points);
-        PRICES_ASKED.delete(tcgId);
-        return points;
-    });
-    PRICES_ASKED.set(tcgId, p);
-    return p;
-}
-
-/** For tests: forget every line read so far. */
-export function forgetPriceHistory() {
-    PRICES_SEEN.clear();
-    PRICES_ASKED.clear();
-}
 
 /**
  * One card's price over time — the same chart Home draws for the whole collection.
@@ -55,10 +24,10 @@ export function CardPriceChart({ tcgId, holo = false, name }: { tcgId: string; h
     const [period, setPeriod] = useState<PeriodKey>("6m");
     // What was fetched, or what an earlier open already learned — derived, so a known line needs
     // no effect and no second render to show.
-    const points = loaded?.tcgId === tcgId ? loaded.points : (PRICES_SEEN.get(tcgId) ?? null);
+    const points = loaded?.tcgId === tcgId ? loaded.points : (knownPriceHistory(tcgId) ?? null);
 
     useEffect(() => {
-        if (PRICES_SEEN.has(tcgId)) return;
+        if (knownPriceHistory(tcgId)) return;
         let live = true;
         preloadPriceHistory(tcgId).then((p) => {
             if (live) setLoaded({ tcgId, points: p });

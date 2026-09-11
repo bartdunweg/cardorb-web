@@ -9,7 +9,6 @@ import { Heading as AriaHeading } from "react-aria-components";
 import {
     type CardFacts,
     addCard,
-    cardFacts,
     editCopies,
     listCopies,
     removeCard,
@@ -22,7 +21,8 @@ import {
 import { type FolderChoice, listCollections, loadFacets } from "@/app/(app)/dashboard/collections/actions";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
-import { CardPriceChart, preloadPriceHistory } from "@/components/app/card-price-chart";
+import { knownCardFacts, preloadCardFacts, preloadPriceHistory } from "@/components/app/card-memo";
+import { CardPriceChart } from "@/components/app/card-price-chart";
 import { CopyCard } from "@/components/app/copy-card";
 import { CopyFormDialog } from "@/components/app/copy-form-dialog";
 import { HoloCard } from "@/components/app/holo-card";
@@ -56,19 +56,6 @@ function DetailRow({ label, value, late = false }: { label: string; value: React
         </div>
     );
 }
-
-/**
- * The catalogue's answer for a printing, kept for as long as the page lives.
- *
- * These are facts about a card rather than about anybody's copy — an illustrator and an HP do
- * not change while somebody browses — so asking twice is a wait nobody needed. Held here rather
- * than in a provider because it is a memo, not state: nothing renders from it, and losing it on
- * a navigation costs one fetch.
- *
- * A null answer is kept too. A card the catalogue cannot place should not be asked about again
- * every time its sheet opens.
- */
-const FACTS_SEEN = new Map<string, CardFacts | null>();
 
 /**
  * `onPrev` / `onNext`: the cards either side of this one in the list it was opened from, where
@@ -270,7 +257,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const genLogo = logo?.series === gen ? logo.url : null;
     // What the catalogue knows about the printing: read when a card opens, kept with its id.
     //
-    // Seeded from FACTS_SEEN, which is why a card opened twice fills in at once rather than a
+    // Seeded from the card memo, which is why a card opened twice fills in at once rather than a
     // half-second later with its rows animating: measured, the sheet is on screen at 92 ms and
     // the catalogue answers at 559 ms, and the `arrive` on those rows spends that gap drawing
     // attention to it. The second time there is no gap to draw.
@@ -281,10 +268,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         // The price line too, so the Price tab opens on it rather than on "No readings" for the
         // half second the API takes. Its answer lives with the chart; nothing here renders from it.
         void preloadPriceHistory(tcgId);
-        if (FACTS_SEEN.has(tcgId)) return;
+        if (knownCardFacts(tcgId) !== undefined) return;
         let live = true;
-        cardFacts(tcgId).then((f) => {
-            FACTS_SEEN.set(tcgId, f);
+        preloadCardFacts(tcgId).then((f) => {
             if (live) setFacts({ tcgId, facts: f });
         });
         return () => {
@@ -300,7 +286,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
      * answers at 739 ms, and the `arrive` on those rows spends the gap between drawing attention
      * to it. Opened a second time there is no gap, so nothing animates.
      */
-    const known = tcgId ? (facts?.tcgId === tcgId ? facts.facts : (FACTS_SEEN.get(tcgId) ?? null)) : null;
+    const known = tcgId ? (facts?.tcgId === tcgId ? facts.facts : (knownCardFacts(tcgId) ?? null)) : null;
     // The line beside the price in the header, from the same answer: no request of its own.
     const change = mine ? priceChange(mine.price, known?.price?.avg30) : null;
 
