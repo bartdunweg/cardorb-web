@@ -5,9 +5,10 @@ import { useRef, useState } from "react";
 import { Check, Plus, SearchLg } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
-import { type PokemonCard, addCard, searchPokemon } from "@/app/(app)/dashboard/cards/actions";
+import { type CatalogueFilters, type PokemonCard, addCard, searchPokemon } from "@/app/(app)/dashboard/cards/actions";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
+import { LanguageChips } from "@/components/app/language-chips";
 import { notify } from "@/components/app/toast";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
@@ -15,6 +16,7 @@ import { Button } from "@/components/base/buttons/button";
 import { CloseButton } from "@/components/base/buttons/close-button";
 import { Input } from "@/components/base/input/input";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
+import type { BrowseLanguage } from "@/lib/languages";
 import { cx } from "@/utils/cx";
 
 type Target = "collection" | "wishlist";
@@ -45,7 +47,13 @@ export function AddCardModal({
     const [target, setTarget] = useState<Target>(defaultTarget);
     const [query, setQuery] = useState("");
     const [status, setStatus] = useState<Record<string, "adding" | "done">>({});
-    const { results, loading, failed, retry } = useDebouncedSearch<PokemonCard>(query, searchPokemon, { minLength: 2, delay: 300 });
+    // Which catalogue the name is looked up in: English, or one of the four in their own script.
+    const [language, setLanguage] = useState<BrowseLanguage>("en");
+    const { results, loading, failed, retry } = useDebouncedSearch<PokemonCard, CatalogueFilters>(query, searchPokemon, {
+        minLength: 2,
+        delay: 300,
+        params: language === "en" ? {} : { language },
+    });
     const inputRef = useRef<HTMLInputElement>(null);
     // Try again unmounts the button that was pressed the moment hits land, and focus would fall
     // to the page; it goes back to the field instead, where the next keystroke belongs.
@@ -133,6 +141,7 @@ export function AddCardModal({
                                     onChange={setQuery}
                                     wrapperClassName="rounded-full"
                                 />
+                                <LanguageChips value={language} onChange={setLanguage} />
 
                                 <div className="flex min-h-40 flex-col gap-1 overflow-y-auto">
                                     {/* One live region, always mounted, so a screen reader hears the state change. */}

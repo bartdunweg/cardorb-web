@@ -6,6 +6,7 @@ import type { CatalogueFilters, PokemonCard } from "@/app/(app)/dashboard/cards/
 import { CardImage } from "@/components/app/card-image";
 import type { AddStatus } from "@/components/app/command-search";
 import { FilterChip, FilterChipRow, type FilterOption } from "@/components/app/filter-chip";
+import { LanguageChips } from "@/components/app/language-chips";
 import { CommandMenu, type CommandMenuGroupType } from "@/components/application/command-menus/command-menu";
 import { Button } from "@/components/base/buttons/button";
 import { CARD_TYPES } from "@/lib/card-types";
@@ -140,6 +141,8 @@ export function CommandSearchMenu({
     onAdd: (card: PokemonCard, target: "collection" | "wishlist") => void;
 }) {
     const filtering = Boolean(filters.set || filters.type);
+    // Which catalogue is asked; the set and the type are the English one's facets, so its chips go with it.
+    const language = filters.language ?? "en";
     const searching = inputValue.trim().length >= 2 || filtering;
     const groups: CommandMenuGroupType[] = hits.length
         ? [
@@ -201,8 +204,15 @@ export function CommandSearchMenu({
                 Search cards
             </AriaHeading>
 
+            {/* The catalogue: English, or one of the four TCGdex keeps in its own script, the row Browse has.
+                Always there, because the language is chosen before the name is typed. Changing it drops the
+                set and the type: both are lists of the English catalogue. */}
+            <div className="border-b border-secondary px-4 py-2">
+                <LanguageChips value={language} onChange={(next) => onFiltersChange(next === "en" ? {} : { language: next })} />
+            </div>
+
             {/* The chips that narrow the hits, once something is typed; a set kept while the term changes stays. */}
-            {searching ? (
+            {searching && language === "en" ? (
                 <FilterChipRow className="border-b border-secondary px-4 py-2" onClear={filtering ? () => onFiltersChange({}) : undefined}>
                     <FilterChip label="Set" value={filters.set} options={sets} onChange={(set) => onFiltersChange({ ...filters, set })} />
                     <FilterChip
