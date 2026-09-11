@@ -238,7 +238,11 @@ for the failures that leave no trace — and everything both passes found is clo
 ## Open
 
 - **Seen in passing on 2026-09-11:** on the dev server the sheet's chunk (`card-detail-slideout`)
-  is refused by the CSP nonce — dev-only as far as seen, production untested. The other two
+  is refused by the CSP nonce. **Dev-only, measured the same day:** the seven scripts without a
+  nonce on a dev page are all Turbopack's HMR runtime and what it inserts; on the production build
+  served locally (`pnpm start`, the `prod` entry in `.claude/launch.json`) /dashboard/cards loads,
+  the sheet opens, and the page reports zero `securitypolicyviolation` events and zero console
+  errors. Nothing to change in the policy. The other two
   things seen that day are closed: TCGdex's fifteen トリプレットビート placeholder sets are off the
   shelves (cardorb-api#282) and CSV1C, which TCGdex lists twice, shows once, as the entry its
   own page opens on (cardorb-api#289).
