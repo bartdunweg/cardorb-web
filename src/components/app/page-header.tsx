@@ -89,7 +89,8 @@ export function PageHeader({
                     !back && !barActions && !collapsed && "pointer-events-none",
                     // The fade comes with the collapse: at rest the buttons sit on the page and the large title
                     // sits on its line; once content scrolls under, the page's ground fades in behind the bar.
-                    // The ground reaches 28 px past the bar's bottom: that is where the glass runs out.
+                    // The ground reaches 28 px past the bar's bottom: the glass thins over its whole height
+                    // and runs out there.
                     "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:-bottom-7 before:-z-10 before:glass-fade before:transition-opacity before:duration-150 before:ease-enter",
                     collapsed ? "before:opacity-100" : "before:opacity-0",
                 )}
