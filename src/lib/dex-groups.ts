@@ -1,9 +1,16 @@
 import type { DexSlot } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
-import { type DexRange, NATIONAL_DEX_MAX, type PokedexSetting, rarityKept } from "@/lib/folder-rule";
+import { type DexRange, GENERATIONS, NATIONAL_DEX_MAX, type PokedexSetting, rarityKept } from "@/lib/folder-rule";
 
 export type DexNames = Map<number, string>;
 export type NamedDexSlot = DexSlot & { name: string };
+
+/**
+ * One generation of the Pokédex as the page draws it: its slots, and its own "45 of 151". `caught`
+ * and `total` are the page's numbers cut at the generation's edges — the sum over the generations is
+ * the count at the top — so a chapter reads by the same rule as the whole.
+ */
+export type DexGeneration = { label: string; from: number; to: number; slots: NamedDexSlot[]; caught: number; total: number };
 
 /**
  * A list of cards as a Pokédex: one slot per number in the range, the folder's cards in it in the
@@ -18,7 +25,7 @@ export function groupByDex(
     cards: DexCardLike[],
     names: DexNames,
     setting: PokedexSetting,
-): { slots: NamedDexSlot[]; caught: number; range: DexRange; cards: number } {
+): { slots: NamedDexSlot[]; generations: DexGeneration[]; caught: number; range: DexRange; cards: number } {
     const range = setting.dex ?? { from: 1, to: NATIONAL_DEX_MAX };
     // Only the rarities the setting names, compared without case: the catalogue spells some two ways.
     const kept = setting.rarities ?? null;
@@ -43,7 +50,19 @@ export function groupByDex(
             cards: held.map((c) => ({ id: c.id, name: c.name, set: c.set ?? null, number: c.number, imageUrl: c.image_url, imageHighUrl: c.image_high_url })),
         });
     }
-    return { slots, caught: bySlot.size, range, cards: counted };
+    // The slots by generation, in dex order. A generation the range does not reach is not in the
+    // list, and neither is one without a slot to draw (with the missing ones off, a generation nothing
+    // is held in): a heading over nothing says less than no heading.
+    const generations: DexGeneration[] = [];
+    for (const gen of GENERATIONS) {
+        const from = Math.max(gen.from, range.from);
+        const to = Math.min(gen.to, range.to);
+        if (from > to) continue;
+        const held = slots.filter((s) => s.number >= from && s.number <= to);
+        if (held.length === 0) continue;
+        generations.push({ label: gen.label, from, to, slots: held, caught: held.filter((s) => s.cards.length > 0).length, total: to - from + 1 });
+    }
+    return { slots, generations, caught: bySlot.size, range, cards: counted };
 }
 
 /** A folder as a Pokédex, with the numbers the page says about it: the slots, plus the list's own count and worth. */

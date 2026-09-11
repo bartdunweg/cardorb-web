@@ -37,17 +37,28 @@ export function SkeletonFrame({ children }: { children: ReactNode }) {
     );
 }
 
-/** A card list: the tiles' own ratio, in the grid's own columns, without the surface a tile no longer has. */
-export function CardsSkeleton({ count = 12 }: { count?: number }) {
+/**
+ * A card list: the tiles' own ratio, in the grid's own columns, without the surface a tile no
+ * longer has. `heading`: the Pokédex, whose slots stand under a generation's heading and its
+ * count — a line at the left and a short one at the right, before the first row, so the first
+ * heading does not push the tiles down when it lands.
+ */
+export function CardsSkeleton({ count = 12, heading = false }: { count?: number; heading?: boolean }) {
+    const tiles = Array.from({ length: count }, (_, i) => (
+        <div key={i} className="flex flex-col gap-2">
+            <div className="aspect-card w-full rounded-card bg-skeleton" />
+            <Block className="h-4 w-3/4" />
+            <Block className="h-3 w-1/2" />
+        </div>
+    ));
+    if (!heading) return <Outline className={`grid gap-4 ${GRID_COLUMNS.md}`}>{tiles}</Outline>;
     return (
-        <Outline className={`grid gap-4 ${GRID_COLUMNS.md}`}>
-            {Array.from({ length: count }, (_, i) => (
-                <div key={i} className="flex flex-col gap-2">
-                    <div className="aspect-card w-full rounded-card bg-skeleton" />
-                    <Block className="h-4 w-3/4" />
-                    <Block className="h-3 w-1/2" />
-                </div>
-            ))}
+        <Outline className="flex flex-col gap-3">
+            <div className="flex items-baseline justify-between gap-4">
+                <Block className="h-6 w-36" />
+                <Block className="h-4 w-16" />
+            </div>
+            <div className={`grid gap-4 ${GRID_COLUMNS.md}`}>{tiles}</div>
         </Outline>
     );
 }
@@ -63,6 +74,7 @@ export function ListSkeleton({
     back,
     tiles = 12,
     lines = 1,
+    heading = false,
 }: {
     title?: string;
     subtitle?: string;
@@ -70,6 +82,8 @@ export function ListSkeleton({
     tiles?: number;
     /** The count's lines: two on the Pokédex. */
     lines?: 1 | 2;
+    /** A heading's line before the first row: the Pokédex, whose slots stand by generation. */
+    heading?: boolean;
 }) {
     return (
         <SkeletonFrame>
@@ -89,7 +103,7 @@ export function ListSkeleton({
             />
             <div className="flex flex-col gap-4">
                 <ListRow />
-                <CardsSkeleton count={tiles} />
+                <CardsSkeleton count={tiles} heading={heading} />
             </div>
         </SkeletonFrame>
     );
