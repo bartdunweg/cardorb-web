@@ -243,6 +243,24 @@ for the failures that leave no trace — and everything both passes found is clo
   day lands at Apply, Cancel leaves the value, 12 September and later disabled with today as
   "Last available date". One accessibility finding accepted and logged: the dialog keeps the
   kit's name "Date picker"; the button and the date segments carry the field's own label.
+- **The Mobbin pass, paid** (2026-09-11, web #381, #382, #383). The connector was on all along:
+  a hand-added `mobbin` server in `~/.claude.json`, with no token, shadowed the claude.ai
+  connector that has one; removed, and the session's tools are `mcp__claude_ai_Mobbin__*`. A
+  session started before the fix never gets them, so the search ran in a helper `claude -p` per
+  query. Thirteen pages against three or four references each. Follows the pattern, no PR: Home
+  (Rocket Money, Monarch), Collection (OpenSea), Binders, Favorites, sign-in. Seven departures;
+  Bart picked three, merged: the landing shows Home under the words, built from the app's own
+  parts with sample data so it moves with the design, not a screenshot (#381, then his three
+  calls in the same PR: under the copy and half below the fold, then on the page's own ground
+  so the dot grid stops at its edge); Browse draws a set as its logo with the name and count
+  under it, no bar — his call (#383); a wishlist tile carries "Got it", a sibling of the
+  pressable so no button sits in a button (#382). The four not taken, ready when wanted: the
+  public-profile switch and URL visible on Settings (Clay); recent cards, not terms, in the
+  palette, with a ⌘K/Esc footer (v0, Bonsai); the Pokédex grouped per generation with a count
+  each (Headspace); the price's change beside the price in the sheet (Fey). Not measured: the
+  public profile (Bart's is private), the set page (the query returned onboarding "set-up"
+  screens — name the object, never the word "set"). Seen in passing: `/dashboard/you` renders
+  the Settings page under another heading.
 
 ## Next
 
