@@ -6,6 +6,7 @@ import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { AppEmptyState } from "./app-empty-state";
 import { AuthEmailField, AuthShell } from "./auth-shell";
+import { CardBack } from "./card-back";
 import { CardImage } from "./card-image";
 import { CardTile } from "./card-tile";
 import { CopyRow } from "./copy-row";
@@ -74,6 +75,34 @@ export const ourSections: SectionSpec[] = [
                     </div>
                 </AuthShell>
             </div>
+        ),
+    },
+    {
+        id: "card-back",
+        title: "CardBack",
+        from: "components/app/card-back",
+        ours: true,
+        note: "A card the catalogue knows and cannot show, face down. The official back from tcg.pokemon.com, shipped as a static file at a card's exact 63 × 88; decorative, because the caption under every tile names the card. CardImage draws it itself once both of its sources have failed.",
+        render: (
+            <Panel>
+                <Group title="On its own, and where a picture will not load" cols="tight">
+                    <Cell label="width={128}">
+                        <div className="relative aspect-card w-32 overflow-hidden rounded-card">
+                            <CardBack width={128} />
+                        </div>
+                    </Cell>
+                    <Cell label="width={96}">
+                        <div className="relative aspect-card w-24 overflow-hidden rounded-card">
+                            <CardBack width={96} />
+                        </div>
+                    </Cell>
+                    <Cell label="CardImage, src that will not load">
+                        <div className="relative aspect-card w-24 overflow-hidden rounded-card">
+                            <CardImage src="https://assets.tcgdex.net/en/base/base1/none/high.png" alt="" width={96} className="object-cover" />
+                        </div>
+                    </Cell>
+                </Group>
+            </Panel>
         ),
     },
     {

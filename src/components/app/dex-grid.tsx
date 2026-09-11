@@ -3,6 +3,7 @@
 import { type ReactNode, Suspense, use, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { listCopies } from "@/app/(app)/dashboard/cards/actions";
+import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { CardTile } from "@/components/app/card-tile";
 import { DexSlider } from "@/components/app/dex-slider";
@@ -120,7 +121,7 @@ function DexTile({ slot, onSelect }: { slot: NamedDexSlot; onSelect?: (card: Dex
 
     const card = slot.cards[0]!;
     const picture = (
-        <div className={cx("relative aspect-card w-full overflow-hidden rounded-card", !card.imageUrl && "bg-quaternary")}>
+        <div className="relative aspect-card w-full overflow-hidden rounded-card">
             {card.imageUrl ? (
                 <CardImage
                     src={card.imageHighUrl ?? card.imageUrl}
@@ -132,9 +133,7 @@ function DexTile({ slot, onSelect }: { slot: NamedDexSlot; onSelect?: (card: Dex
                     className="object-cover"
                 />
             ) : (
-                <div className="flex h-full w-full flex-col items-center justify-center gap-1 p-3 text-center">
-                    <span className="line-clamp-4 text-sm font-medium text-secondary">{card.name}</span>
-                </div>
+                <CardBack width={TILE_WIDTH.md} sizes={TILE_SIZES.md} />
             )}
         </div>
     );

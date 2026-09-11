@@ -21,6 +21,7 @@ import {
     setLanguage,
 } from "@/app/(app)/dashboard/cards/actions";
 import { type FolderChoice, listCollections, loadFacets, setCardCollection } from "@/app/(app)/dashboard/collections/actions";
+import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { CardPriceChart } from "@/components/app/card-price-chart";
 import { CONDITIONS } from "@/components/app/condition-badge";
@@ -690,9 +691,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                         />
                                     </HoloCard>
                                 ) : (
-                                    <div className="mx-auto flex aspect-card w-full max-w-44 flex-col items-center justify-center gap-1 rounded-card bg-quaternary p-4 text-center">
-                                        <span className="text-sm font-medium text-secondary">{card?.name}</span>
-                                        {card?.number ? <span className="text-xs text-quaternary">#{card.number}</span> : null}
+                                    /* Face down, at the size the scan would be. The sheet's heading names the card. */
+                                    <div className="relative mx-auto aspect-card w-full max-w-44 overflow-hidden rounded-card">
+                                        <CardBack width={176} priority />
                                     </div>
                                 )}
                             </div>
