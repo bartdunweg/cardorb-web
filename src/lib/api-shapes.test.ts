@@ -4,6 +4,7 @@ import {
     absoluteImage,
     browseCardSchema,
     cardFromItem,
+    cardFromPokemonCard,
     folderFromApi,
     pokemonCardFromBrowse,
     pokemonCardFromSetCard,
@@ -137,8 +138,29 @@ describe("pokemonCardFromBrowse", () => {
             priceHolo: null,
             tcgId: null,
         });
-        expect(c).toMatchObject({ set: "Scarlet & Violet", types: null, hp: null, owned: true });
-        expect(c).not.toHaveProperty("tcgId");
+        expect(c).toMatchObject({ set: "Scarlet & Violet", types: null, hp: null, owned: true, price: null });
+        expect(c).not.toHaveProperty("language");
+    });
+    it("carries the catalogue id and the price with every hit, for the sheet a hit opens", () => {
+        const c = pokemonCardFromBrowse({
+            id: "me05-085",
+            number: "085",
+            name: "Fomantis",
+            setName: "Pitch Black",
+            image: null,
+            imageHigh: null,
+            rarity: null,
+            types: [],
+            series: "Mega Evolution",
+            owned: false,
+            wishlist: false,
+            quantity: 0,
+            itemIds: [],
+            price: { low: 1.5, market: 2.46, avg30: 2.96, nm: null },
+            priceHolo: null,
+            tcgId: "me05-085",
+        });
+        expect(c).toMatchObject({ tcgId: "me05-085", price: 2.46 });
         expect(c).not.toHaveProperty("language");
     });
     it("carries the catalogue and the id for a hit from another language, which is how the API finds it", () => {
@@ -162,6 +184,36 @@ describe("pokemonCardFromBrowse", () => {
         };
         expect(pokemonCardFromBrowse(hit, "ja")).toMatchObject({ tcgId: "SV2a-006", language: "ja" });
         expect(pokemonCardFromBrowse(hit, "en")).not.toHaveProperty("language");
+    });
+});
+
+describe("cardFromPokemonCard", () => {
+    it("reads a hit as a card nobody holds: the price line's id and the number, and nothing about a copy", () => {
+        const card = cardFromPokemonCard({
+            id: "me05-085",
+            name: "Fomantis",
+            set: "Pitch Black",
+            number: "085",
+            rarity: null,
+            image: "https://img/me05/085",
+            supertype: null,
+            subtypes: null,
+            hp: null,
+            types: ["Grass"],
+            artist: null,
+            series: "Mega Evolution",
+            releaseDate: null,
+            setPrintedTotal: null,
+            flavorText: null,
+            nationalPokedexNumbers: null,
+            tcgId: "me05-085",
+            owned: false,
+            wishlist: false,
+            quantity: 0,
+            price: 2.46,
+        });
+        expect(card).toMatchObject({ tcg_id: "me05-085", price: 2.46, set_name: "Pitch Black", owned: false, wishlist: false, quantity: 0 });
+        expect(card).toMatchObject({ finish: null, purchase_price: null, collection_id: null, notes: null });
     });
 });
 

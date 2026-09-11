@@ -174,6 +174,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                   owned: false,
                   wishlist: false,
                   quantity: 0,
+                  price: own.price,
               }
             : null);
 
