@@ -7,6 +7,7 @@ import { Heading as AriaHeading } from "react-aria-components";
 import { addCopy, splitCopy } from "@/app/(app)/dashboard/cards/actions";
 import type { CardFacts } from "@/app/(app)/dashboard/cards/actions";
 import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
+import { AcquiredDatePicker } from "@/components/app/acquired-date-picker";
 import { CONDITIONS } from "@/components/app/condition-badge";
 import { finishOptions, patternOptions, soleOption } from "@/components/app/copy-fields";
 import { FormError } from "@/components/app/form-error";
@@ -326,20 +327,7 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
             {mode === "add" ? (
                 <div className={row}>
                     Acquired
-                    {/* No future days: a card you hold was got in the past. Turned away where it is
-                        asked for rather than after the API refuses it. */}
-                    <Input
-                        type="date"
-                        aria-label="Acquired"
-                        size="sm"
-                        className="w-44"
-                        max={today()}
-                        value={acquired}
-                        onChange={(date) => {
-                            if (typeof date === "string" && date > today()) return;
-                            setAcquired(typeof date === "string" ? date : "");
-                        }}
-                    />
+                    <AcquiredDatePicker className="w-44" value={acquired} onChange={setAcquired} />
                 </div>
             ) : null}
 

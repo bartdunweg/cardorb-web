@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Minus, Plus } from "@untitledui/icons";
 import { type CardFacts, editCopies } from "@/app/(app)/dashboard/cards/actions";
 import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
+import { AcquiredDatePicker } from "@/components/app/acquired-date-picker";
 import { CONDITIONS } from "@/components/app/condition-badge";
 import { finishOptions, patternOptions, soleOption } from "@/components/app/copy-fields";
 import { FlagIcon } from "@/components/app/flag-icon";
@@ -16,7 +17,6 @@ import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { NativeSelect } from "@/components/base/select/select-native";
 import { type CopyEdits, type CopyGroup, copyLabel } from "@/lib/copies";
-import { today } from "@/lib/format";
 import { languageOf } from "@/lib/languages";
 import { cx } from "@/utils/cx";
 
@@ -127,11 +127,6 @@ export function CopyCard({
         if (p === purchasePrice) return;
         void save({ purchasePrice: p }, "The purchase price did not save");
     };
-
-    /* A date field the browser owns: React hands it a value, and after that the segments the user
-       arrows through are the input's own. Bumping this remounts it on the value actually stored. */
-    const [dateKey, setDateKey] = useState(0);
-    const todaysDate = today();
 
     const disabled = busy;
     // Label above a full-width field, the add form's shape: the two ask the same questions.
@@ -331,26 +326,13 @@ export function CopyCard({
 
             <div className={field}>
                 Acquired
-                {/* No future days: a card you hold was got in the past. Turned away where it is
-                    asked for rather than after the API refuses it, and not snapped back mid-typing,
-                    which would fight a year being corrected digit by digit; the field is put back
+                {/* Saves when Apply is pressed in the calendar, like every other field here saves
                     when it is left. */}
-                <Input
-                    key={dateKey}
-                    type="date"
-                    aria-label="Acquired"
-                    size="sm"
+                <AcquiredDatePicker
                     className="w-44"
-                    max={todaysDate}
                     isDisabled={disabled}
                     value={acquired}
-                    onChange={(date) => {
-                        if (!date || date > todaysDate) return;
-                        void save({ acquiredAt: date }, "The acquired date did not save").then(() => setDateKey((k) => k + 1));
-                    }}
-                    onBlur={(e) => {
-                        if ((e.target as HTMLInputElement).value !== acquired) setDateKey((k) => k + 1);
-                    }}
+                    onChange={(date) => void save({ acquiredAt: date }, "The acquired date did not save")}
                 />
             </div>
 
