@@ -4,8 +4,21 @@
         {
             "name": "dev",
             "runtimeExecutable": "pnpm",
-            "runtimeArgs": ["dev"],
+            "runtimeArgs": [
+                "dev"
+            ],
             "port": 3210,
+            "autoPort": true
+        },
+        {
+            "name": "prod",
+            "runtimeExecutable": "pnpm",
+            "runtimeArgs": [
+                "start",
+                "-p",
+                "3211"
+            ],
+            "port": 3211,
             "autoPort": true
         }
     ]
