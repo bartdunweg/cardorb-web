@@ -1,13 +1,13 @@
 "use client";
 
-import { type ReactNode, useEffect } from "react";
-import { Trash01 } from "@untitledui/icons";
+import { type ReactNode, useContext, useEffect, useRef } from "react";
+import { ChevronLeft, Trash01, XClose } from "@untitledui/icons";
 import { Heading as AriaHeading, ListBoxLoadMoreItem } from "react-aria-components";
 import type { CatalogueFilters, PokemonCard } from "@/app/(app)/dashboard/cards/actions";
 import { CardImage } from "@/components/app/card-image";
 import { FilterChip, FilterChipRow, type FilterOption } from "@/components/app/filter-chip";
 import { LanguageFilterChip } from "@/components/app/language-filter-chip";
-import { CommandMenu, type CommandMenuGroupType } from "@/components/application/command-menus/command-menu";
+import { CommandMenu, CommandMenuContext, type CommandMenuGroupType } from "@/components/application/command-menus/command-menu";
 import { LoadingIndicator } from "@/components/application/loading-indicator/loading-indicator";
 import { Button } from "@/components/base/buttons/button";
 import { clearRecentCards, rememberCard, useRecentCards } from "@/hooks/use-recent-cards";
@@ -26,9 +26,20 @@ function DetailRow({ label, value }: { label: string; value: ReactNode }) {
     );
 }
 
-// Beside the hits on a desktop, under them on a phone: the highlighted card's scan, everything the
-// catalogue says about it, what it trades at, and the two ways to take it.
-function CardPreview({ card, adding, onAdd }: { card: PokemonCard; adding: boolean; onAdd: (target: "collection" | "wishlist") => void }) {
+// Beside the hits on a desktop; on a phone over them, the whole screen under the field, with Back
+// to the hits at its top: the highlighted card's scan, everything the catalogue says about it,
+// what it trades at, and the two ways to take it.
+function CardPreview({
+    card,
+    adding,
+    onAdd,
+    onView,
+}: {
+    card: PokemonCard;
+    adding: boolean;
+    onAdd: (target: "collection" | "wishlist") => void;
+    onView: () => void;
+}) {
     // A card that has stood here a second was looked at, and goes to the front of the palette's
     // "Recently viewed" (use-recent-cards.ts). A second, so arrowing down a list of hits does not
     // count every row it passes as a visit.
@@ -36,8 +47,29 @@ function CardPreview({ card, adding, onAdd }: { card: PokemonCard; adding: boole
         const t = setTimeout(() => rememberCard(card), VIEWED_AFTER_MS);
         return () => clearTimeout(t);
     }, [card]);
+    // Back, on a phone: the selection is the preview, so clearing it is the way back to the hits.
+    // Focus goes to the list the preview covered, not the field: the field would raise the
+    // keyboard over the hits just uncovered. Found from this box, not the pressed button — iOS
+    // gives a tapped button no focus, so the button's own ancestors are not there to ask.
+    const box = useRef<HTMLDivElement>(null);
+    const { setSelectedKeys } = useContext(CommandMenuContext);
+    const back = () => {
+        setSelectedKeys(new Set());
+        box.current?.closest('[role="dialog"]')?.querySelector<HTMLElement>('[role="listbox"]')?.focus();
+    };
     return (
-        <div className="flex w-full flex-col gap-4 overflow-y-auto border-secondary p-6 max-md:border-t md:max-h-[70vh] md:w-90 md:border-l">
+        <div
+            ref={box}
+            className="flex w-full flex-col gap-4 overflow-y-auto border-secondary p-6 max-md:border-t max-sm:absolute max-sm:inset-0 max-sm:z-10 max-sm:border-t-0 max-sm:bg-page md:max-h-[70vh] md:w-90 md:border-l"
+        >
+            <Button
+                color="secondary"
+                size="md"
+                iconLeading={ChevronLeft}
+                aria-label="Back to the results"
+                className="-mt-2 -ml-2 self-start sm:hidden"
+                onClick={back}
+            />
             {card.image ? (
                 <div className="relative mx-auto aspect-card w-40 overflow-hidden rounded-card ring-1 ring-image ring-inset">
                     <CardImage src={card.image} alt={card.name} width={160} className="object-cover" priority />
@@ -92,6 +124,11 @@ function CardPreview({ card, adding, onAdd }: { card: PokemonCard; adding: boole
                 >
                     {card.wishlist ? "On your wishlist" : adding ? "Adding…" : "Add to wishlist"}
                 </Button>
+                {/* The card in full: the sheet over the palette, with the price line, the copies and the
+                    binders the preview has no room for. */}
+                <Button color="tertiary" onClick={onView} className="w-full">
+                    View details
+                </Button>
             </div>
         </div>
     );
@@ -143,6 +180,7 @@ export function CommandSearchMenu({
     total,
     adding,
     onAdd,
+    onView,
 }: {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
@@ -166,6 +204,8 @@ export function CommandSearchMenu({
     /** The id of the hit whose add is on its way, so its buttons wait; null while none is. */
     adding: string | null;
     onAdd: (card: PokemonCard, target: "collection" | "wishlist") => void;
+    /** View details pressed in the preview: the card's full sheet over the palette. */
+    onView: (card: PokemonCard) => void;
 }) {
     const filtering = Boolean(filters.set || filters.type);
     // Which catalogue is asked; the set and the type are the English one's facets, so its chips go with it.
@@ -258,11 +298,35 @@ export function CommandSearchMenu({
                     ) : null}
                 </div>
             }
-            dialogClassName={cx("max-w-[calc(100vw-2rem)]")}
+            // On a phone the palette hangs from the top, under the status bar, rather than floating in the
+            // middle: the keyboard takes the lower half the moment the field is focused, and a centred
+            // card was half under it (Bart's call, 2026-09-11; Meetup, Places and corner hang theirs the
+            // same way). From sm up it stays centred, the page's focus while it is open.
+            // On a phone the palette is the whole screen, edge to edge, sliding up from the bottom as
+            // the card sheet does, on the page's own ground: a card floating in the middle felt like a
+            // modal, and the keyboard took its lower half the moment the field was focused (Bart's call,
+            // 2026-09-11). From sm up it stays the centred card, the page's focus while it is open.
+            overlayClassName="max-sm:items-stretch max-sm:p-0"
+            dialogClassName={cx(
+                "max-w-[calc(100vw-2rem)]",
+                "max-sm:h-dvh max-sm:max-h-dvh max-sm:max-w-full max-sm:rounded-none max-sm:bg-page max-sm:pt-safe max-sm:pb-safe max-sm:backdrop-blur-none",
+                "max-sm:slide-in-from-bottom max-sm:slide-out-to-bottom max-sm:zoom-in-100 max-sm:zoom-out-100 motion-reduce:max-sm:slide-in-from-bottom-0 motion-reduce:max-sm:slide-out-to-bottom-0",
+            )}
         >
             <AriaHeading slot="title" className="sr-only">
                 Search cards
             </AriaHeading>
+
+            {/* A phone has no Escape and no scrim beside a full screen to tap: Close, the field's height, at
+                the right end of its row. From sm up the scrim around the card is the way out. */}
+            <Button
+                color="secondary"
+                size="md"
+                iconLeading={XClose}
+                aria-label="Close"
+                className="absolute top-2 right-3 sm:hidden"
+                onClick={() => onOpenChange(false)}
+            />
 
             {/* The chips that narrow the hits, one row, the kit's filter chips throughout (Bart's call: the
                 language is a filter like the others, not a row of flags). Always there, because the language
@@ -282,8 +346,10 @@ export function CommandSearchMenu({
                 ) : null}
             </FilterChipRow>
 
-            <CommandMenu.Group className="flex max-md:flex-col">
-                <CommandMenu.List>
+            {/* relative: on a phone the preview lays itself over the list, inside this box. */}
+            <CommandMenu.Group className="relative flex max-md:flex-col">
+                {/* The kit caps the list at 424 px for the card; on a phone the screen is the list's. */}
+                <CommandMenu.List className="max-sm:max-h-none">
                     {(group: CommandMenuGroupType) => (
                         <CommandMenu.Section {...group}>
                             {(item) =>
@@ -307,7 +373,7 @@ export function CommandSearchMenu({
                         // A hit, or a recent card, which is previewed and taken the same way.
                         const card = hits.find((h) => h.id === selectedId) ?? recent.find((c) => recentId(c) === selectedId);
                         if (!card) return null;
-                        return <CardPreview card={card} adding={adding === card.id} onAdd={(target) => onAdd(card, target)} />;
+                        return <CardPreview card={card} adding={adding === card.id} onAdd={(target) => onAdd(card, target)} onView={() => onView(card)} />;
                     }}
                 </CommandMenu.Preview>
             </CommandMenu.Group>

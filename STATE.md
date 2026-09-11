@@ -322,6 +322,26 @@ for the failures that leave no trace — and everything both passes found is clo
   connection refreshes while you scroll. Same day: a set tile's two buttons moved to a line of
   their own under the price (#391) — on a phone's 110 px tile they broke the price and ran past
   the tile — and a probe of twelve screens at 393 px found nothing else overflowing.
+- **The palette is the whole screen on a phone, and the preview has View details** (2026-09-11).
+  It floated in the middle with the page blurred behind it, and that felt like a modal; the
+  keyboard took its lower half the moment the field was focused. Bart's calls, three in a row:
+  full screen, sliding up from the bottom as the card sheet does, on the page's own ground, with
+  Close at the right end of the field's row since a phone has no Escape and no scrim to tap; a
+  pressed hit's preview lays itself over the list, the whole screen under the field, with Back
+  at its top (it used to sit under the list and squeeze it to a strip of 20 px — main did that
+  too); and View details in the preview, at every width, opens the card's sheet over the palette
+  — the preview is a preview, the sheet is the card. The kit's `CommandMenuContext` is exported
+  for Back, which clears the selection. The sheet reads the hit's rows whether the hit is marked
+  or not, because the marks land a beat after the hits (the lookup in `command-search.tsx`) and
+  a hit pressed before they land has none. Measured on the dev server at 375 px: the dialog at
+  0,0 375×812, Close at 8 px from the top right, the list to the bottom with 112 hits, the
+  preview over it with Back at 16 px, View details opening the sheet and its Close back at the
+  preview, Back back at the hits; at 1280 px the card unchanged, Back and Close display none,
+  the sheet a drawer at the right. Not measured: a held hit opening on its row (see below), the
+  keyboard, a screen reader. Seen in passing: the palette marked Mega Charizard Y ex (Ascended
+  Heroes 022, `me02.5-022`) "In your collection" and its sheet said "You do not hold this card
+  yet"; the database agrees with the sheet — no row of that name, number or id — so the mark is
+  the API lookup's to explain (`lookupCards`), not the sheet's.
 
 ## Next
 

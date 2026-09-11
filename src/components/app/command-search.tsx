@@ -4,17 +4,18 @@ import type { ReactNode } from "react";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { type CatalogueFilters, type PokemonCard, addCard, searchPokemon } from "@/app/(app)/dashboard/cards/actions";
+import { type CatalogueFilters, type PokemonCard, addCard, listRows, searchPokemon } from "@/app/(app)/dashboard/cards/actions";
 import { listSetsShelf } from "@/app/(app)/dashboard/sets/actions";
 import type { FilterOption } from "@/components/app/filter-chip";
 import { SearchTrigger } from "@/components/app/search-trigger";
 import { notify } from "@/components/app/toast";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import { updateRecentCards, useRecentCards } from "@/hooks/use-recent-cards";
+import { type Card, cardFromPokemonCard } from "@/lib/api-shapes";
 import { loadCatalogueIndex, lookupCards } from "@/lib/catalogue-client";
 import { searchIndex } from "@/lib/catalogue-index";
 import type { BrowseLanguage } from "@/lib/languages";
-import { takenHit } from "@/lib/search-hit";
+import { hitFromRows, takenHit } from "@/lib/search-hit";
 
 /** What one answer from the catalogue search holds at most: the API's page. A full one means there may be more. */
 const SEARCH_PAGE_SIZE = 20;
@@ -22,6 +23,9 @@ const SEARCH_PAGE_SIZE = 20;
 // The palette itself, with the kit's command menu and its react-aria dialog behind it, loads the
 // first time someone opens it: every dashboard screen carries the provider, few carry a search.
 const CommandSearchMenu = dynamic(() => import("@/components/app/command-search-menu").then((m) => m.CommandSearchMenu), { ssr: false });
+
+// The card sheet the preview's View details opens, fetched on that press: it is the app's largest client chunk.
+const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-slideout").then((m) => m.CardDetailSlideout), { ssr: false });
 
 const CommandSearchContext = createContext<{ open: () => void }>({ open: () => {} });
 export const useCommandSearch = () => useContext(CommandSearchContext);
@@ -164,6 +168,36 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    /* View details, in the preview: the card's full sheet over the palette, with its price line and
+       everything the preview has no room for (Bart's call, 2026-09-11: the preview is a preview, the
+       sheet is the card). The palette stays behind it with the hits, so closing the sheet is back
+       at the search. A hit you hold opens on its row, as a set tile does: the row carries the
+       copies, the price paid and the id every action in the sheet's bar needs. It is read after the
+       sheet opens on the catalogue's card, so the sheet is never blank waiting, and kept with the
+       hit it was read for. */
+    const [viewed, setViewed] = useState<PokemonCard | null>(null);
+    const [row, setRow] = useState<{ of: string; row: Card } | null>(null);
+    const view = async (hit: PokemonCard) => {
+        setViewed(hit);
+        // Read for every hit, marked or not: the marks arrive a beat after the hits (the lookup above),
+        // and a held card pressed before they land would open as one nobody holds (measured).
+        const rows = await listRows({ set: hit.set, number: hit.number, name: hit.name });
+        if (rows[0]) setRow({ of: hit.id, row: rows[0] });
+    };
+    const held = viewed && row?.of === viewed.id ? row.row : null;
+    /* Closing a sheet that opened on a row re-reads the rows for that hit: the sheet may have
+       removed the card or a copy, and the hits are read by nobody else. A card taken from a hit
+       nobody held is marked at once through onTaken instead, with no read. */
+    const closeSheet = () => {
+        const hit = viewed;
+        setViewed(null);
+        if (!hit || row?.of !== hit.id) return;
+        listRows({ set: hit.set, number: hit.number, name: hit.name }).then((rows) => {
+            update((hits) => hits.map((h) => (h.id === hit.id ? hitFromRows(h, rows) : h)));
+            updateRecentCards([hitFromRows(hit, rows)]);
+        });
+    };
+
     return (
         <CommandSearchContext.Provider
             value={{
@@ -201,6 +235,21 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
                     total={total}
                     adding={adding}
                     onAdd={add}
+                    onView={(hit) => void view(hit)}
+                />
+            ) : null}
+            {/* Mounted from the first opening on and closed with a null card, as every list mounts it:
+                a sheet unmounted on close cannot put focus back on the button that opened it. */}
+            {wanted ? (
+                <CardDetailSlideout
+                    card={held ?? (viewed ? cardFromPokemonCard(viewed) : null)}
+                    addable={viewed && !viewed.owned && !viewed.wishlist ? viewed : null}
+                    onClose={closeSheet}
+                    /* The hit the card came from says so at once, and so does its recent copy. */
+                    onTaken={(card, list) => {
+                        update((hits) => takenHit(hits, card.id, list));
+                        updateRecentCards(takenHit([card], card.id, list));
+                    }}
                 />
             ) : null}
         </CommandSearchContext.Provider>
