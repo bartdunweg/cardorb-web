@@ -108,18 +108,3 @@ export async function deleteCollection(id: string): Promise<CollectionResult> {
     await forgetMine();
     return { ok: true };
 }
-
-// Files a card in a collection, or takes it out (null). One collection per card, so this moves it.
-export async function setCardCollection(cardId: string, collectionId: string | null): Promise<CollectionResult> {
-    const parsed = z.object({ cardId: z.string().uuid(), collectionId: z.string().uuid().nullable() }).safeParse({ cardId, collectionId });
-    if (!parsed.success) return { ok: false, error: "Invalid input." };
-
-    try {
-        await api(`/collection/items/${parsed.data.cardId}`, { method: "PATCH", body: { collectionId: parsed.data.collectionId } });
-    } catch (err) {
-        return failed(err);
-    }
-
-    await forgetMine();
-    return { ok: true };
-}

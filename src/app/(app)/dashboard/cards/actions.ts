@@ -15,7 +15,7 @@ import {
 } from "@/lib/api-shapes";
 import { type Card, getMyCards } from "@/lib/cards";
 import { type CopyEdits, copyEdits, sameCard } from "@/lib/copies";
-import { type BrowseLanguage, WESTERN_LANGUAGES, isBrowseLanguage } from "@/lib/languages";
+import { type BrowseLanguage, isBrowseLanguage } from "@/lib/languages";
 import { getSets } from "@/lib/sets";
 import { forgetMine } from "@/lib/user-cache";
 
@@ -301,20 +301,6 @@ export async function seriesLogo(series: string): Promise<string | null> {
     }
 }
 
-// The language of one copy. Null clears it back to "not recorded", which reads as English.
-export async function setLanguage(cardId: string, language: string | null): Promise<Result> {
-    const codes = WESTERN_LANGUAGES.map((l) => l.code);
-    const parsed = z.object({ cardId: z.string().uuid(), language: z.enum(codes as [string, ...string[]]).nullable() }).safeParse({ cardId, language });
-    if (!parsed.success) return { ok: false, error: "Invalid input." };
-    try {
-        await api(`/collection/items/${parsed.data.cardId}`, { method: "PATCH", body: { language: parsed.data.language } });
-    } catch (err) {
-        return failed(err);
-    }
-    await forgetMine();
-    return { ok: true };
-}
-
 // Every row of one card the person holds: the set and number name it, the name confirms it
 // (two cards of one number in one set do not happen, but the check costs nothing).
 export async function listCopies(card: Pick<Card, "set" | "number" | "name">): Promise<Card[]> {
@@ -377,19 +363,6 @@ export async function splitCopy(cardId: string, edits: CopyEdits, count = 1): Pr
     return { ok: true };
 }
 
-// When a copy was pulled: an ISO date, not in the future; decides Newest first.
-export async function setAcquiredAt(cardId: string, date: string): Promise<Result> {
-    const parsed = z.object({ cardId: z.string().uuid(), date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }).safeParse({ cardId, date });
-    if (!parsed.success) return { ok: false, error: "Invalid input." };
-    try {
-        await api(`/collection/items/${parsed.data.cardId}`, { method: "PATCH", body: { acquiredAt: parsed.data.date } });
-    } catch (err) {
-        return failed(err);
-    }
-    await forgetMine();
-    return { ok: true };
-}
-
 /** What the catalogue knows about a printing beyond what the row carries (GET /v1/cards/{tcgId}). */
 export type CardFacts = {
     illustrator: string | null;
@@ -435,19 +408,6 @@ export async function cardFacts(tcgId: string): Promise<CardFacts | null> {
         console.error("Card facts unavailable:", err instanceof Error ? err.message : err);
         return null;
     }
-}
-
-// The condition of one copy, in Cardmarket's words; null clears it.
-export async function setCondition(cardId: string, condition: string | null): Promise<Result> {
-    const parsed = z.object({ cardId: z.string().uuid(), condition: z.string().trim().min(1).max(40).nullable() }).safeParse({ cardId, condition });
-    if (!parsed.success) return { ok: false, error: "Invalid input." };
-    try {
-        await api(`/collection/items/${parsed.data.cardId}`, { method: "PATCH", body: { condition: parsed.data.condition } });
-    } catch (err) {
-        return failed(err);
-    }
-    await forgetMine();
-    return { ok: true };
 }
 
 // One copy's own facts, whichever of them changed: the same PATCH that marks a wish owned, so a
