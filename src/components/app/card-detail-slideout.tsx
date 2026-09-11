@@ -27,6 +27,7 @@ import { CopyCard } from "@/components/app/copy-card";
 import { CopyFormDialog } from "@/components/app/copy-form-dialog";
 import { HoloCard } from "@/components/app/holo-card";
 import { MarkOwnedDialog } from "@/components/app/mark-owned-dialog";
+import { SheetActionBar } from "@/components/app/sheet-action-bar";
 import { SheetBar } from "@/components/app/sheet-bar";
 import { notify } from "@/components/app/toast";
 import { TypeIcon } from "@/components/app/type-icon";
@@ -36,6 +37,7 @@ import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Tooltip } from "@/components/base/tooltip/tooltip";
+import { useBreakpoint } from "@/hooks/use-breakpoint";
 import { type PokemonCard, type RemovedCard, isReverseFinish } from "@/lib/api-shapes";
 import { binderFromPath, isBinderPath } from "@/lib/binder-from-path";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
@@ -594,6 +596,28 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const heldRows = mine ? (copies ?? [mine]) : [];
     const inBinders = collections.filter((c) => heldRows.some((r) => (c.rule ? matchesRule(r, c.rule, facets) : r.collection_id === c.id)));
 
+    /* The two ways to take a card nobody holds, built once: from `sm` up they sit in the Copies
+       tab under "You do not hold this card yet", and on a phone in a bar pinned to the bottom of
+       the sheet, so they are reached without scrolling past every detail. One element, so the
+       labels and the handlers cannot drift between the two places, and one place at a time, so
+       a screen reader never hears "Add to collection" twice. The breakpoint is read before the
+       first paint — the sheet is never rendered on the server — so neither placement flashes.
+       Under each other, each the full width: side by side made a choice out of what is really
+       two offers, the narrower one read as the lesser, and a binder's name can be any length. */
+    const sm = useBreakpoint("sm");
+    const offer =
+        mine && takeable && (emptied || (!mine.owned && !mine.wishlist)) ? (
+            <div className="flex flex-col gap-2">
+                <Button size="md" iconLeading={Plus} className="w-full" isDisabled={busy || binderPending} onClick={() => void add("collection")}>
+                    {binder ? `Add to ${binder.name}` : "Add to collection"}
+                </Button>
+                <Button size="md" color="secondary" iconLeading={Heart} className="w-full" isDisabled={busy} onClick={() => void add("wishlist")}>
+                    Add to wishlist
+                </Button>
+            </div>
+        ) : null;
+    const actionBar = !sm && offer;
+
     return (
         <SlideoutMenu
             isDismissable
@@ -608,7 +632,8 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
             //
             // The page's own opaque ground rather than glass, so the art's fade has one colour to
             // end on, the same in both themes.
-            dialogClassName="scrollbar-hide gap-0 h-dvh max-h-dvh rounded-none bg-page backdrop-blur-none sm:h-full sm:max-h-full"
+            // The bar at the bottom carries the home-indicator inset itself when it is there.
+            dialogClassName={cx("scrollbar-hide h-dvh max-h-dvh gap-0 rounded-none bg-page backdrop-blur-none sm:h-full sm:max-h-full", actionBar && "pb-0")}
         >
             {({ close }) => (
                 <>
@@ -959,7 +984,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                         {/* None yet, and the two ways to change that. This tab answers "what do I
                                             have of this", and for a card you do not hold the honest answer is
                                             nothing — followed by the offer, which is what you opened it for. */}
-                                        {takeable && (emptied || (!mine.owned && !mine.wishlist)) ? (
+                                        {offer ? (
                                             /* No card around it. A card in this app holds what you have of
                                                something, and this is the panel saying you have none — a box
                                                drawn around that reads as a copy with nothing in it. */
@@ -967,29 +992,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                 <p className="text-sm text-tertiary">
                                                     {emptied ? "That was the last copy; it has left your collection." : "You do not hold this card yet."}
                                                 </p>
-                                                {/* Under each other, each the width of the panel: two side by side made a choice out of
-                                                    what is really two offers, and the narrower one read as the lesser. */}
-                                                <div className="flex flex-col gap-2">
-                                                    <Button
-                                                        size="md"
-                                                        iconLeading={Plus}
-                                                        className="w-full"
-                                                        isDisabled={busy || binderPending}
-                                                        onClick={() => void add("collection")}
-                                                    >
-                                                        {binder ? `Add to ${binder.name}` : "Add to collection"}
-                                                    </Button>
-                                                    <Button
-                                                        size="md"
-                                                        color="secondary"
-                                                        iconLeading={Heart}
-                                                        className="w-full"
-                                                        isDisabled={busy}
-                                                        onClick={() => void add("wishlist")}
-                                                    >
-                                                        Add to wishlist
-                                                    </Button>
-                                                </div>
+                                                {/* On a phone the two buttons are in the bar at the bottom of the
+                                                    sheet instead, under the thumb; see `offer`. */}
+                                                {sm ? offer : null}
                                             </div>
                                         ) : null}
                                         {/* One card per kind of copy you hold — Holo · Near Mint, ×4 — with every field the
@@ -1127,6 +1132,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                             </Tabs>
                         ) : null}
                     </SlideoutMenu.Content>
+                    {/* Last in the sheet, so the keyboard reaches it after the content, and a direct
+                        child of the scroll box, which is what keeps it pinned. */}
+                    {actionBar ? <SheetActionBar>{actionBar}</SheetActionBar> : null}
                 </>
             )}
         </SlideoutMenu>
