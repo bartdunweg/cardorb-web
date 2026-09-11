@@ -1,7 +1,7 @@
 "use client";
 
 import type { FC } from "react";
-import { Folder, Plus, Star01 } from "@untitledui/icons";
+import { Folder, FolderPlus, Star01 } from "@untitledui/icons";
 import Link from "next/link";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderDialog } from "@/components/app/folder-dialog";
@@ -34,10 +34,12 @@ function FolderCard({ href, icon, name, count, detail }: { href: string; icon: F
 export function NewCollectionButton({ compact }: { compact?: boolean }) {
     return (
         <FolderDialog mode="create">
+            {/* A folder, not a plus: Add card stands beside it with the plus, and two pluses in one bar
+                were two guesses. Secondary for the same reason — adding a card is the app's main action. */}
             {compact ? (
-                <Button iconLeading={Plus} size="lg" aria-label="New binder" />
+                <Button iconLeading={FolderPlus} color="secondary" size="lg" aria-label="New binder" />
             ) : (
-                <Button iconLeading={Plus} size="md">
+                <Button iconLeading={FolderPlus} color="secondary" size="md">
                     New binder
                 </Button>
             )}
@@ -82,7 +84,7 @@ export function CollectionsGrid({ collections, favoritesCount }: { collections: 
                 <div className="hidden lg:contents">
                     <AppEmptyState icon="folder" title="No binders yet" description="Group your cards into binders you can jump to from the sidebar.">
                         <FolderDialog mode="create">
-                            <Button iconLeading={Plus}>New binder</Button>
+                            <Button iconLeading={FolderPlus}>New binder</Button>
                         </FolderDialog>
                     </AppEmptyState>
                 </div>
