@@ -429,11 +429,15 @@ export async function setCondition(cardId: string, condition: string | null): Pr
 // One copy's own facts, whichever of them changed: the same PATCH that marks a wish owned, so a
 // copy's card in the sheet edits every field the add form asks for, and nothing is left read-only
 // for want of an action of its own. The API takes only what is sent; a field left out stays.
-export async function editCopy(cardId: string, edits: CopyEdits): Promise<Result> {
-    const parsed = z.object({ cardId: z.string().uuid(), edits: copyEdits }).safeParse({ cardId, edits });
+//
+// Every row of the kind in one call: four identical copies are four rows in the store, and
+// "these are Near Mint" said row by row was four round trips through Next's one-at-a-time
+// action queue. The API takes the ids beside the fields and changes them in one statement.
+export async function editCopies(cardIds: string[], edits: CopyEdits): Promise<Result> {
+    const parsed = z.object({ cardIds: z.array(z.string().uuid()).min(1).max(100), edits: copyEdits }).safeParse({ cardIds: [...new Set(cardIds)], edits });
     if (!parsed.success || Object.keys(parsed.data.edits).length === 0) return { ok: false, error: "Invalid input." };
     try {
-        await api(`/collection/items/${parsed.data.cardId}`, { method: "PATCH", body: parsed.data.edits });
+        await api("/collection/items", { method: "PATCH", body: { ids: parsed.data.cardIds, ...parsed.data.edits } });
     } catch (err) {
         return failed(err);
     }
