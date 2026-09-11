@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1440" viewBox="0 0 1920 1440">
+    <defs>
+        <pattern
+            id="dotPattern"
+            width="24"
+            height="24"
+            patternUnits="userSpaceOnUse"
+        >
+            <circle cx="12" cy="12" r="1.5" fill="#D4D4D4" />
+        </pattern>
+
+        <radialGradient
+            id="fadeGradient"
+            cx="0"
+            cy="0"
+            r="1"
+            gradientUnits="userSpaceOnUse"
+            gradientTransform="translate(720 -0.000171661) rotate(90) scale(1440 751.588)"
+        >
+            <stop />
+            <stop offset="0.953125" stop-opacity="0" />
+        </radialGradient>
+
+        <mask
+            id="fadeMask"
+            style="mask-type: alpha"
+            maskUnits="userSpaceOnUse"
+            x="240"
+            y="0"
+            width="1440"
+            height="1440"
+        >
+            <rect
+                width="1440"
+                height="1440"
+                transform="translate(240)"
+                fill="url(#fadeGradient)"
+            />
+        </mask>
+    </defs>
+
+    <rect
+        width="1920"
+        height="1440"
+        fill="url(#dotPattern)"
+        mask="url(#fadeMask)"
+    />
+</svg>

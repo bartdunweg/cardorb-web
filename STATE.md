@@ -351,6 +351,14 @@ for the failures that leave no trace — and everything both passes found is clo
   own ground (`glass-thick`, blur off) edge to edge, the field loses its corners under `sm`
   (a one-class kit edit, marked ours), the preview sits on `bg-primary` to match. Slide-up,
   Close and Back stay. Not yet seen on the dev server at 375 px: the pane had no session.
+- **The landing page's dots came back only on a refresh** (2026-09-12). The pattern was a
+  picture fetched from untitledui.com, and the pages a person clicks to the landing from — sign
+  out, the Cardorb link on /login — carry the image policy that names the card hosts and not that
+  one; a click keeps the document, so the browser refused it without a request or a word, and a
+  refresh, which loads the landing as its own document with only the frame rule, showed it. The
+  two SVGs (1.2 KB each) are in `public/patterns` now, under `'self'`. Measured in headless
+  WebKit and Chromium: the click route loads the picture at 1920 px wide, where it loaded nothing.
+  Also seen: in dark mode the dots sit at 20% brightness, near invisible by design; untouched.
 
 ## Next
 
