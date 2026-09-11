@@ -8,6 +8,7 @@ import type { AddStatus } from "@/components/app/command-search";
 import { FilterChip, FilterChipRow, type FilterOption } from "@/components/app/filter-chip";
 import { LanguageFilterChip } from "@/components/app/language-filter-chip";
 import { CommandMenu, type CommandMenuGroupType } from "@/components/application/command-menus/command-menu";
+import { LoadingIndicator } from "@/components/application/loading-indicator/loading-indicator";
 import { Button } from "@/components/base/buttons/button";
 import { CARD_TYPES } from "@/lib/card-types";
 import { formatDate } from "@/lib/format";
@@ -228,13 +229,11 @@ export function CommandSearchMenu({
                         <CommandMenu.Section {...group}>
                             {(item) =>
                                 item.id === MORE ? (
-                                    <ListBoxLoadMoreItem
-                                        key={MORE}
-                                        onLoadMore={onLoadMore}
-                                        isLoading={loadingMore}
-                                        className="px-4 py-3 text-center text-sm text-tertiary"
-                                    >
-                                        {item.label}
+                                    <ListBoxLoadMoreItem key={MORE} onLoadMore={onLoadMore} isLoading={loadingMore} className="px-4 py-3">
+                                        {/* The kit's indicator rather than the words alone: the row only exists while the
+                                            next batch is on its way, and a line of grey text in a list of cards read as
+                                            one more result. */}
+                                        <LoadingIndicator size="sm" label={item.label} />
                                     </ListBoxLoadMoreItem>
                                 ) : (
                                     <CommandMenu.Item key={item.id} {...item} />
