@@ -420,9 +420,10 @@
     /* What a flat tile (a card in a grid) turns into under the pointer: a surface on the page. */
     --color-bg-page-raised: var(--color-bg-primary);
     --color-bg-quaternary: var(--color-neutral-200);
-    /* The outline a page draws where its content will land. Two steps under the page in the light,
-       where the steps are small; one in the dark, where the same two read as a block. */
-    --color-bg-skeleton: var(--color-neutral-200);
+    /* The outline a page draws where its content will land: one step off the page in either theme,
+       barely there — an outline is a promise of content, not content. Bart's call, after two
+       steps still read as blocks. */
+    --color-bg-skeleton: var(--color-neutral-100);
     --color-bg-primary_alt: var(--color-white);
     --color-bg-brand-primary_alt: var(--color-brand-50);
     --color-bg-secondary_alt: var(--color-neutral-50);
@@ -832,7 +833,7 @@
         /* Halfway between 950 and the surfaces' 900: a step under a tile, not a pit. */
         --color-bg-page: color-mix(in oklab, var(--color-neutral-950), var(--color-neutral-900));
         --color-bg-page-raised: var(--color-neutral-800);
-        --color-bg-skeleton: var(--color-neutral-700);
+        --color-bg-skeleton: var(--color-neutral-800);
         --color-bg-quaternary: var(--color-neutral-600);
         --color-bg-primary_alt: var(--color-bg-secondary);
         --color-bg-brand-primary_alt: var(--color-bg-secondary);
