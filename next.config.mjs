@@ -28,6 +28,12 @@ const nextConfig = {
     },
     experimental: {
         optimizePackageImports: ["@untitledui/icons"],
+        // The CSV import (src/components/app/import-dialog.tsx) sends the file's text through a
+        // server action, and the file may be 2 MB (MAX_CSV_BYTES). Next's own limit on an action's
+        // body is 1 MB, checked before the action runs: a 1.4 MB export was refused with a 500
+        // the dialog never saw. 3 MB is the 2 MB of text plus what JSON escaping and the action
+        // envelope add around it.
+        serverActions: { bodySizeLimit: "3mb" },
         // The router keeps a page it has shown for a minute: a tab tapped twice, or Back, is drawn
         // from memory rather than fetched again. A write calls router.refresh(), which bypasses it.
         staleTimes: { dynamic: 60, static: 300 },

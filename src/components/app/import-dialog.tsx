@@ -124,6 +124,29 @@ function ImportForm({ close }: { close: () => void }) {
         setHeader([]);
     };
 
+    /*
+     * Every action here answers `{ ok: false }` for anything it saw coming, so
+     * an actual throw is the case nobody wrote a sentence for: the request that
+     * never reached the action at all. That is not hypothetical — a 1.4 MB file
+     * once tripped Next's own body limit in front of the action, the promise
+     * rejected, and the dialog sat on "reading…" with the drop zone disabled
+     * and no button, which the person who hit it described as "nothing
+     * happens". A rejection has to land somewhere on screen, and it has to put
+     * `busy` down on the way, or the dialog is dead until it is closed.
+     *
+     * The write gets its own sentence: a preview that failed can simply be
+     * asked again, but a write whose answer never arrived may have landed, and
+     * "try again" there is an invitation to double a collection.
+     */
+    const guard = async (work: () => Promise<void>, message = "Something went wrong. Try again.") => {
+        try {
+            await work();
+        } catch {
+            setBusy(null);
+            setError(message);
+        }
+    };
+
     const run = async (text: string, columns: ColumnMap) => {
         setBusy("reading");
         setError(null);
@@ -144,22 +167,24 @@ function ImportForm({ close }: { close: () => void }) {
         if (outcome.guessed) setMap(outcome.guessed);
     };
 
-    const onPick = async (files: FileList) => {
+    const onPick = (files: FileList) => {
         const file = files[0];
         if (!file) return;
 
-        reset();
-        setFileName(file.name);
-        setBusy("reading");
-        const read = readCsv(await file.arrayBuffer());
-        if (!read.ok) {
-            setBusy(null);
-            setCsv(null);
-            setError(read.error);
-            return;
-        }
-        setCsv(read.text);
-        await run(read.text, {});
+        void guard(async () => {
+            reset();
+            setFileName(file.name);
+            setBusy("reading");
+            const read = readCsv(await file.arrayBuffer());
+            if (!read.ok) {
+                setBusy(null);
+                setCsv(null);
+                setError(read.error);
+                return;
+            }
+            setCsv(read.text);
+            await run(read.text, {});
+        });
     };
 
     const onColumn = async (key: keyof ColumnMap, value: string) => {
@@ -167,26 +192,27 @@ function ImportForm({ close }: { close: () => void }) {
         if (value === "") delete next[key];
         else next[key] = Number(value);
         setMap(next);
-        if (csv) await run(csv, next);
+        if (csv) await guard(() => run(csv, next));
     };
 
-    const onImport = async () => {
-        if (!csv) return;
-        setBusy("importing");
-        setError(null);
-        const outcome = await commitImport({ csv, map: Object.keys(map).length ? map : undefined });
-        setBusy(null);
+    const onImport = () =>
+        guard(async () => {
+            if (!csv) return;
+            setBusy("importing");
+            setError(null);
+            const outcome = await commitImport({ csv, map: Object.keys(map).length ? map : undefined });
+            setBusy(null);
 
-        if (!outcome.ok) {
-            setError(outcome.error);
-            return;
-        }
-        setResult(outcome.result);
-        setPreview(null);
-        // The collection this just wrote to is read through a cache the write
-        // dropped; without this the cards page would show yesterday's count.
-        router.refresh();
-    };
+            if (!outcome.ok) {
+                setError(outcome.error);
+                return;
+            }
+            setResult(outcome.result);
+            setPreview(null);
+            // The collection this just wrote to is read through a cache the write
+            // dropped; without this the cards page would show yesterday's count.
+            router.refresh();
+        }, "Something went wrong, and the import may or may not have finished. Close this, reload, and check your cards before trying again.");
 
     const writing = preview ? preview.seen - preview.skipped : 0;
     // The sample the API sends holds the first twenty skipped rows, mixed; only
