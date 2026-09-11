@@ -19,7 +19,7 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
     const filter: CardFilter = { wishlist: true, q, sort, order, set, rarity, gen, type, ...(unpriced ? { priced: false } : {}) };
     const narrowed = isNarrowed(query);
     const list = getMyCards(filter);
-    const datapoints = list.then((r) => ({ total: r.total, narrowed, value: r.value, unpriced: r.unpriced }));
+    const datapoints = list.then((r) => ({ total: r.total, copies: r.copies ?? undefined, narrowed, value: r.value, unpriced: r.unpriced }));
     const { profile } = await getMyProfile();
     const facets = list.then((r) => r.facets);
 

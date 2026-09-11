@@ -23,10 +23,13 @@ const FIRST_ROW = 6;
 // tiles so a folder reads the same whichever way it is shown.
 
 export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null; price?: number | null; quantity?: number | null; owned?: boolean | null }>({
+    holder = "you",
     cards,
     onSelect,
     size = "md",
 }: {
+    /** Whose cards these are, for the words a screen reader gets under a count: the person looking, or the owner of a public page. */
+    holder?: "you" | "owner";
     cards: T[];
     /** The card, and the list it was picked from, so a sheet knows what is either side of it. */
     onSelect: (card: T, siblings: T[]) => void;
@@ -89,13 +92,12 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                                 {card.quantity != null || card.price != null ? (
                                     <span className="mt-0.5 flex items-baseline justify-between gap-2 text-sm font-medium tabular-nums">
                                         <span className="text-tertiary">
-                                            {card.quantity != null ? (
+                                            {/* A wish is not a holding: no count under it, and no "×1" that read as one.
+                                                On a visitor's screen the count is the owner's, and says so — a screen
+                                                reader used to be told "You hold" about somebody else's binder. */}
+                                            {card.quantity != null && card.owned !== false ? (
                                                 <>
-                                                    {/* On the wishlist the number is not a holding: a screen reader
-                                                        was told "You hold ×1" about the one kind of card you have
-                                                        said you do not. `owned` is absent on a public profile, where
-                                                        every card shown is one somebody holds. */}
-                                                    <span className="sr-only">{card.owned === false ? "On your wishlist, " : "You hold "}</span>×{card.quantity}
+                                                    <span className="sr-only">{holder === "owner" ? "Holds " : "You hold "}</span>×{card.quantity}
                                                 </>
                                             ) : null}
                                         </span>

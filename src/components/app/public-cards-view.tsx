@@ -33,7 +33,7 @@ export function PublicCardsView({
                 <div className="contents">{toolbar}</div>
                 <ViewMenu view="grid" size={size} onView={() => {}} onSize={setSize} layouts={false} />
             </div>
-            {empty ?? <CardsGrid cards={cards} onSelect={setSelected} size={size} />}
+            {empty ?? <CardsGrid cards={cards} onSelect={setSelected} size={size} holder="owner" />}
             <CardDetailSlideout card={selected} onClose={() => setSelected(null)} readOnly />
         </div>
     );

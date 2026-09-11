@@ -672,6 +672,8 @@ export const facetsSchema = z.object({
 });
 
 export const cardsAnswer = z.object({
+    /** The list as a person counts it: an owned copy `quantity` times, a wish once. Absent from an API before 2026-09-11. */
+    copies: z.number().optional(),
     cards: z.array(cardItemSchema),
     total: z.number(),
     facets: facetsSchema.optional(),
@@ -735,10 +737,11 @@ export const pricePointsAnswer = z.object({
 export const publicCardsAnswer = z.object({
     cards: z.array(publicItemSchema),
     total: z.number(),
+    copies: z.number().optional(),
     facets: facetsSchema.optional(),
 });
 
-export const publicTotalAnswer = z.object({ total: z.number() });
+export const publicTotalAnswer = z.object({ total: z.number(), copies: z.number().optional() });
 
 export const publicFoldersAnswer = z.object({
     folders: z.array(z.object({ id: z.string(), name: z.string(), kind: z.enum(["manual", "rule"]), count: z.number() })),

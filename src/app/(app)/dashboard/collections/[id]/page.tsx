@@ -67,11 +67,13 @@ export default async function CollectionDetailPage({ params, searchParams }: { p
         const dex: Promise<DexList> = Promise.all([getAllMyCards(filter), getDexNames()]).then(([r, names]) => ({
             ...groupByDex(r.cards, names, setting),
             total: r.total,
+            copies: r.copies ?? undefined,
             value: r.value,
             unpriced: r.unpriced,
         }));
         const datapoints = dex.then((d) => ({
             total: d.total,
+            copies: d.copies,
             narrowed,
             value: d.value,
             unpriced: d.unpriced,
@@ -85,7 +87,7 @@ export default async function CollectionDetailPage({ params, searchParams }: { p
     }
 
     const list = getMyCards(filter);
-    const datapoints = list.then((r) => ({ total: r.total, narrowed, value: r.value, unpriced: r.unpriced }));
+    const datapoints = list.then((r) => ({ total: r.total, copies: r.copies ?? undefined, narrowed, value: r.value, unpriced: r.unpriced }));
     return (
         <FolderPage {...common} datapoints={datapoints} list={list}>
             {chips}

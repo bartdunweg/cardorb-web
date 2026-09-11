@@ -47,4 +47,4 @@ export function groupByDex(
 }
 
 /** A folder as a Pokédex, with the numbers the page says about it: the slots, plus the list's own count and worth. */
-export type DexList = ReturnType<typeof groupByDex> & { total: number; value: number | null; unpriced: number };
+export type DexList = ReturnType<typeof groupByDex> & { total: number; copies?: number; value: number | null; unpriced: number };

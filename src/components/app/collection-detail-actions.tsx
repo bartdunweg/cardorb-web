@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Check, Edit03, Plus, SearchLg, Trash01 } from "@untitledui/icons";
+import { Check, DotsHorizontal, Edit03, Plus, SearchLg, Trash01 } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import { type CardHit, searchMyCards } from "@/app/(app)/dashboard/cards/actions";
@@ -13,6 +13,7 @@ import { notify } from "@/components/app/toast";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { Button } from "@/components/base/buttons/button";
 import { CloseButton } from "@/components/base/buttons/close-button";
+import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Input } from "@/components/base/input/input";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import { cardLabel } from "@/lib/card-label";
@@ -70,6 +71,8 @@ export function CollectionDetailActions({
     };
 
     const [deleting, setDeleting] = useState(false);
+    // The dots menu opens the confirm dialog; the dialog's own trigger button is gone with it.
+    const [confirming, setConfirming] = useState(false);
     const del = async () => {
         setDeleting(true);
         const res = await deleteCollection(collectionId);
@@ -167,10 +170,20 @@ export function CollectionDetailActions({
                 </DialogTrigger>
             )}
 
-            <DialogTrigger>
-                <Button color="secondary-destructive" size="md" iconLeading={Trash01}>
-                    Delete
-                </Button>
+            {/* Deleting is the one thing here that cannot be undone, so it is not a button beside the
+                two that can: it sits behind the dots, the way the tiles keep theirs, one press further
+                than Edit and Add. The confirm dialog is the same as before. */}
+            <Dropdown.Root>
+                <Button color="secondary" size="md" iconLeading={DotsHorizontal} aria-label="More" />
+                <Dropdown.Popover className="w-56">
+                    <Dropdown.Menu>
+                        <Dropdown.Item icon={Trash01} onAction={() => setConfirming(true)}>
+                            Delete binder
+                        </Dropdown.Item>
+                    </Dropdown.Menu>
+                </Dropdown.Popover>
+            </Dropdown.Root>
+            <DialogTrigger isOpen={confirming} onOpenChange={setConfirming}>
                 <ModalOverlay>
                     <Modal className="max-w-sm">
                         <Dialog>
