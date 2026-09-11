@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import { listCopies } from "@/app/(app)/dashboard/cards/actions";
+import { listRows } from "@/app/(app)/dashboard/cards/actions";
 import { SetCardTile } from "@/components/app/set-card-tile";
 import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
@@ -40,7 +40,7 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
         setAddable(card.owned || card.wishlist ? null : card);
         setSelected(fromCatalogue(card));
         if (!card.owned && !card.wishlist) return;
-        const rows = await listCopies({ set: card.setName, number: card.number, name: card.name });
+        const rows = await listRows({ set: card.setName, number: card.number, name: card.name });
         const row = rows[0];
         if (row) {
             setAddable(null);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { searchHitDescription, takenHit } from "./search-hit";
+import { hitFromRows, searchHitDescription, takenHit } from "./search-hit";
 
 const hit = { id: "me05-085", set: "Pitch Black", number: "085", rarity: "Common", owned: false, wishlist: false, quantity: 0 };
 
@@ -22,5 +22,21 @@ describe("takenHit", () => {
     });
     it("a wish that becomes a copy is owned and no longer wished, and counts up", () => {
         expect(takenHit([{ ...hit, wishlist: true, quantity: 2 }], hit.id, "collection")[0]).toMatchObject({ owned: true, wishlist: false, quantity: 3 });
+    });
+});
+
+describe("hitFromRows", () => {
+    const held = { ...hit, owned: true, quantity: 2 };
+    it("reads the rows the way the API marks a hit", () => {
+        expect(
+            hitFromRows(held, [
+                { owned: true, wishlist: false, quantity: 3 },
+                { owned: true, wishlist: false, quantity: null },
+            ]),
+        ).toMatchObject({ owned: true, wishlist: false, quantity: 4 });
+        expect(hitFromRows(held, [{ owned: false, wishlist: true, quantity: 1 }])).toMatchObject({ owned: false, wishlist: true, quantity: 0 });
+    });
+    it("no rows left is a card you do not have", () => {
+        expect(hitFromRows(held, [])).toMatchObject({ owned: false, wishlist: false, quantity: 0 });
     });
 });

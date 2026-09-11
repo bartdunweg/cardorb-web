@@ -318,10 +318,22 @@ export async function setLanguage(cardId: string, language: string | null): Prom
 // Every row of one card the person holds: the set and number name it, the name confirms it
 // (two cards of one number in one set do not happen, but the check costs nothing).
 export async function listCopies(card: Pick<Card, "set" | "number" | "name">): Promise<Card[]> {
+    return (await listRows(card)).filter((c) => c.owned);
+}
+
+/**
+ * Every row of this card, held or wished for. For opening a sheet on a card the page knows only
+ * from the catalogue: the row carries the id every action in the sheet's bar needs. `listCopies`
+ * left a wish out, so a wished card opened on the catalogue's card and "Remove from wishlist"
+ * answered "Invalid card" — on a set page as in the search.
+ */
+export async function listRows(card: Pick<Card, "set" | "number" | "name">): Promise<Card[]> {
     if (!card.set || !card.number) return [];
     try {
-        const { cards } = await getMyCards({ set: card.set, number: card.number, facets: false, limit: 100 });
-        return cards.filter((c) => c.owned && sameCard(c, card));
+        // The API lists the collection or the wishlist, never both in one answer.
+        const ask = { set: card.set, number: card.number, facets: false, limit: 100 } as const;
+        const [held, wished] = await Promise.all([getMyCards(ask), getMyCards({ ...ask, wishlist: true })]);
+        return [...held.cards, ...wished.cards].filter((c) => sameCard(c, card));
     } catch (err) {
         console.error("Copies unavailable:", err instanceof Error ? err.message : err);
         return [];
