@@ -173,6 +173,7 @@ export function CopyCard({
             <div className={field}>
                 Condition
                 <ButtonGroup
+                    aria-label="Condition"
                     size="sm"
                     className="w-full *:flex-1 *:justify-center"
                     selectionMode="single"
