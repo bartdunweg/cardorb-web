@@ -36,6 +36,21 @@ export async function getMyFolders(): Promise<{ id: string; name: string; kind: 
     }
 }
 
+/**
+ * How many cards you have starred, for the sidebar's Favorites row. Fails soft as the folders
+ * do: null draws the row without a number. The stats are cached with the folders, under the
+ * same tag, so the frame pays this read once per five minutes and after a write.
+ */
+export async function getFavoritesCount(): Promise<number | null> {
+    try {
+        return (await getStats()).favorites;
+    } catch (err) {
+        if (err instanceof ApiError && err.status === 401) throw err;
+        console.error("Stats unavailable, sidebar drawn without the favorites count:", err instanceof Error ? err.message : err);
+        return null;
+    }
+}
+
 export type CollectionDetail = { id: string; name: string; kind: FolderKind; rule: FolderRule | null; pokedex: PokedexSetting | null; isPublic: boolean };
 
 export async function getCollection(id: string): Promise<CollectionDetail | null> {
