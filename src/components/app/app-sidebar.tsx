@@ -13,7 +13,7 @@ import type { NavItemDividerType, NavItemType } from "@/components/application/a
 import { SidebarNavigationSectionDividers } from "@/components/application/app-navigation/sidebar-navigation/sidebar-section-dividers";
 
 type Account = { name: string; email: string; avatarUrl: string | null };
-type FolderLink = { id: string; name: string; kind: "manual" | "rule" };
+type FolderLink = { id: string; name: string; kind: "manual" | "rule"; count: number };
 
 // Icons are component functions, so nav items are built here (client) — they can't be passed
 // from a Server Component. Home, All cards, the wishlist (cards you do not have, so outside the
@@ -107,7 +107,20 @@ function FolderRows({ collections, activeUrl }: { collections: Promise<FolderLin
                          * the thing: from the sidebar it is a folder with cards in
                          * it, and how they got there is the folder's own business.
                          */}
-                        <NavItemBase type="link" icon={Folder} href={href} current={activeUrl === href}>
+                        <NavItemBase
+                            type="link"
+                            icon={Folder}
+                            href={href}
+                            current={activeUrl === href}
+                            // How many cards are in it, at the row's end as the Binders page's rows have it:
+                            // a number alone, not the kit's pill, which would make every row a notification.
+                            badge={
+                                <span className="ml-3 shrink-0 text-sm text-tertiary tabular-nums">
+                                    {c.count}
+                                    <span className="sr-only"> card{c.count === 1 ? "" : "s"}</span>
+                                </span>
+                            }
+                        >
                             {c.name}
                         </NavItemBase>
                     </li>

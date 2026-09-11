@@ -10,10 +10,12 @@ import { FeaturedIcon } from "@/components/foundations/featured-icon/featured-ic
 import type { CollectionSummary } from "@/lib/collections";
 import { cx } from "@/utils/cx";
 
-// On a phone a row: the icon, the name with what kind of binder under it, the count at the end,
-// and a line between rows — a list, not a stack of cards (Bart's call). From sm a stacked tile,
-// three or four to a row, with the count and the kind on one line under the name. One component
-// for every binder, the two that are always there and the ones you made.
+// On a phone a row: the icon, the name, the count at the end as a number alone (the sidebar's rows
+// on desktop have it the same way), and a line between rows — a list, not a stack of cards (Bart's
+// call). From sm a stacked tile, three or four to a row, with "12 cards" under the name. One
+// component for every binder, the two that are always there and the ones you made. How a binder
+// was filled is not said here: by hand or by rule, it is a binder with cards in it (Bart's call);
+// `kind` remains for the Pokédex, which has no count and says what it is instead.
 function FolderCard({ href, icon, name, count, kind }: { href: string; icon: FC<{ className?: string }>; name: string; count?: number; kind?: string }) {
     const counted = count === undefined ? null : `${count} card${count === 1 ? "" : "s"}`;
     return (
@@ -34,7 +36,12 @@ function FolderCard({ href, icon, name, count, kind }: { href: string; icon: FC<
                 {kind ? <span className="text-sm text-tertiary sm:hidden">{kind}</span> : null}
                 <span className="text-sm text-tertiary max-sm:hidden">{[counted, kind].filter(Boolean).join(" · ")}</span>
             </div>
-            {counted ? <span className="shrink-0 text-sm text-tertiary tabular-nums sm:hidden">{counted}</span> : null}
+            {counted ? (
+                <span className="shrink-0 text-sm text-tertiary tabular-nums sm:hidden">
+                    {count}
+                    <span className="sr-only"> card{count === 1 ? "" : "s"}</span>
+                </span>
+            ) : null}
         </Link>
     );
 }
@@ -83,7 +90,6 @@ export function CollectionsGrid({ collections, favoritesCount }: { collections: 
                             icon={Folder}
                             name={c.name}
                             count={c.count}
-                            kind={c.kind === "rule" ? "By rule" : undefined}
                         />
                     </div>
                 ))}

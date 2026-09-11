@@ -21,8 +21,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     // frame streams at once, the page's loading.tsx with it, and the folder rows and the account
     // card fill in when their read lands (each logs its own timing line).
     //
-    // Only the folder names are asked for: the counts the Collections page shows cost a read of
-    // the whole collection, which no other screen needs from its frame.
+    // Only the folders are asked for, and their counts ride along in that one answer; the
+    // favorites count the Binders page shows costs a read of the stats, which the frame does not pay.
     const me = getMyProfile();
     const folders = getMyFolders();
     // What the client components get resolves always: a rejection there would reach the root
