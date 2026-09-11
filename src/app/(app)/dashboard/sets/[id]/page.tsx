@@ -86,7 +86,23 @@ export default async function SetPage({ params, searchParams }: { params: Promis
                 <ProgressBarBase value={set.owned} max={set.total || 1} className="mt-2 max-w-md" aria-label={`${set.name} completion`} />
             </PageHeader>
 
-            <SetCards cards={set.cards} language={language} />
+            {set.cards.length === 0 ? (
+                /* TCGdex lists a set and its count long before it records the cards: 68 of the 184
+                   Japanese sets and 92 of the 95 Korean ones stood like that on 2026-09-11. The page
+                   opened on nothing, under a header that said "0 of 60 cards" and looked like a
+                   collection with a long way to go. It is the catalogue that has the way to go. */
+                <AppEmptyState
+                    icon="book"
+                    title="No cards in the catalogue yet"
+                    description={
+                        set.total > 0
+                            ? `The card catalogue lists this set with ${formatCount(set.total)} cards but has not recorded them. They will show here when it has.`
+                            : "The card catalogue has this set on record but none of its cards. They will show here when it has them."
+                    }
+                />
+            ) : (
+                <SetCards cards={set.cards} language={language} />
+            )}
         </div>
     );
 }
