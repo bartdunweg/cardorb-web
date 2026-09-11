@@ -1,3 +1,4 @@
+import { LandingPreview } from "@/components/app/landing-preview";
 import { LinkButton } from "@/components/app/link-button";
 import { PublicTopBar } from "@/components/app/public-top-bar";
 
@@ -5,6 +6,12 @@ import { PublicTopBar } from "@/components/app/public-top-bar";
 // heavy marketing Header/nav replaced by the shared PublicTopBar and its buttons by plain links, so
 // the page ships no react-aria; the hero carries one call to
 // action, Get started, so it never competes with the bar's pair.
+//
+// The copy stands left and the product beside it, as Origin, Oku and Monarch set a tracking
+// product's hero: five columns of words, seven of picture from md up, four and eight from xl,
+// where the picture's four tiles stand in a row; on a phone the words first and the picture
+// under them, full width. The picture is Home drawn from the app's own parts (LandingPreview),
+// not a screenshot, so it never goes stale.
 export const HeroGeometricShapes04 = () => {
     return (
         <div className="relative flex min-h-dvh flex-col overflow-hidden bg-primary">
@@ -26,10 +33,13 @@ export const HeroGeometricShapes04 = () => {
 
             <PublicTopBar />
 
-            <main className="relative flex flex-1 items-center py-16">
-                <div className="mx-auto w-full max-w-container px-4 md:px-8">
-                    <div className="mx-auto flex max-w-5xl flex-col md:items-center md:text-center">
-                        <h1 className="mt-4 text-display-md font-medium text-primary md:text-display-lg lg:text-display-xl">
+            {/* The words first, centered, then the product under them at full width: the dashboard
+                is what the page is selling, and it sits half under the fold on a laptop so the eye
+                is drawn down into it. The owner's call over the side-by-side layout. */}
+            <main className="relative flex flex-1 flex-col pt-16 pb-8 md:pt-24 md:pb-12">
+                <div className="mx-auto flex w-full max-w-container flex-col items-center px-4 md:px-8">
+                    <div className="flex w-full max-w-3xl flex-col items-center text-center">
+                        <h1 className="mt-4 text-display-md font-medium text-balance text-primary md:text-display-lg lg:text-display-xl">
                             Organize your trading card collection
                         </h1>
                         <p className="mt-4 max-w-120 text-lg text-balance text-tertiary md:mt-6 md:text-xl">
@@ -41,6 +51,7 @@ export const HeroGeometricShapes04 = () => {
                             </LinkButton>
                         </div>
                     </div>
+                    <LandingPreview className="mt-12 w-full max-w-5xl md:mt-16" />
                 </div>
             </main>
 
