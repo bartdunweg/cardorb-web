@@ -159,6 +159,12 @@ for the failures that leave no trace — and everything both passes found is clo
   by set so it stays one probe per set, on both search paths; a record naming no picture gets
   the guess without a probe. Measured in the palette: "リザードン" 20 of 20 with a picture (14
   Limitless, 6 TCGdex), 0 broken, where it was 6 of 20.
+- **A TCGdex outage is found out once** (cardorb-api#283, closes cardorb-api#164). #165 had
+  already made the answer right — rows without the catalogue, flagged — but every request in an
+  outage still waited on three attempts, up to ~25 s, before getting there. A breaker in the
+  client: after one failed call, twenty seconds of refusing at once, then one probe; a 404 never
+  trips it; per instance. The web frame already survives a failed folder list. Not taken: the
+  vendor comment on #164 offering pokemontcgapi.com as a third catalogue — Bart's call.
 - **Pokémon Card 151's Japanese cards looked like reverse holos** (cardorb-api#277). Bart saw it;
   it was the scan, not the app: TCGdex photographed SV2a in its Master Ball variant, every card
   (001, 011, 025, 150 looked at), no other Japanese set sampled. A set list in `artwork.ts`, SV2a
