@@ -38,17 +38,19 @@
 }
 
 /* Glass that runs out: the ground of a bar content scrolls under at the top of the screen. The
-   same material as the tab bar, but no edge — the last 28 px fade to nothing, so what passes
-   under the bar goes light and soft and then clear, and the bar is a place on the page rather
-   than a strip laid over it. Size the element 28 px past the bar's bottom: the fade must fall
-   under the bar, not across its buttons. The mask clips the blur with the colour, so the fade is
-   one thing; a plain gradient of the page colour banded and, in the dark, ran to black. */
+   same material as the tab bar, but no edge — it is whole at the top of the screen and thins over
+   its full height to nothing at the bottom, so what passes under the bar goes light and soft and
+   then clear, and the bar is a place on the page rather than a strip laid over it. A fade that
+   held full for the bar and dropped in its last 28 px read as exactly that strip. Size the element
+   28 px past the bar's bottom, so the glass still has some body under the buttons. The mask clips
+   the blur with the colour, so the fade is one thing; a plain gradient of the page colour banded
+   and, in the dark, ran to black. */
 @utility glass-fade {
     background-color: var(--color-bg-glass);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     backdrop-filter: blur(20px) saturate(180%);
-    -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 28px), transparent);
-    mask-image: linear-gradient(to bottom, black calc(100% - 28px), transparent);
+    -webkit-mask-image: linear-gradient(to bottom, black, transparent);
+    mask-image: linear-gradient(to bottom, black, transparent);
 
     @media (prefers-reduced-transparency: reduce) {
         background-color: var(--color-bg-primary);
