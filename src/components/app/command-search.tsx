@@ -21,13 +21,27 @@ const CommandSearchMenu = dynamic(() => import("@/components/app/command-search-
 // The card sheet a pressed hit opens, fetched on that press: it is the app's largest client chunk.
 const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-slideout").then((m) => m.CardDetailSlideout), { ssr: false });
 
-const CommandSearchContext = createContext<{ open: () => void }>({ open: () => {} });
+/**
+ * What the palette was opened for. Search from the sidebar has none: a hit's sheet offers the
+ * collection and the wishlist alike. Add card on a page opens the same palette with the page's
+ * side of the choice already made — the wishlist page's puts the wishlist first, a manual binder's
+ * files the card in that binder — so there is one place to search and add, not two (Bart's call,
+ * 2026-09-11; the Add dialog that did the same with fewer filters and no preview went).
+ */
+export type AddIntent = {
+    target: "collection" | "wishlist";
+    /** A manual binder the card goes into, and its name for the button. */
+    collectionId?: string;
+    collectionName?: string;
+};
+
+const CommandSearchContext = createContext<{ open: (intent?: AddIntent) => void }>({ open: () => {} });
 export const useCommandSearch = () => useContext(CommandSearchContext);
 
 // A search-field-looking button that opens the command palette (used in the desktop sidebar).
 export function SidebarSearchTrigger() {
     const { open } = useCommandSearch();
-    return <SearchTrigger label="Search" onPress={open} />;
+    return <SearchTrigger label="Search" onPress={() => open()} />;
 }
 
 // Renders the single command palette and provides open() to descendants. It searches the whole
@@ -35,6 +49,7 @@ export function SidebarSearchTrigger() {
 // is where it is added to the collection or the wishlist.
 export function CommandSearchProvider({ children }: { children: ReactNode }) {
     const [isOpen, setIsOpen] = useState(false);
+    const [intent, setIntent] = useState<AddIntent | null>(null);
     // True from the first open on: the menu stays mounted after, so closing still animates.
     const [wanted, setWanted] = useState(false);
     const [inputValue, setInputValue] = useState("");
@@ -74,8 +89,8 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
         params: filters,
         pageSize: SEARCH_PAGE_SIZE,
     });
-    // A term is kept once its search has found something, for the palette's empty state and the
-    // Add dialog's alike (use-recent-searches.ts).
+    // A term is kept once its search has found something, for the palette's empty state
+    // (use-recent-searches.ts).
     useEffect(() => {
         if (!loading && hits.length) rememberSearch(inputValue);
         // Only when an answer lands: the term is what the answer is for.
@@ -90,7 +105,8 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
     return (
         <CommandSearchContext.Provider
             value={{
-                open: () => {
+                open: (next) => {
+                    setIntent(next ?? null);
                     setWanted(true);
                     setIsOpen(true);
                 },
@@ -107,6 +123,7 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
                         if (!o) {
                             setInputValue("");
                             setFilters({});
+                            setIntent(null);
                         }
                     }}
                     inputValue={inputValue}
@@ -128,7 +145,9 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
             {/* Mounted from the first press on and closed with a null card, as every list mounts it: a
                 sheet unmounted on close cannot put focus back on the hit that opened it, and a keyboard
                 user landed on the page under the palette (measured). */}
-            {wanted ? <CardDetailSlideout card={opened ? cardFromPokemonCard(opened) : null} addable={opened} onClose={() => setOpened(null)} /> : null}
+            {wanted ? (
+                <CardDetailSlideout card={opened ? cardFromPokemonCard(opened) : null} addable={opened} addInto={intent} onClose={() => setOpened(null)} />
+            ) : null}
         </CommandSearchContext.Provider>
     );
 }

@@ -22,6 +22,7 @@ import { type FolderChoice, listCollections, loadFacets } from "@/app/(app)/dash
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { CardPriceChart } from "@/components/app/card-price-chart";
+import type { AddIntent } from "@/components/app/command-search";
 import { CopyCard } from "@/components/app/copy-card";
 import { CopyFormDialog } from "@/components/app/copy-form-dialog";
 import { HoloCard } from "@/components/app/holo-card";
@@ -80,13 +81,17 @@ type Neighbours = { onPrev?: (() => void) | null; onNext?: (() => void) | null }
  * The sheet is built around a row somebody owns, so a card with no row had nothing to offer and
  * opened as something to read. A set page is full of those.
  */
-type Addable = { addable?: PokemonCard | null };
+type Addable = {
+    addable?: PokemonCard | null;
+    /** What Add card on a page opened the palette for: which side leads, and a binder to file the card in. */
+    addInto?: AddIntent | null;
+};
 
 type Props = ({ card: Card | null; onClose: () => void; readOnly?: false } | { card: PublicCard | null; onClose: () => void; readOnly: true }) &
     Neighbours &
     Addable;
 
-export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, onNext, addable }: Props) {
+export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, onNext, addable, addInto }: Props) {
     const router = useRouter();
     // The owner's fields exist only on the editable view; the public view never receives them.
     // The row the sheet shows: the one it opened on, or another copy of the card tapped in the
@@ -183,19 +188,22 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const add = async (list: "collection" | "wishlist") => {
         if (!takeable) return;
         setBusy(true);
-        const res = await addCard(takeable, list);
+        const binder = list === "collection" ? addInto?.collectionId : undefined;
+        const res = await addCard(takeable, list, binder);
         setBusy(false);
+        const where = list === "wishlist" ? "your wishlist" : binder && addInto?.collectionName ? addInto.collectionName : "your collection";
         if (!res.ok) {
-            notify.failed(list === "wishlist" ? "That card was not added to your wishlist" : "That card was not added to your collection", {
-                description: res.error,
-            });
+            notify.failed(`That card was not added to ${where}`, { description: res.error });
             return;
         }
         setRemoved(null);
         router.refresh();
         onClose();
-        notify.done(list === "wishlist" ? "Added to your wishlist" : "Added to your collection", { description: takeable.name });
+        notify.done(`Added to ${where}`, { description: takeable.name });
     };
+    // The side the page already chose leads; from the sidebar and a set page the collection does, as before.
+    const wishFirst = addInto?.target === "wishlist";
+    const intoLabel = addInto?.collectionName ? `Add to ${addInto.collectionName}` : "Add to collection";
     const [collections, setCollections] = useState<FolderChoice[]>([]);
     const [facets, setFacets] = useState<Facets | undefined>(undefined);
     // The star, kept here so a tap answers at once; the page re-reads the flag after the save.
@@ -875,19 +883,20 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                 </p>
                                                 {/* Under each other, each the width of the panel: two side by side made a choice out of
                                                     what is really two offers, and the narrower one read as the lesser. */}
-                                                <div className="flex flex-col gap-2">
+                                                <div className={cx("flex gap-2", wishFirst ? "flex-col-reverse" : "flex-col")}>
                                                     <Button
                                                         size="md"
+                                                        color={wishFirst ? "secondary" : "primary"}
                                                         iconLeading={Plus}
                                                         className="w-full"
                                                         isDisabled={busy}
                                                         onClick={() => void add("collection")}
                                                     >
-                                                        Add to collection
+                                                        {intoLabel}
                                                     </Button>
                                                     <Button
                                                         size="md"
-                                                        color="secondary"
+                                                        color={wishFirst ? "primary" : "secondary"}
                                                         iconLeading={Heart}
                                                         className="w-full"
                                                         isDisabled={busy}

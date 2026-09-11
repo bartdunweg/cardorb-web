@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { AddCardModal } from "@/components/app/add-card-modal";
+import { AddCardButton } from "@/components/app/add-card-button";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CollectionDetailActions } from "@/components/app/collection-detail-actions";
 import { FolderPage } from "@/components/app/folder-page";
@@ -53,7 +53,9 @@ export default async function CollectionDetailPage({ params, searchParams }: { p
         back: { href: "/dashboard/collections", label: "Collection" },
         actions: <CollectionDetailActions folder={collection} facets={facets} />,
         // A folder filled by hand takes a card straight from its own page; a rule folder fills itself.
-        add: collection.rule ? undefined : (compact: boolean) => <AddCardModal compact={compact} collectionId={collection.id} />,
+        add: collection.rule
+            ? undefined
+            : (compact: boolean) => <AddCardButton compact={compact} collectionId={collection.id} collectionName={collection.name} />,
         query,
         basePath: `/dashboard/collections/${id}`,
         facets,

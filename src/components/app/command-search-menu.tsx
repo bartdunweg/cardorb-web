@@ -80,7 +80,7 @@ export function CommandSearchMenu({
     const language = filters.language ?? "en";
     const searching = inputValue.trim().length >= 2 || filtering;
     // Before a letter is typed: the last few terms, each a press away, and a row to be rid of
-    // them. Kept in this browser (use-recent-searches.ts); the Add dialog offers the same.
+    // them. Kept in this browser (use-recent-searches.ts).
     const recent = useRecentSearches();
     const groups: CommandMenuGroupType[] =
         !searching && !inputValue.trim() && recent.length

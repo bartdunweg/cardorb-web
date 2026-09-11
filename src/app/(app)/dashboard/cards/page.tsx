@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AddCardModal } from "@/components/app/add-card-modal";
+import { AddCardButton } from "@/components/app/add-card-button";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderPage } from "@/components/app/folder-page";
 import { type CardFilter, getMyCards } from "@/lib/cards";
@@ -28,7 +28,7 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
         <FolderPage
             title="Collection"
             datapoints={datapoints}
-            add={(compact) => <AddCardModal compact={compact} />}
+            add={(compact) => <AddCardButton compact={compact} />}
             query={query}
             basePath="/dashboard/cards"
             facets={facets}
@@ -36,7 +36,7 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
             filter={filter}
             empty={
                 <AppEmptyState icon="plus" title="No cards yet" description="Add your first card to start your collection">
-                    <AddCardModal />
+                    <AddCardButton />
                 </AppEmptyState>
             }
         />
