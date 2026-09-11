@@ -314,6 +314,14 @@ for the failures that leave no trace — and everything both passes found is clo
   are loaded before the press. Not measured: the feel, the pane was hidden; Bart merged on the
   gate. A note for every session: on 2026-09-11 a `git checkout --` in the shared checkout
   erased another session's uncommitted lines; edit in a worktree from the first line.
+- **A revoked session now stays open for ten minutes, not an hour** (2026-09-11, #79 closed,
+  cardorb-api#304). Both the middleware and the API verify a token locally, so a session ends
+  when its token does. JWT expiry is 600 in the Supabase project, pushed from the API's
+  `config.toml` with `supabase config push`; a second push reported every remote config up to
+  date. The clients refresh on their own; not lower, since under five minutes iOS on a poor
+  connection refreshes while you scroll. Same day: a set tile's two buttons moved to a line of
+  their own under the price (#391) — on a phone's 110 px tile they broke the price and ran past
+  the tile — and a probe of twelve screens at 393 px found nothing else overflowing.
 
 ## Next
 
@@ -343,9 +351,6 @@ for the failures that leave no trace — and everything both passes found is clo
   every route: since #327 it loads with the sheet (`src/styles/holo.css`, same cascade layer),
   and the shared stylesheet went 260 → 204 KB (37.4 → 30.8 KB gzip), the effect computing the
   same styles before and after.
-- **A revoked session stays open on the web for up to an hour (#79).** Both the middleware and
-  the API verify the token locally with `getClaims`. To shorten it: lower the JWT expiry in the
-  Supabase project.
 - **Verified this session, so nobody need re-check:** cardorb-api scopes card writes by
   `id AND user_id` *and* by RLS, with `cards.user_id` defaulting to `auth.uid()`; the service-role
   key is reachable from two routes and neither touches cards; HSTS is set on both hosts; and the
