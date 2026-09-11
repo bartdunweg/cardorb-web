@@ -85,13 +85,17 @@ const cardSchema = z.object({
     /**
      * The catalogue's own id, and which catalogue it belongs to.
      *
-     * Both optional, because everything added before today has neither and the API still resolves
-     * those by set name. They are how a card from the Japanese, Korean or Chinese shelves is
-     * findable at all: those sets have no English name, so the name the API would look up does
-     * not exist. Together they say "this row is that card, in that catalogue" (cardorb-api#257).
+     * Both may be missing or null: everything added before today has neither and the API still
+     * resolves those by set name, and a set tile carries null for what its shelf did not send.
+     * They are how a card from the Japanese, Korean or Chinese shelves is findable at all: those
+     * sets have no English name, so the name the API would look up does not exist. Together they
+     * say "this row is that card, in that catalogue" (cardorb-api#257).
+     *
+     * `nullish`, not `optional`: an English tile sends `language: null`, and `optional` refused
+     * that as "expected string, received null" — every add from every set page, since #308.
      */
-    tcgId: z.string().trim().min(1).optional(),
-    language: z.string().trim().min(2).max(5).optional(),
+    tcgId: z.string().trim().min(1).nullish(),
+    language: z.string().trim().min(2).max(5).nullish(),
 });
 
 // Adds a catalogue card to the collection or the wishlist. The API matches it against the
