@@ -303,6 +303,18 @@ for the failures that leave no trace — and everything both passes found is clo
   another session is in that layout. Glass on the palette: no; card art behind translucent
   prices is unreadable, and Linear and v0 keep the panel solid too.
 
+- **Stepping through a list reads as paging** (2026-09-11, web #392). Bart could not see the
+  crossfade from #366, and was right: it was tuned to go unnoticed, and the fade only played
+  once the next picture was in, so on a cold list you saw the old card stand still and then a
+  jump. Now the scan travels 12 px in from its arrow's side while the last one leaves the other
+  way, 250 ms on the enter curve, reduced motion keeping the fade alone; and the sheet fetches
+  the neighbours' scan and blur hidden, at the size it draws them, so the slide starts on the
+  press. Clicking faster than 250 ms cuts the slide short, by design. Measured: the three
+  animations start on the right layers with the right keyframes, and the neighbour's pictures
+  are loaded before the press. Not measured: the feel, the pane was hidden; Bart merged on the
+  gate. A note for every session: on 2026-09-11 a `git checkout --` in the shared checkout
+  erased another session's uncommitted lines; edit in a worktree from the first line.
+
 ## Next
 
 - **Condition and grade do not reach the price.** A Poor copy and a PSA 10 show what a Near Mint
