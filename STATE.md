@@ -195,6 +195,19 @@ for the failures that leave no trace — and everything both passes found is clo
   `favorite` is. Measured live at the end: cardorb.com/user/bartdunweg "1,931 cards", the API
   `copies: 1931`, Kanto 734, and the database's own sum of owned quantities 1,931 — one number. Keyboard on the menu is not measured: the pane delivers no
   key to a react-aria button. The Mobbin pass stays owed until the connector is on.
+- **Waiting has a component** (2026-09-11, web #358, #365, #367). The kit's LoadingIndicator is
+  in the design system under Data display, from the kit's GitHub source rather than the CLI,
+  which overwrites the vendored dirs. Four changes from the kit, written above it: a status
+  region, so a screen reader hears the label or "Loading…"; gradient ids from `useId`, where
+  the kit's fixed ids made every second dot-circle on a page point at the first; reduced motion
+  slows the spin to a third instead of freezing a broken arc; a `className`. Its one use is the
+  search menu's next-page row (#365), which was a grey line the size of a result's set line.
+  Bart's second call the same day: the skeletons drew too hard in the dark. Measured against the
+  page, the shared `bg-quaternary` stood at 1.2:1 in the light and 2.7:1 in the dark; one step
+  lower in the light came to 1.04:1, invisible, and a `dark:` variant is what the linter forbids,
+  so the outline has its own token, `bg-skeleton`, unchanged in the light and 2.0:1 in the dark
+  (#367). The next-page row itself was not caught live: the pane was hidden when the second page
+  had to load; the same markup was measured in the gallery.
 - **Pokémon Card 151's Japanese cards looked like reverse holos** (cardorb-api#277). Bart saw it;
   it was the scan, not the app: TCGdex photographed SV2a in its Master Ball variant, every card
   (001, 011, 025, 150 looked at), no other Japanese set sampled. A set list in `artwork.ts`, SV2a
