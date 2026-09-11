@@ -3,18 +3,14 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
-import { type CatalogueFilters, type PokemonCard, addCard, searchPokemon } from "@/app/(app)/dashboard/cards/actions";
+import { type CatalogueFilters, type PokemonCard, searchPokemon } from "@/app/(app)/dashboard/cards/actions";
 import { listSetsShelf } from "@/app/(app)/dashboard/sets/actions";
 import type { FilterOption } from "@/components/app/filter-chip";
 import { SearchTrigger } from "@/components/app/search-trigger";
-import { notify } from "@/components/app/toast";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import { rememberSearch } from "@/hooks/use-recent-searches";
+import { cardFromPokemonCard } from "@/lib/api-shapes";
 import type { BrowseLanguage } from "@/lib/languages";
-
-/** `added` went to the collection, `wished` to the wishlist; both close the card to a second press. */
-export type AddStatus = "idle" | "adding" | "added" | "wished";
 
 /** What one answer from the catalogue search holds at most: the API's page. A full one means there may be more. */
 const SEARCH_PAGE_SIZE = 20;
@@ -22,6 +18,8 @@ const SEARCH_PAGE_SIZE = 20;
 // The palette itself, with the kit's command menu and its react-aria dialog behind it, loads the
 // first time someone opens it: every dashboard screen carries the provider, few carry a search.
 const CommandSearchMenu = dynamic(() => import("@/components/app/command-search-menu").then((m) => m.CommandSearchMenu), { ssr: false });
+// The card sheet a pressed hit opens, fetched on that press: it is the app's largest client chunk.
+const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-slideout").then((m) => m.CardDetailSlideout), { ssr: false });
 
 const CommandSearchContext = createContext<{ open: () => void }>({ open: () => {} });
 export const useCommandSearch = () => useContext(CommandSearchContext);
@@ -33,9 +31,9 @@ export function SidebarSearchTrigger() {
 }
 
 // Renders the single command palette and provides open() to descendants. It searches the whole
-// Pokémon card database (the Card Orb API, TCGdex behind it) and lets you add a result to your collection.
+// Pokémon card database (the Card Orb API, TCGdex behind it); a hit opens the card's sheet, which
+// is where it is added to the collection or the wishlist.
 export function CommandSearchProvider({ children }: { children: ReactNode }) {
-    const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
     // True from the first open on: the menu stays mounted after, so closing still animates.
     const [wanted, setWanted] = useState(false);
@@ -76,7 +74,6 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
         params: filters,
         pageSize: SEARCH_PAGE_SIZE,
     });
-    const [status, setStatus] = useState<Record<string, AddStatus>>({});
     // A term is kept once its search has found something, for the palette's empty state and the
     // Add dialog's alike (use-recent-searches.ts).
     useEffect(() => {
@@ -85,24 +82,10 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [loading, hits]);
 
-    // To the collection, or to the wishlist: the same card cannot be in both, so one press settles it.
-    const add = async (card: PokemonCard, target: "collection" | "wishlist") => {
-        setStatus((s) => ({ ...s, [card.id]: "adding" }));
-        const res = await addCard(card, target);
-        if (res.ok) {
-            setStatus((s) => ({ ...s, [card.id]: target === "wishlist" ? "wished" : "added" }));
-            router.refresh();
-        } else {
-            // The row goes back to "Add", which reads as a missed click; the toast is the only
-            // thing that says the card is not there.
-            setStatus((s) => {
-                const next = { ...s };
-                delete next[card.id];
-                return next;
-            });
-            notify.failed(`${card.name} was not added to your ${target}`, { description: res.error });
-        }
-    };
+    /* The hit whose sheet is open over the palette: the card in full, with its price line and the
+       two ways to take it, the same sheet a set page opens on a card nobody holds. The palette stays
+       behind it with the hits, so closing the sheet is back at the search. */
+    const [opened, setOpened] = useState<PokemonCard | null>(null);
 
     return (
         <CommandSearchContext.Provider
@@ -139,10 +122,13 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
                     loadingMore={loadingMore}
                     onLoadMore={loadMore}
                     total={total}
-                    status={status}
-                    onAdd={add}
+                    onOpen={setOpened}
                 />
             ) : null}
+            {/* Mounted from the first press on and closed with a null card, as every list mounts it: a
+                sheet unmounted on close cannot put focus back on the hit that opened it, and a keyboard
+                user landed on the page under the palette (measured). */}
+            {wanted ? <CardDetailSlideout card={opened ? cardFromPokemonCard(opened) : null} addable={opened} onClose={() => setOpened(null)} /> : null}
         </CommandSearchContext.Provider>
     );
 }

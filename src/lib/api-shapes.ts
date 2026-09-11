@@ -517,6 +517,7 @@ export const pokemonCardFromSetCard = (c: SetCard, language?: string): PokemonCa
     owned: c.owned,
     wishlist: c.wishlist,
     quantity: c.quantity ?? 0,
+    price: c.price,
 });
 
 // ── GET /v1/catalog/search ────────────────────────────────────────────────────────────────
@@ -580,15 +581,22 @@ export type PokemonCard = {
     wishlist: boolean;
     /** Copies already held: "you have three of this" is a different answer from "you have it". */
     quantity: number;
+    /** One number, the way a tile shows it: null where the guide does not price the card, or the route did not ask. */
+    price: number | null;
 };
 
 /**
  * `language` is the catalogue the search asked (null or "en": the English one). A hit off the
- * Japanese, Korean or Chinese catalogue carries that and its id along, the only way the API can
- * find it (cardorb-api#257); an English hit carries neither, as every add before did.
+ * Japanese, Korean or Chinese catalogue carries that along, the only way the API can find it
+ * (cardorb-api#257); an English hit carries no language, as every add before did.
+ *
+ * The catalogue id goes with every hit, as it does with every set tile: it is what the card's
+ * price line is asked by, and the sheet a hit opens draws that line. The API adds an English
+ * card by set name whether or not the id comes along, as it has for every set-page add.
  */
 export const pokemonCardFromBrowse = (c: BrowseCard, language?: string | null): PokemonCard => ({
-    ...(language && language !== "en" ? { tcgId: c.tcgId, language } : {}),
+    tcgId: c.tcgId,
+    ...(language && language !== "en" ? { language } : {}),
     id: c.id,
     name: c.name,
     set: c.setName,
@@ -608,6 +616,44 @@ export const pokemonCardFromBrowse = (c: BrowseCard, language?: string | null): 
     owned: c.owned,
     wishlist: c.wishlist,
     quantity: c.quantity ?? 0,
+    price: priceForCopy({ finish: null, price: c.price, priceHolo: c.priceHolo }),
+});
+
+/**
+ * A search hit as the sheet reads a card: every field about a copy is empty, because there is
+ * none. What the set page does for a tile nobody holds, so a hit opens the same sheet a tile
+ * does — with its price line, which the catalogue id asks for, and the number above the tabs.
+ */
+export const cardFromPokemonCard = (c: PokemonCard): Card => ({
+    id: c.id,
+    name: c.name,
+    set_name: c.set,
+    set_abbr: null,
+    set: c.set,
+    number: c.number,
+    rarity: c.rarity,
+    gen: null,
+    types: c.types,
+    quantity: c.quantity,
+    owned: c.owned,
+    is_favorite: false,
+    excluded: false,
+    condition: null,
+    grade: null,
+    language: null,
+    finish: null,
+    foil_pattern: null,
+    purchase_price: null,
+    purchase_date: null,
+    acquired_at: null,
+    notes: null,
+    price: c.price,
+    image_url: c.image,
+    image_high_url: null,
+    tcg_id: c.tcgId ?? null,
+    collection_id: null,
+    wishlist: c.wishlist,
+    species_id: null,
 });
 
 // ── GET /v1/profile ───────────────────────────────────────────────────────────────────────
