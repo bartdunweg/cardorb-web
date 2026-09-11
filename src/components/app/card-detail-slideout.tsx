@@ -22,7 +22,6 @@ import { type FolderChoice, listCollections, loadFacets } from "@/app/(app)/dash
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { CardPriceChart } from "@/components/app/card-price-chart";
-import type { AddIntent } from "@/components/app/command-search";
 import { CopyCard } from "@/components/app/copy-card";
 import { CopyFormDialog } from "@/components/app/copy-form-dialog";
 import { HoloCard } from "@/components/app/holo-card";
@@ -83,8 +82,6 @@ type Neighbours = { onPrev?: (() => void) | null; onNext?: (() => void) | null }
  */
 type Addable = {
     addable?: PokemonCard | null;
-    /** What Add card on a page opened the palette for: which side leads, and a binder to file the card in. */
-    addInto?: AddIntent | null;
     /**
      * The card was taken, into the collection or onto the wishlist. For a list the page does not
      * re-read — the search's hits — to mark the one it came from; every other list learns it
@@ -97,7 +94,7 @@ type Props = ({ card: Card | null; onClose: () => void; readOnly?: false } | { c
     Neighbours &
     Addable;
 
-export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, onNext, addable, addInto, onTaken }: Props) {
+export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, onNext, addable, onTaken }: Props) {
     const router = useRouter();
     // The owner's fields exist only on the editable view; the public view never receives them.
     // The row the sheet shows: the one it opened on, or another copy of the card tapped in the
@@ -194,10 +191,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const add = async (list: "collection" | "wishlist") => {
         if (!takeable) return;
         setBusy(true);
-        const binder = list === "collection" ? addInto?.collectionId : undefined;
-        const res = await addCard(takeable, list, binder);
+        const res = await addCard(takeable, list);
         setBusy(false);
-        const where = list === "wishlist" ? "your wishlist" : binder && addInto?.collectionName ? addInto.collectionName : "your collection";
+        const where = list === "wishlist" ? "your wishlist" : "your collection";
         if (!res.ok) {
             notify.failed(`That card was not added to ${where}`, { description: res.error });
             return;
@@ -208,9 +204,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         onClose();
         notify.done(`Added to ${where}`, { description: takeable.name });
     };
-    // The side the page already chose leads; from the sidebar and a set page the collection does, as before.
-    const wishFirst = addInto?.target === "wishlist";
-    const intoLabel = addInto?.collectionName ? `Add to ${addInto.collectionName}` : "Add to collection";
     const [collections, setCollections] = useState<FolderChoice[]>([]);
     const [facets, setFacets] = useState<Facets | undefined>(undefined);
     // The star, kept here so a tap answers at once; the page re-reads the flag after the save.
@@ -890,35 +883,26 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                 </p>
                                                 {/* Under each other, each the width of the panel: two side by side made a choice out of
                                                     what is really two offers, and the narrower one read as the lesser. */}
-                                                {/* In the order they are offered, in the DOM too: a keyboard reaches the leading one first. */}
                                                 <div className="flex flex-col gap-2">
-                                                    {(wishFirst ? ["wishlist", "collection"] : ["collection", "wishlist"]).map((list) =>
-                                                        list === "collection" ? (
-                                                            <Button
-                                                                key={list}
-                                                                size="md"
-                                                                color={wishFirst ? "secondary" : "primary"}
-                                                                iconLeading={Plus}
-                                                                className="w-full"
-                                                                isDisabled={busy}
-                                                                onClick={() => void add("collection")}
-                                                            >
-                                                                {intoLabel}
-                                                            </Button>
-                                                        ) : (
-                                                            <Button
-                                                                key={list}
-                                                                size="md"
-                                                                color={wishFirst ? "primary" : "secondary"}
-                                                                iconLeading={Heart}
-                                                                className="w-full"
-                                                                isDisabled={busy}
-                                                                onClick={() => void add("wishlist")}
-                                                            >
-                                                                Add to wishlist
-                                                            </Button>
-                                                        ),
-                                                    )}
+                                                    <Button
+                                                        size="md"
+                                                        iconLeading={Plus}
+                                                        className="w-full"
+                                                        isDisabled={busy}
+                                                        onClick={() => void add("collection")}
+                                                    >
+                                                        Add to collection
+                                                    </Button>
+                                                    <Button
+                                                        size="md"
+                                                        color="secondary"
+                                                        iconLeading={Heart}
+                                                        className="w-full"
+                                                        isDisabled={busy}
+                                                        onClick={() => void add("wishlist")}
+                                                    >
+                                                        Add to wishlist
+                                                    </Button>
                                                 </div>
                                             </div>
                                         ) : null}

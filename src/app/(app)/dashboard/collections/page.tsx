@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AddCardButton } from "@/components/app/add-card-button";
 import { CollectionsGrid, NewCollectionButton } from "@/components/app/collections-grid";
 import { PageHeader } from "@/components/app/page-header";
 import { getMyCollections } from "@/lib/collections";
@@ -14,12 +15,20 @@ export default async function CollectionsPage() {
         <div className="flex flex-1 flex-col gap-6">
             <PageHeader
                 title="Binders"
+                // Add card is the app's main action and opens the one palette, here as everywhere; a new
+                // binder is the page's own thing and sits beside it as the secondary.
                 actions={
-                    <div className="max-lg:hidden">
+                    <div className="flex items-center gap-3 max-lg:hidden">
                         <NewCollectionButton />
+                        <AddCardButton />
                     </div>
                 }
-                barActions={<NewCollectionButton compact />}
+                barActions={
+                    <>
+                        <NewCollectionButton compact />
+                        <AddCardButton compact />
+                    </>
+                }
             />
             <CollectionsGrid collections={collections} favoritesCount={favoritesCount} />
         </div>

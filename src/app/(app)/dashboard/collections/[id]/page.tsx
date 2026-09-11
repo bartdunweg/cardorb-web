@@ -53,9 +53,7 @@ export default async function CollectionDetailPage({ params, searchParams }: { p
         back: { href: "/dashboard/collections", label: "Collection" },
         actions: <CollectionDetailActions folder={collection} facets={facets} />,
         // A folder filled by hand takes a card straight from its own page; a rule folder fills itself.
-        add: collection.rule
-            ? undefined
-            : (compact: boolean) => <AddCardButton compact={compact} collectionId={collection.id} collectionName={collection.name} />,
+        add: collection.rule ? undefined : (compact: boolean) => <AddCardButton compact={compact} />,
         query,
         basePath: `/dashboard/collections/${id}`,
         facets,
