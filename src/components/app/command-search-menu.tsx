@@ -6,6 +6,7 @@ import type { CatalogueFilters, PokemonCard } from "@/app/(app)/dashboard/cards/
 import { CardImage } from "@/components/app/card-image";
 import type { AddStatus } from "@/components/app/command-search";
 import { FilterChip, FilterChipRow, type FilterOption } from "@/components/app/filter-chip";
+import { LanguageChips } from "@/components/app/language-chips";
 import { CommandMenu, type CommandMenuGroupType } from "@/components/application/command-menus/command-menu";
 import { Button } from "@/components/base/buttons/button";
 import { CARD_TYPES } from "@/lib/card-types";
@@ -139,7 +140,7 @@ export function CommandSearchMenu({
     status: Record<string, AddStatus>;
     onAdd: (card: PokemonCard, target: "collection" | "wishlist") => void;
 }) {
-    const filtering = Boolean(filters.set || filters.type);
+    const filtering = Boolean(filters.set || filters.type || filters.language);
     const searching = inputValue.trim().length >= 2 || filtering;
     const groups: CommandMenuGroupType[] = hits.length
         ? [
@@ -204,13 +205,25 @@ export function CommandSearchMenu({
             {/* The chips that narrow the hits, once something is typed; a set kept while the term changes stays. */}
             {searching ? (
                 <FilterChipRow className="border-b border-secondary px-4 py-2" onClear={filtering ? () => onFiltersChange({}) : undefined}>
-                    <FilterChip label="Set" value={filters.set} options={sets} onChange={(set) => onFiltersChange({ ...filters, set })} />
-                    <FilterChip
-                        label="Type"
-                        value={filters.type}
-                        options={CARD_TYPES.map((t) => ({ value: t, label: t }))}
-                        onChange={(type) => onFiltersChange({ ...filters, type })}
+                    {/* Which shelf: the same flags Browse uses. On another shelf the set and type chips
+                        go, since they name English sets and English facts; the term is matched against
+                        the English names those cards are shown under, so "charizard" finds リザードン. */}
+                    <LanguageChips
+                        value={filters.language ?? "en"}
+                        className="w-auto"
+                        onChange={(language) => onFiltersChange(language === "en" ? {} : { language })}
                     />
+                    {filters.language ? null : (
+                        <>
+                            <FilterChip label="Set" value={filters.set} options={sets} onChange={(set) => onFiltersChange({ ...filters, set })} />
+                            <FilterChip
+                                label="Type"
+                                value={filters.type}
+                                options={CARD_TYPES.map((t) => ({ value: t, label: t }))}
+                                onChange={(type) => onFiltersChange({ ...filters, type })}
+                            />
+                        </>
+                    )}
                 </FilterChipRow>
             ) : null}
 

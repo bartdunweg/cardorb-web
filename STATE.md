@@ -104,6 +104,13 @@ for the failures that leave no trace — and everything both passes found is clo
   hand-kept lists: SV4a is Shiny Treasure ex now (TCGdex mislabels it), and the 46 Simplified
   Chinese sets and three coming MEGA sets have no English name yet. Measured in the pane against
   the API worktree: SV4a in Japanese, 320 English names, the sheet's bracketed heading.
+- **…and the rest of the way** (cardorb-api#279, web #339). A collection row off those shelves
+  carries the printed name too, so its sheet reads the same brackets. The search palette has the
+  Browse flags as chips: on another shelf the set and type chips go, and "charizard" finds every
+  Lizardon by the English name the app shows it under — the API scans its committed names, no
+  request, and reads only the sets on the page shown. A hit carries the catalogue and the id, so
+  it can be added. The 46 Simplified Chinese sets have English titles now, literal renderings
+  flagged as such; M3 (ムニキスゼロ) and the Japanese CP5 still do not.
 - **The small thumbnails lie face down too** (#324): table rows, the add dialog, the folder's
   card search and the Pokédex slider. The Fomantis acquired date is put right (2026-09-07),
   through the sheet on the dev server.

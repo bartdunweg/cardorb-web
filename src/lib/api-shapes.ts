@@ -100,6 +100,8 @@ export const cardItemSchema = z.object({
     image: nullable(z.string()),
     imageHigh: nullable(z.string()),
     speciesId: nullable(z.number()),
+    /** What the card prints where `name` is the English for it; absent from an API before it said. */
+    localName: nullable(z.string()).optional(),
     tcgId: nullable(z.string()),
     owned: z.boolean(),
     finish: vocabulary(FINISHES),
@@ -257,6 +259,7 @@ export function folderFromApi(f: FolderItem): Folder {
 export const cardFromItem = (item: CardItem): Card => ({
     id: item.id,
     name: item.name,
+    local_name: item.localName ?? null,
     set_name: item.setTitle || item.set || null,
     set_abbr: item.setAbbr ?? null,
     set: item.set || null,
@@ -576,6 +579,9 @@ export type PokemonCard = {
 };
 
 export const pokemonCardFromBrowse = (c: BrowseCard): PokemonCard => ({
+    // The catalogue's id, so a hit off another shelf can be added: the set has no English name to
+    // look it up by (cardorb-api#257). The language is the search's to say; see searchPokemon.
+    tcgId: c.tcgId ?? null,
     id: c.id,
     name: c.name,
     set: c.setName,
