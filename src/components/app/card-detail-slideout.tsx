@@ -12,6 +12,7 @@ import {
     cardFacts,
     listCopies,
     removeCard,
+    rereadMine,
     restoreCard,
     seriesLogo,
     setCopies,
@@ -341,7 +342,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
        dead in between. Now the panel shows the new count and the store catches up: one write in
        the air per row, always for the last count pressed, and the rows are read back once it has
        landed. A write that fails puts the store's number back and says so. */
-    const [settleQuantity] = useState(() => settleLatest(setCopies));
+    const [settleQuantity] = useState(() => settleLatest((id: string, quantity: number) => setCopies(id, quantity, { reread: false })));
     const showQuantity = (row: Card, quantity: number) => {
         if (!mine) return;
         pressed.current += 1;
@@ -349,11 +350,16 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         setCopiesState({ of: copiesKey(mine), rows: base.map((r) => (r.id === row.id ? { ...r, quantity } : r)) });
         void settleQuantity(row.id, quantity, (error) => {
             notify.failed("The number of copies did not change", { description: error });
-            void reloadCopies();
         }).then((landed) => {
-            if (!landed) return;
-            scheduleRefresh();
-            void reloadCopies();
+            // null is a press folded into one still flying; that one re-reads for both. The
+            // writes forget nothing themselves (setCopies, reread: false): the cache is dropped
+            // here, once, when no write is in the air to race the re-read that fills it again.
+            // A failed run may still have landed its first presses, so it re-reads too.
+            if (landed === null) return;
+            void rereadMine().then(() => {
+                scheduleRefresh();
+                void reloadCopies();
+            });
         });
     };
     const stepUp = (group: CopyGroup) => {

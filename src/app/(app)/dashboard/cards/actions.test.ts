@@ -7,7 +7,8 @@ vi.mock("@/lib/api", () => ({ ApiError: class extends Error {}, api }));
 vi.mock("@/lib/user-cache", () => ({ forgetMine: vi.fn(async () => undefined) }));
 vi.mock("next/cache", () => ({ unstable_cache: (fn: () => unknown) => fn, updateTag: vi.fn(), revalidatePath: vi.fn() }));
 
-const { addCard, searchPokemon } = await import("./actions");
+const { addCard, rereadMine, searchPokemon, setCopies } = await import("./actions");
+const { forgetMine } = await import("@/lib/user-cache");
 
 const tile = {
     id: "sv03.5-011",
@@ -105,5 +106,28 @@ describe("searchPokemon", () => {
         } as never);
         const { items } = await searchPokemon("リザードン", { language: "ja" });
         expect(items[0]).toMatchObject({ tcgId: "SV2a-006", language: "ja" });
+    });
+});
+
+/**
+ * A run of presses on the count is several writes and one re-read. A write that forgot on its own
+ * re-rendered the page inside its answer, and a press landing during that render left the render's
+ * older list in the cache after the press had dropped it: ×4 on the list behind a sheet saying 2.
+ */
+describe("setCopies", () => {
+    beforeEach(() => vi.mocked(forgetMine).mockClear());
+
+    it("forgets the cached answers after the write, by default", async () => {
+        await setCopies("d6ba4891-3908-48d0-b4da-ed0096bd4360", 3);
+        expect(api).toHaveBeenCalledWith("/collection/items/d6ba4891-3908-48d0-b4da-ed0096bd4360", { method: "PATCH", body: { quantity: 3 } });
+        expect(forgetMine).toHaveBeenCalledTimes(1);
+    });
+
+    it("writes and nothing more when told the caller re-reads once, later", async () => {
+        await setCopies("d6ba4891-3908-48d0-b4da-ed0096bd4360", 3, { reread: false });
+        expect(api).toHaveBeenCalledTimes(1);
+        expect(forgetMine).not.toHaveBeenCalled();
+        await rereadMine();
+        expect(forgetMine).toHaveBeenCalledTimes(1);
     });
 });

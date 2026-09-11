@@ -141,7 +141,13 @@ export async function addCard(input: PokemonCard, target: "collection" | "wishli
 }
 
 // Sets how many of one copy are held. The API refuses 0: a card you no longer hold is removed.
-export async function setCopies(cardId: string, quantity: number): Promise<Result> {
+//
+// `reread: false` writes and nothing more, for a caller that presses several times and re-reads
+// once, through rereadMine(). Forgetting here re-renders the page inside this action's answer —
+// updateTag does that on its own — and a press that lands while that render is reading the list
+// leaves the render's answer, from before the press, filling the cache after the press dropped
+// it. Four copies pressed down to two said ×4 on the list behind the sheet until the next write.
+export async function setCopies(cardId: string, quantity: number, { reread = true }: { reread?: boolean } = {}): Promise<Result> {
     const parsed = z.object({ cardId: z.string().uuid(), quantity: z.number().int().min(1).max(999) }).safeParse({ cardId, quantity });
     if (!parsed.success) return { ok: false, error: "Invalid card." };
 
@@ -151,8 +157,14 @@ export async function setCopies(cardId: string, quantity: number): Promise<Resul
         return failed(err);
     }
 
-    await forgetMine();
+    if (reread) await forgetMine();
     return { ok: true };
+}
+
+// After a run of writes that did not forget on their own: the cached answers go, and the page
+// re-renders from the API with nothing else in flight.
+export async function rereadMine(): Promise<void> {
+    await forgetMine();
 }
 
 // Removes one row: an owned copy or a wish. The API wants a JSON content type on a delete, so
