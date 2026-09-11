@@ -12,6 +12,7 @@ import { FolderDialog } from "@/components/app/folder-dialog";
 import { notify } from "@/components/app/toast";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { Button } from "@/components/base/buttons/button";
+import { styles } from "@/components/base/buttons/button-styles";
 import { CloseButton } from "@/components/base/buttons/close-button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Input } from "@/components/base/input/input";
@@ -175,8 +176,11 @@ export function CollectionDetailActions({
                 than Edit and Add. The confirm dialog is the same as before. */}
             <Dropdown.Root>
                 {/* The kit's own trigger, as the design page's menu uses it: the menu opens from it by
-                    mouse and by keyboard alike, which a kit Button standing in for it did not. */}
-                <Dropdown.DotsButton className="flex size-10 items-center justify-center rounded-lg ring-1 ring-primary ring-inset" />
+                    mouse and by keyboard alike, which a kit Button standing in for it did not. It wears
+                    the secondary pill's own classes, so it sits beside Edit as the same button. */}
+                <Dropdown.DotsButton
+                    className={cx(styles.common.root, styles.sizes.md.root, styles.colors.secondary.root, "rounded-full p-2.5 before:rounded-full")}
+                />
                 <Dropdown.Popover className="w-56">
                     <Dropdown.Menu>
                         <Dropdown.Item icon={Trash01} onAction={() => setConfirming(true)}>
