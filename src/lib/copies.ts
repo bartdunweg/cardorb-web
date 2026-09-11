@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { Card } from "@/lib/api-shapes";
+import { type Card, FINISH_LABELS, FOIL_PATTERN_LABELS, type Finish, type FoilPattern } from "@/lib/api-shapes";
 import { WESTERN_LANGUAGES, languageOf } from "@/lib/languages";
 
 /** The same card: the same set, number and name; a second row of it is another copy, not another card. */
@@ -49,6 +49,22 @@ export const groupCopies = (rows: Card[]): CopyGroup[] => {
     }
     return [...groups.values()];
 };
+
+/**
+ * What kind of copy this is, as the sheet names it: "Holo · Cosmos · Near Mint · Kanto". The
+ * finish, then the foil's pattern where one is recorded, the grade or else the condition, and the
+ * binder it is filed in. A normal finish says nothing, since that is what a card is unless it is
+ * something else; with nothing recorded at all it is a "Copy".
+ */
+export const copyLabel = (row: Card, folderName?: string | null): string =>
+    [
+        row.finish && row.finish !== "normal" ? (FINISH_LABELS[row.finish as Finish] ?? null) : null,
+        row.foil_pattern ? (FOIL_PATTERN_LABELS[row.foil_pattern as FoilPattern] ?? null) : null,
+        row.grade ?? row.condition,
+        folderName,
+    ]
+        .filter(Boolean)
+        .join(" · ") || "Copy";
 
 /** What a copy may differ in from the row it comes from. */
 export const copyEdits = z

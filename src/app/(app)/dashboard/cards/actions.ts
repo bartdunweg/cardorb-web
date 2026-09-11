@@ -418,6 +418,21 @@ export async function setCondition(cardId: string, condition: string | null): Pr
     return { ok: true };
 }
 
+// One copy's own facts, whichever of them changed: the same PATCH that marks a wish owned, so a
+// copy's card in the sheet edits every field the add form asks for, and nothing is left read-only
+// for want of an action of its own. The API takes only what is sent; a field left out stays.
+export async function editCopy(cardId: string, edits: CopyEdits): Promise<Result> {
+    const parsed = z.object({ cardId: z.string().uuid(), edits: copyEdits }).safeParse({ cardId, edits });
+    if (!parsed.success || Object.keys(parsed.data.edits).length === 0) return { ok: false, error: "Invalid input." };
+    try {
+        await api(`/collection/items/${parsed.data.cardId}`, { method: "PATCH", body: parsed.data.edits });
+    } catch (err) {
+        return failed(err);
+    }
+    await forgetMine();
+    return { ok: true };
+}
+
 // A wish becomes a copy you hold, with what is known about it at once: language, condition or
 // grade, finish, folder, purchase price and the day you got it (today unless said). One PATCH.
 export async function markOwnedWith(cardId: string, edits: CopyEdits): Promise<Result> {

@@ -2,14 +2,16 @@
 
 import { useState } from "react";
 import { Download01, FilterLines, Grid01, Plus } from "@untitledui/icons";
+import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
+import type { Card } from "@/lib/api-shapes";
 import { AppEmptyState } from "./app-empty-state";
 import { AuthEmailField, AuthShell } from "./auth-shell";
 import { CardBack } from "./card-back";
 import { CardImage } from "./card-image";
 import { CardTile } from "./card-tile";
-import { CopyRow } from "./copy-row";
+import { CopyCard } from "./copy-card";
 import { Cell, Group, Panel, type SectionSpec } from "./design-section";
 import { FilterChip, FilterChipRow } from "./filter-chip";
 import { FlagIcon } from "./flag-icon";
@@ -30,6 +32,23 @@ const sets = [
 ];
 
 /** Ours, because the kit has nothing that fits — each one says what it does instead. */
+/* A held row for the gallery's CopyCard: the Fomantis the sheet was measured on, Holo · Near Mint. */
+const SAMPLE_COPY = {
+    id: "sample-copy",
+    name: "Fomantis",
+    set: "Pitch Black",
+    number: "085",
+    language: "en",
+    finish: "holo",
+    foil_pattern: null,
+    condition: "Near Mint",
+    grade: null,
+    collection_id: "kanto",
+    quantity: 4,
+    purchase_price: 2.5,
+    acquired_at: "2026-07-09",
+} as unknown as Card;
+
 export const ourSections: SectionSpec[] = [
     {
         id: "app-empty-state",
@@ -213,27 +232,46 @@ export const ourSections: SectionSpec[] = [
         ),
     },
     {
-        id: "copy-row",
-        title: "CopyRow",
-        from: "components/app/copy-row",
+        id: "copy-card",
+        title: "CopyCard",
+        from: "components/app/copy-card",
         ours: true,
-        note: "One line of the Copies panel in a card's sheet: the language's flag, what kind of copy it is, what one is worth and how many you hold. The kit has no clickable row — its table rows are cells — and a list item that is itself the control is not a shape it draws. The sheet works out what the line says; the row draws it and takes the press.",
+        note: "One kind of copy you hold of a card, as a card of its own in the sheet's Copies tab: how many of it there are and every field the add form asks, in the add form's order and shape. Each field saves as it changes, to every row behind the kind. The count and the removal are the sheet's, since taking one away may remove a row and the sheet owns the undo.",
         render: (
             <Panel>
                 <Group title="States" cols="single">
-                    <Cell label="current" span="full">
-                        <div className="w-full">
-                            <CopyRow language="en" label="Holo · Cosmos · Near Mint" price={249} quantity={2} current onSelect={() => {}} />
+                    <Cell label="four of a kind" span="full">
+                        <div className="w-full max-w-md">
+                            <CopyCard
+                                group={{ key: "holo-nm", shown: SAMPLE_COPY, rows: [SAMPLE_COPY], quantity: 4 }}
+                                folders={[{ id: "kanto", name: "Kanto", rule: null } satisfies FolderChoice]}
+                                busy={false}
+                                onMore={() => {}}
+                                onFewer={() => {}}
+                                onRemove={() => {}}
+                                onSaved={() => {}}
+                                refreshFolders={async () => []}
+                            />
                         </div>
                     </Cell>
-                    <Cell label="another kind" span="full">
-                        <div className="w-full">
-                            <CopyRow language="ja" label="Reverse Holo · PSA 9 · Kanto" price={31.5} quantity={1} current={false} onSelect={() => {}} />
-                        </div>
-                    </Cell>
-                    <Cell label="nothing recorded" span="full">
-                        <div className="w-full">
-                            <CopyRow language={null} label="Copy" quantity={4} current={false} onSelect={() => {}} />
+                    <Cell label="graded, arriving" span="full">
+                        <div className="w-full max-w-md">
+                            <CopyCard
+                                group={{
+                                    key: "psa9",
+                                    shown: { ...SAMPLE_COPY, id: "sample-copy-2", language: "ja", finish: "reverse-holo", condition: null, grade: "PSA 9" },
+                                    rows: [],
+                                    quantity: 1,
+                                }}
+                                folders={[]}
+                                busy={false}
+                                arrive
+                                onMore={() => {}}
+                                onFewer={() => {}}
+                                onRemove={() => {}}
+                                onSaved={() => {}}
+                                refreshFolders={async () => []}
+                            />
                         </div>
                     </Cell>
                 </Group>
