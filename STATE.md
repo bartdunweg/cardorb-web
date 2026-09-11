@@ -110,8 +110,12 @@ for the failures that leave no trace — and everything both passes found is clo
   (#336) now find a card by the English name the app shows it under: "charizard" on the Japanese
   shelf answers 67 Lizardons — the API scans its committed names, no request, and reads only the
   sets on the page shown; a term in the shelf's own script still asks TCGdex. The 46 Simplified
-  Chinese sets have English titles now, literal renderings flagged as such; M3 (ムニキスゼロ) and
-  the Japanese CP5 still do not. Measured in the pane against the API worktree.
+  Chinese sets have English titles now, literal renderings flagged as such; M3 (ムニキスゼロ) still
+  does not, CP5 does (cardorb-api#282, which also drops TCGdex's fifteen cloned placeholder sets
+  from the shelves). Measured in the pane against the API worktree. Then Bart's call: the
+  language is a filter chip like Set and Type, the kit's, not a row of flags (web #342); the Set
+  chip lists the chosen shelf's sets and the API keeps to it (cardorb-api#284). Type stays
+  English-only: TCGdex publishes no types on the other shelves.
 - **The small thumbnails lie face down too** (#324): table rows, the add dialog, the folder's
   card search and the Pokédex slider. The Fomantis acquired date is put right (2026-09-07),
   through the sheet on the dev server.
