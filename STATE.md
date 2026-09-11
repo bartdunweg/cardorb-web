@@ -46,6 +46,13 @@ for the failures that leave no trace — and everything both passes found is clo
   English rows are untouched and sets with no English card are now *cheaper*. Ownership marks were
   wrong both ways and are right. **cardorb-api#259 is open**: the Pokédex slot, which needed the
   1,025 species in those languages (PokéAPI's CSV already had them).
+- **A Japanese set page has prices** (cardorb-api#261). It showed a blank line under every card
+  while Cardmarket priced them — all 92 of one set were in the guide the API downloads daily —
+  because the only map from a card to its Cardmarket product held English cards somebody owns.
+  A script asked TCGdex once about every card on the four shelves (21,333) and committed the
+  product of each, one map per catalogue since the ids collide: ja 10,350 of 12,781, zh-tw
+  3,861 of 7,436, zh-cn 742 of 877, ko all 239. The page pays no request it did not pay before.
+  Nothing changed on the web: it rendered whatever price the API sent, which was null.
 - **A test that guards the wrong thing** (cardorb-api#258). Five of them, and the sharpest mocked
   the payload it was meant to inspect — so the suite was green with the field-stripping deleted.
   Each is now checked by breaking what it guards and watching it go red. The ten undocumented
@@ -67,11 +74,13 @@ for the failures that leave no trace — and everything both passes found is clo
   one does. Neither Cardmarket nor TCGplayer publishes either — checked, both feeds carry
   printing and no condition. PokemonPriceTracker does, RAW and PSA, at $9.99 a month, from the
   American market. **Needs a decision before it needs code.**
-- **Step 2b, the rest of it.** The language set page shows no prices (that browse surface prices
-  through a guide keyed by English ids, while the per-card figures exist); a Cardmarket link falls
-  back to searching the Japanese name; and `zh` is one code for two catalogues, so traditional is
-  asked before simplified. Splitting it properly widens an enum the iOS app decodes, which is a
-  decision rather than a side effect.
+- **Step 2b, the rest of it.** A Cardmarket link on a language card falls back to searching the
+  Japanese name; and `zh` is one code for two catalogues, so traditional is asked before
+  simplified. Splitting it properly widens an enum the iOS app decodes, which is a decision
+  rather than a side effect.
+- **Empty shelves.** TCGdex lists 184 Japanese sets and carries cards for 116; on the Korean
+  shelf it is 3 of 95. Those set pages open on nothing, with no word about why. Measured on
+  2026-09-11 while pricing the shelves; not changed.
 - **A privacy flip made in the iOS app is invisible here for five minutes.** `forgetMine()` drops
   the public tag on writes made through this app; the same API serves iOS and invalidates nothing
   here. Wants a revalidation webhook from cardorb-api.
