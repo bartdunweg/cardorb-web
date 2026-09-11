@@ -22,13 +22,13 @@ export async function getMyCollections(): Promise<{ collections: CollectionSumma
 }
 
 /**
- * The folder names, for the sidebar. Fails soft: a sidebar without its folders is a poorer page,
+ * The folder names and their counts, for the sidebar. Fails soft: a sidebar without its folders is a poorer page,
  * a thrown error is no page at all, and on 2026-09-04 a catalogue outage took every screen down
  * through this one read. A 401 still throws: that is the session, not the folders.
  */
-export async function getMyFolders(): Promise<{ id: string; name: string; kind: FolderKind }[]> {
+export async function getMyFolders(): Promise<{ id: string; name: string; kind: FolderKind; count: number }[]> {
     try {
-        return (await folders()).map((f) => ({ id: f.id, name: f.name, kind: f.kind }));
+        return (await folders()).map((f) => ({ id: f.id, name: f.name, kind: f.kind, count: f.count }));
     } catch (err) {
         if (err instanceof ApiError && err.status === 401) throw err;
         console.error("Folders unavailable, sidebar drawn without them:", err instanceof Error ? err.message : err);
