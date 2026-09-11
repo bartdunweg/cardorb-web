@@ -18,6 +18,11 @@ type Options<P> = {
 
 const isSet = (params: object | undefined) => Boolean(params && Object.values(params).some((v) => v !== undefined && v !== "" && v !== null));
 
+/** What `search` may answer: the hits, or the hits with how many there are in all. */
+type Answer<T> = T[] | { items: T[]; total?: number };
+const unpack = <T>(a: Answer<T>): { items: T[]; total: number | null } =>
+    Array.isArray(a) ? { items: a, total: null } : { items: a.items, total: a.total ?? null };
+
 /**
  * Results for a search box: waits for the typing to pause, asks once, and ignores an answer that
  * arrives after a newer question was asked. `search` is read through a ref, so a new function
@@ -29,7 +34,7 @@ const isSet = (params: object | undefined) => Boolean(params && Object.values(pa
  */
 export function useDebouncedSearch<T, P extends object = Record<string, never>>(
     query: string,
-    search: (term: string, params: P, page: number) => Promise<T[]>,
+    search: (term: string, params: P, page: number) => Promise<Answer<T>>,
     { minLength = 1, delay = 250, params, pageSize }: Options<P> = {},
 ) {
     const [results, setResults] = useState<T[]>([]);
@@ -39,6 +44,8 @@ export function useDebouncedSearch<T, P extends object = Record<string, never>>(
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(false);
     const [loadingMore, setLoadingMore] = useState(false);
+    /** How many the whole search matched, where `search` says; null where it does not. */
+    const [total, setTotal] = useState<number | null>(null);
     // Bumped by retry(): a dependency the effect re-runs on, with the term and the filters unchanged.
     const [attempt, setAttempt] = useState(0);
     const searchRef = useRef(search);
@@ -62,19 +69,21 @@ export function useDebouncedSearch<T, P extends object = Record<string, never>>(
                 setLoading(false);
                 setFailed(false);
                 setHasMore(false);
+                setTotal(null);
                 return;
             }
             setLoading(true);
-            let found: T[] | null = null;
+            let found: { items: T[]; total: number | null } | null = null;
             try {
-                found = await searchRef.current(term, (current ?? {}) as P, 1);
+                found = unpack(await searchRef.current(term, (current ?? {}) as P, 1));
             } catch {
                 // The reason is the server's to log; the box only needs to know it is not an empty answer.
             }
             if (id === reqId.current) {
-                setResults(found ?? []);
+                setResults(found?.items ?? []);
+                setTotal(found?.total ?? null);
                 setFailed(found === null);
-                setHasMore(Boolean(pageSize && found && found.length >= pageSize));
+                setHasMore(Boolean(pageSize && found && found.items.length >= pageSize));
                 setLoading(false);
             }
         }, delay);
@@ -90,20 +99,21 @@ export function useDebouncedSearch<T, P extends object = Record<string, never>>(
         const id = reqId.current;
         const next = page + 1;
         setLoadingMore(true);
-        let found: T[] | null = null;
+        let found: { items: T[] } | null = null;
         try {
-            found = await searchRef.current(query.trim(), (paramsRef.current ?? {}) as P, next);
+            found = unpack(await searchRef.current(query.trim(), (paramsRef.current ?? {}) as P, next));
         } catch {
             // As above.
         }
         if (id !== reqId.current) return;
         if (found) {
-            setResults((r) => [...r, ...found]);
+            const { items } = found;
+            setResults((r) => [...r, ...items]);
             setPage(next);
-            setHasMore(found.length >= pageSize);
+            setHasMore(items.length >= pageSize);
         }
         setLoadingMore(false);
     };
 
-    return { results, loading, failed, retry: () => setAttempt((n) => n + 1), hasMore, loadingMore, loadMore };
+    return { results, loading, failed, retry: () => setAttempt((n) => n + 1), hasMore, loadingMore, loadMore, total };
 }

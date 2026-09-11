@@ -669,7 +669,8 @@ export const pokedexAnswer = z.object({ entries: z.array(dexEntrySchema) });
  */
 export const speciesAnswer = z.object({ entries: z.array(z.object({ id: z.number(), name: z.string() })) });
 export const catalogueSetsAnswer = z.object({ sets: z.array(catalogueSetSchema) });
-export const searchAnswer = z.object({ cards: z.array(browseCardSchema) });
+/** `total` is how many the whole search matched, across every page; capped at the 250 the API reads. Optional until every API has it. */
+export const searchAnswer = z.object({ cards: z.array(browseCardSchema), total: z.number().int().optional() });
 
 export const setPageAnswer = z.object({
     /** The catalogue's own set, without the viewer's counts: those are the page's own two fields. */
