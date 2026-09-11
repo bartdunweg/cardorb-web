@@ -6,11 +6,11 @@ import type { CatalogueFilters, PokemonCard } from "@/app/(app)/dashboard/cards/
 import { CardImage } from "@/components/app/card-image";
 import type { AddStatus } from "@/components/app/command-search";
 import { FilterChip, FilterChipRow, type FilterOption } from "@/components/app/filter-chip";
+import { LanguageFilterChip } from "@/components/app/language-filter-chip";
 import { CommandMenu, type CommandMenuGroupType } from "@/components/application/command-menus/command-menu";
 import { Button } from "@/components/base/buttons/button";
 import { CARD_TYPES } from "@/lib/card-types";
 import { formatDate } from "@/lib/format";
-import { BROWSE_LANGUAGES, isBrowseLanguage } from "@/lib/languages";
 import { cx } from "@/utils/cx";
 
 function DetailRow({ label, value }: { label: string; value: ReactNode }) {
@@ -210,13 +210,7 @@ export function CommandSearchMenu({
                 list is the chosen shelf's; the type is the English catalogue's alone, since TCGdex publishes
                 none for the other shelves, so that chip goes with them. */}
             <FilterChipRow className="border-b border-secondary px-4 py-2" onClear={filtering ? () => onFiltersChange({}) : undefined}>
-                <FilterChip
-                    label="Language"
-                    any="English"
-                    value={language === "en" ? undefined : language}
-                    options={BROWSE_LANGUAGES.filter((l) => l.code !== "en").map((l) => ({ value: l.code, label: l.label }))}
-                    onChange={(next) => onFiltersChange(isBrowseLanguage(next) && next !== "en" ? { language: next } : {})}
-                />
+                <LanguageFilterChip value={language} onChange={(next) => onFiltersChange(next === "en" ? {} : { language: next })} />
                 <FilterChip label="Set" value={filters.set} options={sets} onChange={(set) => onFiltersChange({ ...filters, set })} />
                 {language === "en" ? (
                     <FilterChip

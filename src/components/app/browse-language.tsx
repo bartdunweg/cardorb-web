@@ -2,7 +2,8 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { LanguageChips } from "@/components/app/language-chips";
+import { FilterChipRow } from "@/components/app/filter-chip";
+import { LanguageFilterChip } from "@/components/app/language-filter-chip";
 import type { BrowseLanguage } from "@/lib/languages";
 import { cx } from "@/utils/cx";
 
@@ -12,12 +13,13 @@ export function BrowseLanguage({ value }: { value: BrowseLanguage }) {
     const router = useRouter();
     const [pending, startTransition] = useTransition();
     return (
-        <LanguageChips
-            value={value}
-            className={cx("transition-opacity", pending && "opacity-60")}
-            onChange={(next) =>
-                startTransition(() => router.replace(next === "en" ? "/dashboard/sets" : `/dashboard/sets?language=${next}`, { scroll: false }))
-            }
-        />
+        <FilterChipRow className={cx("transition-opacity", pending && "opacity-60")}>
+            <LanguageFilterChip
+                value={value}
+                onChange={(next) =>
+                    startTransition(() => router.replace(next === "en" ? "/dashboard/sets" : `/dashboard/sets?language=${next}`, { scroll: false }))
+                }
+            />
+        </FilterChipRow>
     );
 }

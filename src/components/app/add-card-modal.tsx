@@ -8,7 +8,8 @@ import { Heading as AriaHeading } from "react-aria-components";
 import { type CatalogueFilters, type PokemonCard, addCard, searchPokemon } from "@/app/(app)/dashboard/cards/actions";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
-import { LanguageChips } from "@/components/app/language-chips";
+import { FilterChipRow } from "@/components/app/filter-chip";
+import { LanguageFilterChip } from "@/components/app/language-filter-chip";
 import { notify } from "@/components/app/toast";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
@@ -141,7 +142,9 @@ export function AddCardModal({
                                     onChange={setQuery}
                                     wrapperClassName="rounded-full"
                                 />
-                                <LanguageChips value={language} onChange={setLanguage} />
+                                <FilterChipRow>
+                                    <LanguageFilterChip value={language} onChange={setLanguage} />
+                                </FilterChipRow>
 
                                 <div className="flex min-h-40 flex-col gap-1 overflow-y-auto">
                                     {/* One live region, always mounted, so a screen reader hears the state change. */}
