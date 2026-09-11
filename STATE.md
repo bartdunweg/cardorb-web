@@ -64,6 +64,12 @@ for the failures that leave no trace — and everything both passes found is clo
 - **An owned Japanese card from an unphotographed set** shows Limitless's scan too
   (cardorb-api#264): the collection resolves a card on its own, so it probes once per card,
   cached a day, where the shelf probed once per set.
+- **Chinese is two languages** (cardorb-api#269, web #326). Bart's call, and it turned out to
+  be a fix: a card added from a Chinese shelf arrived as `zh-tw`, failed a list that knew only
+  `zh`, and was stored with no language — then looked up as an English card by its set's name.
+  `zh-tw` and `zh-cn` are languages now, each asking its own catalogue; `zh` stays for old rows
+  and asks both. The note that held this back feared an enum the iOS app decodes; checked, it
+  decodes no language field at all. Old `zh` rows are not rewritten.
 - **The small thumbnails lie face down too** (#324): table rows, the add dialog, the folder's
   card search and the Pokédex slider. The Fomantis acquired date is put right (2026-09-07),
   through the sheet on the dev server.
@@ -94,9 +100,6 @@ for the failures that leave no trace — and everything both passes found is clo
   one does. Neither Cardmarket nor TCGplayer publishes either — checked, both feeds carry
   printing and no condition. PokemonPriceTracker does, RAW and PSA, at $9.99 a month, from the
   American market. **Needs a decision before it needs code.**
-- **Step 2b, the rest of it.** `zh` is one code for two catalogues, so traditional is asked
-  before simplified. Splitting it properly widens an enum the iOS app decodes, which is a
-  decision rather than a side effect.
 - **"Buy on Cardmarket" is off** (cardorb-api#267): `cmUrl` is null until an address can be
   guaranteed to land on the card's own page. Cardmarket publishes product ids but not the
   expansion half of a product's address, and its site answers every probe from a tool with a
