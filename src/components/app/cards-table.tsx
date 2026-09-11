@@ -1,5 +1,6 @@
 "use client";
 
+import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { FavoriteStar } from "@/components/app/favorite-star";
 import { Table, TableCard } from "@/components/application/table/table";
@@ -33,13 +34,14 @@ export function CardsTable({ cards, onSelect }: { cards: Card[]; onSelect: (card
                         <Table.Row id={card.id} className="arrive cursor-pointer">
                             <Table.Cell className="font-medium text-primary">
                                 <div className="flex items-center gap-3">
-                                    {card.image_url ? (
-                                        <div className="relative h-10 w-7 shrink-0 overflow-hidden rounded bg-quaternary ring-1 ring-image ring-inset">
+                                    {/* Face down where there is no picture, as the tiles are; the name beside it says which card. */}
+                                    <div className="relative h-10 w-7 shrink-0 overflow-hidden rounded ring-1 ring-image ring-inset">
+                                        {card.image_url ? (
                                             <CardImage src={card.image_url} alt="" width={64} className="object-cover" />
-                                        </div>
-                                    ) : (
-                                        <div className="h-10 w-7 shrink-0 rounded bg-quaternary" />
-                                    )}
+                                        ) : (
+                                            <CardBack width={64} />
+                                        )}
+                                    </div>
                                     <span className="flex items-center gap-1">
                                         {card.name}
                                         {card.is_favorite ? <FavoriteStar /> : null}

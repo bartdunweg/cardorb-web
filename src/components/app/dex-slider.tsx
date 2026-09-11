@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "@untitledui/icons";
 import { Button as AriaButton } from "react-aria-components";
+import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import type { DexCard } from "@/lib/api-shapes";
@@ -39,9 +40,8 @@ export function DexSlider({ cards, onSelect }: { cards: DexCard[]; onSelect?: (c
                                 className="object-cover"
                             />
                         ) : (
-                            <div className="flex size-full items-center justify-center bg-quaternary p-3 text-center text-sm font-medium text-secondary">
-                                {card.name}
-                            </div>
+                            /* Face down, and named: the slot's caption says the Pokémon, not which card this is. */
+                            <CardBack width={TILE_WIDTH.md} alt={card.name} />
                         )}
                     </Slide>
                 ))}

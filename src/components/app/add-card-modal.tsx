@@ -6,6 +6,7 @@ import { Check, Plus, SearchLg } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import { type PokemonCard, addCard, searchPokemon } from "@/app/(app)/dashboard/cards/actions";
+import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { notify } from "@/components/app/toast";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
@@ -148,8 +149,12 @@ export function AddCardModal({
                                             const st = status[keyFor(card)];
                                             return (
                                                 <div key={card.id} className="flex items-center gap-3 rounded-lg p-2 hover:bg-secondary">
-                                                    <div className="relative h-16 w-11 shrink-0 overflow-hidden rounded bg-quaternary ring-1 ring-image ring-inset">
-                                                        {card.image ? <CardImage src={card.image} alt="" width={64} className="object-cover" /> : null}
+                                                    <div className="relative h-16 w-11 shrink-0 overflow-hidden rounded ring-1 ring-image ring-inset">
+                                                        {card.image ? (
+                                                            <CardImage src={card.image} alt="" width={64} className="object-cover" />
+                                                        ) : (
+                                                            <CardBack width={64} />
+                                                        )}
                                                     </div>
                                                     <div className="flex min-w-0 flex-1 flex-col">
                                                         <span className="truncate text-sm font-medium text-primary">{card.name}</span>

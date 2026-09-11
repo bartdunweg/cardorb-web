@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import { type CardHit, searchMyCards } from "@/app/(app)/dashboard/cards/actions";
 import { deleteCollection, setCardCollection } from "@/app/(app)/dashboard/collections/actions";
+import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { FolderDialog } from "@/components/app/folder-dialog";
 import { notify } from "@/components/app/toast";
@@ -132,10 +133,12 @@ export function CollectionDetailActions({
                                                     const st = status[card.id];
                                                     return (
                                                         <div key={card.id} className="flex items-center gap-3 rounded-lg p-2 hover:bg-secondary">
-                                                            <div className="relative h-14 w-10 shrink-0 overflow-hidden rounded bg-quaternary ring-1 ring-image ring-inset">
+                                                            <div className="relative h-14 w-10 shrink-0 overflow-hidden rounded ring-1 ring-image ring-inset">
                                                                 {card.image_url ? (
                                                                     <CardImage src={card.image_url} alt="" width={64} className="object-cover" />
-                                                                ) : null}
+                                                                ) : (
+                                                                    <CardBack width={64} />
+                                                                )}
                                                             </div>
                                                             <div className="flex min-w-0 flex-1 flex-col">
                                                                 <span className="truncate text-sm font-medium text-primary">{card.name}</span>

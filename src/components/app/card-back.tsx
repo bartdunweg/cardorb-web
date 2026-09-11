@@ -20,7 +20,10 @@ export function CardBack({
     sizes,
     priority = false,
     className,
+    alt = "",
 }: {
+    /** Empty where a caption names the card; the name where nothing beside it does (the Pokédex slider). */
+    alt?: string;
     /** The widest the layout draws this, in CSS pixels — the optimizer's hint, not the box. */
     width?: number;
     sizes?: string;
@@ -30,7 +33,7 @@ export function CardBack({
     return (
         <Image
             src="/card-back.jpg"
-            alt=""
+            alt={alt}
             width={width}
             height={Math.round((width * 88) / 63)}
             sizes={sizes}
