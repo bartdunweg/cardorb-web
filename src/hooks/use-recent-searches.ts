@@ -5,7 +5,7 @@ import { useSyncExternalStore } from "react";
 /**
  * The last few terms typed into a card search, kept in this browser so the box has something
  * to offer before a letter is typed: most searches are for a card looked for before. Five,
- * newest first, shared by the Add dialog and the palette, and told about across tabs the way
+ * newest first, for the palette, and told about across tabs the way
  * the theme is (providers/theme.tsx): localStorage, a storage event, and an event of our own
  * for this tab. Nothing leaves the browser.
  */

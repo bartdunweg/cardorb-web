@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AddCardModal } from "@/components/app/add-card-modal";
+import { AddCardButton } from "@/components/app/add-card-button";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderPage } from "@/components/app/folder-page";
 import { ListSettingsDialog } from "@/components/app/list-settings-dialog";
@@ -28,7 +28,7 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
             title="Wishlist"
             datapoints={datapoints}
             settings={(compact) => <ListSettingsDialog list="wishlist" title="Wishlist" isPublic={profile?.wishlist_public ?? false} compact={compact} />}
-            add={(compact) => <AddCardModal defaultTarget="wishlist" compact={compact} />}
+            add={(compact) => <AddCardButton target="wishlist" compact={compact} />}
             query={query}
             basePath="/dashboard/wishlist"
             facets={facets}
@@ -37,7 +37,7 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
             empty={
                 <AppEmptyState icon="heart" title="Your wishlist is empty" description="Add cards you’re looking for but don’t own yet">
                     {/* The words only: this node crosses to a client component, and an icon is a function. */}
-                    <AddCardModal defaultTarget="wishlist" label="Add to wishlist" />
+                    <AddCardButton target="wishlist" label="Add to wishlist" />
                 </AppEmptyState>
             }
         />

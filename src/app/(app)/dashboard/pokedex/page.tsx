@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { AddCardModal } from "@/components/app/add-card-modal";
+import { AddCardButton } from "@/components/app/add-card-button";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderPage } from "@/components/app/folder-page";
 import { PokedexSettingsDialog } from "@/components/app/pokedex-settings-dialog";
@@ -66,7 +66,7 @@ export default async function PokedexPage({ searchParams }: { searchParams: Prom
             filter={filter}
             empty={
                 <AppEmptyState icon="plus" title="No cards yet" description="Add your first card to start your collection">
-                    <AddCardModal />
+                    <AddCardButton />
                 </AppEmptyState>
             }
             pokedex={{ dex }}
