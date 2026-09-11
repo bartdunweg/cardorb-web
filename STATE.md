@@ -261,6 +261,16 @@ for the failures that leave no trace — and everything both passes found is clo
   public profile (Bart's is private), the set page (the query returned onboarding "set-up"
   screens — name the object, never the word "set"). Seen in passing: `/dashboard/you` renders
   the Settings page under another heading.
+- **One search on a phone too** (2026-09-11). The bar at the top of Home opened a full-screen
+  sheet of its own — the collection search with every set listed under it — while Add card on
+  the page beside it opened the palette as a floating card. Bart's call: the phone gets the same
+  elements as the desktop, the mobile version of the one thing. The bar opens the palette now,
+  as the sidebar's trigger and Add card do; the sheet, its shelf list and the top row are gone
+  (`searchMyCards` stays: the binder's add-from-collection dialog is on it). The sheet was also
+  the only way into Browse on a phone, so Browse has a tab, the sidebar's order — Home, Browse,
+  Wishlist, Collection, Binders — with the pill a fifth wide, and the Browse page wears its title
+  on a phone as the other tabs do. Measured on the dev server at 375 px: the bar opens the palette
+  over Home with the recent searches, five tabs of 67 px each, Browse's pill on its page.
 
 ## Next
 

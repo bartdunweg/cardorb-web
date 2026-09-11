@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { MobileTopRow } from "@/components/app/mobile-top-row";
 import { PageHeader } from "@/components/app/page-header";
 import { SETS_COLUMNS } from "@/components/app/set-tile";
 import { ListRow } from "@/components/app/skeleton-row";
@@ -189,11 +188,11 @@ export function FoldersSkeleton() {
     );
 }
 
-/** Browse: the search at the top on a phone, then a series heading and tiles of logo box, name and bar in the shelf's grid. */
+/** Browse: the title, then a series heading and tiles of logo box, name and bar in the shelf's grid. */
 export function SetsSkeleton() {
     return (
         <SkeletonFrame>
-            <PageHeader title="Browse" above={<MobileTopRow />} titleOnPhone={false} />
+            <PageHeader title="Browse" />
             <SetsOutline />
         </SkeletonFrame>
     );
