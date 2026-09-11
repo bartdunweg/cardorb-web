@@ -870,7 +870,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                     {change ? (
                                         <span
                                             className={cx(
-                                                "arrive text-sm font-medium",
+                                                "arrive text-sm font-medium whitespace-nowrap",
                                                 change.direction === "up" ? "text-success-primary" : "text-error-primary",
                                             )}
                                         >
