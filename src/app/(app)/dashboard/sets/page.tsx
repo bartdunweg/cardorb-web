@@ -1,17 +1,13 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { BrowseLanguage } from "@/components/app/browse-language";
-import { CardImage } from "@/components/app/card-image";
 import { MobileTopRow } from "@/components/app/mobile-top-row";
 import { PageHeader } from "@/components/app/page-header";
+import { FIRST_ROW, SETS_COLUMNS, SetTile } from "@/components/app/set-tile";
 import { SetsOutline } from "@/components/app/skeletons";
-import { ProgressBarBase } from "@/components/base/progress-indicators/progress-indicators";
-import { formatCount } from "@/lib/format";
 import { type BrowseLanguage as BrowseLanguageCode, isBrowseLanguage } from "@/lib/languages";
-import { CatalogueUnavailable, type SetSummary, getSets } from "@/lib/sets";
-import { cx } from "@/utils/cx";
+import { CatalogueUnavailable, getSets } from "@/lib/sets";
 
 // The tab's name, which the root layout's template finishes as “… · Cardorb”: without it every
 // tab and every history entry read “Cardorb”. The word is the one the navigation uses for this page.
@@ -52,16 +48,17 @@ async function Shelf({ language }: { language: BrowseLanguageCode }) {
 
     return (
         <>
-            {series.map((group) => (
+            {series.map((group, g) => (
                 <section key={group.name} aria-labelledby={`series-${slug(group.name)}`} className="flex flex-col gap-3">
                     <h2 id={`series-${slug(group.name)}`} className="text-lg font-semibold text-primary">
                         {group.name}
                     </h2>
-                    <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    <ul className={`grid gap-4 ${SETS_COLUMNS}`}>
                         {/* The first row of each series arrives 30 ms apart; the rest of it together. */}
                         {group.sets.map((set, i) => (
-                            <li key={set.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i, 3) * 30}ms` } as React.CSSProperties}>
-                                <SetTile set={set} language={language} />
+                            <li key={set.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i, 5) * 30}ms` } as React.CSSProperties}>
+                                {/* Only the first series' first row is on screen at load; every tile under it loads as it scrolls in. */}
+                                <SetTile set={set} language={language} priority={g === 0 && i < FIRST_ROW} />
                             </li>
                         ))}
                     </ul>
@@ -72,56 +69,3 @@ async function Shelf({ language }: { language: BrowseLanguageCode }) {
 }
 
 const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-
-// One set on the shelf. The whole tile is the link; the bar repeats the count, which is the
-// accessible name, so a screen reader hears "12 of 207" once. A set with nothing in it stays on
-// the shelf but dimmed, like an empty Pokédex slot: it is the part still to collect.
-function SetTile({ set, language }: { set: SetSummary; language: BrowseLanguageCode }) {
-    const empty = set.owned === 0;
-    return (
-        <Link
-            href={`/dashboard/sets/${encodeURIComponent(set.id)}${language === "en" ? "" : `?language=${language}`}`}
-            className={cx(
-                "flex pressable items-center gap-4 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary outline-focus-ring transition-[color,background-color,box-shadow] ring-inset hover:bg-secondary focus-visible:outline-2",
-                empty && "opacity-70 hover:opacity-100",
-            )}
-        >
-            <div className="relative flex size-12 shrink-0 items-center justify-center">
-                {set.logoUrl ? (
-                    // The logo is decoration: the name beside it says which set this is.
-                    // The width is the box's own (size-12 = 48), not double it: the optimizer already
-                    // asks for 2x on top, and 96 here fetched the 192 px file for a 48 px logo —
-                    // sixteen times the pixels, on 157 tiles.
-                    <CardImage src={set.logoUrl} alt="" width={48} ratio="square" className="object-contain" />
-                ) : (
-                    <div className="size-full rounded-md bg-secondary" />
-                )}
-            </div>
-            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                <div className="flex items-baseline justify-between gap-3">
-                    <span className="flex min-w-0 flex-col">
-                        <span className="truncate text-sm font-semibold text-primary">{set.name}</span>
-                        {set.localName ? <span className="truncate text-xs text-tertiary">{set.localName}</span> : null}
-                    </span>
-                    {set.cardsRecorded ? (
-                        <span className="shrink-0 text-sm text-tertiary tabular-nums">
-                            {formatCount(set.owned)} of {formatCount(set.total)}
-                        </span>
-                    ) : null}
-                </div>
-                {/* A set the catalogue has not recorded cards for is not "0 of 60 to go": the count and
-                    the bar would say the collecting is unstarted where it is the catalogue that is. The
-                    tile says so instead, in the words the set's own page uses, and still opens it. */}
-                {set.cardsRecorded ? (
-                    <ProgressBarBase
-                        value={set.owned}
-                        max={set.total || 1}
-                        aria-label={`${set.name}: ${formatCount(set.owned)} of ${formatCount(set.total)} cards`}
-                    />
-                ) : (
-                    <span className="text-xs text-tertiary">No cards in the catalogue yet</span>
-                )}
-            </div>
-        </Link>
-    );
-}
