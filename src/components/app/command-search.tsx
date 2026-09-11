@@ -11,7 +11,8 @@ import { SearchTrigger } from "@/components/app/search-trigger";
 import { notify } from "@/components/app/toast";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 
-export type AddStatus = "idle" | "adding" | "added";
+/** `added` went to the collection, `wished` to the wishlist; both close the card to a second press. */
+export type AddStatus = "idle" | "adding" | "added" | "wished";
 
 /** What one answer from the catalogue search holds at most: the API's page. A full one means there may be more. */
 const SEARCH_PAGE_SIZE = 20;
@@ -59,6 +60,7 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
         hasMore,
         loadingMore,
         loadMore,
+        total,
     } = useDebouncedSearch<PokemonCard, CatalogueFilters>(inputValue, searchPokemon, {
         minLength: 2,
         delay: 300,
@@ -67,11 +69,12 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
     });
     const [status, setStatus] = useState<Record<string, AddStatus>>({});
 
-    const add = async (card: PokemonCard) => {
+    // To the collection, or to the wishlist: the same card cannot be in both, so one press settles it.
+    const add = async (card: PokemonCard, target: "collection" | "wishlist") => {
         setStatus((s) => ({ ...s, [card.id]: "adding" }));
-        const res = await addCard(card);
+        const res = await addCard(card, target);
         if (res.ok) {
-            setStatus((s) => ({ ...s, [card.id]: "added" }));
+            setStatus((s) => ({ ...s, [card.id]: target === "wishlist" ? "wished" : "added" }));
             router.refresh();
         } else {
             // The row goes back to "Add", which reads as a missed click; the toast is the only
@@ -81,7 +84,7 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
                 delete next[card.id];
                 return next;
             });
-            notify.failed(`${card.name} was not added to your collection`, { description: res.error });
+            notify.failed(`${card.name} was not added to your ${target}`, { description: res.error });
         }
     };
 
@@ -119,6 +122,7 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
                     hasMore={hasMore}
                     loadingMore={loadingMore}
                     onLoadMore={loadMore}
+                    total={total}
                     status={status}
                     onAdd={add}
                 />

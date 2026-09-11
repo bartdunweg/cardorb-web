@@ -103,6 +103,17 @@ describe("useDebouncedSearch", () => {
         expect(search).toHaveBeenCalledTimes(3);
     });
 
+    it("carries how many there are in all, where the search says", async () => {
+        const search = vi.fn(async () => ({ items: ["a", "b"], total: 125 }));
+        const { result } = renderHook(() => useDebouncedSearch("x", search, { delay: 10, pageSize: 2 }));
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(10);
+        });
+        expect(result.current.results).toEqual(["a", "b"]);
+        expect(result.current.total).toBe(125);
+        expect(result.current.hasMore).toBe(true);
+    });
+
     it("tells a search that threw apart from one that found nothing, and asks again on retry", async () => {
         let down = true;
         const search = vi.fn(async (term: string) => {

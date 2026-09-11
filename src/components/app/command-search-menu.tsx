@@ -23,7 +23,7 @@ function DetailRow({ label, value }: { label: string; value: ReactNode }) {
 }
 
 // Right-hand (desktop) / stacked (mobile) preview showing all available card data + an add action.
-function CardPreview({ card, status, onAdd }: { card: PokemonCard; status: AddStatus; onAdd: () => void }) {
+function CardPreview({ card, status, onAdd }: { card: PokemonCard; status: AddStatus; onAdd: (target: "collection" | "wishlist") => void }) {
     return (
         <div className="flex w-full flex-col gap-4 overflow-y-auto border-secondary p-6 max-md:border-t md:max-h-[70vh] md:w-90 md:border-l">
             {card.image ? (
@@ -54,15 +54,24 @@ function CardPreview({ card, status, onAdd }: { card: PokemonCard; status: AddSt
 
             {card.flavorText ? <p className="text-sm text-tertiary italic">{card.flavorText}</p> : null}
 
-            <Button onClick={onAdd} isDisabled={status !== "idle"} className="w-full">
-                {status === "added" ? "Added" : status === "adding" ? "Adding…" : "Add to collection"}
-            </Button>
+            {/* Owned or wished for, never both: the first press settles which, and the other button closes with it. */}
+            <div className="flex flex-col gap-2">
+                <Button onClick={() => onAdd("collection")} isDisabled={status !== "idle"} className="w-full">
+                    {status === "added" ? "Added" : status === "adding" ? "Adding…" : "Add to collection"}
+                </Button>
+                <Button color="secondary" onClick={() => onAdd("wishlist")} isDisabled={status !== "idle"} className="w-full">
+                    {status === "wished" ? "On your wishlist" : status === "adding" ? "Adding…" : "Add to wishlist"}
+                </Button>
+            </div>
         </div>
     );
 }
 
 /** The id of the row at the end of a full page, the one that asks for the next page. No card carries it. */
 const MORE = "more";
+
+/** The most the API counts: it reads that many and stops, so that figure means "at least". */
+const SEARCH_WINDOW = 250;
 
 // The command palette: the search field, the hits and the preview of the selected one. Loaded
 // by CommandSearchProvider the first time it is opened; the state lives there.
@@ -81,6 +90,7 @@ export function CommandSearchMenu({
     hasMore,
     loadingMore,
     onLoadMore,
+    total,
     status,
     onAdd,
 }: {
@@ -101,8 +111,10 @@ export function CommandSearchMenu({
     hasMore: boolean;
     loadingMore: boolean;
     onLoadMore: () => void;
+    /** How many the whole search matched; null where the API did not say. Capped at 250 there, read as "250+". */
+    total: number | null;
     status: Record<string, AddStatus>;
-    onAdd: (card: PokemonCard) => void;
+    onAdd: (card: PokemonCard, target: "collection" | "wishlist") => void;
 }) {
     const filtering = Boolean(filters.set || filters.type);
     const searching = inputValue.trim().length >= 2 || filtering;
@@ -110,7 +122,7 @@ export function CommandSearchMenu({
         ? [
               {
                   id: "cards",
-                  title: "Cards",
+                  title: total === null ? "Cards" : total >= SEARCH_WINDOW ? `${SEARCH_WINDOW}+ cards` : `${total} ${total === 1 ? "card" : "cards"}`,
                   items: [
                       ...hits.map((c) => ({
                           id: c.id,
@@ -208,7 +220,7 @@ export function CommandSearchMenu({
                     {({ selectedId }) => {
                         const card = hits.find((h) => h.id === selectedId);
                         if (!card) return null;
-                        return <CardPreview card={card} status={status[card.id] ?? "idle"} onAdd={() => onAdd(card)} />;
+                        return <CardPreview card={card} status={status[card.id] ?? "idle"} onAdd={(target) => onAdd(card, target)} />;
                     }}
                 </CommandMenu.Preview>
             </CommandMenu.Group>
