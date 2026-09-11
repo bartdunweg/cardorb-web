@@ -1,6 +1,7 @@
 import { render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { CardPriceChart, forgetPriceHistory, preloadPriceHistory } from "./card-price-chart";
+import { forgetCards, preloadPriceHistory } from "./card-memo";
+import { CardPriceChart } from "./card-price-chart";
 
 /*
  * The Price tab used to open on "No readings in this period yet" and change its mind half a
@@ -27,7 +28,7 @@ const two = [
 describe("CardPriceChart", () => {
     beforeEach(() => {
         vi.stubGlobal("ResizeObserver", FakeResizeObserver);
-        forgetPriceHistory();
+        forgetCards();
         history.mockReset();
     });
     afterEach(() => vi.unstubAllGlobals());

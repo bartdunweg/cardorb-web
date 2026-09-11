@@ -7,6 +7,8 @@ import { Button as AriaButton } from "react-aria-components";
 import { addCard, markOwned, removeCard, setCopies } from "@/app/(app)/dashboard/cards/actions";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
+import { warmCard } from "@/components/app/card-memo";
+import { useWarm } from "@/components/app/use-warm";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
 import { TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
@@ -45,6 +47,8 @@ export function SetCardTile({
     const router = useRouter();
     const [pending, startTransition] = useTransition();
     const [error, setError] = useState<string | null>(null);
+    // What the sheet will ask for, asked while the pointer rests here, so the first open is complete.
+    const warm = useWarm(onOpen ? () => warmCard(card.tcgId) : undefined);
 
     const run = (action: () => Promise<Result>) => {
         setError(null);
@@ -73,6 +77,7 @@ export function SetCardTile({
                 isDisabled={pending}
                 aria-label={`${card.name} #${card.number}, ${stateLabel}`}
                 onPress={() => onOpen?.(card)}
+                {...warm}
                 className={({ isPressed, isFocusVisible }) =>
                     cx(
                         // The shared tile's own frame: a card is its own surface, so nothing of ours

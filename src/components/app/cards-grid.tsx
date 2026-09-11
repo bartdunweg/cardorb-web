@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
+import { warmCard } from "@/components/app/card-memo";
 import { CardTile } from "@/components/app/card-tile";
 import { FavoriteStar } from "@/components/app/favorite-star";
 import { FlagIcon } from "@/components/app/flag-icon";
@@ -69,6 +70,7 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                 >
                     <CardTile
                         onSelect={() => onSelect(card, cards)}
+                        onWarm={() => warmCard(card.tcg_id)}
                         picture={
                             /* Nothing of ours around the picture: a card carries its own printed border, and a hairline
                                or a grey box behind it read as a second one. A card with no picture shows its back. */
