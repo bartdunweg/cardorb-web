@@ -44,8 +44,9 @@ for the failures that leave no trace — and everything both passes found is clo
   shelves can be added. The wall was that the collection found a set by its English name; the way
   past was already in the table, because a row carries `tcg_id` and a TCGdex id names its own set.
   English rows are untouched and sets with no English card are now *cheaper*. Ownership marks were
-  wrong both ways and are right. **cardorb-api#259 is open**: the Pokédex slot, which needed the
-  1,025 species in those languages (PokéAPI's CSV already had them).
+  wrong both ways and are right. The Pokédex slot followed (cardorb-api#259): the 1,025 species
+  in those languages, from the PokéAPI CSV the English list already came from, longest name first
+  so ミュウ does not swallow ミュウツー.
 - **A Japanese set page has prices** (cardorb-api#261). It showed a blank line under every card
   while Cardmarket priced them — all 92 of one set were in the guide the API downloads daily —
   because the only map from a card to its Cardmarket product held English cards somebody owns.
@@ -116,8 +117,25 @@ for the failures that leave no trace — and everything both passes found is clo
 - **235 leftover branches deleted** across both repositories. One of them had the name a new
   branch wanted, and a pull request landed on three-day-old work because of it.
 
+- **The add button on every set page was dead for seventeen hours** (#333, cardorb-api#271).
+  Since #308 (01:10) a tile handed the add action `language: null` and `tcgId: null`, and a
+  schema that took only "absent" answered "Invalid input: expected string, received null" — a
+  red line under the tile that reads as nothing happening. English too; only the palette, whose
+  hits carry neither key, could add. Found by adding a Japanese トランセル to check #259. Behind
+  it the language shelves sent no `tcgId` at all, so a Japanese card would have gone to the API
+  with a language and no id. Both fixed and **measured end to end on the dev server against
+  production**: the row is stored `ja` / `SV2a-011`, and the `/cards` item comes back with
+  `speciesId: 11`. The slot still reads "Missing" on Bart's page — his Pokédex keeps five
+  rarities and a common is not one — which is the setting, not a bug. The test card was removed.
+- **The API's `check` job was red on main since #270** (cardorb-api#272): the card route's test
+  made five real TCGdex requests and timed out on the runner. Mocked; 223 ms.
+
 ## Next
 
+- **Search asks the English catalogue only.** The palette and the Add dialog cannot find a
+  Japanese, Korean or Chinese card by name: `/catalog/search` has no language. Bart's ask,
+  2026-09-11: a language filter in search, the way Browse has one. API first (a `language`
+  parameter on the search route, the four TCGdex catalogues), then the palette.
 - **Condition and grade do not reach the price.** A Poor copy and a PSA 10 show what a Near Mint
   one does. Neither Cardmarket nor TCGplayer publishes either — checked, both feeds carry
   printing and no condition. PokemonPriceTracker does, RAW and PSA, at $9.99 a month, from the
@@ -133,6 +151,10 @@ for the failures that leave no trace — and everything both passes found is clo
 
 ## Open
 
+- **Seen in passing on 2026-09-11, not touched:** the Japanese Browse shelf lists トリプレットビート
+  a dozen times under "No cards in the catalogue yet" and React warns of a duplicate key
+  `CSV1C`; and on the dev server the sheet's chunk (`card-detail-slideout`) is refused by the
+  CSP nonce — dev-only as far as seen, production untested.
 - **The holo CSS is GPL-3.0.** Accepted while Cardorb is free; before it charges, swap the folder
   for an own implementation of the same recipe or write to @simeydotme. It no longer ships on
   every route: since #327 it loads with the sheet (`src/styles/holo.css`, same cascade layer),
