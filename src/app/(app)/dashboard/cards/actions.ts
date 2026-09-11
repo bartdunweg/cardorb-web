@@ -15,7 +15,7 @@ import {
 } from "@/lib/api-shapes";
 import { type Card, getMyCards } from "@/lib/cards";
 import { type CopyEdits, copyEdits, sameCard } from "@/lib/copies";
-import { WESTERN_LANGUAGES } from "@/lib/languages";
+import { type BrowseLanguage, WESTERN_LANGUAGES, isBrowseLanguage } from "@/lib/languages";
 import { getSets } from "@/lib/sets";
 import { forgetMine } from "@/lib/user-cache";
 
@@ -49,8 +49,12 @@ export async function searchMyCards(query: string, filters: MyCardsFilters = {})
     return cards;
 }
 
-/** The chips under a catalogue search: a set by its name and an energy type. */
-export type CatalogueFilters = { set?: string; type?: string };
+/**
+ * The chips under a catalogue search: a set by its name and an energy type — and which catalogue
+ * is asked. "en" and absent are the same, the English one; the set and the type are English
+ * facets, so the screens offer them there alone.
+ */
+export type CatalogueFilters = { set?: string; type?: string; language?: BrowseLanguage };
 
 // Searches the catalogue through the API, which also says whether each hit is already yours. With
 // a filter on, the API's fielded mode is asked instead: the term matches the name only, the set
@@ -65,15 +69,19 @@ export type CatalogueFilters = { set?: string; type?: string };
 // of the same question, asked when the list is scrolled to its end. There are 125 Charizards,
 // and the first twenty were the only ones anyone could reach.
 export async function searchPokemon(query: string, filters: CatalogueFilters = {}, page = 1): Promise<{ items: PokemonCard[]; total?: number }> {
-    const parsed = z.object({ q: term, set: choice, type: choice, page: z.number().int().min(1).max(50) }).safeParse({ q: query, ...filters, page });
+    const parsed = z
+        .object({ q: term, set: choice, type: choice, language: z.custom<BrowseLanguage>(isBrowseLanguage).optional(), page: z.number().int().min(1).max(50) })
+        .safeParse({ q: query, ...filters, page });
     if (!parsed.success) return { items: [] };
     const { q, set, type } = parsed.data;
+    // The English catalogue is the API's default; naming it would only be a longer way to ask.
+    const language = parsed.data.language && parsed.data.language !== "en" ? parsed.data.language : null;
     const fields = set || type ? { ...(q ? { name: q } : {}), ...(set ? { set } : {}), ...(type ? { type } : {}) } : q.length >= 2 ? { query: q } : null;
     if (!fields) return { items: [] };
-    const params = parsed.data.page > 1 ? { ...fields, page: parsed.data.page } : fields;
+    const params = { ...fields, ...(language ? { language } : {}), ...(parsed.data.page > 1 ? { page: parsed.data.page } : {}) };
 
     const { cards, total } = await api("/catalog/search", { params, schema: searchAnswer });
-    return { items: cards.map(pokemonCardFromBrowse), total };
+    return { items: cards.map((c) => pokemonCardFromBrowse(c, language)), total };
 }
 
 const cardSchema = z.object({

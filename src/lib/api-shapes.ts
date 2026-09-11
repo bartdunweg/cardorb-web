@@ -562,7 +562,13 @@ export type PokemonCard = {
     quantity: number;
 };
 
-export const pokemonCardFromBrowse = (c: BrowseCard): PokemonCard => ({
+/**
+ * `language` is the catalogue the search asked (null or "en": the English one). A hit off the
+ * Japanese, Korean or Chinese catalogue carries that and its id along, the only way the API can
+ * find it (cardorb-api#257); an English hit carries neither, as every add before did.
+ */
+export const pokemonCardFromBrowse = (c: BrowseCard, language?: string | null): PokemonCard => ({
+    ...(language && language !== "en" ? { tcgId: c.tcgId, language } : {}),
     id: c.id,
     name: c.name,
     set: c.setName,

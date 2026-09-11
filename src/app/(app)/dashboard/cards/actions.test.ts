@@ -7,7 +7,7 @@ vi.mock("@/lib/api", () => ({ ApiError: class extends Error {}, api }));
 vi.mock("@/lib/user-cache", () => ({ forgetMine: vi.fn(async () => undefined) }));
 vi.mock("next/cache", () => ({ unstable_cache: (fn: () => unknown) => fn, updateTag: vi.fn(), revalidatePath: vi.fn() }));
 
-const { addCard } = await import("./actions");
+const { addCard, searchPokemon } = await import("./actions");
 
 const tile = {
     id: "sv03.5-011",
@@ -57,5 +57,52 @@ describe("addCard from a set page", () => {
     it("still refuses a card with no set", async () => {
         expect(await addCard(pokemonCardFromSetCard({ ...tile, setName: "" }, "en"))).toMatchObject({ ok: false });
         expect(api).not.toHaveBeenCalled();
+    });
+});
+
+/** The API answers the language asked, and nothing but English when none is. */
+describe("searchPokemon", () => {
+    const call = () => (api.mock.calls[0] as unknown as [string, { params: Record<string, unknown> }])[1].params;
+    beforeEach(() => api.mockResolvedValue({ cards: [], total: 0 } as never));
+
+    it("asks the English catalogue by default, naming no language", async () => {
+        await searchPokemon("char");
+        expect(call()).toEqual({ query: "char" });
+    });
+
+    it("asks the catalogue of the language chosen, and reads English as none", async () => {
+        await searchPokemon("リザードン", { language: "ja" });
+        expect(call()).toEqual({ query: "リザードン", language: "ja" });
+        api.mockClear();
+        await searchPokemon("char", { language: "en" });
+        expect(call()).toEqual({ query: "char" });
+    });
+
+    it("hands a hit from another language on with its catalogue and id", async () => {
+        api.mockResolvedValue({
+            total: 1,
+            cards: [
+                {
+                    id: "SV2a-006",
+                    number: "006",
+                    name: "リザードンex",
+                    setName: "Pokémon Card 151",
+                    image: null,
+                    imageHigh: null,
+                    rarity: null,
+                    types: [],
+                    series: "SV",
+                    owned: false,
+                    wishlist: false,
+                    quantity: 0,
+                    itemIds: [],
+                    tcgId: "SV2a-006",
+                    price: null,
+                    priceHolo: null,
+                },
+            ],
+        } as never);
+        const { items } = await searchPokemon("リザードン", { language: "ja" });
+        expect(items[0]).toMatchObject({ tcgId: "SV2a-006", language: "ja" });
     });
 });

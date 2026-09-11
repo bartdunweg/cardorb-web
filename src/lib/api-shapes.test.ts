@@ -137,6 +137,30 @@ describe("pokemonCardFromBrowse", () => {
             tcgId: null,
         });
         expect(c).toMatchObject({ set: "Scarlet & Violet", types: null, hp: null, owned: true });
+        expect(c).not.toHaveProperty("tcgId");
+        expect(c).not.toHaveProperty("language");
+    });
+    it("carries the catalogue and the id for a hit from another language, which is how the API finds it", () => {
+        const hit = {
+            id: "SV2a-006",
+            number: "006",
+            name: "リザードンex",
+            setName: "Pokémon Card 151",
+            image: null,
+            imageHigh: null,
+            rarity: null,
+            types: [],
+            series: "SV",
+            owned: false,
+            wishlist: false,
+            quantity: 0,
+            itemIds: [],
+            price: null,
+            priceHolo: null,
+            tcgId: "SV2a-006",
+        };
+        expect(pokemonCardFromBrowse(hit, "ja")).toMatchObject({ tcgId: "SV2a-006", language: "ja" });
+        expect(pokemonCardFromBrowse(hit, "en")).not.toHaveProperty("language");
     });
 });
 
