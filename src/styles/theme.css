@@ -806,8 +806,9 @@
         --color-fg-brand-secondary_hover: var(--color-neutral-500);
 
         /* Dark surfaces sit one ramp step above Untitled UI's stock (950/900/800): near-black #0a0a0a
-           reads as OLED black, and cards vanished into it. Borders, hover, overlay, placeholder
-           and the quaternary icon shift with them so every pair keeps its contrast. */
+           reads as OLED black, and cards vanished into it. Borders, hover, placeholder and the
+           quaternary icon shift with them so every pair keeps its contrast. The overlay does not:
+           a scrim dims what is under a sheet, so it stays the same near-black as in light mode. */
         --color-bg-primary: var(--color-neutral-900);
         --color-bg-tertiary: var(--color-neutral-700);
         --color-bg-brand-primary: var(--color-brand-500);
@@ -836,7 +837,7 @@
         --color-bg-primary_alt: var(--color-bg-secondary);
         --color-bg-brand-primary_alt: var(--color-bg-secondary);
         --color-bg-secondary_alt: var(--color-bg-primary);
-        --color-bg-overlay: var(--color-neutral-700);
+        --color-bg-overlay: var(--color-neutral-950);
         --color-bg-brand-section: var(--color-bg-secondary);
         --color-bg-brand-section_subtle: var(--color-bg-primary);
         --color-bg-primary-solid: var(--color-bg-secondary);
