@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Check, DotsHorizontal, Edit03, Plus, SearchLg, Trash01 } from "@untitledui/icons";
+import { Check, Edit03, Plus, SearchLg, Trash01 } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import { type CardHit, searchMyCards } from "@/app/(app)/dashboard/cards/actions";
@@ -174,7 +174,9 @@ export function CollectionDetailActions({
                 two that can: it sits behind the dots, the way the tiles keep theirs, one press further
                 than Edit and Add. The confirm dialog is the same as before. */}
             <Dropdown.Root>
-                <Button color="secondary" size="md" iconLeading={DotsHorizontal} aria-label="More" />
+                {/* The kit's own trigger, as the design page's menu uses it: the menu opens from it by
+                    mouse and by keyboard alike, which a kit Button standing in for it did not. */}
+                <Dropdown.DotsButton className="flex size-10 items-center justify-center rounded-lg ring-1 ring-primary ring-inset" />
                 <Dropdown.Popover className="w-56">
                     <Dropdown.Menu>
                         <Dropdown.Item icon={Trash01} onAction={() => setConfirming(true)}>
@@ -183,34 +185,34 @@ export function CollectionDetailActions({
                     </Dropdown.Menu>
                 </Dropdown.Popover>
             </Dropdown.Root>
-            <DialogTrigger isOpen={confirming} onOpenChange={setConfirming}>
-                <ModalOverlay>
-                    <Modal className="max-w-sm">
-                        <Dialog>
-                            {({ close }) => (
-                                <div className="flex w-full max-w-sm flex-col gap-4 rounded-2xl glass-thick p-6 shadow-xl">
-                                    <AriaHeading slot="title" className="text-lg font-semibold text-primary">
-                                        Delete this binder?
-                                    </AriaHeading>
-                                    <p className="text-sm text-tertiary">
-                                        {folder.kind === "rule"
-                                            ? "Only this binder and its rule go. The cards stay where they are."
-                                            : "The cards stay in your collection. Only this binder goes, and it cannot be brought back."}
-                                    </p>
-                                    <div className="flex justify-end gap-2">
-                                        <Button color="secondary" onClick={close}>
-                                            Cancel
-                                        </Button>
-                                        <Button color="primary-destructive" onClick={del} isLoading={deleting}>
-                                            Delete
-                                        </Button>
-                                    </div>
+            {/* Opened by the menu item, not by a button of its own: the overlay is controlled, and
+                DialogTrigger — which wants a pressable child — is not in the picture. */}
+            <ModalOverlay isOpen={confirming} onOpenChange={setConfirming}>
+                <Modal className="max-w-sm">
+                    <Dialog>
+                        {({ close }) => (
+                            <div className="flex w-full max-w-sm flex-col gap-4 rounded-2xl glass-thick p-6 shadow-xl">
+                                <AriaHeading slot="title" className="text-lg font-semibold text-primary">
+                                    Delete this binder?
+                                </AriaHeading>
+                                <p className="text-sm text-tertiary">
+                                    {folder.kind === "rule"
+                                        ? "Only this binder and its rule go. The cards stay where they are."
+                                        : "The cards stay in your collection. Only this binder goes, and it cannot be brought back."}
+                                </p>
+                                <div className="flex justify-end gap-2">
+                                    <Button color="secondary" onClick={close}>
+                                        Cancel
+                                    </Button>
+                                    <Button color="primary-destructive" onClick={del} isLoading={deleting}>
+                                        Delete
+                                    </Button>
                                 </div>
-                            )}
-                        </Dialog>
-                    </Modal>
-                </ModalOverlay>
-            </DialogTrigger>
+                            </div>
+                        )}
+                    </Dialog>
+                </Modal>
+            </ModalOverlay>
         </div>
     );
 }
