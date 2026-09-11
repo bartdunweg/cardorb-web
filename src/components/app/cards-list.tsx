@@ -4,6 +4,7 @@ import { type ReactNode, use, useEffect, useRef, useState, useTransition } from 
 import { loadMoreCards } from "@/app/(app)/dashboard/list-actions";
 import { CardsGrid } from "@/components/app/cards-grid";
 import { CardsTable } from "@/components/app/cards-table";
+import { GotItButton } from "@/components/app/got-it-button";
 import { CardsSkeleton } from "@/components/app/skeletons";
 import { Button } from "@/components/base/buttons/button";
 import type { Card, CardFilter, CardList } from "@/lib/cards";
@@ -134,7 +135,18 @@ export function CardsList({
                 <div className="flex flex-1 flex-col">{narrowed ? noHits : empty}</div>
             ) : (
                 <>
-                    {view === "grid" ? <CardsGrid cards={cards} onSelect={onSelect} size={size} /> : <CardsTable cards={cards} onSelect={onSelect} />}
+                    {view === "grid" ? (
+                        <CardsGrid
+                            cards={cards}
+                            onSelect={onSelect}
+                            size={size}
+                            // The wishlist's tiles carry "Got it": the list says which list it is, rather than
+                            // the grid reading it off a card's fields, so the collection never grows the button.
+                            action={filter.wishlist ? (card, compact) => <GotItButton card={card} compact={compact} /> : undefined}
+                        />
+                    ) : (
+                        <CardsTable cards={cards} onSelect={onSelect} />
+                    )}
                     {pending ? <CardsSkeleton count={6} /> : null}
                     {/* Where the next batch is asked for. Also the manual way in: a browser without the observer, or a
                         reader who would rather press. One button through loading and failure alike, so a keyboard
