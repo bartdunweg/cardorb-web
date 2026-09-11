@@ -56,8 +56,11 @@ for the failures that leave no trace — and everything both passes found is clo
 - **A Japanese set has its pictures** (cardorb-api#262). TCGdex had no file behind 41 of 72
   sampled Japanese cards, whole sets at a time; Limitless has them at a guessable address, and
   a set TCGdex has not photographed now shows those. One probe per set. Chinese (44 of 60
-  missing) and Korean are not on Limitless and still show grey boxes; the odd gap in a
-  photographed Japanese set stays a gap too.
+  missing) and Korean are not on Limitless; the odd gap in a photographed Japanese set stays.
+- **A card with no picture lies face down** (#314). Bart's call: the official back from
+  tcg.pokemon.com, a static file, in the set page, the grid, the Pokédex and the sheet, where a
+  grey box with the name in it read as "nothing here". `CardImage` draws it itself once both of
+  its sources fail. Prices untouched. Measured on S7R (zh-tw): 22 backs, 0 broken images.
 - **A test that guards the wrong thing** (cardorb-api#258). Five of them, and the sharpest mocked
   the payload it was meant to inspect — so the suite was green with the field-stripping deleted.
   Each is now checked by breaking what it guards and watching it go red. The ten undocumented
@@ -83,11 +86,11 @@ for the failures that leave no trace — and everything both passes found is clo
   Japanese name; and `zh` is one code for two catalogues, so traditional is asked before
   simplified. Splitting it properly widens an enum the iOS app decodes, which is a decision
   rather than a side effect.
-- **A card back where there is no picture.** Bart's call on 2026-09-11: a card the catalogue
-  knows but cannot show gets a drawn card back in the tile, and no price. An own drawing, not
-  the real back — that art is a registered mark. Chinese shelves and the single gaps above are
-  what it is for. Owned Japanese cards take the same TCGdex address the shelf did, without the
-  Limitless fallback: same gap, in the collection, not yet closed.
+- **Owned Japanese cards** take the same TCGdex address the shelf did, without the Limitless
+  fallback (#262 is the set page only): the same gap, in the collection, shows a card back now
+  rather than a picture. Small API work in `cards.ts`'s language path.
+- **The small thumbnails** — table rows, the add dialog, folder actions — still draw a grey
+  box where a card has no picture; the four card-sized places show the back (#314).
 - **Empty shelves.** TCGdex lists 184 Japanese sets and carries cards for 116; on the Korean
   shelf it is 3 of 95. Those set pages open on nothing, with no word about why. Measured on
   2026-09-11 while pricing the shelves; not changed.
