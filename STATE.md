@@ -219,7 +219,7 @@ for the failures that leave no trace — and everything both passes found is clo
   went secondary with a folder icon beside it: two pluses in one bar were two guesses. Measured on
   the dev server: from Binders, Add card opens the palette and a hit's sheet reads Add to
   collection then Add to wishlist, the same as from the sidebar.
-- **Two screen-reader points closed** (2026-09-11, web #377). Clearing a search back to the whole
+- **Two screen-reader points closed** (2026-09-11, web #379). Clearing a search back to the whole
   list was silent: the count's live region asked "is this list filtered" where the question is
   "did the reader change this list, or arrive at it". It now remembers, per tab, the URL of the
   list shown last — a module variable read once in the state's initialiser, written by an effect
