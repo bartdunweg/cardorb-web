@@ -1,0 +1,17 @@
+/* The holographic card effect (vendor/pokemon-cards-css, GPL-3.0), loaded by holo-card.tsx and by
+   nothing else. It sat in globals.css and so in the first stylesheet of every page, 5.4 KB Brotli
+   for an effect only the card sheet draws — and the sheet is already a chunk fetched on the tap
+   that opens it, so its CSS now travels with it. Same layer as before: components, so preflight
+   loses to it and our utilities on the same elements still win. */
+@import "./vendor/pokemon-cards-css/index.css" layer(components);
+
+/* The card in its sheet, wearing the vendored effect: the corner and the ratio the rest of the app
+   draws a card with. A finger on the card drives the card and nothing else: with pan-y a vertical
+   drag scrolled the sheet under the tilt (iPhone, Safari); the sheet scrolls from anywhere else. */
+.holo-card {
+    --card-radius: 4.8% / 3.436%;
+    --card-aspect: 63 / 88;
+}
+.holo-card .card__rotator {
+    touch-action: none;
+}

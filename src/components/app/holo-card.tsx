@@ -3,6 +3,7 @@
 import { type CSSProperties, type ReactNode, useRef, useState } from "react";
 import { useHoloTilt } from "@/lib/holo/use-holo-tilt";
 import { holoVariant } from "@/lib/holo/variant";
+import "@/styles/holo.css";
 import { cx } from "@/utils/cx";
 
 /**
