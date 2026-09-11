@@ -56,10 +56,25 @@ function CardPreview({ card, status, onAdd }: { card: PokemonCard; status: AddSt
 
             {/* Owned or wished for, never both: the first press settles which, and the other button closes with it. */}
             <div className="flex flex-col gap-2">
-                <Button onClick={() => onAdd("collection")} isDisabled={status !== "idle"} className="w-full">
+                <Button
+                    onClick={() => {
+                        onAdd("collection");
+                        focusField();
+                    }}
+                    isDisabled={status !== "idle"}
+                    className="w-full"
+                >
                     {status === "added" ? "Added" : status === "adding" ? "Adding…" : "Add to collection"}
                 </Button>
-                <Button color="secondary" onClick={() => onAdd("wishlist")} isDisabled={status !== "idle"} className="w-full">
+                <Button
+                    color="secondary"
+                    onClick={() => {
+                        onAdd("wishlist");
+                        focusField();
+                    }}
+                    isDisabled={status !== "idle"}
+                    className="w-full"
+                >
                     {status === "wished" ? "On your wishlist" : status === "adding" ? "Adding…" : "Add to wishlist"}
                 </Button>
             </div>
@@ -69,6 +84,14 @@ function CardPreview({ card, status, onAdd }: { card: PokemonCard; status: AddSt
 
 /** The id of the row at the end of a full page, the one that asks for the next page. No card carries it. */
 const MORE = "more";
+
+/**
+ * Focus back to the palette's field. A button that disables itself under the pointer — Add to
+ * collection the moment it is pressed — or unmounts — Try again once hits land — drops focus on
+ * the page, and a keyboard user is back at the top of the menu. The kit's menu keeps its field to
+ * itself, so it is found from the dialog the pressed button — the active element — sits in.
+ */
+const focusField = () => document.activeElement?.closest('[role="dialog"]')?.querySelector("input")?.focus();
 
 /** The most the API counts: it reads that many and stops, so that figure means "at least". */
 const SEARCH_WINDOW = 250;
@@ -164,10 +187,7 @@ export function CommandSearchMenu({
                             color="secondary"
                             onClick={() => {
                                 onRetry();
-                                // This button is gone the moment hits land, and focus with it. The kit's
-                                // menu keeps its field to itself, so the field is found from the dialog
-                                // the pressed button — the active element — sits in.
-                                document.activeElement?.closest('[role="dialog"]')?.querySelector("input")?.focus();
+                                focusField();
                             }}
                         >
                             Try again
