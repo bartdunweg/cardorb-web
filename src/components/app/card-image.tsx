@@ -51,6 +51,7 @@ export function CardImage({
     sizes,
     width = 256,
     ratio = "card",
+    onLoad,
 }: {
     src: string;
     alt: string;
@@ -79,6 +80,11 @@ export function CardImage({
     width?: number;
     /** A card is 63 by 88; a set logo or a badge is drawn square. */
     ratio?: "card" | "square";
+    /**
+     * Once the picture is on screen — also when it came from cache — for whatever fades it in.
+     * Also when there is no picture and the back stands in, so the fade never waits for nothing.
+     */
+    onLoad?: () => void;
 }) {
     // Once the optimizer fails, the original is tried; when that fails too there is no picture.
     // A card then shows its back — a shelf hands out addresses it has not checked, and a 404
@@ -101,7 +107,15 @@ export function CardImage({
             priority={priority}
             quality={quality}
             unoptimized={direct || !isOptimised(shown)}
-            onError={() => (direct || !isOptimised(shown) ? setGone(true) : setDirect(true))}
+            onLoad={onLoad}
+            onError={() => {
+                if (!direct && isOptimised(shown)) {
+                    setDirect(true);
+                    return;
+                }
+                setGone(true);
+                onLoad?.();
+            }}
         />
     );
 }
