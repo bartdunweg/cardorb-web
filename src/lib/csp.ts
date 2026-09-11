@@ -41,13 +41,23 @@ export const needsNonce = (pathname: string): boolean => NONCE_ROUTES.some((rout
  */
 const SUPABASE_HOST = process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin : "https://*.supabase.co";
 
+/**
+ * The API this build talks to, for the Pokédex artwork it serves (`artwork_url` on
+ * /public/species). Production is api.cardorb.com, named below anyway; this is for a build
+ * pointed at a preview or a local API, whose pictures come from that host and were blocked here.
+ */
+const API_HOST = process.env.CARDORB_API_URL ? new URL(process.env.CARDORB_API_URL).origin : "https://api.cardorb.com";
+
 const IMAGE_HOSTS = [
-    SUPABASE_HOST,
-    "https://api.cardorb.com",
-    "https://assets.tcgdex.net",
-    "https://images.pokemontcg.io",
-    "https://images.scrydex.com",
-    "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com",
+    ...new Set([
+        SUPABASE_HOST,
+        API_HOST,
+        "https://api.cardorb.com",
+        "https://assets.tcgdex.net",
+        "https://images.pokemontcg.io",
+        "https://images.scrydex.com",
+        "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com",
+    ]),
 ];
 
 /**

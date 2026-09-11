@@ -750,7 +750,8 @@ export const pokedexAnswer = z.object({ entries: z.array(dexEntrySchema) });
  * of each you own is a different one and needs a session; this is a catalogue, so a stranger
  * looking at a public profile can read it too.
  */
-export const speciesAnswer = z.object({ entries: z.array(z.object({ id: z.number(), name: z.string() })) });
+/** `artwork_url` is the species' official picture, served by the API (cardorb-api#305); optional until every API answers it. */
+export const speciesAnswer = z.object({ entries: z.array(z.object({ id: z.number(), name: z.string(), artwork_url: z.string().optional() })) });
 export const catalogueSetsAnswer = z.object({ sets: z.array(catalogueSetSchema) });
 /** `total` is how many the whole search matched, across every page; capped at the 250 the API reads. Optional until every API has it. */
 export const searchAnswer = z.object({ cards: z.array(browseCardSchema), total: z.number().int().optional() });
