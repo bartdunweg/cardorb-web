@@ -1,5 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import { AddCardButton } from "@/components/app/add-card-button";
+import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CardsStats, StatCard } from "@/components/app/cards-stats";
 import { PhoneSearchTrigger } from "@/components/app/command-search";
 import { DexStat } from "@/components/app/dex-stat";
@@ -8,8 +10,10 @@ import { ValueHeroOutline } from "@/components/app/skeletons";
 import { TopCards } from "@/components/app/top-cards";
 import { ValueHero, type ValueList } from "@/components/app/value-hero";
 import { YouLink } from "@/components/app/you-link";
+import { Button } from "@/components/base/buttons/button";
 import { getCardStats, getMyCards } from "@/lib/cards";
 import { getMyFolders } from "@/lib/collections";
+import { getMyProfile } from "@/lib/profile";
 import { getValueHistory } from "@/lib/value-history";
 
 // The tab's name, which the root layout's template finishes as “… · Cardorb”: without it every
@@ -25,6 +29,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     const { value } = await searchParams;
     const selected = value === "favorites" || value === "wishlist" || (value && UUID.test(value)) ? value : "all";
     const stats = await getCardStats();
+    // Nothing held and nothing wanted: the first visit after signing up. A value of €0 with an
+    // empty chart and four zeros said the account was empty and not what to do about it.
+    const fresh = stats.owned === 0 && stats.wishlist === 0;
 
     return (
         <div className="flex flex-col gap-6">
@@ -39,21 +46,52 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                     </div>
                 }
             />
-            <Suspense fallback={<ValueHeroOutline />}>
-                <ValueSection selected={selected} total={stats.value} />
-            </Suspense>
-            <CardsStats
-                stats={stats}
-                fourth={
-                    <Suspense fallback={<StatCard label="Pokémon collected" value=" " href="/dashboard/pokedex" delay={120} />}>
-                        <DexStat />
+            {fresh ? (
+                <Welcome />
+            ) : (
+                <>
+                    <Suspense fallback={<ValueHeroOutline />}>
+                        <ValueSection selected={selected} total={stats.value} />
                     </Suspense>
-                }
-            />
-            <Suspense fallback={null}>
-                <TopCards />
-            </Suspense>
+                    <CardsStats
+                        stats={stats}
+                        fourth={
+                            <Suspense fallback={<StatCard label="Pokémon collected" value=" " href="/dashboard/pokedex" delay={120} />}>
+                                <DexStat />
+                            </Suspense>
+                        }
+                    />
+                    <Suspense fallback={null}>
+                        <TopCards />
+                    </Suspense>
+                </>
+            )}
         </div>
+    );
+}
+
+// The first thing a new account sees: the one action that fills every page, and the name the
+// account was given. Sign-up asked for no name, so the profile carries one drawn from the email
+// with four random characters after it — and it is the address of the public page, so it is worth
+// a line here where the person is, not only in Settings where they may never look.
+async function Welcome() {
+    const { profile } = await getMyProfile();
+    const name = profile?.display_name || profile?.username;
+    return (
+        <AppEmptyState
+            icon="plus"
+            title="Welcome to Cardorb"
+            description={
+                name
+                    ? `Add your first card to start your collection. You are signed in as ${name}; choose a name of your own in Settings.`
+                    : "Add your first card to start your collection."
+            }
+        >
+            <AddCardButton label="Add your first card" />
+            <Button href="/dashboard/settings" color="secondary" size="md">
+                Choose your name
+            </Button>
+        </AppEmptyState>
     );
 }
 

@@ -54,7 +54,23 @@ export function AuthShell({
     );
 }
 
-/** The email field, as sign in, sign up and forgot all three ask for it: the same label, the same placeholder, required. */
-export function AuthEmailField() {
-    return <Input isRequired hideRequiredIndicator label="Email" type="email" name="email" autoComplete="email" placeholder="Enter your email" size="lg" />;
+/**
+ * The email field, as sign in, sign up and forgot all three ask for it: the same label, the same
+ * placeholder, required. Sign-up holds the value itself: a form resets its uncontrolled fields
+ * after its action, so an error from the server emptied the address while the password stayed.
+ */
+export function AuthEmailField({ value, onChange }: { value?: string; onChange?: (value: string) => void } = {}) {
+    return (
+        <Input
+            isRequired
+            hideRequiredIndicator
+            label="Email"
+            type="email"
+            name="email"
+            autoComplete="email"
+            placeholder="Enter your email"
+            size="lg"
+            {...(onChange ? { value, onChange } : {})}
+        />
+    );
 }

@@ -22,6 +22,18 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-12.** The sign-up was walked as a stranger, with a real address. The mail arrived and
+its button went to `env%28SUPABASE_AUTH_SITE_URL%29/…`: a `config push` from a shell without
+that variable had stored the literal text, so no sign-up could be confirmed and no password
+reset (cardorb-api#307 writes the address out; the push is Bart's). On this side: the form said
+eight characters where Supabase wants ten; a server error emptied the address; the "check your
+email" line sat under a form still saying Get started; and Home after confirming was €0, an empty
+chart and four zeros with nothing to do. Now the floor is ten everywhere, the address stays, the
+sent state replaces the form, and an account that holds and wants nothing gets a welcome on Home
+with Add your first card and Choose your name — the generated `bart-cardorb-test-boaw` kind of
+name is the public address, and the person is told so where they are. Test account
+`bart+cardorb-test@strakzat.com` is still in the database.
+
 **2026-09-10 and 11.** The API had never been audited. It was, twice — once for security, once
 for the failures that leave no trace — and everything both passes found is closed.
 

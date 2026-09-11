@@ -134,7 +134,7 @@ export async function updatePassword(currentPassword: string, password: string):
     const parsed = z
         .object({
             currentPassword: z.string().min(1, "Enter your current password."),
-            password: z.string().min(8, "Password must be at least 8 characters.").max(72),
+            password: z.string().min(10, "Password must be at least 10 characters.").max(72),
         })
         .safeParse({ currentPassword, password });
     if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
