@@ -115,5 +115,9 @@ export function useDebouncedSearch<T, P extends object = Record<string, never>>(
         setLoadingMore(false);
     };
 
-    return { results, loading, failed, retry: () => setAttempt((n) => n + 1), hasMore, loadingMore, loadMore, total };
+    /* A change to the hits in hand, without asking again: a card taken from a hit's sheet is
+       the same hit with a mark on it, and the search that found it need not run twice. */
+    const update = (change: (items: T[]) => T[]) => setResults(change);
+
+    return { results, loading, failed, retry: () => setAttempt((n) => n + 1), hasMore, loadingMore, loadMore, total, update };
 }
