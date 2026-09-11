@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Card } from "@/lib/api-shapes";
-import { copyLabel, groupCopies } from "./copies";
+import { copyLabel, groupCopies, sameCard } from "./copies";
 
 const copy = (over: Partial<Card> = {}): Card =>
     ({
@@ -66,5 +66,31 @@ describe("copyLabel", () => {
     it("leaves out a normal finish, and says Copy when nothing is recorded", () => {
         expect(copyLabel(copy({ finish: "normal" }))).toBe("Near Mint");
         expect(copyLabel(copy({ finish: null, condition: null }))).toBe("Copy");
+    });
+});
+
+describe("sameCard", () => {
+    const stored = { name: "Pikachu", set: "SV Black Star Promos", set_name: "SVP Black Star Promos", number: "027" };
+
+    it("matches a catalogue hit named by the set's title where the stored row carries another set name", () => {
+        // The API stores a set under one name and titles it under another (SV vs SVP Black Star
+        // Promos); the catalogue, and so a search hit, knows only the title. Comparing `set`
+        // alone dropped the row the API had just answered for that title.
+        expect(sameCard(stored, { name: "Pikachu", set: "SVP Black Star Promos", number: "027" })).toBe(true);
+        expect(sameCard({ name: "Pikachu", set: "SVP Black Star Promos", number: "027" }, stored)).toBe(true);
+    });
+
+    it("matches on the stored set name as before", () => {
+        expect(sameCard(stored, { name: "Pikachu", set: "SV Black Star Promos", number: "027" })).toBe(true);
+        expect(
+            sameCard({ name: "Goldeen", set: "Pitch Black", number: "087" }, { name: "Goldeen", set: "Pitch Black", set_name: "Pitch Black", number: "087" }),
+        ).toBe(true);
+    });
+
+    it("still tells another set, number or name apart", () => {
+        expect(sameCard(stored, { name: "Pikachu", set: "SWSH Black Star Promos", number: "027" })).toBe(false);
+        expect(sameCard(stored, { name: "Pikachu", set: "SVP Black Star Promos", number: "088" })).toBe(false);
+        expect(sameCard(stored, { name: "Raichu", set: "SVP Black Star Promos", number: "027" })).toBe(false);
+        expect(sameCard({ name: "Pikachu", set: null, number: "027" }, { name: "Pikachu", set: null, number: "027" })).toBe(true);
     });
 });
