@@ -201,10 +201,11 @@ for the failures that leave no trace — and everything both passes found is clo
 
 ## Open
 
-- **Seen in passing on 2026-09-11, not touched:** the Japanese Browse shelf lists トリプレットビート
-  a dozen times under "No cards in the catalogue yet" and React warns of a duplicate key
-  `CSV1C`; and on the dev server the sheet's chunk (`card-detail-slideout`) is refused by the
-  CSP nonce — dev-only as far as seen, production untested.
+- **Seen in passing on 2026-09-11:** on the dev server the sheet's chunk (`card-detail-slideout`)
+  is refused by the CSP nonce — dev-only as far as seen, production untested. The other two
+  things seen that day are closed: TCGdex's fifteen トリプレットビート placeholder sets are off the
+  shelves (cardorb-api#282) and CSV1C, which TCGdex lists twice, shows once, as the entry its
+  own page opens on (cardorb-api#289).
 - **The holo CSS is GPL-3.0.** Accepted while Cardorb is free; before it charges, swap the folder
   for an own implementation of the same recipe or write to @simeydotme. It no longer ships on
   every route: since #327 it loads with the sheet (`src/styles/holo.css`, same cascade layer),
