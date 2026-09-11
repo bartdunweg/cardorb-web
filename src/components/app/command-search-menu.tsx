@@ -1,7 +1,7 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { ClockRewind, Trash01 } from "@untitledui/icons";
+import { type ReactNode, useEffect } from "react";
+import { Trash01 } from "@untitledui/icons";
 import { Heading as AriaHeading, ListBoxLoadMoreItem } from "react-aria-components";
 import type { CatalogueFilters, PokemonCard } from "@/app/(app)/dashboard/cards/actions";
 import { CardImage } from "@/components/app/card-image";
@@ -10,7 +10,7 @@ import { LanguageFilterChip } from "@/components/app/language-filter-chip";
 import { CommandMenu, type CommandMenuGroupType } from "@/components/application/command-menus/command-menu";
 import { LoadingIndicator } from "@/components/application/loading-indicator/loading-indicator";
 import { Button } from "@/components/base/buttons/button";
-import { clearSearches, useRecentSearches } from "@/hooks/use-recent-searches";
+import { clearRecentCards, rememberCard, useRecentCards } from "@/hooks/use-recent-cards";
 import { CARD_TYPES } from "@/lib/card-types";
 import { formatDate, formatPrice } from "@/lib/format";
 import { searchHitDescription } from "@/lib/search-hit";
@@ -29,6 +29,13 @@ function DetailRow({ label, value }: { label: string; value: ReactNode }) {
 // Beside the hits on a desktop, under them on a phone: the highlighted card's scan, everything the
 // catalogue says about it, what it trades at, and the two ways to take it.
 function CardPreview({ card, adding, onAdd }: { card: PokemonCard; adding: boolean; onAdd: (target: "collection" | "wishlist") => void }) {
+    // A card that has stood here a second was looked at, and goes to the front of the palette's
+    // "Recently viewed" (use-recent-cards.ts). A second, so arrowing down a list of hits does not
+    // count every row it passes as a visit.
+    useEffect(() => {
+        const t = setTimeout(() => rememberCard(card), VIEWED_AFTER_MS);
+        return () => clearTimeout(t);
+    }, [card]);
     return (
         <div className="flex w-full flex-col gap-4 overflow-y-auto border-secondary p-6 max-md:border-t md:max-h-[70vh] md:w-90 md:border-l">
             {card.image ? (
@@ -101,8 +108,12 @@ const MORE = "more";
  */
 const focusField = () => document.activeElement?.closest('[role="dialog"]')?.querySelector("input")?.focus();
 
-/** The palette's last recent item: not a term, the way out of the list. */
+/** The palette's last recent item: not a card, the way out of the list. */
 const CLEAR_RECENT = "recent:clear";
+/** A recent card's row id: not the card's own, which its hit may carry in the same list. */
+const recentId = (card: PokemonCard) => `recent:${card.id}`;
+/** How long a card stands in the preview before it counts as viewed. */
+const VIEWED_AFTER_MS = 1000;
 
 /** The most the API counts: it reads that many and stops, so that figure means "at least". */
 const SEARCH_WINDOW = 250;
@@ -160,27 +171,28 @@ export function CommandSearchMenu({
     // Which catalogue is asked; the set and the type are the English one's facets, so its chips go with it.
     const language = filters.language ?? "en";
     const searching = inputValue.trim().length >= 2 || filtering;
-    // Before a letter is typed: the last few terms, each a press away, and a row to be rid of
-    // them. Kept in this browser (use-recent-searches.ts).
-    const recent = useRecentSearches();
+    // Before a letter is typed: the last few cards looked at here, drawn as the hits are and
+    // previewed the same way, and a row to be rid of them. Kept in this browser
+    // (use-recent-cards.ts). Cards, not the terms that found them: what was looked at is what
+    // gets looked at again (Bart's call, after v0 and Bonsai).
+    const recent = useRecentCards();
     const groups: CommandMenuGroupType[] =
         !searching && !inputValue.trim() && recent.length
             ? [
                   {
                       id: "recent",
-                      title: "Recent searches",
+                      title: "Recently viewed",
                       items: [
-                          ...recent.map((term) => ({
-                              id: `recent:${term}`,
-                              type: "icon" as const,
-                              icon: ClockRewind,
-                              label: term,
-                              onAction: () => {
-                                  onInputChange(term);
-                                  focusField();
-                              },
+                          ...recent.map((c) => ({
+                              id: recentId(c),
+                              type: "image" as const,
+                              src: c.image,
+                              alt: c.name,
+                              label: c.name,
+                              description: searchHitDescription(c),
+                              stacked: true,
                           })),
-                          { id: CLEAR_RECENT, type: "icon" as const, icon: Trash01, label: "Clear recent searches", onAction: clearSearches },
+                          { id: CLEAR_RECENT, type: "icon" as const, icon: Trash01, label: "Clear recently viewed", onAction: clearRecentCards },
                       ],
                   },
               ]
@@ -292,7 +304,8 @@ export function CommandSearchMenu({
 
                 <CommandMenu.Preview asChild>
                     {({ selectedId }) => {
-                        const card = hits.find((h) => h.id === selectedId);
+                        // A hit, or a recent card, which is previewed and taken the same way.
+                        const card = hits.find((h) => h.id === selectedId) ?? recent.find((c) => recentId(c) === selectedId);
                         if (!card) return null;
                         return <CardPreview card={card} adding={adding === card.id} onAdd={(target) => onAdd(card, target)} />;
                     }}

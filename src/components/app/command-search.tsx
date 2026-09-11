@@ -10,7 +10,7 @@ import type { FilterOption } from "@/components/app/filter-chip";
 import { SearchTrigger } from "@/components/app/search-trigger";
 import { notify } from "@/components/app/toast";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
-import { rememberSearch } from "@/hooks/use-recent-searches";
+import { updateRecentCards, useRecentCards } from "@/hooks/use-recent-cards";
 import { loadCatalogueIndex, lookupCards } from "@/lib/catalogue-client";
 import { searchIndex } from "@/lib/catalogue-index";
 import type { BrowseLanguage } from "@/lib/languages";
@@ -121,13 +121,18 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
         // A new question starts the marks over: a hit found twice is looked up twice, once per answer.
         lookedUp.current = new Set();
     }, [inputValue, filters]);
-    // A term is kept once its search has found something, for the palette's empty state
-    // (use-recent-searches.ts).
+    /* The palette's recent cards carry the marks they had when last looked at. Opening the palette
+       asks the API once what is held now and corrects them in place (use-recent-cards.ts); a
+       lookup that fails leaves them as they were. */
+    const recent = useRecentCards();
     useEffect(() => {
-        if (!loading && hits.length) rememberSearch(inputValue);
-        // Only when an answer lands: the term is what the answer is for.
+        if (!isOpen || !recent.length) return;
+        lookupCards(recent.map((c) => c.id))
+            .then(updateRecentCards)
+            .catch(() => {});
+        // Once per opening: the marks are read for the cards kept at that moment.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [loading, hits]);
+    }, [isOpen]);
 
     /* To the collection, or to the wishlist: the same card cannot be in both, so one press settles
        it. The hit is marked at once (takenHit), because the hits are this component's and no
@@ -140,6 +145,8 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
         setAdding(null);
         if (res.ok) {
             update((hits) => takenHit(hits, card.id, target));
+            // The same mark on the recent copy of the card, where there is one.
+            updateRecentCards(takenHit([card], card.id, target));
             router.refresh();
         } else {
             // The buttons come back as they were, which reads as a missed click; the toast is the
