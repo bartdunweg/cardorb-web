@@ -338,10 +338,12 @@ for the failures that leave no trace — and everything both passes found is clo
   preview over it with Back at 16 px, View details opening the sheet and its Close back at the
   preview, Back back at the hits; at 1280 px the card unchanged, Back and Close display none,
   the sheet a drawer at the right. Not measured: a held hit opening on its row (see below), the
-  keyboard, a screen reader. Seen in passing: the palette marked Mega Charizard Y ex (Ascended
-  Heroes 022, `me02.5-022`) "In your collection" and its sheet said "You do not hold this card
-  yet"; the database agrees with the sheet — no row of that name, number or id — so the mark is
-  the API lookup's to explain (`lookupCards`), not the sheet's.
+  keyboard, a screen reader. Seen in passing and run down: the palette marked Mega Charizard Y
+  ex (`me02.5-022`) "In your collection" while its sheet said "You do not hold this card yet".
+  Not the lookup: asked again, `/v1/catalog/cards?ids=me02.5-022` answers `owned: false`, the
+  database holds no such row, and its rows show other sessions adding and removing cards all
+  evening (a Charizard wish at 18:23 UTC among them). A row that stood for a minute, marked while
+  it stood.
 
 ## Next
 
