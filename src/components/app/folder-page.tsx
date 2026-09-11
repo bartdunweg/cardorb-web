@@ -103,7 +103,7 @@ function CountOutline({ lines }: { lines: 1 | 2 }) {
         <>
             {Array.from({ length: lines }, (_, i) => (
                 <span key={i} className="block">
-                    <span className="inline-block h-5 w-40 rounded-md bg-quaternary align-middle motion-safe:animate-pulse" />
+                    <span className="inline-block h-5 w-40 rounded-md bg-skeleton align-middle motion-safe:animate-pulse" />
                 </span>
             ))}
         </>

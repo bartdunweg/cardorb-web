@@ -10,11 +10,13 @@ import { GRID_COLUMNS } from "@/lib/cards-view";
 // the real grid's columns. Every loading.tsx under the dashboard composes these. The shell (sidebar,
 // tab bar) streams before any of them.
 
-// A shade under the page: a block the page's own colour would be no outline at all.
-const Block = ({ className }: { className: string }) => <div className={`rounded-md bg-quaternary ${className}`} />;
+// A shade under the page, its own token: a block the page's own colour would be no outline at all,
+// and the shared quaternary stood at 1.2:1 against the page in the light but 2.7:1 in the dark, an
+// outline harder than the cards it stands for. bg-skeleton is a step softer there and unchanged here.
+const Block = ({ className }: { className: string }) => <div className={`rounded-md bg-skeleton ${className}`} />;
 
 // The same block where a line of text will be: inside a <p>, so a span.
-const Line = ({ className }: { className: string }) => <span className={`inline-block rounded-md bg-quaternary align-middle ${className}`} />;
+const Line = ({ className }: { className: string }) => <span className={`inline-block rounded-md bg-skeleton align-middle ${className}`} />;
 
 /** The outlines: hidden from a screen reader (the frame around them says "Loading…"), pulsing. */
 function Outline({ children, className = "" }: { children: ReactNode; className?: string }) {
@@ -40,7 +42,7 @@ export function CardsSkeleton({ count = 12 }: { count?: number }) {
         <Outline className={`grid gap-4 ${GRID_COLUMNS.md}`}>
             {Array.from({ length: count }, (_, i) => (
                 <div key={i} className="flex flex-col gap-2">
-                    <div className="aspect-card w-full rounded-card bg-quaternary" />
+                    <div className="aspect-card w-full rounded-card bg-skeleton" />
                     <Block className="h-4 w-3/4" />
                     <Block className="h-3 w-1/2" />
                 </div>
@@ -230,7 +232,7 @@ export function SetSkeleton() {
             <PageHeader title={" "} subtitle={<Line className="h-5 w-40" />} back={{ href: "/dashboard/sets", label: "Browse" }} />
             <Outline className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
                 {Array.from({ length: 40 }, (_, i) => (
-                    <div key={i} className="aspect-card rounded-card bg-quaternary" />
+                    <div key={i} className="aspect-card rounded-card bg-skeleton" />
                 ))}
             </Outline>
         </SkeletonFrame>
