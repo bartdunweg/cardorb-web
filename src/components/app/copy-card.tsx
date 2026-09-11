@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Minus, Plus } from "@untitledui/icons";
-import { type CardFacts, editCopy } from "@/app/(app)/dashboard/cards/actions";
+import { type CardFacts, editCopies } from "@/app/(app)/dashboard/cards/actions";
 import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { CONDITIONS } from "@/components/app/condition-badge";
 import { finishOptions, patternOptions, soleOption } from "@/components/app/copy-fields";
@@ -82,10 +82,12 @@ export function CopyCard({
 
     const save = async (edits: CopyEdits, failed: string) => {
         setOver((o) => ({ id: row.id, edits: { ...(o.id === row.id ? o.edits : {}), ...edits } }));
-        const results = await Promise.all(group.rows.map((r) => editCopy(r.id, edits)));
-        const lost = results.find((r) => !r.ok);
-        if (lost && !lost.ok) {
-            notify.failed(failed, { description: lost.error });
+        const res = await editCopies(
+            group.rows.map((r) => r.id),
+            edits,
+        );
+        if (!res.ok) {
+            notify.failed(failed, { description: res.error });
             setOver((o) => {
                 const kept = { ...(o.id === row.id ? o.edits : {}) };
                 for (const k of Object.keys(edits) as (keyof CopyEdits)[]) delete kept[k];
