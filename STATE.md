@@ -344,6 +344,13 @@ for the failures that leave no trace — and everything both passes found is clo
   database holds no such row, and its rows show other sessions adding and removing cards all
   evening (a Charizard wish at 18:23 UTC among them). A row that stood for a minute, marked while
   it stood.
+- **The palette's phone screen is one surface** (2026-09-11, #404 follow-up). On the page's grey
+  ground the kit's field, white and `rounded-xl`, drew itself as a rounded card at the top of the
+  screen, a sheet's head over a list, and the whole read as a bottom sheet — on a desktop the
+  card's `overflow-hidden` clips those corners. Bart's call: the phone keeps the desktop card's
+  own ground (`glass-thick`, blur off) edge to edge, the field loses its corners under `sm`
+  (a one-class kit edit, marked ours), the preview sits on `bg-primary` to match. Slide-up,
+  Close and Back stay. Not yet seen on the dev server at 375 px: the pane had no session.
 
 ## Next
 
