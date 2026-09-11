@@ -37,8 +37,8 @@ const choice = z.string().trim().min(1).max(100).optional();
 /** The chips under a collection search: a set (as the API addresses it) and a rarity, matched whole, as on a folder page. */
 export type MyCardsFilters = { set?: string; rarity?: string };
 
-// Searches the signed-in person's own collection (the phone's search sheet). A filter on its own
-// lists that set or rarity; without one the term has to be at least a character.
+// Searches the signed-in person's own collection (a binder's add-from-collection dialog). A filter
+// on its own lists that set or rarity; without one the term has to be at least a character.
 export async function searchMyCards(query: string, filters: MyCardsFilters = {}): Promise<CardHit[]> {
     const parsed = z.object({ q: term, set: choice, rarity: choice }).safeParse({ q: query, ...filters });
     if (!parsed.success) return [];

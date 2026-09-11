@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { BrowseLanguage } from "@/components/app/browse-language";
-import { MobileTopRow } from "@/components/app/mobile-top-row";
 import { PageHeader } from "@/components/app/page-header";
 import { FIRST_ROW, SETS_COLUMNS, SetTile } from "@/components/app/set-tile";
 import { SetsOutline } from "@/components/app/skeletons";
@@ -19,7 +18,7 @@ export default async function SetsPage({ searchParams }: { searchParams: Promise
     return (
         <div className="flex flex-col gap-6">
             {/* The title alone: how far the shelf is comes per set, on its tile, not as one number over all of them. */}
-            <PageHeader title="Browse" above={<MobileTopRow />} titleOnPhone={false} />
+            <PageHeader title="Browse" />
             {/* The shelf is not awaited: the title and the search go out first, the sets when the catalogue answers. */}
             {/* Which catalogue: English, or one of TCGdex's own for Japanese, Chinese and Korean cards. */}
             <BrowseLanguage value={language} />

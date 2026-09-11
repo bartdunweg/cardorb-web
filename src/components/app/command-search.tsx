@@ -32,6 +32,15 @@ export function SidebarSearchTrigger() {
     return <SearchTrigger label="Search" onPress={open} />;
 }
 
+// The same button at the top of Home on a phone, a size up: the row Home starts with. It opens the
+// one palette, as the sidebar's trigger and Add card do. It used to open a sheet of its own that
+// searched the collection and listed every set, a second search with a different shape from the
+// palette Add card opened on the page beside it (Bart's call, 2026-09-11: one search, everywhere).
+export function PhoneSearchTrigger({ className }: { className?: string }) {
+    const { open } = useCommandSearch();
+    return <SearchTrigger size="md" label="Search a card" onPress={open} className={className} />;
+}
+
 // Renders the single command palette and provides open() to descendants. It searches the whole
 // Pokémon card database (the Card Orb API, TCGdex behind it) and lets you add the highlighted hit
 // to your collection or your wishlist from its preview, without leaving the palette.
