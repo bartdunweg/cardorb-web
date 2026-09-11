@@ -518,11 +518,14 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
             onOpenChange={(open) => {
                 if (!open) void closeSheet();
             }}
-            // The whole screen on a phone but for the page sheet's inset (iOS leaves ten points under
-            // the status bar, so the page behind still shows as a page): the sheet is the card's page,
-            // on the page's own opaque ground rather than on glass, so the art's fade has one colour
-            // to end on, the same in both themes.
-            dialogClassName="scrollbar-hide gap-0 mt-auto h-[calc(100dvh-env(safe-area-inset-top)-0.625rem)] max-h-[calc(100dvh-env(safe-area-inset-top)-0.625rem)] bg-page backdrop-blur-none sm:h-full sm:max-h-full"
+            // The whole screen on a phone, edge to edge. It used to stop short of the top by the
+            // status bar plus ten points, which is iOS' page-sheet inset, and with the rounded top
+            // that read as a bottom sheet: a card sitting on the page rather than a page of its own.
+            // The card is the subject here, so it gets the screen, and its art runs into the corners.
+            //
+            // The page's own opaque ground rather than glass, so the art's fade has one colour to
+            // end on, the same in both themes.
+            dialogClassName="scrollbar-hide gap-0 h-dvh max-h-dvh rounded-none bg-page backdrop-blur-none sm:h-full sm:max-h-full"
         >
             {({ close }) => (
                 <>
@@ -603,7 +606,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                     <SlideoutMenu.Header onClose={close} close="none" className="px-0 pt-0 md:px-0">
                         {/* The card first, on a blurred, dimmed copy of itself: the art sets the header's colour,
                             the way a product page takes its hero's. The copy is decoration and says nothing. */}
-                        <div className="relative w-full overflow-hidden rounded-t-2xl sm:rounded-none">
+                        <div className="relative w-full overflow-hidden">
                             {card?.image_url ? (
                                 <div aria-hidden="true" className="absolute inset-0 scale-125 opacity-60 blur-lg">
                                     <CardImage src={card.image_url} alt="" width={64} className="object-cover" />
