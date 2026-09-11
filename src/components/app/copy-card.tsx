@@ -72,16 +72,17 @@ export function CopyCard({
 
     /* What the card shows while a save is on its way, over what the row says. A failed save
        takes the override off and the row's own value is back; a saved one is re-read into the
-       row and the two agree. Kept with the row it was set for, so a re-grouped kind starts clean. */
+       row and the two agree. Kept with the row it was set for, so a re-grouped kind starts clean.
+
+       Nothing is disabled while it flies. The card used to grey out whole for the round trip,
+       which took the focus off the select you had just used and made the next field wait for
+       the last one's save; what you set is shown at once, and a failure takes it back. */
     const [over, setOver] = useState<{ id: string; edits: CopyEdits }>({ id: row.id, edits: {} });
     const shown = over.id === row.id ? over.edits : {};
-    const [saving, setSaving] = useState(false);
 
     const save = async (edits: CopyEdits, failed: string) => {
         setOver((o) => ({ id: row.id, edits: { ...(o.id === row.id ? o.edits : {}), ...edits } }));
-        setSaving(true);
         const results = await Promise.all(group.rows.map((r) => editCopy(r.id, edits)));
-        setSaving(false);
         const lost = results.find((r) => !r.ok);
         if (lost && !lost.ok) {
             notify.failed(failed, { description: lost.error });
@@ -130,7 +131,7 @@ export function CopyCard({
     const [dateKey, setDateKey] = useState(0);
     const todaysDate = today();
 
-    const disabled = busy || saving;
+    const disabled = busy;
     // Label above a full-width field, the add form's shape: the two ask the same questions.
     const field = "flex flex-col gap-1.5 text-sm font-medium text-secondary";
 
