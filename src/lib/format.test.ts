@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatCount, formatDate, formatPrice } from "./format";
+import { formatCount, formatDate, formatPercent, formatPrice } from "./format";
 
 describe("formatDate", () => {
     it("reads a date-only string as a local day, so it does not slip a day", () => {
@@ -16,6 +16,14 @@ describe("formatPrice", () => {
         expect(formatPrice(0.07)).toBe("€0.07");
         expect(formatPrice(null)).toBe("");
         expect(formatPrice(undefined)).toBe("");
+    });
+});
+
+describe("formatPercent", () => {
+    it("writes a ratio as a whole percent", () => {
+        expect(formatPercent(0.05)).toBe("5%");
+        expect(formatPercent(0.125)).toBe("13%");
+        expect(formatPercent(1.5)).toBe("150%");
     });
 });
 

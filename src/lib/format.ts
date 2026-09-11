@@ -31,6 +31,14 @@ export function formatValue(value: number | null | undefined): string {
     return value == null ? "" : wholeEuros.format(value);
 }
 
+const percents = new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 0 });
+
+// Formats a ratio as "5%": 0.05 in, a whole percent out. A change against an average is read
+// to the percent; the decimals would only make a glance at it slower.
+export function formatPercent(ratio: number): string {
+    return percents.format(ratio);
+}
+
 const counts = new Intl.NumberFormat("en-US");
 
 // Formats a count as "1,025": every number the app says out loud is grouped, so 1025 cards and
