@@ -201,6 +201,14 @@ for the failures that leave no trace — and everything both passes found is clo
   alone in it, and the shelf and the collection take Limitless's plain print for those without
   probing TCGdex. Measured on the dev server after the deploy: 210 of 210 tiles from Limitless,
   0 broken.
+- **Every acquired date is picked from the kit's calendar** (#359, #362). Bart's ask. The copy
+  card, the add-copy form and the mark-owned form used the browser's own date field; all three
+  use Untitled UI's DatePicker now, through `AcquiredDatePicker` (ours, for the seam only: the
+  API's `YYYY-MM-DD` to a CalendarDate and back, the calendar ending at today, the day handed on
+  at Apply). The range picker the CLI brought along is not added. Measured in the pane: a picked
+  day lands at Apply, Cancel leaves the value, 12 September and later disabled with today as
+  "Last available date". One accessibility finding accepted and logged: the dialog keeps the
+  kit's name "Date picker"; the button and the date segments carry the field's own label.
 
 ## Next
 
