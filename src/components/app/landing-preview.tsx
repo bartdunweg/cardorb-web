@@ -59,7 +59,10 @@ export function LandingPreview({ className }: { className?: string }) {
         <div
             role="img"
             aria-label="Preview of the Cardorb dashboard"
-            className={`pointer-events-none flex flex-col gap-5 overflow-hidden rounded-2xl bg-page p-4 shadow-lift-lg ring-1 ring-primary select-none ring-inset sm:gap-6 sm:p-6 ${className ?? ""}`}
+            // No background of its own: the dashboard sits on the landing's ground, as Linear's does,
+            // held by one hairline. A second surface behind the tiles read as tooling laid over the
+            // page, plainest in the dark. The owner's call.
+            className={`pointer-events-none flex flex-col gap-5 overflow-hidden rounded-2xl p-4 ring-1 ring-primary select-none ring-inset sm:gap-6 sm:p-6 ${className ?? ""}`}
         >
             {/* Home's value block: the label, the number, the change over the period, the line. */}
             <div className="flex flex-col gap-4">
