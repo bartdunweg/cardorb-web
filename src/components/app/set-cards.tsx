@@ -44,7 +44,8 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
         const row = rows[0];
         if (row) {
             setAddable(null);
-            setSelected(row);
+            // The row stores one name, the English one; the printed name is the shelf's to tell.
+            setSelected({ ...row, local_name: card.localName });
         }
     };
 
@@ -87,6 +88,7 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
 const fromCatalogue = (c: SetCard): Card => ({
     id: c.id,
     name: c.name,
+    local_name: c.localName,
     set_name: c.setName,
     set_abbr: null,
     set: c.setName,

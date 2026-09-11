@@ -160,6 +160,13 @@ export const removedAnswer = z.object({ card: removedCardSchema.nullish() });
 export type Card = {
     id: string;
     name: string;
+    /**
+     * What the card itself prints, where `name` is the English for it: a Japanese, Korean or
+     * Chinese card is named in English on every shelf (the app is English throughout) and the sheet
+     * shows the printed name in brackets after it. Absent or null on an English card, and on a row
+     * read from the collection, which stores one name.
+     */
+    local_name?: string | null;
     set_name: string | null;
     /** The code printed on the card: MEW, SFA, DEX. Null where the catalogue codes no set. */
     set_abbr: string | null;
@@ -432,7 +439,9 @@ export function seriesFromSets(sets: CatalogueSet[]): { series: SetSeries[]; com
 export type SetCard = {
     id: string;
     number: string;
+    /** In English on every shelf; `localName` is what a Japanese, Korean or Chinese card prints, or null. */
     name: string;
+    localName: string | null;
     /** As the catalogue names the set; what a new collection row is filed under. */
     setName: string;
     rarity: string | null;
@@ -455,6 +464,7 @@ export const setCardFromBrowse = (c: BrowseCard): SetCard => ({
     id: c.id,
     number: c.number,
     name: c.name,
+    localName: c.localName ?? null,
     setName: c.setName,
     rarity: c.rarity,
     types: c.types,
@@ -508,6 +518,9 @@ export const browseCardSchema = z.object({
     id: z.string(),
     number: z.string(),
     name: z.string(),
+    /* The printed name of a card whose `name` is a translation (a Japanese card); null on English
+       cards, absent from an API before it named the other shelves in English. */
+    localName: nullable(z.string()).optional(),
     setName: z.string(),
     image: nullable(z.string()),
     imageHigh: nullable(z.string()),
