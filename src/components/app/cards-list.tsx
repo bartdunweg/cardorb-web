@@ -18,8 +18,18 @@ import type { CardsSize, CardsViewMode } from "@/lib/cards-view";
  * comes within a screen of view, and appended. Nothing here pages by URL: the sort and the
  * filters stay in it, how far the reader scrolled does not.
  */
+/**
+ * The URL of the list the reader saw last, in this tab. A module variable, not state: the list is
+ * keyed on its URL and remounts on every search, so nothing inside a mount remembers the one
+ * before it. Read once at mount, written after; the same page's URL with a different query is a
+ * list the reader changed, any other is one they arrived at.
+ */
+let lastListKey: string | null = null;
+const pathOf = (key: string) => key.split("?")[0];
+
 export function CardsList({
     list,
+    listKey,
     filter,
     narrowed,
     view,
@@ -29,6 +39,8 @@ export function CardsList({
     empty,
 }: {
     list: Promise<CardList>;
+    /** The list's own URL, what `cards-view` keys this on; for telling a change from an arrival. */
+    listKey?: string;
     filter: CardFilter;
     narrowed: boolean;
     view: CardsViewMode;
@@ -111,13 +123,25 @@ export function CardsList({
 
     /* Moving it above the early return is not enough on its own. `folder-body.tsx` keys the whole
        view on the list's URL, so a search does not update this component, it replaces it — and a
-       live region that arrives with its text already in it is never read out. Where a search brought
-       us here (`narrowed`), the region is therefore mounted empty and the sentence written a beat
-       later, so what a screen reader sees is a region that was already standing and then changed.
-       A plain effect is not enough either: React commits the insert and the text in one batch, which
-       is one mutation record and one region-with-content again. Landing on a whole folder writes the
-       count straight away instead, so arriving somewhere is not narrated; the node then stays put,
-       and Show more speaks by changing it. */
+       live region that arrives with its text already in it is never read out. Where the reader
+       changed this list (`changed`), the region is therefore mounted empty and the sentence written a
+       beat later, so what a screen reader sees is a region that was already standing and then
+       changed. A plain effect is not enough either: React commits the insert and the text in one
+       batch, which is one mutation record and one region-with-content again. Arriving at a list
+       writes the count straight away instead, so landing somewhere is not narrated; the node then
+       stays put, and Show more speaks by changing it.
+
+       Changed, not narrowed: it used to ask "is this list filtered", which is the wrong question —
+       clearing a search back to the whole list is as much a change as narrowing it, and was silent.
+       The reader changed the list when the one they saw last, in this tab, was the same page with
+       a different query. The comparison is made once, in the state's initialiser, because the
+       variable it reads is written by the effect below and a render must not depend on that. */
+    const [changed] = useState(
+        () => narrowed || (lastListKey !== null && listKey !== undefined && lastListKey !== listKey && pathOf(lastListKey) === pathOf(listKey)),
+    );
+    useEffect(() => {
+        if (listKey !== undefined) lastListKey = listKey;
+    }, [listKey]);
     const [ready, setReady] = useState(false);
     useEffect(() => {
         const t = setTimeout(() => setReady(true), 100);
@@ -128,7 +152,7 @@ export function CardsList({
         <>
             {/* sr-only is position: absolute, so it is not a flex item and adds neither height nor gap. */}
             <p aria-live="polite" className="sr-only">
-                {narrowed && !ready ? "" : announcement}
+                {changed && !ready ? "" : announcement}
             </p>
             {first.total === 0 ? (
                 <div className="flex flex-1 flex-col">{narrowed ? noHits : empty}</div>

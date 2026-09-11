@@ -48,13 +48,11 @@ export function AppSidebar({ account, collections }: { account: Promise<Account>
     return (
         <>
             <PrefetchRoutes hrefs={SIDEBAR_ROUTES} />
-            {/* The kit's root is an <aside>, so on desktop the whole navigation was a complementary
-                landmark and "jump to navigation" found nothing at all. The kit file is not ours to edit,
-                so the landmark is made from here, named as the phone's tab bar is. HTML-AAM says an
-                unnamed <aside> inside a <nav> maps to generic; Chrome has not shipped that yet and still
-                exposes it, so the sidebar reads as a navigation landmark with a nameless complementary
-                inside it until it does — one landmark too many, where before there was no navigation at
-                all. max-lg:hidden because both children are already hidden below lg: without it an empty
+            {/* The kit's root was an <aside>, so on desktop the whole navigation was a complementary
+                landmark and "jump to navigation" found nothing at all. The landmark is made from here,
+                named as the phone's tab bar is, and the kit's root is a <div> now (marked in its file):
+                Chrome exposed the unnamed <aside> inside this <nav> as a second, nameless landmark.
+                max-lg:hidden because both children are already hidden below lg: without it an empty
                 second "Primary" would stand beside the tab bar's. */}
             <nav aria-label="Primary" className="max-lg:hidden">
                 <SidebarNavigationSectionDividers

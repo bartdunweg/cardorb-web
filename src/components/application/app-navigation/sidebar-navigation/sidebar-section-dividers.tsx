@@ -1,5 +1,9 @@
 "use client";
 
+// Changed from the kit: the root is a <div>, not an <aside>. app-sidebar.tsx wraps it in the
+// <nav> that names the landmark, and an <aside> inside that read to Chrome as a nameless
+// complementary landmark within the navigation — one landmark too many (HTML-AAM says generic;
+// Chrome has not shipped that). Nothing styled on the tag.
 import type { ReactNode } from "react";
 import { SearchLg } from "@untitledui/icons";
 import Link from "next/link";
@@ -38,7 +42,7 @@ export const SidebarNavigationSectionDividers = ({
     const MAIN_SIDEBAR_WIDTH = 276;
 
     const content = (
-        <aside
+        <div
             style={
                 {
                     "--width": `${MAIN_SIDEBAR_WIDTH}px`,
@@ -72,7 +76,7 @@ export const SidebarNavigationSectionDividers = ({
             </NavList>
 
             <div className="mt-auto flex flex-col gap-5 px-2 py-4 lg:gap-6 lg:px-4 lg:py-4">{footer ?? <NavAccountCard />}</div>
-        </aside>
+        </div>
     );
 
     return (
