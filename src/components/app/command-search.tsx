@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { type CatalogueFilters, type PokemonCard, addCard, searchPokemon } from "@/app/(app)/dashboard/cards/actions";
@@ -11,6 +11,8 @@ import { SearchTrigger } from "@/components/app/search-trigger";
 import { notify } from "@/components/app/toast";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import { rememberSearch } from "@/hooks/use-recent-searches";
+import { loadCatalogueIndex, lookupCards } from "@/lib/catalogue-client";
+import { searchIndex } from "@/lib/catalogue-index";
 import type { BrowseLanguage } from "@/lib/languages";
 import { takenHit } from "@/lib/search-hit";
 
@@ -60,6 +62,23 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
             live = false;
         };
     }, [wanted, sets, language]);
+    /* The English catalogue, in the browser: fetched the first time the palette is wanted (a day
+       in the HTTP cache after that) and searched here, so typing is answered before a request
+       could have left. Until it is in hand, and on the other shelves, the API is asked as before.
+       What the document does not know — owned, wishlist, the price — is looked up for the hits
+       on screen once they are (below). */
+    const [inBrowser, setInBrowser] = useState(false);
+    useEffect(() => {
+        if (!wanted) return;
+        loadCatalogueIndex().then((found) => setInBrowser(Boolean(found)));
+    }, [wanted]);
+    const search = async (term: string, params: CatalogueFilters, page: number) => {
+        if ((params.language ?? "en") === "en") {
+            const index = await loadCatalogueIndex();
+            if (index) return searchIndex(index, term, { set: params.set, type: params.type }, page);
+        }
+        return searchPokemon(term, params, page);
+    };
     const {
         results: hits,
         loading,
@@ -70,12 +89,38 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
         loadMore,
         total,
         update,
-    } = useDebouncedSearch<PokemonCard, CatalogueFilters>(inputValue, searchPokemon, {
+    } = useDebouncedSearch<PokemonCard, CatalogueFilters>(inputValue, search, {
         minLength: 2,
-        delay: 300,
+        // A search in memory can follow the typing closely; one that leaves waits for the pause.
+        delay: inBrowser && language === "en" ? 80 : 300,
         params: filters,
         pageSize: SEARCH_PAGE_SIZE,
     });
+    /* The marks and the price for the hits the document found, from the API, once per hit per
+       question: what is yours and what it costs are the two things the document cannot say.
+       Asked after the hits are shown, so they never wait on it; a lookup that fails leaves the
+       hits as they are, unmarked, which is what a search result without them has always been. */
+    const lookedUp = useRef<Set<string>>(new Set());
+    useEffect(() => {
+        if (!inBrowser || language !== "en" || loading) return;
+        const ids = hits.filter((h) => !lookedUp.current.has(h.id)).map((h) => h.id);
+        if (!ids.length) return;
+        for (const id of ids) lookedUp.current.add(id);
+        lookupCards(ids)
+            .then((known) => {
+                const byId = new Map(known.map((c) => [c.id, c]));
+                update((current) => current.map((h) => byId.get(h.id) ?? h));
+            })
+            .catch(() => {
+                for (const id of ids) lookedUp.current.delete(id);
+            });
+        // Only when hits land: the ids are what the lookup is for.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [hits, loading]);
+    useEffect(() => {
+        // A new question starts the marks over: a hit found twice is looked up twice, once per answer.
+        lookedUp.current = new Set();
+    }, [inputValue, filters]);
     // A term is kept once its search has found something, for the palette's empty state
     // (use-recent-searches.ts).
     useEffect(() => {
