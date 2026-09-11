@@ -883,27 +883,35 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                 </p>
                                                 {/* Under each other, each the width of the panel: two side by side made a choice out of
                                                     what is really two offers, and the narrower one read as the lesser. */}
-                                                <div className={cx("flex gap-2", wishFirst ? "flex-col-reverse" : "flex-col")}>
-                                                    <Button
-                                                        size="md"
-                                                        color={wishFirst ? "secondary" : "primary"}
-                                                        iconLeading={Plus}
-                                                        className="w-full"
-                                                        isDisabled={busy}
-                                                        onClick={() => void add("collection")}
-                                                    >
-                                                        {intoLabel}
-                                                    </Button>
-                                                    <Button
-                                                        size="md"
-                                                        color={wishFirst ? "primary" : "secondary"}
-                                                        iconLeading={Heart}
-                                                        className="w-full"
-                                                        isDisabled={busy}
-                                                        onClick={() => void add("wishlist")}
-                                                    >
-                                                        Add to wishlist
-                                                    </Button>
+                                                {/* In the order they are offered, in the DOM too: a keyboard reaches the leading one first. */}
+                                                <div className="flex flex-col gap-2">
+                                                    {(wishFirst ? ["wishlist", "collection"] : ["collection", "wishlist"]).map((list) =>
+                                                        list === "collection" ? (
+                                                            <Button
+                                                                key={list}
+                                                                size="md"
+                                                                color={wishFirst ? "secondary" : "primary"}
+                                                                iconLeading={Plus}
+                                                                className="w-full"
+                                                                isDisabled={busy}
+                                                                onClick={() => void add("collection")}
+                                                            >
+                                                                {intoLabel}
+                                                            </Button>
+                                                        ) : (
+                                                            <Button
+                                                                key={list}
+                                                                size="md"
+                                                                color={wishFirst ? "primary" : "secondary"}
+                                                                iconLeading={Heart}
+                                                                className="w-full"
+                                                                isDisabled={busy}
+                                                                onClick={() => void add("wishlist")}
+                                                            >
+                                                                Add to wishlist
+                                                            </Button>
+                                                        ),
+                                                    )}
                                                 </div>
                                             </div>
                                         ) : null}
