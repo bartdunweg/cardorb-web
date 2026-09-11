@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { SearchLg } from "@untitledui/icons";
+import { SearchLg, XClose } from "@untitledui/icons";
 import dynamic from "next/dynamic";
 import { Button as AriaButton, Heading as AriaHeading } from "react-aria-components";
 import { type CardHit, type MyCardsFilters, searchMyCards } from "@/app/(app)/dashboard/cards/actions";
@@ -28,7 +28,7 @@ import { cx } from "@/utils/cx";
 const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-slideout").then((m) => m.CardDetailSlideout), { ssr: false });
 
 // The collection search on a phone: a search-field-looking bar at the top of Home that opens a
-// bottom sheet with the field and the hits. The desktop sidebar has its own trigger and palette.
+// page of its own with the field and the hits. The desktop sidebar has its own trigger and palette.
 export function MobileSearchSheet() {
     const [open, setOpen] = useState(false);
 
@@ -42,9 +42,11 @@ export function MobileSearchSheet() {
                 isDismissable
                 isOpen={open}
                 onOpenChange={setOpen}
-                // The same sheet a card opens: the page's own ground, the whole screen but for the page
-                // sheet's inset under the status bar.
-                dialogClassName="scrollbar-hide mt-auto h-[calc(100dvh-env(safe-area-inset-top)-0.625rem)] max-h-[calc(100dvh-env(safe-area-inset-top)-0.625rem)] bg-page backdrop-blur-none sm:h-full sm:max-h-full"
+                // The same sheet a card opens: the whole screen, edge to edge, sliding up from the bottom.
+                // It used to stop short of the top by iOS' page-sheet inset, with a rounded top, and that
+                // read as a bottom sheet over Home rather than a place of its own. The page's own opaque
+                // ground rather than glass, as the card sheet.
+                dialogClassName="scrollbar-hide h-dvh max-h-dvh rounded-none bg-page backdrop-blur-none sm:h-full sm:max-h-full"
             >
                 {({ close }) => <CollectionSearch onClose={close} />}
             </SlideoutMenu>
@@ -103,24 +105,33 @@ function CollectionSearch({ onClose }: { onClose: () => void }) {
 
     return (
         <>
-            <SlideoutMenu.Header onClose={onClose} className="flex flex-col gap-3 pr-14">
+            <SlideoutMenu.Header close="none" className="flex flex-col gap-3 pt-3 sm:pt-6">
+                {/* Pushed clear of the status bar, since the page runs to the top of the screen: the
+                    buttons must not. Nothing on a desktop, where the inset is zero. */}
+                <div aria-hidden="true" className="-mt-3 sm:hidden" style={{ height: "env(safe-area-inset-top)" }} />
                 {/* The field is the title; the word stays for a screen reader, which names the dialog by it. */}
                 <AriaHeading slot="title" className="sr-only">
                     Search
                 </AriaHeading>
-                <Input
-                    aria-label="Search a card"
-                    icon={SearchLg}
-                    placeholder="Search a card…"
-                    value={query}
-                    onChange={setQuery}
-                    ref={field}
-                    wrapperClassName="rounded-full"
-                />
+                <div className="flex items-center gap-2">
+                    {/* Close at the left of the field, a round secondary button the field's height: where the
+                        card sheet keeps its close, and where a thumb is. The field takes the rest of the row. */}
+                    <Button color="secondary" size="md" iconLeading={XClose} aria-label="Close" className="shrink-0" onClick={onClose} />
+                    <Input
+                        aria-label="Search a card"
+                        icon={SearchLg}
+                        placeholder="Search a card…"
+                        value={query}
+                        onChange={setQuery}
+                        ref={field}
+                        className="min-w-0 flex-1"
+                        wrapperClassName="rounded-full"
+                    />
+                </div>
                 {/* Which catalogue the shelf below shows; in the head so it stays put while the shelf scrolls.
                     Once something is typed, the chips that narrow the hits take its place. */}
                 {searching ? (
-                    <FilterChipRow className="-mr-14" onClear={filtering ? () => setFilters({}) : undefined}>
+                    <FilterChipRow className="-mr-4 md:-mr-6" onClear={filtering ? () => setFilters({}) : undefined}>
                         <FilterChip
                             label="Set"
                             value={filters.set}
@@ -135,7 +146,7 @@ function CollectionSearch({ onClose }: { onClose: () => void }) {
                         />
                     </FilterChipRow>
                 ) : (
-                    <FilterChipRow className="-mr-14">
+                    <FilterChipRow className="-mr-4 md:-mr-6">
                         <LanguageFilterChip value={language} onChange={setLanguage} />
                     </FilterChipRow>
                 )}
