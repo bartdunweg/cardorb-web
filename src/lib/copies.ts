@@ -2,9 +2,27 @@ import { z } from "zod";
 import { type Card, FINISH_LABELS, FOIL_PATTERN_LABELS, type Finish, type FoilPattern } from "@/lib/api-shapes";
 import { WESTERN_LANGUAGES, languageOf } from "@/lib/languages";
 
-/** The same card: the same set, number and name; a second row of it is another copy, not another card. */
-export const sameCard = (a: Pick<Card, "set" | "number" | "name">, b: Pick<Card, "set" | "number" | "name">) =>
-    a.set === b.set && (a.number ?? "") === (b.number ?? "") && a.name === b.name;
+/** One card as the sheet, a list or a search names it: set, number, name, and the set's title where known. */
+export type CardName = Pick<Card, "set" | "number" | "name"> & Partial<Pick<Card, "set_name">>;
+
+/**
+ * The names a card's set goes by: the API stores a set under one name and titles it under
+ * another ("SV Black Star Promos", titled "SVP Black Star Promos"), and the catalogue, so a
+ * search hit or a set page, knows only the title. Most sets are named once, both ways.
+ */
+const setNames = (c: CardName): string[] => [c.set, c.set_name].filter((s): s is string => Boolean(s));
+
+/**
+ * The same card: the same set, number and name; a second row of it is another copy, not another
+ * card. A set matches under any name it goes by, so a row the API answered for the set's title
+ * is not dropped for being stored under the set's name (the SVP Pikachu opened on the catalogue's
+ * card, and every action in the sheet's bar answered "Invalid input").
+ */
+export const sameCard = (a: CardName, b: CardName) => {
+    const sets = setNames(b);
+    const sameSet = a.set === b.set || setNames(a).some((s) => sets.includes(s));
+    return sameSet && (a.number ?? "") === (b.number ?? "") && a.name === b.name;
+};
 
 const rank = (c: Card) =>
     [
