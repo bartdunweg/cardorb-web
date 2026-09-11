@@ -13,6 +13,7 @@ const tile = {
     id: "sv03.5-011",
     number: "011",
     name: "Metapod",
+    localName: null,
     setName: "151",
     rarity: null,
     types: ["Grass"],

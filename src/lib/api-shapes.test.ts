@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
     type CatalogueSet,
     absoluteImage,
+    browseCardSchema,
     cardFromItem,
     folderFromApi,
     pokemonCardFromBrowse,
@@ -243,6 +244,7 @@ describe("setCardFromBrowse", () => {
             id: "sv1-1",
             number: "1",
             name: "Sprigatito",
+            localName: null,
             setName: "Scarlet & Violet",
             rarity: "Common",
             types: ["Grass"],
@@ -258,12 +260,38 @@ describe("setCardFromBrowse", () => {
     });
 });
 
+describe("setCardFromBrowse, a card off another shelf", () => {
+    it("keeps the printed name beside the English one, and reads an older API's silence as none", () => {
+        const base = {
+            id: "SV4a-001",
+            number: "001",
+            name: "Oddish",
+            setName: "Shiny Treasure ex",
+            image: null,
+            imageHigh: null,
+            rarity: null,
+            types: [],
+            series: "Scarlet & Violet",
+            owned: false,
+            wishlist: false,
+            quantity: 0,
+            itemIds: [],
+            price: null,
+            priceHolo: null,
+            tcgId: "SV4a-001",
+        };
+        expect(setCardFromBrowse({ ...base, localName: "ナゾノクサ" })).toMatchObject({ name: "Oddish", localName: "ナゾノクサ" });
+        expect(setCardFromBrowse(browseCardSchema.parse(base)).localName).toBeNull();
+    });
+});
+
 describe("pokemonCardFromSetCard", () => {
     it("carries what the add action validates: name, set, number, rarity, types", () => {
         const card = pokemonCardFromSetCard({
             id: "sv1-1",
             number: "1",
             name: "Sprigatito",
+            localName: null,
             setName: "Scarlet & Violet",
             rarity: null,
             types: [],

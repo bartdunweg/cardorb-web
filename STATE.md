@@ -93,6 +93,18 @@ for the failures that leave no trace — and everything both passes found is clo
   `zh-tw` and `zh-cn` are languages now, each asking its own catalogue; `zh` stays for old rows
   and asks both. The note that held this back feared an enum the iOS app decodes; checked, it
   decodes no language field at all. Old `zh` rows are not rewritten.
+- **Every shelf reads in English** (cardorb-api#275, web this PR). Bart's call: the app is English
+  throughout, and a Japanese set page named its cards リザードンex. The API names a Japanese,
+  Korean or Chinese card off Cardmarket's product list (through the committed product id maps)
+  or, failing that, its species and printed suffix — 12,308 of 12,781 Japanese cards, 6,582 of
+  7,436 Traditional Chinese, 823 of 877 Simplified, all 239 Korean; the rest, old-era trainers
+  mostly, keep their printed name. The eras are English too (Scarlet & Violet, not ポケモンカード
+  ゲーム スカーレット&バイオレット). The printed name travels as `localName` and the sheet shows
+  it in brackets after the English one — "Oddish (ナゾノクサ)" — on a set page's card, owned or
+  not; a collection row stores one name, English from now on. Set names still come off the
+  hand-kept lists: SV4a is Shiny Treasure ex now (TCGdex mislabels it), and the 46 Simplified
+  Chinese sets and three coming MEGA sets have no English name yet. Measured in the pane against
+  the API worktree: SV4a in Japanese, 320 English names, the sheet's bracketed heading.
 - **The small thumbnails lie face down too** (#324): table rows, the add dialog, the folder's
   card search and the Pokédex slider. The Fomantis acquired date is put right (2026-09-07),
   through the sheet on the dev server.
