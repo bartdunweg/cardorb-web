@@ -29,7 +29,15 @@ type FolderLink = { id: string; name: string; kind: "manual" | "rule"; count: nu
 // chance of a click made the page you are on wait for it.
 const SIDEBAR_ROUTES = ["/dashboard", "/dashboard/collections", "/dashboard/cards", "/dashboard/favorites", "/dashboard/sets", "/dashboard/wishlist"];
 
-export function AppSidebar({ account, collections }: { account: Promise<Account>; collections: Promise<FolderLink[]> }) {
+export function AppSidebar({
+    account,
+    collections,
+    favoritesCount,
+}: {
+    account: Promise<Account>;
+    collections: Promise<FolderLink[]>;
+    favoritesCount: Promise<number | null>;
+}) {
     const pathname = usePathname();
 
     const navItems: (NavItemType | NavItemDividerType)[] = [
@@ -38,7 +46,16 @@ export function AppSidebar({ account, collections }: { account: Promise<Account>
         { label: "Wishlist", href: "/dashboard/wishlist", icon: Heart },
         { label: "Collection", href: "/dashboard/cards", icon: Rows01 },
         { divider: true, label: "Binders" },
-        { label: "Favorites", href: "/dashboard/favorites", icon: Star01 },
+        {
+            label: "Favorites",
+            href: "/dashboard/favorites",
+            icon: Star01,
+            badge: (
+                <Suspense fallback={null}>
+                    <FavoritesCount count={favoritesCount} />
+                </Suspense>
+            ),
+        },
         // A folder like the ones below it. The Pokédex is one of the two that are
         // always there, not a different kind of thing, and drawing it as a grid
         // said otherwise.
@@ -107,20 +124,7 @@ function FolderRows({ collections, activeUrl }: { collections: Promise<FolderLin
                          * the thing: from the sidebar it is a folder with cards in
                          * it, and how they got there is the folder's own business.
                          */}
-                        <NavItemBase
-                            type="link"
-                            icon={Folder}
-                            href={href}
-                            current={activeUrl === href}
-                            // How many cards are in it, at the row's end as the Binders page's rows have it:
-                            // a number alone, not the kit's pill, which would make every row a notification.
-                            badge={
-                                <span className="ml-3 shrink-0 text-sm text-tertiary tabular-nums">
-                                    {c.count}
-                                    <span className="sr-only"> card{c.count === 1 ? "" : "s"}</span>
-                                </span>
-                            }
-                        >
+                        <NavItemBase type="link" icon={Folder} href={href} current={activeUrl === href} badge={<Count count={c.count} />}>
                             {c.name}
                         </NavItemBase>
                     </li>
@@ -128,6 +132,22 @@ function FolderRows({ collections, activeUrl }: { collections: Promise<FolderLin
             })}
         </>
     );
+}
+
+// How many cards are in a binder, at the row's end as the Binders page's rows have it: a number
+// alone, not the kit's pill, which would make every row a notification.
+function Count({ count }: { count: number }) {
+    return (
+        <span className="ml-3 shrink-0 text-sm text-tertiary tabular-nums">
+            {count}
+            <span className="sr-only"> card{count === 1 ? "" : "s"}</span>
+        </span>
+    );
+}
+
+function FavoritesCount({ count }: { count: Promise<number | null> }) {
+    const n = use(count);
+    return n === null ? null : <Count count={n} />;
 }
 
 function AccountSlot({ account }: { account: Promise<Account> }) {

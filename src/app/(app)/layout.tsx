@@ -6,7 +6,7 @@ import { MobileTabBar } from "@/components/app/mobile-nav";
 import { MAIN_ID, SkipToContent } from "@/components/app/skip-to-content";
 import { Toasts } from "@/components/app/toast";
 import { ApiError } from "@/lib/api";
-import { getMyFolders } from "@/lib/collections";
+import { getFavoritesCount, getMyFolders } from "@/lib/collections";
 import { type Account, accountFrom, getMyProfile } from "@/lib/profile";
 import { RouteProvider } from "@/providers/router-provider";
 
@@ -21,14 +21,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     // frame streams at once, the page's loading.tsx with it, and the folder rows and the account
     // card fill in when their read lands (each logs its own timing line).
     //
-    // Only the folders are asked for, and their counts ride along in that one answer; the
-    // favorites count the Binders page shows costs a read of the stats, which the frame does not pay.
+    // The folders' counts ride along in that one answer; the favorites count is a read of the
+    // stats, cached like the folders, so every binder in the sidebar has its number (Bart's call).
     const me = getMyProfile();
     const folders = getMyFolders();
     // What the client components get resolves always: a rejection there would reach the root
     // error boundary and take the frame down with it. The failure itself is judged in SessionGuard.
     const account = me.then(accountFrom, () => NO_ACCOUNT);
     const collections = folders.catch(() => []);
+    const favoritesCount = getFavoritesCount().catch(() => null);
 
     return (
         <RouteProvider>
@@ -43,7 +44,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <SkipToContent />
                 <div className="flex min-h-dvh flex-col overflow-x-clip bg-page">
                     <div className="flex flex-1 flex-col lg:flex-row">
-                        <AppSidebar account={account} collections={collections} />
+                        <AppSidebar account={account} collections={collections} favoritesCount={favoritesCount} />
                         {/* tabIndex -1 so focus can be sent here after a navigation without putting
                             the element itself in the tab order. */}
                         <main id={MAIN_ID} tabIndex={-1} className="flex min-w-0 flex-1 flex-col outline-none">
