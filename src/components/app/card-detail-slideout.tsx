@@ -4,12 +4,13 @@ import type { ReactNode } from "react";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight, DotsHorizontal, Heart, Phone01, Plus, Star01, Trash01, XClose } from "@untitledui/icons";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import {
     type CardFacts,
     addCard,
     cardFacts,
+    editCopies,
     listCopies,
     removeCard,
     rereadMine,
@@ -36,6 +37,7 @@ import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Tooltip } from "@/components/base/tooltip/tooltip";
 import { type PokemonCard, type RemovedCard, isReverseFinish } from "@/lib/api-shapes";
+import { binderFromPath, isBinderPath } from "@/lib/binder-from-path";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
 import { type CopyGroup, groupCopies, sortCopies } from "@/lib/copies";
 import { matchesRule } from "@/lib/folder-rule";
@@ -187,14 +189,24 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
               }
             : null);
 
+    const [collections, setCollections] = useState<FolderChoice[]>([]);
+    /* The hand-filled binder whose page this sheet was opened on, if any: a card taken here goes
+       into it as well. Read from the path, the one fact every mounted sheet shares — the palette's
+       sheet hangs from the layout, beside the page, out of reach of anything the page provides. */
+    const pathname = usePathname();
+    const binder = readOnly ? null : binderFromPath(pathname, collections);
+    // On a binder's page before the binder list has answered: the press would file nowhere, so it waits a beat.
+    const binderPending = !readOnly && isBinderPath(pathname) && collections.length === 0;
+
     /* Taking a card the sheet was only showing. The list behind re-reads, and the sheet closes:
        what it was showing is not what it is now, and the row it became has its own copies. */
     const add = async (list: "collection" | "wishlist") => {
         if (!takeable) return;
         setBusy(true);
-        const res = await addCard(takeable, list);
+        const into = list === "collection" ? binder : null;
+        const res = await addCard(takeable, list, into?.id);
         setBusy(false);
-        const where = list === "wishlist" ? "your wishlist" : "your collection";
+        const where = list === "wishlist" ? "your wishlist" : into ? into.name : "your collection";
         if (!res.ok) {
             notify.failed(`That card was not added to ${where}`, { description: res.error });
             return;
@@ -205,7 +217,25 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         onClose();
         notify.done(`Added to ${where}`, { description: takeable.name });
     };
-    const [collections, setCollections] = useState<FolderChoice[]>([]);
+    /* A card you hold, into the binder this page is: the first row not yet in a binder, else the
+       row shown, which then moves. A row is one kind of copy, so ×4 goes as four — as the Binder
+       select on a copy does it. Only a row the store has answered with: a sheet opened from the
+       palette shows the catalogue's card until its rows land, and that card's id is no row's. */
+    const fileInBinder = async () => {
+        if (!mine || !binder || !copies?.length) return;
+        const row = copies.find((r) => r.collection_id === null) ?? copies[0];
+        pressed.current += 1;
+        setBusy(true);
+        const res = await editCopies([row.id], { collectionId: binder.id });
+        setBusy(false);
+        if (!res.ok) {
+            notify.failed(`${mine.name} was not added to ${binder.name}`, { description: res.error });
+            return;
+        }
+        notify.done(`Added to ${binder.name}`, { description: row.collection_id ? "Moved from another binder" : mine.name });
+        scheduleRefresh();
+        void reloadCopies();
+    };
     const [facets, setFacets] = useState<Facets | undefined>(undefined);
     // The star, kept here so a tap answers at once; the page re-reads the flag after the save.
     const [starred, setStarred] = useState<boolean | null>(null);
@@ -958,10 +988,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                         size="md"
                                                         iconLeading={Plus}
                                                         className="w-full"
-                                                        isDisabled={busy}
+                                                        isDisabled={busy || binderPending}
                                                         onClick={() => void add("collection")}
                                                     >
-                                                        Add to collection
+                                                        {binder ? `Add to ${binder.name}` : "Add to collection"}
                                                     </Button>
                                                     <Button
                                                         size="md"
@@ -981,6 +1011,14 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                             merged them, so four identical copies are one card saying ×4, and a change to
                                             it is made to all four. The card the sheet opened on is there at once; the
                                             other kinds arrive. */}
+                                        {/* Opened on a hand-filled binder's page with a card you hold that is not in
+                                            it yet: the offer this page is for. The chip under "In binders" and this
+                                            button trade places once it lands. */}
+                                        {binder && mine?.owned && !emptied && !!copies?.length && !copies.some((r) => r.collection_id === binder.id) ? (
+                                            <Button size="md" iconLeading={Plus} className="w-full" isDisabled={busy} onClick={() => void fileInBinder()}>
+                                                Add to {binder.name}
+                                            </Button>
+                                        ) : null}
                                         {mine?.owned && !emptied
                                             ? groupCopies(copies ?? [mine]).map((group, i) => (
                                                   /* Keyed on the row, not the kind: the kind's key holds the condition and

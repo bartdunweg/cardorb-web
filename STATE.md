@@ -229,6 +229,21 @@ for the failures that leave no trace — and everything both passes found is clo
   complementary landmark inside the navigation. Measured in the pane's accessibility tree: one
   navigation landmark, no complementary. The clear-a-search path is measured by its DOM — region
   empty at mount, the count 100 ms later — not with a screen reader.
+- **A binder's page: the plus asks which kind, the dots hold the rest** (2026-09-11, branch
+  `palette-from-tablet-width`). Bart's calls, three in a row: Edit rule goes behind the dots; a
+  plus sits beside them; and pressing that plus is the choice, since you already know whether
+  you are after a card you do not have or one you hold. So on a hand-filled binder the plus is a
+  menu of two — Search all cards (the palette) and From your collection (your own cards, a
+  checkbox per hit, one "Add 3 cards" press through `editCopies`) — and the dots hold Edit
+  binder and Delete binder. A rule binder fills itself: its plus is the plain Add card. The
+  sheet reads the binder from the path (`binderFromPath`; the palette's sheet hangs from the
+  layout, out of reach of anything the page provides) and, opened on a hand-filled binder's
+  page, puts "Add to <binder>" first: a card you do not own lands in the collection and the
+  binder in one press, a card you hold gets its first unfiled row moved there. Found on the
+  way: `FolderPage` drops `actions` whenever `settings` or `add` is given, so since #172 a
+  hand-filled binder had shown only the plus — no Edit, no Delete, and an "Add cards" dialog
+  nobody could reach; both kinds use the `settings`/`add` pair now. The Binders overview's
+  phone bar had lost its plus on main the same hour; the desktop pair from #375 stands.
 - **Pokémon Card 151's Japanese cards looked like reverse holos** (cardorb-api#277). Bart saw it;
   it was the scan, not the app: TCGdex photographed SV2a in its Master Ball variant, every card
   (001, 011, 025, 150 looked at), no other Japanese set sampled. A set list in `artwork.ts`, SV2a
