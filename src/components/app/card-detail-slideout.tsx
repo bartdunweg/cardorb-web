@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight, DotsHorizontal, Heart, Phone01, Plus, Star01, Trash01, XClose } from "@untitledui/icons";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -272,8 +272,22 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
      * through it. Only when nothing is being typed into: the sheet holds a note field and a
      * grade box, and a left arrow inside those belongs to the cursor.
      */
+    /*
+     * Which way the list was stepped, kept for the art below: the next card slides in from the
+     * side its arrow sits on, the last one leaves through the other. Zero when the sheet opened
+     * on this card, so there is nothing to slide from.
+     */
+    const stepDir = useRef<-1 | 0 | 1>(0);
+    const step = useCallback(
+        (dir: -1 | 1) => {
+            const go = dir < 0 ? onPrev : onNext;
+            if (!go) return;
+            stepDir.current = dir;
+            go();
+        },
+        [onPrev, onNext],
+    );
     useEffect(() => {
-        if (!onPrev && !onNext) return;
         const onKey = (e: KeyboardEvent) => {
             if (e.metaKey || e.ctrlKey || e.altKey) return;
             const el = e.target as HTMLElement | null;
@@ -287,12 +301,12 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                 )
             )
                 return;
-            if (e.key === "ArrowLeft") onPrev?.();
-            if (e.key === "ArrowRight") onNext?.();
+            if (e.key === "ArrowLeft") step(-1);
+            if (e.key === "ArrowRight") step(1);
         };
         document.addEventListener("keydown", onKey);
         return () => document.removeEventListener("keydown", onKey);
-    }, [onPrev, onNext]);
+    }, [step]);
     // On an iPhone the card can follow the phone's tilt once the browser has asked; a Tilt button
     // in the bar is the tap it asks from. The question is the browser's, read as an external store,
     // false on the server, so both renders agree.
@@ -470,9 +484,11 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
      * jumped and the card teleported. Now the art crosses over. The last card's scan and blurred
      * copy stay underneath while the next card's are fetched, and each fades in over them once
      * its own picture is on screen — not on mount, or the fade would run on an empty box and the
-     * picture still pop in after it. Opacity only, 200 ms on the enter curve: this runs on every
-     * arrow press, so it has to stay under the threshold of noticing. Reduced motion keeps it,
-     * being a fade and nothing else.
+     * picture still pop in after it. The blurred copy is opacity only. The scan also travels:
+     * 12 px in from the side its arrow sits on while the last one slides 12 px out the other way,
+     * so stepping through a list reads as paging rather than as one card replaced by another.
+     * 250 ms on the enter curve: this runs on every arrow press, so it stays small. Reduced
+     * motion drops the travel and keeps the fade.
      *
      * The blurred copy underneath is never cleared: fully covered once the next one lands, it
      * costs one 64 px picture. The scan underneath goes as soon as the new one has faded in,
@@ -484,8 +500,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const [scanLoaded, setScanLoaded] = useState(false);
     const [blurLoaded, setBlurLoaded] = useState(false);
     const scanFade = useRef<HTMLDivElement>(null);
+    const prevScan = useRef<HTMLDivElement>(null);
     const blurFade = useRef<HTMLDivElement>(null);
-    const fades = useRef<{ scan?: Animation; blur?: Animation }>({});
+    const fades = useRef<{ scan?: Animation; blur?: Animation; prev?: Animation }>({});
     if (card?.image_url ? art?.id !== card.id : art !== null) {
         setArt(card?.image_url ? { id: card.id, scan: card.image_high_url ?? card.image_url, blur: card.image_url } : null);
         // Underneath only what was there while the sheet stayed open: opening it anew has nothing to cross from.
@@ -505,12 +522,38 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const landed = (which: "scan" | "blur", layer: React.RefObject<HTMLDivElement | null>, set: (v: boolean) => void, done?: () => void) => () => {
         set(true);
         fades.current[which]?.cancel();
+        fades.current.prev?.cancel();
         const el = layer.current;
         if (!el) return;
         const easing = getComputedStyle(el).getPropertyValue("--ease-enter").trim() || "ease-out";
-        const fade = el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing });
+        const dir = which === "scan" ? stepDir.current : 0;
+        const travel = dir !== 0 && !window.matchMedia("(prefers-reduced-motion: reduce)").matches ? dir * 12 : 0;
+        const duration = travel ? 250 : 200;
+        const fade = el.animate(
+            [
+                { opacity: 0, transform: `translateX(${travel}px)` },
+                { opacity: 1, transform: "translateX(0)" },
+            ],
+            { duration, easing },
+        );
         fades.current[which] = fade;
         if (done) fade.onfinish = done;
+        // The last scan leaves the way the new one came, or it would peek out beside the new
+        // one for the length of its travel.
+        const under = which === "scan" ? prevScan.current : null;
+        if (under && travel) {
+            fades.current.prev = under.animate(
+                [
+                    { opacity: 1, transform: "translateX(0)" },
+                    { opacity: 0, transform: `translateX(${-travel}px)` },
+                ],
+                {
+                    duration,
+                    easing,
+                    fill: "forwards",
+                },
+            );
+        }
     };
     // Stepping on before the last fade finished: its finish would have cleared the scan the
     // next card now needs underneath, so it is cancelled with the card it belonged to.
@@ -519,6 +562,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         return () => {
             running.scan?.cancel();
             running.blur?.cancel();
+            running.prev?.cancel();
         };
     }, [art?.id]);
 
@@ -672,7 +716,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                     iconLeading={ChevronLeft}
                                                     aria-label="Previous card"
                                                     className="pointer-events-auto glass text-primary ring-1 ring-glass ring-inset"
-                                                    onClick={() => onPrev()}
+                                                    onClick={() => step(-1)}
                                                 />
                                             </Tooltip>
                                         ) : (
@@ -686,7 +730,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                     iconLeading={ChevronRight}
                                                     aria-label="Next card"
                                                     className="pointer-events-auto glass text-primary ring-1 ring-glass ring-inset"
-                                                    onClick={() => onNext()}
+                                                    onClick={() => step(1)}
                                                 />
                                             </Tooltip>
                                         ) : (
@@ -699,7 +743,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                        printing's rarity pick the foil); the header's padding is the room it tilts in. */
                                     <div className="relative mx-auto w-full max-w-44">
                                         {prevArt ? (
-                                            <div aria-hidden="true" className="absolute inset-0 aspect-card overflow-hidden rounded-card">
+                                            <div ref={prevScan} aria-hidden="true" className="absolute inset-0 aspect-card overflow-hidden rounded-card">
                                                 <CardImage src={prevArt.scan} alt="" width={176} quality={75} className="object-cover" />
                                             </div>
                                         ) : null}
