@@ -178,8 +178,9 @@ for the failures that leave no trace — and everything both passes found is clo
   `WEB_REVALIDATE_URL` + `WEB_REVALIDATE_SECRET` on the API, production and preview), which
   drops the public and the user tag — `revalidateTag(…, "max")`, since Next refuses `updateTag`
   in a route handler. Measured on production: PATCH 19:34:25 → POST /api/revalidate 19:34:26 →
-  `/user/bartdunweg` "Collection not found" at 19:34:39; flipped back, page back. Card writes
-  from iOS are not on the hook yet; the same call fits their routes.
+  `/user/bartdunweg` "Collection not found" at 19:34:39; flipped back, page back. Every
+  collection write followed (cardorb-api#288): cards, copies, split, folders and the CSV import
+  say the same word beside their own `revalidateTag`, with two seconds for the web at most.
 - **Pokémon Card 151's Japanese cards looked like reverse holos** (cardorb-api#277). Bart saw it;
   it was the scan, not the app: TCGdex photographed SV2a in its Master Ball variant, every card
   (001, 011, 025, 150 looked at), no other Japanese set sampled. A set list in `artwork.ts`, SV2a
