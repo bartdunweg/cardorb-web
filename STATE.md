@@ -129,13 +129,15 @@ for the failures that leave no trace — and everything both passes found is clo
   rarities and a common is not one — which is the setting, not a bug. The test card was removed.
 - **The API's `check` job was red on main since #270** (cardorb-api#272): the card route's test
   made five real TCGdex requests and timed out on the runner. Mocked; 223 ms.
+- **Search can ask a language's catalogue** (cardorb-api#273, web #336). Bart's ask: the palette
+  and the Add dialog asked the English catalogue only, so "リザードン" found nothing. Both have
+  Browse's row of flags now; outside English the set and type chips go, being English lists.
+  Measured against production: 49 Japanese Charizards, and an add from the palette stores
+  `ja` / `SV2a-006`. Seen, not touched: many Japanese hits have no picture in the list — the
+  search reads TCGdex's scan only, where a set page also probes Limitless.
 
 ## Next
 
-- **Search asks the English catalogue only.** The palette and the Add dialog cannot find a
-  Japanese, Korean or Chinese card by name: `/catalog/search` has no language. Bart's ask,
-  2026-09-11: a language filter in search, the way Browse has one. API first (a `language`
-  parameter on the search route, the four TCGdex catalogues), then the palette.
 - **Condition and grade do not reach the price.** A Poor copy and a PSA 10 show what a Near Mint
   one does. Neither Cardmarket nor TCGplayer publishes either — checked, both feeds carry
   printing and no condition. PokemonPriceTracker does, RAW and PSA, at $9.99 a month, from the
