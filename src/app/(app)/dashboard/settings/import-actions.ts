@@ -39,6 +39,14 @@ const request = z.object({
     map: columnMap.optional(),
 });
 
+/*
+ * The schemas stay inside this file. A "use server" file may export nothing but
+ * async functions — Next checks that when the module is evaluated, and one
+ * exported zod object was enough for every import to answer 500 from the 7th
+ * of September (#263) until somebody said "nothing happens". Types are fine,
+ * they do not exist at runtime.
+ */
+
 /** `null` and "the key was not sent" are one answer here too. */
 const nullable = <T extends z.ZodType>(inner: T) => inner.nullish().transform((v) => v ?? null);
 
@@ -56,7 +64,7 @@ const importRow = z.object({
 });
 export type ImportRow = z.infer<typeof importRow>;
 
-export const importPreviewAnswer = z.object({
+const importPreviewAnswer = z.object({
     /** Everything the file held, rows written and rows passed over alike. */
     seen: z.number(),
     /** Rows not written: printings the file records as not held, plus rows it could not read. */
@@ -80,7 +88,7 @@ export const importPreviewAnswer = z.object({
 });
 export type ImportPreview = z.infer<typeof importPreviewAnswer>;
 
-export const importResultAnswer = z.object({
+const importResultAnswer = z.object({
     seen: z.number(),
     added: z.number(),
     skipped: z.number(),
