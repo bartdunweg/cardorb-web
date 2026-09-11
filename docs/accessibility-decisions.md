@@ -24,3 +24,4 @@ File and line, the finding in one clause, why it is accepted, and the date.
   Moving the toaster inside every modal — or giving it a working skip-to hotkey, sonner's
   own ⌥+T did not fire here — is a change to how overlays are built rather than to this
   screen. Revisit when the first modal needs a toast of its own. 2026-09-08.
+- `src/components/application/date-picker/date-picker.tsx:51` — the calendar popover's dialog is named "Date picker", not the field's own label ("Acquired", "Got it on"). Accepted: the trigger button and the day, month and year fields inside carry the field's label, so the user knows what the calendar is for from the button just pressed; keeping the kit file unedited beats renaming a dialog the user reaches through a named button. Revisit if one form ever holds two date fields. 2026-09-11.
