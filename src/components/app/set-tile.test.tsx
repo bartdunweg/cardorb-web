@@ -6,8 +6,8 @@ import { SetTile } from "./set-tile";
 /*
  * The tile is a picture with the words under it. What matters is that the box is never blank —
  * the logo, else the name's first word — and that the words say what the old row
- * said: the name, the count once, and the bar named the same way, so a screen reader hears
- * "12 of 207" once. A set the catalogue has no cards for says so instead of "0 of 60".
+ * said: the name and the count once, no bar. A set the catalogue has no cards for says so
+ * instead of "0 of 60".
  */
 
 const base: SetSummary = {
@@ -25,7 +25,7 @@ const base: SetSummary = {
 };
 
 describe("SetTile", () => {
-    it("is one link to the set, with the logo, the name, the count and the bar", () => {
+    it("is one link to the set, with the logo, the name and the count, and no bar", () => {
         render(<SetTile set={base} language="en" />);
         const link = screen.getByRole("link");
         expect(link).toHaveAttribute("href", "/dashboard/sets/sv08");
@@ -33,7 +33,7 @@ describe("SetTile", () => {
         expect(link.querySelectorAll("img")).toHaveLength(1);
         expect(screen.getByText("Surging Sparks")).toBeInTheDocument();
         expect(screen.getByText("12 of 207")).toBeInTheDocument();
-        expect(screen.getByRole("progressbar", { name: "Surging Sparks: 12 of 207 cards" })).toBeInTheDocument();
+        expect(screen.queryByRole("progressbar")).toBeNull();
     });
 
     it("draws the name's first word where there is no logo, and not the symbol", () => {

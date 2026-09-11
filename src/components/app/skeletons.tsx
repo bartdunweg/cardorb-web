@@ -213,7 +213,6 @@ export function SetsOutline() {
                                 <div className="flex flex-col gap-2.5">
                                     <Block className="h-4 w-3/4" />
                                     <Block className="h-4 w-14" />
-                                    <Block className="h-2 w-full rounded-full" />
                                 </div>
                             </div>
                         ))}

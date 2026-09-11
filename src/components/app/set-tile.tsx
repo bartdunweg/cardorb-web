@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { CardImage } from "@/components/app/card-image";
-import { ProgressBarBase } from "@/components/base/progress-indicators/progress-indicators";
 import { formatCount } from "@/lib/format";
 import type { BrowseLanguage } from "@/lib/languages";
 import type { SetSummary } from "@/lib/sets";
@@ -14,9 +13,10 @@ import { cx } from "@/utils/cx";
  * cover. The shelf used to be text rows with the logo squeezed into a 48 px box beside the name,
  * where the logo was decoration; here it is the thing you scan for, and the words confirm it.
  *
- * The whole tile is the link. The bar repeats the count, which is its accessible name, so a
- * screen reader hears "12 of 207" once. A set with nothing in it stays on the shelf but dimmed,
- * like an empty Pokédex slot: it is the part still to collect.
+ * The whole tile is the link. The count is one quiet line under the name — no bar: the owner's
+ * call, the shelf shows the sets, and how far each one is stays a number, not a meter on every
+ * tile. A set with nothing in it stays on the shelf but dimmed, like an empty Pokédex slot: it
+ * is the part still to collect.
  *
  * A set without a logo shows the first word of its name, large and quiet, so the box is never
  * blank. Not its symbol: of the 37 sets on the English shelf without a logo (2026-09-11), 35 have
@@ -86,20 +86,13 @@ export function SetTile({
                     <span className="truncate text-sm font-semibold text-primary">{set.name}</span>
                     {set.localName ? <span className="truncate text-xs text-tertiary">{set.localName}</span> : null}
                 </span>
-                {/* A set the catalogue has not recorded cards for is not "0 of 60 to go": the count and
-                    the bar would say the collecting is unstarted where it is the catalogue that is. The
-                    tile says so instead, in the words the set's own page uses, and still opens it. */}
+                {/* A set the catalogue has not recorded cards for is not "0 of 60 to go": the count
+                    would say the collecting is unstarted where it is the catalogue that is. The tile
+                    says so instead, in the words the set's own page uses, and still opens it. */}
                 {set.cardsRecorded ? (
-                    <>
-                        <span className="text-sm text-tertiary tabular-nums">
-                            {formatCount(set.owned)} of {formatCount(set.total)}
-                        </span>
-                        <ProgressBarBase
-                            value={set.owned}
-                            max={set.total || 1}
-                            aria-label={`${set.name}: ${formatCount(set.owned)} of ${formatCount(set.total)} cards`}
-                        />
-                    </>
+                    <span className="text-sm text-tertiary tabular-nums">
+                        {formatCount(set.owned)} of {formatCount(set.total)}
+                    </span>
                 ) : (
                     <span className="text-xs text-tertiary">No cards in the catalogue yet</span>
                 )}
