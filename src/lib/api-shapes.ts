@@ -354,13 +354,6 @@ export const publicCardFromItem = (item: PublicItem): PublicCard => ({
 
 // ── GET /v1/pokedex ───────────────────────────────────────────────────────────────────────
 
-export const dexEntrySchema = z.object({
-    id: z.number(),
-    name: z.string(),
-    owned: z.number(),
-    cards: z.array(z.object({ key: z.string(), name: z.string(), image: nullable(z.string()) })),
-});
-export type DexEntry = z.infer<typeof dexEntrySchema>;
 /** One card in a Pokédex slot. `set` and `number` name it to the API, so a tap can open that card and not its namesakes. */
 export type DexCard = { id: string; name: string; set: string | null; number: string | null; imageUrl: string | null; imageHighUrl: string | null };
 export type DexSlot = { number: number; cards: DexCard[] };
@@ -744,7 +737,6 @@ export const statsAnswer = z.object({
 });
 
 export const foldersAnswer = z.object({ folders: z.array(folderItemSchema) });
-export const pokedexAnswer = z.object({ entries: z.array(dexEntrySchema) });
 /**
  * Every Pokémon's name by national number, and nothing else. The route that also says how many
  * of each you own is a different one and needs a session; this is a catalogue, so a stranger
