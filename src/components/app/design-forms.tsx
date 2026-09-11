@@ -1,6 +1,8 @@
 "use client";
 
+import { parseDate } from "@internationalized/date";
 import { Mail01, SearchLg, Star01, Tag01 } from "@untitledui/icons";
+import { DatePicker } from "@/components/application/date-picker/date-picker";
 import { FileUploadDropZone } from "@/components/application/file-upload/file-upload-base";
 import { Checkbox } from "@/components/base/checkbox/checkbox";
 import { Input } from "@/components/base/input/input";
@@ -71,11 +73,29 @@ export const formSections: SectionSpec[] = [
                     <Cell label='type="password"'>
                         <Input label="Password" type="password" defaultValue="pikachu" />
                     </Cell>
-                    <Cell label='type="date"'>
-                        <Input label="Acquired" type="date" size="sm" />
-                    </Cell>
                     <Cell label='type="number" with min/max/step'>
                         <Input label="Dex number" type="number" min={1} max={1025} step={1} placeholder="25" />
+                    </Cell>
+                </Group>
+            </Panel>
+        ),
+    },
+    {
+        id: "date-picker",
+        title: "DatePicker",
+        from: "components/application/date-picker/date-picker",
+        note: "A button that says the day and opens the kit's calendar: a month grid, a typed date field and a Today shortcut, then Cancel or Apply. Every acquired date in the app is picked here, through AcquiredDatePicker, which ends the calendar at today. Replaced the browser's own date field, whose look was the browser's and whose segments fought a year being corrected digit by digit.",
+        render: (
+            <Panel>
+                <Group title="States" cols="wide">
+                    <Cell label="empty">
+                        <DatePicker aria-label="Acquired" />
+                    </Cell>
+                    <Cell label="defaultValue">
+                        <DatePicker aria-label="Acquired" defaultValue={parseDate("2026-07-09")} />
+                    </Cell>
+                    <Cell label="isDisabled">
+                        <DatePicker aria-label="Acquired" isDisabled defaultValue={parseDate("2026-07-09")} />
                     </Cell>
                 </Group>
             </Panel>

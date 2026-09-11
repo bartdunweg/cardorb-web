@@ -6,6 +6,7 @@ import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import type { Card } from "@/lib/api-shapes";
+import { AcquiredDatePicker } from "./acquired-date-picker";
 import { AppEmptyState } from "./app-empty-state";
 import { AuthEmailField, AuthShell } from "./auth-shell";
 import { CardBack } from "./card-back";
@@ -32,6 +33,11 @@ const sets = [
 ];
 
 /** Ours, because the kit has nothing that fits — each one says what it does instead. */
+function AcquiredDatePickerSample() {
+    const [date, setDate] = useState("2026-07-09");
+    return <AcquiredDatePicker value={date} onChange={setDate} />;
+}
+
 /* A held row for the gallery's CopyCard: the Fomantis the sheet was measured on, Holo · Near Mint. */
 const SAMPLE_COPY = {
     id: "sample-copy",
@@ -50,6 +56,28 @@ const SAMPLE_COPY = {
 } as unknown as Card;
 
 export const ourSections: SectionSpec[] = [
+    {
+        id: "acquired-date-picker",
+        title: "AcquiredDatePicker",
+        from: "components/app/acquired-date-picker",
+        ours: true,
+        note: "The kit's DatePicker with the app's two rules on it: the day is the YYYY-MM-DD string the API speaks, and the calendar ends at today, since a card you hold was got in the past. The day is handed on when Apply is pressed, so the copy card can save from it directly.",
+        render: (
+            <Panel>
+                <Group title="States" cols="wide">
+                    <Cell label="a day">
+                        <AcquiredDatePickerSample />
+                    </Cell>
+                    <Cell label="none yet">
+                        <AcquiredDatePicker value="" onChange={() => {}} />
+                    </Cell>
+                    <Cell label="isDisabled">
+                        <AcquiredDatePicker value="2026-07-09" isDisabled onChange={() => {}} />
+                    </Cell>
+                </Group>
+            </Panel>
+        ),
+    },
     {
         id: "app-empty-state",
         title: "AppEmptyState",
