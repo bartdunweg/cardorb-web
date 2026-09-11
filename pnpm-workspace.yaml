@@ -1,7 +1,8 @@
 # pnpm settings (pnpm 11 moved these out of package.json).
-# Allow native install scripts we trust: sharp (Next.js image optimization) and
+# Allow native install scripts we trust: esbuild (tsx, which renders the emails), sharp (Next.js image optimization) and
 # unrs-resolver (ESLint's native module resolver).
 allowBuilds:
+    esbuild: true
     sharp: true
     unrs-resolver: true
 # pnpm 11 holds back any package published less than a day ago (minimumReleaseAge). Our own lint
@@ -10,5 +11,6 @@ allowBuilds:
 minimumReleaseAgeExclude:
     - "@strakzat/eslint-config-ui@0.4.0"
 onlyBuiltDependencies:
+    - esbuild
     - sharp
     - unrs-resolver

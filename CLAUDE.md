@@ -23,6 +23,7 @@ exist so other collectors can join later.
 | `pnpm lint` | ESLint (`@strakzat/eslint-config-ui` strict) + Prettier check |
 | `pnpm typecheck` | `tsc --noEmit` |
 | `pnpm test` | Vitest |
+| `pnpm emails:render` | The auth emails (`src/emails`) to static HTML for `cardorb-api/supabase/templates` |
 
 ## Structure
 
