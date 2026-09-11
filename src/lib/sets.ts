@@ -90,7 +90,10 @@ export async function getSet(id: string, language: BrowseLanguage = "en"): Promi
             series: set.series,
             releaseDate: set.releaseDate,
             logoUrl: absoluteImage(set.logo),
-            total: totalCount,
+            // The cards read, which is the count every full set answers with; the catalogue's own
+            // count where it has recorded none of them yet, so "0 of 60" says what is missing
+            // rather than "0 of 0", which says nothing was ever there.
+            total: totalCount || set.total,
             owned: ownedCount,
             cards: cards.map(setCardFromBrowse),
         };
