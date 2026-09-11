@@ -1,5 +1,6 @@
 "use client";
 
+import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { CardTile } from "@/components/app/card-tile";
 import { FavoriteStar } from "@/components/app/favorite-star";
@@ -44,8 +45,8 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                         onSelect={() => onSelect(card, cards)}
                         picture={
                             /* Nothing of ours around the picture: a card carries its own printed border, and a hairline
-                               or a grey box behind it read as a second one. The grey stays only where there is no picture. */
-                            <div className={cx("relative aspect-card w-full overflow-hidden rounded-card", !card.image_url && "bg-quaternary")}>
+                               or a grey box behind it read as a second one. A card with no picture shows its back. */
+                            <div className="relative aspect-card w-full overflow-hidden rounded-card">
                                 {card.image_url ? (
                                     <CardImage
                                         src={card.image_high_url ?? card.image_url}
@@ -59,11 +60,9 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                                         priority={i < FIRST_ROW}
                                     />
                                 ) : (
-                                    // No art in our source (e.g. some promos) — show the name so the tile still reads as a card.
-                                    <div className="flex h-full w-full flex-col items-center justify-center gap-1 p-3 text-center">
-                                        <span className="line-clamp-4 text-sm font-medium text-secondary">{card.name}</span>
-                                        {card.number ? <span className="text-2xs text-quaternary">#{card.number}</span> : null}
-                                    </div>
+                                    // No art in any catalogue (some promos, most Chinese cards): face down. The words
+                                    // beside it name the card, as they do for every tile.
+                                    <CardBack width={TILE_WIDTH[size]} sizes={TILE_SIZES[size]} priority={i < FIRST_ROW} />
                                 )}
                             </div>
                         }

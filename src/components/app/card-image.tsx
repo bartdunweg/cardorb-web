@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { CardBack } from "@/components/app/card-back";
 
 /**
  * A card picture, through Vercel's image optimizer rather than straight from the catalogue.
@@ -79,11 +80,12 @@ export function CardImage({
     /** A card is 63 by 88; a set logo or a badge is drawn square. */
     ratio?: "card" | "square";
 }) {
-    // Once the optimizer fails, the original is tried; when that fails too there is no picture,
-    // and the box behind (a name, a grey) is better than the browser's broken-image mark.
+    // Once the optimizer fails, the original is tried; when that fails too there is no picture.
+    // A card then shows its back — a shelf hands out addresses it has not checked, and a 404
+    // there is a real card with no scan, not a broken tile. A logo or a badge shows nothing.
     const [direct, setDirect] = useState(false);
     const [gone, setGone] = useState(false);
-    if (gone) return null;
+    if (gone) return ratio === "card" ? <CardBack width={width} sizes={sizes} priority={priority} /> : null;
     const height = ratio === "card" ? Math.round((width * 88) / 63) : width;
     // The lighter picture on the way down, where there is one to fall back to.
     const shown = direct ? (fallbackSrc ?? src) : src;

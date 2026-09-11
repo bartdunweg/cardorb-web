@@ -5,6 +5,7 @@ import { Check, DotsHorizontal, Heart, Minus, Plus, Rows01, Trash01 } from "@unt
 import { useRouter } from "next/navigation";
 import { Button as AriaButton } from "react-aria-components";
 import { addCard, markOwned, removeCard, setCopies } from "@/app/(app)/dashboard/cards/actions";
+import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
@@ -75,9 +76,8 @@ export function SetCardTile({
                 className={({ isPressed, isFocusVisible }) =>
                     cx(
                         // The shared tile's own frame: a card is its own surface, so nothing of ours
-                        // sits behind it and the grey box is only for a card with no picture.
+                        // sits behind it — a card with no picture shows its back, not a grey box.
                         "relative block aspect-card w-full cursor-pointer overflow-hidden rounded-card outline-offset-2 outline-focus-ring",
-                        !card.imageUrl && "bg-quaternary",
                         (isPressed || isFocusVisible) && "outline-2",
                         pending && "cursor-progress",
                     )
@@ -98,10 +98,9 @@ export function SetCardTile({
                         className="object-cover"
                     />
                 ) : (
-                    <div className="flex size-full flex-col items-center justify-center gap-1 p-3 text-center">
-                        <span className="line-clamp-4 text-sm font-medium text-secondary">{card.name}</span>
-                        <span className="text-2xs text-quaternary">#{card.number}</span>
-                    </div>
+                    /* Face down: a real card no catalogue has a scan of. The caption under the tile
+                       still names it, as it names every card. */
+                    <CardBack width={TILE_WIDTH.md} sizes={TILE_SIZES.md} priority={priority} />
                 )}
                 {state !== "missing" ? (
                     <span
