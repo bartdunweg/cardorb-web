@@ -116,8 +116,8 @@ for the failures that leave no trace — and everything both passes found is clo
   language is a filter chip like Set and Type, the kit's, not a row of flags (web #344); the Set
   chip lists the chosen shelf's sets and the API keeps to it (cardorb-api#284). Type stays
   English-only: TCGdex publishes no types on the other shelves. The same chip stands on Browse,
-  in the add dialog and in the phone's search (web #345); the row of flags is gone. A visitor's
-  sheet on a public profile shows the brackets too (cardorb-api#285).
+  in the add dialog and in the phone's search (web #347); the row of flags is gone. A visitor's
+  sheet on a public profile shows the brackets too (cardorb-api#287).
 - **The small thumbnails lie face down too** (#324): table rows, the add dialog, the folder's
   card search and the Pokédex slider. The Fomantis acquired date is put right (2026-09-07),
   through the sheet on the dev server.
