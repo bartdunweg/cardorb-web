@@ -40,6 +40,7 @@ import { type CopyGroup, groupCopies, sortCopies } from "@/lib/copies";
 import { matchesRule } from "@/lib/folder-rule";
 import { formatDate, formatPrice } from "@/lib/format";
 import { orientationNeedsPermission, requestOrientation } from "@/lib/holo/orientation";
+import { settleLatest } from "@/lib/settle-latest";
 import { cx } from "@/utils/cx";
 
 // `late`: a row the catalogue sends a hop after the sheet has settled arrives like the rest of what streams in.
@@ -95,9 +96,15 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const copiesKey = (c: Card) => `${c.set ?? ""}|${c.number ?? ""}|${c.name}`;
     const [copiesState, setCopiesState] = useState<{ of: string; rows: Card[] } | null>(null);
     const copies = mine && copiesState?.of === copiesKey(mine) ? copiesState.rows : null;
+    /* Counts the presses the sheet has answered on screen before the store has. A read that
+       started before one of those would put the old number back over the new one, so it is
+       dropped; the press that made it stale reads again once its write has landed. */
+    const pressed = useRef(0);
     const reloadCopies = async (row: Card | null = mine) => {
         if (!row || !row.owned) return;
+        const asOf = pressed.current;
         const rows = sortCopies(await listCopies(row));
+        if (asOf !== pressed.current) return;
         setCopiesState({ of: copiesKey(row), rows });
         // A row that is gone (removed, or merged away) cannot stay the one shown.
         setViewing((v) => (v && !rows.some((r) => r.id === v.row.id) ? null : v));
@@ -110,6 +117,12 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
        identical rows would leave a line still saying ×3 and nothing to show for the press. */
     const dropCopies = async (group: Card[]) => {
         if (!mine || !card || !group.length) return;
+        /* Gone from the panel at once; the store follows. A failure reads the rows back. */
+        const gone = new Set(group.map((r) => r.id));
+        const rows = (copies ?? [mine]).filter((r) => !gone.has(r.id));
+        pressed.current += 1;
+        setCopiesState({ of: copiesKey(mine), rows });
+        if (gone.has(mine.id) && rows[0]) setViewing({ of: card.id, row: rows[0] });
         setBusy(true);
         /* At once, not one after another. Each of these is a round trip from the browser through
            the app to the API and on to the database in another region, so a group of four in a
@@ -128,10 +141,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
             results.flatMap((r) => (r.ok && r.card ? [r.card] : [])),
             group.length > 1 ? `${group.length} copies removed` : "Copy removed",
         );
-        const rows = sortCopies(await listCopies(mine));
-        setCopiesState({ of: copiesKey(mine), rows });
-        if (group.some((r) => r.id === mine.id) && rows[0]) setViewing({ of: card.id, row: rows[0] });
-        router.refresh();
+        scheduleRefresh();
     };
     /* A card the sheet has just emptied stays on screen as a card you could take again, so the
        last minus is not a door slamming. The set page hands one of these in; everywhere else the
@@ -304,25 +314,55 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     // The dots menu's actions: each one server call, then the page re-reads; removing closes the sheet
     // first, since the card it showed is gone.
     const [busy, setBusy] = useState(false);
+    /* The list behind the sheet re-reads after a write, but not after each one: a run of presses
+       is one change to it, and a re-read per press had every one of them competing with the next
+       write for the same connection. Closing the sheet takes whatever is still waiting with it. */
+    const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const scheduleRefresh = () => {
+        if (refreshTimer.current) clearTimeout(refreshTimer.current);
+        refreshTimer.current = setTimeout(() => {
+            refreshTimer.current = null;
+            router.refresh();
+        }, 500);
+    };
+    const flushRefresh = () => {
+        if (!refreshTimer.current) return;
+        clearTimeout(refreshTimer.current);
+        refreshTimer.current = null;
+        router.refresh();
+    };
     /* How many of a kind. Plus adds one to the row on screen for it. Minus takes one from a row
        that holds more than one, and otherwise drops a whole row of the kind, since four identical
        copies are four rows of one in the store. The last one may go: the panel answers at once
-       with the two ways to take it back. */
-    const stepUp = async (group: CopyGroup) => {
+       with the two ways to take it back.
+
+       The number changes under the finger. It used to wait for the write to land in another
+       region and then for the rows to be read back, two round trips, with the button looking
+       dead in between. Now the panel shows the new count and the store catches up: one write in
+       the air per row, always for the last count pressed, and the rows are read back once it has
+       landed. A write that fails puts the store's number back and says so. */
+    const [settleQuantity] = useState(() => settleLatest(setCopies));
+    const showQuantity = (row: Card, quantity: number) => {
+        if (!mine) return;
+        pressed.current += 1;
+        const base = copies ?? [mine];
+        setCopiesState({ of: copiesKey(mine), rows: base.map((r) => (r.id === row.id ? { ...r, quantity } : r)) });
+        void settleQuantity(row.id, quantity, (error) => {
+            notify.failed("The number of copies did not change", { description: error });
+            void reloadCopies();
+        }).then((landed) => {
+            if (!landed) return;
+            scheduleRefresh();
+            void reloadCopies();
+        });
+    };
+    const stepUp = (group: CopyGroup) => {
         const row = group.shown;
-        const res = await setCopies(row.id, (row.quantity ?? 1) + 1);
-        if (!res.ok) return notify.failed("The number of copies did not change", { description: res.error });
-        router.refresh();
-        void reloadCopies();
+        showQuantity(row, (row.quantity ?? 1) + 1);
     };
     const stepDown = async (group: CopyGroup) => {
         const many = group.rows.find((r) => (r.quantity ?? 1) > 1);
-        if (many) {
-            const res = await setCopies(many.id, (many.quantity ?? 1) - 1);
-            if (!res.ok) return notify.failed("The number of copies did not change", { description: res.error });
-            router.refresh();
-            return void reloadCopies();
-        }
+        if (many) return showQuantity(many, (many.quantity ?? 1) - 1);
         // Any row but the one the sheet opened on, so what it shows stays as long as it can.
         const spare = group.rows.find((r) => r.id !== mine?.id) ?? group.rows[0];
         if (!spare) return;
@@ -335,6 +375,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const heldTotal = copies ? copies.reduce((n, r) => n + (r.quantity ?? 1), 0) : (mine?.quantity ?? 1);
 
     const closeSheet = async () => {
+        flushRefresh();
         // The next card, or this one again, opens on its own row.
         setViewing(null);
         onClose();
@@ -384,8 +425,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     useEffect(() => {
         if (!opened) return;
         let live = true;
+        const asOf = pressed.current;
         listCopies(opened).then((rows) => {
-            if (live) setCopiesState({ of: copiesKey(opened), rows: sortCopies(rows) });
+            if (live && asOf === pressed.current) setCopiesState({ of: copiesKey(opened), rows: sortCopies(rows) });
         });
         return () => {
             live = false;
