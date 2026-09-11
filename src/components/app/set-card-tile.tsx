@@ -126,10 +126,12 @@ export function SetCardTile({
                 {/* The number alone, not the set's code: every card here is from the same set, so
                     repeating it on all 120 tiles says nothing the page's own title has not. */}
                 <span className="truncate text-xs text-tertiary tabular-nums">#{card.number}</span>
-                {/* The price and the two controls on one line under the card. They sat in the
-                    picture's corner, over the art you came to look at, and on a grid of 129 that is
-                    129 things floating on top of the cards. Under it they are still one press away
-                    and the card is whole. */}
+                {/* The count and the price on one line, the two controls on their own line under it.
+                    The controls sat in the picture's corner, over the art you came to look at, and on
+                    a grid of 129 that is 129 things floating on top of the cards. Then they shared the
+                    price's line, which on a phone is 110 px across three tiles: the price broke in two
+                    and the buttons ran 6 px past the tile, behind the card beside it. A line of their
+                    own costs 32 px a tile and fits at every width. */}
                 <div className="mt-0.5 flex items-center gap-2">
                     {/* The same two numbers a tile carries on every other list: how many you hold on
                         the left, what one is worth on the right. A set page was the one place that
@@ -149,6 +151,8 @@ export function SetCardTile({
                             </>
                         ) : null}
                     </span>
+                </div>
+                <div className="mt-1 flex justify-end">
                     <span className="flex shrink-0 items-center gap-1">
                         {/* The menu, where the picture used to be its trigger. A dots button in the corner beside
                     the plus, so everything the tile could do is still one press away — it is just no
