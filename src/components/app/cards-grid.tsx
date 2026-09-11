@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { CardTile } from "@/components/app/card-tile";
@@ -27,6 +28,7 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
     cards,
     onSelect,
     size = "md",
+    action,
 }: {
     /** Whose cards these are, for the words a screen reader gets under a count: the person looking, or the owner of a public page. */
     holder?: "you" | "owner";
@@ -34,7 +36,24 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
     /** The card, and the list it was picked from, so a sheet knows what is either side of it. */
     onSelect: (card: T, siblings: T[]) => void;
     size?: CardsSize;
+    /**
+     * The one thing a tile of this list can do, drawn on the tile: "Got it" on the wishlist.
+     * A sibling of the tile, not a child of it — the tile is a button, and a button inside a
+     * button is not HTML and reads as one control to a screen reader. It sits in the words'
+     * bottom row, in the slot the count keeps on every other list (a wish has no count), so the
+     * picture stays whole. Shown on hover, on focus within the tile and always on a touch screen,
+     * so a keyboard reaches it and a finger never has to hover.
+     *
+     * Where the row is too narrow for the words and the price both, the button moves: on a
+     * phone's three-across grid (a tile is 104 px) it takes a row of its own under the price, and
+     * on the small grid (86 to 128 px at any width) it is the mark alone, `compact`, with the
+     * card's name in its accessible name still.
+     */
+    action?: (card: T, compact: boolean) => ReactNode;
 }) {
+    // The small grid keeps the button in the row at every width, so the row is the button's
+    // height; the others only from md, under which the button has a row of its own.
+    const inRow = action ? (size === "sm" ? "min-h-9 items-center" : "items-baseline md:min-h-9 md:items-center") : "items-baseline";
     return (
         <div className={cx("grid gap-4", GRID_COLUMNS[size])}>
             {cards.map((card, i) => (
@@ -43,7 +62,11 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                 // The first two rows arrive one after another, 20 ms apart; everything under them comes in
                 // together once that wave has passed. A batch appended on scroll sits below the fold, so
                 // its wave is not seen and its delay has passed by the time it is.
-                <div key={card.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i, 12) * 20}ms` } as React.CSSProperties}>
+                <div
+                    key={card.id}
+                    className={cx("arrive", action && "group relative")}
+                    style={{ "--arrive-delay": `${Math.min(i, 12) * 20}ms` } as React.CSSProperties}
+                >
                     <CardTile
                         onSelect={() => onSelect(card, cards)}
                         picture={
@@ -89,8 +112,8 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                                     forty-eight of them is a column of the same character — but a number that appears
                                     only sometimes is one you have to notice the absence of, and the owner would
                                     rather read it down the column than work it out. */}
-                                {card.quantity != null || card.price != null ? (
-                                    <span className="mt-0.5 flex items-baseline justify-between gap-2 text-sm font-medium tabular-nums">
+                                {card.quantity != null || card.price != null || action ? (
+                                    <span className={cx("mt-0.5 flex justify-between gap-2 text-sm font-medium tabular-nums", inRow)}>
                                         <span className="text-tertiary">
                                             {/* A wish is not a holding: no count under it, and no "×1" that read as one.
                                                 On a visitor's screen the count is the owner's, and says so — a screen
@@ -112,6 +135,16 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                             </div>
                         }
                     />
+                    {action ? (
+                        <div
+                            className={cx(
+                                "opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100",
+                                size === "sm" ? "absolute bottom-0 left-0" : "mt-2 flex *:flex-1 md:absolute md:bottom-0 md:left-0 md:mt-0 md:block",
+                            )}
+                        >
+                            {action(card, size === "sm")}
+                        </div>
+                    ) : null}
                 </div>
             ))}
         </div>
