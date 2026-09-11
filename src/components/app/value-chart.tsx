@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useEffect, useId, useRef, useState } from "react";
+import { type ReactNode, useCallback, useId, useRef, useState } from "react";
 import { BarChart01 } from "@untitledui/icons";
 import { formatCount, formatPrice } from "@/lib/format";
 import { type Frame, areaPath, linePath, nearestIndex, niceTicks, pointsFor } from "@/lib/value-chart-math";
@@ -54,8 +54,12 @@ export function ValueChart({
     const descId = useId();
     const svgTitleId = useId();
 
-    useEffect(() => {
-        const el = container.current;
+    // Measured from the moment the container exists, not from the first render: the card sheet
+    // draws the empty state first and the readings arrive after, and an effect that ran once on
+    // mount found no container to watch. The periods then appeared under a blank space, since
+    // the SVG is drawn only at a measured width. A callback ref attaches when the node does.
+    const measure = useCallback((el: HTMLDivElement | null) => {
+        container.current = el;
         if (!el) return;
         const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
         observer.observe(el);
@@ -131,7 +135,7 @@ export function ValueChart({
                 {summary}
             </p>
 
-            <div ref={container} className="relative w-full" style={{ height: HEIGHT }}>
+            <div ref={measure} className="relative w-full" style={{ height: HEIGHT }}>
                 {width > 0 ? (
                     <svg
                         width={width}
