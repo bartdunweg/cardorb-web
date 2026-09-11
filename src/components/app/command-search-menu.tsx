@@ -126,9 +126,23 @@ export function CommandSearchMenu({
             shortcut={null}
             emptyState={
                 <div className="flex flex-col items-center gap-3 px-4 py-10 text-center text-sm text-tertiary">
-                    {!searching ? "Type to search for a card." : loading ? "Searching…" : failed ? "The card service didn't answer." : "No cards found."}
+                    {/* A live region, as the other search boxes have: the kit's empty state is not one, so a
+                        screen reader heard nothing when the answer changed. */}
+                    <output aria-live="polite">
+                        {!searching ? "Type to search for a card." : loading ? "Searching…" : failed ? "The card service didn't answer." : "No cards found."}
+                    </output>
                     {searching && !loading && failed ? (
-                        <Button size="sm" color="secondary" onClick={onRetry}>
+                        <Button
+                            size="sm"
+                            color="secondary"
+                            onClick={() => {
+                                onRetry();
+                                // This button is gone the moment hits land, and focus with it. The kit's
+                                // menu keeps its field to itself, so the field is found from the dialog
+                                // the pressed button — the active element — sits in.
+                                document.activeElement?.closest('[role="dialog"]')?.querySelector("input")?.focus();
+                            }}
+                        >
                             Try again
                         </Button>
                     ) : null}

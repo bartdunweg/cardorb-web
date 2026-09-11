@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Check, Plus, SearchLg } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
@@ -45,6 +45,13 @@ export function AddCardModal({
     const [query, setQuery] = useState("");
     const [status, setStatus] = useState<Record<string, "adding" | "done">>({});
     const { results, loading, failed, retry } = useDebouncedSearch<PokemonCard>(query, searchPokemon, { minLength: 2, delay: 300 });
+    const inputRef = useRef<HTMLInputElement>(null);
+    // Try again unmounts the button that was pressed the moment hits land, and focus would fall
+    // to the page; it goes back to the field instead, where the next keystroke belongs.
+    const retryAndRefocus = () => {
+        retry();
+        inputRef.current?.focus();
+    };
     const searchState = loading
         ? "Searching…"
         : failed
@@ -117,6 +124,7 @@ export function AddCardModal({
                                 </ButtonGroup>
 
                                 <Input
+                                    ref={inputRef}
                                     aria-label="Search cards"
                                     icon={SearchLg}
                                     placeholder="Search by name…"
@@ -131,7 +139,7 @@ export function AddCardModal({
                                         {searchState}
                                     </output>
                                     {failed && !loading ? (
-                                        <Button size="sm" color="secondary" className="self-center" onClick={retry}>
+                                        <Button size="sm" color="secondary" className="self-center" onClick={retryAndRefocus}>
                                             Try again
                                         </Button>
                                     ) : null}

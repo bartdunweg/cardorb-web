@@ -94,6 +94,12 @@ function CollectionSearch({ onClose }: { onClose: () => void }) {
         params: filters,
     });
     const searchState = loading ? "Searching…" : failed ? "The card service didn't answer." : searching && results.length === 0 ? "No cards found." : "";
+    // Try again unmounts the button that was pressed the moment hits land, and focus would fall
+    // to the page; it goes back to the field instead, where the next keystroke belongs.
+    const retryAndRefocus = () => {
+        retry();
+        field.current?.focus();
+    };
 
     return (
         <>
@@ -142,7 +148,7 @@ function CollectionSearch({ onClose }: { onClose: () => void }) {
                     {searchState}
                 </output>
                 {failed && !loading ? (
-                    <Button size="sm" color="secondary" className="self-center" onClick={retry}>
+                    <Button size="sm" color="secondary" className="self-center" onClick={retryAndRefocus}>
                         Try again
                     </Button>
                 ) : null}
