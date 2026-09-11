@@ -8,6 +8,7 @@ import { checkUsername, removeAvatar, updateEmail, updatePassword, updateProfile
 import { signOut } from "@/app/(auth)/actions";
 import { FormError } from "@/components/app/form-error";
 import { ImportDialog } from "@/components/app/import-dialog";
+import { PublicProfileRow, publicUrl } from "@/components/app/public-profile-row";
 import { SettingsGroup, SettingsLinkRow, SettingsRow, SheetHeader } from "@/components/app/settings-rows";
 import { SheetDialog } from "@/components/app/sheet-dialog";
 import { Avatar } from "@/components/base/avatar/avatar";
@@ -23,12 +24,6 @@ type Msg = { type: "ok" | "err"; text: string } | null;
 
 const AVATAR_TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
-
-/** The public page's address as a person would type it: the site's origin without its scheme. */
-function publicUrl(username: string): string {
-    const site = process.env.NEXT_PUBLIC_SITE_URL ?? "https://cardorb.com";
-    return `${site.replace(/^https?:\/\//, "")}/user/${username}`;
-}
 
 function StatusText({ msg }: { msg: Msg }) {
     if (!msg) return null;
@@ -232,7 +227,7 @@ export function SettingsForm({ profile, email, heading }: { profile: Profile; em
                                 hint="A new address takes effect once you confirm it from your inbox."
                             />
                             <Toggle
-                                label="Public collection"
+                                label="Public profile"
                                 // With the toggle on, the address people can open, so it can be read and copied from here.
                                 // The saved name, not the field: an address only exists once the name is claimed.
                                 hint={
@@ -271,6 +266,10 @@ export function SettingsForm({ profile, email, heading }: { profile: Profile; em
             </div>
 
             <SettingsGroup title="Account">
+                {/* The one setting that decides who sees the collection, and the address they see
+                    it at, on the page rather than behind Manage. It shares `isPublic` with the
+                    sheet, so a flip here is what the sheet shows when it opens. */}
+                <PublicProfileRow username={profile.username || null} isPublic={isPublic} onChange={setIsPublic} />
                 <SettingsRow
                     icon={Lock01}
                     label="Password"
