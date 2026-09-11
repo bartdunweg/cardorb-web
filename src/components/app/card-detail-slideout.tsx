@@ -207,7 +207,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         setStarring(true);
         const res = await setFavorite(mine.id, next);
         setStarring(false);
-        if (res.ok) router.refresh();
+        if (res.ok) scheduleRefresh();
         else {
             setStarred(!next);
             notify.failed(next ? "That card is not a Favorite" : "That card is still a Favorite", { description: res.error });
@@ -395,7 +395,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                         const failed = results.find((r) => !r.ok);
                         if (failed && !failed.ok) notify.failed("That did not go back", { description: failed.error });
                         else notify.done(rows.length > 1 ? `${rows.length} copies are back` : "It is back");
-                        router.refresh();
+                        scheduleRefresh();
                         void reloadCopies();
                     });
                 },
@@ -811,7 +811,11 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                             other kinds arrive. */}
                                         {mine?.owned && !emptied
                                             ? groupCopies(copies ?? [mine]).map((group, i) => (
-                                                  <div key={group.key} style={{ "--arrive-delay": `${Math.min(i, 8) * 20}ms` } as React.CSSProperties}>
+                                                  /* Keyed on the row, not the kind: the kind's key holds the condition and
+                                                     the finish, so changing one of those in the card made it a new card to
+                                                     React, and the select you had just used lost its focus. The row stays
+                                                     the same row through a re-read. */
+                                                  <div key={group.shown.id} style={{ "--arrive-delay": `${Math.min(i, 8) * 20}ms` } as React.CSSProperties}>
                                                       <CopyCard
                                                           group={group}
                                                           folders={collections}
@@ -823,7 +827,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                           onFewer={() => void stepDown(group)}
                                                           onRemove={() => void dropCopies(group.rows)}
                                                           onSaved={() => {
-                                                              router.refresh();
+                                                              scheduleRefresh();
                                                               void reloadCopies();
                                                           }}
                                                           refreshFolders={async () => {
