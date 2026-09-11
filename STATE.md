@@ -181,6 +181,16 @@ for the failures that leave no trace — and everything both passes found is clo
   `/user/bartdunweg` "Collection not found" at 19:34:39; flipped back, page back. Every
   collection write followed (cardorb-api#288): cards, copies, split, folders and the CSV import
   say the same word beside their own `revalidateTag`, with two seconds for the web at most.
+- **A page audit, eleven pages wide and four narrow** (2026-09-11, without Mobbin: the connector
+  is not in the session). No overflow, no broken picture, no contrast fault seen. Four findings,
+  all fixed (web #352, #354, cardorb-api#292): one count for a collection — the collection said
+  1,915 (rows), the public page 1,609 (distinct cards), Home 1,933 (copies) about the same binder,
+  and copies is the number everywhere now, `copies` beside `total` in every list answer and the
+  folder counts; the public page said "You hold ×1" to a visitor, and says "Holds"; no "×1"
+  under a wish; a binder's Delete sits behind the kit's dots trigger, not beside Edit and Add.
+  Measured on the dev server: Collection "1,933 cards", Kanto 734, the dots menu opens by mouse
+  and the confirm dialog takes focus. Keyboard on the menu is not measured: the pane delivers no
+  key to a react-aria button. The Mobbin pass stays owed until the connector is on.
 - **Pokémon Card 151's Japanese cards looked like reverse holos** (cardorb-api#277). Bart saw it;
   it was the scan, not the app: TCGdex photographed SV2a in its Master Ball variant, every card
   (001, 011, 025, 150 looked at), no other Japanese set sampled. A set list in `artwork.ts`, SV2a
