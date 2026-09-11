@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { ArrowRight, ChevronLeft, ChevronRight, DotsHorizontal, Heart, Minus, Phone01, Plus, Star01, Trash01, XClose } from "@untitledui/icons";
+import { ArrowRight, ChevronLeft, ChevronRight, DotsHorizontal, Heart, Phone01, Plus, Star01, Trash01, XClose } from "@untitledui/icons";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
@@ -14,22 +14,16 @@ import {
     removeCard,
     restoreCard,
     seriesLogo,
-    setAcquiredAt,
-    setCondition,
     setCopies,
     setFavorite,
-    setLanguage,
 } from "@/app/(app)/dashboard/cards/actions";
-import { type FolderChoice, listCollections, loadFacets, setCardCollection } from "@/app/(app)/dashboard/collections/actions";
+import { type FolderChoice, listCollections, loadFacets } from "@/app/(app)/dashboard/collections/actions";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { CardPriceChart } from "@/components/app/card-price-chart";
-import { CONDITIONS } from "@/components/app/condition-badge";
+import { CopyCard } from "@/components/app/copy-card";
 import { CopyFormDialog } from "@/components/app/copy-form-dialog";
-import { CopyRow } from "@/components/app/copy-row";
-import { FolderDialog } from "@/components/app/folder-dialog";
 import { HoloCard } from "@/components/app/holo-card";
-import { LanguageSelect } from "@/components/app/language-select";
 import { MarkOwnedDialog } from "@/components/app/mark-owned-dialog";
 import { SheetBar } from "@/components/app/sheet-bar";
 import { notify } from "@/components/app/toast";
@@ -39,14 +33,12 @@ import { Tab, TabList, TabPanel, Tabs } from "@/components/application/tabs/tabs
 import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
-import { Input } from "@/components/base/input/input";
-import { NativeSelect } from "@/components/base/select/select-native";
 import { Tooltip } from "@/components/base/tooltip/tooltip";
-import { FINISH_LABELS, FOIL_PATTERN_LABELS, type Finish, type FoilPattern, type PokemonCard, type RemovedCard, isReverseFinish } from "@/lib/api-shapes";
+import { type PokemonCard, type RemovedCard, isReverseFinish } from "@/lib/api-shapes";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
-import { groupCopies, sortCopies } from "@/lib/copies";
+import { type CopyGroup, groupCopies, sortCopies } from "@/lib/copies";
 import { matchesRule } from "@/lib/folder-rule";
-import { formatDate, formatPrice, today } from "@/lib/format";
+import { formatDate, formatPrice } from "@/lib/format";
 import { orientationNeedsPermission, requestOrientation } from "@/lib/holo/orientation";
 import { cx } from "@/utils/cx";
 
@@ -194,7 +186,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     };
     const [collections, setCollections] = useState<FolderChoice[]>([]);
     const [facets, setFacets] = useState<Facets | undefined>(undefined);
-    const [collectionId, setCollectionId] = useState<string>("");
     // The star, kept here so a tap answers at once; the page re-reads the flag after the save.
     const [starred, setStarred] = useState<boolean | null>(null);
     const [starring, setStarring] = useState(false);
@@ -313,75 +304,36 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     // The dots menu's actions: each one server call, then the page re-reads; removing closes the sheet
     // first, since the card it showed is gone.
     const [busy, setBusy] = useState(false);
-    /* Copies, as the sheet shows them. Minus stops at one: whether you hold a card and how many
-       of it you hold are two facts, and the counter had been quietly doing the first one's job —
-       stepping to nought marked the card as leaving and removed it when the sheet closed. A copy
-       goes with the bin on its own line; the card goes with Remove from collection. Kept with the
-       row it was read for. */
-    const [copyCount, setCopies_] = useState<{ id: string; n: number } | null>(null);
-    const shownCopies = mine && copyCount?.id === mine.id ? copyCount.n : (mine?.quantity ?? 1);
-    /* Every copy of this card, not just the row on screen: the tab says how many there are before
-       anybody opens it. The listed rows once they are read, the shown row's own count until then. */
-    const heldTotal = copies ? copies.reduce((n, r) => n + (r.quantity ?? 1), 0) : shownCopies;
-    /* The group the sheet has opened on: the rows that differ from this one in nothing. Its total
-       is what the line above the fields says, so the stepper says it too. */
-    const shownGroup = mine ? groupCopies(copies ?? [mine]).find((g) => g.rows.some((r) => r.id === mine.id)) : undefined;
-    const heldOfThisKind = shownGroup?.quantity ?? shownCopies;
-    /* One fewer of this kind: off the row on screen while it holds more than one, otherwise a
-       whole row of the group goes, since four identical copies are four rows of one. */
-    const stepDown = async () => {
-        if (!mine) return;
-        if (shownCopies > 1) return await step(shownCopies - 1);
-        /* The shown row holds one, so one fewer means a whole row of this kind goes. Any row but
-           the one on screen — and if the group cannot be found at all (the listed copies are from
-           before a write, so the shown row is not among them), say so rather than doing nothing.
-           A button that answers a press with silence is the worst of the three outcomes. */
-        /* The last one may go: the panel answers at once with the two ways to take it back, so
-           this is not the door it used to be, when nought meant the card left on closing. */
-        const spare = shownGroup?.rows.find((r) => r.id !== mine.id) ?? mine;
-        const last = (shownGroup?.rows.length ?? 1) <= 1;
+    /* How many of a kind. Plus adds one to the row on screen for it. Minus takes one from a row
+       that holds more than one, and otherwise drops a whole row of the kind, since four identical
+       copies are four rows of one in the store. The last one may go: the panel answers at once
+       with the two ways to take it back. */
+    const stepUp = async (group: CopyGroup) => {
+        const row = group.shown;
+        const res = await setCopies(row.id, (row.quantity ?? 1) + 1);
+        if (!res.ok) return notify.failed("The number of copies did not change", { description: res.error });
+        router.refresh();
+        void reloadCopies();
+    };
+    const stepDown = async (group: CopyGroup) => {
+        const many = group.rows.find((r) => (r.quantity ?? 1) > 1);
+        if (many) {
+            const res = await setCopies(many.id, (many.quantity ?? 1) - 1);
+            if (!res.ok) return notify.failed("The number of copies did not change", { description: res.error });
+            router.refresh();
+            return void reloadCopies();
+        }
+        // Any row but the one the sheet opened on, so what it shows stays as long as it can.
+        const spare = group.rows.find((r) => r.id !== mine?.id) ?? group.rows[0];
+        if (!spare) return;
+        const last = (copies ?? [spare]).length <= 1;
         await dropCopies([spare]);
         if (last && card) setRemoved(card.id);
     };
-    const step = async (n: number) => {
-        if (!mine || n < 1) return;
-        setCopies_({ id: mine.id, n });
-        const res = await setCopies(mine.id, n);
-        if (!res.ok) {
-            notify.failed("The number of copies did not change", { description: res.error });
-            setCopies_({ id: mine.id, n: mine.quantity ?? 1 });
-        } else {
-            router.refresh();
-            void reloadCopies();
-        }
-    };
-    // The language as the sheet shows it, kept with the row it was picked for; the page re-reads after.
-    const [language, setLanguage_] = useState<{ id: string; code: string } | null>(null);
-    const shownLanguage = mine && language?.id === mine.id ? language.code : (mine?.language ?? "en");
-    const pickLanguage = async (code: string) => {
-        if (!mine) return;
-        setLanguage_({ id: mine.id, code });
-        const res = await setLanguage(mine.id, code);
-        if (!res.ok) {
-            notify.failed("The language did not change", { description: res.error });
-            setLanguage_(null);
-        } else router.refresh();
-    };
-    // The condition as the sheet shows it, kept with the row it was picked for.
-    const [condition, setCondition_] = useState<{ id: string; value: string } | null>(null);
-    const shownCondition = mine && condition?.id === mine.id ? condition.value : (mine?.condition ?? "");
-    const pickCondition = async (value: string) => {
-        if (!mine) return;
-        setCondition_({ id: mine.id, value });
-        const res = await setCondition(mine.id, value || null);
-        if (!res.ok) {
-            notify.failed("The condition did not change", { description: res.error });
-            setCondition_(null);
-        } else {
-            router.refresh();
-            void reloadCopies();
-        }
-    };
+    /* Every copy of this card, not just the row on screen: the tab says how many there are before
+       anybody opens it. The listed rows once they are read, the shown row's own count until then. */
+    const heldTotal = copies ? copies.reduce((n, r) => n + (r.quantity ?? 1), 0) : (mine?.quantity ?? 1);
+
     const closeSheet = async () => {
         // The next card, or this one again, opens on its own row.
         setViewing(null);
@@ -423,31 +375,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         offerUndo(res.card ? [res.card] : [], wishlist ? "Removed from your wishlist" : "Removed from your collection");
     };
 
-    /* Every failure in here is a toast, and none of them is a line in the header any more. This
-       sheet is the whole page on a phone: an error paragraph beside the title is off screen for
-       every control below the fold — the bin sits in the Copies tab — and for an action that
-       closes the sheet it was never read at all. The one that stayed inline is the Binder select's,
-       which renders against the control it belongs to. */
-    const run = async (
-        action: () => Promise<{ ok: true } | { ok: false; error: string }>,
-        opts: { closes?: boolean; done?: string; failed: string; onFailed?: () => void } = { failed: "That did not save" },
-    ) => {
-        setBusy(true);
-        const res = await action();
-        setBusy(false);
-        if (!res.ok) {
-            // The title is the app's own sentence; the API's is the line under it, where it reads
-            // as the reason rather than as the app talking.
-            notify.failed(opts.failed, { description: res.error });
-            opts.onFailed?.();
-            return;
-        }
-        if (opts.closes) onClose();
-        router.refresh();
-        void reloadCopies();
-        if (opts.done) notify.done(opts.done);
-    };
-
     // The folders and the facets are for the sheet's own controls, so they are asked for when a
     // card first opens, not when the page mounts: this sits on every list page, closed, and used
     // to cost two calls on every visit for a sheet nobody had opened.
@@ -478,39 +405,13 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const [syncedCardId, setSyncedCardId] = useState(card?.id);
     if (card?.id !== syncedCardId) {
         setSyncedCardId(card?.id);
-        setCollectionId(mine?.collection_id ?? "");
         setStarred(null);
     }
 
-    /* A date field the browser owns: React hands it a value, and after that the segments the user
-       arrows through are the input's own. When nothing is written the value prop has not changed,
-       so nothing puts the field back, and it sits there showing a date the store never took.
-       Bumping this remounts it on the value that is actually stored. */
-    const [dateKey, setDateKey] = useState(0);
-    const resetDate = () => setDateKey((k) => k + 1);
-    // Local, not UTC: at 01:00 in Amsterdam `toISOString()` still says yesterday, and a card
-    // pulled tonight would be a date the field refuses.
-    const todaysDate = today();
-
     const titleRef = useRef<HTMLHeadingElement>(null);
-    const [collectionError, setCollectionError] = useState<string | null>(null);
-    const manual = collections.filter((c) => !c.rule);
-    const onCollectionChange = async (value: string) => {
-        if (!card) return;
-        const before = collectionId;
-        setCollectionId(value);
-        setCollectionError(null);
-        const res = await setCardCollection(card.id, value || null);
-        if (res.ok) {
-            router.refresh();
-            const into = manual.find((c) => c.id === value);
-            notify.done(into ? `Filed in ${into.name}` : "Taken out of that Binder");
-        } else {
-            // The select must not keep showing a folder the card never moved to.
-            setCollectionId(before);
-            setCollectionError(res.error);
-        }
-    };
+    /* The binders any copy of this card is in: filed by hand, or fitting a rule binder's rule. */
+    const heldRows = mine ? (copies ?? [mine]) : [];
+    const inBinders = collections.filter((c) => heldRows.some((r) => (c.rule ? matchesRule(r, c.rule, facets) : r.collection_id === c.id)));
 
     return (
         <SlideoutMenu
@@ -858,271 +759,53 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                 </div>
                                             </div>
                                         ) : null}
-                                        {/* The copies you hold of this card, one line per *kind*: the language's flag, the
-                                    finish, the condition or grade, the folder and how many. Rows are one per purchase
-                                    and nothing merged them, so four identical Holo · Near Mint copies were four lines
-                                    saying "€2.81 ×1" — the same nothing, four times. A tap shows that kind and its
-                                    fields; Add a copy at the foot asks what the new one is. */}
+                                        {/* One card per kind of copy you hold — Holo · Near Mint, ×4 — with every field the
+                                            add form asks, in its order and shape. Rows are one per purchase and nothing
+                                            merged them, so four identical copies are one card saying ×4, and a change to
+                                            it is made to all four. The card the sheet opened on is there at once; the
+                                            other kinds arrive. */}
+                                        {mine?.owned && !emptied
+                                            ? groupCopies(copies ?? [mine]).map((group, i) => (
+                                                  <div key={group.key} style={{ "--arrive-delay": `${Math.min(i, 8) * 20}ms` } as React.CSSProperties}>
+                                                      <CopyCard
+                                                          group={group}
+                                                          folders={collections}
+                                                          languages={known?.languages}
+                                                          facts={known}
+                                                          busy={busy}
+                                                          arrive={!group.rows.some((r) => r.id === mine.id)}
+                                                          onMore={() => void stepUp(group)}
+                                                          onFewer={() => void stepDown(group)}
+                                                          onRemove={() => void dropCopies(group.rows)}
+                                                          onSaved={() => {
+                                                              router.refresh();
+                                                              void reloadCopies();
+                                                          }}
+                                                          refreshFolders={async () => {
+                                                              const next = await listCollections();
+                                                              setCollections(next);
+                                                              return next;
+                                                          }}
+                                                      />
+                                                  </div>
+                                              ))
+                                            : null}
+                                        {/* Where the card is: every binder any copy is filed in, every rule binder whose
+                                            rule a copy fits, and Favorites when starred. A fact about the card, so it
+                                            sits under the copies rather than inside one of them. */}
                                         {mine?.owned && !emptied ? (
-                                            <div className="flex flex-col gap-3 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary ring-inset">
-                                                <ul className="flex flex-col divide-y divide-secondary" aria-label="Copies">
-                                                    {groupCopies(copies ?? [mine]).map((group, i) => {
-                                                        const row = group.shown;
-                                                        const folderName = collections.find((c) => c.id === row.collection_id)?.name;
-                                                        const current = group.rows.some((r) => r.id === mine.id);
-                                                        return (
-                                                            // The row the sheet opened on is already there; the other copies arrive.
-                                                            <li
-                                                                key={group.key}
-                                                                className={cx("flex items-center gap-1", !current && "arrive")}
-                                                                style={{ "--arrive-delay": `${Math.min(i, 8) * 20}ms` } as React.CSSProperties}
-                                                            >
-                                                                <CopyRow
-                                                                    language={row.language}
-                                                                    label={
-                                                                        [
-                                                                            // The finish, then the foil's pattern where anything
-                                                                            // recorded one: "Holo · Cosmos". Two facts about this
-                                                                            // copy — what it is worth, and what it looks like.
-                                                                            row.finish && row.finish !== "normal"
-                                                                                ? (FINISH_LABELS[row.finish as Finish] ?? null)
-                                                                                : null,
-                                                                            row.foil_pattern
-                                                                                ? (FOIL_PATTERN_LABELS[row.foil_pattern as FoilPattern] ?? null)
-                                                                                : null,
-                                                                            row.grade ?? row.condition,
-                                                                            folderName,
-                                                                        ]
-                                                                            .filter(Boolean)
-                                                                            .join(" · ") || "Copy"
-                                                                    }
-                                                                    price={row.price}
-                                                                    quantity={group.quantity}
-                                                                    current={current}
-                                                                    onSelect={() => card && setViewing({ of: card.id, row })}
-                                                                />
-                                                                {/* Removing a copy is a thing you do to that copy, so it belongs on that copy's
-                                                                    line — outside the button that shows it, because a button inside a button is
-                                                                    not a thing a browser will render. */}
-                                                                {!readOnly ? (
-                                                                    <Tooltip
-                                                                        title={
-                                                                            group.quantity > 1
-                                                                                ? `Remove all ${group.quantity} of these copies`
-                                                                                : "Remove this copy"
-                                                                        }
-                                                                        placement="left"
-                                                                    >
-                                                                        <Button
-                                                                            color="tertiary-destructive"
-                                                                            size="sm"
-                                                                            iconLeading={Trash01}
-                                                                            aria-label={
-                                                                                group.quantity > 1
-                                                                                    ? `Remove all ${group.quantity} of these copies`
-                                                                                    : "Remove this copy"
-                                                                            }
-                                                                            isDisabled={busy}
-                                                                            onClick={() => void dropCopies(group.rows)}
-                                                                        />
-                                                                    </Tooltip>
-                                                                ) : null}
-                                                            </li>
-                                                        );
-                                                    })}
+                                            <div className="flex flex-col gap-1.5">
+                                                <span className="text-sm font-medium text-secondary">In binders</span>
+                                                <ul className="flex flex-wrap gap-1.5" aria-label="In binders">
+                                                    {[...(isStarred ? [{ id: "favorites", name: "Favorites" }] : []), ...inBinders].map(({ id, name }) => (
+                                                        <li key={id}>
+                                                            <Badge size="sm" color="gray" type="pill-color">
+                                                                {name}
+                                                            </Badge>
+                                                        </li>
+                                                    ))}
+                                                    {!isStarred && !inBinders.length ? <li className="text-sm text-quaternary">None yet</li> : null}
                                                 </ul>
-                                                {/* This copy: everything that belongs to the row shown, not to the card. */}
-                                                <dl className="flex flex-col divide-y divide-secondary">
-                                                    {/* Copies, with a step either way. The number is the *group's*, because the line
-                                        above says the same thing and two numbers for one fact in one panel is a
-                                        panel arguing with itself — it read "×4" over "Quantity 1", the group over
-                                        the one row the sheet had opened on.
-
-                                        Plus adds to the row on screen. Minus takes from it while it holds more
-                                        than one, and otherwise drops a whole row of the group, because four rows
-                                        of one is what four identical copies actually are in the store. */}
-                                                    <DetailRow
-                                                        label="Quantity"
-                                                        value={
-                                                            mine?.owned ? (
-                                                                <span className="flex items-center gap-2">
-                                                                    <Tooltip title={heldOfThisKind <= 1 ? "Remove this copy" : "One copy fewer"}>
-                                                                        <Button
-                                                                            color="secondary"
-                                                                            size="sm"
-                                                                            iconLeading={Minus}
-                                                                            aria-label="One copy fewer"
-                                                                            isDisabled={busy || heldOfThisKind < 1}
-                                                                            onClick={() => void stepDown()}
-                                                                        />
-                                                                    </Tooltip>
-                                                                    <span className="min-w-4 text-center tabular-nums">{heldOfThisKind}</span>
-                                                                    <Tooltip title="One copy more">
-                                                                        <Button
-                                                                            color="secondary"
-                                                                            size="sm"
-                                                                            iconLeading={Plus}
-                                                                            aria-label="One copy more"
-                                                                            isDisabled={busy}
-                                                                            onClick={() => step(shownCopies + 1)}
-                                                                        />
-                                                                    </Tooltip>
-                                                                </span>
-                                                            ) : (
-                                                                (card?.quantity ?? 1)
-                                                            )
-                                                        }
-                                                    />
-                                                    {/* The printing's language, with its flag; an owner picks it here, a reader sees it. Not
-                                        recorded reads as English, which nearly every card is. */}
-                                                    {mine ? (
-                                                        <DetailRow
-                                                            label="Language"
-                                                            value={
-                                                                <LanguageSelect
-                                                                    value={shownLanguage}
-                                                                    onChange={(code) => void pickLanguage(code)}
-                                                                    printed={known?.languages}
-                                                                    // A detail row, not a form field: it sits against the right edge
-                                                                    // beside its label rather than filling the sheet.
-                                                                    className="w-44"
-                                                                />
-                                                            }
-                                                        />
-                                                    ) : null}
-                                                    {/* A graded copy has a grade and no condition: the slab says which it is. Otherwise the
-                                        condition is picked here, in Cardmarket's scale. */}
-                                                    {mine && mine.grade ? (
-                                                        <DetailRow label="Grade" value={mine.grade} />
-                                                    ) : mine ? (
-                                                        <DetailRow
-                                                            label="Condition"
-                                                            value={
-                                                                <span className="flex items-center justify-end gap-2">
-                                                                    <NativeSelect
-                                                                        aria-label="Condition"
-                                                                        size="sm"
-                                                                        className="w-auto"
-                                                                        value={shownCondition}
-                                                                        onChange={(event) => void pickCondition(event.target.value)}
-                                                                        options={[
-                                                                            { label: "Not recorded", value: "" },
-                                                                            ...CONDITIONS.map((c) => ({ label: c, value: c })),
-                                                                        ]}
-                                                                    />
-                                                                </span>
-                                                            }
-                                                        />
-                                                    ) : null}
-                                                    <DetailRow label="Finish" value={mine?.finish ?? "Not recorded"} />
-                                                    {/* Personal fields stay off the public read-only view. */}
-                                                    {mine && (
-                                                        <DetailRow
-                                                            label="Acquired"
-                                                            value={
-                                                                mine.owned ? (
-                                                                    /* The kit's Input, the way mark-owned-dialog already asks for this
-                                                                       same date. It was a raw input styled by hand and read as a smaller
-                                                                       control in a column of larger ones — the two places that ask for an
-                                                                       acquired date now ask the same way. */
-                                                                    <Input
-                                                                        key={dateKey}
-                                                                        type="date"
-                                                                        aria-label="Acquired"
-                                                                        size="sm"
-                                                                        className="w-auto"
-                                                                        value={mine.acquired_at ? mine.acquired_at.slice(0, 10) : ""}
-                                                                        max={todaysDate}
-                                                                        /* `max` is a form-validation rule, and nothing here is a form: the browser
-                                                                           happily arrows a native date field past it. So the future is turned away
-                                                                           where it is asked for rather than reported after the API refuses it —
-                                                                           a card you have not pulled yet is not a date anybody meant to type.
-                                                                           Not snapped back mid-typing, which would fight a year being corrected
-                                                                           digit by digit; the field is put back when it is left. */
-                                                                        onChange={(date) => {
-                                                                            if (!date || date > todaysDate) return;
-                                                                            void run(() => setAcquiredAt(mine.id, date), {
-                                                                                done: "Acquired date saved",
-                                                                                failed: "The acquired date did not save",
-                                                                                onFailed: resetDate,
-                                                                            });
-                                                                        }}
-                                                                        onBlur={(e) => {
-                                                                            const stored = mine.acquired_at ? mine.acquired_at.slice(0, 10) : "";
-                                                                            if ((e.target as HTMLInputElement).value !== stored) resetDate();
-                                                                        }}
-                                                                    />
-                                                                ) : mine.acquired_at ? (
-                                                                    formatDate(mine.acquired_at)
-                                                                ) : null
-                                                            }
-                                                        />
-                                                    )}
-                                                    {/* The folder this copy is filed in. Only a folder filled by hand takes a card; a rule
-                                        folder fills itself. With none yet, the way to file it is to make one. */}
-                                                    <DetailRow
-                                                        label="Binder"
-                                                        value={
-                                                            <span className="flex flex-col items-end gap-2">
-                                                                {manual.length ? (
-                                                                    <NativeSelect
-                                                                        aria-label="Binder"
-                                                                        size="sm"
-                                                                        className="w-auto max-w-48"
-                                                                        value={collectionId}
-                                                                        onChange={(event) => onCollectionChange(event.target.value)}
-                                                                        options={[
-                                                                            { label: "None", value: "" },
-                                                                            ...manual.map((c) => ({ label: c.name, value: c.id })),
-                                                                        ]}
-                                                                    />
-                                                                ) : null}
-                                                                <FolderDialog
-                                                                    mode="create"
-                                                                    onSaved={async (id) => {
-                                                                        const next = await listCollections();
-                                                                        setCollections(next);
-                                                                        if (id && next.some((c) => c.id === id && !c.rule)) onCollectionChange(id);
-                                                                    }}
-                                                                >
-                                                                    <Button size="sm" color="link-gray" iconLeading={Plus}>
-                                                                        New binder
-                                                                    </Button>
-                                                                </FolderDialog>
-                                                                {collectionError ? (
-                                                                    <span role="alert" className="text-sm text-error-primary">
-                                                                        {collectionError}
-                                                                    </span>
-                                                                ) : null}
-                                                            </span>
-                                                        }
-                                                    />
-                                                </dl>
-                                                {/* Where the card is: the folder it was filed in, every rule folder whose rule it fits, and
-                            Favorites when starred. A wish is in none of them. */}
-                                                {mine ? (
-                                                    <div className="flex flex-col gap-1.5">
-                                                        <span className="text-sm font-medium text-secondary">In binders</span>
-                                                        <ul className="flex flex-wrap gap-1.5" aria-label="In binders">
-                                                            {[
-                                                                ...(isStarred ? [{ id: "favorites", name: "Favorites" }] : []),
-                                                                ...collections.filter((c) =>
-                                                                    c.rule ? matchesRule(mine, c.rule, facets) : c.id === collectionId,
-                                                                ),
-                                                            ].map(({ id, name }) => (
-                                                                <li key={id}>
-                                                                    <Badge size="sm" color="gray" type="pill-color">
-                                                                        {name}
-                                                                    </Badge>
-                                                                </li>
-                                                            ))}
-                                                            {!isStarred &&
-                                                            !collections.some((c) => (c.rule ? matchesRule(mine, c.rule, facets) : c.id === collectionId)) ? (
-                                                                <li className="text-sm text-quaternary">None yet</li>
-                                                            ) : null}
-                                                        </ul>
-                                                    </div>
-                                                ) : null}
                                             </div>
                                         ) : null}
                                         {/* Under the card, not in it. Adding a copy makes a new row beside the ones listed

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Card } from "@/lib/api-shapes";
-import { groupCopies } from "./copies";
+import { copyLabel, groupCopies } from "./copies";
 
 const copy = (over: Partial<Card> = {}): Card =>
     ({
@@ -54,5 +54,17 @@ describe("groupCopies", () => {
                 .rows.map((r) => r.id)
                 .sort(),
         ).toEqual(rows.map((r) => r.id).sort());
+    });
+});
+
+describe("copyLabel", () => {
+    it("names a kind by finish, pattern, condition or grade, and binder", () => {
+        expect(copyLabel(copy(), "Kanto")).toBe("Holo · Near Mint · Kanto");
+        expect(copyLabel(copy({ finish: "reverse-holo", foil_pattern: "cosmos", condition: null, grade: "PSA 9" }))).toBe("Reverse holo · Cosmos · PSA 9");
+    });
+
+    it("leaves out a normal finish, and says Copy when nothing is recorded", () => {
+        expect(copyLabel(copy({ finish: "normal" }))).toBe("Near Mint");
+        expect(copyLabel(copy({ finish: null, condition: null }))).toBe("Copy");
     });
 });
