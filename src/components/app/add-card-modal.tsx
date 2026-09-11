@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check, Plus, SearchLg } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
@@ -10,6 +10,7 @@ import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { FilterChipRow } from "@/components/app/filter-chip";
 import { LanguageFilterChip } from "@/components/app/language-filter-chip";
+import { RecentSearches } from "@/components/app/recent-searches";
 import { notify } from "@/components/app/toast";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
@@ -17,6 +18,7 @@ import { Button } from "@/components/base/buttons/button";
 import { CloseButton } from "@/components/base/buttons/close-button";
 import { Input } from "@/components/base/input/input";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
+import { clearSearches, rememberSearch, useRecentSearches } from "@/hooks/use-recent-searches";
 import type { BrowseLanguage } from "@/lib/languages";
 import { cx } from "@/utils/cx";
 
@@ -56,6 +58,18 @@ export function AddCardModal({
         params: language === "en" ? {} : { language },
     });
     const inputRef = useRef<HTMLInputElement>(null);
+    // The last few terms, offered before a letter is typed. A term is kept once its search has
+    // found something: what was typed and found is what is worth finding again.
+    const recent = useRecentSearches();
+    useEffect(() => {
+        if (!loading && results.length) rememberSearch(query);
+        // Only when an answer lands: the term is what the answer is for.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [loading, results]);
+    const pickRecent = (term: string) => {
+        setQuery(term);
+        inputRef.current?.focus();
+    };
     // Try again unmounts the button that was pressed the moment hits land, and focus would fall
     // to the page; it goes back to the field instead, where the next keystroke belongs.
     const retryAndRefocus = () => {
@@ -151,6 +165,7 @@ export function AddCardModal({
                                     <output aria-live="polite" className={cx("text-center text-sm text-tertiary", searchState ? "px-1 py-6" : "sr-only")}>
                                         {searchState}
                                     </output>
+                                    {!query.trim() ? <RecentSearches terms={recent} onPick={pickRecent} onClear={clearSearches} /> : null}
                                     {failed && !loading ? (
                                         <Button size="sm" color="secondary" className="self-center" onClick={retryAndRefocus}>
                                             Try again

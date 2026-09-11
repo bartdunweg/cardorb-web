@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { ClockRewind, Trash01 } from "@untitledui/icons";
 import { Heading as AriaHeading, ListBoxLoadMoreItem } from "react-aria-components";
 import type { CatalogueFilters, PokemonCard } from "@/app/(app)/dashboard/cards/actions";
 import { CardImage } from "@/components/app/card-image";
@@ -9,6 +10,7 @@ import { FilterChip, FilterChipRow, type FilterOption } from "@/components/app/f
 import { LanguageFilterChip } from "@/components/app/language-filter-chip";
 import { CommandMenu, type CommandMenuGroupType } from "@/components/application/command-menus/command-menu";
 import { Button } from "@/components/base/buttons/button";
+import { clearSearches, useRecentSearches } from "@/hooks/use-recent-searches";
 import { CARD_TYPES } from "@/lib/card-types";
 import { formatDate } from "@/lib/format";
 import { cx } from "@/utils/cx";
@@ -94,6 +96,9 @@ const MORE = "more";
  */
 const focusField = () => document.activeElement?.closest('[role="dialog"]')?.querySelector("input")?.focus();
 
+/** The palette's last recent item: not a term, the way out of the list. */
+const CLEAR_RECENT = "recent:clear";
+
 /** The most the API counts: it reads that many and stops, so that figure means "at least". */
 const SEARCH_WINDOW = 250;
 
@@ -144,28 +149,52 @@ export function CommandSearchMenu({
     // Which catalogue is asked; the set and the type are the English one's facets, so its chips go with it.
     const language = filters.language ?? "en";
     const searching = inputValue.trim().length >= 2 || filtering;
-    const groups: CommandMenuGroupType[] = hits.length
-        ? [
-              {
-                  id: "cards",
-                  title: total === null ? "Cards" : total >= SEARCH_WINDOW ? `${SEARCH_WINDOW}+ cards` : `${total} ${total === 1 ? "card" : "cards"}`,
-                  items: [
-                      ...hits.map((c) => ({
-                          id: c.id,
-                          type: "image" as const,
-                          src: c.image,
-                          alt: c.name,
-                          label: c.name,
-                          description: [c.set, c.number ? `#${c.number}` : null, c.rarity].filter(Boolean).join(" · "),
-                          stacked: true,
-                      })),
-                      // The sentinel is an item of the list so it scrolls with it; the section renders it as
-                      // the kit's load-more row rather than as a card.
-                      ...(hasMore ? [{ id: MORE, label: "Loading more…" }] : []),
-                  ],
-              },
-          ]
-        : [];
+    // Before a letter is typed: the last few terms, each a press away, and a row to be rid of
+    // them. Kept in this browser (use-recent-searches.ts); the Add dialog offers the same.
+    const recent = useRecentSearches();
+    const groups: CommandMenuGroupType[] =
+        !searching && !inputValue.trim() && recent.length
+            ? [
+                  {
+                      id: "recent",
+                      title: "Recent searches",
+                      items: [
+                          ...recent.map((term) => ({
+                              id: `recent:${term}`,
+                              type: "icon" as const,
+                              icon: ClockRewind,
+                              label: term,
+                              onAction: () => {
+                                  onInputChange(term);
+                                  focusField();
+                              },
+                          })),
+                          { id: CLEAR_RECENT, type: "icon" as const, icon: Trash01, label: "Clear recent searches", onAction: clearSearches },
+                      ],
+                  },
+              ]
+            : hits.length
+              ? [
+                    {
+                        id: "cards",
+                        title: total === null ? "Cards" : total >= SEARCH_WINDOW ? `${SEARCH_WINDOW}+ cards` : `${total} ${total === 1 ? "card" : "cards"}`,
+                        items: [
+                            ...hits.map((c) => ({
+                                id: c.id,
+                                type: "image" as const,
+                                src: c.image,
+                                alt: c.name,
+                                label: c.name,
+                                description: [c.set, c.number ? `#${c.number}` : null, c.rarity].filter(Boolean).join(" · "),
+                                stacked: true,
+                            })),
+                            // The sentinel is an item of the list so it scrolls with it; the section renders it as
+                            // the kit's load-more row rather than as a card.
+                            ...(hasMore ? [{ id: MORE, label: "Loading more…" }] : []),
+                        ],
+                    },
+                ]
+              : [];
 
     return (
         <CommandMenu
