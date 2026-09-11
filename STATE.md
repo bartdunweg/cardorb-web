@@ -53,6 +53,11 @@ for the failures that leave no trace — and everything both passes found is clo
   product of each, one map per catalogue since the ids collide: ja 10,350 of 12,781, zh-tw
   3,861 of 7,436, zh-cn 742 of 877, ko all 239. The page pays no request it did not pay before.
   Nothing changed on the web: it rendered whatever price the API sent, which was null.
+- **A Japanese set has its pictures** (cardorb-api#262). TCGdex had no file behind 41 of 72
+  sampled Japanese cards, whole sets at a time; Limitless has them at a guessable address, and
+  a set TCGdex has not photographed now shows those. One probe per set. Chinese (44 of 60
+  missing) and Korean are not on Limitless and still show grey boxes; the odd gap in a
+  photographed Japanese set stays a gap too.
 - **A test that guards the wrong thing** (cardorb-api#258). Five of them, and the sharpest mocked
   the payload it was meant to inspect — so the suite was green with the field-stripping deleted.
   Each is now checked by breaking what it guards and watching it go red. The ten undocumented
@@ -78,6 +83,11 @@ for the failures that leave no trace — and everything both passes found is clo
   Japanese name; and `zh` is one code for two catalogues, so traditional is asked before
   simplified. Splitting it properly widens an enum the iOS app decodes, which is a decision
   rather than a side effect.
+- **A card back where there is no picture.** Bart's call on 2026-09-11: a card the catalogue
+  knows but cannot show gets a drawn card back in the tile, and no price. An own drawing, not
+  the real back — that art is a registered mark. Chinese shelves and the single gaps above are
+  what it is for. Owned Japanese cards take the same TCGdex address the shelf did, without the
+  Limitless fallback: same gap, in the collection, not yet closed.
 - **Empty shelves.** TCGdex lists 184 Japanese sets and carries cards for 116; on the Korean
   shelf it is 3 of 95. Those set pages open on nothing, with no word about why. Measured on
   2026-09-11 while pricing the shelves; not changed.
