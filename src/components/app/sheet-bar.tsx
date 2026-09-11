@@ -55,10 +55,19 @@ export function SheetBar({
         <div ref={ref} className="sticky top-0 z-20 h-0 w-full" style={{ "--bar": 0 } as CSSProperties}>
             {/* Three columns, the outer two equal, so the name is centred on the bar and not between
                 one button and two. */}
-            <div className="relative grid h-17 grid-cols-[1fr_auto_1fr] items-center px-3">
+            {/* Pushed clear of the status bar. The sheet is the whole screen now, so its art runs
+                under the notch on purpose — the buttons must not. Nothing on a desktop, where the
+                inset is zero. */}
+            <div className="relative grid h-17 grid-cols-[1fr_auto_1fr] items-center px-3" style={{ marginTop: "env(safe-area-inset-top)" }}>
                 {/* Past the bar, not only behind it: the ground is 68px of bar plus a tail below it, so the
                     fade has room to finish instead of ending at the bar's own edge. */}
-                <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 -bottom-8 fade-from-page" style={{ opacity: "var(--bar)" }} />
+                <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-x-0 -bottom-8 fade-from-page"
+                    // Up past the bar's own top, so the ground covers the status bar too rather
+                    // than leaving the art bright behind the clock once the title has scrolled up.
+                    style={{ opacity: "var(--bar)", top: "calc(-1 * env(safe-area-inset-top))" }}
+                />
                 {/* A gap, because these are glass: three translucent circles touching read as one
                     smear rather than three buttons, and each carries its own faint ring. */}
                 <div className="relative flex items-center gap-3 justify-self-start">{left}</div>
