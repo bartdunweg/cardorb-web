@@ -95,7 +95,7 @@ export function LandingPreview({ className }: { className?: string }) {
             </div>
 
             {/* The four counts, on Home's tiles, breaking to a row where Home does. */}
-            <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                 <StatCard label="Owned" value={formatCount(1931)} />
                 <StatCard label="Wishlist" value={formatCount(24)} />
                 <StatCard label="Favorites" value={formatCount(12)} />
