@@ -64,6 +64,12 @@ for the failures that leave no trace — and everything both passes found is clo
 - **An owned Japanese card from an unphotographed set** shows Limitless's scan too
   (cardorb-api#264): the collection resolves a card on its own, so it probes once per card,
   cached a day, where the shelf probed once per set.
+- **A set the catalogue has not recorded says so** (#320, #321, cardorb-api#265). TCGdex lists
+  68 of 184 Japanese sets and 92 of 95 Korean ones with a count and no card; the page opened on
+  nothing under "0 of 0 cards". The page shows an empty state naming the count the catalogue
+  claims, and the shelf tile says "No cards in the catalogue yet" in place of the count and
+  the bar. The API reads which sets those are off the committed Cardmarket id maps — no request
+  — so it is as current as the maps' last run; a set's own page reads the cards live.
 - **A test that guards the wrong thing** (cardorb-api#258). Five of them, and the sharpest mocked
   the payload it was meant to inspect — so the suite was green with the field-stripping deleted.
   Each is now checked by breaking what it guards and watching it go red. The ten undocumented
@@ -91,9 +97,6 @@ for the failures that leave no trace — and everything both passes found is clo
   rather than a side effect.
 - **The small thumbnails** — table rows, the add dialog, folder actions — still draw a grey
   box where a card has no picture; the four card-sized places show the back (#314).
-- **Empty shelves.** TCGdex lists 184 Japanese sets and carries cards for 116; on the Korean
-  shelf it is 3 of 95. Those set pages open on nothing, with no word about why. Measured on
-  2026-09-11 while pricing the shelves; not changed.
 - **A privacy flip made in the iOS app is invisible here for five minutes.** `forgetMine()` drops
   the public tag on writes made through this app; the same API serves iOS and invalidates nothing
   here. Wants a revalidation webhook from cardorb-api.
