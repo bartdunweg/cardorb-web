@@ -103,15 +103,24 @@ function SetTile({ set, language }: { set: SetSummary; language: BrowseLanguageC
                         <span className="truncate text-sm font-semibold text-primary">{set.name}</span>
                         {set.localName ? <span className="truncate text-xs text-tertiary">{set.localName}</span> : null}
                     </span>
-                    <span className="shrink-0 text-sm text-tertiary tabular-nums">
-                        {formatCount(set.owned)} of {formatCount(set.total)}
-                    </span>
+                    {set.cardsRecorded ? (
+                        <span className="shrink-0 text-sm text-tertiary tabular-nums">
+                            {formatCount(set.owned)} of {formatCount(set.total)}
+                        </span>
+                    ) : null}
                 </div>
-                <ProgressBarBase
-                    value={set.owned}
-                    max={set.total || 1}
-                    aria-label={`${set.name}: ${formatCount(set.owned)} of ${formatCount(set.total)} cards`}
-                />
+                {/* A set the catalogue has not recorded cards for is not "0 of 60 to go": the count and
+                    the bar would say the collecting is unstarted where it is the catalogue that is. The
+                    tile says so instead, in the words the set's own page uses, and still opens it. */}
+                {set.cardsRecorded ? (
+                    <ProgressBarBase
+                        value={set.owned}
+                        max={set.total || 1}
+                        aria-label={`${set.name}: ${formatCount(set.owned)} of ${formatCount(set.total)} cards`}
+                    />
+                ) : (
+                    <span className="text-xs text-tertiary">No cards in the catalogue yet</span>
+                )}
             </div>
         </Link>
     );
