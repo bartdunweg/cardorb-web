@@ -19,6 +19,7 @@ import {
     setFavorite,
 } from "@/app/(app)/dashboard/cards/actions";
 import { type FolderChoice, listCollections, loadFacets } from "@/app/(app)/dashboard/collections/actions";
+import { NO_ART, artStack, nextArt } from "@/components/app/card-art";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { knownCardFacts, preloadCardFacts, preloadPriceHistory } from "@/components/app/card-memo";
@@ -515,23 +516,28 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
      * 250 ms on the enter curve: this runs on every arrow press, so it stays small. Reduced
      * motion drops the travel and keeps the fade.
      *
-     * The blurred copy underneath is never cleared: fully covered once the next one lands, it
-     * costs one 64 px picture. The scan underneath goes as soon as the new one has faded in,
-     * since a card tilted under the pointer would show it peeking out. Adjusted during render,
-     * the same way as the collection value above.
+     * The picture underneath is the very element that was showing the last card, not a copy of
+     * it. It used to be a copy: a second <img> mounted at the moment of the step, and an <img>
+     * that has just been put in the page paints nothing until the browser has decoded it — even
+     * from cache, and next/image asks for that decode off the main thread. So for the first
+     * frames after a press both layers were empty and the page's ground showed through the head:
+     * a white blink on every step on a phone, where the decode takes longest. Now the layers are
+     * a keyed list (`artStack`), the key being the scan's address: the last card's element stays
+     * where it is and only becomes the one underneath, and the new one is added over it. The
+     * scans sit inside the tilting card together, so a card tilted under the pointer cannot show
+     * the one underneath peeking out beside it. The layer underneath goes once the fade has
+     * ended. Adjusted during render, the same way as the collection value above.
      */
-    const [art, setArt] = useState<{ id: string; scan: string; blur: string } | null>(null);
-    const [prevArt, setPrevArt] = useState<{ scan: string; blur: string } | null>(null);
+    const [art, setArt] = useState(NO_ART);
     const [scanLoaded, setScanLoaded] = useState(false);
     const [blurLoaded, setBlurLoaded] = useState(false);
     const scanFade = useRef<HTMLDivElement>(null);
     const prevScan = useRef<HTMLDivElement>(null);
     const blurFade = useRef<HTMLDivElement>(null);
     const fades = useRef<{ scan?: Animation; blur?: Animation; prev?: Animation }>({});
-    if (card?.image_url ? art?.id !== card.id : art !== null) {
-        setArt(card?.image_url ? { id: card.id, scan: card.image_high_url ?? card.image_url, blur: card.image_url } : null);
-        // Underneath only what was there while the sheet stayed open: opening it anew has nothing to cross from.
-        setPrevArt(card?.image_url && art ? { scan: art.scan, blur: art.blur } : null);
+    const artNow = nextArt(art, card);
+    if (artNow !== art) {
+        setArt(artNow);
         setScanLoaded(false);
         setBlurLoaded(false);
     }
@@ -540,9 +546,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
      * layer transitions to. A cached picture reports in the same task that made its layer
      * transparent, and a class flipped back within that task is never seen by the browser: it
      * styles the end state once and nothing crosses. An animation started then plays from zero
-     * whatever the base style does underneath it. Both pictures are keyed by the card, so each is
-     * a fresh <img>: on a reused one Chrome still calls the old request complete for a tick after
-     * the address changes, and next/image took that for the new picture being there.
+     * whatever the base style does underneath it. Both pictures are keyed by their address, so a
+     * new picture is a fresh <img>: on a reused one Chrome still calls the old request complete
+     * for a tick after the address changes, and next/image took that for the new picture being there.
      */
     const landed = (which: "scan" | "blur", layer: React.RefObject<HTMLDivElement | null>, set: (v: boolean) => void, done?: () => void) => () => {
         set(true);
@@ -589,7 +595,17 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
             running.blur?.cancel();
             running.prev?.cancel();
         };
-    }, [art?.id]);
+    }, [art.shown?.scan]);
+    // Stepped back to the card still fading out: its picture never left the screen, so the browser
+    // will not report it loaded again. The fade starts here instead, on the element it now is.
+    const clearUnder = () => setArt((a) => (a.under ? { ...a, under: null } : a));
+    const swapped = art.swapped ? art.shown?.scan : undefined;
+    useEffect(() => {
+        if (!swapped) return;
+        landed("scan", scanFade, setScanLoaded, clearUnder)();
+        landed("blur", blurFade, setBlurLoaded)();
+        // Only on the step: the handlers are rebuilt each render and carry nothing of their own.
+    }, [swapped]);
 
     const titleRef = useRef<HTMLHeadingElement>(null);
     /* The binders any copy of this card is in: filed by hand, or fitting a rule binder's rule. */
@@ -719,24 +735,24 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                 /* The dimming sits on the box, not the layers, so the new copy at full
                                    opacity covers the old one entirely rather than mixing with it. */
                                 <div aria-hidden="true" className="absolute inset-0 opacity-60">
-                                    {prevArt ? (
-                                        <div className="absolute inset-0 scale-125 blur-lg">
-                                            <CardImage src={prevArt.blur} alt="" width={64} className="object-cover" />
+                                    {artStack(art).map(({ layer, shown }) => (
+                                        <div
+                                            key={layer.scan}
+                                            ref={shown ? blurFade : undefined}
+                                            className={cx("absolute inset-0 scale-125 blur-lg", shown && !blurLoaded && "opacity-0")}
+                                        >
+                                            <CardImage
+                                                src={layer.blur}
+                                                alt=""
+                                                width={64}
+                                                className="object-cover"
+                                                // Eager: the header's colour at the moment the sheet opens, and lazy
+                                                // it waited for a scroll that never comes inside the sheet.
+                                                priority
+                                                onLoad={shown ? landed("blur", blurFade, setBlurLoaded) : undefined}
+                                            />
                                         </div>
-                                    ) : null}
-                                    <div ref={blurFade} className={cx("absolute inset-0 scale-125 blur-lg", blurLoaded ? "opacity-100" : "opacity-0")}>
-                                        <CardImage
-                                            key={card.id}
-                                            src={card.image_url}
-                                            alt=""
-                                            width={64}
-                                            className="object-cover"
-                                            // Eager: the header's colour at the moment the sheet opens, and lazy
-                                            // it waited for a scroll that never comes inside the sheet.
-                                            priority
-                                            onLoad={landed("blur", blurFade, setBlurLoaded)}
-                                        />
-                                    </div>
+                                    ))}
                                 </div>
                             ) : null}
                             <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-2/5 fade-to-page" />
@@ -790,42 +806,47 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                     /* The card tilts and shines under the pointer (the copy's finish and the
                                        printing's rarity pick the foil); the header's padding is the room it tilts in. */
                                     <div className="relative mx-auto w-full max-w-44">
-                                        {prevArt ? (
-                                            <div ref={prevScan} aria-hidden="true" className="absolute inset-0 aspect-card overflow-hidden rounded-card">
-                                                <CardImage src={prevArt.scan} alt="" width={176} quality={75} className="object-cover" />
-                                            </div>
-                                        ) : null}
-                                        <div ref={scanFade} className={scanLoaded ? "opacity-100" : "opacity-0"}>
-                                            <HoloCard
-                                                rarity={card.rarity}
-                                                finish={mine?.finish ?? card.finish ?? null}
-                                                // A public profile is not told what somebody's copy looks
-                                                // like, so there is nothing to narrow to there.
-                                                foilPattern={mine?.foil_pattern ?? ("foil_pattern" in card ? card.foil_pattern : null)}
-                                                facts={known}
-                                                number={card.number}
-                                                types={card.types}
-                                                gen={card.gen}
-                                                tilt={tiltGranted}
-                                                className="w-full"
-                                            >
-                                                <CardImage
-                                                    key={card.id}
-                                                    src={card.image_high_url ?? card.image_url}
-                                                    fallbackSrc={card.image_url}
-                                                    alt={card.name}
-                                                    // The box is max-w-44, so 176 CSS pixels: 384 asked for the 828 rung and
-                                                    // got a 50 KB file where 24 KB shows every pixel — eagerly, on every tap,
-                                                    // because this one is priority. `width` is what the layout draws, not the
-                                                    // scan you want.
-                                                    width={176}
-                                                    quality={75}
-                                                    className="object-cover"
-                                                    priority
-                                                    onLoad={landed("scan", scanFade, setScanLoaded, () => setPrevArt(null))}
-                                                />
-                                            </HoloCard>
-                                        </div>
+                                        <HoloCard
+                                            rarity={card.rarity}
+                                            finish={mine?.finish ?? card.finish ?? null}
+                                            // A public profile is not told what somebody's copy looks
+                                            // like, so there is nothing to narrow to there.
+                                            foilPattern={mine?.foil_pattern ?? ("foil_pattern" in card ? card.foil_pattern : null)}
+                                            facts={known}
+                                            number={card.number}
+                                            types={card.types}
+                                            gen={card.gen}
+                                            tilt={tiltGranted}
+                                            className="w-full"
+                                        >
+                                            {/* The card's face is a grid with one cell, and every child of it is laid
+                                                in that cell (the vendored effect's rule): the two scans stack there
+                                                by themselves, the one underneath first. The card frame, its shadow and
+                                                its shine stay put; the pictures cross inside it. */}
+                                            {artStack(art).map(({ layer, shown }) => (
+                                                <div
+                                                    key={layer.scan}
+                                                    ref={shown ? scanFade : prevScan}
+                                                    aria-hidden={shown ? undefined : "true"}
+                                                    className={shown && !scanLoaded ? "opacity-0" : undefined}
+                                                >
+                                                    <CardImage
+                                                        src={layer.scan}
+                                                        fallbackSrc={layer.blur}
+                                                        alt={shown ? card.name : ""}
+                                                        // The box is max-w-44, so 176 CSS pixels: 384 asked for the 828 rung and
+                                                        // got a 50 KB file where 24 KB shows every pixel — eagerly, on every tap,
+                                                        // because this one is priority. `width` is what the layout draws, not the
+                                                        // scan you want.
+                                                        width={176}
+                                                        quality={75}
+                                                        className="object-cover"
+                                                        priority
+                                                        onLoad={shown ? landed("scan", scanFade, setScanLoaded, clearUnder) : undefined}
+                                                    />
+                                                </div>
+                                            ))}
+                                        </HoloCard>
                                     </div>
                                 ) : (
                                     /* Face down, at the size the scan would be. The sheet's heading names the card. */
