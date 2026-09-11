@@ -21,7 +21,7 @@ import {
 import { type FolderChoice, listCollections, loadFacets } from "@/app/(app)/dashboard/collections/actions";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
-import { CardPriceChart } from "@/components/app/card-price-chart";
+import { CardPriceChart, preloadPriceHistory } from "@/components/app/card-price-chart";
 import { CopyCard } from "@/components/app/copy-card";
 import { CopyFormDialog } from "@/components/app/copy-form-dialog";
 import { HoloCard } from "@/components/app/holo-card";
@@ -246,7 +246,11 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const [facts, setFacts] = useState<{ tcgId: string; facts: CardFacts | null } | null>(null);
     const tcgId = card?.tcg_id ?? null;
     useEffect(() => {
-        if (!tcgId || FACTS_SEEN.has(tcgId)) return;
+        if (!tcgId) return;
+        // The price line too, so the Price tab opens on it rather than on "No readings" for the
+        // half second the API takes. Its answer lives with the chart; nothing here renders from it.
+        void preloadPriceHistory(tcgId);
+        if (FACTS_SEEN.has(tcgId)) return;
         let live = true;
         cardFacts(tcgId).then((f) => {
             FACTS_SEEN.set(tcgId, f);
