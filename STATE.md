@@ -64,6 +64,13 @@ for the failures that leave no trace — and everything both passes found is clo
 - **An owned Japanese card from an unphotographed set** shows Limitless's scan too
   (cardorb-api#264): the collection resolves a card on its own, so it probes once per card,
   cached a day, where the shelf probed once per set.
+- **The holo effect's CSS travels with the sheet** (#327), not with every page: the shared
+  stylesheet 260 → 204 KB (37.4 → 30.8 KB gzip), confirmed on production. The GPL question stands.
+- **Measured, so nobody need re-check:** of 1,946 rows with a catalogue id, 1,924 are English
+  and 22 carry no language (all English ids); none is Japanese, Korean or Chinese. No `zh` row
+  exists, and no row lost its language to the bug #269 fixed — nothing from those shelves had
+  been added yet. A script to pin `zh` rows to their catalogue was written and dropped: it had
+  nothing to act on.
 - **Chinese is two languages** (cardorb-api#269, web #326). Bart's call, and it turned out to
   be a fix: a card added from a Chinese shelf arrived as `zh-tw`, failed a list that knew only
   `zh`, and was stored with no language — then looked up as an English card by its set's name.
@@ -112,9 +119,10 @@ for the failures that leave no trace — and everything both passes found is clo
 ## Open
 
 - **The holo CSS is GPL-3.0.** Accepted while Cardorb is free; before it charges, swap the folder
-  for an own implementation of the same recipe or write to @simeydotme. It also ships on every
-  route for 5.4 KB Brotli while only the card sheet uses it — moving it out of the Tailwind entry
-  changes the cascade, so that wants a pair of eyes on the effect, not a blind edit.
+  for an own implementation of the same recipe or write to @simeydotme. It no longer ships on
+  every route: since #327 it loads with the sheet (`src/styles/holo.css`, same cascade layer),
+  and the shared stylesheet went 260 → 204 KB (37.4 → 30.8 KB gzip), the effect computing the
+  same styles before and after.
 - **A revoked session stays open on the web for up to an hour (#79).** Both the middleware and
   the API verify the token locally with `getClaims`. To shorten it: lower the JWT expiry in the
   Supabase project.
