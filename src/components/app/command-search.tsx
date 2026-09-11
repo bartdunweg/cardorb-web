@@ -3,15 +3,16 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import { type CatalogueFilters, type PokemonCard, listRows, searchPokemon } from "@/app/(app)/dashboard/cards/actions";
+import { useRouter } from "next/navigation";
+import { type CatalogueFilters, type PokemonCard, addCard, searchPokemon } from "@/app/(app)/dashboard/cards/actions";
 import { listSetsShelf } from "@/app/(app)/dashboard/sets/actions";
 import type { FilterOption } from "@/components/app/filter-chip";
 import { SearchTrigger } from "@/components/app/search-trigger";
+import { notify } from "@/components/app/toast";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import { rememberSearch } from "@/hooks/use-recent-searches";
-import { type Card, cardFromPokemonCard } from "@/lib/api-shapes";
 import type { BrowseLanguage } from "@/lib/languages";
-import { hitFromRows, takenHit } from "@/lib/search-hit";
+import { takenHit } from "@/lib/search-hit";
 
 /** What one answer from the catalogue search holds at most: the API's page. A full one means there may be more. */
 const SEARCH_PAGE_SIZE = 20;
@@ -19,8 +20,6 @@ const SEARCH_PAGE_SIZE = 20;
 // The palette itself, with the kit's command menu and its react-aria dialog behind it, loads the
 // first time someone opens it: every dashboard screen carries the provider, few carry a search.
 const CommandSearchMenu = dynamic(() => import("@/components/app/command-search-menu").then((m) => m.CommandSearchMenu), { ssr: false });
-// The card sheet a pressed hit opens, fetched on that press: it is the app's largest client chunk.
-const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-slideout").then((m) => m.CardDetailSlideout), { ssr: false });
 
 const CommandSearchContext = createContext<{ open: () => void }>({ open: () => {} });
 export const useCommandSearch = () => useContext(CommandSearchContext);
@@ -32,9 +31,10 @@ export function SidebarSearchTrigger() {
 }
 
 // Renders the single command palette and provides open() to descendants. It searches the whole
-// Pokémon card database (the Card Orb API, TCGdex behind it); a hit opens the card's sheet, which
-// is where it is added to the collection or the wishlist.
+// Pokémon card database (the Card Orb API, TCGdex behind it) and lets you add the highlighted hit
+// to your collection or your wishlist from its preview, without leaving the palette.
 export function CommandSearchProvider({ children }: { children: ReactNode }) {
+    const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
     // True from the first open on: the menu stays mounted after, so closing still animates.
     const [wanted, setWanted] = useState(false);
@@ -84,32 +84,23 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [loading, hits]);
 
-    /* The hit whose sheet is open over the palette: the card in full, with its price line and the
-       two ways to take it, the same sheet a set page opens on a card nobody holds. The palette stays
-       behind it with the hits, so closing the sheet is back at the search. */
-    const [opened, setOpened] = useState<PokemonCard | null>(null);
-    /* A hit you hold opens on its row, as a set tile does: the row carries the copies, the price
-       paid and the id every action in the sheet's bar needs. Read after the sheet opens on the
-       catalogue's card, so it is never blank waiting; kept with the hit it was read for. It was
-       missing, and "Remove from wishlist" on a wished hit answered "Invalid card" (measured). */
-    const [row, setRow] = useState<{ of: string; row: Card } | null>(null);
-    const open = async (hit: PokemonCard) => {
-        setOpened(hit);
-        if (!hit.owned && !hit.wishlist) return;
-        const rows = await listRows({ set: hit.set, number: hit.number, name: hit.name });
-        if (rows[0]) setRow({ of: hit.id, row: rows[0] });
-    };
-    const held = opened && row?.of === opened.id ? row.row : null;
-    /* Closing a sheet that opened on a row re-reads the rows for that hit: the sheet may have
-       removed the card or a copy, and the hits are read by nobody else. A card taken from a hit
-       nobody held is marked at once through onTaken instead, with no read. */
-    const close = () => {
-        const hit = opened;
-        setOpened(null);
-        if (!hit || row?.of !== hit.id) return;
-        listRows({ set: hit.set, number: hit.number, name: hit.name }).then((rows) =>
-            update((hits) => hits.map((h) => (h.id === hit.id ? hitFromRows(h, rows) : h))),
-        );
+    /* To the collection, or to the wishlist: the same card cannot be in both, so one press settles
+       it. The hit is marked at once (takenHit), because the hits are this component's and no
+       refresh re-reads them: the row under the closed preview would still offer the card as one
+       you did not have. `adding` holds the hit whose add is in flight, so its buttons wait. */
+    const [adding, setAdding] = useState<string | null>(null);
+    const add = async (card: PokemonCard, target: "collection" | "wishlist") => {
+        setAdding(card.id);
+        const res = await addCard(card, target);
+        setAdding(null);
+        if (res.ok) {
+            update((hits) => takenHit(hits, card.id, target));
+            router.refresh();
+        } else {
+            // The buttons come back as they were, which reads as a missed click; the toast is the
+            // only thing that says the card is not there.
+            notify.failed(`${card.name} was not added to your ${target}`, { description: res.error });
+        }
     };
 
     return (
@@ -147,20 +138,8 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
                     loadingMore={loadingMore}
                     onLoadMore={loadMore}
                     total={total}
-                    onOpen={(hit) => void open(hit)}
-                />
-            ) : null}
-            {/* Mounted from the first press on and closed with a null card, as every list mounts it: a
-                sheet unmounted on close cannot put focus back on the hit that opened it, and a keyboard
-                user landed on the page under the palette (measured). */}
-            {wanted ? (
-                <CardDetailSlideout
-                    card={held ?? (opened ? cardFromPokemonCard(opened) : null)}
-                    addable={opened && !opened.owned && !opened.wishlist ? opened : null}
-                    onClose={close}
-                    /* The hit the card came from says so at once: the hits are this component's, and no
-                       refresh re-reads them. */
-                    onTaken={(card, list) => update((hits) => takenHit(hits, card.id, list))}
+                    adding={adding}
+                    onAdd={add}
                 />
             ) : null}
         </CommandSearchContext.Provider>

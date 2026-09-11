@@ -1,8 +1,10 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { ClockRewind, Trash01 } from "@untitledui/icons";
 import { Heading as AriaHeading, ListBoxLoadMoreItem } from "react-aria-components";
 import type { CatalogueFilters, PokemonCard } from "@/app/(app)/dashboard/cards/actions";
+import { CardImage } from "@/components/app/card-image";
 import { FilterChip, FilterChipRow, type FilterOption } from "@/components/app/filter-chip";
 import { LanguageFilterChip } from "@/components/app/language-filter-chip";
 import { CommandMenu, type CommandMenuGroupType } from "@/components/application/command-menus/command-menu";
@@ -10,17 +12,92 @@ import { LoadingIndicator } from "@/components/application/loading-indicator/loa
 import { Button } from "@/components/base/buttons/button";
 import { clearSearches, useRecentSearches } from "@/hooks/use-recent-searches";
 import { CARD_TYPES } from "@/lib/card-types";
+import { formatDate, formatPrice } from "@/lib/format";
 import { searchHitDescription } from "@/lib/search-hit";
 import { cx } from "@/utils/cx";
+
+function DetailRow({ label, value }: { label: string; value: ReactNode }) {
+    if (value === null || value === undefined || value === "") return null;
+    return (
+        <div className="flex items-start justify-between gap-4 py-2">
+            <dt className="shrink-0 text-sm text-tertiary">{label}</dt>
+            <dd className="text-right text-sm font-medium text-primary">{value}</dd>
+        </div>
+    );
+}
+
+// Beside the hits on a desktop, under them on a phone: the highlighted card's scan, everything the
+// catalogue says about it, what it trades at, and the two ways to take it.
+function CardPreview({ card, adding, onAdd }: { card: PokemonCard; adding: boolean; onAdd: (target: "collection" | "wishlist") => void }) {
+    return (
+        <div className="flex w-full flex-col gap-4 overflow-y-auto border-secondary p-6 max-md:border-t md:max-h-[70vh] md:w-90 md:border-l">
+            {card.image ? (
+                <div className="relative mx-auto aspect-card w-40 overflow-hidden rounded-card ring-1 ring-image ring-inset">
+                    <CardImage src={card.image} alt={card.name} width={160} className="object-cover" priority />
+                </div>
+            ) : (
+                <div className="mx-auto h-56 w-40 rounded-xl bg-quaternary" />
+            )}
+
+            <div className="flex flex-col gap-0.5 text-center">
+                <p className="text-md font-semibold text-primary">{card.name}</p>
+                <p className="text-sm text-tertiary">{card.supertype ?? "Card"}</p>
+            </div>
+
+            <dl className="flex flex-col divide-y divide-secondary">
+                <DetailRow label="Price" value={formatPrice(card.price)} />
+                <DetailRow label="Set" value={card.set || null} />
+                <DetailRow label="Series" value={card.series} />
+                <DetailRow label="Number" value={card.number ? `${card.number}${card.setPrintedTotal ? ` / ${card.setPrintedTotal}` : ""}` : null} />
+                <DetailRow label="Rarity" value={card.rarity} />
+                <DetailRow label="Type" value={card.types?.length ? card.types.join(", ") : null} />
+                <DetailRow label="Subtypes" value={card.subtypes?.length ? card.subtypes.join(", ") : null} />
+                <DetailRow label="HP" value={card.hp} />
+                <DetailRow label="Pokédex №" value={card.nationalPokedexNumbers?.length ? card.nationalPokedexNumbers.join(", ") : null} />
+                <DetailRow label="Artist" value={card.artist} />
+                <DetailRow label="Released" value={formatDate(card.releaseDate)} />
+            </dl>
+
+            {card.flavorText ? <p className="text-sm text-tertiary italic">{card.flavorText}</p> : null}
+
+            {/* Owned or wished for, never both. A card you hold closes both buttons; a wish closes its own
+                and leaves the collection open, because taking a wished card is what settles a wish. The hit
+                itself says which it is (takenHit marks it the moment a press lands). */}
+            <div className="flex flex-col gap-2">
+                <Button
+                    onClick={() => {
+                        onAdd("collection");
+                        focusField();
+                    }}
+                    isDisabled={adding || card.owned}
+                    className="w-full"
+                >
+                    {card.owned ? "In your collection" : adding ? "Adding…" : "Add to collection"}
+                </Button>
+                <Button
+                    color="secondary"
+                    onClick={() => {
+                        onAdd("wishlist");
+                        focusField();
+                    }}
+                    isDisabled={adding || card.owned || card.wishlist}
+                    className="w-full"
+                >
+                    {card.wishlist ? "On your wishlist" : adding ? "Adding…" : "Add to wishlist"}
+                </Button>
+            </div>
+        </div>
+    );
+}
 
 /** The id of the row at the end of a full page, the one that asks for the next page. No card carries it. */
 const MORE = "more";
 
 /**
- * Focus back to the palette's field. A button that unmounts under the pointer — Try again once
- * hits land — drops focus on the page, and a keyboard user is back at the top of the menu. The
- * kit's menu keeps its field to itself, so it is found from the dialog the pressed button — the
- * active element — sits in.
+ * Focus back to the palette's field. A button that disables itself under the pointer — Add to
+ * collection the moment it is pressed — or unmounts — Try again once hits land — drops focus on
+ * the page, and a keyboard user is back at the top of the menu. The kit's menu keeps its field to
+ * itself, so it is found from the dialog the pressed button — the active element — sits in.
  */
 const focusField = () => document.activeElement?.closest('[role="dialog"]')?.querySelector("input")?.focus();
 
@@ -30,12 +107,13 @@ const CLEAR_RECENT = "recent:clear";
 /** The most the API counts: it reads that many and stops, so that figure means "at least". */
 const SEARCH_WINDOW = 250;
 
-// The command palette: the search field and the hits; a pressed hit opens the card's sheet over
-// it. Loaded by CommandSearchProvider the first time it is opened; the state lives there.
+// The command palette: the search field, the hits and the preview of the highlighted one, all in
+// the one dialog. Loaded by CommandSearchProvider the first time it is opened; the state lives there.
 //
-// It had a preview beside the list — the catalogue's facts about the highlighted hit and the two
-// ways to take it. The sheet says all of that and what the card trades at, which the preview
-// could not, so the preview went and pressing a hit opens the sheet (Bart's call, 2026-09-11).
+// #368 took the preview out and had a hit open the card's sheet over the palette, for the price
+// line the preview lacked. Bart wanted the card inside the palette — the scan, its facts and the
+// two buttons a glance away, no second panel — so the preview is back, with the price on it
+// (Bart's call, 2026-09-11, over the earlier one).
 export function CommandSearchMenu({
     isOpen,
     onOpenChange,
@@ -52,7 +130,8 @@ export function CommandSearchMenu({
     loadingMore,
     onLoadMore,
     total,
-    onOpen,
+    adding,
+    onAdd,
 }: {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
@@ -73,8 +152,9 @@ export function CommandSearchMenu({
     onLoadMore: () => void;
     /** How many the whole search matched; null where the API did not say. Capped at 250 there, read as "250+". */
     total: number | null;
-    /** A hit pressed: the card's full sheet, with its price line, over the palette. */
-    onOpen: (card: PokemonCard) => void;
+    /** The id of the hit whose add is on its way, so its buttons wait; null while none is. */
+    adding: string | null;
+    onAdd: (card: PokemonCard, target: "collection" | "wishlist") => void;
 }) {
     const filtering = Boolean(filters.set || filters.type);
     // Which catalogue is asked; the set and the type are the English one's facets, so its chips go with it.
@@ -118,9 +198,6 @@ export function CommandSearchMenu({
                                 label: c.name,
                                 description: searchHitDescription(c),
                                 stacked: true,
-                                /* Pressing a hit, by pointer or Enter, opens its sheet: the card, its price line and
-                                   the two ways to take it, the way a set page opens a tile nobody holds. */
-                                onAction: () => onOpen(c),
                             })),
                             // The sentinel is an item of the list so it scrolls with it; the section renders it as
                             // the kit's load-more row rather than as a card.
@@ -193,7 +270,7 @@ export function CommandSearchMenu({
                 ) : null}
             </FilterChipRow>
 
-            <CommandMenu.Group>
+            <CommandMenu.Group className="flex max-md:flex-col">
                 <CommandMenu.List>
                     {(group: CommandMenuGroupType) => (
                         <CommandMenu.Section {...group}>
@@ -212,6 +289,14 @@ export function CommandSearchMenu({
                         </CommandMenu.Section>
                     )}
                 </CommandMenu.List>
+
+                <CommandMenu.Preview asChild>
+                    {({ selectedId }) => {
+                        const card = hits.find((h) => h.id === selectedId);
+                        if (!card) return null;
+                        return <CardPreview card={card} adding={adding === card.id} onAdd={(target) => onAdd(card, target)} />;
+                    }}
+                </CommandMenu.Preview>
             </CommandMenu.Group>
         </CommandMenu>
     );
