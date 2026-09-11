@@ -85,13 +85,19 @@ type Addable = {
     addable?: PokemonCard | null;
     /** What Add card on a page opened the palette for: which side leads, and a binder to file the card in. */
     addInto?: AddIntent | null;
+    /**
+     * The card was taken, into the collection or onto the wishlist. For a list the page does not
+     * re-read — the search's hits — to mark the one it came from; every other list learns it
+     * from the refresh the sheet asks for.
+     */
+    onTaken?: (card: PokemonCard, list: "collection" | "wishlist") => void;
 };
 
 type Props = ({ card: Card | null; onClose: () => void; readOnly?: false } | { card: PublicCard | null; onClose: () => void; readOnly: true }) &
     Neighbours &
     Addable;
 
-export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, onNext, addable, addInto }: Props) {
+export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, onNext, addable, addInto, onTaken }: Props) {
     const router = useRouter();
     // The owner's fields exist only on the editable view; the public view never receives them.
     // The row the sheet shows: the one it opened on, or another copy of the card tapped in the
@@ -198,6 +204,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         }
         setRemoved(null);
         router.refresh();
+        onTaken?.(takeable, list);
         onClose();
         notify.done(`Added to ${where}`, { description: takeable.name });
     };

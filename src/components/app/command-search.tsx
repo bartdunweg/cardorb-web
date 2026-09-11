@@ -11,6 +11,7 @@ import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import { rememberSearch } from "@/hooks/use-recent-searches";
 import { cardFromPokemonCard } from "@/lib/api-shapes";
 import type { BrowseLanguage } from "@/lib/languages";
+import { takenHit } from "@/lib/search-hit";
 
 /** What one answer from the catalogue search holds at most: the API's page. A full one means there may be more. */
 const SEARCH_PAGE_SIZE = 20;
@@ -83,6 +84,7 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
         loadingMore,
         loadMore,
         total,
+        update,
     } = useDebouncedSearch<PokemonCard, CatalogueFilters>(inputValue, searchPokemon, {
         minLength: 2,
         delay: 300,
@@ -146,7 +148,15 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
                 sheet unmounted on close cannot put focus back on the hit that opened it, and a keyboard
                 user landed on the page under the palette (measured). */}
             {wanted ? (
-                <CardDetailSlideout card={opened ? cardFromPokemonCard(opened) : null} addable={opened} addInto={intent} onClose={() => setOpened(null)} />
+                <CardDetailSlideout
+                    card={opened ? cardFromPokemonCard(opened) : null}
+                    addable={opened}
+                    addInto={intent}
+                    onClose={() => setOpened(null)}
+                    /* The hit the card came from says so at once: the hits are this component's, and no
+                       refresh re-reads them. */
+                    onTaken={(card, list) => update((hits) => takenHit(hits, card.id, list))}
+                />
             ) : null}
         </CommandSearchContext.Provider>
     );

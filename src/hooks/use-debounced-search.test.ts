@@ -20,6 +20,17 @@ describe("useDebouncedSearch", () => {
         expect(result.current.loading).toBe(false);
     });
 
+    it("lets the caller change the hits in hand without asking again", async () => {
+        const search = vi.fn(async (term: string) => [term, `${term}!`]);
+        const { result } = renderHook(() => useDebouncedSearch("pik", search, { delay: 10 }));
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(10);
+        });
+        act(() => result.current.update((items) => items.map((i) => (i === "pik" ? "PIK" : i))));
+        expect(result.current.results).toEqual(["PIK", "pik!"]);
+        expect(search).toHaveBeenCalledTimes(1);
+    });
+
     it("clears without asking below the minimum length", async () => {
         const search = vi.fn(async (term: string) => [term]);
         const { result } = renderHook(() => useDebouncedSearch(" a ", search, { minLength: 2, delay: 50 }));

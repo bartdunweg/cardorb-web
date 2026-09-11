@@ -10,6 +10,7 @@ import { LoadingIndicator } from "@/components/application/loading-indicator/loa
 import { Button } from "@/components/base/buttons/button";
 import { clearSearches, useRecentSearches } from "@/hooks/use-recent-searches";
 import { CARD_TYPES } from "@/lib/card-types";
+import { searchHitDescription } from "@/lib/search-hit";
 import { cx } from "@/utils/cx";
 
 /** The id of the row at the end of a full page, the one that asks for the next page. No card carries it. */
@@ -115,7 +116,7 @@ export function CommandSearchMenu({
                                 src: c.image,
                                 alt: c.name,
                                 label: c.name,
-                                description: [c.set, c.number ? `#${c.number}` : null, c.rarity].filter(Boolean).join(" · "),
+                                description: searchHitDescription(c),
                                 stacked: true,
                                 /* Pressing a hit, by pointer or Enter, opens its sheet: the card, its price line and
                                    the two ways to take it, the way a set page opens a tile nobody holds. */
