@@ -24,9 +24,10 @@ export function CardsFilters({ query, facets }: { query: ListQuery; facets: Face
                 aria-label="Set"
                 size="sm"
                 className="w-auto max-w-64"
-                value={query.set ?? ""}
+                value={facets.sets.find((s) => s.title === query.set || s.name === query.set)?.title ?? query.set ?? ""}
                 onChange={(event) => go({ set: event.target.value || undefined })}
-                options={[{ label: "All sets", value: "" }, ...facets.sets.map((s) => ({ label: s.title, value: s.name }))]}
+                // The set's official name, which the API's filter takes as well as the filed one.
+                options={[{ label: "All sets", value: "" }, ...facets.sets.map((s) => ({ label: s.title, value: s.title }))]}
             />
             <NativeSelect
                 aria-label="Rarity"

@@ -14,7 +14,7 @@ import {
     searchAnswer,
 } from "@/lib/api-shapes";
 import { type Card, getMyCards } from "@/lib/cards";
-import { type CopyEdits, copyEdits, sameCard } from "@/lib/copies";
+import { type CardName, type CopyEdits, copyEdits, sameCard } from "@/lib/copies";
 import { type BrowseLanguage, isBrowseLanguage } from "@/lib/languages";
 import { getSets } from "@/lib/sets";
 import { forgetMine } from "@/lib/user-cache";
@@ -303,7 +303,7 @@ export async function seriesLogo(series: string): Promise<string | null> {
 
 // Every row of one card the person holds: the set and number name it, the name confirms it
 // (two cards of one number in one set do not happen, but the check costs nothing).
-export async function listCopies(card: Pick<Card, "set" | "number" | "name">): Promise<Card[]> {
+export async function listCopies(card: CardName): Promise<Card[]> {
     return (await listRows(card)).filter((c) => c.owned);
 }
 
@@ -313,11 +313,13 @@ export async function listCopies(card: Pick<Card, "set" | "number" | "name">): P
  * left a wish out, so a wished card opened on the catalogue's card and "Remove from wishlist"
  * answered "Invalid card" — on a set page as in the search.
  */
-export async function listRows(card: Pick<Card, "set" | "number" | "name">): Promise<Card[]> {
-    if (!card.set || !card.number) return [];
+export async function listRows(card: CardName): Promise<Card[]> {
+    const set = card.set_name ?? card.set;
+    if (!set || !card.number) return [];
     try {
-        // The API lists the collection or the wishlist, never both in one answer.
-        const ask = { set: card.set, number: card.number, facets: false, limit: 100 } as const;
+        // The API lists the collection or the wishlist, never both in one answer, and takes the
+        // set by its official name (the title) or the name a card was filed under.
+        const ask = { set, number: card.number, facets: false, limit: 100 } as const;
         const [held, wished] = await Promise.all([getMyCards(ask), getMyCards({ ...ask, wishlist: true })]);
         return [...held.cards, ...wished.cards].filter((c) => sameCard(c, card));
     } catch (err) {

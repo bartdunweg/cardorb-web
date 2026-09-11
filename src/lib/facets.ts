@@ -15,6 +15,17 @@ export type Facets = {
 export const NO_FACETS: Facets = { sets: [], rarities: [], gens: [], types: [] };
 
 /**
+ * One entry per official name. The API keys its sets by the name the owner filed a card under,
+ * and a set filed under two names ("SV Black Star Promos" and "SVP Black Star Promos", say) came
+ * twice, under one title. The title is the set's name as far as the app is concerned (Bart,
+ * 2026-09-11); the first `name` is kept for the address a rule or a filter may still carry.
+ */
+const byTitle = (sets: Facets["sets"]): Facets["sets"] => {
+    const seen = new Set<string>();
+    return sets.filter((s) => (seen.has(s.title) ? false : (seen.add(s.title), true)));
+};
+
+/**
  * The API's facets as the menus need them.
  *
  * The API has carried facets since its #161; an older deploy, a rollback, or an answer cached
@@ -22,7 +33,7 @@ export const NO_FACETS: Facets = { sets: [], rarities: [], gens: [], types: [] }
  * then, not a page that throws on `facets.sets`.
  */
 export const facetsFrom = (raw: Partial<Facets> | undefined): Facets => ({
-    sets: raw?.sets ?? [],
+    sets: byTitle(raw?.sets ?? []),
     rarities: raw?.rarities ?? [],
     gens: raw?.gens ?? [],
     types: raw?.types ?? [],

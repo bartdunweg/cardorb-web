@@ -18,3 +18,17 @@ describe("facetsFrom", () => {
         expect(facetsFrom(raw)).toEqual(raw);
     });
 });
+
+describe("facetsFrom sets", () => {
+    it("offers each official name once, whatever the cards were filed under", () => {
+        const sets = [
+            { name: "SV Black Star Promos", title: "SVP Black Star Promos" },
+            { name: "SVP Black Star Promos", title: "SVP Black Star Promos" },
+            { name: "Pitch Black", title: "Pitch Black" },
+        ];
+        expect(facetsFrom({ sets }).sets).toEqual([
+            { name: "SV Black Star Promos", title: "SVP Black Star Promos" },
+            { name: "Pitch Black", title: "Pitch Black" },
+        ]);
+    });
+});

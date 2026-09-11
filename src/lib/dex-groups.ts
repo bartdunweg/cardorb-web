@@ -21,7 +21,10 @@ export type DexGeneration = { label: string; from: number; to: number; slots: Na
  */
 /** What a slot needs of a card: the owner's card and a public profile's both have it. */
 /** `set` is what a public card does not carry; a public Pokédex opens nothing, so it needs none. */
-export type DexCardLike = Pick<Card, "id" | "name" | "number" | "species_id" | "rarity" | "image_url" | "image_high_url"> & { set?: string | null };
+export type DexCardLike = Pick<Card, "id" | "name" | "number" | "species_id" | "rarity" | "image_url" | "image_high_url"> & {
+    set?: string | null;
+    set_name?: string | null;
+};
 
 export function groupByDex(
     cards: DexCardLike[],
@@ -51,7 +54,14 @@ export function groupByDex(
             number,
             name: known?.name ?? `#${number}`,
             artwork: known?.artwork ?? null,
-            cards: held.map((c) => ({ id: c.id, name: c.name, set: c.set ?? null, number: c.number, imageUrl: c.image_url, imageHighUrl: c.image_high_url })),
+            cards: held.map((c) => ({
+                id: c.id,
+                name: c.name,
+                set: c.set_name ?? c.set ?? null,
+                number: c.number,
+                imageUrl: c.image_url,
+                imageHighUrl: c.image_high_url,
+            })),
         });
     }
     // The slots by generation, in dex order. A generation the range does not reach is not in the

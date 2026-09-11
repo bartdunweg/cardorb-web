@@ -95,7 +95,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const [viewing, setViewing] = useState<{ of: string; row: Card } | null>(null);
     const mine = readOnly ? null : viewing && card && viewing.of === card.id ? viewing.row : (card as Card | null);
     // Every row of this card the person holds, read when the sheet opens and after each write.
-    const copiesKey = (c: Card) => `${c.set ?? ""}|${c.number ?? ""}|${c.name}`;
+    const copiesKey = (c: Card) => `${c.set_name ?? c.set ?? ""}|${c.number ?? ""}|${c.name}`;
     const [copiesState, setCopiesState] = useState<{ of: string; rows: Card[] } | null>(null);
     const copies = mine && copiesState?.of === copiesKey(mine) ? copiesState.rows : null;
     /* Counts the presses the sheet has answered on screen before the store has. A read that
@@ -158,7 +158,8 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
             ? {
                   id: own.id,
                   name: own.name,
-                  set: own.set ?? own.set_name ?? "",
+                  // The official name: what every catalogue add sends, and what a new row is filed under.
+                  set: own.set_name ?? own.set ?? "",
                   number: own.number ?? "",
                   rarity: own.rarity,
                   image: own.image_url,
