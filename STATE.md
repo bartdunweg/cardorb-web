@@ -64,6 +64,9 @@ for the failures that leave no trace — and everything both passes found is clo
 - **An owned Japanese card from an unphotographed set** shows Limitless's scan too
   (cardorb-api#264): the collection resolves a card on its own, so it probes once per card,
   cached a day, where the shelf probed once per set.
+- **The small thumbnails lie face down too** (#324): table rows, the add dialog, the folder's
+  card search and the Pokédex slider. The Fomantis acquired date is put right (2026-09-07),
+  through the sheet on the dev server.
 - **A set the catalogue has not recorded says so** (#320, #321, cardorb-api#265). TCGdex lists
   68 of 184 Japanese sets and 92 of 95 Korean ones with a count and no card; the page opened on
   nothing under "0 of 0 cards". The page shows an empty state naming the count the catalogue
@@ -99,13 +102,9 @@ for the failures that leave no trace — and everything both passes found is clo
   expansion half of a product's address, and its site answers every probe from a tool with a
   bot check, so it cannot be verified from here. Bart's call, 2026-09-11. The links map and
   `cardmarketUrl()` stay.
-- **The small thumbnails** — table rows, the add dialog, folder actions — still draw a grey
-  box where a card has no picture; the four card-sized places show the back (#314).
 - **A privacy flip made in the iOS app is invisible here for five minutes.** `forgetMine()` drops
   the public tag on writes made through this app; the same API serves iOS and invalidates nothing
   here. Wants a revalidation webhook from cardorb-api.
-- **One acquired date is wrong.** A Fomantis copy reads 2026-09-08 and was got on the 7th — a
-  mis-click while testing undo. Two taps in the sheet: Details → Acquired.
 
 ## Open
 
