@@ -61,6 +61,9 @@ for the failures that leave no trace — and everything both passes found is clo
   tcg.pokemon.com, a static file, in the set page, the grid, the Pokédex and the sheet, where a
   grey box with the name in it read as "nothing here". `CardImage` draws it itself once both of
   its sources fail. Prices untouched. Measured on S7R (zh-tw): 22 backs, 0 broken images.
+- **An owned Japanese card from an unphotographed set** shows Limitless's scan too
+  (cardorb-api#264): the collection resolves a card on its own, so it probes once per card,
+  cached a day, where the shelf probed once per set.
 - **A test that guards the wrong thing** (cardorb-api#258). Five of them, and the sharpest mocked
   the payload it was meant to inspect — so the suite was green with the field-stripping deleted.
   Each is now checked by breaking what it guards and watching it go red. The ten undocumented
@@ -86,9 +89,6 @@ for the failures that leave no trace — and everything both passes found is clo
   Japanese name; and `zh` is one code for two catalogues, so traditional is asked before
   simplified. Splitting it properly widens an enum the iOS app decodes, which is a decision
   rather than a side effect.
-- **Owned Japanese cards** take the same TCGdex address the shelf did, without the Limitless
-  fallback (#262 is the set page only): the same gap, in the collection, shows a card back now
-  rather than a picture. Small API work in `cards.ts`'s language path.
 - **The small thumbnails** — table rows, the add dialog, folder actions — still draw a grey
   box where a card has no picture; the four card-sized places show the back (#314).
 - **Empty shelves.** TCGdex lists 184 Japanese sets and carries cards for 116; on the Korean
