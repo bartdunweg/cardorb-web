@@ -181,6 +181,13 @@ describe("seriesFromSets", () => {
         expect({ complete, started, totalSets }).toEqual({ complete: 1, started: 2, totalSets: 3 });
     });
 
+    it("reads whether the catalogue has the set's cards, and assumes so from an API that does not say", () => {
+        // TCGdex lists 68 of 184 Japanese sets with a count and no card; an API before
+        // cardorb-api#265 never said, and its every set had cards as far as the shelf knew.
+        const { series } = seriesFromSets([set({ id: "a", cardsRecorded: false }), set({ id: "b", cardsRecorded: true }), set({ id: "c" })]);
+        expect(series[0].sets.map((s) => s.cardsRecorded)).toEqual([false, true, true]);
+    });
+
     it("resolves a relative logo on the API's host", () => {
         const { series } = seriesFromSets([set({ logo: "/api/cover?url=l" })]);
         expect(series[0].sets[0].logoUrl).toBe("https://api.cardorb.com/api/cover?url=l");

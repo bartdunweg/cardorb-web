@@ -368,6 +368,12 @@ export const catalogueSetSchema = z.object({
     symbol: nullable(z.string()),
     /** The set's own name where `name` is a translation (a Japanese set); null for English. */
     localName: nullable(z.string()),
+    /**
+     * Whether the catalogue has recorded the set's cards, or only the set and its count. TCGdex
+     * lists 68 of 184 Japanese sets and 92 of 95 Korean ones without a card (2026-09-11). Absent
+     * from an API before cardorb-api#265, which reads as recorded: that was the only answer then.
+     */
+    cardsRecorded: z.boolean().nullish(),
     /** Distinct cards of the set held; never more than `total` (cardorb-api#162). */
     ownedCount: z.number(),
     wishlistCount: z.number(),
@@ -386,6 +392,8 @@ export type SetSummary = {
     owned: number;
     total: number;
     complete: boolean;
+    /** False where the catalogue has the set and its count but none of its cards yet. */
+    cardsRecorded: boolean;
 };
 
 export type SetSeries = { name: string; sets: SetSummary[] };
@@ -405,6 +413,7 @@ export function seriesFromSets(sets: CatalogueSet[]): { series: SetSeries[]; com
             releaseDate: set.releaseDate,
             logoUrl: absoluteImage(set.logo),
             symbolUrl: absoluteImage(set.symbol),
+            cardsRecorded: set.cardsRecorded ?? true,
             owned,
             total: set.total,
             complete: set.total > 0 && owned >= set.total,
