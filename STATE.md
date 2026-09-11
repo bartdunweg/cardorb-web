@@ -147,6 +147,12 @@ for the failures that leave no trace — and everything both passes found is clo
   Measured against production: 49 Japanese Charizards, and an add from the palette stores
   `ja` / `SV2a-006`. Seen, not touched: many Japanese hits have no picture in the list — the
   search reads TCGdex's scan only, where a set page also probes Limitless.
+- **Pokémon Card 151's Japanese cards looked like reverse holos** (cardorb-api#277). Bart saw it;
+  it was the scan, not the app: TCGdex photographed SV2a in its Master Ball variant, every card
+  (001, 011, 025, 150 looked at), no other Japanese set sampled. A set list in `artwork.ts`, SV2a
+  alone in it, and the shelf and the collection take Limitless's plain print for those without
+  probing TCGdex. Measured on the dev server after the deploy: 210 of 210 tiles from Limitless,
+  0 broken.
 
 ## Next
 
