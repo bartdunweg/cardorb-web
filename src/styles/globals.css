@@ -119,6 +119,38 @@
     }
 }
 
+/* Chart draw: a line that is new to the screen — the Price tab just opened, or a period just
+   showed another stretch of it — is revealed left to right in 400 ms on the enter curve, as if
+   drawn, with the ground under it following. A wipe rather than a dash along the path, so the
+   fill and the stroke arrive together. Runs once, on the element's first frame; the chart keys
+   the group on what it shows, so a hover or a resize does not run it again. Reduced motion
+   fades it in instead. */
+@utility chart-draw {
+    animation: chart-draw 400ms var(--ease-enter) both;
+
+    @media (prefers-reduced-motion: reduce) {
+        animation: chart-fade 200ms var(--ease-enter) both;
+    }
+}
+
+@keyframes chart-draw {
+    from {
+        clip-path: inset(0 100% 0 0);
+    }
+    to {
+        clip-path: inset(0 0 0 0);
+    }
+}
+
+@keyframes chart-fade {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
 /* Arrive: what streams in after the page is standing — a batch of cards, the count under a title,
    the sidebar's folder rows — fades up 4 px into place rather than popping. 200 ms on the enter
    curve, from @starting-style, so it runs once, on the element's first frame, with no JS. A

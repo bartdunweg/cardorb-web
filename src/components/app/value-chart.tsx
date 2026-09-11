@@ -21,6 +21,8 @@ import { cx } from "@/utils/cx";
  */
 
 const HEIGHT = 200;
+/** The height the chart takes, for a placeholder to hold while the readings are on their way. */
+export const CHART_HEIGHT = HEIGHT;
 // No axis: the number above the chart says the scale, the tooltip says any point, and the table
 // says them all. The line runs edge to edge, the three dates sit under it.
 const FRAME: Omit<Frame, "width"> = { height: HEIGHT, top: 12, right: 0, bottom: 28, left: 0 };
@@ -184,8 +186,14 @@ export function ValueChart({
                                 <stop offset={1} stopColor="currentColor" stopOpacity={0} />
                             </linearGradient>
                         </defs>
-                        <path d={areaPath(points, baseline)} fill={`url(#${fadeId})`} className="text-fg-primary" />
-                        <path d={linePath(points)} className={strokeTone} strokeWidth={2} fill="none" strokeLinejoin="round" strokeLinecap="round" />
+                        {/* Drawn left to right, once, when the line is new: on the tab opening, and on a
+                            period that shows another stretch of it. Keyed on the ends of what is shown, so
+                            a hover or a resize does not draw it again; a period change does. The group is
+                            revealed, not the path's dash, so the ground under the line follows the pen. */}
+                        <g key={`${first.date}/${last.date}`} className="chart-draw">
+                            <path d={areaPath(points, baseline)} fill={`url(#${fadeId})`} className="text-fg-primary" />
+                            <path d={linePath(points)} className={strokeTone} strokeWidth={2} fill="none" strokeLinejoin="round" strokeLinecap="round" />
+                        </g>
 
                         {currentPoint ? (
                             <g aria-hidden="true">
