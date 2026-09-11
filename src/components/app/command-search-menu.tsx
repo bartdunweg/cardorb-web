@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Heading as AriaHeading } from "react-aria-components";
+import { Heading as AriaHeading, ListBoxLoadMoreItem } from "react-aria-components";
 import type { CatalogueFilters, PokemonCard } from "@/app/(app)/dashboard/cards/actions";
 import { CardImage } from "@/components/app/card-image";
 import type { AddStatus } from "@/components/app/command-search";
@@ -61,6 +61,9 @@ function CardPreview({ card, status, onAdd }: { card: PokemonCard; status: AddSt
     );
 }
 
+/** The id of the row at the end of a full page, the one that asks for the next page. No card carries it. */
+const MORE = "more";
+
 // The command palette: the search field, the hits and the preview of the selected one. Loaded
 // by CommandSearchProvider the first time it is opened; the state lives there.
 export function CommandSearchMenu({
@@ -75,6 +78,9 @@ export function CommandSearchMenu({
     loading,
     failed,
     onRetry,
+    hasMore,
+    loadingMore,
+    onLoadMore,
     status,
     onAdd,
 }: {
@@ -91,6 +97,10 @@ export function CommandSearchMenu({
     /** The API did not answer: not an empty answer, and worth asking again. */
     failed: boolean;
     onRetry: () => void;
+    /** A full page came back: the list ends in a sentinel that asks for the next one when scrolled into view. */
+    hasMore: boolean;
+    loadingMore: boolean;
+    onLoadMore: () => void;
     status: Record<string, AddStatus>;
     onAdd: (card: PokemonCard) => void;
 }) {
@@ -101,15 +111,20 @@ export function CommandSearchMenu({
               {
                   id: "cards",
                   title: "Cards",
-                  items: hits.map((c) => ({
-                      id: c.id,
-                      type: "image" as const,
-                      src: c.image,
-                      alt: c.name,
-                      label: c.name,
-                      description: [c.set, c.number ? `#${c.number}` : null, c.rarity].filter(Boolean).join(" · "),
-                      stacked: true,
-                  })),
+                  items: [
+                      ...hits.map((c) => ({
+                          id: c.id,
+                          type: "image" as const,
+                          src: c.image,
+                          alt: c.name,
+                          label: c.name,
+                          description: [c.set, c.number ? `#${c.number}` : null, c.rarity].filter(Boolean).join(" · "),
+                          stacked: true,
+                      })),
+                      // The sentinel is an item of the list so it scrolls with it; the section renders it as
+                      // the kit's load-more row rather than as a card.
+                      ...(hasMore ? [{ id: MORE, label: "Loading more…" }] : []),
+                  ],
               },
           ]
         : [];
@@ -170,7 +185,22 @@ export function CommandSearchMenu({
             <CommandMenu.Group className="flex max-md:flex-col">
                 <CommandMenu.List>
                     {(group: CommandMenuGroupType) => (
-                        <CommandMenu.Section {...group}>{(item) => <CommandMenu.Item key={item.id} {...item} />}</CommandMenu.Section>
+                        <CommandMenu.Section {...group}>
+                            {(item) =>
+                                item.id === MORE ? (
+                                    <ListBoxLoadMoreItem
+                                        key={MORE}
+                                        onLoadMore={onLoadMore}
+                                        isLoading={loadingMore}
+                                        className="px-4 py-3 text-center text-sm text-tertiary"
+                                    >
+                                        {item.label}
+                                    </ListBoxLoadMoreItem>
+                                ) : (
+                                    <CommandMenu.Item key={item.id} {...item} />
+                                )
+                            }
+                        </CommandMenu.Section>
                     )}
                 </CommandMenu.List>
 

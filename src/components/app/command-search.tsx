@@ -13,6 +13,9 @@ import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 
 export type AddStatus = "idle" | "adding" | "added";
 
+/** What one answer from the catalogue search holds at most: the API's page. A full one means there may be more. */
+const SEARCH_PAGE_SIZE = 20;
+
 // The palette itself, with the kit's command menu and its react-aria dialog behind it, loads the
 // first time someone opens it: every dashboard screen carries the provider, few carry a search.
 const CommandSearchMenu = dynamic(() => import("@/components/app/command-search-menu").then((m) => m.CommandSearchMenu), { ssr: false });
@@ -53,10 +56,14 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
         loading,
         failed,
         retry,
+        hasMore,
+        loadingMore,
+        loadMore,
     } = useDebouncedSearch<PokemonCard, CatalogueFilters>(inputValue, searchPokemon, {
         minLength: 2,
         delay: 300,
         params: filters,
+        pageSize: SEARCH_PAGE_SIZE,
     });
     const [status, setStatus] = useState<Record<string, AddStatus>>({});
 
@@ -109,6 +116,9 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
                     loading={loading}
                     failed={failed}
                     onRetry={retry}
+                    hasMore={hasMore}
+                    loadingMore={loadingMore}
+                    onLoadMore={loadMore}
                     status={status}
                     onAdd={add}
                 />
