@@ -39,11 +39,29 @@ export function FolderDialog({ children, ...form }: FormProps & { children: Reac
         <DialogTrigger>
             {children}
             <ModalOverlay>
-                <Modal className="max-w-md">
-                    <Dialog>{({ close }) => <FolderForm {...form} close={close} />}</Dialog>
-                </Modal>
+                <FolderModalBody {...form} />
             </ModalOverlay>
         </DialogTrigger>
+    );
+}
+
+/**
+ * The same dialog, opened by something that is not a pressable child — a menu item on the
+ * binder's page. The overlay is controlled; DialogTrigger is not in the picture.
+ */
+export function FolderModal({ isOpen, onOpenChange, ...form }: FormProps & { isOpen: boolean; onOpenChange: (open: boolean) => void }) {
+    return (
+        <ModalOverlay isOpen={isOpen} onOpenChange={onOpenChange}>
+            <FolderModalBody {...form} />
+        </ModalOverlay>
+    );
+}
+
+function FolderModalBody(form: FormProps) {
+    return (
+        <Modal className="max-w-md">
+            <Dialog>{({ close }) => <FolderForm {...form} close={close} />}</Dialog>
+        </Modal>
     );
 }
 
@@ -121,7 +139,7 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
         }
     };
 
-    const title = mode === "create" ? "New binder" : kind === "rule" ? "Edit rule" : "Edit folder";
+    const title = mode === "create" ? "New binder" : kind === "rule" ? "Edit rule" : "Edit binder";
     const setOptions = facets.sets.filter((s) => !sets.includes(s.name));
     const rarityOptions = facets.rarities.filter((r) => !rarities.includes(r));
     const titleOf = (name: string) => facets.sets.find((s) => s.name === name)?.title ?? name;

@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AddCardButton } from "@/components/app/add-card-button";
 import { AppEmptyState } from "@/components/app/app-empty-state";
-import { CollectionDetailActions } from "@/components/app/collection-detail-actions";
+import { BinderAddButton } from "@/components/app/binder-add-button";
+import { BinderMenu } from "@/components/app/binder-menu";
 import { FolderPage } from "@/components/app/folder-page";
 import { Badge } from "@/components/base/badges/badges";
 import { type CardFilter, getAllMyCards, getFacets, getMyCards } from "@/lib/cards";
@@ -46,14 +47,18 @@ export default async function CollectionDetailPage({ params, searchParams }: { p
     const empty = collection.rule ? (
         <AppEmptyState icon="folder" title="Nothing matches yet" description="Cards you own that fit the rule show up here" />
     ) : (
-        <AppEmptyState icon="folder" title="No cards in this binder" description="Use “Add cards” to fill it" />
+        <AppEmptyState icon="folder" title="No cards in this binder" description="Press the plus to fill it" />
     );
     const common = {
         title: collection.name,
-        back: { href: "/dashboard/collections", label: "Collection" },
-        actions: <CollectionDetailActions folder={collection} facets={facets} />,
-        // A folder filled by hand takes a card straight from its own page; a rule folder fills itself.
-        add: collection.rule ? undefined : (compact: boolean) => <AddCardButton compact={compact} />,
+        back: { href: "/dashboard/collections", label: "Binders" },
+        // The dots and the plus, the pair every list has. A binder filled by hand takes a card from
+        // its own page, new or already yours, so its plus asks which; a rule binder fills itself, and
+        // its plus is the plain Add card.
+        settings: (compact: boolean) => <BinderMenu folder={collection} facets={facets} compact={compact} />,
+        add: collection.rule
+            ? (compact: boolean) => <AddCardButton compact={compact} />
+            : (compact: boolean) => <BinderAddButton folder={collection} compact={compact} />,
         query,
         basePath: `/dashboard/collections/${id}`,
         facets,
