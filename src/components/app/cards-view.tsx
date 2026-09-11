@@ -72,6 +72,7 @@ export function CardsView({
             <Suspense fallback={<CardsSkeleton />}>
                 <CardsList
                     key={listKey}
+                    listKey={listKey}
                     list={list}
                     filter={filter}
                     narrowed={narrowed}

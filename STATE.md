@@ -219,6 +219,16 @@ for the failures that leave no trace — and everything both passes found is clo
   went secondary with a folder icon beside it: two pluses in one bar were two guesses. Measured on
   the dev server: from Binders, Add card opens the palette and a hit's sheet reads Add to
   collection then Add to wishlist, the same as from the sidebar.
+- **Two screen-reader points closed** (2026-09-11, web #379). Clearing a search back to the whole
+  list was silent: the count's live region asked "is this list filtered" where the question is
+  "did the reader change this list, or arrive at it". It now remembers, per tab, the URL of the
+  list shown last — a module variable read once in the state's initialiser, written by an effect
+  — and treats the same page with a different query as a change: mounted empty, spoken a beat
+  later. Arriving from another page still writes the count at once and is not narrated. And the
+  sidebar kit's root is a `<div>` instead of an `<aside>`, so Chrome no longer exposes a nameless
+  complementary landmark inside the navigation. Measured in the pane's accessibility tree: one
+  navigation landmark, no complementary. The clear-a-search path is measured by its DOM — region
+  empty at mount, the count 100 ms later — not with a screen reader.
 - **Pokémon Card 151's Japanese cards looked like reverse holos** (cardorb-api#277). Bart saw it;
   it was the scan, not the app: TCGdex photographed SV2a in its Master Ball variant, every card
   (001, 011, 025, 150 looked at), no other Japanese set sampled. A set list in `artwork.ts`, SV2a
@@ -265,13 +275,6 @@ for the failures that leave no trace — and everything both passes found is clo
 - **A revoked session stays open on the web for up to an hour (#79).** Both the middleware and
   the API verify the token locally with `getClaims`. To shorten it: lower the JWT expiry in the
   Supabase project.
-- **Clearing a search back to the full list is still silent** to a screen reader. The mechanism is
-  right and the condition is wrong: it asks "is this list filtered" where the question is "did the
-  reader change this list, or arrive at it". Answering it properly needs a comparison React will
-  not allow during render, and every legal way round changes whether *arriving* is announced —
-  which is a judgement that wants a screen reader, not a guess.
-- **Chrome still exposes the sidebar kit's unnamed `<aside>` as a nested `complementary`** inside
-  the `<nav>`. HTML-AAM says `generic`; removing it needs the vendored file.
 - **Verified this session, so nobody need re-check:** cardorb-api scopes card writes by
   `id AND user_id` *and* by RLS, with `cards.user_id` defaulting to `auth.uid()`; the service-role
   key is reachable from two routes and neither touches cards; HSTS is set on both hosts; and the
