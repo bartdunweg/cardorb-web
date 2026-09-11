@@ -9,7 +9,11 @@ export const LANGUAGES = [
     { code: "nl", label: "Dutch", country: "nl" },
     { code: "ja", label: "Japanese", country: "jp" },
     { code: "ko", label: "Korean", country: "kr" },
+    /* Chinese is two catalogues and the API says which since cardorb-api#269. `zh` stays for the
+       rows written before it said: one of the two, read as "Chinese". */
     { code: "zh", label: "Chinese", country: "cn" },
+    { code: "zh-tw", label: "Traditional Chinese", country: "tw" },
+    { code: "zh-cn", label: "Simplified Chinese", country: "cn" },
 ] as const;
 
 export type LanguageCode = (typeof LANGUAGES)[number]["code"];
@@ -33,8 +37,7 @@ export function languagesFor(catalogue: string | null | undefined, printed?: rea
         const only = WESTERN_LANGUAGES.filter((l) => printed.includes(l.code));
         return only.length ? only : WESTERN_LANGUAGES.slice(0, 1);
     }
-    const fixed = languageOf(catalogue === "zh-tw" || catalogue === "zh-cn" ? "zh" : catalogue);
-    return [fixed];
+    return [languageOf(catalogue)];
 }
 export type Language = (typeof LANGUAGES)[number];
 
