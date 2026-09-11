@@ -20,7 +20,7 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
     const filter: CardFilter = { q, sort, order, set, rarity, gen, type, ...(unpriced ? { priced: false } : {}) };
     const narrowed = isNarrowed(query);
     const list = getMyCards(filter);
-    const datapoints = list.then((r) => ({ total: r.total, narrowed, value: r.value, unpriced: r.unpriced }));
+    const datapoints = list.then((r) => ({ total: r.total, copies: r.copies ?? undefined, narrowed, value: r.value, unpriced: r.unpriced }));
     // The facets ride with the list's first page: nothing else is read before the first byte.
     const facets = list.then((r) => r.facets);
 

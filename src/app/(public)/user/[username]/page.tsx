@@ -63,6 +63,7 @@ export default async function PublicProfilePage({ params, searchParams }: Params
             ? Promise.all([getAllPublicCards(decodeURIComponent(username), query), getDexNames()]).then(([r, names]) => ({
                   ...groupByDex(r.cards, names, profile.pokedex ?? DEFAULT_POKEDEX),
                   total: r.total,
+                  copies: r.copies,
                   value: null,
                   unpriced: 0,
               }))

@@ -72,6 +72,8 @@ export async function getMyCards({
 }: CardFilter & { limit?: number; offset?: number } = {}): Promise<{
     cards: Card[];
     total: number;
+    /** The list as a person counts it: an owned copy `quantity` times, a wish once. Null from an API before it said. */
+    copies: number | null;
     /** What the whole filtered list is worth, in euros; null from an API that does not answer it yet. */
     value: number | null;
     /** Copies in the filtered list without a price. */
@@ -92,7 +94,7 @@ export async function getMyCards({
             ? `cards:${JSON.stringify([q, collectionId, favoritesOnly, wishlist, sort, order, set, rarity, gen, type, number, priced, wantFacets])}`
             : null;
     const read = async (token?: string) => {
-        const { cards, total, facets, value, unpriced, catalogueUnavailable } = await api("/cards", {
+        const { cards, total, copies, facets, value, unpriced, catalogueUnavailable } = await api("/cards", {
             schema: cardsAnswer,
             token,
             params: {
@@ -117,6 +119,7 @@ export async function getMyCards({
         return {
             cards: cards.map(cardFromItem),
             total,
+            copies: copies ?? null,
             value: value ?? null,
             unpriced: unpriced ?? 0,
             catalogueUnavailable: catalogueUnavailable === true,

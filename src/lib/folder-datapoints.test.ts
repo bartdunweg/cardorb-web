@@ -8,6 +8,12 @@ describe("datapointsLine", () => {
         expect(datapointsLine({ total: 12, narrowed: true })).toBe("12 matches");
         expect(datapointsLine({ total: 1, narrowed: true })).toBe("1 match");
     });
+    it("counts copies where the API says them, and rows where it does not yet", () => {
+        expect(datapointsLine({ total: 1915, copies: 1933, narrowed: false })).toBe("1,933 cards");
+        expect(datapointsLine({ total: 1, copies: 1, narrowed: false })).toBe("1 card");
+        // Narrowed, the count is what matched: rows, since a match is a row.
+        expect(datapointsLine({ total: 12, copies: 30, narrowed: true })).toBe("12 matches");
+    });
     it("adds the value when there is one and something to value", () => {
         expect(datapointsLine({ total: 3, narrowed: false, value: 2140 })).toMatch(/^3 cards · /);
         expect(datapointsLine({ total: 3, narrowed: false, value: null })).toBe("3 cards");
