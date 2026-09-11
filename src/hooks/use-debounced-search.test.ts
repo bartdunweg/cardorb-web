@@ -15,7 +15,7 @@ describe("useDebouncedSearch", () => {
             await vi.advanceTimersByTimeAsync(100);
         });
         expect(search).toHaveBeenCalledTimes(1);
-        expect(search).toHaveBeenCalledWith("pik", {});
+        expect(search).toHaveBeenCalledWith("pik", {}, 1);
         expect(result.current.results).toEqual(["pik"]);
         expect(result.current.loading).toBe(false);
     });
@@ -58,7 +58,7 @@ describe("useDebouncedSearch", () => {
         await act(async () => {
             await vi.advanceTimersByTimeAsync(10);
         });
-        expect(search).toHaveBeenCalledWith("", { set: "sv3" });
+        expect(search).toHaveBeenCalledWith("", { set: "sv3" }, 1);
         expect(result.current.results).toEqual(["|sv3"]);
         // The same filters, rebuilt as a new object: no second ask.
         rerender({ set: "sv3" });
@@ -73,6 +73,34 @@ describe("useDebouncedSearch", () => {
         });
         expect(search).toHaveBeenCalledTimes(1);
         expect(result.current.results).toEqual([]);
+    });
+
+    it("appends the next page on loadMore, and stops once a page comes back short", async () => {
+        const search = vi.fn(async (term: string, _p: object, page: number) => (page < 3 ? [`${term}${page}a`, `${term}${page}b`] : [`${term}3a`]));
+        const { result } = renderHook(() => useDebouncedSearch("x", search, { delay: 10, pageSize: 2 }));
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(10);
+        });
+        expect(result.current.results).toEqual(["x1a", "x1b"]);
+        expect(result.current.hasMore).toBe(true);
+
+        await act(async () => {
+            await result.current.loadMore();
+        });
+        expect(search).toHaveBeenLastCalledWith("x", {}, 2);
+        expect(result.current.results).toEqual(["x1a", "x1b", "x2a", "x2b"]);
+        expect(result.current.hasMore).toBe(true);
+
+        await act(async () => {
+            await result.current.loadMore();
+        });
+        expect(result.current.results).toEqual(["x1a", "x1b", "x2a", "x2b", "x3a"]);
+        expect(result.current.hasMore).toBe(false);
+        // Nothing more to ask for: no fourth call.
+        await act(async () => {
+            await result.current.loadMore();
+        });
+        expect(search).toHaveBeenCalledTimes(3);
     });
 
     it("tells a search that threw apart from one that found nothing, and asks again on retry", async () => {

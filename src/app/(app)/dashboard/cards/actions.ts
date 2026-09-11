@@ -60,12 +60,17 @@ export type CatalogueFilters = { set?: string; type?: string };
 // empty list, which reads as "No cards found." — for a week that is what "charizard" said while
 // the catalogue behind the API refused three requests in five (cardorb-api#260). A term the
 // schema refuses is still an empty answer: nothing was asked.
-export async function searchPokemon(query: string, filters: CatalogueFilters = {}): Promise<PokemonCard[]> {
-    const parsed = z.object({ q: term, set: choice, type: choice }).safeParse({ q: query, ...filters });
+//
+// Twenty a page, the API's own size (the palette's SEARCH_PAGE_SIZE); `page` is the next twenty
+// of the same question, asked when the list is scrolled to its end. There are 125 Charizards,
+// and the first twenty were the only ones anyone could reach.
+export async function searchPokemon(query: string, filters: CatalogueFilters = {}, page = 1): Promise<PokemonCard[]> {
+    const parsed = z.object({ q: term, set: choice, type: choice, page: z.number().int().min(1).max(50) }).safeParse({ q: query, ...filters, page });
     if (!parsed.success) return [];
     const { q, set, type } = parsed.data;
-    const params = set || type ? { ...(q ? { name: q } : {}), ...(set ? { set } : {}), ...(type ? { type } : {}) } : q.length >= 2 ? { query: q } : null;
-    if (!params) return [];
+    const fields = set || type ? { ...(q ? { name: q } : {}), ...(set ? { set } : {}), ...(type ? { type } : {}) } : q.length >= 2 ? { query: q } : null;
+    if (!fields) return [];
+    const params = parsed.data.page > 1 ? { ...fields, page: parsed.data.page } : fields;
 
     const { cards } = await api("/catalog/search", { params, schema: searchAnswer });
     return cards.map(pokemonCardFromBrowse);
