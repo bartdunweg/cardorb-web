@@ -8,22 +8,33 @@ import { FolderDialog } from "@/components/app/folder-dialog";
 import { Button } from "@/components/base/buttons/button";
 import { FeaturedIcon } from "@/components/foundations/featured-icon/featured-icon";
 import type { CollectionSummary } from "@/lib/collections";
+import { cx } from "@/utils/cx";
 
-// A tile with a count, or with a line of its own for a view that is not a pile of cards. One
-// shape for every folder, the two that are always there and the ones you made, so the page
-// is one grid whatever the screen.
-function FolderCard({ href, icon, name, count, detail }: { href: string; icon: FC<{ className?: string }>; name: string; count?: number; detail?: string }) {
+// On a phone a row: the icon, the name with what kind of binder under it, the count at the end,
+// and a line between rows — a list, not a stack of cards (Bart's call). From sm a stacked tile,
+// three or four to a row, with the count and the kind on one line under the name. One component
+// for every binder, the two that are always there and the ones you made.
+function FolderCard({ href, icon, name, count, kind }: { href: string; icon: FC<{ className?: string }>; name: string; count?: number; kind?: string }) {
+    const counted = count === undefined ? null : `${count} card${count === 1 ? "" : "s"}`;
     return (
         <Link
             href={href}
-            // One to a row on a phone, the icon beside the words; a stacked tile from sm, three or four to a row.
-            className="flex pressable items-center gap-3 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary outline-focus-ring transition-[color,background-color,box-shadow] ring-inset hover:bg-secondary focus-visible:outline-2 sm:flex-col sm:items-start"
+            className={cx(
+                "flex pressable items-center gap-3 outline-focus-ring transition-[color,background-color,box-shadow] focus-visible:outline-2",
+                // The row: no surface of its own, the page's, with the divider the list draws between rows.
+                "max-sm:-mx-1 max-sm:rounded-lg max-sm:px-1 max-sm:py-3 max-sm:hover:bg-secondary",
+                // The tile.
+                "sm:flex-col sm:items-start sm:rounded-xl sm:bg-primary sm:p-4 sm:shadow-lift-xs sm:ring-1 sm:ring-primary sm:ring-inset sm:hover:bg-secondary",
+            )}
         >
             <FeaturedIcon color="gray" theme="modern-neue" size="lg" icon={icon} className="shrink-0" />
-            <div className="flex min-w-0 flex-col">
+            <div className="flex min-w-0 flex-1 flex-col">
                 <span className="truncate text-sm font-semibold text-primary">{name}</span>
-                <span className="text-sm text-tertiary">{detail ?? `${count} card${count === 1 ? "" : "s"}`}</span>
+                {/* Under the name: the kind alone on a phone, the count at the row's end; both in one line on a tile. */}
+                {kind ? <span className="text-sm text-tertiary sm:hidden">{kind}</span> : null}
+                <span className="text-sm text-tertiary max-sm:hidden">{[counted, kind].filter(Boolean).join(" · ")}</span>
             </div>
+            {counted ? <span className="shrink-0 text-sm text-tertiary tabular-nums sm:hidden">{counted}</span> : null}
         </Link>
     );
 }
@@ -55,14 +66,14 @@ export function CollectionsGrid({ collections, favoritesCount }: { collections: 
             {/* One grid: the two folders that are always there (the favorites, the Pokédex; neither a folder in
                 the data, both one to the eye), then the ones you made. All cards is not here: it is a tab of its
                 own, beside Home. On desktop the sidebar's Collections section is this list. */}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+            <div className="grid grid-cols-1 max-sm:divide-y max-sm:divide-secondary sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
                 {/* The tiles arrive as the card grids do, in a wrapper: the link owns a transition of its own. */}
                 <div className="arrive">
                     <FolderCard href="/dashboard/favorites" icon={Star01} name="Favorites" count={favoritesCount} />
                 </div>
                 <div className="arrive" style={{ "--arrive-delay": "20ms" } as React.CSSProperties}>
                     {/* A folder like the ones beside it; see the note in app-sidebar.tsx. */}
-                    <FolderCard href="/dashboard/pokedex" icon={Folder} name="Pokédex" detail="Cards by Pokémon" />
+                    <FolderCard href="/dashboard/pokedex" icon={Folder} name="Pokédex" kind="Cards by Pokémon" />
                 </div>
                 {collections.map((c, i) => (
                     <div key={c.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i + 2, 8) * 20}ms` } as React.CSSProperties}>
@@ -72,7 +83,7 @@ export function CollectionsGrid({ collections, favoritesCount }: { collections: 
                             icon={Folder}
                             name={c.name}
                             count={c.count}
-                            detail={c.kind === "rule" ? `${c.count} card${c.count === 1 ? "" : "s"} · by rule` : undefined}
+                            kind={c.kind === "rule" ? "By rule" : undefined}
                         />
                     </div>
                 ))}
