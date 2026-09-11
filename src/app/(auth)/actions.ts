@@ -44,7 +44,8 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
     // Email confirmation off → a session is returned, so go straight in.
     if (data.session) redirect("/dashboard");
 
-    return { success: "Account created. Check your email to confirm, then sign in." };
+    // The link in that email signs the person in; there is no "then sign in" step.
+    return { success: `Open the link we sent to ${email} and you are in.` };
 }
 
 /**
