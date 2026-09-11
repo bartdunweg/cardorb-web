@@ -10,6 +10,7 @@ import type { FilterOption } from "@/components/app/filter-chip";
 import { SearchTrigger } from "@/components/app/search-trigger";
 import { notify } from "@/components/app/toast";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
+import { rememberSearch } from "@/hooks/use-recent-searches";
 import type { BrowseLanguage } from "@/lib/languages";
 
 /** `added` went to the collection, `wished` to the wishlist; both close the card to a second press. */
@@ -76,6 +77,13 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
         pageSize: SEARCH_PAGE_SIZE,
     });
     const [status, setStatus] = useState<Record<string, AddStatus>>({});
+    // A term is kept once its search has found something, for the palette's empty state and the
+    // Add dialog's alike (use-recent-searches.ts).
+    useEffect(() => {
+        if (!loading && hits.length) rememberSearch(inputValue);
+        // Only when an answer lands: the term is what the answer is for.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [loading, hits]);
 
     // To the collection, or to the wishlist: the same card cannot be in both, so one press settles it.
     const add = async (card: PokemonCard, target: "collection" | "wishlist") => {
