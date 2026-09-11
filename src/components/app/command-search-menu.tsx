@@ -144,7 +144,15 @@ export function CommandSearchMenu({
                 <div className="flex flex-col items-center gap-3 px-4 py-10 text-center text-sm text-tertiary">
                     {/* A live region, as the other search boxes have: the kit's empty state is not one, so a
                         screen reader heard nothing when the answer changed. */}
-                    <output aria-live="polite">
+                    {/* While the answer is on its way: the kit's indicator, with the same words under it. It is
+                        hidden from a screen reader because the output below already says them, and the output stays
+                        mounted through every state, which is what makes a live region reliable. */}
+                    {searching && loading ? (
+                        <div aria-hidden="true">
+                            <LoadingIndicator size="sm" label="Searching…" />
+                        </div>
+                    ) : null}
+                    <output aria-live="polite" className={cx(searching && loading && "sr-only")}>
                         {!searching ? "Type to search for a card." : loading ? "Searching…" : failed ? "The card service didn't answer." : "No cards found."}
                     </output>
                     {searching && !loading && failed ? (
