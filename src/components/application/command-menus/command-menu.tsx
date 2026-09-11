@@ -47,7 +47,9 @@ interface CommandMenuContextType extends Omit<CommandMenuRootProps, "children"> 
     setSelectedKeys: (keys: Iterable<Key>) => void;
 }
 
-const CommandMenuContext = createContext<CommandMenuContextType>({
+// Exported (ours; the kit keeps it to itself): the palette's phone-size preview clears the
+// selection to go back to the hits, and the selection lives here.
+export const CommandMenuContext = createContext<CommandMenuContextType>({
     hasFooter: false,
     flatItems: [],
     selectedKeys: new Set(),
