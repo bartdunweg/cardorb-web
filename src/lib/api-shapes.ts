@@ -295,6 +295,7 @@ export type PublicCard = Pick<
     Card,
     | "id"
     | "name"
+    | "local_name"
     | "set_name"
     | "number"
     | "rarity"
@@ -323,6 +324,8 @@ export const publicItemSchema = z.object({
     /** The larger scan; absent from an API before #179. */
     imageHigh: nullable(z.string()),
     speciesId: nullable(z.number()),
+    /** What the card prints where `name` is the English for it; absent from an API before it said. */
+    localName: nullable(z.string()).optional(),
     tcgId: nullable(z.string()),
     copies: z.number(),
     /** One of the owned copies is starred; absent from an API before it said so. */
@@ -334,6 +337,7 @@ export type PublicItem = z.infer<typeof publicItemSchema>;
 export const publicCardFromItem = (item: PublicItem): PublicCard => ({
     id: item.key,
     name: item.name,
+    local_name: item.localName ?? null,
     set_name: item.setTitle || item.set || null,
     number: item.number || null,
     rarity: item.rarity,

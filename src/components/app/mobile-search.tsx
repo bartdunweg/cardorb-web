@@ -9,7 +9,7 @@ import { loadFacets } from "@/app/(app)/dashboard/collections/actions";
 import { listSetsShelf } from "@/app/(app)/dashboard/sets/actions";
 import { CardImage } from "@/components/app/card-image";
 import { FilterChip, FilterChipRow } from "@/components/app/filter-chip";
-import { LanguageChips } from "@/components/app/language-chips";
+import { LanguageFilterChip } from "@/components/app/language-filter-chip";
 import { SearchTrigger } from "@/components/app/search-trigger";
 import { SetsShelfList } from "@/components/app/sets-shelf-list";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
@@ -135,7 +135,9 @@ function CollectionSearch({ onClose }: { onClose: () => void }) {
                         />
                     </FilterChipRow>
                 ) : (
-                    <LanguageChips value={language} onChange={setLanguage} className="-mr-14" />
+                    <FilterChipRow className="-mr-14">
+                        <LanguageFilterChip value={language} onChange={setLanguage} />
+                    </FilterChipRow>
                 )}
             </SlideoutMenu.Header>
             {/* role="presentation", not the kit's default "main": the page already has a <main>, and a
