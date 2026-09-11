@@ -208,6 +208,15 @@ for the failures that leave no trace — and everything both passes found is clo
   so the outline has its own token, `bg-skeleton`, unchanged in the light and 2.0:1 in the dark
   (#367). The next-page row itself was not caught live: the pane was hidden when the second page
   had to load; the same markup was measured in the gallery.
+- **One place to search and add** (2026-09-11, web #373). Search (cmd+K) and Add card opened two
+  dialogs on the same catalogue, and the palette was the better one: set and type filters, the
+  next page on scroll, and since #368 the card's sheet with its price line. Bart's call: one
+  solution for both. Add card opens the palette with an `AddIntent` — the wishlist page's puts
+  Add to wishlist first and primary, a manual binder's files the card there and the button says
+  Add to <its name>; the sidebar's search is unchanged. The Add dialog and the recent-searches
+  list only it drew are gone. Measured on the dev server: the pair's order follows the page in
+  the DOM and on screen, Add card takes focus into the field and Escape returns it to the button.
+  The binder case is typechecked only: the one binder here fills by rule.
 - **Pokémon Card 151's Japanese cards looked like reverse holos** (cardorb-api#277). Bart saw it;
   it was the scan, not the app: TCGdex photographed SV2a in its Master Ball variant, every card
   (001, 011, 025, 150 looked at), no other Japanese set sampled. A set list in `artwork.ts`, SV2a
