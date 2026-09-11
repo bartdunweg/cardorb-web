@@ -125,7 +125,10 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
                     onOpen={setOpened}
                 />
             ) : null}
-            {opened ? <CardDetailSlideout card={cardFromPokemonCard(opened)} addable={opened} onClose={() => setOpened(null)} /> : null}
+            {/* Mounted from the first press on and closed with a null card, as every list mounts it: a
+                sheet unmounted on close cannot put focus back on the hit that opened it, and a keyboard
+                user landed on the page under the palette (measured). */}
+            {wanted ? <CardDetailSlideout card={opened ? cardFromPokemonCard(opened) : null} addable={opened} onClose={() => setOpened(null)} /> : null}
         </CommandSearchContext.Provider>
     );
 }
