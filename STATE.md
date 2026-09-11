@@ -152,8 +152,13 @@ for the failures that leave no trace — and everything both passes found is clo
   and the Add dialog asked the English catalogue only, so "リザードン" found nothing. Both have
   Browse's row of flags now; outside English the set and type chips go, being English lists.
   Measured against production: 49 Japanese Charizards, and an add from the palette stores
-  `ja` / `SV2a-006`. Seen, not touched: many Japanese hits have no picture in the list — the
-  search reads TCGdex's scan only, where a set page also probes Limitless.
+  `ja` / `SV2a-006`.
+- **A Japanese search hit gets the picture its set page shows** (cardorb-api#280). The list
+  showed a picture for one hit in three: search handed over TCGdex's address as the record
+  carried it, or nothing. The twenty shown go through the set page's Limitless step now, grouped
+  by set so it stays one probe per set, on both search paths; a record naming no picture gets
+  the guess without a probe. Measured in the palette: "リザードン" 20 of 20 with a picture (14
+  Limitless, 6 TCGdex), 0 broken, where it was 6 of 20.
 - **Pokémon Card 151's Japanese cards looked like reverse holos** (cardorb-api#277). Bart saw it;
   it was the scan, not the app: TCGdex photographed SV2a in its Master Ball variant, every card
   (001, 011, 025, 150 looked at), no other Japanese set sampled. A set list in `artwork.ts`, SV2a
