@@ -73,6 +73,8 @@ export function CommandSearchMenu({
     sets,
     hits,
     loading,
+    failed,
+    onRetry,
     status,
     onAdd,
 }: {
@@ -86,6 +88,9 @@ export function CommandSearchMenu({
     sets: FilterOption[];
     hits: PokemonCard[];
     loading: boolean;
+    /** The API did not answer: not an empty answer, and worth asking again. */
+    failed: boolean;
+    onRetry: () => void;
     status: Record<string, AddStatus>;
     onAdd: (card: PokemonCard) => void;
 }) {
@@ -120,8 +125,27 @@ export function CommandSearchMenu({
             placeholder="Search a card"
             shortcut={null}
             emptyState={
-                <div className="px-4 py-10 text-center text-sm text-tertiary">
-                    {!searching ? "Type to search for a card." : loading ? "Searching…" : "No cards found."}
+                <div className="flex flex-col items-center gap-3 px-4 py-10 text-center text-sm text-tertiary">
+                    {/* A live region, as the other search boxes have: the kit's empty state is not one, so a
+                        screen reader heard nothing when the answer changed. */}
+                    <output aria-live="polite">
+                        {!searching ? "Type to search for a card." : loading ? "Searching…" : failed ? "The card service didn't answer." : "No cards found."}
+                    </output>
+                    {searching && !loading && failed ? (
+                        <Button
+                            size="sm"
+                            color="secondary"
+                            onClick={() => {
+                                onRetry();
+                                // This button is gone the moment hits land, and focus with it. The kit's
+                                // menu keeps its field to itself, so the field is found from the dialog
+                                // the pressed button — the active element — sits in.
+                                document.activeElement?.closest('[role="dialog"]')?.querySelector("input")?.focus();
+                            }}
+                        >
+                            Try again
+                        </Button>
+                    ) : null}
                 </div>
             }
             dialogClassName={cx("max-w-[calc(100vw-2rem)]")}

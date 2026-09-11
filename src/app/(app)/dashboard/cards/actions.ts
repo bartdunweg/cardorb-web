@@ -55,6 +55,11 @@ export type CatalogueFilters = { set?: string; type?: string };
 // Searches the catalogue through the API, which also says whether each hit is already yours. With
 // a filter on, the API's fielded mode is asked instead: the term matches the name only, the set
 // and the type their own fields; the term may then be empty, or one character.
+//
+// An API that does not answer throws, and the box shows that it did not. It used to return an
+// empty list, which reads as "No cards found." — for a week that is what "charizard" said while
+// the catalogue behind the API refused three requests in five (cardorb-api#260). A term the
+// schema refuses is still an empty answer: nothing was asked.
 export async function searchPokemon(query: string, filters: CatalogueFilters = {}): Promise<PokemonCard[]> {
     const parsed = z.object({ q: term, set: choice, type: choice }).safeParse({ q: query, ...filters });
     if (!parsed.success) return [];
@@ -62,12 +67,8 @@ export async function searchPokemon(query: string, filters: CatalogueFilters = {
     const params = set || type ? { ...(q ? { name: q } : {}), ...(set ? { set } : {}), ...(type ? { type } : {}) } : q.length >= 2 ? { query: q } : null;
     if (!params) return [];
 
-    try {
-        const { cards } = await api("/catalog/search", { params, schema: searchAnswer });
-        return cards.map(pokemonCardFromBrowse);
-    } catch {
-        return [];
-    }
+    const { cards } = await api("/catalog/search", { params, schema: searchAnswer });
+    return cards.map(pokemonCardFromBrowse);
 }
 
 const cardSchema = z.object({

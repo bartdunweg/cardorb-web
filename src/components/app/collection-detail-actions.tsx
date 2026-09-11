@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Check, Edit03, Plus, SearchLg, Trash01 } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
@@ -34,8 +34,21 @@ export function CollectionDetailActions({
 
     const [query, setQuery] = useState("");
     const [status, setStatus] = useState<Record<string, "adding" | "done">>({});
-    const { results, loading } = useDebouncedSearch<CardHit>(query, searchMyCards, { minLength: 1, delay: 250 });
-    const searchState = loading ? "Searching…" : query.trim().length >= 1 && results.length === 0 ? "No cards found." : "";
+    const { results, loading, failed, retry } = useDebouncedSearch<CardHit>(query, searchMyCards, { minLength: 1, delay: 250 });
+    const inputRef = useRef<HTMLInputElement>(null);
+    // Try again unmounts the button that was pressed the moment hits land, and focus would fall
+    // to the page; it goes back to the field instead, where the next keystroke belongs.
+    const retryAndRefocus = () => {
+        retry();
+        inputRef.current?.focus();
+    };
+    const searchState = loading
+        ? "Searching…"
+        : failed
+          ? "The card service didn't answer."
+          : query.trim().length >= 1 && results.length === 0
+            ? "No cards found."
+            : "";
 
     const add = async (card: CardHit) => {
         setStatus((s) => ({ ...s, [card.id]: "adding" }));
@@ -93,6 +106,7 @@ export function CollectionDetailActions({
                                             <CloseButton onClick={close} size="sm" className="-mt-1 -mr-1" />
                                         </div>
                                         <Input
+                                            ref={inputRef}
                                             aria-label="Search your cards"
                                             icon={SearchLg}
                                             placeholder="Search your cards…"
@@ -108,6 +122,11 @@ export function CollectionDetailActions({
                                             >
                                                 {searchState}
                                             </output>
+                                            {failed && !loading ? (
+                                                <Button size="sm" color="secondary" className="self-center" onClick={retryAndRefocus}>
+                                                    Try again
+                                                </Button>
+                                            ) : null}
                                             {!loading &&
                                                 results.map((card) => {
                                                     const st = status[card.id];

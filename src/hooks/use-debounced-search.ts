@@ -17,6 +17,10 @@ const isSet = (params: object | undefined) => Boolean(params && Object.values(pa
  * Results for a search box: waits for the typing to pause, asks once, and ignores an answer that
  * arrives after a newer question was asked. `search` is read through a ref, so a new function
  * identity on every render does not restart the timer; only the term and the filters do.
+ *
+ * A search that throws is `failed`, with no results, and `retry()` asks the same question again.
+ * It used to be an empty list, which every box shows as "No cards found." — and for a week that
+ * is what the catalogue being down looked like (cardorb-api#260).
  */
 export function useDebouncedSearch<T, P extends object = Record<string, never>>(
     query: string,
@@ -25,6 +29,9 @@ export function useDebouncedSearch<T, P extends object = Record<string, never>>(
 ) {
     const [results, setResults] = useState<T[]>([]);
     const [loading, setLoading] = useState(false);
+    const [failed, setFailed] = useState(false);
+    // Bumped by retry(): a dependency the effect re-runs on, with the term and the filters unchanged.
+    const [attempt, setAttempt] = useState(0);
     const searchRef = useRef(search);
     searchRef.current = search;
     const paramsRef = useRef(params);
@@ -42,17 +49,24 @@ export function useDebouncedSearch<T, P extends object = Record<string, never>>(
             if (term.length < minLength && !isSet(current)) {
                 setResults([]);
                 setLoading(false);
+                setFailed(false);
                 return;
             }
             setLoading(true);
-            const found = await searchRef.current(term, (current ?? {}) as P);
+            let found: T[] | null = null;
+            try {
+                found = await searchRef.current(term, (current ?? {}) as P);
+            } catch {
+                // The reason is the server's to log; the box only needs to know it is not an empty answer.
+            }
             if (id === reqId.current) {
-                setResults(found);
+                setResults(found ?? []);
+                setFailed(found === null);
                 setLoading(false);
             }
         }, delay);
         return () => clearTimeout(t);
-    }, [query, minLength, delay, paramsKey]);
+    }, [query, minLength, delay, paramsKey, attempt]);
 
-    return { results, loading };
+    return { results, loading, failed, retry: () => setAttempt((n) => n + 1) };
 }

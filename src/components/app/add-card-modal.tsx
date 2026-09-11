@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Check, Plus, SearchLg } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
@@ -44,8 +44,21 @@ export function AddCardModal({
     const [target, setTarget] = useState<Target>(defaultTarget);
     const [query, setQuery] = useState("");
     const [status, setStatus] = useState<Record<string, "adding" | "done">>({});
-    const { results, loading } = useDebouncedSearch<PokemonCard>(query, searchPokemon, { minLength: 2, delay: 300 });
-    const searchState = loading ? "Searching…" : query.trim().length >= 2 && results.length === 0 ? "No cards found." : "";
+    const { results, loading, failed, retry } = useDebouncedSearch<PokemonCard>(query, searchPokemon, { minLength: 2, delay: 300 });
+    const inputRef = useRef<HTMLInputElement>(null);
+    // Try again unmounts the button that was pressed the moment hits land, and focus would fall
+    // to the page; it goes back to the field instead, where the next keystroke belongs.
+    const retryAndRefocus = () => {
+        retry();
+        inputRef.current?.focus();
+    };
+    const searchState = loading
+        ? "Searching…"
+        : failed
+          ? "The card service didn't answer."
+          : query.trim().length >= 2 && results.length === 0
+            ? "No cards found."
+            : "";
 
     // Status is keyed by target + card so the same card can be added to both places.
     const keyFor = (card: PokemonCard) => `${target}:${card.id}`;
@@ -111,6 +124,7 @@ export function AddCardModal({
                                 </ButtonGroup>
 
                                 <Input
+                                    ref={inputRef}
                                     aria-label="Search cards"
                                     icon={SearchLg}
                                     placeholder="Search by name…"
@@ -124,6 +138,11 @@ export function AddCardModal({
                                     <output aria-live="polite" className={cx("text-center text-sm text-tertiary", searchState ? "px-1 py-6" : "sr-only")}>
                                         {searchState}
                                     </output>
+                                    {failed && !loading ? (
+                                        <Button size="sm" color="secondary" className="self-center" onClick={retryAndRefocus}>
+                                            Try again
+                                        </Button>
+                                    ) : null}
                                     {!loading &&
                                         results.map((card) => {
                                             const st = status[keyFor(card)];
