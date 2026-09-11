@@ -78,9 +78,10 @@ export function PageHeader({
         // and the 16 px column, whatever the page puts between its sections.
         <div className="flex flex-col">
             {/* The bar is fixed to the top of the screen, like the tab bar to its bottom, so it stays through
-                the whole page and not only while the header is in view. Collapsed, it stands on a fade from
-                the page's ground to nothing, so the buttons and the small title stay readable over whatever
-                scrolls under; content runs out under the bar the way it runs out under the tab bar. */}
+                the whole page and not only while the header is in view. Collapsed, it stands on the tab bar's
+                glass, running out under its bottom — the same ground as the card sheet's bar — so the buttons
+                and the small title stay readable over whatever scrolls under; content runs out under the bar
+                the way it runs out under the tab bar. */}
             <div
                 className={cx(
                     "fixed inset-x-0 top-0 z-30 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-4 pt-4 pb-2 sm:px-6 lg:hidden",
@@ -88,7 +89,8 @@ export function PageHeader({
                     !back && !barActions && !collapsed && "pointer-events-none",
                     // The fade comes with the collapse: at rest the buttons sit on the page and the large title
                     // sits on its line; once content scrolls under, the page's ground fades in behind the bar.
-                    "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:-z-10 before:h-24 before:bg-linear-to-b before:from-bg-page before:from-40% before:to-transparent before:transition-opacity before:duration-150 before:ease-enter",
+                    // The ground reaches 28 px past the bar's bottom: that is where the glass runs out.
+                    "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:-bottom-7 before:-z-10 before:glass-fade before:transition-opacity before:duration-150 before:ease-enter",
                     collapsed ? "before:opacity-100" : "before:opacity-0",
                 )}
             >
@@ -99,7 +101,8 @@ export function PageHeader({
                 <span
                     aria-hidden="true"
                     className={cx(
-                        "truncate px-2 text-sm font-semibold text-primary transition-opacity duration-150 ease-enter",
+                        // The same size as the card sheet's bar gives its name: one bar, two places.
+                        "truncate px-2 text-md font-semibold text-primary transition-opacity duration-150 ease-enter",
                         collapsed ? "opacity-100" : "opacity-0",
                     )}
                 >

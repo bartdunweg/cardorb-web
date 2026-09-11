@@ -13,8 +13,8 @@ const GROUND_SCROLL = 24;
 // scrolls, so the bar is sticky on it, and it takes no height: the art starts at the top and the
 // buttons sit in it, as before. At the top it has no ground, as a native bar has none at its
 // scroll edge; the moment the sheet scrolls, the same glass as the tab bar comes in under it, blur
-// and a hairline, so whatever passes under the bar is a light and not a shape, and the name is
-// readable on it wherever the page is. The name itself comes in as the big title slides under.
+// running out under the bar's bottom, so whatever passes under the bar is a light and not a
+// shape, and the name is readable on it wherever the page is. The name itself comes in as the big title slides under.
 // Both follow the scroll position and nothing else: no animation, so nothing to reduce.
 //
 // The sticky box must be a direct child of the sheet's scroll box, not of its header: a sticky
@@ -64,10 +64,11 @@ export function SheetBar({
                 under the notch on purpose — the buttons must not. Nothing on a desktop, where the
                 inset is zero. */}
             <div className="relative grid h-17 grid-cols-[1fr_auto_1fr] items-center px-3" style={{ marginTop: "env(safe-area-inset-top)" }}>
-                {/* The ground: the tab bar's glass, with the hairline a native bar draws at its edge. */}
+                {/* The ground: the tab bar's glass, running out under the bar's bottom rather than
+                    ending on a line — the same ground a page's bar stands on. */}
                 <div
                     aria-hidden="true"
-                    className="pointer-events-none absolute inset-x-0 bottom-0 border-b border-glass glass"
+                    className="pointer-events-none absolute inset-x-0 -bottom-7 glass-fade"
                     // Up past the bar's own top, so the ground covers the status bar too rather
                     // than leaving the art bright behind the clock once the sheet has scrolled.
                     style={{ opacity: "var(--ground)", top: "calc(-1 * env(safe-area-inset-top))" }}
