@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { MobileTopRow } from "@/components/app/mobile-top-row";
 import { PageHeader } from "@/components/app/page-header";
+import { SETS_COLUMNS } from "@/components/app/set-tile";
 import { ListRow } from "@/components/app/skeleton-row";
 import { GRID_COLUMNS } from "@/lib/cards-view";
 
@@ -188,7 +189,7 @@ export function FoldersSkeleton() {
     );
 }
 
-/** Browse: the search at the top on a phone, then a series heading and rows of logo, name and bar in the shelf's grid. */
+/** Browse: the search at the top on a phone, then a series heading and tiles of logo box, name and bar in the shelf's grid. */
 export function SetsSkeleton() {
     return (
         <SkeletonFrame>
@@ -198,22 +199,20 @@ export function SetsSkeleton() {
     );
 }
 
-/** The shelf's rows alone, under a title the page has already drawn. */
+/** The shelf's tiles alone, under a title the page has already drawn: the picture box, then the name's line and the count's. */
 export function SetsOutline() {
     return (
         <>
             {Array.from({ length: 2 }, (_, s) => (
                 <Outline key={s} className="flex flex-col gap-3">
                     <Block className="h-6 w-40" />
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    <div className={`grid gap-4 ${SETS_COLUMNS}`}>
                         {Array.from({ length: 6 }, (_, i) => (
-                            <div key={i} className="flex items-center gap-4 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary ring-inset">
-                                <Block className="size-12 shrink-0" />
-                                <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-                                    <div className="flex items-baseline justify-between gap-3">
-                                        <Block className="h-4 w-32" />
-                                        <Block className="h-4 w-14" />
-                                    </div>
+                            <div key={i} className="flex flex-col gap-3 rounded-xl bg-primary p-3 shadow-lift-xs ring-1 ring-primary ring-inset">
+                                <Block className="aspect-4/3 w-full rounded-lg" />
+                                <div className="flex flex-col gap-2.5">
+                                    <Block className="h-4 w-3/4" />
+                                    <Block className="h-4 w-14" />
                                     <Block className="h-2 w-full rounded-full" />
                                 </div>
                             </div>
