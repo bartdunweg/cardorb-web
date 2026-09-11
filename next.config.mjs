@@ -57,6 +57,14 @@ const nextConfig = {
             },
         ];
     },
+    // `/api/v1/*` is the Card Orb API on this origin. On Vercel that is vercel.json's rewrite
+    // (R-DEPLOY-001); this one is for `pnpm dev`, where vercel.json does nothing, so the browser's
+    // own reads of the API (src/lib/catalogue-client.ts) work on localhost the way they do live.
+    async rewrites() {
+        if (process.env.VERCEL) return [];
+        const api = new URL(process.env.CARDORB_API_URL ?? "https://api.cardorb.com/v1").origin;
+        return [{ source: "/api/v1/:path*", destination: `${api}/api/v1/:path*` }];
+    },
     async redirects() {
         return [
             {
