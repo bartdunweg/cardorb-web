@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AlertCircle, BookOpen01, Check, Folder, Heart, Home01, Star01, Trash01, User01, Zap } from "@untitledui/icons";
 import type { SortDescriptor } from "react-aria-components";
 import { NavItemBase } from "@/components/application/app-navigation/base-components/nav-item";
+import { LoadingIndicator } from "@/components/application/loading-indicator/loading-indicator";
 import { Table, TableCard, TableRowActionsDropdown } from "@/components/application/table/table";
 import { Tab, TabList, TabPanel, Tabs } from "@/components/application/tabs/tabs";
 import { Avatar } from "@/components/base/avatar/avatar";
@@ -229,6 +230,41 @@ export const displaySections: SectionSpec[] = [
                     </Cell>
                     <Cell label="modern-neue">
                         <FeaturedIcon icon={Folder} color="gray" theme="modern-neue" size="md" />
+                    </Cell>
+                </Group>
+            </Panel>
+        ),
+    },
+    {
+        id: "loading-indicator",
+        title: "LoadingIndicator",
+        from: "components/application/loading-indicator",
+        note: "Waiting with no known shape to draw an outline of; where the page knows what is coming, the skeletons in components/app/skeletons draw that instead, and a button that is working shows its own. Changed from the kit: it is a status region, so a screen reader hears the label or “Loading…”; the dot-circle’s gradient ids are unique per instance; reduced motion slows the spin rather than freezing it.",
+        render: (
+            <Panel>
+                <Group title="Types" hint='size="md", with a label' cols="tight">
+                    <Cell label='type="line-simple"'>
+                        <LoadingIndicator type="line-simple" size="md" label="Loading…" />
+                    </Cell>
+                    <Cell label='type="line-spinner"'>
+                        <LoadingIndicator type="line-spinner" size="md" label="Loading…" />
+                    </Cell>
+                    <Cell label='type="dot-circle"'>
+                        <LoadingIndicator type="dot-circle" size="md" label="Loading…" />
+                    </Cell>
+                </Group>
+                <Group title="Sizes" hint="without a label; the screen reader still hears it" cols="tight">
+                    <Cell label="sm">
+                        <LoadingIndicator size="sm" />
+                    </Cell>
+                    <Cell label="md">
+                        <LoadingIndicator size="md" />
+                    </Cell>
+                    <Cell label="lg">
+                        <LoadingIndicator size="lg" />
+                    </Cell>
+                    <Cell label="xl">
+                        <LoadingIndicator size="xl" />
                     </Cell>
                 </Group>
             </Panel>
