@@ -4,14 +4,18 @@ import { type CSSProperties, type ReactNode, type RefObject, useEffect, useRef }
 
 // The bar's height: a 44 px button, the size of a page bar's, between twelve points above and below it.
 const BAR_HEIGHT = 68;
+// How far the sheet scrolls before its ground is fully in: a native bar's material is in within
+// the first few points, so the content never sits under a bare bar.
+const GROUND_SCROLL = 24;
 
 // The bar at the top of a sheet whose head is a picture: Close at the left, the actions at the
 // right, and the name between them once the big title has slid under it. The sheet itself
 // scrolls, so the bar is sticky on it, and it takes no height: the art starts at the top and the
-// buttons sit in it, as before. Over the art it has no ground; as the title passes under it the
-// page's colour comes in, fading down into the content the way the tab bar's fade comes up, and
-// the name with it, so the name stays readable wherever the page is. Both follow the scroll
-// position and nothing else: no animation, so nothing to reduce.
+// buttons sit in it, as before. At the top it has no ground, as a native bar has none at its
+// scroll edge; the moment the sheet scrolls, the same glass as the tab bar comes in under it, blur
+// and a hairline, so whatever passes under the bar is a light and not a shape, and the name is
+// readable on it wherever the page is. The name itself comes in as the big title slides under.
+// Both follow the scroll position and nothing else: no animation, so nothing to reduce.
 //
 // The sticky box must be a direct child of the sheet's scroll box, not of its header: a sticky
 // element stays only while its parent is in view, and the header is what scrolls away.
@@ -34,6 +38,7 @@ export function SheetBar({
         const root = bar?.parentElement;
         if (!bar || !root) return;
         const update = () => {
+            bar.style.setProperty("--ground", String(Math.min(1, root.scrollTop / GROUND_SCROLL)));
             const heading = titleRef.current;
             if (!heading) {
                 bar.style.setProperty("--bar", "0");
@@ -52,21 +57,20 @@ export function SheetBar({
     }, [titleRef, title]);
 
     return (
-        <div ref={ref} className="sticky top-0 z-20 h-0 w-full" style={{ "--bar": 0 } as CSSProperties}>
+        <div ref={ref} className="sticky top-0 z-20 h-0 w-full" style={{ "--bar": 0, "--ground": 0 } as CSSProperties}>
             {/* Three columns, the outer two equal, so the name is centred on the bar and not between
                 one button and two. */}
             {/* Pushed clear of the status bar. The sheet is the whole screen now, so its art runs
                 under the notch on purpose — the buttons must not. Nothing on a desktop, where the
                 inset is zero. */}
             <div className="relative grid h-17 grid-cols-[1fr_auto_1fr] items-center px-3" style={{ marginTop: "env(safe-area-inset-top)" }}>
-                {/* Past the bar, not only behind it: the ground is 68px of bar plus a tail below it, so the
-                    fade has room to finish instead of ending at the bar's own edge. */}
+                {/* The ground: the tab bar's glass, with the hairline a native bar draws at its edge. */}
                 <div
                     aria-hidden="true"
-                    className="pointer-events-none absolute inset-x-0 -bottom-8 fade-from-page"
+                    className="pointer-events-none absolute inset-x-0 bottom-0 border-b border-glass glass"
                     // Up past the bar's own top, so the ground covers the status bar too rather
-                    // than leaving the art bright behind the clock once the title has scrolled up.
-                    style={{ opacity: "var(--bar)", top: "calc(-1 * env(safe-area-inset-top))" }}
+                    // than leaving the art bright behind the clock once the sheet has scrolled.
+                    style={{ opacity: "var(--ground)", top: "calc(-1 * env(safe-area-inset-top))" }}
                 />
                 {/* A gap, because these are glass: three translucent circles touching read as one
                     smear rather than three buttons, and each carries its own faint ring. */}
