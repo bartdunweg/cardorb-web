@@ -48,7 +48,12 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
             live = false;
         };
     }, [wanted, sets]);
-    const { results: hits, loading } = useDebouncedSearch<PokemonCard, CatalogueFilters>(inputValue, searchPokemon, {
+    const {
+        results: hits,
+        loading,
+        failed,
+        retry,
+    } = useDebouncedSearch<PokemonCard, CatalogueFilters>(inputValue, searchPokemon, {
         minLength: 2,
         delay: 300,
         params: filters,
@@ -102,6 +107,8 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
                     sets={sets ?? []}
                     hits={hits}
                     loading={loading}
+                    failed={failed}
+                    onRetry={retry}
                     status={status}
                     onAdd={add}
                 />

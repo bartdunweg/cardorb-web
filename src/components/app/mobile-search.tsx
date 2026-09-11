@@ -13,6 +13,7 @@ import { LanguageChips } from "@/components/app/language-chips";
 import { SearchTrigger } from "@/components/app/search-trigger";
 import { SetsShelfList } from "@/components/app/sets-shelf-list";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
+import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import type { Facets } from "@/lib/cards";
@@ -87,8 +88,12 @@ function CollectionSearch({ onClose }: { onClose: () => void }) {
     const field = useRef<HTMLInputElement>(null);
     // The sheet exists to type into: the tap on Search lands the caret in the field.
     useEffect(() => field.current?.focus(), []);
-    const { results, loading } = useDebouncedSearch<CardHit, MyCardsFilters>(query, searchMyCards, { minLength: 1, delay: 250, params: filters });
-    const searchState = loading ? "Searching…" : searching && results.length === 0 ? "No cards found." : "";
+    const { results, loading, failed, retry } = useDebouncedSearch<CardHit, MyCardsFilters>(query, searchMyCards, {
+        minLength: 1,
+        delay: 250,
+        params: filters,
+    });
+    const searchState = loading ? "Searching…" : failed ? "The card service didn't answer." : searching && results.length === 0 ? "No cards found." : "";
 
     return (
         <>
@@ -136,6 +141,11 @@ function CollectionSearch({ onClose }: { onClose: () => void }) {
                 <output aria-live="polite" className={cx("text-center text-sm text-tertiary", searchState ? "px-1 py-6" : "sr-only")}>
                     {searchState}
                 </output>
+                {failed && !loading ? (
+                    <Button size="sm" color="secondary" className="self-center" onClick={retry}>
+                        Try again
+                    </Button>
+                ) : null}
                 {/* Nothing typed and no chip set: the shelf of sets, series by series, so the sheet is Browse as well as search. */}
                 {!searching ? (
                     <>

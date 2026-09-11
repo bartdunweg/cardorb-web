@@ -44,8 +44,14 @@ export function AddCardModal({
     const [target, setTarget] = useState<Target>(defaultTarget);
     const [query, setQuery] = useState("");
     const [status, setStatus] = useState<Record<string, "adding" | "done">>({});
-    const { results, loading } = useDebouncedSearch<PokemonCard>(query, searchPokemon, { minLength: 2, delay: 300 });
-    const searchState = loading ? "Searching…" : query.trim().length >= 2 && results.length === 0 ? "No cards found." : "";
+    const { results, loading, failed, retry } = useDebouncedSearch<PokemonCard>(query, searchPokemon, { minLength: 2, delay: 300 });
+    const searchState = loading
+        ? "Searching…"
+        : failed
+          ? "The card service didn't answer."
+          : query.trim().length >= 2 && results.length === 0
+            ? "No cards found."
+            : "";
 
     // Status is keyed by target + card so the same card can be added to both places.
     const keyFor = (card: PokemonCard) => `${target}:${card.id}`;
@@ -124,6 +130,11 @@ export function AddCardModal({
                                     <output aria-live="polite" className={cx("text-center text-sm text-tertiary", searchState ? "px-1 py-6" : "sr-only")}>
                                         {searchState}
                                     </output>
+                                    {failed && !loading ? (
+                                        <Button size="sm" color="secondary" className="self-center" onClick={retry}>
+                                            Try again
+                                        </Button>
+                                    ) : null}
                                     {!loading &&
                                         results.map((card) => {
                                             const st = status[keyFor(card)];

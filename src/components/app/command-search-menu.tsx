@@ -73,6 +73,8 @@ export function CommandSearchMenu({
     sets,
     hits,
     loading,
+    failed,
+    onRetry,
     status,
     onAdd,
 }: {
@@ -86,6 +88,9 @@ export function CommandSearchMenu({
     sets: FilterOption[];
     hits: PokemonCard[];
     loading: boolean;
+    /** The API did not answer: not an empty answer, and worth asking again. */
+    failed: boolean;
+    onRetry: () => void;
     status: Record<string, AddStatus>;
     onAdd: (card: PokemonCard) => void;
 }) {
@@ -120,8 +125,13 @@ export function CommandSearchMenu({
             placeholder="Search a card"
             shortcut={null}
             emptyState={
-                <div className="px-4 py-10 text-center text-sm text-tertiary">
-                    {!searching ? "Type to search for a card." : loading ? "Searching…" : "No cards found."}
+                <div className="flex flex-col items-center gap-3 px-4 py-10 text-center text-sm text-tertiary">
+                    {!searching ? "Type to search for a card." : loading ? "Searching…" : failed ? "The card service didn't answer." : "No cards found."}
+                    {searching && !loading && failed ? (
+                        <Button size="sm" color="secondary" onClick={onRetry}>
+                            Try again
+                        </Button>
+                    ) : null}
                 </div>
             }
             dialogClassName={cx("max-w-[calc(100vw-2rem)]")}

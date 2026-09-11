@@ -34,8 +34,14 @@ export function CollectionDetailActions({
 
     const [query, setQuery] = useState("");
     const [status, setStatus] = useState<Record<string, "adding" | "done">>({});
-    const { results, loading } = useDebouncedSearch<CardHit>(query, searchMyCards, { minLength: 1, delay: 250 });
-    const searchState = loading ? "Searching…" : query.trim().length >= 1 && results.length === 0 ? "No cards found." : "";
+    const { results, loading, failed, retry } = useDebouncedSearch<CardHit>(query, searchMyCards, { minLength: 1, delay: 250 });
+    const searchState = loading
+        ? "Searching…"
+        : failed
+          ? "The card service didn't answer."
+          : query.trim().length >= 1 && results.length === 0
+            ? "No cards found."
+            : "";
 
     const add = async (card: CardHit) => {
         setStatus((s) => ({ ...s, [card.id]: "adding" }));
@@ -108,6 +114,11 @@ export function CollectionDetailActions({
                                             >
                                                 {searchState}
                                             </output>
+                                            {failed && !loading ? (
+                                                <Button size="sm" color="secondary" className="self-center" onClick={retry}>
+                                                    Try again
+                                                </Button>
+                                            ) : null}
                                             {!loading &&
                                                 results.map((card) => {
                                                     const st = status[card.id];

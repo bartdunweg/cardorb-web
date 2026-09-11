@@ -74,4 +74,28 @@ describe("useDebouncedSearch", () => {
         expect(search).toHaveBeenCalledTimes(1);
         expect(result.current.results).toEqual([]);
     });
+
+    it("tells a search that threw apart from one that found nothing, and asks again on retry", async () => {
+        let down = true;
+        const search = vi.fn(async (term: string) => {
+            if (down) throw new Error("502");
+            return [term];
+        });
+        const { result } = renderHook(() => useDebouncedSearch("pika", search, { delay: 10 }));
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(10);
+        });
+        expect(result.current.failed).toBe(true);
+        expect(result.current.results).toEqual([]);
+        expect(result.current.loading).toBe(false);
+
+        down = false;
+        act(() => result.current.retry());
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(10);
+        });
+        expect(search).toHaveBeenCalledTimes(2);
+        expect(result.current.failed).toBe(false);
+        expect(result.current.results).toEqual(["pika"]);
+    });
 });
