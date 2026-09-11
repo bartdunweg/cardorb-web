@@ -93,7 +93,7 @@ for the failures that leave no trace — and everything both passes found is clo
   `zh-tw` and `zh-cn` are languages now, each asking its own catalogue; `zh` stays for old rows
   and asks both. The note that held this back feared an enum the iOS app decodes; checked, it
   decodes no language field at all. Old `zh` rows are not rewritten.
-- **Every shelf reads in English** (cardorb-api#275, web this PR). Bart's call: the app is English
+- **Every shelf reads in English** (cardorb-api#275, web #338). Bart's call: the app is English
   throughout, and a Japanese set page named its cards リザードンex. The API names a Japanese,
   Korean or Chinese card off Cardmarket's product list (through the committed product id maps)
   or, failing that, its species and printed suffix — 12,308 of 12,781 Japanese cards, 6,582 of
@@ -105,6 +105,13 @@ for the failures that leave no trace — and everything both passes found is clo
   hand-kept lists: SV4a is Shiny Treasure ex now (TCGdex mislabels it), and the 46 Simplified
   Chinese sets and three coming MEGA sets have no English name yet. Measured in the pane against
   the API worktree: SV4a in Japanese, 320 English names, the sheet's bracketed heading.
+- **…and the rest of the way** (cardorb-api#279, web #341). A collection row off those shelves
+  carries the printed name too, so its sheet reads the same brackets. The palette's language chips
+  (#336) now find a card by the English name the app shows it under: "charizard" on the Japanese
+  shelf answers 67 Lizardons — the API scans its committed names, no request, and reads only the
+  sets on the page shown; a term in the shelf's own script still asks TCGdex. The 46 Simplified
+  Chinese sets have English titles now, literal renderings flagged as such; M3 (ムニキスゼロ) and
+  the Japanese CP5 still do not. Measured in the pane against the API worktree.
 - **The small thumbnails lie face down too** (#324): table rows, the add dialog, the folder's
   card search and the Pokédex slider. The Fomantis acquired date is put right (2026-09-07),
   through the sheet on the dev server.
