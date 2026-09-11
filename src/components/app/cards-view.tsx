@@ -59,6 +59,10 @@ export function CardsView({
         const next = at >= 0 ? selected?.siblings[at + by] : undefined;
         return next ? () => setSelected({ card: next, siblings: selected!.siblings }) : null;
     };
+    const warm = [-1, 1]
+        .map((by) => (at >= 0 ? selected?.siblings[at + by] : undefined))
+        .filter((c) => c?.image_url)
+        .map((c) => ({ scan: c!.image_high_url ?? c!.image_url!, blur: c!.image_url! }));
 
     return (
         // A column that grows: an empty state under the row takes the rest of the page and sits in the middle of it.
@@ -84,7 +88,7 @@ export function CardsView({
                 />
             </Suspense>
 
-            <CardDetailSlideout card={selected?.card ?? null} onClose={() => setSelected(null)} onPrev={step(-1)} onNext={step(1)} />
+            <CardDetailSlideout card={selected?.card ?? null} onClose={() => setSelected(null)} onPrev={step(-1)} onNext={step(1)} warm={warm} />
         </div>
     );
 }

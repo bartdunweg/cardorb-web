@@ -55,6 +55,10 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
         const next = at >= 0 ? cards[at + by] : undefined;
         return next ? () => void open(next) : null;
     };
+    const warm = [-1, 1]
+        .map((by) => (at >= 0 ? cards[at + by] : undefined))
+        .filter((c) => c?.imageUrl)
+        .map((c) => ({ scan: c!.imageHighUrl ?? c!.imageUrl!, blur: c!.imageUrl! }));
 
     return (
         <>
@@ -79,6 +83,7 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
                 addable={addable ? pokemonCardFromSetCard(addable, language) : null}
                 onPrev={step(-1)}
                 onNext={step(1)}
+                warm={warm}
             />
         </>
     );

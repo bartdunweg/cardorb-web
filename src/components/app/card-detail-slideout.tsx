@@ -72,7 +72,17 @@ const FACTS_SEEN = new Map<string, CardFacts | null>();
  * there is one. A sheet opened from a search hit or a Pokédex slot has no next, and then the
  * buttons are not drawn rather than drawn dead.
  */
-type Neighbours = { onPrev?: (() => void) | null; onNext?: (() => void) | null };
+type Neighbours = {
+    onPrev?: (() => void) | null;
+    onNext?: (() => void) | null;
+    /**
+     * The pictures of the cards either side, fetched while this one is on screen. The art
+     * crosses over only once the next card's picture is in, so a scan that still had to come
+     * showed the last card standing still and then a jump: with the neighbours warm, the slide
+     * starts on the press. `scan` at the sheet's size, `blur` the small copy behind the header.
+     */
+    warm?: { scan: string; blur: string }[];
+};
 
 /**
  * `addable`: the catalogue card behind this sheet, for one that is neither held nor wished.
@@ -94,7 +104,7 @@ type Props = ({ card: Card | null; onClose: () => void; readOnly?: false } | { c
     Neighbours &
     Addable;
 
-export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, onNext, addable, onTaken }: Props) {
+export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, onNext, warm = [], addable, onTaken }: Props) {
     const router = useRouter();
     // The owner's fields exist only on the editable view; the public view never receives them.
     // The row the sheet shows: the one it opened on, or another copy of the card tapped in the
@@ -742,6 +752,15 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                     /* The card tilts and shines under the pointer (the copy's finish and the
                                        printing's rarity pick the foil); the header's padding is the room it tilts in. */
                                     <div className="relative mx-auto w-full max-w-44">
+                                        {/* The neighbours' pictures, asked for at exactly the size and quality the
+                                            sheet draws them, so the browser has them the moment they are stepped to.
+                                            Eager, since a lazy picture that is not shown is never fetched. */}
+                                        {warm.map((w) => (
+                                            <div key={w.scan} hidden aria-hidden="true">
+                                                <CardImage src={w.scan} alt="" width={176} quality={75} priority />
+                                                <CardImage src={w.blur} alt="" width={64} priority />
+                                            </div>
+                                        ))}
                                         {prevArt ? (
                                             <div ref={prevScan} aria-hidden="true" className="absolute inset-0 aspect-card overflow-hidden rounded-card">
                                                 <CardImage src={prevArt.scan} alt="" width={176} quality={75} className="object-cover" />
