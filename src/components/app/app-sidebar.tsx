@@ -45,7 +45,9 @@ export function AppSidebar({
         { label: "Browse", href: "/dashboard/sets", icon: BookOpen01 },
         { label: "Wishlist", href: "/dashboard/wishlist", icon: Heart },
         { label: "Collection", href: "/dashboard/cards", icon: Rows01 },
-        { divider: true, label: "Binders" },
+        // The head is the overview itself: on a phone the Binders tab opens it, on a desktop nothing did
+        // but Back from Favorites or the Pokédex.
+        { divider: true, label: "Binders", href: "/dashboard/collections" },
         {
             label: "Favorites",
             href: "/dashboard/favorites",

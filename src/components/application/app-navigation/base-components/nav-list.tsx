@@ -2,6 +2,7 @@
 
 import { type ReactNode, useEffect, useState } from "react";
 import { ChevronDown } from "@untitledui/icons";
+import { Link as AriaLink } from "react-aria-components";
 import { cx } from "@/utils/cx";
 import type { NavItemDividerType, NavItemType } from "../config";
 import { NavItemBase } from "./nav-item";
@@ -65,10 +66,23 @@ export const NavList = ({ activeUrl, items, className, children }: NavListProps)
         <ul className={cx("flex flex-col px-4 pt-5", className)}>
             {items.map((item, index) => {
                 if (item.divider) {
-                    // A divider with a label heads a section; without a label it is a rule.
+                    // A divider with a label heads a section; without a label it is a rule. With an href the
+                    // label is the section's own page (Binders: the overview the phone's tab opens, which
+                    // the desktop had no road to): the same small caps, a link on hover and focus, no
+                    // chevron, since a chevron on a section head says collapse everywhere else.
                     return item.label ? (
                         <li key={index} className="pt-5 pb-1">
-                            <span className="block px-3 py-0.5 text-xs font-semibold text-quaternary">{item.label}</span>
+                            {item.href ? (
+                                <AriaLink
+                                    href={item.href}
+                                    aria-current={activeUrl === item.href ? "page" : undefined}
+                                    className="block rounded-sm px-3 py-0.5 text-xs font-semibold text-quaternary outline-focus-ring transition duration-100 ease-linear hover:text-tertiary focus-visible:outline-2 focus-visible:outline-offset-2 aria-[current=page]:text-secondary"
+                                >
+                                    {item.label}
+                                </AriaLink>
+                            ) : (
+                                <span className="block px-3 py-0.5 text-xs font-semibold text-quaternary">{item.label}</span>
+                            )}
                         </li>
                     ) : (
                         <li key={index} className="w-full px-0.5 py-2">
