@@ -47,3 +47,4 @@ supabase/.temp/
 
 # a log dump a session streams from Vercel while measuring
 .timing-logs.jsonl
+emails-out/
