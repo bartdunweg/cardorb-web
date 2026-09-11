@@ -13,7 +13,8 @@ import { Button } from "@/components/base/buttons/button";
 import type { DexCard } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
 import { type CardsSize, GRID_COLUMNS, TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
-import type { DexList, NamedDexSlot } from "@/lib/dex-groups";
+import type { DexGeneration, DexList, NamedDexSlot } from "@/lib/dex-groups";
+import { formatCount } from "@/lib/format";
 import { cx } from "@/utils/cx";
 
 // The card sheet, fetched on the tap that opens it: it is the app's largest client chunk and the
@@ -28,14 +29,23 @@ const dexNumber = (n: number) => `#${String(n).padStart(3, "0")}`;
 // the Pokédex reads as one of the folders and not as a different screen. A number you hold
 // shows its card (several: a slider), its name and how many you have; one you do not is the
 // same tile in grey, named, so a person knows what to find.
+//
+// The slots stand in chapters, one a generation, each under its own heading with its own "45 of
+// 151" — the way a completion grid reads in Headspace or Skillshare — so progress shows per
+// region and not only as one number over a thousand tiles. The chapter's count is the page's
+// count cut at the generation's edges (`groupByDex`), no rule of its own.
 /** Slots drawn per batch: two to three screens on any width, the rest as the reader scrolls. */
 const DEX_BATCH = 96;
 
-export function DexGrid({ slots, size = "md", linked = true }: { slots: NamedDexSlot[]; size?: CardsSize; linked?: boolean }) {
+export function DexGrid({ generations, size = "md", linked = true }: { generations: DexGeneration[]; size?: CardsSize; linked?: boolean }) {
     // A thousand slots is seven hundred pictures' markup, most of it below the fold: drawn a
     // batch at a time, a screen ahead of the sentinel, the way a list of cards is. The slots are
-    // all in hand already, so a batch is a render and not a request.
+    // all in hand already, so a batch is a render and not a request. The count runs on across
+    // the chapters: a chapter the batch has not reached is not drawn, heading included.
     const [shown, setShown] = useState(DEX_BATCH);
+    // Where each chapter starts in that count, and the whole.
+    const starts = generations.map((_, i) => generations.slice(0, i).reduce((n, g) => n + g.slots.length, 0));
+    const total = (starts[generations.length - 1] ?? 0) + (generations[generations.length - 1]?.slots.length ?? 0);
     const sentinel = useRef<HTMLDivElement>(null);
     // The card a tile opens, in the same sheet a list opens one in. A slot carries its cards' ids and
     // names only; the sheet wants the whole row, so a tap asks the API for that card's rows (set and
@@ -54,7 +64,7 @@ export function DexGrid({ slots, size = "md", linked = true }: { slots: NamedDex
             opening.current = null;
         }
     };
-    const more = shown < slots.length;
+    const more = shown < total;
     useEffect(() => {
         const el = sentinel.current;
         if (!el || !more || typeof IntersectionObserver === "undefined") return;
@@ -71,11 +81,29 @@ export function DexGrid({ slots, size = "md", linked = true }: { slots: NamedDex
     }, [more, shown]);
     return (
         <>
-            <div className={cx("grid gap-4", GRID_COLUMNS[size])}>
-                {slots.slice(0, shown).map((slot) => (
-                    <DexTile key={slot.number} slot={slot} onSelect={linked ? open : undefined} />
-                ))}
-            </div>
+            {generations.map((gen, i) => {
+                const start = starts[i]!;
+                if (start >= shown) return null;
+                const id = `dex-gen-${gen.from}`;
+                return (
+                    <section key={gen.from} aria-labelledby={id} className="flex flex-col gap-3">
+                        {/* The count in the heading's own line, so a screen reader hears it with the name. */}
+                        <div className="flex items-baseline justify-between gap-4">
+                            <h2 id={id} className="text-lg font-semibold text-primary">
+                                {gen.label}
+                            </h2>
+                            <p className="text-sm text-tertiary tabular-nums">
+                                {formatCount(gen.caught)} of {formatCount(gen.total)}
+                            </p>
+                        </div>
+                        <div className={cx("grid gap-4", GRID_COLUMNS[size])}>
+                            {gen.slots.slice(0, shown - start).map((slot) => (
+                                <DexTile key={slot.number} slot={slot} onSelect={linked ? open : undefined} />
+                            ))}
+                        </div>
+                    </section>
+                );
+            })}
             {more ? (
                 <div ref={sentinel} className="flex justify-center py-2">
                     {/* The way on when the sentinel is never seen — a keyboard, or an observer the
@@ -173,7 +201,7 @@ export function DexView({
                 <div className="contents">{toolbar}</div>
                 <ViewMenu view="grid" size={size} onView={() => {}} onSize={setSize} layouts={false} />
             </div>
-            <Suspense fallback={<CardsSkeleton />}>
+            <Suspense fallback={<CardsSkeleton heading />}>
                 <DexSlots key={listKey} dex={dex} size={size} narrowed={narrowed} noHits={noHits} empty={empty} linked={linked} />
             </Suspense>
         </div>
@@ -197,5 +225,5 @@ function DexSlots({
 }) {
     const d = use(dex);
     if (d.total === 0) return <div className="flex flex-1 flex-col">{narrowed ? noHits : empty}</div>;
-    return <DexGrid slots={d.slots} size={size} linked={linked} />;
+    return <DexGrid generations={d.generations} size={size} linked={linked} />;
 }
