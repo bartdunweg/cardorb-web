@@ -205,3 +205,17 @@ export async function updateListPublic(input: unknown): Promise<ActionResult> {
     await forgetMine();
     return { ok: true };
 }
+
+// The public flag on its own, from the row on the settings page: one PATCH, nothing else touched.
+// The Manage sheet still sends it with the name and the username; this is the fast road.
+export async function setProfilePublic(isPublic: boolean): Promise<ActionResult> {
+    const parsed = profileSchema.shape.is_public.safeParse(isPublic);
+    if (!parsed.success) return { ok: false, error: "Something went wrong. Try again." };
+    try {
+        await api("/profile", { method: "PATCH", body: { isPublic: parsed.data } });
+    } catch (err) {
+        return failed(err);
+    }
+    await forgetMine();
+    return { ok: true };
+}
