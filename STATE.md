@@ -91,10 +91,14 @@ for the failures that leave no trace — and everything both passes found is clo
   one does. Neither Cardmarket nor TCGplayer publishes either — checked, both feeds carry
   printing and no condition. PokemonPriceTracker does, RAW and PSA, at $9.99 a month, from the
   American market. **Needs a decision before it needs code.**
-- **Step 2b, the rest of it.** A Cardmarket link on a language card falls back to searching the
-  Japanese name; and `zh` is one code for two catalogues, so traditional is asked before
-  simplified. Splitting it properly widens an enum the iOS app decodes, which is a decision
-  rather than a side effect.
+- **Step 2b, the rest of it.** `zh` is one code for two catalogues, so traditional is asked
+  before simplified. Splitting it properly widens an enum the iOS app decodes, which is a
+  decision rather than a side effect.
+- **"Buy on Cardmarket" is off** (cardorb-api#267): `cmUrl` is null until an address can be
+  guaranteed to land on the card's own page. Cardmarket publishes product ids but not the
+  expansion half of a product's address, and its site answers every probe from a tool with a
+  bot check, so it cannot be verified from here. Bart's call, 2026-09-11. The links map and
+  `cardmarketUrl()` stay.
 - **The small thumbnails** — table rows, the add dialog, folder actions — still draw a grey
   box where a card has no picture; the four card-sized places show the back (#314).
 - **A privacy flip made in the iOS app is invisible here for five minutes.** `forgetMine()` drops
