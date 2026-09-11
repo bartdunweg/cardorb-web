@@ -4,11 +4,12 @@ import { groupByDex } from "./dex-groups";
 
 const card = (id: string, species_id: number | null): Card =>
     ({ id, name: id, species_id, image_url: null, owned: true, set_name: "Base Set", rarity: "Common" }) as unknown as Card;
+const art = (id: number) => `https://api.cardorb.com/artwork/pokedex/${id}.png`;
 const names = new Map([
-    [1, "Bulbasaur"],
-    [2, "Ivysaur"],
-    [3, "Venusaur"],
-    [25, "Pikachu"],
+    [1, { name: "Bulbasaur", artwork: art(1) }],
+    [2, { name: "Ivysaur", artwork: art(2) }],
+    [3, { name: "Venusaur", artwork: art(3) }],
+    [25, { name: "Pikachu", artwork: art(25) }],
 ]);
 
 describe("groupByDex", () => {
@@ -23,6 +24,11 @@ describe("groupByDex", () => {
         expect(out.caught).toBe(2);
         expect(out.cards).toBe(3);
         expect(out.range).toEqual({ from: 1, to: 25 });
+    });
+    it("hands an empty slot its species' picture, and a slot nobody knows nothing", () => {
+        const out = groupByDex([], names, { missing: true, dex: { from: 1, to: 4 } });
+        expect(out.slots[0]).toMatchObject({ number: 1, name: "Bulbasaur", artwork: art(1) });
+        expect(out.slots[3]).toMatchObject({ number: 4, name: "#4", artwork: null });
     });
     it("drops the empty slots when the missing ones are not wanted", () => {
         const out = groupByDex([card("b", 3)], names, { missing: false, dex: { from: 1, to: 3 } });

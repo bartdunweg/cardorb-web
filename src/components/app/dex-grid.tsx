@@ -25,6 +25,14 @@ const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-sl
 
 const dexNumber = (n: number) => `#${String(n).padStart(3, "0")}`;
 
+/**
+ * The artwork in a missing slot: the tile's width less the box's padding, and the source is 120 px,
+ * so nothing wider is ever worth asking the optimizer for. One `sizes` for every tile size: the
+ * difference between them is smaller than the optimizer's own rungs at this end of the list.
+ */
+const ART_WIDTH = 128;
+const ART_SIZES = "(min-width: 1280px) 128px, 20vw";
+
 // A folder as a Pokédex: one tile per number, drawn as the same tile a list of cards uses, so
 // the Pokédex reads as one of the folders and not as a different screen. A number you hold
 // shows its card (several: a slider), its name and how many you have; one you do not is the
@@ -129,12 +137,31 @@ function DexTile({ slot, onSelect }: { slot: NamedDexSlot; onSelect?: (card: Dex
         </div>
     );
 
+    // A missing slot shows the Pokémon itself, in grey: what to look for, drawn as not held. The
+    // picture is the API's own copy of the official artwork, 120 px on a see-through ground, so it
+    // is drawn square inside the card-shaped box and never stretched to fill it. Ratio "square":
+    // a picture that will not load leaves the grey box, not a card back — a card back would say
+    // "a card with no scan", and there is no card here. `alt=""`: the name is under the box. The
+    // number stands in only where the API knew no picture.
     if (held === 0) {
         return (
             <CardTile
                 picture={
                     <div className="flex aspect-card w-full items-center justify-center rounded-card bg-tertiary">
-                        <span className="text-sm font-medium text-quaternary tabular-nums">{dexNumber(slot.number)}</span>
+                        {slot.artwork ? (
+                            <div className="relative aspect-square w-3/5">
+                                <CardImage
+                                    src={slot.artwork}
+                                    alt=""
+                                    width={ART_WIDTH}
+                                    sizes={ART_SIZES}
+                                    ratio="square"
+                                    className="object-contain opacity-60 grayscale"
+                                />
+                            </div>
+                        ) : (
+                            <span className="text-sm font-medium text-quaternary tabular-nums">{dexNumber(slot.number)}</span>
+                        )}
                     </div>
                 }
                 words={words}

@@ -2,8 +2,10 @@ import type { DexSlot } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
 import { type DexRange, GENERATIONS, NATIONAL_DEX_MAX, type PokedexSetting, rarityKept } from "@/lib/folder-rule";
 
-export type DexNames = Map<number, string>;
-export type NamedDexSlot = DexSlot & { name: string };
+/** What the catalogue says of a species: its name, and its official picture where the API has one. */
+export type DexSpecies = Map<number, { name: string; artwork: string | null }>;
+/** `artwork` is drawn only in a slot with no card: a held card is its own picture. */
+export type NamedDexSlot = DexSlot & { name: string; artwork: string | null };
 
 /**
  * One generation of the Pokédex as the page draws it: its slots, and its own "45 of 151". `caught`
@@ -23,7 +25,7 @@ export type DexCardLike = Pick<Card, "id" | "name" | "number" | "species_id" | "
 
 export function groupByDex(
     cards: DexCardLike[],
-    names: DexNames,
+    species: DexSpecies,
     setting: PokedexSetting,
 ): { slots: NamedDexSlot[]; generations: DexGeneration[]; caught: number; range: DexRange; cards: number } {
     const range = setting.dex ?? { from: 1, to: NATIONAL_DEX_MAX };
@@ -44,9 +46,11 @@ export function groupByDex(
     for (let number = range.from; number <= range.to; number += 1) {
         const held = bySlot.get(number) ?? [];
         if (held.length === 0 && !setting.missing) continue;
+        const known = species.get(number);
         slots.push({
             number,
-            name: names.get(number) ?? `#${number}`,
+            name: known?.name ?? `#${number}`,
+            artwork: known?.artwork ?? null,
             cards: held.map((c) => ({ id: c.id, name: c.name, set: c.set ?? null, number: c.number, imageUrl: c.image_url, imageHighUrl: c.image_high_url })),
         });
     }
