@@ -15,20 +15,17 @@ export default async function CollectionsPage() {
         <div className="flex flex-1 flex-col gap-6">
             <PageHeader
                 title="Binders"
-                // Add card is the app's main action and opens the one palette, here as everywhere; a new
-                // binder is the page's own thing and sits beside it as the secondary.
+                // Add card is the app's main action and opens the one palette, here as everywhere on a
+                // desktop; a new binder is the page's own thing and sits beside it as the secondary. On a
+                // phone the bar carries the new binder alone: this is the list of binders, and a card is
+                // added from inside one, where it has somewhere to go (Bart's call).
                 actions={
                     <div className="flex items-center gap-3 max-lg:hidden">
                         <NewCollectionButton />
                         <AddCardButton />
                     </div>
                 }
-                barActions={
-                    <>
-                        <NewCollectionButton compact />
-                        <AddCardButton compact />
-                    </>
-                }
+                barActions={<NewCollectionButton compact />}
             />
             <CollectionsGrid collections={collections} favoritesCount={favoritesCount} />
         </div>
