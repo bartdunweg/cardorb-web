@@ -14,7 +14,7 @@ export function RecentSearches({ terms, onPick, onClear }: { terms: readonly str
                 <h3 id="recent-searches-title" className="text-xs font-medium text-tertiary">
                     Recent searches
                 </h3>
-                <Button size="sm" color="link-gray" onClick={onClear}>
+                <Button size="sm" color="tertiary" onClick={onClear}>
                     Clear
                 </Button>
             </div>
