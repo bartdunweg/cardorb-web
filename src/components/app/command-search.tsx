@@ -10,6 +10,7 @@ import type { FilterOption } from "@/components/app/filter-chip";
 import { SearchTrigger } from "@/components/app/search-trigger";
 import { notify } from "@/components/app/toast";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
+import type { BrowseLanguage } from "@/lib/languages";
 
 /** `added` went to the collection, `wished` to the wishlist; both close the card to a second press. */
 export type AddStatus = "idle" | "adding" | "added" | "wished";
@@ -38,20 +39,27 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
     // True from the first open on: the menu stays mounted after, so closing still animates.
     const [wanted, setWanted] = useState(false);
     const [inputValue, setInputValue] = useState("");
-    // The chips under the field: a set from the English catalogue (asked for on the first open, once)
-    // and an energy type. Both go to the API's fielded search beside the term.
+    // The chips under the field: a language, a set of that language's shelf and an energy type. All
+    // go to the API's fielded search beside the term. Each shelf's sets are asked for once, the
+    // first time that language is chosen (English on the first open), and kept.
     const [filters, setFilters] = useState<CatalogueFilters>({});
-    const [sets, setSets] = useState<FilterOption[] | null>(null);
+    const language: BrowseLanguage = filters.language ?? "en";
+    const [shelves, setShelves] = useState<Partial<Record<BrowseLanguage, FilterOption[]>>>({});
+    const sets = shelves[language];
     useEffect(() => {
         if (!wanted || sets) return;
         let live = true;
-        listSetsShelf("en").then(({ series }) => {
-            if (live) setSets(series.flatMap((group) => group.sets.map((set) => ({ value: set.name, label: set.name, hint: group.name }))));
+        listSetsShelf(language).then(({ series }) => {
+            if (live)
+                setShelves((known) => ({
+                    ...known,
+                    [language]: series.flatMap((group) => group.sets.map((set) => ({ value: set.name, label: set.name, hint: group.name }))),
+                }));
         });
         return () => {
             live = false;
         };
-    }, [wanted, sets]);
+    }, [wanted, sets, language]);
     const {
         results: hits,
         loading,

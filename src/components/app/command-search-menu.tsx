@@ -6,11 +6,11 @@ import type { CatalogueFilters, PokemonCard } from "@/app/(app)/dashboard/cards/
 import { CardImage } from "@/components/app/card-image";
 import type { AddStatus } from "@/components/app/command-search";
 import { FilterChip, FilterChipRow, type FilterOption } from "@/components/app/filter-chip";
-import { LanguageChips } from "@/components/app/language-chips";
 import { CommandMenu, type CommandMenuGroupType } from "@/components/application/command-menus/command-menu";
 import { Button } from "@/components/base/buttons/button";
 import { CARD_TYPES } from "@/lib/card-types";
 import { formatDate } from "@/lib/format";
+import { BROWSE_LANGUAGES, isBrowseLanguage } from "@/lib/languages";
 import { cx } from "@/utils/cx";
 
 function DetailRow({ label, value }: { label: string; value: ReactNode }) {
@@ -204,25 +204,29 @@ export function CommandSearchMenu({
                 Search cards
             </AriaHeading>
 
-            {/* The catalogue: English, or one of the four TCGdex keeps in its own script, the row Browse has.
-                Always there, because the language is chosen before the name is typed. Changing it drops the
-                set and the type: both are lists of the English catalogue. */}
-            <div className="border-b border-secondary px-4 py-2">
-                <LanguageChips value={language} onChange={(next) => onFiltersChange(next === "en" ? {} : { language: next })} />
-            </div>
-
-            {/* The chips that narrow the hits, once something is typed; a set kept while the term changes stays. */}
-            {searching && language === "en" ? (
-                <FilterChipRow className="border-b border-secondary px-4 py-2" onClear={filtering ? () => onFiltersChange({}) : undefined}>
-                    <FilterChip label="Set" value={filters.set} options={sets} onChange={(set) => onFiltersChange({ ...filters, set })} />
+            {/* The chips that narrow the hits, one row, the kit's filter chips throughout (Bart's call: the
+                language is a filter like the others, not a row of flags). Always there, because the language
+                is chosen before the name is typed. English is the default and needs no chip value. The set
+                list is the chosen shelf's; the type is the English catalogue's alone, since TCGdex publishes
+                none for the other shelves, so that chip goes with them. */}
+            <FilterChipRow className="border-b border-secondary px-4 py-2" onClear={filtering ? () => onFiltersChange({}) : undefined}>
+                <FilterChip
+                    label="Language"
+                    any="English"
+                    value={language === "en" ? undefined : language}
+                    options={BROWSE_LANGUAGES.filter((l) => l.code !== "en").map((l) => ({ value: l.code, label: l.label }))}
+                    onChange={(next) => onFiltersChange(isBrowseLanguage(next) && next !== "en" ? { language: next } : {})}
+                />
+                <FilterChip label="Set" value={filters.set} options={sets} onChange={(set) => onFiltersChange({ ...filters, set })} />
+                {language === "en" ? (
                     <FilterChip
                         label="Type"
                         value={filters.type}
                         options={CARD_TYPES.map((t) => ({ value: t, label: t }))}
                         onChange={(type) => onFiltersChange({ ...filters, type })}
                     />
-                </FilterChipRow>
-            ) : null}
+                ) : null}
+            </FilterChipRow>
 
             <CommandMenu.Group className="flex max-md:flex-col">
                 <CommandMenu.List>
