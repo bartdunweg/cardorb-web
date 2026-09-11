@@ -139,6 +139,23 @@ finder_copies() {
 }
 run "no-finder-copies" finder_copies
 
+# shellcheck disable=SC2329  # invoked indirectly, through `run` below.
+# R-STRUCT-003: a "use server" file exports async functions and nothing else. Next checks that
+# when the module is evaluated at runtime — not at build, lint or typecheck, all of which stayed
+# green while an exported zod schema made every CSV import answer 500 for four days (#263 → #329).
+# Types and interfaces do not exist at runtime and are fine.
+server_exports() {
+  local hits
+  hits="$(grep -rl --include='*.ts' --include='*.tsx' '^"use server"' src \
+    | xargs grep -n '^export ' \
+    | grep -Ev ':export (async function|default async function|type|interface)\b' || true)"
+  if [[ -n "$hits" ]]; then
+    printf 'A "use server" file may export only async functions (R-STRUCT-003):\n%s\n' "$hits"
+    return 1
+  fi
+}
+run "server-exports" server_exports
+
 rule_rows() {
   grep '^| ' CONVENTIONS.md | grep -v '^| ID | Rule |' | grep -v '^|[- |]*$' || true
 }
