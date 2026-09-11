@@ -286,6 +286,22 @@ for the failures that leave no trace — and everything both passes found is clo
   Wishlist, Collection, Binders — with the pill a fifth wide, and the Browse page wears its title
   on a phone as the other tabs do. Measured on the dev server at 375 px: the bar opens the palette
   over Home with the recent searches, five tabs of 67 px each, Browse's pill on its page.
+- **The Mobbin pass, the rest of it** (2026-09-11, web #387, #388, #389, #395, #397, #399).
+  Bart picked the four departures left and three more he saw the same evening, all merged: the
+  skeletons a step off the page in both themes, barely there (#387, his call after #367 still
+  read as blocks); the palette opens on "Recently viewed" — a card that stood a second in the
+  preview, eight kept in the browser, previewed and taken as hits are, marks re-read on open —
+  and recent searches are gone with their hook (#388); on a phone the binders are rows with a
+  line between, and the bar there adds a binder, not a card (#389); the sheet's price carries its
+  change against the 30-day average the sheet already had, sign and colour, no new request
+  (#395); Settings has the "Public profile" switch and the address in view, first in Account,
+  Manage keeping the full form and its label renamed to the same words (#397); the Pokédex is
+  nine sections, "Gen 1 · Kanto" with "69 of 151" each, from the same count as the top line,
+  cut at the range setting (#399). Not measured in a browser: the palette's one-second dwell,
+  the binder rows at 375, the sheet's line in the light theme. Left where it was: the palette's
+  list does not stretch to the preview's height — the `palette-from-tablet-width` branch of
+  another session is in that layout. Glass on the palette: no; card art behind translucent
+  prices is unreadable, and Linear and v0 keep the panel solid too.
 
 ## Next
 
