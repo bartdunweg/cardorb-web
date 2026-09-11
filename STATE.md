@@ -169,6 +169,15 @@ for the failures that leave no trace — and everything both passes found is clo
   client: after one failed call, twenty seconds of refusing at once, then one probe; a 404 never
   trips it; per instance. The web frame already survives a failed folder list. Not taken: the
   vendor comment on #164 offering pokemontcgapi.com as a third catalogue — Bart's call.
+- **A profile change made through the API reaches cardorb.com at once** (cardorb-api#285, web
+  #345). `forgetMine()` only ever dropped this app's cache for writes made here; a switch to
+  private in the iOS app stayed open on the web for five minutes. `PATCH /profile` now posts who
+  changed to `POST /api/revalidate`, behind a shared secret (`REVALIDATE_SECRET` here,
+  `WEB_REVALIDATE_URL` + `WEB_REVALIDATE_SECRET` on the API, production and preview), which
+  drops the public and the user tag — `revalidateTag(…, "max")`, since Next refuses `updateTag`
+  in a route handler. Measured on production: PATCH 19:34:25 → POST /api/revalidate 19:34:26 →
+  `/user/bartdunweg` "Collection not found" at 19:34:39; flipped back, page back. Card writes
+  from iOS are not on the hook yet; the same call fits their routes.
 - **Pokémon Card 151's Japanese cards looked like reverse holos** (cardorb-api#277). Bart saw it;
   it was the scan, not the app: TCGdex photographed SV2a in its Master Ball variant, every card
   (001, 011, 025, 150 looked at), no other Japanese set sampled. A set list in `artwork.ts`, SV2a
@@ -187,9 +196,6 @@ for the failures that leave no trace — and everything both passes found is clo
   expansion half of a product's address, and its site answers every probe from a tool with a
   bot check, so it cannot be verified from here. Bart's call, 2026-09-11. The links map and
   `cardmarketUrl()` stay.
-- **A privacy flip made in the iOS app is invisible here for five minutes.** `forgetMine()` drops
-  the public tag on writes made through this app; the same API serves iOS and invalidates nothing
-  here. Wants a revalidation webhook from cardorb-api.
 
 ## Open
 
