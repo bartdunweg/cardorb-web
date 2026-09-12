@@ -22,6 +22,19 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-12, later.** The toast's title is medium (#422): the kit sets title and undo link both
+semibold and tells them apart by colour, and Cardorb's brand is the same grey as the title. Read
+against the PRO `application/notifications` source; ours is that box in its parts (#424). Then
+the new-account flow, from the code (#429): five screens a fresh account reaches had no way
+onward and have one now (Favorites, both empty binders, Check your email, an expired link on
+/login); Choose your name opens the profile sheet and says the name is the public address; a
+private profile's address says so instead of the site's 404. **Not yet walked in the browser as
+the test account** (its password is Bart's). Still open from the same map: adding the first card
+is silent and the palette stays over a Home that has switched to the stats; "Add to wishlist" on
+the wishlist page opens the palette without the wishlist preset; one wishlist card flips Home
+from the welcome to a €0 hero with four zeros; the Binders hub on a phone has no empty state, by
+design.
+
 **2026-09-12.** The sign-up was walked as a stranger, with a real address. The mail arrived and
 its button went to `env%28SUPABASE_AUTH_SITE_URL%29/…`: a `config push` from a shell without
 that variable had stored the literal text, so no sign-up could be confirmed and no password
