@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Card } from "@/lib/api-shapes";
-import { band, distinctTitles, matchSets, matchTitles } from "@/lib/card-titles";
+import { distinctTitles, matchSets, matchTitles } from "@/lib/card-titles";
+import { band } from "@/lib/name-rank";
 
 const row = (name: string, set: string | null, id = `${name}-${set}-${Math.random()}`) => ({ id, name, set_name: set }) as Card;
 

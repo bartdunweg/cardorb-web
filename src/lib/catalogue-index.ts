@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { type PokemonCard, absoluteImage } from "@/lib/api-shapes";
+import { bestBand } from "@/lib/name-rank";
 
 /**
  * The English catalogue as the browser holds it, and a search over it.
@@ -57,9 +58,13 @@ const haystackOf = (index: CatalogueIndex): string[] => {
 /**
  * The hits for a term and the chips, the way the API's search reads them: every word must be
  * in the name, the number or the set name; a word that is an energy type filters on type; a
- * set chip matches the set's name whole. The document is newest set first, by number within
- * one, and the hits keep that order. A hit carries no ownership and no price yet: those are
+ * set chip matches the set's name whole. A hit carries no ownership and no price yet: those are
  * `lookupCards`'s to attach.
+ *
+ * What the name begins with comes first (`name-rank.ts`), then what a word inside it begins
+ * with, then the rest: the document is newest set first, which had "char" answering Pecharunt ex
+ * above every Charizard. Inside a band the document's order stands, so a name is still answered
+ * newest printing first.
  */
 export function searchIndex(index: CatalogueIndex, term: string, filters: IndexFilters = {}, page = 1): { items: PokemonCard[]; total: number } {
     const words: string[] = [];
@@ -87,6 +92,10 @@ export function searchIndex(index: CatalogueIndex, term: string, filters: IndexF
             }
         if (all) matched.push(i);
     }
+    // Banded by the name, the document's order kept inside a band. Sorted whole rather than per
+    // page, so page two of a search is the next twenty of one order and not a second one.
+    if (words.length) matched.sort((a, b) => bestBand(index.cards[a]![3], words) - bestBand(index.cards[b]![3], words) || a - b);
+
     const from = (Math.max(1, page) - 1) * INDEX_PAGE_SIZE;
     return { items: matched.slice(from, from + INDEX_PAGE_SIZE).map((i) => hitOf(index, index.cards[i]!)), total: matched.length };
 }

@@ -10,6 +10,7 @@ const index: CatalogueIndex = {
     },
     cards: [
         ["sv03.5-006", "sv03.5", "006", "Charizard ex", "Double Rare", ["Fire"]],
+        ["sv03.5-099", "sv03.5", "099", "Pecharunt ex", "Double Rare", ["Psychic"]],
         ["sv03.5-007", "sv03.5", "007", "Squirtle", "Common", ["Water"], "https://elsewhere/007"],
         ["base1-4", "base1", "4", "Charizard", "Rare Holo", ["Fire"], null],
         ["base1-58", "base1", "58", "Pikachu", "Common", ["Lightning"]],
@@ -28,12 +29,20 @@ describe("catalogueIndexSchema", () => {
 });
 
 describe("searchIndex", () => {
-    it("matches every word against name, number and set name, keeping the document's order", () => {
+    it("matches every word against name, number and set name", () => {
         const { items, total } = searchIndex(index, "charizard");
         expect(items.map((c) => c.id)).toEqual(["sv03.5-006", "base1-4"]);
         expect(total).toBe(2);
         expect(searchIndex(index, "charizard 151").items.map((c) => c.id)).toEqual(["sv03.5-006"]);
         expect(searchIndex(index, "CHARIZARD base").items.map((c) => c.id)).toEqual(["base1-4"]);
+    });
+
+    it("answers what the name begins with first, the document's order inside a band", () => {
+        // "char" is in Pecharunt too, and its printing is the newer one: the document would have
+        // answered it first, which is the letters over what anyone meant.
+        expect(searchIndex(index, "char").items.map((c) => c.id)).toEqual(["sv03.5-006", "base1-4", "sv03.5-099"]);
+        // A word that is the set narrows; the name still decides the order.
+        expect(searchIndex(index, "char 151").items.map((c) => c.id)).toEqual(["sv03.5-006", "sv03.5-099"]);
     });
 
     it("reads an energy word as the type filter, and the chips as the API does", () => {
@@ -48,7 +57,9 @@ describe("searchIndex", () => {
     });
 
     it("draws a hit as the palette reads one: scan at the set's folder unless the card says otherwise", () => {
-        const [charizard, squirtle] = searchIndex(index, "", { set: "151" }).items;
+        const inSet = searchIndex(index, "", { set: "151" }).items;
+        const charizard = inSet.find((c) => c.id === "sv03.5-006");
+        const squirtle = inSet.find((c) => c.id === "sv03.5-007");
         expect(charizard).toMatchObject({
             id: "sv03.5-006",
             tcgId: "sv03.5-006",

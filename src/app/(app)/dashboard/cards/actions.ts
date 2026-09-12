@@ -17,6 +17,7 @@ import { type CardTitle, type TitleSet, distinctTitles, matchTitles } from "@/li
 import { type Card, getMyCards } from "@/lib/cards";
 import { type CardName, type CopyEdits, copyEdits, sameCard } from "@/lib/copies";
 import { type BrowseLanguage, isBrowseLanguage } from "@/lib/languages";
+import { rank } from "@/lib/name-rank";
 import { getSets } from "@/lib/sets";
 import { forgetMine } from "@/lib/user-cache";
 
@@ -47,7 +48,9 @@ export async function searchMyCards(query: string, filters: MyCardsFilters = {})
     if (!q && !set && !rarity) return [];
 
     const { cards } = await getMyCards({ q: q || undefined, set, rarity, facets: false, limit: 20 });
-    return cards;
+    // What the name begins with first, as everywhere else. These twenty are the API's own pick of
+    // the matches, so this orders the page rather than the search: a dialog with no page two.
+    return q ? rank(cards, q, (card) => card.name) : cards;
 }
 
 /** Which list a suggestion may come from: the binder the field sits on, with its filters still on. */

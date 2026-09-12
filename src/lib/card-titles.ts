@@ -1,4 +1,5 @@
 import type { Card } from "@/lib/api-shapes";
+import { band, rank } from "@/lib/name-rank";
 
 /** One suggestion under a collection's search field: the title of a card you hold, and where it sits. */
 export type CardTitle = { name: string; hint: string };
@@ -33,30 +34,6 @@ export function distinctTitles(cards: Card[], limit = Infinity): CardTitle[] {
         const [only] = [...sets];
         return { name, hint: sets.size === 1 && rows.length === 1 && only ? only : `${rows.length} card${rows.length === 1 ? "" : "s"}` };
     });
-}
-
-/**
- * Where the term sits in a name, and so how well it answers what was typed: 0 the name starts
- * with it, 1 a word inside it does, 2 it is in there somewhere.
- *
- * "char" has to offer Charizard before Pecharunt. The API matches the letters wherever they are
- * and answers in its own order, which put Pecharunt ex on top of a list of Charizards: right by
- * the letters, wrong by what anyone meant.
- */
-export function band(name: string, term: string): number {
-    const where = name.toLowerCase().indexOf(term.toLowerCase());
-    if (where < 0) return 3;
-    if (where === 0) return 0;
-    // A word starts after a space or a punctuation mark: "Giovanni's Charisma" starts a word at C.
-    return /[\s'’\-.:(]/.test(name[where - 1]) ? 1 : 2;
-}
-
-/** The same order, over anything with a name: what starts with the term first, the rest behind it. */
-export function rank<T>(items: T[], term: string, nameOf: (item: T) => string): T[] {
-    return items
-        .map((item, at) => ({ item, at, band: band(nameOf(item), term) }))
-        .sort((a, b) => a.band - b.band || a.at - b.at)
-        .map((entry) => entry.item);
 }
 
 /** The titles this term asks for, best first, out of every title held: the search a browser can do itself. */
