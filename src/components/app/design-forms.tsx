@@ -84,10 +84,10 @@ export const formSections: SectionSpec[] = [
         id: "date-picker",
         title: "DatePicker",
         from: "components/application/date-picker/date-picker",
-        note: "A button that says the day and opens the kit's calendar: a month grid, a typed date field and a Today shortcut, then Cancel or Apply. Every acquired date in the app is picked here, through AcquiredDatePicker, which ends the calendar at today. Replaced the browser's own date field, whose look was the browser's and whose segments fought a year being corrected digit by digit.",
+        note: "A button that says the day and opens the kit's calendar: a month grid, a typed date field and a Today shortcut, then Cancel or Apply. Two shapes, added to the kit: filter is a pill that hugs the day, for a bar of filters; field is a rectangle that fills its wrapper and reads like an input, for a form. Every acquired date in the app is the field, through AcquiredDatePicker, which ends the calendar at today. Replaced the browser's own date field, whose look was the browser's and whose segments fought a year being corrected digit by digit.",
         render: (
             <Panel>
-                <Group title="States" cols="wide">
+                <Group title="variant=filter" cols="wide">
                     <Cell label="empty">
                         <DatePicker aria-label="Acquired" />
                     </Cell>
@@ -96,6 +96,17 @@ export const formSections: SectionSpec[] = [
                     </Cell>
                     <Cell label="isDisabled">
                         <DatePicker aria-label="Acquired" isDisabled defaultValue={parseDate("2026-07-09")} />
+                    </Cell>
+                </Group>
+                <Group title="variant=field" cols="wide">
+                    <Cell label="empty">
+                        <DatePicker aria-label="Acquired" variant="field" className="w-full" />
+                    </Cell>
+                    <Cell label="defaultValue">
+                        <DatePicker aria-label="Acquired" variant="field" className="w-full" defaultValue={parseDate("2026-07-09")} />
+                    </Cell>
+                    <Cell label="isDisabled">
+                        <DatePicker aria-label="Acquired" variant="field" className="w-full" isDisabled defaultValue={parseDate("2026-07-09")} />
                     </Cell>
                 </Group>
             </Panel>
