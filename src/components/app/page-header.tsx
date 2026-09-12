@@ -83,9 +83,15 @@ export function PageHeader({
         // One element, so the page's own gap applies once, under it: the distances inside are the spacer's
         // and the 16 px column, whatever the page puts between its sections.
         <div className="flex flex-col">
-            {/* Out to the page's edges and up to its top, cancelling the layout's padding (px-4 pt-4,
-                sm:px-6 sm:py-8), so the band is the page's top edge and the phone's bar floats on it. */}
-            {hero ? <div className="-mx-4 -mt-4 mb-4 sm:-mx-6 sm:-mt-8">{hero}</div> : null}
+            {/* As wide as main and up to its top. The column is centred in main with a ceiling on its
+                width and padding inside it (px-4 pt-4, sm:px-6 sm:py-8), so the band is made main's
+                width (100cqw, main being the container) and pulled left by half the difference, which
+                cancels the column's centring and its padding in one number. The phone's bar floats on it. */}
+            {hero ? (
+                <div className="-mt-4 mb-4 sm:-mt-8" style={{ width: "100cqw", marginLeft: "calc((100% - 100cqw) / 2)" }}>
+                    {hero}
+                </div>
+            ) : null}
             {/* The bar is fixed to the top of the screen, like the tab bar to its bottom, so it stays through
                 the whole page and not only while the header is in view. Collapsed, it stands on the tab bar's
                 glass, running out under its bottom (the same ground as the card sheet's bar), so the buttons
