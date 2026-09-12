@@ -33,7 +33,7 @@ export const useCommandSearch = () => useContext(CommandSearchContext);
 // A search-field-looking button that opens the command palette (used in the desktop sidebar).
 export function SidebarSearchTrigger() {
     const { open } = useCommandSearch();
-    return <SearchTrigger label="Search" onPress={open} />;
+    return <SearchTrigger label="Search" shortcut="/" onPress={open} />;
 }
 
 // The same button at the top of Home on a phone, a size up: the row Home starts with. It opens the
@@ -197,6 +197,24 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
             updateRecentCards([hitFromRows(hit, rows)]);
         });
     };
+
+    /*
+     * "/" opens the palette from anywhere on the page, as it does on GitHub and Linear. Only a
+     * bare slash: one typed into a field or an editable element is text, and one with a
+     * modifier is somebody else's shortcut. The trigger in the sidebar shows the key.
+     */
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey || e.isComposing) return;
+            const t = e.target;
+            if (t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+            e.preventDefault();
+            setWanted(true);
+            setIsOpen(true);
+        };
+        window.addEventListener("keydown", onKey);
+        return () => window.removeEventListener("keydown", onKey);
+    }, []);
 
     return (
         <CommandSearchContext.Provider

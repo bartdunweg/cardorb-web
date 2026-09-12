@@ -16,12 +16,15 @@ import { cx } from "@/utils/cx";
 export function SearchTrigger({
     label,
     size = "sm",
+    shortcut,
     onPress,
     className,
 }: {
     /** The words in the bar, and the button's name: "Search", "Search a card or a set". */
     label: string;
     size?: "sm" | "md";
+    /** The key that also opens it, drawn at the end of the bar as GitHub and Linear do. Hidden from a screen reader: the button's name is the label. */
+    shortcut?: string;
     onPress: () => void;
     className?: string;
 }) {
@@ -36,6 +39,11 @@ export function SearchTrigger({
         >
             <SearchLg className="size-5 text-fg-quaternary" />
             <span className="flex-1 text-left">{label}</span>
+            {shortcut ? (
+                <kbd aria-hidden="true" className="rounded-md px-1.5 py-0.5 font-sans text-xs text-quaternary ring-1 ring-secondary ring-inset">
+                    {shortcut}
+                </kbd>
+            ) : null}
         </AriaButton>
     );
 }
