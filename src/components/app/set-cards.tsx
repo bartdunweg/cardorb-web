@@ -5,12 +5,12 @@ import { SearchLg, SwitchVertical01 } from "@untitledui/icons";
 import dynamic from "next/dynamic";
 import { listRows } from "@/app/(app)/dashboard/cards/actions";
 import { AppEmptyState } from "@/components/app/app-empty-state";
-import { FilterChip } from "@/components/app/filter-chip";
 import { FiltersSheet } from "@/components/app/filters-sheet";
 import { RowButton } from "@/components/app/row-button";
 import { SetCardTile } from "@/components/app/set-card-tile";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Input } from "@/components/base/input/input";
+import { NativeSelect } from "@/components/base/select/select-native";
 import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
 import { GRID_COLUMNS } from "@/lib/cards-view";
@@ -33,7 +33,7 @@ const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-sl
  *
  * Above the grid, the row every list in the app has, in the shape they all have it: the field you
  * type in, then Filters and Sort as the same two buttons, with the filters themselves in the sheet
- * behind the first. Two controls of different heights beside each other was the reason to follow
+ * behind the first on a phone and in the row itself from lg. Two controls of different heights beside each other was the reason to follow
  * that pattern rather than invent a row for this page.
  *
  * It works on the cards the page already holds rather than on the URL, because a set is one page
@@ -70,7 +70,7 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
         const named = [...new Set(cards.map((c) => c.rarity).filter((r): r is string => Boolean(r)))].sort().map((r) => ({ value: r, label: r }));
         // Above the rarities, because it is the question people ask of a set first, and because it
         // cuts across them: one full art is an Ultra Rare and the next is an illustration rare.
-        return fullArt.size > 0 ? [{ value: FULL_ART, label: "Full art", hint: `${fullArt.size} cards` }, ...named] : named;
+        return fullArt.size > 0 ? [{ value: FULL_ART, label: "Full art" }, ...named] : named;
     }, [cards, fullArt]);
     const shown = useMemo(() => {
         const term = q.trim().toLowerCase();
@@ -133,9 +133,27 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
                     onChange={setQ}
                     className="min-w-0 flex-1 basis-48 sm:max-w-64"
                 />
-                <FiltersSheet active={[holding, rarity].filter(Boolean).length}>
-                    <FilterChip label="Cards" any="All cards" value={holding} options={HOLDINGS} onChange={(next) => setHolding(next as Holding | undefined)} />
-                    {rarities.length > 1 ? <FilterChip label="Rarity" value={rarity} options={rarities} onChange={setRarity} /> : null}
+                <FiltersSheet inline active={[holding, rarity].filter(Boolean).length}>
+                    {/* Menus, as a binder's and Browse's: from lg they stand in the row beside Sort, and a chip
+                        there was a control of another height. */}
+                    <NativeSelect
+                        aria-label="Cards"
+                        size="sm"
+                        className="w-auto"
+                        value={holding ?? ""}
+                        onChange={(event) => setHolding(HOLDINGS.find((h) => h.value === event.target.value)?.value)}
+                        options={[{ label: "All cards", value: "" }, ...HOLDINGS]}
+                    />
+                    {rarities.length > 1 ? (
+                        <NativeSelect
+                            aria-label="Rarity"
+                            size="sm"
+                            className="w-auto"
+                            value={rarity ?? ""}
+                            onChange={(event) => setRarity(event.target.value || undefined)}
+                            options={[{ label: "All rarities", value: "" }, ...rarities]}
+                        />
+                    ) : null}
                 </FiltersSheet>
                 <Dropdown.Root>
                     <RowButton icon={SwitchVertical01} label="Sort" menu />
