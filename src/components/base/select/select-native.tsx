@@ -2,6 +2,7 @@
 
 import { type SelectHTMLAttributes, useId } from "react";
 import { ChevronDown } from "@untitledui/icons";
+import { LoadingIndicator } from "@/components/application/loading-indicator/loading-indicator";
 import { HintText } from "@/components/base/input/hint-text";
 import { Label } from "@/components/base/input/label";
 import { cx } from "@/utils/cx";
@@ -11,6 +12,13 @@ interface NativeSelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>
     hint?: string;
     selectClassName?: string;
     size?: "sm" | "md" | "lg";
+    /**
+     * Changed from the kit: the options are still on their way. The chevron becomes a spinner, so a
+     * field whose only option reads "Loading sets…" says that with a moving thing rather than with a
+     * word alone. The field stays operable: disabling it takes it out of the tab order, and with the
+     * spinner hidden from a screen reader that would leave nothing at all to hear.
+     */
+    isLoading?: boolean;
     options: { label: string; value: string; disabled?: boolean }[];
 }
 
@@ -37,7 +45,7 @@ const styles = {
     },
 };
 
-export const NativeSelect = ({ label, hint, options, className, selectClassName, size = "md", ...props }: NativeSelectProps) => {
+export const NativeSelect = ({ label, hint, options, className, selectClassName, size = "md", isLoading, ...props }: NativeSelectProps) => {
     const id = useId();
     const selectId = `select-native-${id}`;
     const hintId = `select-native-hint-${id}`;
@@ -85,10 +93,20 @@ export const NativeSelect = ({ label, hint, options, className, selectClassName,
                     ))}
                 </select>
 
+                {/* In the chevron's place, at the chevron's size: the field keeps its shape while it waits.
+                    Hidden from a screen reader, which hears the wait from the option the field is showing
+                    ("Loading sets…"); the indicator's own "Loading…" would only say it twice. */}
+                {isLoading ? (
+                    <div aria-hidden="true" className={cx("pointer-events-none absolute", size === "sm" ? "right-2.5" : "right-3")}>
+                        <LoadingIndicator size="sm" className="[&_svg]:size-4" />
+                    </div>
+                ) : null}
+
                 <ChevronDown
                     aria-hidden="true"
                     className={cx(
                         "pointer-events-none absolute text-fg-quaternary",
+                        isLoading && "hidden",
 
                         styles[size].icon,
                         // Styles for the icon when the select is within an `InputGroup`

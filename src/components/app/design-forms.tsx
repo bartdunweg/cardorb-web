@@ -341,7 +341,7 @@ export const formSections: SectionSpec[] = [
         id: "native-select",
         title: "NativeSelect",
         from: "components/base/select/select-native",
-        note: "The browser's own select, dressed like the kit's. It is what the app reaches for inside a form on a phone, where the native wheel beats any listbox. Changed from the kit: room on the right for the chevron, which the sm and md sizes did not have.",
+        note: "The browser's own select, dressed like the kit's. It is what the app reaches for inside a form on a phone, where the native wheel beats any listbox. Changed from the kit: room on the right for the chevron, which the sm and md sizes did not have, and an isLoading that puts a spinner where the chevron is while the options are still being read.",
         render: (
             <Panel>
                 <Group title="Sizes" cols="wide">
@@ -364,6 +364,9 @@ export const formSections: SectionSpec[] = [
                     </Cell>
                     <Cell label="defaultValue">
                         <NativeSelect label="Condition" options={conditions} defaultValue="lp" />
+                    </Cell>
+                    <Cell label="isLoading">
+                        <NativeSelect label="Sets" options={[{ label: "Loading sets…", value: "" }]} isLoading />
                     </Cell>
                 </Group>
             </Panel>

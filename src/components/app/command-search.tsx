@@ -150,14 +150,15 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
     /* To the collection, or to the wishlist: the same card cannot be in both, so one press settles
        it. The hit is marked at once (takenHit), because the hits are this component's and no
        refresh re-reads them: the row under the closed preview would still offer the card as one
-       you did not have. `adding` holds the hit whose add is in flight, so its buttons wait. */
-    const [adding, setAdding] = useState<string | null>(null);
+       you did not have. `adding` holds the hit whose add is in flight and which of the two lists it
+       is going to, so both buttons wait and the spinner sits on the one that was pressed. */
+    const [adding, setAdding] = useState<{ id: string; target: "collection" | "wishlist" } | null>(null);
     /* The page behind is re-read when the palette closes, not on every add: read at once, Home
        swapped its welcome for the stats under a palette still open, and the change landed on a
        screen nobody was looking at. Read on close, it lands on the screen you come back to. */
     const wrote = useRef(false);
     const add = async (card: PokemonCard, target: "collection" | "wishlist") => {
-        setAdding(card.id);
+        setAdding({ id: card.id, target });
         const res = await addCard(card, target);
         setAdding(null);
         if (res.ok) {

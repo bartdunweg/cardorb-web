@@ -22,11 +22,14 @@ export function PokedexSettingsDialog({
     setting,
     isPublic,
     facets,
+    facetsLoading,
     compact,
 }: {
     setting: PokedexSetting;
     isPublic: boolean;
     facets: Facets;
+    /** The facets are the page's own Suspense fallback: no rarities yet, rather than none at all. */
+    facetsLoading?: boolean;
     compact?: boolean;
 }) {
     const router = useRouter();
@@ -101,7 +104,13 @@ export function PokedexSettingsDialog({
                                     isSelected={missing}
                                     onChange={setMissing}
                                 />
-                                <RarityPicker label="Rarities that count" options={facets.rarities} selected={rarities} onChange={setRarities} />
+                                <RarityPicker
+                                    label="Rarities that count"
+                                    options={facets.rarities}
+                                    selected={rarities}
+                                    onChange={setRarities}
+                                    isLoading={facetsLoading}
+                                />
                                 <Toggle
                                     label="Show on my public profile"
                                     hint="As a chip beside your binders on your page, drawn the way you see it here. Only while your profile is public."

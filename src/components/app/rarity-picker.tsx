@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadingIndicator } from "@/components/application/loading-indicator/loading-indicator";
 import { Checkbox } from "@/components/base/checkbox/checkbox";
 import { RARITY_SPLITS, SPLIT_RARITY } from "@/lib/folder-rule";
 
@@ -13,6 +14,7 @@ function CheckPicker({
     onChange,
     none,
     loading,
+    isLoading,
 }: {
     label: string;
     options: { value: string; label: string }[];
@@ -20,7 +22,9 @@ function CheckPicker({
     onChange: (values: string[]) => void;
     /** What none ticked means: "Every card, whatever its rarity." */
     none: string;
+    /** What the wait says, shown under the spinner while `isLoading`. */
     loading?: string;
+    isLoading?: boolean;
 }) {
     const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
     const has = (v: string) => selected.some((s) => same(s, v));
@@ -41,8 +45,12 @@ function CheckPicker({
                         />
                     ))}
                 </div>
+            ) : isLoading && loading ? (
+                /* The rarities are still on their way. The kit's indicator rather than the words alone: an
+                   empty fieldset with a grey line in it read as a list with nothing to offer. */
+                <LoadingIndicator size="sm" label={loading} className="py-4" />
             ) : (
-                <p className="text-sm text-tertiary">{loading ?? "Nothing to choose from."}</p>
+                <p className="text-sm text-tertiary">Nothing to choose from.</p>
             )}
         </fieldset>
     );
@@ -57,11 +65,14 @@ export function RarityPicker({
     options,
     selected,
     onChange,
+    isLoading,
 }: {
     label: string;
     options: string[];
     selected: string[];
     onChange: (r: string[]) => void;
+    /** The rarities are still being read; the boxes are a spinner until they are in. */
+    isLoading?: boolean;
 }) {
     // A plain "Ultra Rare" saved before the split means all three of its rows.
     const shown = selected.flatMap((s) => (s.toLowerCase() === SPLIT_RARITY.toLowerCase() ? RARITY_SPLITS.map((k) => `${SPLIT_RARITY} / ${k.id}`) : [s]));
@@ -75,6 +86,7 @@ export function RarityPicker({
             onChange={onChange}
             none="Every card, whatever its rarity."
             loading="Loading rarities…"
+            isLoading={isLoading}
         />
     );
 }

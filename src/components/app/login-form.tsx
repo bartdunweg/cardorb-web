@@ -44,7 +44,7 @@ export const LoginForm = ({ notice }: { notice?: string }) => {
 
                 {state && "error" in state && <FormError error={state.error} />}
 
-                <Button type="submit" size="lg" isDisabled={pending}>
+                <Button type="submit" size="lg" isLoading={pending} showTextWhileLoading>
                     {pending ? "Signing in…" : "Sign in"}
                 </Button>
             </form>

@@ -28,7 +28,7 @@ export const ResetPasswordForm = () => {
 
                 {state && "error" in state && <FormError error={state.error} />}
 
-                <Button type="submit" size="lg" isDisabled={pending}>
+                <Button type="submit" size="lg" isLoading={pending} showTextWhileLoading>
                     {pending ? "Saving…" : "Save password"}
                 </Button>
             </form>
