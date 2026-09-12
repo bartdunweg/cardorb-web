@@ -804,6 +804,21 @@ export const facetsSchema = z.object({
     types: z.array(z.string()),
 });
 
+/**
+ * How many cards each filter choice would leave, given the other filters (`?counts=1`): a set's
+ * number counts the list with every filter on but the set's own. Keyed by the value the filter
+ * takes (a set by its title). Absent from an API before cardorb-api#372.
+ */
+export const filterCountsSchema = z.object({
+    set: z.record(z.string(), z.number()).optional(),
+    rarity: z.record(z.string(), z.number()).optional(),
+    gen: z.record(z.string(), z.number()).optional(),
+    type: z.record(z.string(), z.number()).optional(),
+    fullArt: z.number().optional(),
+    duplicates: z.number().optional(),
+});
+export type FilterCounts = z.infer<typeof filterCountsSchema>;
+
 export const cardsAnswer = z.object({
     /** The list as a person counts it: an owned copy `quantity` times, a wish once. Absent from an API before 2026-09-11. */
     copies: z.number().optional(),
@@ -814,6 +829,7 @@ export const cardsAnswer = z.object({
     unpriced: z.number().optional(),
     /** The catalogue is not answering, so pictures and prices are missing rather than absent. */
     catalogueUnavailable: z.boolean().optional(),
+    counts: filterCountsSchema.optional(),
 });
 
 export const facetsAnswer = z.object({ facets: facetsSchema.optional() });

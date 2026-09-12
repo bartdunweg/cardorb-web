@@ -1,5 +1,5 @@
 import { api } from "@/lib/api";
-import { type Card, type CardItem, cardFromItem, cardsAnswer, facetsAnswer, statsAnswer } from "@/lib/api-shapes";
+import { type Card, type CardItem, type FilterCounts, cardFromItem, cardsAnswer, facetsAnswer, statsAnswer } from "@/lib/api-shapes";
 import { type Facets, facetsFrom } from "@/lib/facets";
 import { perUser } from "@/lib/user-cache";
 
@@ -75,8 +75,15 @@ export async function getMyCards({
     priced,
     duplicates,
     facets: wantFacets,
+    counts: wantCounts = false,
     token,
-}: CardFilter & { limit?: number; offset?: number; token?: string } = {}): Promise<{
+}: CardFilter & {
+    limit?: number;
+    offset?: number;
+    token?: string;
+    /** Ask for how many each filter choice would leave (the Filters sheet); off for a list. */
+    counts?: boolean;
+} = {}): Promise<{
     cards: Card[];
     total: number;
     /** The list as a person counts it: an owned copy `quantity` times, a wish once. Null from an API before it said. */
@@ -92,6 +99,8 @@ export async function getMyCards({
     catalogueUnavailable: boolean;
     /** The sets, rarities, generations and types held, over the whole collection whatever the filters: what the menus offer. */
     facets: Facets;
+    /** Per filter choice, what it would leave; null unless asked for, or from an API that does not answer it yet. */
+    counts: FilterCounts | null;
 }> {
     // The first batch of a list is the read every list page waits on; per person and five
     // minutes it is a cache read instead of a round trip, and a write drops it with the rest
@@ -101,7 +110,7 @@ export async function getMyCards({
             ? `cards:${JSON.stringify([q, collectionId, favoritesOnly, wishlist, sort, order, set, rarity, fullArt, gen, type, number, priced, duplicates, wantFacets])}`
             : null;
     const read = async (token?: string) => {
-        const { cards, total, copies, facets, value, unpriced, catalogueUnavailable } = await api("/cards", {
+        const { cards, total, copies, facets, value, unpriced, catalogueUnavailable, counts } = await api("/cards", {
             schema: cardsAnswer,
             token,
             params: {
@@ -121,6 +130,7 @@ export async function getMyCards({
                 duplicates: duplicates ? 1 : undefined,
                 // The API skips its facets pass when told nobody will read them.
                 facets: wantFacets === false ? 0 : undefined,
+                counts: wantCounts ? 1 : undefined,
                 limit,
                 offset,
             },
@@ -133,6 +143,7 @@ export async function getMyCards({
             unpriced: unpriced ?? 0,
             catalogueUnavailable: catalogueUnavailable === true,
             facets: facetsFrom(facets),
+            counts: counts ?? null,
         };
     };
     // A caller inside the per-user cache (getPokedexCount) hands the token in: the session cannot
