@@ -357,7 +357,7 @@ export function SettingsForm({
                     </AriaButton>
                 </ImportDialog>
                 {/* A file, not a page: the row is a plain link the browser saves, named by the day. */}
-                <SettingsLinkRow icon={Download01} label="Export a CSV file" value="Dex format" href="/dashboard/settings/export" download />
+                <SettingsLinkRow icon={Download01} label="Export a CSV file" value="Collection and wishlist" href="/dashboard/settings/export" download />
             </SettingsGroup>
 
             <SettingsGroup title="Support">
