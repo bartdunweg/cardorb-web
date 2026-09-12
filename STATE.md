@@ -32,7 +32,10 @@ chart and four zeros with nothing to do. Now the floor is ten everywhere, the ad
 sent state replaces the form, and an account that holds and wants nothing gets a welcome on Home
 with Add your first card and Choose your name — the generated `bart-cardorb-test-boaw` kind of
 name is the public address, and the person is told so where they are. Test account
-`bart+cardorb-test@strakzat.com` is still in the database.
+`bart+cardorb-test@strakzat.com` is still in the database. Later that day the set page got its
+band: the logo centred on its own brightest colour, read once from the PNG on the server
+(`src/lib/logo-color.ts`, cached a month by address) and drawn by `SetHero`; grey where no colour
+can be read, the name's first word where there is no logo.
 
 **2026-09-10 and 11.** The API had never been audited. It was, twice — once for security, once
 for the failures that leave no trace — and everything both passes found is closed.

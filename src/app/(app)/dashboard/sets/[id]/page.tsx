@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppEmptyState } from "@/components/app/app-empty-state";
-import { CardImage } from "@/components/app/card-image";
 import { PageHeader } from "@/components/app/page-header";
 import { SetCards } from "@/components/app/set-cards";
+import { SetHero } from "@/components/app/set-hero";
 import { ProgressBarBase } from "@/components/base/progress-indicators/progress-indicators";
 import { formatCount } from "@/lib/format";
 import { isBrowseLanguage } from "@/lib/languages";
+import { logoColor } from "@/lib/logo-color";
 import { CatalogueUnavailable, getSet, getSets } from "@/lib/sets";
 
 // The set's own name in the tab, so a history of open sets is readable.
@@ -62,6 +63,8 @@ export default async function SetPage({ params, searchParams }: { params: Promis
     }
     if (!set) notFound();
 
+    // Read once per logo and cached a month; a logo it cannot be read from gives the band its grey.
+    const color = await logoColor(set.logoUrl);
     const released = releaseLabel(set.releaseDate);
     // The set's own name first where the title is a translation: that is what the pack says.
     const subtitle = [set.localName, set.series, released ? `released ${released}` : null, `${formatCount(set.owned)} of ${formatCount(set.total)} cards`]
@@ -74,14 +77,8 @@ export default async function SetPage({ params, searchParams }: { params: Promis
                 title={set.name}
                 subtitle={subtitle}
                 back={{ href: language === "en" ? "/dashboard/sets" : `/dashboard/sets?language=${language}`, label: "Browse" }}
-                // The set's logo over its name, as it is printed on the pack. Decoration: the h1 says which set.
-                above={
-                    set.logoUrl ? (
-                        <div className="relative h-14 w-48 max-w-full">
-                            <CardImage src={set.logoUrl} alt="" width={192} ratio="square" className="object-contain object-left" />
-                        </div>
-                    ) : undefined
-                }
+                // The set's logo on its own colour, over the name. Decoration: the h1 says which set.
+                above={<SetHero name={set.name} logoUrl={set.logoUrl} color={color} />}
             >
                 {/* Thin and short: the subtitle already says the count in words; the bar is a glance, not a second headline. */}
                 <ProgressBarBase value={set.owned} max={set.total || 1} className="mt-2 h-1 max-w-xs" aria-label={`${set.name} completion`} />

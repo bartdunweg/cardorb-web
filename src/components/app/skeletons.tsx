@@ -240,7 +240,13 @@ export function SetsOutline() {
 export function SetSkeleton() {
     return (
         <SkeletonFrame>
-            <PageHeader title={" "} subtitle={<Line className="h-5 w-40" />} back={{ href: "/dashboard/sets", label: "Browse" }} />
+            <PageHeader
+                title={" "}
+                subtitle={<Line className="h-5 w-40" />}
+                back={{ href: "/dashboard/sets", label: "Browse" }}
+                // The band the logo lands in (set-hero.tsx), at its height, so the title does not move.
+                above={<div className="h-44 rounded-xl bg-skeleton sm:h-56" />}
+            />
             <Outline className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
                 {Array.from({ length: 40 }, (_, i) => (
                     <div key={i} className="aspect-card rounded-card bg-skeleton" />
