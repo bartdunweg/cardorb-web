@@ -5,7 +5,7 @@ import { FlagIcon } from "@/components/app/flag-icon";
 import { BROWSE_LANGUAGES, type BrowseLanguage, isBrowseLanguage } from "@/lib/languages";
 
 /**
- * Which catalogue to read: English, or one of the four TCGdex keeps in its own script. The kit's
+ * Which catalogue to read: English or Japanese. The kit's
  * filter chip, as Set and Type are, wherever a search can change language (Bart's call: a filter
  * like the others, not a row of flags; each choice wears its flag beside its name). English is the default and reads as the chip's label with
  * nothing chosen; another catalogue names itself on the chip. Browse keeps its language behind
