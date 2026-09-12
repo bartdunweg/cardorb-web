@@ -27,9 +27,6 @@ export type PublicProfile = {
     avatar_url: string | null;
     wishlist_public: boolean;
     favorites_public: boolean;
-    pokedex_public: boolean;
-    /** The owner's Pokédex setting, while the Pokédex is shown; null otherwise. */
-    pokedex: PokedexSetting | null;
 };
 
 // The public face of a profile, or null when there is none by that name or it is not public.
@@ -43,8 +40,6 @@ export async function getPublicProfile(username: string): Promise<PublicProfile 
             avatar_url: p.avatarUrl,
             wishlist_public: p.wishlistPublic ?? false,
             favorites_public: p.favoritesPublic ?? false,
-            pokedex_public: p.pokedexPublic ?? false,
-            pokedex: p.pokedex ?? null,
         };
     } catch (err) {
         if (err instanceof ApiError && err.status === 404) return null;

@@ -759,12 +759,10 @@ export const ownProfileSchema = z.object({
     isPublic: z.boolean(),
     /** The wishlist on the public profile too. Absent from an API before #176. */
     wishlistPublic: z.boolean().nullish(),
-    /** The favorites and the Pokédex on the public profile too. Absent from an API before #187. */
+    /** The favorites on the public profile too. Absent from an API before #187. */
     favoritesPublic: z.boolean().nullish(),
-    pokedexPublic: z.boolean().nullish(),
     avatarUrl: nullable(z.string()),
     onboardedAt: nullable(z.string()),
-    pokedex: pokedexSettingSchema.nullish(),
     email: z.string(),
 });
 export type OwnProfile = z.infer<typeof ownProfileSchema>;
@@ -776,11 +774,8 @@ export type Profile = {
     is_public: boolean;
     /** The wishlist shows on the public profile as well, while it is public. */
     wishlist_public: boolean;
-    /** The favorites and the Pokédex show on the public profile as well, while it is public. */
+    /** The favorites show on the public profile as well, while it is public. */
     favorites_public: boolean;
-    pokedex_public: boolean;
-    /** How the built-in Pokédex shows; null is every slot, missing ones too. */
-    pokedex: PokedexSetting | null;
 };
 
 export const profileFromOwn = (p: OwnProfile): Profile => ({
@@ -790,8 +785,6 @@ export const profileFromOwn = (p: OwnProfile): Profile => ({
     is_public: p.isPublic,
     wishlist_public: p.wishlistPublic ?? false,
     favorites_public: p.favoritesPublic ?? false,
-    pokedex_public: p.pokedexPublic ?? false,
-    pokedex: p.pokedex ?? null,
 });
 
 // ── What each route answers ───────────────────────────────────────────────────────────────
@@ -909,8 +902,6 @@ export const publicProfileAnswer = z.object({
     avatarUrl: nullable(z.string()),
     wishlistPublic: z.boolean().nullish(),
     favoritesPublic: z.boolean().nullish(),
-    pokedexPublic: z.boolean().nullish(),
-    pokedex: pokedexSettingSchema.nullish(),
 });
 
 /**
