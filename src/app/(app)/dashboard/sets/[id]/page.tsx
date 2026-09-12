@@ -5,10 +5,12 @@ import { AppEmptyState } from "@/components/app/app-empty-state";
 import { PageHeader } from "@/components/app/page-header";
 import { SetCards } from "@/components/app/set-cards";
 import { SetHero } from "@/components/app/set-hero";
+import { SetFacts, SetStatTiles } from "@/components/app/set-stats";
 import { SetSkeleton } from "@/components/app/skeletons";
 import { formatCount } from "@/lib/format";
 import { isBrowseLanguage } from "@/lib/languages";
 import { logoPalette } from "@/lib/logo-color";
+import { setStats } from "@/lib/set-stats";
 import { CatalogueUnavailable, getSet, getSets } from "@/lib/sets";
 
 // The set's own name in the tab, so a history of open sets is readable.
@@ -77,22 +79,24 @@ async function Set({ params, searchParams }: { params: Promise<{ id: string }>; 
     // Read once per logo and cached a month; a logo they cannot be read from gives the wash its grey.
     const colors = await logoPalette(set.logoUrl);
     const released = releaseLabel(set.releaseDate);
-    // The set's own name first where the title is a translation: that is what the pack says.
-    const subtitle = [set.localName, set.series, released ? `released ${released}` : null, `${formatCount(set.owned)} of ${formatCount(set.total)} cards`]
-        .filter(Boolean)
-        .join(" · ");
+    // The counts over the set's own total rather than the cards read, which is the same number on
+    // every set the catalogue has recorded and the catalogue's own count on one it has not.
+    const stats = { ...setStats(set.cards, set.total), owned: set.owned };
 
     return (
         <div className="flex flex-1 flex-col gap-6">
             <PageHeader
                 title={set.name}
-                subtitle={subtitle}
                 back={{ href: language === "en" ? "/dashboard/sets" : `/dashboard/sets?language=${language}`, label: "Browse" }}
                 // The set's logo on its own colour, edge to edge over the name. Decoration: the h1 says
-                // which set. No progress bar under the title: the subtitle says the count, and the
-                // owner's call is that the page shows the cards, not a meter.
+                // which set. No progress bar under the title: the owner's call is that the page
+                // shows the cards, not a meter, so the tiles under the title say the count in words.
                 hero={<SetHero name={set.name} logoUrl={set.logoUrl} colors={colors} />}
-            />
+            >
+                {/* The set's own name first where the title is a translation: that is what the pack says. */}
+                <SetFacts name={set.name} series={set.series} localName={set.localName} released={released} total={set.total} printedTotal={set.printedTotal} />
+                {set.cards.length > 0 ? <SetStatTiles stats={stats} /> : null}
+            </PageHeader>
 
             {set.cards.length === 0 ? (
                 /* TCGdex lists a set and its count long before it records the cards: 68 of the 184
