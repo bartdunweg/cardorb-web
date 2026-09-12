@@ -16,6 +16,8 @@ describe("languageOf", () => {
     it("offers the Western printings for an English-catalogue card and one fixed language for the others", () => {
         expect(languagesFor(null).map((l) => l.code)).toEqual(["en", "de", "fr", "it", "es", "pt", "nl"]);
         expect(languagesFor("en").length).toBe(7);
+        // A German copy is the English catalogue's card in German: every Western language stays on offer.
+        expect(languagesFor("de").map((l) => l.code)).toEqual(["en", "de", "fr", "it", "es", "pt", "nl"]);
         expect(languagesFor("ja").map((l) => l.code)).toEqual(["ja"]);
         expect(languagesFor("zh-tw").map((l) => l.code)).toEqual(["zh-tw"]);
         expect(languagesFor("zh-cn").map((l) => l.code)).toEqual(["zh-cn"]);
