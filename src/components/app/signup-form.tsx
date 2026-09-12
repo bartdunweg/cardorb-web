@@ -83,7 +83,7 @@ export const SignupForm = () => {
 
                 {state && "error" in state && <FormError error={state.error} />}
 
-                <Button type="submit" size="lg" isDisabled={pending}>
+                <Button type="submit" size="lg" isDisabled={pending} isLoading={pending} showTextWhileLoading>
                     {pending ? "Creating account…" : "Get started"}
                 </Button>
             </form>

@@ -178,7 +178,14 @@ export function CardsList({
                     {more ? (
                         <div ref={sentinel} className="flex flex-col items-center gap-3 py-2">
                             {failed ? <p className="text-sm text-tertiary">The next cards did not load.</p> : null}
-                            <Button color={failed ? "secondary" : "tertiary"} size="sm" onClick={loadMore} aria-disabled={pending || undefined}>
+                            <Button
+                                color={failed ? "secondary" : "tertiary"}
+                                size="sm"
+                                onClick={loadMore}
+                                aria-disabled={pending || undefined}
+                                isLoading={pending}
+                                showTextWhileLoading
+                            >
                                 {pending ? "Loading…" : failed ? "Try again" : "Show more"}
                             </Button>
                         </div>

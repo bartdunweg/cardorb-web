@@ -36,7 +36,8 @@ function CardPreview({
     onView,
 }: {
     card: PokemonCard;
-    adding: boolean;
+    /** Which list this card is on its way to, or null: the button that was pressed carries the spinner. */
+    adding: "collection" | "wishlist" | null;
     onAdd: (target: "collection" | "wishlist") => void;
     onView: () => void;
 }) {
@@ -99,10 +100,12 @@ function CardPreview({
                         onAdd("collection");
                         focusField();
                     }}
-                    isDisabled={adding || card.owned}
+                    isDisabled={adding !== null || card.owned}
+                    isLoading={adding === "collection"}
+                    showTextWhileLoading
                     className="w-full"
                 >
-                    {card.owned ? "In your collection" : adding ? "Adding…" : "Add to collection"}
+                    {card.owned ? "In your collection" : adding === "collection" ? "Adding…" : "Add to collection"}
                 </Button>
                 <Button
                     color="secondary"
@@ -110,10 +113,12 @@ function CardPreview({
                         onAdd("wishlist");
                         focusField();
                     }}
-                    isDisabled={adding || card.owned || card.wishlist}
+                    isDisabled={adding !== null || card.owned || card.wishlist}
+                    isLoading={adding === "wishlist"}
+                    showTextWhileLoading
                     className="w-full"
                 >
-                    {card.wishlist ? "On your wishlist" : adding ? "Adding…" : "Add to wishlist"}
+                    {card.wishlist ? "On your wishlist" : adding === "wishlist" ? "Adding…" : "Add to wishlist"}
                 </Button>
                 {/* The card in full: the sheet over the palette, with the price line, the copies and the
                     binders the preview has no room for. */}
@@ -208,8 +213,8 @@ export function CommandSearchMenu({
     onLoadMore: () => void;
     /** How many the whole search matched; null where the API did not say. Capped at 250 there, read as "250+". */
     total: number | null;
-    /** The id of the hit whose add is on its way, so its buttons wait; null while none is. */
-    adding: string | null;
+    /** The hit whose add is on its way and which list it is going to, so its buttons wait; null while none is. */
+    adding: { id: string; target: "collection" | "wishlist" } | null;
     onAdd: (card: PokemonCard, target: "collection" | "wishlist") => void;
     /** View details pressed in the preview: the card's full sheet over the palette. */
     onView: (card: PokemonCard) => void;
@@ -379,7 +384,14 @@ export function CommandSearchMenu({
                         // A hit, or a recent card, which is previewed and taken the same way.
                         const card = hits.find((h) => h.id === selectedId) ?? recent.find((c) => recentId(c) === selectedId);
                         if (!card) return null;
-                        return <CardPreview card={card} adding={adding === card.id} onAdd={(target) => onAdd(card, target)} onView={() => onView(card)} />;
+                        return (
+                            <CardPreview
+                                card={card}
+                                adding={adding?.id === card.id ? adding.target : null}
+                                onAdd={(target) => onAdd(card, target)}
+                                onView={() => onView(card)}
+                            />
+                        );
                     }}
                 </CommandMenu.Preview>
             </CommandMenu.Group>

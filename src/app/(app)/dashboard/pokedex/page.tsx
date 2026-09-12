@@ -57,7 +57,15 @@ export default async function PokedexPage({ searchParams }: { searchParams: Prom
             datapoints={datapoints}
             settings={(compact) => (
                 <Suspense
-                    fallback={<PokedexSettingsDialog setting={setting} isPublic={me.profile?.pokedex_public ?? false} facets={NO_FACETS} compact={compact} />}
+                    fallback={
+                        <PokedexSettingsDialog
+                            setting={setting}
+                            isPublic={me.profile?.pokedex_public ?? false}
+                            facets={NO_FACETS}
+                            facetsLoading
+                            compact={compact}
+                        />
+                    }
                 >
                     <SettingsWhenReady setting={setting} isPublic={me.profile?.pokedex_public ?? false} facets={facets} compact={compact} />
                 </Suspense>

@@ -9,6 +9,7 @@ import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { useCommandSearch } from "@/components/app/command-search";
 import { notify } from "@/components/app/toast";
+import { LoadingIndicator } from "@/components/application/loading-indicator/loading-indicator";
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { Button } from "@/components/base/buttons/button";
 import { styles } from "@/components/base/buttons/button-styles";
@@ -142,8 +143,16 @@ function OwnCardsPicker({ folder, close }: { folder: { id: string; name: string 
                 wrapperClassName="rounded-full"
             />
             <div className="flex min-h-40 flex-col gap-1 overflow-y-auto">
+                {/* While the answer is on its way: the kit's indicator, with the same word under it. Hidden
+                    from a screen reader, because the region below already says it and that region has to stay
+                    mounted through every state to be read at all. */}
+                {loading ? (
+                    <div aria-hidden="true" className="flex justify-center px-1 py-6">
+                        <LoadingIndicator size="sm" label="Searching…" />
+                    </div>
+                ) : null}
                 {/* One live region, always mounted, so a screen reader hears the state change. */}
-                <output aria-live="polite" className={cx("text-center text-sm text-tertiary", searchState ? "px-1 py-6" : "sr-only")}>
+                <output aria-live="polite" className={cx("text-center text-sm text-tertiary", searchState && !loading ? "px-1 py-6" : "sr-only")}>
                     {searchState}
                 </output>
                 {failed && !loading ? (

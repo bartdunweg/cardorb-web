@@ -179,6 +179,7 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
                     <div className="flex flex-col gap-1.5">
                         <NativeSelect
                             label="Sets"
+                            isLoading={!loaded}
                             value=""
                             onChange={(event) => {
                                 if (event.target.value) setSets((s) => [...s, event.target.value]);
@@ -209,6 +210,7 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
                     <div className="flex flex-col gap-1.5">
                         <NativeSelect
                             label="Rarities"
+                            isLoading={!loaded}
                             value=""
                             onChange={(event) => {
                                 if (event.target.value) setRarities((r) => [...r, event.target.value]);
@@ -250,7 +252,7 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
                 <>
                     <DexRangeFields label="Pokédex range" anyLabel="Every Pokémon" dex={dexShown} onChange={setDexShown} />
                     <Toggle label="Show the Pokémon I'm missing" isSelected={missing} onChange={setMissing} />
-                    <RarityPicker label="Rarities that count" options={facets.rarities} selected={dexRarities} onChange={setDexRarities} />
+                    <RarityPicker label="Rarities that count" options={facets.rarities} selected={dexRarities} onChange={setDexRarities} isLoading={!loaded} />
                 </>
             ) : null}
             <Toggle
