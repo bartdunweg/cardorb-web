@@ -31,6 +31,18 @@ then the rest, the document's order kept inside a band (#471). Left as it was: t
 for the other language shelves, where the palette pages a search it did not sort, and re-ordering
 one page would read as an order the whole search does not have.
 
+**2026-09-12, the toast above the dialog.** Bart: a card added from a dialog put the
+confirmation behind it. The toaster was mounted inside the frame div, which carries `isolate`,
+and that stacking context caps every z-index inside it at the div's own place on the page, so
+sonner's 999999999 counted for nothing against a dialog or a slideout, both `fixed z-50` in a
+portal on the body. It sits outside that div now, beside `RouteProgress`, where it shares the
+body's stacking context with the overlays and wins on its own z-index; the frame keeps its
+`isolate` for the page wash, which is what it was there for. Checked with a dialog open:
+`elementFromPoint` at the middle of the toast returns the toast (#469). Still open, and not a
+regression: while a dialog holds the focus, react-aria traps it, so the Undo and the cross in a
+toast cannot be reached with a keyboard. A failure toast, which does not leave on its own, is
+the case that matters.
+
 **2026-09-12, the warm lists.** Two more things measured and thrown away: a first batch of 24
 instead of 48 (266 to 353 ms against 264 to 399 ms) and skipping the API's facets pass (243 to
 442 ms). The row count and the facets are not what the read costs, so nothing in this app makes it
