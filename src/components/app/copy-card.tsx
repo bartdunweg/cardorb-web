@@ -118,6 +118,7 @@ export function CopyCard({
     const solePattern = soleOption(patterns);
     const edition = shown.edition !== undefined ? (shown.edition ?? "") : (row.edition ?? "");
     const editions = editionOptions(facts, row.edition ?? null, language);
+    const soleEdition = soleOption(editions);
     /* The ordinary price beside the run that has its own, so the two can be read against each
        other. The ordinary one is `price` on a row whose edition says nothing, which is every row
        until somebody says otherwise; where a run is recorded the row already shows that run's.
@@ -289,7 +290,12 @@ export function CopyCard({
 
             {/* Asked only where the catalogue says a stamped run of this card exists, or says
                 nothing at all. A card printed once has no run to choose. */}
-            {editions.length ? (
+            {soleEdition ? (
+                <div className={field}>
+                    Edition
+                    <span className="text-secondary">{soleEdition.label}</span>
+                </div>
+            ) : editions.length ? (
                 <div className={field}>
                     Edition
                     <NativeSelect

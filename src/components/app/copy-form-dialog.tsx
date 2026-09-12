@@ -81,6 +81,9 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
     const effectivePattern = pattern || solePattern?.value || "";
     // Asked only of a card the catalogue says had a stamped run, or says nothing about.
     const editions = editionOptions(facts, from.edition ?? null, language);
+    // A card printed in one run only states it, and the save records it, as the finish does.
+    const soleEdition = soleOption(editions);
+    const effectiveEdition = edition || soleEdition?.value || "";
 
     const edits = (): CopyEdits => {
         const out: CopyEdits = {};
@@ -93,7 +96,7 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
         if (fin !== (from.finish ?? null)) out.finish = fin;
         const pat = (effectivePattern || null) as CopyEdits["foilPattern"];
         if (pat !== (from.foil_pattern ?? null)) out.foilPattern = pat;
-        const ed = (edition || null) as CopyEdits["edition"];
+        const ed = (effectiveEdition || null) as CopyEdits["edition"];
         if (ed !== (from.edition ?? null)) out.edition = ed;
         if ((folder || null) !== (from.collection_id ?? null)) out.collectionId = folder || null;
         const p = price.trim() === "" ? null : Number(price);
@@ -306,7 +309,12 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
                 </div>
             ) : null}
 
-            {editions.length ? (
+            {soleEdition ? (
+                <div className={row}>
+                    Edition
+                    <span className="text-secondary">{soleEdition.label}</span>
+                </div>
+            ) : editions.length ? (
                 <div className={row}>
                     Edition
                     <NativeSelect

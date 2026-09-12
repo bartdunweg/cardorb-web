@@ -79,7 +79,7 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
             grade: graded ? gradeLabel(grader, gradeValue) : null,
             finish: (effectiveFinish || null) as CopyEdits["finish"],
             foilPattern: (effectivePattern || null) as CopyEdits["foilPattern"],
-            edition: (edition || null) as CopyEdits["edition"],
+            edition: (effectiveEdition || null) as CopyEdits["edition"],
             collectionId: folder || null,
             purchasePrice: price.trim() === "" ? null : Number(price),
             acquiredAt: date || today(),
@@ -119,6 +119,9 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
        opened again to say so. Asked only of a card that had more than one run
        (cardorb-api#342). */
     const editions = editionOptions(facts, card.edition ?? null, language);
+    // A card printed in one run only states it, and the save records it, as the finish does.
+    const soleEdition = soleOption(editions);
+    const effectiveEdition = edition || soleEdition?.value || "";
 
     return (
         <form
@@ -267,7 +270,12 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
                 </div>
             ) : null}
 
-            {editions.length ? (
+            {soleEdition ? (
+                <div className={row}>
+                    Edition
+                    <span className="text-secondary">{soleEdition.label}</span>
+                </div>
+            ) : editions.length ? (
                 <div className={row}>
                     Edition
                     <NativeSelect

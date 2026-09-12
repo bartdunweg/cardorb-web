@@ -42,6 +42,18 @@ export function LanguageSelect({
 }) {
     const options = languagesFor(value, printed);
 
+    /* A card printed in one language only is not a question, the rule every other field of the
+       form follows (soleOption): the language is stated beside its flag. */
+    if (options.length === 1) {
+        const only = options[0]!;
+        return (
+            <span className={cx("flex items-center gap-2 text-secondary", className)}>
+                <FlagIcon language={only.code} size="sm" labelled />
+                {only.label}
+            </span>
+        );
+    }
+
     return (
         <Select
             aria-label="Language"

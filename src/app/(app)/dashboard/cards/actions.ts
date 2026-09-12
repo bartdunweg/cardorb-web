@@ -514,11 +514,16 @@ export type CardFacts = {
      */
     firstEdition: boolean | null;
     /**
-     * The print runs a copy of this card can be from: the stamped run where TCGdex says there is
-     * one, and Shadowless where Cardmarket prices one (which is Base Set and nowhere else). Null
-     * where nothing could say, and then every run is offered.
+     * The print runs a copy of this card can be from, as TCGplayer and TCGdex name them: no
+     * unlimited run for a card only ever printed stamped, Shadowless where TCGplayer has a product
+     * for it. Null where nothing could say, and then every run is offered.
      */
     editions: Edition[] | null;
+    /**
+     * The foil patterns a copy can be recorded with. Empty is an answer: a Wizards holo had its
+     * set's one foil, so there is nothing to ask. Null is no answer, and the printings decide.
+     */
+    foilPatterns: string[] | null;
     /** TCGplayer's price for the printing, converted: the market figure and its lowest listing. */
     price: { low: number | null; market: number | null } | null;
 };
@@ -540,6 +545,7 @@ export async function cardFacts(tcgId: string): Promise<CardFacts | null> {
             eraRarities: Array.isArray(c.eraRarities) && c.eraRarities.length ? c.eraRarities : null,
             printings: Array.isArray(c.printings) ? c.printings : [],
             editions: Array.isArray(c.editions) ? c.editions : null,
+            foilPatterns: Array.isArray(c.foilPatterns) ? c.foilPatterns : null,
             firstEdition: c.firstEdition ?? null,
             price: c.price ? { low: c.price.low, market: c.price.market } : null,
         };
