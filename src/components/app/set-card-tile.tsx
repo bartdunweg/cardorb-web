@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { Check, DotsHorizontal, Heart, Minus, Plus, Rows01, Trash01 } from "@untitledui/icons";
+import { Check, Heart, Minus, Plus } from "@untitledui/icons";
 import { Button as AriaButton } from "react-aria-components";
 import { addCard, removeCard, rereadMine, restoreCard, setCopies } from "@/app/(app)/dashboard/cards/actions";
 import { CardBack } from "@/components/app/card-back";
@@ -11,7 +11,6 @@ import { GotItButton } from "@/components/app/got-it-button";
 import { TileIconButton } from "@/components/app/tile-icon-button";
 import { notify } from "@/components/app/toast";
 import { useWarm } from "@/components/app/use-warm";
-import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
 import { TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
 import { formatPrice } from "@/lib/format";
@@ -21,9 +20,9 @@ type Result = { ok: true } | { ok: false; error: string };
 
 /**
  * One card of a set, and what you can do with it from here. A card you do not hold has two round
- * buttons under it, the wishlist and the collection; one on the wishlist has the wishlist's check
- * and a menu (remove it, the way to it); one you hold has a minus where the heart was, the plus,
- * and the menu (the way to it). Copies are only offered
+ * buttons under it, the wishlist and the collection; one on the wishlist has the heart filled, in
+ * pink, which takes it off again, and the wishlist's check; one you hold has a minus where the
+ * heart was and the plus. No menu on any of them. Copies are only offered
  * when the card is one row, which is nearly always: a card held as two printings is managed
  * in Cards, where each printing is its own row.
  *
@@ -223,19 +222,12 @@ export function SetCardTile({
                        still names it, as it names every card. */
                     <CardBack width={TILE_WIDTH.md} sizes={TILE_SIZES.md} priority={priority} />
                 )}
-                {state !== "missing" ? (
-                    <span
-                        className={cx(
-                            "absolute top-1.5 right-1.5 flex h-5 min-w-5 items-center justify-center gap-0.5 rounded-full px-1 text-2xs font-semibold shadow-xs",
-                            // The wishlist heart is a meaningful graphic (on a grid of 129 tiles it is
-                            // the one mark that says "you already want this"), so it owes 3:1 against the
-                            // tile it sits on. fg-quaternary is 2.58:1 on white; fg-tertiary clears it in
-                            // both themes.
-                            state === "owned" ? "bg-primary-solid text-primary_on-brand" : "bg-primary text-fg-tertiary ring-1 ring-secondary",
-                        )}
-                    >
-                        {state === "owned" ? <Check className="size-3" aria-hidden="true" /> : <Heart className="size-3" aria-hidden="true" />}
-                        {state === "owned" && held > 1 ? <span className="tabular-nums">{held}</span> : null}
+                {/* Only a card you hold is marked on the picture. A wish is said by the pink heart under
+                    it, and a second heart on the art said the same thing twice. */}
+                {state === "owned" ? (
+                    <span className="absolute top-1.5 right-1.5 flex h-5 min-w-5 items-center justify-center gap-0.5 rounded-full bg-primary-solid px-1 text-2xs font-semibold text-primary_on-brand shadow-xs">
+                        <Check className="size-3" aria-hidden="true" />
+                        {held > 1 ? <span className="tabular-nums">{held}</span> : null}
                     </span>
                 ) : null}
             </AriaButton>
@@ -254,22 +246,23 @@ export function SetCardTile({
                     and the buttons ran 6 px past the tile, behind the card beside it. A line of their
                     own costs 32 px a tile and fits at every width. */}
                 <div className="mt-0.5 flex items-center gap-2">
-                    {/* The same two numbers a tile carries on every other list: how many you hold on
-                        the left, what one is worth on the right. A set page was the one place that
+                    {/* The two numbers a tile carries: what one is worth on the left, under the name it
+                        belongs to (Bart's call, 2026-09-13: the price read loose against the right
+                        edge), and how many you hold on the right. A set page was the one place that
                         said only the price, so a card you held four of looked like a card you held. */}
-                    {/* Polite: a press says its new count, with no toast for a change you are looking at. */}
-                    <span aria-live="polite" className="text-sm font-medium text-tertiary tabular-nums">
-                        {held > 0 ? (
-                            <>
-                                <span className="sr-only">You hold </span>×{held}
-                            </>
-                        ) : null}
-                    </span>
-                    <span className="ml-auto text-sm font-medium text-primary tabular-nums">
+                    <span className="text-sm font-medium text-primary tabular-nums">
                         {card.price != null ? (
                             <>
                                 <span className="sr-only">Market price </span>
                                 {formatPrice(card.price)}
+                            </>
+                        ) : null}
+                    </span>
+                    {/* Polite: a press says its new count, with no toast for a change you are looking at. */}
+                    <span aria-live="polite" className="ml-auto text-sm font-medium text-tertiary tabular-nums">
+                        {held > 0 ? (
+                            <>
+                                <span className="sr-only">You hold </span>×{held}
                             </>
                         ) : null}
                     </span>
@@ -278,40 +271,30 @@ export function SetCardTile({
                     round size, the one you reach for most against the right edge. A card you do not hold
                     has two answers, the collection or the wishlist, so both are buttons and there is no
                     menu: the heart sat behind a dots button, one press further than the plus for no reason.
-                    A card you want gets the check the wishlist's own tiles carry, in the same place; the
-                    menu stays for the rest (removing it, a copy more or less, the way to it). */}
+                    A card you want keeps the heart, filled and pink, and pressed again it comes off the
+                    wishlist; beside it the check the wishlist's own tiles carry. A card you hold has the
+                    minus and the plus. No menu anywhere: Bart's call, 2026-09-13. Every answer it held is
+                    a button here or in the card's sheet, which the picture opens. */}
                 <div ref={buttons} className="mt-1 flex justify-end gap-1">
-                    {state !== "missing" ? (
-                        <Dropdown.Root>
-                            <TileIconButton icon={DotsHorizontal} label={`What to do with ${card.name} #${card.number}`} />
-                            <Dropdown.Popover className="w-56">
-                                <Dropdown.Menu>
-                                    {state === "wishlist" ? (
-                                        <>
-                                            {oneRow ? (
-                                                <Dropdown.Item icon={Trash01} onAction={() => run(() => removeCard(rowId))}>
-                                                    Remove from wishlist
-                                                </Dropdown.Item>
-                                            ) : null}
-                                            <Dropdown.Item icon={Heart} href={`/dashboard/wishlist?q=${encodeURIComponent(card.name)}`}>
-                                                Open in Wishlist
-                                            </Dropdown.Item>
-                                        </>
-                                    ) : (
-                                        <>
-                                            {steps && held <= 1 ? (
-                                                <Dropdown.Item icon={Trash01} onAction={() => press(0)}>
-                                                    Remove from collection
-                                                </Dropdown.Item>
-                                            ) : null}
-                                            <Dropdown.Item icon={Rows01} href={`/dashboard/cards?q=${encodeURIComponent(card.name)}`}>
-                                                Open in Collection
-                                            </Dropdown.Item>
-                                        </>
-                                    )}
-                                </Dropdown.Menu>
-                            </Dropdown.Popover>
-                        </Dropdown.Root>
+                    {state === "wishlist" && oneRow ? (
+                        <TileIconButton
+                            icon={Heart}
+                            on="wishlist"
+                            label={`Remove ${card.name} #${card.number} from your wishlist`}
+                            pending={pending}
+                            onPress={() =>
+                                run(
+                                    () => removeCard(rowId),
+                                    (res) => {
+                                        const removed = res.card;
+                                        notify.removed(
+                                            `${card.name} is off your wishlist`,
+                                            removed ? { undo: { label: "Put back", onUndo: () => void restoreCard(removed) } } : {},
+                                        );
+                                    },
+                                )
+                            }
+                        />
                     ) : null}
                     {state === "missing" ? (
                         <>

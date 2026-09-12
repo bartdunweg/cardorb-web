@@ -32,12 +32,13 @@ import { HoloCard } from "@/components/app/holo-card";
 import { MarkOwnedDialog } from "@/components/app/mark-owned-dialog";
 import { SheetActionBar } from "@/components/app/sheet-action-bar";
 import { SheetBar } from "@/components/app/sheet-bar";
+import { MARK_ON } from "@/components/app/tile-icon-button";
 import { notify } from "@/components/app/toast";
 import { TypeIcon } from "@/components/app/type-icon";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Tab, TabList, TabPanel, Tabs } from "@/components/application/tabs/tabs";
 import { Badge } from "@/components/base/badges/badges";
-import { Button } from "@/components/base/buttons/button";
+import { Button, styles as buttonStyles } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Tooltip } from "@/components/base/tooltip/tooltip";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
@@ -726,15 +727,25 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                     <>
                                         {mine.owned ? (
                                             <Tooltip title={isStarred ? "Remove from Favorites" : "Add to Favorites"}>
+                                                {/* Set, the star is filled on yellow, the favourites' own colour, as a set
+                                                    wish is a filled heart on pink under a tile (MARK_ON). It was the primary
+                                                    button, white in dark mode, which read as the sheet's main action rather
+                                                    than as "this one is a favourite". */}
                                                 <Button
-                                                    color={isStarred ? "primary" : "tertiary"}
+                                                    color="tertiary"
                                                     size="lg"
-                                                    iconLeading={Star01}
+                                                    iconLeading={
+                                                        isStarred ? (
+                                                            <Star01 data-icon="leading" className={cx(buttonStyles.common.icon, "fill-current")} />
+                                                        ) : (
+                                                            Star01
+                                                        )
+                                                    }
                                                     aria-label="Favorite"
                                                     aria-pressed={isStarred}
                                                     isLoading={starring}
                                                     onClick={toggleStar}
-                                                    className={isStarred ? undefined : "glass text-primary ring-1 ring-glass ring-inset"}
+                                                    className={isStarred ? MARK_ON.favorite : "glass text-primary ring-1 ring-glass ring-inset"}
                                                 />
                                             </Tooltip>
                                         ) : null}
