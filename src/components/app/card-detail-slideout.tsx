@@ -44,7 +44,7 @@ import { useBreakpoint } from "@/hooks/use-breakpoint";
 import { type PokemonCard, type RemovedCard, isReverseFinish } from "@/lib/api-shapes";
 import { binderFromPath, isBinderPath } from "@/lib/binder-from-path";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
-import { type CopyGroup, groupCopies, printingLabel, sortCopies } from "@/lib/copies";
+import { type CopyGroup, groupCopies, sortCopies } from "@/lib/copies";
 import { matchesRule } from "@/lib/folder-rule";
 import { formatDate, formatPrice } from "@/lib/format";
 import { orientationNeedsPermission, requestOrientation } from "@/lib/holo/orientation";
@@ -1184,12 +1184,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                     <DetailRow label="Lowest listing" value={formatPrice(known.price.low)} late />
                                                 ) : null}
                                             </dl>
-                                            {/* Said plainly either way: which market and printing, or that no market prices it. */}
-                                            <p className="text-xs text-tertiary">
-                                                {mine.price != null
-                                                    ? `TCGplayer${mine.price_printing ? `, ${printingLabel(mine.price_printing)}` : ""}, converted to euros. Ungraded.`
-                                                    : "TCGplayer has no price for this card. Sold listings on eBay are the nearest check."}
-                                            </p>
                                             {/* Where to check it: the page the figure came from, and what the card sold for,
                                                 raw and as a PSA 10, which no market here prices. The kit's secondary button,
                                                 as a link, full width and one under the other (Bart, 2026-09-12). A list, so a screen reader says how many there
