@@ -7,7 +7,7 @@ import { cx } from "@/utils/cx";
  * A catalogue page leads with its artwork the way an album page does: Spotify, YouTube Music and
  * TIDAL all draw the cover large with a wash of its colour behind it, and a set's logo is its
  * cover. The wash is the logo's own two or three colours (`logo-color.ts`), each a soft pool of
- * light from a different point along the top, fading to nothing before the title: a tint of the
+ * light from a different point along the top, fading to nothing well below the logo: a tint of the
  * page, never a block of colour. It runs the whole width of the window, behind the floating
  * sidebar and under the phone's bar, because it is the page's ground lit up and the ground does
  * not stop at a column. The logo stays in the column, centred. A logo whose colours cannot be
@@ -50,6 +50,9 @@ export function SetHero({ name, logoUrl, colors }: { name: string; logoUrl: stri
         <>
             {/* Across the whole window: positioned by the app frame (the `relative isolate` root in the
                 app layout), not by the page's column, so the sidebar floats on it. */}
+            {/* Twice the band's height, so the colour keeps fading well past the logo rather than
+                stopping with it. It reaches the title and the line under it at a fraction of its own
+                strength; measured there, both stay far above the AA contrast they need. */}
             <SetWash colors={colors} className="inset-x-0 top-0 h-56 sm:h-64" />
             <div aria-hidden="true" className="flex h-28 w-full items-center justify-center sm:h-32">
                 {logoUrl ? (

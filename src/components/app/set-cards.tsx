@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { listRows } from "@/app/(app)/dashboard/cards/actions";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FilterChip } from "@/components/app/filter-chip";
+import { FiltersSheet } from "@/components/app/filters-sheet";
 import { RowButton } from "@/components/app/row-button";
 import { SetCardTile } from "@/components/app/set-card-tile";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
@@ -29,12 +30,16 @@ const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-sl
  * not hold has no row, so it opens on what the set page already has: the printing, read-only,
  * with its price line. Adding it is the plus and the menu beside it, which is where it was.
  *
- * Above the grid, the row every list in the app has: search, filters and sort. Here it works on
- * the cards the page already holds rather than on the URL, because a set is one page of at most
- * a few hundred cards and the question is "where is Charizard" or "what am I missing", not a
- * query the server should re-run. Search matches the name, the printed name and the number;
- * the filters are what you hold and the rarity; the sort is the set's own order, the name or
- * the price. A search that finds nothing keeps the row where it is and says so under it.
+ * Above the grid, the row every list in the app has, in the shape they all have it: the field you
+ * type in, then Filters and Sort as the same two buttons, with the filters themselves in the sheet
+ * behind the first. Two controls of different heights beside each other was the reason to follow
+ * that pattern rather than invent a row for this page.
+ *
+ * It works on the cards the page already holds rather than on the URL, because a set is one page
+ * of at most a few hundred cards and the question is "where is Charizard" or "what am I missing",
+ * not a query the server should re-run. Search matches the name, the printed name and the number;
+ * the filters are what you hold and the rarity; the sort is the set's own order, the name or the
+ * price. A search that finds nothing keeps the row where it is and says so under it.
  */
 type Holding = "owned" | "missing" | "wishlist";
 type SortKey = "set" | "name" | "price-desc" | "price-asc";
@@ -120,8 +125,10 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
                     onChange={setQ}
                     className="min-w-0 flex-1 basis-48 sm:max-w-64"
                 />
-                <FilterChip label="Cards" any="All cards" value={holding} options={HOLDINGS} onChange={(next) => setHolding(next as Holding | undefined)} />
-                {rarities.length > 1 ? <FilterChip label="Rarity" value={rarity} options={rarities} onChange={setRarity} /> : null}
+                <FiltersSheet active={[holding, rarity].filter(Boolean).length}>
+                    <FilterChip label="Cards" any="All cards" value={holding} options={HOLDINGS} onChange={(next) => setHolding(next as Holding | undefined)} />
+                    {rarities.length > 1 ? <FilterChip label="Rarity" value={rarity} options={rarities} onChange={setRarity} /> : null}
+                </FiltersSheet>
                 <Dropdown.Root>
                     <RowButton icon={SwitchVertical01} label="Sort" menu />
                     <Dropdown.Popover placement="bottom end" className="w-56">
