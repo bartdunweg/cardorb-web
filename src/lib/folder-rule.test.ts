@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { folderRuleSchema, matchesRule, pokedexSettingSchema, ruleChips, ruleSummary } from "./folder-rule";
+import { folderRuleSchema, matchesRule, pokedexSettingSchema, rarityLabel, ruleChips, ruleSummary } from "./folder-rule";
 
 const facets = { sets: [{ name: "sv04", title: "Paradox Rift" }], rarities: ["Common", "Illustration Rare"], gens: [], types: [] };
 
@@ -47,5 +47,13 @@ describe("pokedexSettingSchema", () => {
         expect(pokedexSettingSchema.safeParse({ missing: false, dex: { from: 1, to: 151 } }).success).toBe(true);
         expect(pokedexSettingSchema.safeParse({ dex: { from: 1, to: 151 } }).success).toBe(false);
         expect(pokedexSettingSchema.safeParse({ missing: true, dex: { from: 9, to: 1 } }).success).toBe(false);
+    });
+});
+
+describe("rarityLabel", () => {
+    it("spells a split entry out and leaves a plain rarity alone", () => {
+        expect(rarityLabel("Ultra Rare / v")).toBe("Ultra Rare · V, VMAX, VSTAR, GX, EX");
+        expect(rarityLabel("Ultra Rare / ex")).toBe("Ultra Rare · ex");
+        expect(rarityLabel("Illustration rare")).toBe("Illustration rare");
     });
 });

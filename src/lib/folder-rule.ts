@@ -34,6 +34,14 @@ export const splitOf = (entry: string): { rarity: string; split: string } | null
     return m ? { rarity: m[1], split: m[2] } : null;
 };
 
+/** A kept rarity in words: a split entry as "Ultra Rare · ex", a plain one as itself. */
+export function rarityLabel(entry: string): string {
+    const s = splitOf(entry);
+    if (!s) return entry;
+    const kind = RARITY_SPLITS.find((k) => k.id === s.split);
+    return kind ? `${s.rarity} · ${kind.label}` : s.rarity;
+}
+
 /** Whether a card is one of the rarities a setting names, split entries included. */
 export function rarityKept(entries: string[], rarity: string | null, name: string): boolean {
     const r = (rarity ?? "").toLowerCase();
