@@ -22,6 +22,20 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-12, every choice is one the card could have.** After the rarities and Portuguese, a pass
+over every choice field about a copy. Five offered answers that do not exist, and the largest was a
+rule that had been written down and never fired: the finish and foil lists narrow to the card's
+`printings`, and the API sent no printings at all, so every card took the "no answer, offer
+everything" branch. Pikachu with Grey Felt Hat, one plain normal in TCGdex, offered a holo, a
+reverse holo and both ball prints; it now states Finish · Normal and asks nothing. `variants_detailed`
+is where the answer was (cardorb-api#342), and it also names the ball reverses per card, which the
+code had assumed nothing could. Beside it: `editions` per card, so Base Set offers Shadowless and
+Jungle does not (the 102 Cardmarket run products from #329 are all base1); PSA grades in whole
+numbers with 1.5 as its only half, so "PSA 9.5" is gone and the scale follows the company; Dutch
+left the language list, because no card is printed in it; and the "I got it" dialog asks the edition,
+which it never did. Checked and left alone: conditions, binder choice, the rarity boxes in rules and
+the Pokédex, the filters, the dex range. web #498.
+
 **2026-09-12, a card is offered what its era had.** Two pickers offered combinations that do not
 exist. The language list came from asking every Western catalogue whether it carries the card,
 which is right for German, French, Italian and Spanish and wrong for Portuguese: TCGdex' Portuguese
