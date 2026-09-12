@@ -23,6 +23,7 @@ export function CardsView({
     narrowed,
     initialView,
     initialSize = "md",
+    groupedBySet = false,
     listKey,
     toolbar,
     noHits,
@@ -33,6 +34,8 @@ export function CardsView({
     narrowed: boolean;
     initialView: CardsViewMode;
     initialSize?: CardsSize;
+    /** The list arrives set by set: the grid says so with a heading over each one. */
+    groupedBySet?: boolean;
     /**
      * The list's URL. It keys the list and nothing above it: a new search is a new list, with its
      * own first batch and nothing scrolled-to from the last one, but the row over it, the search
@@ -78,6 +81,7 @@ export function CardsView({
                     narrowed={narrowed}
                     view={view}
                     size={size}
+                    groupedBySet={groupedBySet}
                     onSelect={(card, siblings) => setSelected({ card, siblings })}
                     noHits={noHits}
                     empty={empty}
