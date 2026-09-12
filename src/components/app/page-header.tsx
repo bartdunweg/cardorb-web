@@ -27,6 +27,7 @@ export function PageHeader({
     back,
     actions,
     above,
+    hero,
     barActions,
     children,
     titleOnPhone = true,
@@ -40,6 +41,11 @@ export function PageHeader({
     actions?: ReactNode;
     /** Above the title, under the sticky bar: Home's search on a phone. */
     above?: ReactNode;
+    /**
+     * A band across the very top of the page, edge to edge, under the phone's bar: a set's logo on
+     * its colour. It takes the room the bar's spacer would, since it is taller than the bar.
+     */
+    hero?: ReactNode;
     /** On a phone, at the bar's right end across from Back: a page's settings as a dots button. */
     barActions?: ReactNode;
     /** Anything else that belongs with the title, like a progress bar. */
@@ -77,6 +83,9 @@ export function PageHeader({
         // One element, so the page's own gap applies once, under it: the distances inside are the spacer's
         // and the 16 px column, whatever the page puts between its sections.
         <div className="flex flex-col">
+            {/* Out to the page's edges and up to its top, cancelling the layout's padding (px-4 pt-4,
+                sm:px-6 sm:py-8), so the band is the page's top edge and the phone's bar floats on it. */}
+            {hero ? <div className="-mx-4 -mt-4 mb-4 sm:-mx-6 sm:-mt-8">{hero}</div> : null}
             {/* The bar is fixed to the top of the screen, like the tab bar to its bottom, so it stays through
                 the whole page and not only while the header is in view. Collapsed, it stands on the tab bar's
                 glass, running out under its bottom (the same ground as the card sheet's bar), so the buttons
@@ -114,7 +123,7 @@ export function PageHeader({
             {/* The room the bar takes in the flow, on top of the page's own 16 px (32 from `sm`). With Back the
                 title starts at 76: under the 44 px button with 16 above and under it. Beside the buttons it
                 starts at 22, its 32 px line centred on them. With nothing in the bar, at 24. */}
-            <div aria-hidden="true" className={cx("lg:hidden", back ? "mb-4 h-11 sm:h-7" : beside ? "h-1.5 sm:h-0" : "h-2 sm:h-0")} />
+            {hero ? null : <div aria-hidden="true" className={cx("lg:hidden", back ? "mb-4 h-11 sm:h-7" : beside ? "h-1.5 sm:h-0" : "h-2 sm:h-0")} />}
 
             {/* Above the title, 8 px from the top: the search on Home sits higher than a page's first content,
                 and the title 16 px under it whatever the page's own gap, as under Back. */}

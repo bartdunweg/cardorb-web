@@ -40,6 +40,23 @@ export async function logoColor(url: string | null): Promise<string | null> {
     }
 }
 
+/** Many logos' colours in the same order, read `CONCURRENCY` at a time so a shelf of 200 does not open 200 connections at once. */
+export async function logoColors(urls: (string | null)[]): Promise<(string | null)[]> {
+    const out: (string | null)[] = new Array(urls.length).fill(null);
+    let next = 0;
+    const worker = async () => {
+        while (next < urls.length) {
+            const i = next++;
+            out[i] = await logoColor(urls[i] ?? null);
+        }
+    };
+    await Promise.all(Array.from({ length: Math.min(CONCURRENCY, urls.length) }, worker));
+    return out;
+}
+
+/** Reads in flight at once for a shelf. At the five-second limit each, a catalogue that answers nothing costs a 200-set shelf under a minute, once. */
+const CONCURRENCY = 24;
+
 async function readLogoColor(url: string): Promise<string | null> {
     try {
         const res = await fetch(pngAddress(url), { signal: AbortSignal.timeout(FETCH_LIMIT_MS), cache: "no-store" });

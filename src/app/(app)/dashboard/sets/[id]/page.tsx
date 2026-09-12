@@ -4,7 +4,6 @@ import { AppEmptyState } from "@/components/app/app-empty-state";
 import { PageHeader } from "@/components/app/page-header";
 import { SetCards } from "@/components/app/set-cards";
 import { SetHero } from "@/components/app/set-hero";
-import { ProgressBarBase } from "@/components/base/progress-indicators/progress-indicators";
 import { formatCount } from "@/lib/format";
 import { isBrowseLanguage } from "@/lib/languages";
 import { logoColor } from "@/lib/logo-color";
@@ -77,12 +76,11 @@ export default async function SetPage({ params, searchParams }: { params: Promis
                 title={set.name}
                 subtitle={subtitle}
                 back={{ href: language === "en" ? "/dashboard/sets" : `/dashboard/sets?language=${language}`, label: "Browse" }}
-                // The set's logo on its own colour, over the name. Decoration: the h1 says which set.
-                above={<SetHero name={set.name} logoUrl={set.logoUrl} color={color} />}
-            >
-                {/* Thin and short: the subtitle already says the count in words; the bar is a glance, not a second headline. */}
-                <ProgressBarBase value={set.owned} max={set.total || 1} className="mt-2 h-1 max-w-xs" aria-label={`${set.name} completion`} />
-            </PageHeader>
+                // The set's logo on its own colour, edge to edge over the name. Decoration: the h1 says
+                // which set. No progress bar under the title: the subtitle says the count, and the
+                // owner's call is that the page shows the cards, not a meter.
+                hero={<SetHero name={set.name} logoUrl={set.logoUrl} color={color} />}
+            />
 
             {set.cards.length === 0 ? (
                 /* TCGdex lists a set and its count long before it records the cards: 68 of the 184
