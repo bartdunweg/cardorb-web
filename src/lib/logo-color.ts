@@ -20,7 +20,7 @@ import { elapsed, logTiming } from "@/lib/timing";
 const THIRTY_DAYS = 30 * 24 * 3600;
 const FETCH_LIMIT_MS = 5_000;
 /** Bump when the picking changes: the Data Cache outlives a deploy (see the memory of #206). */
-const VERSION = "v2";
+const VERSION = "v3";
 
 export async function logoColor(url: string | null): Promise<string | null> {
     if (!url) return null;
@@ -82,7 +82,7 @@ const MIN_VIVID_SHARE = 0.05;
 const HUE_BINS = 24;
 
 /**
- * The colour of the largest vivid hue in an RGBA buffer, as `#rrggbb`; null for a logo that is
+ * The largest vivid hue in an RGBA buffer, made bright, as `#rrggbb`; null for a logo that is
  * grey, black or white.
  *
  * Every opaque, saturated, mid-light pixel votes for its hue, weighted by its saturation; the
@@ -113,11 +113,27 @@ export function pickVividColor(data: Uint8Array | Buffer, width: number, height:
     }
     if (opaque === 0 || vivid / opaque < MIN_VIVID_SHARE) return null;
     const best = bins.reduce((a, b) => (b.weight > a.weight ? b : a));
-    const channel = (sum: number) =>
-        Math.round(sum / best.weight)
+    const [h, s] = hsl(best.r / best.weight, best.g / best.weight, best.b / best.weight);
+    return hex(h, Math.max(s, MIN_SATURATION_OUT), LIGHTNESS_OUT);
+}
+
+/**
+ * The band is the same strength on every set. The hue is the logo's; the saturation and the
+ * lightness are not, because a logo's own numbers are whatever its artist drew: Paradox Rift's
+ * navy came out a dull #1b4182 beside Base Set's #f2bc2b, and the band is meant to be bright.
+ */
+const MIN_SATURATION_OUT = 0.85;
+const LIGHTNESS_OUT = 0.5;
+
+/** `#rrggbb` from a hue in degrees and saturation and lightness in 0–1. */
+function hex(h: number, s: number, l: number): string {
+    const k = (n: number) => (n + h / 30) % 12;
+    const a = s * Math.min(l, 1 - l);
+    const channel = (n: number) =>
+        Math.round(255 * (l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1))))
             .toString(16)
             .padStart(2, "0");
-    return `#${channel(best.r)}${channel(best.g)}${channel(best.b)}`;
+    return `#${channel(0)}${channel(8)}${channel(4)}`;
 }
 
 /** Hue in degrees, saturation and lightness in 0–1. */
