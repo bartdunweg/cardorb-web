@@ -22,6 +22,22 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-12, the set says which languages it had.** Dutch was taken out of the language list this
+morning on the grounds that no Pokémon card is printed in it. Bart: Base Set had Dutch. He is right,
+and chasing the correction found the fault behind it. The list was read off TCGdex per card, and for
+the old sets its catalogues do not have the cards: the Spanish and Portuguese records for Base Set
+hold zero cards, the Italian one holds nothing for Fossil, Neo Genesis, Ruby & Sapphire or Diamond &
+Pearl, and all of those sets were printed in those languages. So a 404 there is a gap in a
+catalogue, and reading it as "never printed" offered a Base Set card four languages when it had
+seven. Bulbapedia writes it down per set, in prose, under "Languages this set is released in";
+`scripts/set-languages.mjs` reads that sentence for the 47 pre-Black & White sets whose page has one
+and the answer is checked in (cardorb-api#347), because it is a fact about cards printed twenty
+years ago. Where the map has the set it decides outright; from Black & White on TCGdex answers per
+card, which is the better grain, because a promo can be printed in fewer languages than its set.
+Measured live: Base Set Pikachu offers seven languages, Jungle seven, Team Rocket four (English,
+German, French, Italian, which is what that set was released in), the Van Gogh Pikachu English
+alone. web #501.
+
 **2026-09-12, every choice is one the card could have.** After the rarities and Portuguese, a pass
 over every choice field about a copy. Five offered answers that do not exist, and the largest was a
 rule that had been written down and never fired: the finish and foil lists narrow to the card's
