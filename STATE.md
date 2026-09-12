@@ -567,15 +567,22 @@ for the failures that leave no trace), and everything both passes found is close
 
 ## Open
 
-- **A printing's edition is a field now, and the euro price still is not.** The owner raised it on
-  2026-09-12 and it shipped the same day: `cards.edition` holds `1st-edition`, `shadowless` or
-  `unlimited`, null where nobody has said, and a stamped copy is its own row in the store and
-  its own line at read time. The CSV import reads the run from Dex's Variant word and from a
-  column of its own; the export writes it. What is not done is the money: TCGplayer prices the
-  two runs apart for Jungle, Fossil, Team Rocket, Gym and Neo and a 1st Edition copy reads that
-  figure, converted, but Cardmarket publishes one figure per card id and its public product
-  list does not name the runs, so Base Set's own runs and the value chart are the ordinary
-  price. Naming a Cardmarket product as a run would need something nothing published.
+- **A printing's edition, and which of the two feeds prices it.** `cards.edition` holds
+  `1st-edition`, `shadowless` or `unlimited`, null where nobody has said; such a copy is its own
+  row in the store and its own line at read time, the CSV import reads the run from Dex's Variant
+  word and from a column of its own, and the export writes it. The money is now mapped, and the
+  two runs come from different markets:
+  Shadowless is a Cardmarket product of its own (Base Set, all 102 cards, from the nightly guide
+  through the committed map `cardmarket-ids.editions.generated.json`, cardorb-api#329), and the
+  stamped first run is TCGplayer's, converted (Jungle, Fossil, Team Rocket, Gym, Neo, where
+  TCGdex answers `1st-edition-holofoil` beside `unlimited-holofoil`).
+  The one hole left is **Base Set's own stamped run**: TCGdex answers a plain `holofoil` for it
+  on TCGplayer and no 1st Edition subtype with a Cardmarket product, so neither feed prices it
+  and such a copy reads the ordinary figure. Checked card by card on 2026-09-12, not assumed. The
+  earlier note here said naming a Cardmarket product as a run would need something nothing
+  published: TCGdex publishes it, per variant, in `variants_detailed[].thirdParty.cardmarket`.
+  What no row has yet is a run written down; the field is empty until somebody walks their
+  classics. `docs/editions.md` holds the ground and the decisions.
 - **Seen in passing on 2026-09-11:** on the dev server the sheet's chunk (`card-detail-slideout`)
   is refused by the CSP nonce. **Dev-only, measured the same day:** the seven scripts without a
   nonce on a dev page are all Turbopack's HMR runtime and what it inserts; on the production build
