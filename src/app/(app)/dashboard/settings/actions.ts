@@ -3,7 +3,6 @@
 import { z } from "zod";
 import { ApiError, api } from "@/lib/api";
 import { avatarAnswer, usernameAnswer } from "@/lib/api-shapes";
-import { type PokedexSetting, pokedexSettingSchema } from "@/lib/folder-rule";
 import { createClient } from "@/lib/supabase/server";
 import { forgetMine } from "@/lib/user-cache";
 
@@ -175,24 +174,11 @@ export async function updateEmail(email: string): Promise<ActionResult> {
     return { ok: true };
 }
 
-// How the built-in Pokédex shows: which Pokémon you collect and whether the missing ones show.
-// Null restores the default, every slot with the missing ones.
-export async function updatePokedexSetting(setting: PokedexSetting | null): Promise<ActionResult> {
-    const parsed = pokedexSettingSchema.nullable().safeParse(setting);
-    if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
-    try {
-        await api("/profile", { method: "PATCH", body: { pokedex: parsed.data } });
-    } catch (err) {
-        return failed(err);
-    }
-    await forgetMine();
-    return { ok: true };
-}
-
-// A list's one setting, from its own page: whether it shows on the public profile. The wishlist,
-// the favorites and the Pokédex each have the flag; a folder you made carries its own.
-const listSchema = z.object({ list: z.enum(["wishlist", "favorites", "pokedex"]), shown: z.boolean() });
-const FLAG = { wishlist: "wishlistPublic", favorites: "favoritesPublic", pokedex: "pokedexPublic" } as const;
+// A list's one setting, from its own page: whether it shows on the public profile. The wishlist
+// and the favorites have the flag; a binder carries its own, the Pokédex among them since it
+// became one.
+const listSchema = z.object({ list: z.enum(["wishlist", "favorites"]), shown: z.boolean() });
+const FLAG = { wishlist: "wishlistPublic", favorites: "favoritesPublic" } as const;
 
 export async function updateListPublic(input: unknown): Promise<ActionResult> {
     const parsed = listSchema.safeParse(input);

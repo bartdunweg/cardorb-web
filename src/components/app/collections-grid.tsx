@@ -13,10 +13,10 @@ import { cx } from "@/utils/cx";
 // On a phone a row: the icon, the name, the count at the end as a number alone (the sidebar's rows
 // on desktop have it the same way), and a line between rows: a list, not a stack of cards (Bart's
 // call). From sm a stacked tile, three or four to a row, with "12 cards" under the name. One
-// component for every binder, the two that are always there and the ones you made. How a binder
-// was filled is not said here: by hand or by rule, it is a binder with cards in it (Bart's call).
-// The Pokédex too: a binder with a rule, counted like one. `count` is null only when a count
-// could not be read, and the tile goes without.
+// component for every binder, Favorites and the ones you made. How a binder was filled is not said
+// here: by hand or by rule, it is a binder with cards in it (Bart's call). A binder shown as a
+// Pokédex too, which is what the Pokédex is now. `count` is null only when a count could not be
+// read, and the tile goes without.
 function FolderCard({ href, icon, name, count }: { href: string; icon: FC<{ className?: string }>; name: string; count: number | null }) {
     const counted = count === null ? null : `${count} card${count === 1 ? "" : "s"}`;
     return (
@@ -65,33 +65,21 @@ export function NewCollectionButton({ compact }: { compact?: boolean }) {
     );
 }
 
-export function CollectionsGrid({
-    collections,
-    favoritesCount,
-    pokedexCount,
-}: {
-    collections: CollectionSummary[];
-    favoritesCount: number;
-    pokedexCount: number | null;
-}) {
+export function CollectionsGrid({ collections, favoritesCount }: { collections: CollectionSummary[]; favoritesCount: number }) {
     const hasCollections = collections.length > 0;
 
     return (
         <div className="flex flex-1 flex-col gap-6">
-            {/* One grid: the two folders that are always there (the favorites, the Pokédex; neither a folder in
-                the data, both one to the eye), then the ones you made. All cards is not here: it is a tab of its
-                own, beside Home. On desktop the sidebar's Collections section is this list. */}
+            {/* One grid: Favorites, the one that is always there (not a folder in the data, one to the eye),
+                then the ones you made, the Pokédex among them. All cards is not here: it is a tab of its own,
+                beside Home. On desktop the sidebar's Collections section is this list. */}
             <div className="grid grid-cols-1 max-sm:divide-y max-sm:divide-secondary sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
                 {/* The tiles arrive as the card grids do, in a wrapper: the link owns a transition of its own. */}
                 <div className="arrive">
                     <FolderCard href="/dashboard/favorites" icon={Star01} name="Favorites" count={favoritesCount} />
                 </div>
-                <div className="arrive" style={{ "--arrive-delay": "20ms" } as React.CSSProperties}>
-                    {/* A folder like the ones beside it, with a count like theirs; see the note in app-sidebar.tsx. */}
-                    <FolderCard href="/dashboard/pokedex" icon={Folder} name="Pokédex" count={pokedexCount} />
-                </div>
                 {collections.map((c, i) => (
-                    <div key={c.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i + 2, 8) * 20}ms` } as React.CSSProperties}>
+                    <div key={c.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i + 1, 8) * 20}ms` } as React.CSSProperties}>
                         <FolderCard
                             href={`/dashboard/collections/${c.id}`}
                             // However it was filled, it is a folder with cards in it.

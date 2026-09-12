@@ -25,10 +25,12 @@
 ### Task 1: Every profile's Pokédex becomes a binder (API, PR 1)
 
 **Files (cardorb-api):**
+
 - Create: `supabase/migrations/20260912120000_pokedex_becomes_a_binder.sql`
 - Create: `changelog.d/2026-09-12-pokedex-becomes-a-binder.md`
 
 **Interfaces:**
+
 - Consumes: nothing.
 - Produces: one `collections` row per profile, named "Pokédex", carrying that profile's setting, `is_public` from `pokedex_public`. No code reads it differently yet: a binder shown as a Pokédex already works.
 
@@ -99,11 +101,13 @@ Expected: 6 rows named "Pokédex", one of them public, one carrying Bart's own r
 ### Task 2: The web reads the binder, not the profile (web, PR 2, part 1)
 
 **Files (cardorb-web):**
+
 - Modify: `src/lib/collections.ts` (a helper that finds the binder shown as a Pokédex)
 - Modify: `src/components/app/dex-stat.tsx`
 - Test: `src/lib/collections.test.ts` if it exists, else the helper's own new test file
 
 **Interfaces:**
+
 - Consumes: the binders from Task 1.
 - Produces: `getDexBinder(): Promise<{ id: string; name: string; pokedex: PokedexSetting } | null>`, the first binder shown as a Pokédex, in the order `/v1/folders` answers.
 
@@ -162,12 +166,14 @@ git commit -m "The Pokédex on Home is a binder's, not a profile's"
 ### Task 3: The fixture goes (web, PR 2, part 2)
 
 **Files (cardorb-web):**
+
 - Modify: `src/app/(app)/dashboard/pokedex/page.tsx` (becomes a redirect, nothing else)
 - Modify: `src/components/app/app-sidebar.tsx`, `src/components/app/collections-grid.tsx`, `src/components/app/mobile-nav.tsx`, `src/lib/collections.ts`, `src/app/(app)/layout.tsx`, `src/lib/csp.ts`, `src/lib/list-query.ts`
 - Delete: `src/components/app/pokedex-settings-dialog.tsx`
 - Modify: `src/app/(app)/dashboard/settings/actions.ts` (drop `updatePokedexSetting`)
 
 **Interfaces:**
+
 - Consumes: `getDexBinder` from Task 2.
 - Produces: no route, sidebar row, grid card or settings dialog of its own; `/dashboard/pokedex` redirects.
 
@@ -210,10 +216,12 @@ git commit -m "The Pokédex is a binder, so it stops being a fixture"
 ### Task 4: A public profile draws a Pokédex binder as slots (web, PR 2, part 3)
 
 **Files (cardorb-web):**
+
 - Modify: `src/app/(public)/user/[username]/page.tsx`, `src/lib/public-profile.ts`
 - Test: `src/lib/public-profile.test.ts`
 
 **Interfaces:**
+
 - Consumes: a public folder's `pokedex` setting from `/v1/public/{username}/folders`.
 - Produces: a public binder shown as a Pokédex renders its slots, not a list of cards.
 
@@ -268,12 +276,14 @@ Open the pull request, poll the `check` job, merge on "All checks passed", delet
 Runs only once Task 4 is merged and deployed: until then the web still answers with the profile's fields in its cached reads.
 
 **Files (cardorb-api):**
+
 - Create: `supabase/migrations/20260912140000_profiles_drop_pokedex.sql`
 - Modify: `src/app/api/v1/profile/route.ts`, `src/lib/storage/postgres.ts` (the two profile column lists and their row types), `src/lib/core/collection/items.ts` (`PUBLIC_LISTS`), the public cards route's list gate
 - Delete: `src/app/api/v1/pokedex/route.ts` and `src/app/api/v1/pokedex/route.test.ts`, and `getPokedex`/`summariseDex` if nothing else calls them
 - Create: `changelog.d/2026-09-12-pokedex-columns-dropped.md`
 
 **Interfaces:**
+
 - Consumes: nothing. Everything that read these is gone by now.
 - Produces: a profile with no Pokédex fields; no `/v1/pokedex`; no `list=pokedex`.
 

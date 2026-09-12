@@ -2,24 +2,24 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { updatePokedexSetting } from "@/app/(app)/dashboard/settings/actions";
+import { updateCollection } from "@/app/(app)/dashboard/collections/actions";
 import { notify } from "@/components/app/toast";
 import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { type PokedexSetting, rarityLabel } from "@/lib/folder-rule";
 
 /**
- * What the Pokédex is counting, where it counts less than everything: the rarities the setting
- * names, and the word that a card of any other rarity leaves its slot grey.
+ * What a binder shown as a Pokédex is counting, where it counts less than everything: the rarities
+ * its setting names, and the word that a card of any other rarity leaves its slot grey.
  *
- * The setting lives two taps deep, in the settings dialog, and a grey slot said two things at once:
+ * The setting lives two taps deep, under Edit binder, and a grey slot said two things at once:
  * "you hold no card of it" and "you hold one, in a rarity that does not count". A person who set
  * the rarities months ago reads the first and goes looking for a card they already own.
  *
  * Nothing is drawn while every rarity counts, which is the default: a line saying "everything
  * counts" is a line about nothing.
  */
-export function PokedexRarityNote({ setting }: { setting: PokedexSetting }) {
+export function PokedexRarityNote({ folderId, setting }: { folderId: string; setting: PokedexSetting }) {
     const router = useRouter();
     const [clearing, setClearing] = useState(false);
     const rarities = setting.rarities ?? [];
@@ -27,7 +27,7 @@ export function PokedexRarityNote({ setting }: { setting: PokedexSetting }) {
 
     const countAll = async () => {
         setClearing(true);
-        const res = await updatePokedexSetting({ missing: setting.missing, ...(setting.dex ? { dex: setting.dex } : {}) });
+        const res = await updateCollection(folderId, { pokedex: { missing: setting.missing, ...(setting.dex ? { dex: setting.dex } : {}) } });
         setClearing(false);
         if (!res.ok) {
             notify.failed(res.error);

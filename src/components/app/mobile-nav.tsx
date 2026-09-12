@@ -14,7 +14,7 @@ const tabs = [
         label: "Binders",
         href: "/dashboard/collections",
         icon: Folder,
-        match: (p: string) => ["/dashboard/collections", "/dashboard/favorites", "/dashboard/pokedex"].some((h) => p.startsWith(h)),
+        match: (p: string) => ["/dashboard/collections", "/dashboard/favorites"].some((h) => p.startsWith(h)),
     },
 ];
 

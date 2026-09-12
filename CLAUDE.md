@@ -62,8 +62,9 @@ to this.
 - **Collection**: everything you own. That is the word on screen for the whole of it, and the
   page that lists every card you hold; Browse (every set there has been) and the wishlist sit
   beside it, not in it.
-- **Binder**: one place you put cards: two that are always there (Favorites, Pokédex) and the
-  ones you make, by hand or by rule. In copy one is a "Binder" and the list of them is
+- **Binder**: one place you put cards: one that is always there (Favorites) and the
+  ones you make, by hand or by rule. A binder can be shown as a Pokédex, and the Pokédex is
+  exactly that: a binder you make, edit and delete like any other, not a fixture. In copy one is a "Binder" and the list of them is
   "Binders", nothing else: one word with a singular and a plural, where it used to be a
   "Folder" inside "Collections" and the app said Collection for two different things.
   The `collections` table, the `/collections` routes and the API's own path keep their names:

@@ -36,6 +36,6 @@ export default function CollectionsPage() {
 }
 
 async function Binders() {
-    const { collections, favoritesCount, pokedexCount } = await getMyCollections();
-    return <CollectionsGrid collections={collections} favoritesCount={favoritesCount} pokedexCount={pokedexCount} />;
+    const { collections, favoritesCount } = await getMyCollections();
+    return <CollectionsGrid collections={collections} favoritesCount={favoritesCount} />;
 }

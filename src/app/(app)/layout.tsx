@@ -9,7 +9,7 @@ import { MAIN_ID, SkipToContent } from "@/components/app/skip-to-content";
 import { Toasts } from "@/components/app/toast";
 import { WarmLists } from "@/components/app/warm-lists";
 import { ApiError } from "@/lib/api";
-import { getFavoritesCount, getMyFolders, getPokedexCount } from "@/lib/collections";
+import { getFavoritesCount, getMyFolders } from "@/lib/collections";
 import { type Account, accountFrom, getMyProfile } from "@/lib/profile";
 import { RouteProvider } from "@/providers/router-provider";
 
@@ -34,7 +34,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     const account = me.then(accountFrom, () => NO_ACCOUNT);
     const collections = folders.catch(() => []);
     const favoritesCount = getFavoritesCount().catch(() => null);
-    const pokedexCount = getPokedexCount().catch(() => null);
 
     return (
         // Which page a tap is going to, above the router that reports it: the navigation answers a
@@ -55,7 +54,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     frame's own ground rather than under it. */}
                     <div className="relative isolate flex min-h-dvh flex-col overflow-x-clip bg-page">
                         <div className="flex flex-1 flex-col lg:flex-row">
-                            <AppSidebar account={account} collections={collections} favoritesCount={favoritesCount} pokedexCount={pokedexCount} />
+                            <AppSidebar account={account} collections={collections} favoritesCount={favoritesCount} />
                             {/* tabIndex -1 so focus can be sent here after a navigation without putting
                             the element itself in the tab order. */}
                             <main id={MAIN_ID} tabIndex={-1} className="flex min-w-0 flex-1 flex-col outline-none">
