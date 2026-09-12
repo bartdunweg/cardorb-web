@@ -96,7 +96,7 @@ async function Set({ params, searchParams }: { params: Promise<{ id: string }>; 
 
             {set.cards.length === 0 ? (
                 /* TCGdex lists a set and its count long before it records the cards: 68 of the 184
-                   Japanese sets and 92 of the 95 Korean ones stood like that on 2026-09-11. The page
+                   Japanese sets stood like that on 2026-09-11. The page
                    opened on nothing, under a header that said "0 of 60 cards" and looked like a
                    collection with a long way to go. It is the catalogue that has the way to go. */
                 <AppEmptyState

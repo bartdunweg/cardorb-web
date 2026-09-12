@@ -375,7 +375,7 @@ export const ourSections: SectionSpec[] = [
                     </Cell>
                 </Group>
                 <Group title="Languages" cols="tight">
-                    {["en", "ja", "de", "fr", "it", "es", "pt", "nl", "ko", "zh-tw", "zh-cn"].map((language) => (
+                    {["en", "ja", "de", "fr", "it", "es", "pt", "nl"].map((language) => (
                         <Cell key={language} label={language}>
                             <FlagIcon language={language} size="md" />
                         </Cell>
@@ -603,7 +603,7 @@ function FiltersSheetSample() {
                         onApply={setValues}
                         count={(d) => ({
                             total: 120 >> Object.values(d).flat().length,
-                            options: { rarity: { common: 72, holo: 40, ultra: 8 }, language: { en: 120, ja: 14, ko: 0 } },
+                            options: { rarity: { common: 72, holo: 40, ultra: 8 }, language: { en: 120, ja: 14 } },
                         })}
                         noun={["card", "cards"]}
                     />

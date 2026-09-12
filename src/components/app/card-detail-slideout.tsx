@@ -950,7 +950,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                 {/* No star here. The bar above carries it as a button you can press;
                                     a second one under the title said the same thing and did nothing. */}
                                 {/* The printed name in brackets after the English one, for a card off the
-                                    Japanese, Korean or Chinese shelves: the app is English throughout, and
+                                    Japanese shelf: the app is English throughout, and
                                     this is the one place what the card says is worth a look. */}
                                 {card ? ("local_name" in card && card.local_name ? `${card.name} (${card.local_name})` : card.name) : null}
                             </AriaHeading>

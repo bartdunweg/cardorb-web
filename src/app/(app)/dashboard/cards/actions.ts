@@ -170,7 +170,7 @@ const cardSchema = z.object({
      *
      * Both may be missing or null: everything added before today has neither and the API still
      * resolves those by set name, and a set tile carries null for what its shelf did not send.
-     * They are how a card from the Japanese, Korean or Chinese shelves is findable at all: those
+     * They are how a card from the Japanese shelf is findable at all: those
      * sets have no English name, so the name the API would look up does not exist. Together they
      * say "this row is that card, in that catalogue" (cardorb-api#257).
      *

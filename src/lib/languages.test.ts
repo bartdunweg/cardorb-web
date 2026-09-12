@@ -19,11 +19,9 @@ describe("languageOf", () => {
         // A German copy is the English catalogue's card in German: every Western language stays on offer.
         expect(languagesFor("de").map((l) => l.code)).toEqual(["en", "de", "fr", "it", "es", "pt", "nl"]);
         expect(languagesFor("ja").map((l) => l.code)).toEqual(["ja"]);
-        expect(languagesFor("zh-tw").map((l) => l.code)).toEqual(["zh-tw"]);
-        expect(languagesFor("zh-cn").map((l) => l.code)).toEqual(["zh-cn"]);
-        // A row from before the API told the two apart still reads as Chinese.
-        expect(languageOf("zh").label).toBe("Chinese");
-        expect(languagesFor("ko").map((l) => l.code)).toEqual(["ko"]);
+        // Chinese and Korean are not languages here: an old code reads as English, like any unknown one.
+        expect(languageOf("ko").code).toBe("en");
+        expect(languageOf("zh-tw").code).toBe("en");
         // A Dutch copy is the English catalogue's card in Dutch, which Base Set, Jungle and Fossil had.
         expect(languagesFor("nl").map((l) => l.code)).toEqual(["en", "de", "fr", "it", "es", "pt", "nl"]);
         // A promo printed in English and Portuguese alone offers those alone.

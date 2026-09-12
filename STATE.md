@@ -22,6 +22,12 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-13, English and Japanese only.** Bart's call: Card Orb supports two catalogues, English
+and Japanese. Chinese (traditional, simplified, the old `zh`) and Korean are gone from the web
+(filters #533, then the language list, flags and copy); the API drops them in its own PR. The live `cards` table
+held no Chinese or Korean row (1,941 rows, all `en` or null), so nothing needed migrating. An
+unknown code, an old `ko` among them, reads as English.
+
 **2026-09-13, a search answers by Pokémon.** Bart: "machamp" gave Machamp, Dark Machamp, M
 Machamp EX and Machamp VMAX as strangers. The palette's hits from the browser's catalogue now come
 under headings, "Machamp · 45 cards": every printing of one Pokémon together, a tag team
