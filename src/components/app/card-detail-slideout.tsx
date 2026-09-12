@@ -449,7 +449,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const unnamed = known ? isUnnamedRarity(known.rarity) : isUnnamedRarity(rarity);
     const rarityValue =
         mine && unnamed && rarityIds.length ? (
-            <CardRarityField cardIds={rarityIds} value={rarity} onSaved={(said) => card && setNamed({ of: card.id, rarity: said })} />
+            <CardRarityField cardIds={rarityIds} value={rarity} era={known?.eraRarities} onSaved={(said) => card && setNamed({ of: card.id, rarity: said })} />
         ) : (
             rarity
         );
