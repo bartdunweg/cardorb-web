@@ -19,26 +19,24 @@ type FolderLink = { id: string; name: string; kind: "manual" | "rule"; count: nu
 // from a Server Component. Home, All cards, the wishlist (cards you do not have, so outside the
 // collection) and Browse (every set there has been, not your collection) at the top, the same
 // three the phone's tab bar carries plus Browse; under the Collections heading the rest, flat:
-// Favorites, the Pokédex, each with its own icon, and the ones you made with a folder's, then
-// New folder. On desktop this list is the overview; the Collections page is the phone's.
+// Favorites with its own icon, and the ones you made with a folder's, then New folder. On desktop
+// this list is the overview; the Collections page is the phone's.
 //
 // The folders and the account arrive as promises: the layout hands them over without waiting, so
 // the frame is on screen while the API answers, and each slot fills in on its own.
-// The pages the sidebar leads to, fetched ahead so a click draws them at once. The Pokédex is not
-// among them: it reads every card you own, up to 2,000 per request, and paying for that on the
-// chance of a click made the page you are on wait for it.
+// The pages the sidebar leads to, fetched ahead so a click draws them at once. A binder is not
+// among them, and a binder shown as a Pokédex is why: it reads every card you own, up to 2,000
+// per request, and paying for that on the chance of a click made the page you are on wait for it.
 const SIDEBAR_ROUTES = ["/dashboard", "/dashboard/collections", "/dashboard/cards", "/dashboard/favorites", "/dashboard/sets", "/dashboard/wishlist"];
 
 export function AppSidebar({
     account,
     collections,
     favoritesCount,
-    pokedexCount,
 }: {
     account: Promise<Account>;
     collections: Promise<FolderLink[]>;
     favoritesCount: Promise<number | null>;
-    pokedexCount: Promise<number | null>;
 }) {
     // Where a click is going, or where we are between clicks: the row lights up on the click, not
     // when the page lands, because the page you clicked from stays on screen until the next one is
@@ -51,7 +49,7 @@ export function AppSidebar({
         { label: "Wishlist", href: "/dashboard/wishlist", icon: Heart },
         { label: "Collection", href: "/dashboard/cards", icon: Rows01 },
         // The head is the overview itself: on a phone the Binders tab opens it, on a desktop nothing did
-        // but Back from Favorites or the Pokédex.
+        // but Back from Favorites or a binder.
         { divider: true, label: "Binders", href: "/dashboard/collections" },
         {
             label: "Favorites",
@@ -60,20 +58,6 @@ export function AppSidebar({
             badge: (
                 <Suspense fallback={null}>
                     <LateCount count={favoritesCount} />
-                </Suspense>
-            ),
-        },
-        // A folder like the ones below it, with a count like theirs. The Pokédex is one of the
-        // two that are always there, not a different kind of thing: a binder whose rule is the
-        // range and the rarities you collect, and drawing it as a grid, or without its number,
-        // said otherwise.
-        {
-            label: "Pokédex",
-            href: "/dashboard/pokedex",
-            icon: Folder,
-            badge: (
-                <Suspense fallback={null}>
-                    <LateCount count={pokedexCount} />
                 </Suspense>
             ),
         },
@@ -162,7 +146,7 @@ function Count({ count }: { count: number }) {
     );
 }
 
-/** A count that arrives after the frame (Favorites, the Pokédex); null when its read failed, and the row goes without. */
+/** A count that arrives after the frame (Favorites); null when its read failed, and the row goes without. */
 function LateCount({ count }: { count: Promise<number | null> }) {
     const n = use(count);
     return n === null ? null : <Count count={n} />;

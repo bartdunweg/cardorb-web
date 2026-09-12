@@ -6,6 +6,7 @@ import { AppEmptyState } from "@/components/app/app-empty-state";
 import { BinderAddButton } from "@/components/app/binder-add-button";
 import { BinderMenu } from "@/components/app/binder-menu";
 import { FolderPage } from "@/components/app/folder-page";
+import { PokedexRarityNote } from "@/components/app/pokedex-rarity-note";
 import { ListSkeleton } from "@/components/app/skeletons";
 import { Badge } from "@/components/base/badges/badges";
 import { type CardFilter, getAllMyCards, getFacets, getMyCards } from "@/lib/cards";
@@ -103,6 +104,8 @@ async function Binder({ params, searchParams }: { params: Promise<{ id: string }
         return (
             <FolderPage {...common} datapoints={datapoints} pokedex={{ dex }}>
                 {chips}
+                {/* Why a slot can be grey for a card you own: the rarities this binder counts. */}
+                <PokedexRarityNote folderId={collection.id} setting={setting} />
             </FolderPage>
         );
     }

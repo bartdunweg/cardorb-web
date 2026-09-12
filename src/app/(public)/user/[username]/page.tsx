@@ -9,20 +9,11 @@ import { PublicTopBar } from "@/components/app/public-top-bar";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { type DexList, groupByDex } from "@/lib/dex-groups";
 import { datapointsLine } from "@/lib/folder-datapoints";
-import { DEFAULT_POKEDEX } from "@/lib/folder-rule";
 import { formatCount } from "@/lib/format";
 import { type ListSearchParams, PUBLIC_DEFAULT_SORT, PUBLIC_SORT_OPTIONS, isNarrowed, listHref, readPublicListQuery } from "@/lib/list-query";
 import { getDexNames } from "@/lib/pokedex";
 import { getViewer } from "@/lib/profile";
-import {
-    PUBLIC_PAGE_SIZE,
-    countPublicCards,
-    countPublicPokedex,
-    getAllPublicCards,
-    getPublicCards,
-    getPublicFolders,
-    getPublicProfile,
-} from "@/lib/public-profile";
+import { PUBLIC_PAGE_SIZE, countPublicCards, getAllPublicCards, getPublicCards, getPublicFolders, getPublicProfile } from "@/lib/public-profile";
 
 type Params = { params: Promise<{ username: string }>; searchParams: Promise<ListSearchParams> };
 
@@ -57,30 +48,10 @@ export default async function PublicProfilePage({ params, searchParams }: Params
     const narrowed = isNarrowed(query);
     // A list the owner does not show is the collection: the chips say so, and the route would 404.
     const list =
-        query.list === "wishlist" && profile.wishlist_public
-            ? "wishlist"
-            : query.list === "favorites" && profile.favorites_public
-              ? "favorites"
-              : query.list === "pokedex" && profile.pokedex_public
-                ? "pokedex"
-                : undefined;
+        query.list === "wishlist" && profile.wishlist_public ? "wishlist" : query.list === "favorites" && profile.favorites_public ? "favorites" : undefined;
     if (list !== query.list) query.list = list;
-    // The Pokédex needs every card, and takes longest to read: it is not awaited, and the slots
-    // take their place under the row when the last page is in, as on the owner's own page.
-    const dex: Promise<DexList> | null =
-        list === "pokedex"
-            ? Promise.all([getAllPublicCards(decodeURIComponent(username), query), getDexNames()]).then(([r, names]) => {
-                  // The count is the slots' own, as the owner's page says it; a public card has no price, so no value.
-                  const grouped = groupByDex(r.cards, names, profile.pokedex ?? DEFAULT_POKEDEX);
-                  return { ...grouped, total: grouped.cards };
-              })
-            : null;
-    // The Pokédex chip's number, the same the owner's sidebar says (countPublicPokedex). It is read
-    // from every card, so it is not awaited either: the chip gets it when it is in, and a read that
-    // fails leaves the chip without a number rather than the page without a chip.
-    const pokedexCount = profile.pokedex_public ? countPublicPokedex(decodeURIComponent(username), profile.pokedex ?? DEFAULT_POKEDEX).catch(() => null) : null;
-    // The paged read for every list, the Pokédex too: its first page carries the count and the facets
-    // at once, while the slots' own read of every card streams in behind the row.
+    // The paged read for every list: its first page carries the count and the facets at once, while
+    // a Pokédex binder's own read of every card streams in behind the row.
     const [{ cards, total, facets }, folders, viewer, owned, wishes] = await Promise.all([
         getPublicCards(decodeURIComponent(username), query),
         getPublicFolders(decodeURIComponent(username)),
@@ -91,6 +62,17 @@ export default async function PublicProfilePage({ params, searchParams }: Params
     ]);
     // A folder in the URL that the owner does not show: the API answered the whole list; the chips say so too.
     const folder = folders.find((f) => f.id === query.folder) ?? null;
+    // A binder shown as a Pokédex draws as one here too, the way it does on its owner's page: the
+    // Pokédex is a binder now and nothing else. Every card of it is needed, which takes longest to
+    // read, so it is not awaited: the slots take their place under the row when the last page is in.
+    const dexSetting = folder?.pokedex ?? null;
+    const dex: Promise<DexList> | null = dexSetting
+        ? Promise.all([getAllPublicCards(decodeURIComponent(username), query), getDexNames()]).then(([r, names]) => {
+              // The count is the slots' own, as the owner's page says it; a public card has no price, so no value.
+              const grouped = groupByDex(r.cards, names, dexSetting);
+              return { ...grouped, total: grouped.cards };
+          })
+        : null;
     const base = `/user/${encodeURIComponent(username)}`;
     const name = profile.display_name || profile.username || "Collection";
     // What an empty list says, by which list it is: the words are the visitor's, not the owner's.
@@ -151,7 +133,7 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                     </div>
                 </div>
 
-                {folders.length > 0 || profile.wishlist_public || profile.favorites_public || profile.pokedex_public ? (
+                {folders.length > 0 || profile.wishlist_public || profile.favorites_public ? (
                     // The folders the owner shows, as chips that narrow the list; All cards first. A chip is a link,
                     // so a folder is a URL that can be shared, and the row keeps its place through a search.
                     <nav aria-label="Binders" className="flex flex-wrap gap-2">
@@ -172,12 +154,12 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                                 </LinkButton>
                             );
                         })}
-                        {/* The three lists beside the folders, each behind the owner's own setting. The favorites and
-                            the Pokédex are the collection seen another way; the wishlist is what they are looking for. */}
+                        {/* The two lists beside the folders, each behind the owner's own setting. The favorites are
+                            the collection seen another way; the wishlist is what they are looking for. A Pokédex is a
+                            binder, so it is a chip above, with the others. */}
                         {(
                             [
                                 ["favorites", "Favorites", profile.favorites_public],
-                                ["pokedex", "Pokédex", profile.pokedex_public],
                                 ["wishlist", "Wishlist", profile.wishlist_public],
                             ] as const
                         )
@@ -191,12 +173,6 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                                     aria-current={query.list === id ? "page" : undefined}
                                 >
                                     {label}
-                                    {/* The Pokédex has a count like a folder's; the other two say nothing, as before. */}
-                                    {id === "pokedex" && pokedexCount ? (
-                                        <Suspense fallback={null}>
-                                            <ChipCount count={pokedexCount} />
-                                        </Suspense>
-                                    ) : null}
                                 </LinkButton>
                             ))}
                     </nav>
@@ -211,10 +187,4 @@ export default async function PublicProfilePage({ params, searchParams }: Params
 /** A line of text that arrives after the frame. */
 async function Late({ text }: { text: Promise<string> }) {
     return await text;
-}
-
-/** A chip's number, drawn as the folder chips draw theirs; nothing when the read failed. */
-async function ChipCount({ count }: { count: Promise<number | null> }) {
-    const n = await count;
-    return n === null ? null : <span className="ml-1.5 tabular-nums opacity-70">{formatCount(n)}</span>;
 }

@@ -870,7 +870,16 @@ export const publicCardsAnswer = z.object({
 export const publicTotalAnswer = z.object({ total: z.number(), copies: z.number().optional() });
 
 export const publicFoldersAnswer = z.object({
-    folders: z.array(z.object({ id: z.string(), name: z.string(), kind: z.enum(["manual", "rule"]), count: z.number() })),
+    folders: z.array(
+        z.object({
+            id: z.string(),
+            name: z.string(),
+            kind: z.enum(["manual", "rule"]),
+            count: z.number(),
+            /** Set where the binder is shown as a Pokédex, so the page draws slots; absent from an API before it said so. */
+            pokedex: pokedexSettingSchema.nullish(),
+        }),
+    ),
 });
 
 export const avatarAnswer = z.object({ avatarUrl: z.string() });
