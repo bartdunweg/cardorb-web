@@ -25,12 +25,13 @@ export type LanguageCode = (typeof LANGUAGES)[number]["code"];
  * catalogue's, not a choice.
  */
 /**
- * Dutch is not among them. No Pokémon card has been printed in it and TCGdex keeps no Dutch
- * catalogue, so it could only ever be offered on the path where nothing could answer, and there
- * it was the one option that is never true. It stays in LANGUAGES above so a row that carries it
- * (an import could) still reads as Dutch rather than as English.
+ * Dutch is one of them. It was taken out on 2026-09-12 on the grounds that no Pokémon card is
+ * printed in Dutch, which is wrong: Base Set, Jungle and Fossil were released in it, and nothing
+ * after. TCGdex keeps no Dutch catalogue, so it can never be the answer to a per-card question;
+ * the API answers those three sets from the set's own list instead (cardorb-api#347), and this
+ * list is what a card whose languages nobody could name offers.
  */
-export const WESTERN_LANGUAGES = LANGUAGES.filter((l) => ["en", "de", "fr", "it", "es", "pt"].includes(l.code));
+export const WESTERN_LANGUAGES = LANGUAGES.filter((l) => ["en", "de", "fr", "it", "es", "pt", "nl"].includes(l.code));
 
 /**
  * The languages a copy may be set to, given the language it is in (null: English) and, when the
