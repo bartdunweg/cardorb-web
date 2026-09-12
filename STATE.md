@@ -73,6 +73,16 @@ The field counts and names what is in it: titles in a binder, sets on Browse, re
 when it is empty. A key written as a stringified object had filed the Collection's own history
 under a name the Collection did not ask for; both keys are now written out field by field.
 
+**2026-09-12, the three that were left.** Bart's list, all three done. A preview now says per row
+whether it names a card already held (cardorb-api #327), so "93 of these you already have" points
+at the rows instead of leaving them to be found: the words sit under the card's name, and one
+button unticks all of them at once. Writing that endpoint's first route test turned up a real
+disagreement, a preview given `exclude` counting `seen` without those lines while the commit
+counted them; `seen` is the file on both halves now. The list has a search field that narrows what
+is drawn and never what is written, with the tick at the top acting on what the search left. And
+the tick column is sticky, because the table scrolls sideways on a phone and a row whose tick is
+off the screen is a row you cannot take out.
+
 **2026-09-12, ticking rows off.** The second half of what Bart asked for, and it needed the API
 first (cardorb-api #323): a preview now hands back every row it would write, each with the line
 of the file it came from, and a commit takes `exclude`, the lines not to write, counting them
