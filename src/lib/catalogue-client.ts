@@ -1,11 +1,12 @@
 "use client";
 
 import { z } from "zod";
-import { type PokemonCard, browseCardSchema, pokemonCardFromBrowse } from "@/lib/api-shapes";
+import { type PokemonCard, browseCardSchema, pokemonCardFromBrowse, speciesAnswer } from "@/lib/api-shapes";
+import { type SpeciesTable, speciesTable } from "@/lib/card-group";
 import { type CatalogueIndex, catalogueIndexSchema } from "@/lib/catalogue-index";
 
 /**
- * The two reads a search in the browser makes of the Card Orb API, from the browser.
+ * The three reads a search in the browser makes of the Card Orb API, from the browser.
  *
  * Every other read of the API goes through `src/lib/api.ts` on the server (R-DATA-003), and
  * these two are the same road by another lane: `/api/v1/*` on this origin is the API itself
@@ -44,6 +45,31 @@ export function loadCatalogueIndex(): Promise<CatalogueIndex | null> {
         return found;
     });
     return index;
+}
+
+let species: Promise<SpeciesTable | null> | null = null;
+
+/**
+ * Every Pokémon's English name, for the search to put each card under its Pokémon
+ * (`@/lib/card-group`). The same public list the Pokédex names its slots from. Null where it
+ * would not come: the hits are then one list, as they were, and the next open asks again.
+ */
+export function loadSpecies(): Promise<SpeciesTable | null> {
+    if (species) return species;
+    species = (async () => {
+        try {
+            const res = await fetch("/api/v1/public/species");
+            if (!res.ok) return null;
+            const parsed = speciesAnswer.safeParse(await res.json());
+            return parsed.success ? speciesTable(parsed.data.entries) : null;
+        } catch {
+            return null;
+        }
+    })().then((found) => {
+        if (!found) species = null;
+        return found;
+    });
+    return species;
 }
 
 const lookupAnswer = z.object({ cards: z.array(browseCardSchema) });

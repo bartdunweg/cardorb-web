@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { speciesTable } from "./card-group";
 import { type CatalogueIndex, catalogueIndexSchema, searchIndex } from "./catalogue-index";
 
 const index: CatalogueIndex = {
@@ -94,5 +95,48 @@ describe("searchIndex", () => {
         expect(searchIndex(big, "pikachu", {}, 1).items).toHaveLength(20);
         expect(searchIndex(big, "pikachu", {}, 3).items).toHaveLength(5);
         expect(searchIndex(big, "pikachu", {}, 3).total).toBe(45);
+    });
+});
+
+describe("searchIndex by Pokémon", () => {
+    const species = speciesTable([
+        { id: 66, name: "Machop" },
+        { id: 68, name: "Machamp" },
+    ]);
+    const shelf: CatalogueIndex = {
+        ...index,
+        cards: [
+            ["a-1", "base1", "1", "Machop", null, []],
+            ["a-2", "base1", "2", "Dark Machamp", null, []],
+            ["a-3", "base1", "3", "Machamp's Gym", null, []],
+            ["a-4", "base1", "4", "Machamp V", null, []],
+            ["a-5", "base1", "5", "M Machamp EX", null, []],
+        ],
+    };
+
+    it("answers every printing of one Pokémon together, under its name, with how many", () => {
+        const { items, total } = searchIndex(shelf, "machamp", {}, 1, species);
+        expect(total).toBe(4);
+        expect(items.map((c) => c.id)).toEqual(["a-2", "a-4", "a-5", "a-3"]);
+        expect(items.map((c) => c.group?.title)).toEqual(["Machamp", "Machamp", "Machamp", "Machamp's Gym"]);
+        expect(items[0]?.group?.size).toBe(3);
+        expect(items[3]?.group).toMatchObject({ key: "name:machampsgym", size: 1 });
+    });
+
+    it("keeps the bands between headings, and a heading that is the whole term first", () => {
+        expect(searchIndex(shelf, "mach", {}, 1, species).items.map((c) => c.group?.title)).toEqual([
+            "Machop",
+            "Machamp",
+            "Machamp",
+            "Machamp",
+            "Machamp's Gym",
+        ]);
+        // "dark" is only in one card's name, and that card brings its heading.
+        expect(searchIndex(shelf, "dark", {}, 1, species).items.map((c) => c.id)).toEqual(["a-2"]);
+    });
+
+    it("leaves a shelf read by chips alone, and a search without the species, ungrouped", () => {
+        expect(searchIndex(shelf, "", { set: "Base Set" }, 1, species).items.every((c) => !c.group)).toBe(true);
+        expect(searchIndex(shelf, "machamp").items.every((c) => !c.group)).toBe(true);
     });
 });

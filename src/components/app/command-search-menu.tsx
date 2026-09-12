@@ -168,6 +168,39 @@ const VIEWED_AFTER_MS = 1000;
 /** The most the API counts: it reads that many and stops, so that figure means "at least". */
 const SEARCH_WINDOW = 250;
 
+const cardsLabel = (n: number) => `${n} ${n === 1 ? "card" : "cards"}`;
+
+/**
+ * The hits as the list's sections. A hit the browser's catalogue answered carries its heading
+ * (`@/lib/card-group`): one section per Pokémon, or per trainer or energy by its name, each
+ * saying how many the whole search holds under it, in the order the search put them. A hit
+ * without one (the API's answer, on another shelf or for full art) is one section of all the
+ * cards, as the palette has always drawn it.
+ */
+function hitGroups(hits: PokemonCard[], total: number | null): CommandMenuGroupType[] {
+    const item = (c: PokemonCard) => ({
+        id: c.id,
+        type: "image" as const,
+        src: c.image,
+        alt: c.name,
+        label: c.name,
+        description: searchHitDescription(c),
+        stacked: true,
+    });
+    if (!hits.every((h) => h.group)) {
+        const title = total === null ? "Cards" : total >= SEARCH_WINDOW ? `${SEARCH_WINDOW}+ cards` : cardsLabel(total);
+        return [{ id: "cards", title, items: hits.map(item) }];
+    }
+    const sections = new Map<string, CommandMenuGroupType>();
+    for (const hit of hits) {
+        const { key, title, size } = hit.group!;
+        const section = sections.get(key) ?? { id: `group:${key}`, title: `${title} · ${cardsLabel(size)}`, items: [] };
+        section.items.push(item(hit));
+        sections.set(key, section);
+    }
+    return [...sections.values()];
+}
+
 // The command palette: the search field, the hits and the preview of the highlighted one, all in
 // the one dialog. Loaded by CommandSearchProvider the first time it is opened; the state lives there.
 //
@@ -250,26 +283,15 @@ export function CommandSearchMenu({
                   },
               ]
             : hits.length
-              ? [
-                    {
-                        id: "cards",
-                        title: total === null ? "Cards" : total >= SEARCH_WINDOW ? `${SEARCH_WINDOW}+ cards` : `${total} ${total === 1 ? "card" : "cards"}`,
-                        items: [
-                            ...hits.map((c) => ({
-                                id: c.id,
-                                type: "image" as const,
-                                src: c.image,
-                                alt: c.name,
-                                label: c.name,
-                                description: searchHitDescription(c),
-                                stacked: true,
-                            })),
-                            // The sentinel is an item of the list so it scrolls with it; the section renders it as
-                            // the kit's load-more row rather than as a card.
-                            ...(hasMore ? [{ id: MORE, label: "Loading more…" }] : []),
-                        ],
-                    },
-                ]
+              ? hitGroups(hits, total).map((group, at, all) => ({
+                    ...group,
+                    items: [
+                        ...group.items,
+                        // The sentinel is an item of the list so it scrolls with it; the section renders it as
+                        // the kit's load-more row rather than as a card. It goes in the last heading, at the end.
+                        ...(hasMore && at === all.length - 1 ? [{ id: MORE, label: "Loading more…" }] : []),
+                    ],
+                }))
               : [];
 
     return (

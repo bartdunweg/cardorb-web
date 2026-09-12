@@ -671,6 +671,11 @@ export type PokemonCard = {
     quantity: number;
     /** One number, the way a tile shows it: null where the guide does not price the card, or the route did not ask. */
     price: number | null;
+    /**
+     * The heading a search puts it under (`@/lib/card-group`): its Pokémon, or its own name, and
+     * how many hits of the whole search share it. Only on hits the browser's catalogue answered.
+     */
+    group?: { key: string; title: string; size: number };
 };
 
 /**

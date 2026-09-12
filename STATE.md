@@ -22,6 +22,17 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-13, a search answers by Pokémon.** Bart: "machamp" gave Machamp, Dark Machamp, M
+Machamp EX and Machamp VMAX as strangers. The palette's hits from the browser's catalogue now come
+under headings, "Machamp · 45 cards": every printing of one Pokémon together, a tag team
+("Marshadow & Machamp") its own, a trainer or an energy by its own name (the apostrophe and a
+named professor in brackets folded, so Professor's Research is one heading of 28). The document
+has no Dex number, so `src/lib/card-group.ts` reads the name against the 1025 species of
+`/public/species`: measured on all 4,530 English names, every Pokémon card but "Buried Fossil"
+found its species, and the 48 trainer names holding one (Spirit Links, dolls, Rotom gadgets,
+fossils) are kept out by a word list. Headings keep the bands of #471. Left as it was: the API's
+answer (other shelves, Full art) and a shelf read by chips alone, which stay one list.
+
 **2026-09-13, filters are a sheet of tags with numbers.** The dropdowns behind Filters are gone.
 On a phone Filters opens a bottom sheet, from sm a panel from the right, in the shape Mobbin's
 filter sheets share (Etsy, Best Buy, Airwallex, Alan): each filter a section of the kit's Tags
