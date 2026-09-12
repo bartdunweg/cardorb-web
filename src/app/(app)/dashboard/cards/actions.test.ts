@@ -28,6 +28,7 @@ const tile = {
     itemIds: [],
     price: null,
     tcgId: "sv03.5-011",
+    setAbbr: null,
 };
 
 const posted = () => (api.mock.calls[0] as unknown as [string, { body: Record<string, unknown> }])[1].body;
