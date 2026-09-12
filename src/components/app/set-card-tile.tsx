@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { Check, DotsHorizontal, Heart, Minus, Plus, Rows01, Trash01 } from "@untitledui/icons";
-import { useRouter } from "next/navigation";
 import { Button as AriaButton } from "react-aria-components";
-import { addCard, markOwned, removeCard, setCopies } from "@/app/(app)/dashboard/cards/actions";
+import { addCard, markOwned, removeCard, rereadMine, restoreCard, setCopies } from "@/app/(app)/dashboard/cards/actions";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { warmCard } from "@/components/app/card-memo";
+import { notify } from "@/components/app/toast";
 import { useWarm } from "@/components/app/use-warm";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
@@ -17,12 +17,29 @@ import { cx } from "@/utils/cx";
 
 type Result = { ok: true } | { ok: false; error: string };
 
+// size-7, not size-6: 24px clears WCAG 2.5.8's minimum by nothing at all, and this is a thumb
+// target on a phone, in a grid of 129 of them.
+const stepClass = ({ isFocusVisible, isHovered }: { isFocusVisible: boolean; isHovered: boolean }) =>
+    cx(
+        "flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-primary ring-1 ring-primary outline-offset-2 outline-focus-ring ring-inset",
+        isHovered && "bg-primary_hover",
+        isFocusVisible && "outline-2",
+    );
+
 /**
  * One card of a set, and what you can do with it from here. The tile is a menu button: a card
  * you do not hold offers the collection or the wishlist; one on the wishlist offers "Mark as owned";
  * one you hold offers a copy more or less, and the way to it in Cards. Copies are only offered
  * when the card is one row, which is nearly always: a card held as two printings is managed
  * in Cards, where each printing is its own row.
+ *
+ * The count changes under the finger. A press used to wait for the write and then for the whole
+ * page to be drawn again, twice (once in the action's answer, once more by a refresh), with both
+ * buttons dead in between: seconds on a good day, and on 2026-09-12 one press set off twenty API
+ * reads that took sixteen. Now the tile shows the new count at once and the store follows: one
+ * write in the air at a time, always for the last count pressed, and the page is read again once,
+ * when the presses have landed. Once you hold it the plus stays and a minus comes beside it; the
+ * minus on the last copy takes the card out, with the way back in the toast.
  *
  * The picture carries no text of its own: the caption under it and the button's name say
  * which card this is and whether it is yours, so the grey is never the only signal.
@@ -44,26 +61,115 @@ export function SetCardTile({
     /** Tapping the picture: the page opens the card, the tile only says which. */
     onOpen?: (card: SetCard) => void;
 }) {
-    const router = useRouter();
     const [pending, startTransition] = useTransition();
     const [error, setError] = useState<string | null>(null);
     // What the sheet will ask for, asked while the pointer rests here, so the first open is complete.
     const warm = useWarm(onOpen ? () => warmCard(card.tcgId) : undefined);
 
+    // The page draws itself again inside the action's answer (the write forgets the cache), so
+    // there is no refresh after it: that was the second full render of every press.
     const run = (action: () => Promise<Result>) => {
         setError(null);
+        setPressed(heldOnPage);
         startTransition(async () => {
             const res = await action();
-            if (res.ok) router.refresh();
-            else setError(res.error);
+            if (!res.ok) setError(res.error);
+        });
+    };
+
+    /* How many you hold, as last pressed. Shown while the writes and the page's re-read are under
+       way (the transition is pending until the page drawn after them is on screen), and the
+       page's own count from then on, so the two never disagree for a frame. */
+    const heldOnPage = card.owned ? card.quantity : 0;
+    const [pressed, setPressed] = useState(heldOnPage);
+    const held = pending ? pressed : heldOnPage;
+    const want = useRef(heldOnPage);
+    const flying = useRef(false);
+    /* What the store holds after the last write this tile made. The page's own count is not that
+       until the page drawn after the re-read is on screen: the action's answer arrives before the
+       page it streams, so a press in between read "not held" and added the card a second time
+       (the API adds a copy to the row it finds), and two plus presses made ×4. */
+    const stored = useRef<{ quantity: number; id: string | undefined }>({ quantity: heldOnPage, id: undefined });
+    const seen = useRef<string | null>(null);
+    const press = (quantity: number) => {
+        setError(null);
+        setPressed(quantity);
+        want.current = quantity;
+        if (flying.current) return;
+        flying.current = true;
+        // The page's count once it has caught up with the last run; this tile's own until then.
+        // Taken from the page only when the page has changed since it was last taken, so a page that
+        // has not caught up yet cannot overwrite what this tile knows it wrote.
+        const page = `${heldOnPage}:${card.itemIds.join(",")}`;
+        if (!pending && seen.current !== page) {
+            seen.current = page;
+            stored.current = { quantity: heldOnPage, id: card.owned ? card.itemIds[0] : undefined };
+        }
+        let { quantity: have, id } = stored.current;
+        startTransition(async () => {
+            let failure: string | null = null;
+            do {
+                while (want.current !== have) {
+                    const target = want.current;
+                    if (have === 0) {
+                        const res = await addCard(pokemonCardFromSetCard(card, language), "collection", undefined, { reread: false });
+                        if (!res.ok || !res.id) {
+                            failure = res.ok ? "The card was added, but the page could not follow. Reload to see it." : res.error;
+                            break;
+                        }
+                        id = res.id;
+                        have = 1;
+                        stored.current = { quantity: have, id };
+                    } else if (target === 0 && id) {
+                        const res = await removeCard(id, { reread: false });
+                        if (!res.ok) {
+                            failure = res.error;
+                            break;
+                        }
+                        const removed = res.card;
+                        notify.removed("Removed from your collection", {
+                            description: card.name,
+                            undo: removed
+                                ? {
+                                      label: "Put back",
+                                      onUndo: () =>
+                                          void restoreCard(removed).then((r) =>
+                                              r.ok ? undefined : notify.failed("That did not go back", { description: r.error }),
+                                          ),
+                                  }
+                                : undefined,
+                        });
+                        id = undefined;
+                        have = 0;
+                        stored.current = { quantity: have, id };
+                    } else if (id) {
+                        const res = await setCopies(id, target, { reread: false });
+                        if (!res.ok) {
+                            failure = res.error;
+                            break;
+                        }
+                        have = target;
+                        stored.current = { quantity: have, id };
+                    } else break;
+                }
+                // Once, with nothing in the air to race it; a press during the re-read goes round again.
+                await rereadMine();
+            } while (!failure && want.current !== have);
+            flying.current = false;
+            if (failure) {
+                want.current = have;
+                setError(failure);
+            }
         });
     };
 
     const oneRow = card.itemIds.length === 1;
     const rowId = card.itemIds[0];
-    const state = card.owned ? "owned" : card.wishlist ? "wishlist" : "missing";
+    const state = held > 0 ? "owned" : card.wishlist ? "wishlist" : "missing";
+    // The plus and the minus: a card you do not hold, or one you hold as one row.
+    const steps = state === "missing" || (state === "owned" && (oneRow || !card.owned));
     const stateLabel = {
-        owned: card.quantity > 1 ? `${card.quantity} copies` : "in your collection",
+        owned: held > 1 ? `${held} copies` : "in your collection",
         wishlist: "on your wishlist",
         missing: "not in your collection",
     }[state];
@@ -74,7 +180,6 @@ export function SetCardTile({
                 It used to be the menu's trigger, so a tap on a card answered with a list of things
                 to do to it and never with the card itself. The menu is a button of its own now. */}
             <AriaButton
-                isDisabled={pending}
                 aria-label={`${card.name} #${card.number}, ${stateLabel}`}
                 onPress={() => onOpen?.(card)}
                 {...warm}
@@ -84,7 +189,6 @@ export function SetCardTile({
                         // sits behind it: a card with no picture shows its back, not a grey box.
                         "relative block aspect-card w-full cursor-pointer overflow-hidden rounded-card outline-offset-2 outline-focus-ring",
                         (isPressed || isFocusVisible) && "outline-2",
-                        pending && "cursor-progress",
                     )
                 }
             >
@@ -119,7 +223,7 @@ export function SetCardTile({
                         )}
                     >
                         {state === "owned" ? <Check className="size-3" aria-hidden="true" /> : <Heart className="size-3" aria-hidden="true" />}
-                        {state === "owned" && card.quantity > 1 ? <span className="tabular-nums">{card.quantity}</span> : null}
+                        {state === "owned" && held > 1 ? <span className="tabular-nums">{held}</span> : null}
                     </span>
                 ) : null}
             </AriaButton>
@@ -141,10 +245,11 @@ export function SetCardTile({
                     {/* The same two numbers a tile carries on every other list: how many you hold on
                         the left, what one is worth on the right. A set page was the one place that
                         said only the price, so a card you held four of looked like a card you held. */}
-                    <span className="text-sm font-medium text-tertiary tabular-nums">
-                        {card.owned && card.quantity > 0 ? (
+                    {/* Polite: a press says its new count, without a toast for a change you are looking at. */}
+                    <span aria-live="polite" className="text-sm font-medium text-tertiary tabular-nums">
+                        {held > 0 ? (
                             <>
-                                <span className="sr-only">You hold </span>×{card.quantity}
+                                <span className="sr-only">You hold </span>×{held}
                             </>
                         ) : null}
                     </span>
@@ -164,14 +269,12 @@ export function SetCardTile({
                     longer the answer to tapping the card. */}
                         <Dropdown.Root>
                             <AriaButton
-                                isDisabled={pending}
                                 aria-label={`What to do with ${card.name} #${card.number}`}
                                 className={({ isFocusVisible, isHovered }) =>
                                     cx(
                                         "flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-primary ring-1 ring-primary outline-offset-2 outline-focus-ring ring-inset",
                                         isHovered && "bg-primary_hover",
                                         isFocusVisible && "outline-2",
-                                        pending && "cursor-progress opacity-50",
                                     )
                                 }
                             >
@@ -181,10 +284,7 @@ export function SetCardTile({
                                 <Dropdown.Menu>
                                     {state === "missing" ? (
                                         <>
-                                            <Dropdown.Item
-                                                icon={Plus}
-                                                onAction={() => run(() => addCard(pokemonCardFromSetCard(card, language), "collection"))}
-                                            >
+                                            <Dropdown.Item icon={Plus} onAction={() => press(1)}>
                                                 Add to collection
                                             </Dropdown.Item>
                                             <Dropdown.Item icon={Heart} onAction={() => run(() => addCard(pokemonCardFromSetCard(card, language), "wishlist"))}>
@@ -211,18 +311,18 @@ export function SetCardTile({
                                     ) : null}
                                     {state === "owned" ? (
                                         <>
-                                            {oneRow ? (
-                                                <Dropdown.Item icon={Plus} onAction={() => run(() => setCopies(rowId, card.quantity + 1))}>
+                                            {steps ? (
+                                                <Dropdown.Item icon={Plus} onAction={() => press(held + 1)}>
                                                     Add a copy
                                                 </Dropdown.Item>
                                             ) : null}
-                                            {oneRow && card.quantity > 1 ? (
-                                                <Dropdown.Item icon={Minus} onAction={() => run(() => setCopies(rowId, card.quantity - 1))}>
+                                            {steps && held > 1 ? (
+                                                <Dropdown.Item icon={Minus} onAction={() => press(held - 1)}>
                                                     Remove a copy
                                                 </Dropdown.Item>
                                             ) : null}
-                                            {oneRow && card.quantity <= 1 ? (
-                                                <Dropdown.Item icon={Trash01} onAction={() => run(() => removeCard(rowId))}>
+                                            {steps && held <= 1 ? (
+                                                <Dropdown.Item icon={Trash01} onAction={() => press(0)}>
                                                     Remove from collection
                                                 </Dropdown.Item>
                                             ) : null}
@@ -234,25 +334,29 @@ export function SetCardTile({
                                 </Dropdown.Menu>
                             </Dropdown.Popover>
                         </Dropdown.Root>
-                        {/* One tap to own it, for the card you do not have. The menu behind the tile still offers
-                    the wishlist and everything else; this is the one answer common enough to deserve a
-                    button, and it sits outside the tile's own button because a button inside a button is
-                    not a thing a browser will render. */}
-                        {state === "missing" ? (
+                        {/* One tap to own it, for the card you do not have, and once you do, a copy more or
+                    less. The menu still offers the wishlist and everything else; these are the answers
+                    common enough to deserve buttons. They sit outside the picture's button because a
+                    button inside a button is not a thing a browser will render. The minus comes in
+                    beside the plus rather than in place of it: the plus is where the thumb already is. */}
+                        {steps && state === "owned" ? (
                             <AriaButton
-                                isDisabled={pending}
-                                aria-label={`Add ${card.name} #${card.number} to your collection`}
-                                onPress={() => run(() => addCard(pokemonCardFromSetCard(card, language), "collection"))}
-                                className={({ isFocusVisible, isHovered }) =>
-                                    cx(
-                                        // size-7, not size-6: 24px clears WCAG 2.5.8's minimum by nothing at all, and this
-                                        // is a thumb target on a phone, in a grid of 129 of them.
-                                        "flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-primary ring-1 ring-primary outline-offset-2 outline-focus-ring ring-inset",
-                                        isHovered && "bg-primary_hover",
-                                        isFocusVisible && "outline-2",
-                                        pending && "cursor-progress opacity-50",
-                                    )
+                                aria-label={
+                                    held > 1 ? `Remove a copy of ${card.name} #${card.number}` : `Remove ${card.name} #${card.number} from your collection`
                                 }
+                                onPress={() => press(held - 1)}
+                                className={stepClass}
+                            >
+                                <Minus className="size-3.5" aria-hidden="true" />
+                            </AriaButton>
+                        ) : null}
+                        {steps ? (
+                            <AriaButton
+                                aria-label={
+                                    state === "owned" ? `Add a copy of ${card.name} #${card.number}` : `Add ${card.name} #${card.number} to your collection`
+                                }
+                                onPress={() => press(held + 1)}
+                                className={stepClass}
                             >
                                 <Plus className="size-3.5" aria-hidden="true" />
                             </AriaButton>
