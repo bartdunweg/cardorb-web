@@ -833,6 +833,28 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                 in that cell (the vendored effect's rule): the two scans stack there
                                                 by themselves, the one underneath first. The card frame, its shadow and
                                                 its shine stay put; the pictures cross inside it. */}
+                                            {/* Underneath everything, the card as the head already has it: the 64 px copy
+                                                that colours the header, drawn again inside the frame, scaled up and blurred.
+                                                The same address, so the browser fetches it once and it lands with the
+                                                header's colour, a few hundred milliseconds before the scan; the scan then
+                                                sharpens over it. Until even that small copy is here the frame is a flat
+                                                fill: the sheet used to open on the frame's shadow around nothing, a ghost
+                                                of a card while the scan was on its way. Stepping through a list the last
+                                                scan is opaque on top of this, so it only shows through the crossfade. */}
+                                            {art.shown ? (
+                                                <div aria-hidden="true" className="bg-secondary">
+                                                    <CardImage
+                                                        src={art.shown.blur}
+                                                        alt=""
+                                                        width={64}
+                                                        className={cx(
+                                                            "scale-105 object-cover blur-sm transition-opacity duration-200",
+                                                            !blurLoaded && "opacity-0",
+                                                        )}
+                                                        priority
+                                                    />
+                                                </div>
+                                            ) : null}
                                             {artStack(art).map(({ layer, shown }) => (
                                                 <div
                                                     key={layer.scan}
