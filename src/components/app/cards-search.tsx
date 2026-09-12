@@ -7,6 +7,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type TitleScope, collectionIndex, suggestCardTitles } from "@/app/(app)/dashboard/cards/actions";
 import { listSetsShelf } from "@/app/(app)/dashboard/sets/actions";
 import { InputBase } from "@/components/base/input/input";
+import { MAX_RECENT_TERMS, rememberTerm, useRecentTerms } from "@/hooks/use-recent-terms";
 import { type CardTitle, type TitleSet, matchSets, matchTitles } from "@/lib/card-titles";
 import type { BrowseLanguage } from "@/lib/languages";
 import { cx } from "@/utils/cx";
@@ -19,8 +20,8 @@ type Index = { titles: CardTitle[]; sets: TitleSet[]; complete: boolean };
    the scope, so the wishlist and a binder do not answer for each other. */
 const indexes = new Map<string, Index | Promise<Index>>();
 
-/** What is offered under the field: a title to search for, or a set to narrow the list to. */
-type Suggestion = { kind: "title"; title: CardTitle } | { kind: "set"; set: TitleSet };
+/** What is offered under the field: a title to search for, a set to narrow the list to, or a term searched for before. */
+type Suggestion = { kind: "title"; title: CardTitle } | { kind: "set"; set: TitleSet } | { kind: "recent"; term: string };
 
 // Filters a card list by pushing a debounced `?q=` to the URL; the server page re-queries. The
 // same box serves the owner's Cards page and a public profile; only the words differ.
@@ -100,7 +101,19 @@ export function CardsSearch({
     const [taken, setTaken] = useState<string | null>(null);
     const [index, setIndex] = useState<Index | null>(null);
     const suggests = Boolean(scope || shelf);
-    const sourceKey = JSON.stringify({ scope: scope ?? null, shelf: shelf ?? null });
+    /* What the index is of: the list with its filters, because a filtered list holds fewer titles.
+       Written out field by field rather than stringified whole, so a key never turns on whether a
+       caller passed `undefined` or left the field out. */
+    const sourceKey = JSON.stringify([
+        shelf ?? null,
+        scope?.collectionId ?? null,
+        scope?.wishlist ?? false,
+        scope?.favoritesOnly ?? false,
+        scope?.set ?? null,
+        scope?.rarity ?? null,
+    ]);
+    /** What the recent terms belong to: the binder itself. A filter is not another search history. */
+    const listKey = JSON.stringify([shelf ?? null, scope?.collectionId ?? null, scope?.wishlist ?? false, scope?.favoritesOnly ?? false]);
     /* Where the names come from: a binder reads its own cards, Browse reads the shelf it shows.
        A shelf is one read of set names, so it is always whole; a binder may be larger than one. */
     const read = (): Promise<Index> =>
@@ -166,7 +179,14 @@ export function CardsSearch({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [term, local, sourceKey]);
 
-    const found = [...(local ?? (remote.term === term ? remote.hits : [])), ...setHits];
+    /* Before a letter is typed: what was searched for here before, newest first. A field that is
+       empty and in hand has something to say, and it is the thing most often wanted again. */
+    const recents = useRecentTerms(listKey);
+    const [hasFocus, setHasFocus] = useState(false);
+    const showRecents = suggests && hasFocus && term.length < 2;
+    const found: Suggestion[] = showRecents
+        ? recents.slice(0, MAX_RECENT_TERMS).map((searched) => ({ kind: "recent" as const, term: searched }))
+        : [...(local ?? (remote.term === term ? remote.hits : [])), ...setHits];
     /* The term the list was put away for, by Escape, a press or a blur: it stays away until the
        next keystroke. And a term a suggestion just answered opens nothing, or choosing a title
        would offer that same title back. */
@@ -187,7 +207,14 @@ export function CardsSearch({
     };
 
     const choose = (hit: Suggestion) => {
+        if (hit.kind === "recent") {
+            rememberTerm(listKey, hit.term);
+            setValue(hit.term);
+            close();
+            return;
+        }
         if (hit.kind === "title") {
+            rememberTerm(listKey, hit.title.name);
             setTaken(hit.title.name);
             setValue(hit.title.name);
             close();
@@ -214,6 +241,11 @@ export function CardsSearch({
             else if (value) setValue("");
             return;
         }
+        if (event.key === "Enter" && !isOpen) {
+            event.preventDefault();
+            if (suggests) rememberTerm(listKey, term);
+            return;
+        }
         if (!isOpen || found.length === 0) return;
         if (event.key === "ArrowDown" || event.key === "ArrowUp") {
             event.preventDefault();
@@ -224,9 +256,15 @@ export function CardsSearch({
             if (next >= 0) document.getElementById(`${listId}-${next}`)?.scrollIntoView({ block: "nearest" });
             return;
         }
-        if (event.key === "Enter" && active >= 0) {
+        if (event.key === "Enter") {
             event.preventDefault();
-            choose(found[active]);
+            // On a suggestion, take it. On what was typed, that is the search: remember it, and
+            // put the list away, because the page behind is already answering it.
+            if (active >= 0) choose(found[active]);
+            else {
+                if (suggests) rememberTerm(listKey, term);
+                close();
+            }
             return;
         }
         if (event.key === "Tab") close();
@@ -234,6 +272,7 @@ export function CardsSearch({
 
     const titles = isOpen ? found.filter((hit) => hit.kind === "title") : [];
     const sets = isOpen ? found.filter((hit) => hit.kind === "set") : [];
+    const shown = isOpen && showRecents ? found.length : 0;
     // What the field did, for a screen reader: a list that appears in silence is a list a screen
     // reader user never learns about. Always mounted, as the filter sheet's own region is: one
     // that appears with its text in it is never read out. Only what is there is counted, because
@@ -244,12 +283,16 @@ export function CardsSearch({
         titles.length && `${titles.length} ${noun}${titles.length === 1 ? "" : "s"}`,
         sets.length && `${sets.length} set${sets.length === 1 ? "" : "s"}`,
     ].filter(Boolean);
-    const offered = isOpen ? `${counted.join(" and ")}, use the arrow keys` : "";
+    const offered = !isOpen
+        ? ""
+        : shown
+          ? `${shown} recent search${shown === 1 ? "" : "es"}, use the arrow keys`
+          : `${counted.join(" and ")}, use the arrow keys`;
 
     const option = (hit: Suggestion, at: number) => (
         /* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- the native option element only exists inside a dropdown, which this listbox is not. */
         <li
-            key={hit.kind === "title" ? hit.title.name : `set:${hit.set.name}`}
+            key={hit.kind === "title" ? hit.title.name : hit.kind === "set" ? `set:${hit.set.name}` : `was:${hit.term}`}
             id={`${listId}-${at}`}
             role="option"
             aria-selected={at === active}
@@ -269,8 +312,17 @@ export function CardsSearch({
         >
             {/* The title first: a long set name beside it ("SVP Black Star Promos") took a phone's
                 whole row and left the name as "Pe...". */}
-            <span className="min-w-0 flex-1 truncate text-secondary">{marked(hit.kind === "title" ? hit.title.name : hit.set.title, value.trim())}</span>
-            <span className="max-w-2/5 shrink-0 truncate text-xs text-tertiary">{hit.kind === "title" ? hit.title.hint : "Set"}</span>
+            <span className="min-w-0 flex-1 truncate text-secondary">
+                {hit.kind === "recent" ? hit.term : marked(hit.kind === "title" ? hit.title.name : hit.set.title, term)}
+            </span>
+            {/* A title's hint is read: the set it is in, or how many you hold. A set and a term
+                searched before sit under a heading that says what they are, and that heading is
+                hidden from a screen reader, so this word is the same thing said to it. */}
+            {hit.kind === "title" ? (
+                <span className="max-w-2/5 shrink-0 truncate text-xs text-tertiary">{hit.title.hint}</span>
+            ) : (
+                <span className="sr-only">{hit.kind === "set" ? "Set" : "Recent search"}</span>
+            )}
         </li>
     );
 
@@ -291,7 +343,16 @@ export function CardsSearch({
                     setValue(event.target.value);
                 }}
                 onKeyDown={onKeyDown}
-                onBlur={close}
+                onFocus={() => {
+                    setHasFocus(true);
+                    // Coming back to the field opens it again: what was put away was put away then.
+                    setDismissed(null);
+                    setTaken(null);
+                }}
+                onBlur={() => {
+                    setHasFocus(false);
+                    close();
+                }}
                 size={size}
                 wrapperClassName="rounded-full"
                 role={suggests ? "combobox" : undefined}
@@ -310,16 +371,23 @@ export function CardsSearch({
                 <ul
                     id={listId}
                     role="listbox"
-                    aria-label={shelf ? "Sets" : "Titles and sets"}
+                    aria-label={showRecents ? "Recent searches" : shelf ? "Sets" : "Titles and sets"}
                     className="absolute top-full right-0 left-0 z-50 mt-1 max-h-72 overflow-y-auto rounded-lg bg-primary py-1 shadow-lg ring-1 ring-secondary_alt"
                 >
                     {/* Titles first, then the sets under a heading of their own, rather than ten
                         rows where a set looks like a card you own. Each set option says "Set"
                         beside it, which is what a screen reader reads out with the name: the
                         heading is the same thing said to the eye. */}
+                    {showRecents && (
+                        // Hidden from a screen reader on purpose: each option below carries the word itself.
+                        <li aria-hidden="true" className="px-3 pt-2 pb-1 text-xs font-semibold text-tertiary">
+                            Recent
+                        </li>
+                    )}
+                    {showRecents && found.map((hit, at) => option(hit, at))}
                     {titles.map((hit) => option(hit, found.indexOf(hit)))}
                     {sets.length > 0 && (
-                        // Hidden from a screen reader on purpose: each option below says "Set" beside its name, so the heading would be a second saying of the same thing.
+                        // Hidden from a screen reader on purpose: each option below carries the word itself.
                         <li aria-hidden="true" className="px-3 pt-2 pb-1 text-xs font-semibold text-tertiary">
                             Sets
                         </li>
