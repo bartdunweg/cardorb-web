@@ -3,6 +3,7 @@
 import { BookOpen01, Folder, Heart, HomeLine, Rows01 } from "@untitledui/icons";
 import Link from "next/link";
 import { useRouteTarget, useStartRoute } from "@/components/app/route-pending";
+import { useListQueries, withListQuery } from "@/hooks/use-list-memory";
 import { cx } from "@/utils/cx";
 
 const tabs = [
@@ -32,6 +33,8 @@ export function MobileTabBar() {
     // because the page you tapped from stays on screen until the next one is ready (route-pending.tsx).
     const pathname = useRouteTarget();
     const start = useStartRoute();
+    // A tab opens its list as you left it: the filters, the sort and the search (use-list-memory.ts).
+    const queries = useListQueries();
     // A page outside the five (Settings, You) has no pill.
     const activeIndex = tabs.findIndex((tab) => tab.match(pathname));
 
@@ -59,14 +62,15 @@ export function MobileTabBar() {
                 {tabs.map((tab) => {
                     const active = tab.match(pathname);
                     const Icon = tab.icon;
+                    const href = withListQuery(tab.href, queries);
                     return (
                         <Link
                             key={tab.href}
-                            href={tab.href}
+                            href={href}
                             // The whole page, fetched when the bar mounts, so a tap draws it at once rather than its outline.
                             prefetch={true}
                             // Says where the bar is going the moment it is tapped, so the pill moves at once.
-                            onNavigate={() => start(tab.href)}
+                            onNavigate={() => start(href)}
                             aria-current={active ? "page" : undefined}
                             className={cx(tabClass, active ? "text-primary" : "text-tertiary")}
                         >

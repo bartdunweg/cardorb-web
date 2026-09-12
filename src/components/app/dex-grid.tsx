@@ -10,6 +10,7 @@ import { DexSlider } from "@/components/app/dex-slider";
 import { CardsSkeleton } from "@/components/app/skeletons";
 import { ViewMenu } from "@/components/app/view-menu";
 import { Button } from "@/components/base/buttons/button";
+import { useCardsView } from "@/hooks/use-cards-view";
 import type { DexCard } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
 import { type CardsSize, GRID_COLUMNS, TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
@@ -266,12 +267,12 @@ export function DexView({
     /** When the folder holds nothing at all. */
     empty: ReactNode;
 }) {
-    const [size, setSize] = useState(initialSize);
+    const { size } = useCardsView("grid", initialSize);
     return (
         <div className="flex flex-1 flex-col gap-4">
             <div className="flex flex-wrap items-center gap-2">
                 <div className="contents">{toolbar}</div>
-                <ViewMenu view="grid" size={size} onView={() => {}} onSize={setSize} layouts={false} />
+                <ViewMenu view="grid" size={size} layouts={false} />
             </div>
             <Suspense fallback={<CardsSkeleton heading />}>
                 <DexSlots key={listKey} dex={dex} size={size} narrowed={narrowed} noHits={noHits} empty={empty} linked={linked} />

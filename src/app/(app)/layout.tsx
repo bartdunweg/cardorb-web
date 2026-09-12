@@ -9,6 +9,7 @@ import { RouteProgress } from "@/components/app/route-progress";
 import { MAIN_ID, SkipToContent } from "@/components/app/skip-to-content";
 import { Toasts } from "@/components/app/toast";
 import { WarmLists } from "@/components/app/warm-lists";
+import { RememberListQuery } from "@/hooks/use-list-memory";
 import { ApiError } from "@/lib/api";
 import { getFavoritesCount, getMyFolders } from "@/lib/collections";
 import { type Account, accountFrom, getMyProfile } from "@/lib/profile";
@@ -48,6 +49,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 <CommandSearchProvider>
                     <Suspense fallback={null}>
                         <SessionGuard reads={[me, folders]} />
+                    </Suspense>
+                    {/* Each list's filters, for the tab or row that leads back to it (use-list-memory.ts). */}
+                    <Suspense fallback={null}>
+                        <RememberListQuery />
                     </Suspense>
                     {/* overflow-x-clip: a decoration wider than a phone (the empty state's rings) must not widen the page, or the fixed tab bar drifts off the screen. */}
                     {/* A page a shade off white, so the surfaces on it (tiles, inputs, the chart) read as white

@@ -4,32 +4,15 @@ import { Grid01, Rows01 } from "@untitledui/icons";
 import { Header as AriaHeader } from "react-aria-components";
 import { RowButton } from "@/components/app/row-button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
-import { CARDS_SIZE_COOKIE, CARDS_VIEW_COOKIE, type CardsSize, type CardsViewMode } from "@/lib/cards-view";
-
-const ONE_YEAR = 60 * 60 * 24 * 365;
-
-// The whole site, not only /dashboard: the public profile shares the size.
-const remember = (name: string, value: string) => {
-    document.cookie = `${name}=${value}; path=/; max-age=${ONE_YEAR}; samesite=lax`;
-};
+import { setCardsSize, setCardsView } from "@/hooks/use-cards-view";
+import type { CardsSize, CardsViewMode } from "@/lib/cards-view";
 
 const first = (keys: "all" | Set<React.Key>) => (keys === "all" ? undefined : [...keys][0]);
 
 // One View menu for every list: the layout (grid or list) and the tile size. `layouts` off
-// leaves the size alone, for a list that has no table (the public profile).
-export function ViewMenu({
-    view,
-    size,
-    onView,
-    onSize,
-    layouts = true,
-}: {
-    view: CardsViewMode;
-    size: CardsSize;
-    onView: (view: CardsViewMode) => void;
-    onSize: (size: CardsSize) => void;
-    layouts?: boolean;
-}) {
+// leaves the size alone, for a list that has no table (the public profile). A choice goes to
+// `use-cards-view`, which every list reads, so the next page shows it too.
+export function ViewMenu({ view, size, layouts = true }: { view: CardsViewMode; size: CardsSize; layouts?: boolean }) {
     return (
         <Dropdown.Root>
             <RowButton icon={view === "grid" ? Grid01 : Rows01} label="View" menu className="ml-auto" />
@@ -44,8 +27,7 @@ export function ViewMenu({
                                 onSelectionChange={(keys) => {
                                     const key = first(keys);
                                     if (key === "grid" || key === "table") {
-                                        onView(key);
-                                        remember(CARDS_VIEW_COOKIE, key);
+                                        setCardsView(key);
                                     }
                                 }}
                             >
@@ -67,8 +49,7 @@ export function ViewMenu({
                         onSelectionChange={(keys) => {
                             const key = first(keys);
                             if (key === "sm" || key === "md" || key === "lg") {
-                                onSize(key);
-                                remember(CARDS_SIZE_COOKIE, key);
+                                setCardsSize(key);
                             }
                         }}
                     >
