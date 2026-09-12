@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "@untitledui/icons";
 import { Button as AriaButton } from "react-aria-components";
 import { CardBack } from "@/components/app/card-back";
@@ -10,11 +10,53 @@ import type { DexCard } from "@/lib/api-shapes";
 import { TILE_WIDTH } from "@/lib/cards-view";
 import { cx } from "@/utils/cx";
 
+/** How long a card has to stay in view before it counts as the one you chose. */
+const SETTLED_MS = 400;
+
 // One Pokédex number held as several cards: a horizontal scroll-snap slider in a card tile's
 // picture box. Swipe on touch/trackpad; the arrows (shown on hover) let a mouse-only desktop
-// page through them too. The number and the count are written under the tile, not over it.
-export function DexSlider({ cards, onSelect }: { cards: DexCard[]; onSelect?: (card: DexCard) => void }) {
+// page through them too. Which card is in view is the tile's business: it writes the set and the
+// price under the picture, and remembers the card you stopped on.
+export function DexSlider({
+    cards,
+    onSelect,
+    onShow,
+    onSettle,
+}: {
+    cards: DexCard[];
+    onSelect?: (card: DexCard) => void;
+    /** The card now in view, on every step of the scroll: the tile's words follow it. */
+    onShow?: (card: DexCard) => void;
+    /** The card still in view once the scrolling stopped: the one worth remembering. */
+    onSettle?: (card: DexCard) => void;
+}) {
     const ref = useRef<HTMLDivElement>(null);
+    // Scroll-snap has no event for "it landed": the position says which slide is in view, and a
+    // slide still in view a moment after the last scroll is the one the person stopped on.
+    const shown = useRef(0);
+    const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    useEffect(
+        () => () => {
+            if (timer.current) clearTimeout(timer.current);
+        },
+        [],
+    );
+    const onScroll = () => {
+        const el = ref.current;
+        if (!el || el.clientWidth === 0) return;
+        const index = Math.max(0, Math.min(cards.length - 1, Math.round(el.scrollLeft / el.clientWidth)));
+        if (index !== shown.current) {
+            shown.current = index;
+            const card = cards[index];
+            if (card) onShow?.(card);
+        }
+        if (!onSettle) return;
+        if (timer.current) clearTimeout(timer.current);
+        timer.current = setTimeout(() => {
+            const card = cards[shown.current];
+            if (card) onSettle(card);
+        }, SETTLED_MS);
+    };
 
     const scroll = (direction: 1 | -1) => {
         const el = ref.current;
@@ -23,7 +65,11 @@ export function DexSlider({ cards, onSelect }: { cards: DexCard[]; onSelect?: (c
 
     return (
         <div className="group relative aspect-card w-full overflow-hidden rounded-card">
-            <div ref={ref} className="flex size-full snap-x snap-mandatory [scrollbar-width:none] overflow-x-auto [&::-webkit-scrollbar]:hidden">
+            <div
+                ref={ref}
+                onScroll={onScroll}
+                className="flex size-full snap-x snap-mandatory [scrollbar-width:none] overflow-x-auto [&::-webkit-scrollbar]:hidden"
+            >
                 {cards.map((card) => (
                     <Slide key={card.id} onSelect={onSelect ? () => onSelect(card) : undefined}>
                         {card.imageUrl ? (

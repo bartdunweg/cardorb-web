@@ -26,6 +26,7 @@
 ### Task 1: The card carries `dex_face`, and a PATCH can set it
 
 **Files (cardorb-api):**
+
 - Create: `supabase/migrations/20260912090000_card_dex_face.sql`
 - Modify: `src/lib/storage/postgres.ts` (row type near line 59, `COLUMNS` near line 64, row to domain near line 187, insert near line 492, patch near line 539)
 - Modify: `src/lib/core/collection/collection-row.ts` (`CollectionRow`/draft near line 191 and 242, `CardPatch` near line 509, `validateCardPatch` flag loop near line 580)
@@ -33,6 +34,7 @@
 - Test: `src/lib/core/collection/collection-row.test.ts`, `src/app/api/v1/collection/items/[id]/route.test.ts`
 
 **Interfaces:**
+
 - Consumes: nothing.
 - Produces: `CardPatch.dexFace?: boolean`; `CollectionRow.dexFace: boolean`; `CollectionItem.dexFace: boolean`; the card item answer carries `dexFace: boolean`; `PATCH /v1/collection/items/{id}` accepts `{ dexFace: boolean }`.
 
@@ -42,10 +44,10 @@ In `src/lib/core/collection/collection-row.test.ts`, beside the existing `isFavo
 
 ```ts
 it("takes dexFace as a flag, and refuses anything that is not one", () => {
-  const ok = validateCardPatch({ dexFace: true });
-  expect(ok).toEqual({ kind: "ok", patch: { dexFace: true } });
-  const bad = validateCardPatch({ dexFace: "yes" });
-  expect(bad).toEqual({ kind: "invalid", error: "dexFace must be true or false." });
+    const ok = validateCardPatch({ dexFace: true });
+    expect(ok).toEqual({ kind: "ok", patch: { dexFace: true } });
+    const bad = validateCardPatch({ dexFace: "yes" });
+    expect(bad).toEqual({ kind: "invalid", error: "dexFace must be true or false." });
 });
 ```
 
@@ -65,8 +67,8 @@ In `collection-row.ts`, the flag loop becomes:
 `CardPatch` gains, beside `isFavorite`:
 
 ```ts
-  /** This card leads its Pokémon's Pokédex slot. One per species, kept by the caller: species is not a column. */
-  dexFace: boolean;
+/** This card leads its Pokémon's Pokédex slot. One per species, kept by the caller: species is not a column. */
+dexFace: boolean;
 ```
 
 `CollectionRow` (both the stored shape near line 191 and the draft near line 242) gains `dexFace: boolean;`, and the draft builder near line 406 gains `dexFace: dexFace === true,` beside `isFavorite`. Destructure `dexFace` from the body where `isFavorite` is destructured.
@@ -81,13 +83,13 @@ Expected: PASS.
 In `src/lib/storage/postgres.ts`:
 
 ```ts
-  // the row type, beside is_favorite
-  dex_face: boolean;
+// the row type, beside is_favorite
+dex_face: boolean;
 ```
 
 ```ts
-  // COLUMNS: the same list, with the new column at the end of the inventory fields
-  "id,name,number,set_name,rarity,gen,types,tcg_id,owned,excluded,acquired_at,finish,foil_pattern,quantity,condition,grade,language,purchase_price,purchase_date,notes,is_favorite,dex_face,collection_id";
+// COLUMNS: the same list, with the new column at the end of the inventory fields
+"id,name,number,set_name,rarity,gen,types,tcg_id,owned,excluded,acquired_at,finish,foil_pattern,quantity,condition,grade,language,purchase_price,purchase_date,notes,is_favorite,dex_face,collection_id";
 ```
 
 ```ts
@@ -101,8 +103,8 @@ In `src/lib/storage/postgres.ts`:
 ```
 
 ```ts
-  // the patch, beside the isFavorite line
-  if ("dexFace" in patch) row.dex_face = patch.dexFace;
+// the patch, beside the isFavorite line
+if ("dexFace" in patch) row.dex_face = patch.dexFace;
 ```
 
 Leave the copy near line 1244 alone: a new copy of a card is not the slot's face, and the column's default says so.
@@ -112,8 +114,8 @@ Leave the copy near line 1244 alone: a new copy of a card is not the slot's face
 In `src/lib/core/collection/items.ts`, `CollectionItem` gains beside `isFavorite`:
 
 ```ts
-  /** This card leads its Pokémon's Pokédex slot. */
-  dexFace: boolean;
+/** This card leads its Pokémon's Pokédex slot. */
+dexFace: boolean;
 ```
 
 and the item answer near line 142 gains:
@@ -141,14 +143,14 @@ In `src/app/api/v1/collection/items/[id]/route.test.ts`, beside the `isFavorite`
 
 ```ts
 it("takes dexFace", async () => {
-  const res = await PATCH(patchRequest({ dexFace: true }), { params: Promise.resolve({ id: ROW_ID }) });
-  expect(res.status).toBe(200);
-  expect(updated).toMatchObject({ dexFace: true });
+    const res = await PATCH(patchRequest({ dexFace: true }), { params: Promise.resolve({ id: ROW_ID }) });
+    expect(res.status).toBe(200);
+    expect(updated).toMatchObject({ dexFace: true });
 });
 
 it("refuses a dexFace that is not a flag", async () => {
-  const res = await PATCH(patchRequest({ dexFace: 1 }), { params: Promise.resolve({ id: ROW_ID }) });
-  expect(res.status).toBe(400);
+    const res = await PATCH(patchRequest({ dexFace: 1 }), { params: Promise.resolve({ id: ROW_ID }) });
+    expect(res.status).toBe(400);
 });
 ```
 
@@ -181,10 +183,12 @@ supabase db query --linked "alter table public.cards add column if not exists de
 ### Task 2: A public profile's cards carry the face too
 
 **Files (cardorb-api):**
+
 - Modify: `src/lib/core/collection/items.ts` (`PublicItem` near line 490, `forPublic` near line 526)
 - Test: `src/lib/core/collection/items.test.ts`
 
 **Interfaces:**
+
 - Consumes: `CollectionItem.dexFace` from Task 1.
 - Produces: a public card item carries `dexFace: boolean`.
 
@@ -192,8 +196,8 @@ supabase db query --linked "alter table public.cards add column if not exists de
 
 ```ts
 it("says which card leads its slot, so a visitor's Pokédex opens on it", () => {
-  const [card] = forPublic([ownedCardWith({ dexFace: true })]);
-  expect(card.dexFace).toBe(true);
+    const [card] = forPublic([ownedCardWith({ dexFace: true })]);
+    expect(card.dexFace).toBe(true);
 });
 ```
 
@@ -209,8 +213,8 @@ Expected: FAIL, `dexFace` is undefined.
 `PublicItem` gains, beside `favorite`:
 
 ```ts
-  /** One of the owned copies leads this Pokémon's Pokédex slot. */
-  dexFace: boolean;
+/** One of the owned copies leads this Pokémon's Pokédex slot. */
+dexFace: boolean;
 ```
 
 and `forPublic` gains, beside the `favorite` line:
@@ -258,10 +262,12 @@ curl -s "https://api.cardorb.com/v1/health" >/dev/null && echo deployed
 ### Task 3: The web reads the flag
 
 **Files (cardorb-web):**
+
 - Modify: `src/lib/api-shapes.ts` (`cardItemSchema` near line 117, `Card` near line 183, `cardFromItem` near line 272, the `PublicCard` pick list near line 309, `publicItemSchema` near line 332, `publicCardFromItem` near line 351)
 - Test: `src/lib/api-shapes.test.ts`
 
 **Interfaces:**
+
 - Consumes: the API's `dexFace` from Tasks 1 and 2.
 - Produces: `Card.dex_face: boolean`, `PublicCard` includes `dex_face`.
 
@@ -269,8 +275,8 @@ curl -s "https://api.cardorb.com/v1/health" >/dev/null && echo deployed
 
 ```ts
 it("reads which card leads its Pokédex slot, and says false where an older API is silent", () => {
-  expect(cardFromItem(item({ dexFace: true })).dex_face).toBe(true);
-  expect(cardFromItem(item({})).dex_face).toBe(false);
+    expect(cardFromItem(item({ dexFace: true })).dex_face).toBe(true);
+    expect(cardFromItem(item({})).dex_face).toBe(false);
 });
 ```
 
@@ -330,11 +336,13 @@ git commit -m "Web reads which card leads a Pokédex slot"
 ### Task 4: The flagged card leads its slot, and a slot's card carries its price
 
 **Files (cardorb-web):**
+
 - Modify: `src/lib/dex-groups.ts` (`DexCardLike` near line 24, the slot builder near line 75)
 - Modify: `src/lib/api-shapes.ts` (`DexCard` near line 358)
 - Test: `src/lib/dex-groups.test.ts`
 
 **Interfaces:**
+
 - Consumes: `Card.dex_face` from Task 3.
 - Produces: `DexCard` gains `price: number | null` and `isFace: boolean`; a slot's `cards` are ordered with the face first.
 
@@ -379,18 +387,18 @@ Expected: FAIL on the order, on `isFace` and on `price`.
 `DexCard` in `api-shapes.ts` gains:
 
 ```ts
-    /** What one copy is worth in euros; null on a public profile, which carries no prices. */
-    price: number | null;
-    /** The card the slot opens on: the owner swiped to it and it was remembered. */
-    isFace: boolean;
+/** What one copy is worth in euros; null on a public profile, which carries no prices. */
+price: number | null;
+/** The card the slot opens on: the owner swiped to it and it was remembered. */
+isFace: boolean;
 ```
 
 and the slot builder maps the held cards face-first:
 
 ```ts
-        // The face leads, the rest keep the order the list gave them. Two flags on one species is
-        // not an error (another client may have left one): the first one found leads.
-        const faceFirst = held.some((c) => c.dex_face) ? [...held].sort((a, b) => Number(!!b.dex_face) - Number(!!a.dex_face)) : held;
+// The face leads, the rest keep the order the list gave them. Two flags on one species is
+// not an error (another client may have left one): the first one found leads.
+const faceFirst = held.some((c) => c.dex_face) ? [...held].sort((a, b) => Number(!!b.dex_face) - Number(!!a.dex_face)) : held;
 ```
 
 with `cards: faceFirst.map((c) => ({ ... , price: c.price ?? null, isFace: !!c.dex_face }))`. `Array.prototype.sort` is stable in every engine this runs on, so the rest of the order stands.
@@ -412,11 +420,13 @@ git commit -m "The card a Pokédex slot leads on is the one that was left standi
 ### Task 5: Where you stop swiping is written down
 
 **Files (cardorb-web):**
+
 - Modify: `src/app/(app)/dashboard/cards/actions.ts` (beside `setFavorite` near line 311)
 - Modify: `src/components/app/dex-slider.tsx`
 - Test: `src/app/(app)/dashboard/cards/actions.test.ts` if the file exists; otherwise no test here and the slider's own is in Task 6.
 
 **Interfaces:**
+
 - Consumes: `DexCard.isFace` from Task 4.
 - Produces: `setDexFace(cardId: string, previousId: string | null): Promise<Result>`; `DexSlider` gains `onShow?: (card: DexCard) => void` and `onSettle?: (card: DexCard) => void`.
 
@@ -498,11 +508,13 @@ git commit -m "A Pokédex slot remembers the card you left standing"
 ### Task 6: The slot says its number above and its card below
 
 **Files (cardorb-web):**
+
 - Modify: `src/components/app/card-tile.tsx` (an optional line above the picture)
 - Modify: `src/components/app/dex-grid.tsx` (`DexTile` near line 129)
 - Test: `src/components/app/dex-grid.test.tsx` (create if it is not there)
 
 **Interfaces:**
+
 - Consumes: `DexCard.isFace`, `DexCard.price` (Task 4), `DexSlider`'s `onShow`/`onSettle` and `setDexFace` (Task 5).
 - Produces: `CardTile` gains `header?: ReactNode`.
 
@@ -545,24 +557,24 @@ drawn before `{picture}` in both branches of the component.
 In `DexTile`: the slot's own line goes above, and the card in view goes below.
 
 ```tsx
-    const [shown, setShown] = useState(slot.cards[0] ?? null);
-    const header = (
+const [shown, setShown] = useState(slot.cards[0] ?? null);
+const header = (
+    <div className="flex items-baseline justify-between gap-2">
+        <span className="truncate text-sm font-medium text-primary">{slot.name}</span>
+        <span className="shrink-0 text-xs text-tertiary tabular-nums">{dexNumber(slot.number)}</span>
+    </div>
+);
+// Under the picture: the card you are looking at, not the slot. A slot you hold none of has no
+// card to describe, so it says what it is instead.
+const words =
+    held === 0 ? (
+        <span className="truncate text-xs text-tertiary">Missing</span>
+    ) : (
         <div className="flex items-baseline justify-between gap-2">
-            <span className="truncate text-sm font-medium text-primary">{slot.name}</span>
-            <span className="shrink-0 text-xs text-tertiary tabular-nums">{dexNumber(slot.number)}</span>
+            <span className="truncate text-xs text-tertiary">{shown?.set ?? ""}</span>
+            <span className="shrink-0 text-xs text-tertiary tabular-nums">{formatPrice(shown?.price)}</span>
         </div>
     );
-    // Under the picture: the card you are looking at, not the slot. A slot you hold none of has no
-    // card to describe, so it says what it is instead.
-    const words =
-        held === 0 ? (
-            <span className="truncate text-xs text-tertiary">Missing</span>
-        ) : (
-            <div className="flex items-baseline justify-between gap-2">
-                <span className="truncate text-xs text-tertiary">{shown?.set ?? ""}</span>
-                <span className="shrink-0 text-xs text-tertiary tabular-nums">{formatPrice(shown?.price)}</span>
-            </div>
-        );
 ```
 
 The count moves into the header's line for a slot with more than one card: `{held > 1 ? ` · ${held} cards` : ""}` after the name, so the number and the count stand together above the picture as Bart asked.
@@ -570,12 +582,18 @@ The count moves into the header's line for a slot with more than one card: `{hel
 The slider is handed both callbacks, and writes only where the page is the owner's (`onSelect` is what says so today, so pass a `linked` flag down to `DexTile` rather than inferring it):
 
 ```tsx
-        <DexSlider
-            cards={slot.cards}
-            onSelect={onSelect}
-            onShow={setShown}
-            onSettle={linked ? (card) => { if (!card.isFace) void setDexFace(card.id, slot.cards.find((c) => c.isFace)?.id ?? null); } : undefined}
-        />
+<DexSlider
+    cards={slot.cards}
+    onSelect={onSelect}
+    onShow={setShown}
+    onSettle={
+        linked
+            ? (card) => {
+                  if (!card.isFace) void setDexFace(card.id, slot.cards.find((c) => c.isFace)?.id ?? null);
+              }
+            : undefined
+    }
+/>
 ```
 
 - [ ] **Step 5: Run them and watch them pass**
