@@ -35,6 +35,7 @@ export function CardsList({
     narrowed,
     view,
     size,
+    groupedBySet = false,
     onSelect,
     noHits,
     empty,
@@ -46,6 +47,8 @@ export function CardsList({
     narrowed: boolean;
     view: CardsViewMode;
     size: CardsSize;
+    /** The list arrives set by set; the grid draws a heading over each one. */
+    groupedBySet?: boolean;
     onSelect: (card: Card, siblings: Card[]) => void;
     /** When a search or a filter finds nothing. */
     noHits: ReactNode;
@@ -160,14 +163,32 @@ export function CardsList({
             ) : (
                 <>
                     {view === "grid" ? (
-                        <CardsGrid
-                            cards={cards}
-                            onSelect={onSelect}
-                            size={size}
-                            // The wishlist's tiles carry "Got it": the list says which list it is, rather than
-                            // the grid reading it off a card's fields, so the collection never grows the button.
-                            action={filter.wishlist ? (card, compact) => <GotItButton card={card} compact={compact} /> : undefined}
-                        />
+                        <div className="flex flex-col gap-8">
+                            {setGroups(cards, groupedBySet).map((group) => (
+                                <section key={group.name} aria-labelledby={group.name ? headingId(group.name) : undefined}>
+                                    {group.name ? (
+                                        /* Sticky, so the set a tile belongs to is still readable halfway down a
+                                           long one. `top-0` against the page's own scroll: this list has no
+                                           scroller of its own, and `bg-page` because the band passes over the
+                                           page's ground, which is the neutral tint and not white. */
+                                        <h2 id={headingId(group.name)} className="sticky top-0 z-10 mb-3 bg-page py-2 text-sm font-semibold text-primary">
+                                            {group.name}{" "}
+                                            <span className="font-normal text-tertiary">
+                                                {group.cards.length} {group.cards.length === 1 ? "card" : "cards"}
+                                            </span>
+                                        </h2>
+                                    ) : null}
+                                    <CardsGrid
+                                        cards={group.cards}
+                                        onSelect={(card) => onSelect(card, cards)}
+                                        size={size}
+                                        // The wishlist's tiles carry "Got it": the list says which list it is, rather than
+                                        // the grid reading it off a card's fields, so the collection never grows the button.
+                                        action={filter.wishlist ? (card, compact) => <GotItButton card={card} compact={compact} /> : undefined}
+                                    />
+                                </section>
+                            ))}
+                        </div>
                     ) : (
                         <CardsTable cards={cards} onSelect={onSelect} />
                     )}
@@ -195,3 +216,27 @@ export function CardsList({
         </>
     );
 }
+
+/**
+ * The cards in the runs the list already arrives in, one per set, or the whole list in one
+ * unnamed run when it is sorted by something else.
+ *
+ * Runs, not a group-by: "Set" is the API's own order and a set appears once, so walking the
+ * list keeps that order and cannot invent a second heading for a set further down. A card
+ * whose set the catalogue could not name joins the run above it rather than opening one of
+ * its own, which is where a blank heading came from.
+ */
+export function setGroups(cards: Card[], grouped: boolean): { name: string | null; cards: Card[] }[] {
+    if (!grouped) return [{ name: null, cards }];
+    const runs: { name: string | null; cards: Card[] }[] = [];
+    for (const card of cards) {
+        const name = card.set_name || null;
+        const last = runs.at(-1);
+        if (last && (name === null || last.name === name)) last.cards.push(card);
+        else runs.push({ name, cards: [card] });
+    }
+    return runs;
+}
+
+/** A heading's id, for the section that names it: one per set name, stable across renders. */
+const headingId = (setName: string): string => `set-${setName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;

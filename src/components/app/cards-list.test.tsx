@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { Card, CardList } from "@/lib/cards";
-import { CardsList } from "./cards-list";
+import { CardsList, setGroups } from "./cards-list";
 
 /*
  * The wishlist's tiles carry "Got it", the one thing a wish can have done to it. The tile is a
@@ -119,5 +119,40 @@ describe("CardsList elsewhere", () => {
         await draw(false);
         expect(await screen.findAllByRole("button")).toHaveLength(1);
         expect(screen.queryByRole("button", { name: /Got it/ })).toBeNull();
+    });
+});
+
+/*
+ * "Set" asks the API for nothing, because the order it answers in is set by set already. That
+ * grouping was on screen and unnamed, so the list read as unsorted. These are the runs the
+ * headings are drawn from: one per set, in the order the list arrived, never a group-by that
+ * could reorder it.
+ */
+describe("the runs a set heading is drawn over", () => {
+    const of = (id: string, set: string | null): Card => ({ ...card, id, set_name: set });
+
+    it("keeps the whole list in one unnamed run when the sort is not Set", () => {
+        const cards = [of("a", "Jungle"), of("b", "Fossil")];
+        expect(setGroups(cards, false)).toEqual([{ name: null, cards }]);
+    });
+
+    it("opens a run per set, in the order the list arrived", () => {
+        const groups = setGroups([of("a", "Jungle"), of("b", "Jungle"), of("c", "Fossil")], true);
+        expect(groups.map((g) => [g.name, g.cards.length])).toEqual([
+            ["Jungle", 2],
+            ["Fossil", 1],
+        ]);
+    });
+
+    it("keeps a card the catalogue could not name in the run above it, rather than under a blank heading", () => {
+        const groups = setGroups([of("a", "Jungle"), of("b", null), of("c", "Fossil")], true);
+        expect(groups.map((g) => [g.name, g.cards.map((c) => c.id)])).toEqual([
+            ["Jungle", ["a", "b"]],
+            ["Fossil", ["c"]],
+        ]);
+    });
+
+    it("gives an unnamed first card a run of its own rather than dropping it", () => {
+        expect(setGroups([of("a", null), of("b", "Jungle")], true).map((g) => g.name)).toEqual([null, "Jungle"]);
     });
 });

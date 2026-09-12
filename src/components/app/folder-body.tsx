@@ -164,6 +164,10 @@ export async function FolderBody(props: FolderBodyProps) {
                 list={props.list}
                 filter={props.filter}
                 narrowed={narrowed}
+                // "Set" asks the API for nothing: its own order is set by set, newest first, number
+                // by number. That grouping was on screen and invisible, so the list read as unsorted
+                // and the menu as broken. The headings are the grouping, said out loud.
+                groupedBySet={query.sortKey === "set"}
                 initialView={view}
                 initialSize={size}
                 toolbar={toolbar}
