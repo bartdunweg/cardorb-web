@@ -8,7 +8,6 @@ import { CardsSearch } from "@/components/app/cards-search";
 import { CardsSort } from "@/components/app/cards-sort";
 import { CardsView } from "@/components/app/cards-view";
 import { DexView } from "@/components/app/dex-grid";
-import { FiltersSheet } from "@/components/app/filters-sheet";
 import { PublicCardsView } from "@/components/app/public-cards-view";
 import type { CardFilter, CardList, PublicCard } from "@/lib/cards";
 import { CARDS_SIZE_COOKIE, CARDS_VIEW_COOKIE, parseCardsSize, parseCardsView } from "@/lib/cards-view";
@@ -88,11 +87,15 @@ export async function FolderBody(props: FolderBodyProps) {
                           }
                 }
             />
-            <FiltersSheet key="filters" active={[query.set, query.rarity, query.fullArt, query.gen, query.type, query.duplicates].filter(Boolean).length}>
-                <Suspense key="set-rarity" fallback={<CardsFilters query={query} facets={NO_FACETS} offerDuplicates={offerDuplicates} />}>
-                    <FiltersWhenReady query={query} facets={facets} offerDuplicates={offerDuplicates} />
-                </Suspense>
-            </FiltersSheet>
+            <Suspense key="filters" fallback={<CardsFilters query={query} facets={NO_FACETS} offerDuplicates={offerDuplicates} readOnly={props.readOnly} />}>
+                <FiltersWhenReady
+                    query={query}
+                    facets={facets}
+                    offerDuplicates={offerDuplicates}
+                    readOnly={props.readOnly}
+                    countBase={props.readOnly ? undefined : props.filter}
+                />
+            </Suspense>
             <CardsSort key="sort" query={query} options={sortOptions} defaultSortKey={defaultSortKey} />
         </>
     );
@@ -190,6 +193,16 @@ async function CatalogueNotice({ list }: { list: Promise<CardList> }) {
 
 // The Filters sheet's fields once the sets and rarities are known: they ride with the list's first
 // page, so a page no longer waits for a second read before its first byte.
-async function FiltersWhenReady({ query, facets, offerDuplicates }: { query: ListQuery; facets: Facets | Promise<Facets>; offerDuplicates: boolean }) {
-    return <CardsFilters query={query} facets={await facets} offerDuplicates={offerDuplicates} />;
+async function FiltersWhenReady({
+    query,
+    facets,
+    ...rest
+}: {
+    query: ListQuery;
+    facets: Facets | Promise<Facets>;
+    offerDuplicates: boolean;
+    readOnly?: boolean;
+    countBase?: CardFilter;
+}) {
+    return <CardsFilters query={query} facets={await facets} {...rest} />;
 }

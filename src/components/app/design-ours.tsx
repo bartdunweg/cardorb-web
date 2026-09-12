@@ -16,6 +16,7 @@ import { CardTile } from "./card-tile";
 import { CopyCard } from "./copy-card";
 import { Cell, Group, Panel, type SectionSpec } from "./design-section";
 import { FilterChip, FilterChipRow } from "./filter-chip";
+import { type FilterGroup, type FilterValues, FiltersSheet } from "./filters-sheet";
 import { FlagIcon } from "./flag-icon";
 import { FormError } from "./form-error";
 import { LinkButton } from "./link-button";
@@ -350,6 +351,14 @@ export const ourSections: SectionSpec[] = [
         render: <FilterChipSample />,
     },
     {
+        id: "filters-sheet",
+        title: "FiltersSheet",
+        from: "components/app/filters-sheet",
+        ours: true,
+        note: "A list's filters behind one button: a sheet from the bottom on a phone, a panel from the right from sm. A short filter is the kit's Tags to tap (several, or one with its state as a dot), a long one a row that opens its own list with a field. The choices are a draft until the pinned button, which says how many it will show. With `inline`, from lg each filter is a menu in the row instead. Ours because the kit has the parts and no filter panel.",
+        render: <FiltersSheetSample />,
+    },
+    {
         id: "flag-icon",
         title: "FlagIcon",
         from: "components/app/flag-icon",
@@ -555,6 +564,54 @@ export const ourSections: SectionSpec[] = [
         ),
     },
 ];
+
+/** The sheet holds its choices, so it is a component; the count is worked out from a made-up list of 120. */
+function FiltersSheetSample() {
+    const [values, setValues] = useState<FilterValues>({ rarity: ["holo"] });
+    const groups: FilterGroup[] = [
+        {
+            id: "set",
+            label: "Set",
+            multiple: true,
+            options: [...sets, ...sets.map((o) => ({ ...o, value: `${o.value}-2`, label: `${o.label} 2` }))].slice(0, 14),
+        },
+        {
+            id: "rarity",
+            label: "Rarity",
+            multiple: true,
+            options: [
+                { value: "common", label: "Common" },
+                { value: "holo", label: "Rare Holo" },
+                { value: "ultra", label: "Ultra Rare" },
+            ],
+        },
+        {
+            id: "language",
+            label: "Language",
+            all: { value: "en", label: "English", icon: <FlagIcon language="en" labelled /> },
+            options: [
+                { value: "ja", label: "Japanese", icon: <FlagIcon language="ja" labelled /> },
+                { value: "ko", label: "Korean", icon: <FlagIcon language="ko" labelled /> },
+            ],
+        },
+    ];
+
+    return (
+        <Panel>
+            <Group title="Behind the button" hint="a phone's sheet, a panel from sm" cols="single">
+                <Cell label="FiltersSheet" span="full">
+                    <FiltersSheet
+                        groups={groups}
+                        values={values}
+                        onApply={setValues}
+                        count={(d) => 120 >> Object.values(d).flat().length}
+                        noun={["card", "cards"]}
+                    />
+                </Cell>
+            </Group>
+        </Panel>
+    );
+}
 
 /** The chip row holds a choice, so it is a component rather than an element in the list above. */
 function FilterChipSample() {

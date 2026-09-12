@@ -29,14 +29,14 @@ export type CardFilter = {
     wishlist?: boolean;
     sort?: "name" | "price" | "added" | "dex";
     order?: "asc" | "desc";
-    set?: string;
-    rarity?: string;
+    set?: string | string[];
+    rarity?: string | string[];
     /** Only the cards whose illustration covers the whole card; the API works it out per set. */
     fullArt?: boolean;
-    /** One generation, whole, as the catalogue names its series. */
-    gen?: string;
-    /** One energy type, whole, as the catalogue names it. */
-    type?: string;
+    /** A generation, or several (a card from any), whole, as the catalogue names its series. */
+    gen?: string | string[];
+    /** An energy type, or several (a card of any), whole, as the catalogue names it. */
+    type?: string | string[];
     /** A card number, whole; with `set` it names one card's every row. */
     number?: string;
     /** true: copies with a price; false: the ones nothing prices. */

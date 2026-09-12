@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_PAGE, listHref, readListQuery, readPublicListQuery } from "./list-query";
+import { MAX_PAGE, activeFilterCount, isNarrowed, listHref, readListQuery, readPublicListQuery } from "./list-query";
 
 describe("readListQuery", () => {
     it("reads page and sort, and falls back to set order and page one for anything else", () => {
@@ -9,6 +9,10 @@ describe("readListQuery", () => {
             sort: "added",
             order: "desc",
             q: "pika",
+            set: [],
+            rarity: [],
+            gen: [],
+            type: [],
             fullArt: false,
             unpriced: false,
             duplicates: false,
@@ -19,6 +23,10 @@ describe("readListQuery", () => {
             sort: undefined,
             order: undefined,
             q: undefined,
+            set: [],
+            rarity: [],
+            gen: [],
+            type: [],
             fullArt: false,
             unpriced: false,
             duplicates: false,
@@ -44,8 +52,8 @@ describe("full art in the URL", () => {
         expect(readListQuery({ fullArt: "true" }).fullArt).toBe(false);
         expect(readListQuery({}).fullArt).toBe(false);
         const query = readListQuery({ rarity: "Rare" });
-        expect(listHref("/dashboard/cards", query, { fullArt: true, rarity: undefined })).toBe("/dashboard/cards?fullArt=1");
-        expect(listHref("/dashboard/cards", readListQuery({ fullArt: "1" }), { fullArt: false, rarity: "Rare" })).toBe("/dashboard/cards?rarity=Rare");
+        expect(listHref("/dashboard/cards", query, { fullArt: true, rarity: [] })).toBe("/dashboard/cards?fullArt=1");
+        expect(listHref("/dashboard/cards", readListQuery({ fullArt: "1" }), { fullArt: false, rarity: ["Rare"] })).toBe("/dashboard/cards?rarity=Rare");
     });
 });
 
@@ -78,10 +86,23 @@ describe("listHref", () => {
 describe("set and rarity", () => {
     it("travel in the URL beside the sort and the search", () => {
         const q = readListQuery({ set: "Jungle", rarity: "Rare", sort: "name" });
-        expect(q).toMatchObject({ set: "Jungle", rarity: "Rare", sortKey: "name" });
+        expect(q).toMatchObject({ set: ["Jungle"], rarity: ["Rare"], sortKey: "name" });
         expect(listHref("/dashboard/cards", q, { page: 2 })).toBe("/dashboard/cards?sort=name&set=Jungle&rarity=Rare&page=2");
-        expect(listHref("/dashboard/cards", q, { set: undefined, page: 1 })).toBe("/dashboard/cards?sort=name&rarity=Rare");
-        expect(readListQuery({ set: "  " }).set).toBeUndefined();
+        expect(listHref("/dashboard/cards", q, { set: [], page: 1 })).toBe("/dashboard/cards?sort=name&rarity=Rare");
+        expect(readListQuery({ set: "  " }).set).toEqual([]);
+    });
+
+    it("carry several of one filter as the key repeated, each once", () => {
+        const q = readListQuery({ rarity: ["Rare", " Promo ", "Rare", ""], type: ["Fire", "Water"] });
+        expect(q.rarity).toEqual(["Rare", "Promo"]);
+        expect(listHref("/dashboard/cards", q, {})).toBe("/dashboard/cards?rarity=Rare&rarity=Promo&type=Fire&type=Water");
+        expect(isNarrowed(q)).toBe(true);
+        expect(activeFilterCount(q)).toBe(4);
+        expect(isNarrowed(readListQuery({}))).toBe(false);
+    });
+
+    it("keeps no more than fifty of one", () => {
+        expect(readListQuery({ set: Array.from({ length: 80 }, (_, i) => `Set ${i}`) }).set).toHaveLength(50);
     });
 });
 
@@ -90,7 +111,7 @@ describe("readPublicListQuery", () => {
         // A bare URL is newest first: a profile opens on what its owner pulled last.
         expect(readPublicListQuery({})).toMatchObject({ sortKey: "added-desc", sort: "added", order: "desc" });
         expect(readPublicListQuery({ sort: "name", q: "mew" })).toMatchObject({ sortKey: "name", sort: "name", q: "mew" });
-        expect(readPublicListQuery({ sort: "set", set: "jungle" })).toMatchObject({ sortKey: "set", sort: undefined, order: undefined, set: "jungle" });
+        expect(readPublicListQuery({ sort: "set", set: "jungle" })).toMatchObject({ sortKey: "set", sort: undefined, order: undefined, set: ["jungle"] });
     });
 
     it("drops a sort the public route refuses back to the newest", () => {

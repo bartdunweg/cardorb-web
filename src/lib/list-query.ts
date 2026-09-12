@@ -28,19 +28,20 @@ export type ListQuery = {
     sort: ApiSort | undefined;
     order: ApiOrder | undefined;
     q: string | undefined;
-    /** One set, as the API names it; the API matches it whole. */
-    set: string | undefined;
-    rarity: string | undefined;
+    /** The sets, as the API names them; a card in any of them. None: every set. */
+    set: string[];
+    /** The rarities; a card of any of them. */
+    rarity: string[];
     /**
      * Only the cards whose illustration covers the whole card. Not a rarity: it cuts across
      * them, one full art being an Ultra Rare and the next an illustration rare. The API works
      * it out per set and keeps the answer (`@/lib/full-art` says why the rarity will not do).
      */
     fullArt: boolean;
-    /** One generation, as the catalogue names its series; the API matches it whole. */
-    gen: string | undefined;
-    /** One energy type, as the catalogue names it; the API matches it whole. */
-    type: string | undefined;
+    /** The generations, as the catalogue names its series; a card from any of them. */
+    gen: string[];
+    /** The energy types, as the catalogue names them; a card of any of them. */
+    type: string[];
     /** A public profile's folder, by id; the owner's own lists carry the folder in the path instead. */
     folder: string | undefined;
     /** A public profile's wishlist, favorites or Pokédex instead of its collection. */
@@ -60,11 +61,13 @@ export type ListSearchParams = {
     page?: string;
     sort?: string;
     q?: string;
-    set?: string;
-    rarity?: string;
+    /* A filter chosen twice comes as two of the same key (`?rarity=Rare&rarity=Promo`), which
+       Next hands over as an array. */
+    set?: string | string[];
+    rarity?: string | string[];
     fullArt?: string;
-    gen?: string;
-    type?: string;
+    gen?: string | string[];
+    type?: string | string[];
     folder?: string;
     list?: string;
     unpriced?: string;
@@ -72,7 +75,15 @@ export type ListSearchParams = {
 };
 
 /** A search or a filter is on. */
-export const isNarrowed = (q: ListQuery): boolean => [q.q, q.set, q.rarity, q.fullArt, q.gen, q.type, q.unpriced, q.duplicates].some(Boolean);
+export const isNarrowed = (q: ListQuery): boolean =>
+    [q.q, q.fullArt, q.unpriced, q.duplicates].some(Boolean) || [q.set, q.rarity, q.gen, q.type].some((values) => values.length > 0);
+
+/** How many filters are on, for the badge on the Filters button: each value chosen counts, the search does not. */
+export const activeFilterCount = (q: ListQuery): number =>
+    q.set.length + q.rarity.length + q.gen.length + q.type.length + [q.fullArt, q.duplicates].filter(Boolean).length;
+
+/** More than this per filter is not a choice anybody made by hand; the API refuses past fifty. */
+const MAX_VALUES = 50;
 
 const isSortKey = (v: unknown): v is SortKey => SORT_OPTIONS.some((o) => o.value === v);
 
@@ -84,6 +95,8 @@ export function readListQuery(params: ListSearchParams): ListQuery {
     const sortKey = isSortKey(params.sort) ? params.sort : "set";
     const option = SORT_OPTIONS.find((o) => o.value === sortKey)!;
     const text = (v: string | undefined) => v?.trim().slice(0, 100) || undefined;
+    const texts = (v: string | string[] | undefined): string[] =>
+        [...new Set((Array.isArray(v) ? v : v === undefined ? [] : [v]).map((one) => one.trim().slice(0, 100)).filter(Boolean))].slice(0, MAX_VALUES);
     return {
         // Capped: every distinct page is a cache miss and one call to an API in another region,
         // and nothing here has ten thousand pages. Unbounded, `?page=` was a free way for anyone
@@ -93,11 +106,11 @@ export function readListQuery(params: ListSearchParams): ListQuery {
         sort: option.sort,
         order: option.order,
         q: text(params.q),
-        set: text(params.set),
-        rarity: text(params.rarity),
+        set: texts(params.set),
+        rarity: texts(params.rarity),
         fullArt: params.fullArt === "1",
-        gen: text(params.gen),
-        type: text(params.type),
+        gen: texts(params.gen),
+        type: texts(params.type),
         folder: text(params.folder),
         list: (PUBLIC_LISTS as readonly string[]).includes(params.list ?? "") ? (params.list as PublicList) : undefined,
         unpriced: params.unpriced === "1",
@@ -144,11 +157,11 @@ export function listHref(
     const p = new URLSearchParams();
     if (q) p.set("q", q);
     if (sortKey !== defaultSortKey) p.set("sort", sortKey);
-    if (set) p.set("set", set);
-    if (rarity) p.set("rarity", rarity);
+    for (const one of set ?? []) p.append("set", one);
+    for (const one of rarity ?? []) p.append("rarity", one);
     if (fullArt) p.set("fullArt", "1");
-    if (gen) p.set("gen", gen);
-    if (type) p.set("type", type);
+    for (const one of gen ?? []) p.append("gen", one);
+    for (const one of type ?? []) p.append("type", one);
     if (folder) p.set("folder", folder);
     if (list) p.set("list", list);
     if (unpriced) p.set("unpriced", "1");
