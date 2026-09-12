@@ -14,6 +14,7 @@ import { Input } from "@/components/base/input/input";
 import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
 import { GRID_COLUMNS } from "@/lib/cards-view";
+import { FULL_ART, fullArtIds } from "@/lib/full-art";
 
 // The card sheet, fetched on the tap that opens it: it is the app's largest client chunk and the
 // grid is drawn long before anyone touches a tile. `ssr: false`: the sheet is nothing until then.
@@ -60,24 +61,31 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
     const [holding, setHolding] = useState<Holding | undefined>();
     const [rarity, setRarity] = useState<string | undefined>();
     const [sort, setSort] = useState<SortKey>("set");
-    const rarities = useMemo(
-        () => [...new Set(cards.map((c) => c.rarity).filter((r): r is string => Boolean(r)))].sort().map((r) => ({ value: r, label: r })),
-        [cards],
-    );
+    /* Which of this set's cards are full art, read off the set itself: the same rarity means the
+       opposite thing in Sun & Moon and in Scarlet & Violet, so the rule needs the whole set
+       (`@/lib/full-art`). A set with none never offers the option, which is most sets before
+       Black & White. */
+    const fullArt = useMemo(() => fullArtIds(cards), [cards]);
+    const rarities = useMemo(() => {
+        const named = [...new Set(cards.map((c) => c.rarity).filter((r): r is string => Boolean(r)))].sort().map((r) => ({ value: r, label: r }));
+        // Above the rarities, because it is the question people ask of a set first, and because it
+        // cuts across them: one full art is an Ultra Rare and the next is an illustration rare.
+        return fullArt.size > 0 ? [{ value: FULL_ART, label: "Full art", hint: `${fullArt.size} cards` }, ...named] : named;
+    }, [cards, fullArt]);
     const shown = useMemo(() => {
         const term = q.trim().toLowerCase();
         const kept = cards.filter(
             (c) =>
                 (!term || c.name.toLowerCase().includes(term) || (c.localName ?? "").toLowerCase().includes(term) || c.number.toLowerCase().includes(term)) &&
                 (!holding || (holding === "owned" ? c.owned : holding === "wishlist" ? c.wishlist : !c.owned && !c.wishlist)) &&
-                (!rarity || c.rarity === rarity),
+                (!rarity || (rarity === FULL_ART ? fullArt.has(c.number) : c.rarity === rarity)),
         );
         if (sort === "set") return kept;
         /* A card without a price sorts last either way: the question is which cards are worth what, and
            an unpriced card has no answer to give. */
         const price = (c: SetCard) => c.price ?? (sort === "price-desc" ? -1 : Number.POSITIVE_INFINITY);
         return [...kept].sort((a, b) => (sort === "name" ? a.name.localeCompare(b.name) : sort === "price-desc" ? price(b) - price(a) : price(a) - price(b)));
-    }, [cards, q, holding, rarity, sort]);
+    }, [cards, q, holding, rarity, sort, fullArt]);
     const narrowed = Boolean(q.trim() || holding || rarity);
 
     const [selected, setSelected] = useState<Card | null>(null);
