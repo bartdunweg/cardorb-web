@@ -6,7 +6,7 @@ import { BrowseToolbar } from "@/components/app/browse-toolbar";
 import { PageHeader } from "@/components/app/page-header";
 import { SetsShelf } from "@/components/app/sets-shelf";
 import { SetsOutline } from "@/components/app/skeletons";
-import { type BrowseQuery, type BrowseSearchParams, readBrowseQuery, searchShelf, sortShelf } from "@/lib/browse-query";
+import { type BrowseQuery, type BrowseSearchParams, progressShelf, readBrowseQuery, searchShelf, sortShelf } from "@/lib/browse-query";
 import { CatalogueUnavailable, getSets } from "@/lib/sets";
 import { SETS_VIEW_COOKIE, type SetsViewMode, parseSetsView } from "@/lib/sets-view";
 
@@ -24,7 +24,7 @@ export default async function SetsPage({ searchParams }: { searchParams: Promise
             <PageHeader title="Browse" />
             {/* The shelf is not awaited: the title and the row go out first, the sets when the catalogue answers. */}
             <BrowseToolbar query={query} view={view} />
-            <Suspense key={`${query.language}:${query.sort}:${query.q ?? ""}:${view}`} fallback={<SetsOutline />}>
+            <Suspense key={`${query.language}:${query.sort}:${query.progress}:${query.q ?? ""}:${view}`} fallback={<SetsOutline />}>
                 <Shelf query={query} view={view} />
             </Suspense>
         </div>
@@ -45,9 +45,17 @@ async function Shelf({ query, view }: { query: BrowseQuery; view: SetsViewMode }
             />
         );
     }
-    const series = sortShelf(searchShelf(shelf.series, query.q), query.sort);
+    const series = sortShelf(progressShelf(searchShelf(shelf.series, query.q), query.progress), query.sort);
     if (series.length === 0 && query.q) {
         return <AppEmptyState icon="search" title="No sets found" description={`No set is called “${query.q}”. Try another name.`} />;
+    }
+    if (series.length === 0 && query.progress !== "all") {
+        const why = {
+            started: "No set in this language is half done.",
+            complete: "No set in this language is complete yet.",
+            new: "You have cards from every set in this language.",
+        }[query.progress];
+        return <AppEmptyState icon="book" title="No sets found" description={`${why} Choose All sets to see the whole shelf.`} />;
     }
 
     // The sets as data, not as 204 tiles' worth of markup: the shelf draws a few screens and the

@@ -8,7 +8,7 @@ import { FiltersSheet } from "@/components/app/filters-sheet";
 import { RowButton } from "@/components/app/row-button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { NativeSelect } from "@/components/base/select/select-native";
-import { BROWSE_SORT_OPTIONS, type BrowseQuery, browseHref, isBrowseSort } from "@/lib/browse-query";
+import { BROWSE_PROGRESS_OPTIONS, BROWSE_SORT_OPTIONS, type BrowseQuery, browseHref, isBrowseProgress, isBrowseSort } from "@/lib/browse-query";
 import { BROWSE_LANGUAGES, isBrowseLanguage } from "@/lib/languages";
 import { SETS_VIEW_COOKIE, type SetsViewMode } from "@/lib/sets-view";
 import { cx } from "@/utils/cx";
@@ -19,9 +19,10 @@ const first = (keys: "all" | Set<React.Key>) => (keys === "all" ? undefined : [.
 
 /**
  * Ours: the row over the Browse shelf, as a binder's: the search field, then Filters, Sort and
- * View. Search narrows the shelf to sets by name; Filters holds the catalogue's language, a menu
- * in the sheet on a phone and in the row itself from lg; Sort turns the shelf; View draws it as tiles or
- * rows. Search, language and sort go into the URL (`?q=`, `?language=`, `?sort=`), so the page
+ * View. Search narrows the shelf to sets by name; Filters holds the catalogue's language and how far
+ * along a set is, menus in the sheet on a phone and in the row itself from lg; Sort turns the shelf;
+ * View draws it as tiles or rows. Search, language, progress and sort go into the URL (`?q=`,
+ * `?language=`, `?progress=`, `?sort=`), so the page
  * can be shared and comes back the same; the view is a cookie the server reads, so the chosen
  * layout is in the first paint. The shelf under the row re-reads on each.
  */
@@ -42,7 +43,7 @@ export function BrowseToolbar({ query, view }: { query: BrowseQuery; view: SetsV
                 className="min-w-0 flex-1 sm:max-w-64"
                 shelf={query.language}
             />
-            <FiltersSheet inline active={query.language === "en" ? 0 : 1}>
+            <FiltersSheet inline active={[query.language !== "en", query.progress !== "all"].filter(Boolean).length}>
                 {/* English is the default and reads as the first row, as "All sets" does in a binder's sheet. */}
                 <NativeSelect
                     aria-label="Language"
@@ -51,6 +52,14 @@ export function BrowseToolbar({ query, view }: { query: BrowseQuery; view: SetsV
                     value={query.language}
                     onChange={(event) => go({ language: isBrowseLanguage(event.target.value) ? event.target.value : "en" })}
                     options={BROWSE_LANGUAGES.map((l) => ({ label: l.label, value: l.code }))}
+                />
+                <NativeSelect
+                    aria-label="Progress"
+                    size="sm"
+                    className="w-auto"
+                    value={query.progress}
+                    onChange={(event) => go({ progress: isBrowseProgress(event.target.value) ? event.target.value : "all" })}
+                    options={[...BROWSE_PROGRESS_OPTIONS]}
                 />
             </FiltersSheet>
             <Dropdown.Root>
