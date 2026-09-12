@@ -14,10 +14,14 @@ import { FeaturedIcon } from "@/components/foundations/featured-icon/featured-ic
  * those answer for themselves and get no toast. A card filed into a Binder on another page, a
  * write whose only proof is that nothing broke, and every failure: those get one.
  *
- * The box is the kit's, built from the same parts as `application/alerts` — FeaturedIcon, Button,
- * CloseButton — rather than that component itself, which puts a "Dismiss" text button beside the
- * close cross. Two ways to do nothing, and with an undo beside them, three. Sonner is only the
- * shelf: the positioning, the stacking, the swipe and the live region are its work.
+ * The box is the kit's `application/notifications` in its parts — FeaturedIcon, Button,
+ * CloseButton on Sonner — rather than that component itself, which puts a "Dismiss" text button
+ * beside the close cross. Two ways to do nothing, and with an undo beside them, three. Sonner is
+ * only the shelf: the positioning, the stacking, the swipe and the live region are its work.
+ *
+ * One departure: the kit sets the title and the link button both semibold and tells them apart by
+ * colour. Cardorb's brand colour is the same grey as secondary text, so here the title is medium
+ * and the undo is the one bold word in the box.
  */
 
 type Tone = "done" | "failed";
