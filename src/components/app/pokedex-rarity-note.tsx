@@ -33,6 +33,10 @@ export function PokedexRarityNote({ setting }: { setting: PokedexSetting }) {
             notify.failed(res.error);
             return;
         }
+        // The button this was pressed on is gone the moment the page redraws, and with it the focus
+        // it held: without a word, a keyboard starts over at the top and a screen reader hears
+        // nothing at all. The toast is the live region that says what happened.
+        notify.done("Every rarity counts now");
         router.refresh();
     };
 
