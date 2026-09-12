@@ -1,6 +1,8 @@
 "use client";
 
-// Changed from the kit: the password toggle has a 24 px hit area (#57). A re-fetch through the Untitled UI CLI or MCP overwrites this; re-apply it.
+// Changed from the kit: the password toggle has a 24 px hit area (#57), and the sm size draws its
+// 14 px text the no-zoom way (.field-text-sm, globals.css). A re-fetch through the Untitled UI CLI
+// or MCP overwrites both; re-apply them.
 import { type ComponentType, type HTMLAttributes, type ReactNode, type Ref, createContext, useContext, useState } from "react";
 import { Eye, EyeOff, HelpCircle, InfoCircle } from "@untitledui/icons";
 import type { InputProps as AriaInputProps, TextFieldProps as AriaTextFieldProps } from "react-aria-components";
@@ -73,7 +75,11 @@ export const InputBase = ({
 
     const sizes = sortCx({
         sm: {
-            root: cx("px-3 py-2 text-sm", hasLeadingIcon && "pl-9", hasTrailingIcon && "pr-9"),
+            // 14 px text without Safari zooming the page in on focus: see .field-text-sm in
+            // globals.css. Its padding is in em and its height in px so the scale there cancels
+            // out, and the field stands exactly where it stood. The 12 and the 36 are the px this
+            // read before (px-3, pl-9); the 14 is the size they were measured against.
+            root: cx("field-text-sm h-9 px-[calc(12em/14)]", hasLeadingIcon && "pl-[calc(36em/14)]", hasTrailingIcon && "pr-[calc(36em/14)]"),
             iconLeading: "left-3 size-4 stroke-[2.25px]",
             iconTrailing: "right-3",
             shortcut: "pr-1.5",

@@ -158,7 +158,9 @@ function Choices({
                         placeholder={`Find a ${label.toLowerCase()}…`}
                         value={term}
                         onChange={(e) => setTerm(e.target.value)}
-                        className="w-full rounded-full bg-primary py-1.5 pr-3 pl-8 text-sm text-primary ring-1 ring-primary outline-focus-ring ring-inset placeholder:text-placeholder focus-visible:outline-2"
+                        /* 14 px text that Safari does not zoom the page in for, padding included:
+                           .field-text-sm and .field-pill-sm in globals.css. */
+                        className="field-text-sm field-pill-sm w-full rounded-full bg-primary text-primary ring-1 ring-primary outline-focus-ring ring-inset placeholder:text-placeholder focus-visible:outline-2"
                     />
                 </div>
             ) : null}

@@ -258,6 +258,58 @@ input[type="number"] {
     -moz-appearance: textfield;
 }
 
+/* No zoom on focus: 14 px on the screen, 16 px to the browser.
+
+   Safari on a phone zooms the whole page in when a field whose text is under 16 px takes focus,
+   and it does not zoom back out: you tap the search field and the app is left standing too large.
+   Making the field bigger would fix it and change the design, so the field is set at 16 px and
+   scaled back by 14/16 instead. What you see is the field as it was drawn; what Safari reads is a
+   16 px field it leaves alone. bartdunweg.com carries the same trick on its chat field.
+
+   For it to hold, everything that sits inside the type has to ride along with it: give the field's
+   padding in em (12/14 em is the 12 px it was) so the scale cancels it out, and its height in px so
+   the box around the text does not move. A field whose own box is what you see (its background and
+   rim are on the input itself) has no fixed height and its layout box grows with the type: name
+   that height in em as --field-box and the negative margin below takes the difference back.
+
+   Unlayered on purpose: Tailwind's own text-sm and w-full live in @layer utilities, and an
+   unlayered rule wins over a layered one, so this holds without !important. */
+.field-text-sm {
+    font-size: var(--text-sm);
+    line-height: 1.4286; /* 20 / 14: the line box text-sm gives, as a ratio, so it scales with the type. */
+}
+
+/* The same field where the pill is the input itself, the way the list behind a filter chip draws
+   it: there is no box around it to hold the height, so its padding is in em too and --field-box
+   names what the negative margin above has to take back. The 6, 32 and 12 are the px it read
+   before (py-1.5, pl-8, pr-3), against the 14 they were measured at. */
+.field-pill-sm {
+    --field-box: calc(32em / 14); /* 6 + 20 + 6 */
+    padding-block: calc(6em / 14);
+    padding-inline: calc(32em / 14) calc(12em / 14);
+}
+
+@media (pointer: coarse) {
+    .field-text-sm {
+        font-size: var(--text-md);
+        scale: 0.875; /* 14 / 16 */
+        /* From the left edge, so the field still ends where its box ends and the extra width is
+           exactly what the scale takes off again. flex-none, or a flex row shrinks it back first. */
+        transform-origin: left center;
+        width: calc(100% / 0.875);
+        flex: none;
+        margin-block: calc((0.875 - 1) * var(--field-box, 0em) / 2);
+    }
+
+    /* The field is wider than the box it sits in until the scale takes the difference off again,
+       and a flex row that centres its children (the kit's input group does) would hang that extra
+       width off both sides, putting the text 15 px left of the field. It starts where the box
+       starts. */
+    :where(*):has(> .field-text-sm) {
+        justify-content: start;
+    }
+}
+
 /* Hide the default clear button (X) from search inputs. */
 input[type="search"]::-webkit-search-cancel-button {
     -webkit-appearance: none;
