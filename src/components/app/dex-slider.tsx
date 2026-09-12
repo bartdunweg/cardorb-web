@@ -71,10 +71,7 @@ export function DexSlider({
                 className="flex size-full snap-x snap-mandatory [scrollbar-width:none] overflow-x-auto [&::-webkit-scrollbar]:hidden"
             >
                 {cards.map((card) => (
-                    // Named by its set, not only by the Pokémon: three slides all called "Bulbasaur" are
-                    // three buttons a screen reader cannot tell apart, and the set is what tells them apart.
-                    // The pictures inside carry no alt of their own then, or the button would say it twice.
-                    <Slide key={card.id} label={card.set ? `${card.name}, ${card.set}` : card.name} onSelect={onSelect ? () => onSelect(card) : undefined}>
+                    <Slide key={card.id} onSelect={onSelect ? () => onSelect(card) : undefined}>
                         {card.imageUrl ? (
                             // The same box as a one-card slot in the grid beside it (dex-grid.tsx), so the same
                             // hint: without it CardImage's default of 256 asked for the 640 rung for a 192 px
@@ -85,12 +82,15 @@ export function DexSlider({
                                 fallbackSrc={card.imageUrl}
                                 width={TILE_WIDTH.md}
                                 quality={60}
-                                alt=""
+                                // Named by its set as well, and the slide takes its own name from this: three
+                                // pictures all called "Bulbasaur" are three things a screen reader cannot tell
+                                // apart, and the set is what tells them apart.
+                                alt={named(card)}
                                 className="object-cover"
                             />
                         ) : (
-                            /* Face down: the slide is named, and the slot's caption says the rest. */
-                            <CardBack width={TILE_WIDTH.md} alt="" />
+                            /* Face down, and named the same way: a card with no scan is still this card. */
+                            <CardBack width={TILE_WIDTH.md} alt={named(card)} />
                         )}
                     </Slide>
                 ))}
@@ -122,17 +122,18 @@ export function DexSlider({
     );
 }
 
-// A slide opens its card's sheet, or on a public page is a plain frame. On a public page the label
-// goes on the frame as well: there is no button to name, and the picture still has to be described.
-function Slide({ label, onSelect, children }: { label: string; onSelect?: () => void; children: React.ReactNode }) {
+/** What a card is called here: the Pokémon and the set it is from, which is what tells two apart. */
+const named = (card: DexCard) => (card.set ? `${card.name}, ${card.set}` : card.name);
+
+// A slide opens its card's sheet, or on a public page is a plain frame. It takes its name from the
+// picture inside it, which carries the card's own.
+function Slide({ onSelect, children }: { onSelect?: () => void; children: React.ReactNode }) {
     const className = "relative size-full shrink-0 snap-start";
     return onSelect ? (
-        <AriaButton aria-label={label} onPress={onSelect} className={cx(className, "cursor-pointer outline-focus-ring focus-visible:outline-2")}>
+        <AriaButton onPress={onSelect} className={cx(className, "cursor-pointer outline-focus-ring focus-visible:outline-2")}>
             {children}
         </AriaButton>
     ) : (
-        <div className={className} role="img" aria-label={label}>
-            {children}
-        </div>
+        <div className={className}>{children}</div>
     );
 }
