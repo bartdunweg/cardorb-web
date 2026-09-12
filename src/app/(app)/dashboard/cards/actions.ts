@@ -439,6 +439,11 @@ export type CardFacts = {
      * list is empty, because empty is the catalogue having no answer rather than none existing.
      */
     printings: { finish: "normal" | "holo" | "reverse-holo"; foilPattern: string | null }[];
+    /**
+     * Whether a stamped first run of this card exists, as TCGdex says. Null is no answer, and a
+     * form offers the runs then rather than none, the same rule `printings` follows.
+     */
+    firstEdition: boolean | null;
     /** The catalogue's own price for the printing: the market figure, its floor and its Near Mint band. */
     price: { low: number | null; market: number | null; avg30: number | null; nm: { low: number; mid: number; high: number } | null } | null;
     /** Cardmarket's averages: the all-time average, the trend, and the last seven days. */
@@ -460,6 +465,7 @@ export async function cardFacts(tcgId: string): Promise<CardFacts | null> {
             cmUrl: c.cmUrl ?? null,
             languages: Array.isArray(c.languages) ? c.languages : ["en"],
             printings: Array.isArray(c.printings) ? c.printings : [],
+            firstEdition: c.firstEdition ?? null,
             price: c.price ?? null,
             market: c.market ?? null,
         };

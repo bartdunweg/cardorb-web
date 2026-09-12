@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { type Card, FINISH_LABELS, FOIL_PATTERN_LABELS, type Finish, type FoilPattern } from "@/lib/api-shapes";
+import { type Card, EDITION_LABELS, type Edition, FINISH_LABELS, FOIL_PATTERN_LABELS, type Finish, type FoilPattern } from "@/lib/api-shapes";
 import { WESTERN_LANGUAGES, languageOf } from "@/lib/languages";
 
 /** One card as the sheet, a list or a search names it: set, number, name, and the set's title where known. */
@@ -30,6 +30,7 @@ const rank = (c: Card) =>
         languageOf(c.language).label,
         c.finish ?? "",
         c.foil_pattern ?? "",
+        c.edition ?? "",
         c.condition ?? "",
         c.grade ?? "",
     ].join("|");
@@ -76,6 +77,8 @@ export const groupCopies = (rows: Card[]): CopyGroup[] => {
  */
 export const copyLabel = (row: Card, folderName?: string | null): string =>
     [
+        // The run first: it is the larger fact about the card, and the one a collector reads for.
+        row.edition ? (EDITION_LABELS[row.edition as Edition] ?? null) : null,
         row.finish && row.finish !== "normal" ? (FINISH_LABELS[row.finish as Finish] ?? null) : null,
         row.foil_pattern ? (FOIL_PATTERN_LABELS[row.foil_pattern as FoilPattern] ?? null) : null,
         row.grade ?? row.condition,
@@ -93,6 +96,7 @@ export const copyEdits = z
         grade: z.string().trim().max(40).nullable(),
         finish: z.enum(["normal", "reverse-holo", "holo", "poke-ball", "master-ball"]).nullable(),
         foilPattern: z.enum(["cosmos", "cracked-ice", "starlight", "confetti", "vertical-line"]).nullable(),
+        edition: z.enum(["1st-edition", "shadowless", "unlimited"]).nullable(),
         collectionId: z.string().uuid().nullable(),
         purchasePrice: z.number().min(0).nullable(),
         purchaseDate: z.string().nullable(),

@@ -79,6 +79,18 @@ describe("priceForCopy", () => {
         expect(priceForCopy({ finish: null, price: null, priceHolo: null })).toBeNull();
     });
 
+    it("prices a 1st Edition copy as the stamped run, and falls back where there is none", () => {
+        const price = { low: 1, market: 4, avg30: 4, nm: { low: 5, mid: 6, high: 7 } };
+        const stamped = { low: 30, market: 40, avg30: 40, nm: null };
+        // The stamped run wins over both the plain and the foil series, whatever the finish.
+        expect(priceForCopy({ finish: "holo", edition: "1st-edition", price, priceHolo: null, priceFirstEd: stamped })).toBe(40);
+        expect(priceForCopy({ finish: "reverse-holo", edition: "1st-edition", price, priceHolo: price, priceFirstEd: stamped })).toBe(40);
+        // Nobody prices a stamped run for most cards: the ordinary price stands.
+        expect(priceForCopy({ finish: null, edition: "1st-edition", price, priceHolo: null })).toBe(6);
+        // And an unlimited copy never reads it, even where there is one.
+        expect(priceForCopy({ finish: null, edition: "unlimited", price, priceHolo: null, priceFirstEd: stamped })).toBe(6);
+    });
+
     it("prices a reverse holo with the foil price, everything else with the plain one, as the API does", () => {
         expect(priceForCopy({ finish: "reverse-holo", price, priceHolo: holo })).toBe(60);
         expect(priceForCopy({ finish: "poke-ball", price, priceHolo: holo })).toBe(60);

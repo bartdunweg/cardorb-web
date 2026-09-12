@@ -70,6 +70,24 @@ export const isReverseFinish = (f: string | null | undefined): boolean => f === 
 export const FOIL_PATTERNS = ["cosmos", "cracked-ice", "starlight", "confetti", "vertical-line"] as const;
 export type FoilPattern = (typeof FOIL_PATTERNS)[number];
 
+/**
+ * Which print run a copy is from.
+ *
+ * A third field beside finish and pattern, and neither of them: the finish is a price key and
+ * the pattern is what the foil looks like, while an edition is when the card was printed. The
+ * classics were printed more than once and a 1st Edition is worth multiples of an unlimited
+ * one. Null is not unlimited; it is nobody having said.
+ */
+export const EDITIONS = ["1st-edition", "shadowless", "unlimited"] as const;
+export type Edition = (typeof EDITIONS)[number];
+
+/** What a copy's print run is called in copy. */
+export const EDITION_LABELS: Record<Edition, string> = {
+    "1st-edition": "1st Edition",
+    shadowless: "Shadowless",
+    unlimited: "Unlimited",
+};
+
 export const FOIL_PATTERN_LABELS: Record<FoilPattern, string> = {
     cosmos: "Cosmos",
     "cracked-ice": "Cracked ice",
@@ -107,6 +125,8 @@ export const cardItemSchema = z.object({
     finish: vocabulary(FINISHES),
     /** What the foil looks like, where anything told us. Null is "not recorded". */
     foilPattern: vocabulary(FOIL_PATTERNS),
+    /** Which print run, where somebody said. Absent from an API older than its #313. */
+    edition: vocabulary(EDITIONS).optional(),
     quantity: z.number(),
     condition: nullable(z.string()),
     grade: nullable(z.string()),
@@ -121,6 +141,8 @@ export const cardItemSchema = z.object({
     collectionId: nullable(z.string()),
     price: nullable(apiPriceSchema),
     priceHolo: nullable(apiPriceSchema),
+    /** What the stamped first run trades at, where anything prices that run apart. */
+    priceFirstEd: nullable(apiPriceSchema).optional(),
 });
 export type CardItem = z.infer<typeof cardItemSchema>;
 
@@ -146,6 +168,7 @@ export const removedCardSchema = z.object({
     acquiredAt: nullable(z.string()).optional(),
     finish: vocabulary(FINISHES).optional(),
     foilPattern: vocabulary(FOIL_PATTERNS).optional(),
+    edition: vocabulary(EDITIONS).optional(),
     quantity: z.number().optional(),
     condition: nullable(z.string()).optional(),
     grade: nullable(z.string()).optional(),
@@ -188,6 +211,8 @@ export type Card = {
     language: string | null;
     finish: string | null;
     foil_pattern: string | null;
+    /** Which print run, where somebody said. Null is "not recorded", never "unlimited". */
+    edition: string | null;
     purchase_price: number | null;
     purchase_date: string | null;
     acquired_at: string | null;
@@ -208,9 +233,20 @@ export type Card = {
  * The one number a copy is worth. A holo or reverse-holo copy takes the holo price when there is
  * one; the Near Mint midpoint is preferred, the market price is the fallback.
  */
-export function priceForCopy({ finish, price, priceHolo }: Pick<CardItem, "finish" | "price" | "priceHolo">): number | null {
-    // The API's rule (cards.ts variantPrice): only a reverse holo, patterned or not, takes the foil price.
-    const chosen = (isReverseFinish(finish) ? priceHolo : null) ?? price;
+export function priceForCopy({
+    finish,
+    edition,
+    price,
+    priceHolo,
+    priceFirstEd,
+}: Pick<CardItem, "finish" | "price" | "priceHolo"> & Partial<Pick<CardItem, "edition" | "priceFirstEd">>): number | null {
+    /*
+     * The API's rule, copyPriceOf() in its price-basis.mjs, in the same order: the stamped
+     * first run where anything prices that run apart, then the foil series for a reverse
+     * (patterned or not), then the plain price. A 1st Edition copy of a card nobody prices a
+     * stamped run for falls back to the ordinary price, as it does there.
+     */
+    const chosen = (edition === "1st-edition" ? priceFirstEd : null) ?? (isReverseFinish(finish) ? priceHolo : null) ?? price;
     return chosen?.nm?.mid ?? chosen?.market ?? null;
 }
 
@@ -276,6 +312,7 @@ export const cardFromItem = (item: CardItem): Card => ({
     language: item.language,
     finish: item.finish,
     foil_pattern: item.foilPattern,
+    edition: item.edition ?? null,
     purchase_price: item.purchasePrice,
     purchase_date: item.purchaseDate,
     acquired_at: item.acquiredAt,
@@ -639,6 +676,7 @@ export const cardFromPokemonCard = (c: PokemonCard): Card => ({
     language: null,
     finish: null,
     foil_pattern: null,
+    edition: null,
     purchase_price: null,
     purchase_date: null,
     acquired_at: null,
@@ -821,6 +859,8 @@ export const cardFactsAnswer = z.object({
     cmUrl: nullable(z.string()),
     languages: z.array(z.string()).nullish(),
     printings: z.array(z.object({ finish: z.enum(["normal", "holo", "reverse-holo"]), foilPattern: nullable(z.string()) })).nullish(),
+    /** Whether a stamped first run of this card exists, as TCGdex says. Null or absent: no answer. */
+    firstEdition: z.boolean().nullish(),
     price: nullable(apiPriceSchema),
     market: nullable(z.object({ avg: nullable(z.number()), trend: nullable(z.number()), avg7: nullable(z.number()) })),
 });
