@@ -401,7 +401,18 @@ export const publicCardFromItem = (item: PublicItem): PublicCard => ({
 // ── GET /v1/pokedex ───────────────────────────────────────────────────────────────────────
 
 /** One card in a Pokédex slot. `set` and `number` name it to the API, so a tap can open that card and not its namesakes. */
-export type DexCard = { id: string; name: string; set: string | null; number: string | null; imageUrl: string | null; imageHighUrl: string | null };
+export type DexCard = {
+    id: string;
+    name: string;
+    set: string | null;
+    number: string | null;
+    imageUrl: string | null;
+    imageHighUrl: string | null;
+    /** What one copy is worth in euros; null on a public profile, which carries no prices. */
+    price: number | null;
+    /** The card the slot opens on, because its owner left it standing there. */
+    isFace: boolean;
+};
 export type DexSlot = { number: number; cards: DexCard[] };
 
 // ── GET /v1/catalog/sets ──────────────────────────────────────────────────────────────────

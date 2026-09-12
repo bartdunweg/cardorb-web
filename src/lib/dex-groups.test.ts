@@ -38,6 +38,24 @@ describe("groupByDex", () => {
         expect(out.value).toBe(3);
         expect(out.unpriced).toBe(1);
     });
+    it("puts the card that leads a slot first, and leaves the rest in the order they came", () => {
+        const face = { ...card("p2", 25), dex_face: true } as Card;
+        const out = groupByDex([card("p1", 25), face, card("p3", 25)], names, { missing: false });
+        expect(out.slots[0].cards.map((c) => c.id)).toEqual(["p2", "p1", "p3"]);
+        expect(out.slots[0].cards[0].isFace).toBe(true);
+        expect(out.slots[0].cards[1].isFace).toBe(false);
+    });
+    it("takes the first flag where two cards of a species carry one", () => {
+        const one = { ...card("a", 25), dex_face: true } as Card;
+        const two = { ...card("b", 25), dex_face: true } as Card;
+        const out = groupByDex([one, two], names, { missing: false });
+        expect(out.slots[0].cards.map((c) => c.id)).toEqual(["a", "b"]);
+    });
+    it("hands a slot's card its price, so the tile can say what the card in view is worth", () => {
+        const held = { ...card("p", 25), price: 12.5 } as Card;
+        const out = groupByDex([held], names, { missing: false });
+        expect(out.slots[0].cards[0].price).toBe(12.5);
+    });
     it("says no value for cards that carry no price at all, as a public profile's", () => {
         const out = groupByDex([card("b", 1)], names, { missing: false });
         expect(out.copies).toBe(1);
