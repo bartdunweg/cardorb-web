@@ -30,6 +30,8 @@ export type CardHit = Card;
 
 type Result = { ok: true } | { ok: false; error: string };
 
+const addedAnswer = z.object({ id: z.string().optional() });
+
 const failed = (err: unknown): { ok: false; error: string } => ({
     ok: false,
     error: err instanceof ApiError ? err.message : "Something went wrong. Try again.",
@@ -181,14 +183,18 @@ const cardSchema = z.object({
 
 // Adds a catalogue card to the collection or the wishlist. The API matches it against the
 // catalogues, picks the picture and the price; nothing about the card is stored from here.
-export async function addCard(input: PokemonCard, target: "collection" | "wishlist" = "collection", collectionId?: string): Promise<Result> {
+export async function addCard(input: PokemonCard, target: "collection" | "wishlist" = "collection", collectionId?: string): Promise<Result & { id?: string }> {
     const parsed = cardSchema.safeParse(input);
     if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
     const c = parsed.data;
     const wishlist = target === "wishlist";
+    // The new row's id, so a caller can offer to take the add back. Optional: the API has
+    // answered with it since the route was written, but an add that worked is still an add
+    // without it, just one with no way back.
+    let id: string | undefined;
     try {
-        await api("/cards", {
+        const answer = await api("/cards", {
             method: "POST",
             body: {
                 name: c.name,
@@ -204,13 +210,15 @@ export async function addCard(input: PokemonCard, target: "collection" | "wishli
                 // Added from a folder's own page: filed in it at once.
                 ...(collectionId && !wishlist && z.string().uuid().safeParse(collectionId).success ? { collectionId } : {}),
             },
+            schema: addedAnswer,
         });
+        id = answer.id;
     } catch (err) {
         return failed(err);
     }
 
     await forgetMine();
-    return { ok: true };
+    return { ok: true, id };
 }
 
 // Sets how many of one copy are held. The API refuses 0: a card you no longer hold is removed.

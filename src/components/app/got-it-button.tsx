@@ -4,9 +4,8 @@ import { useState } from "react";
 import { Check } from "@untitledui/icons";
 import { type CardFacts, cardFacts } from "@/app/(app)/dashboard/cards/actions";
 import { type FolderChoice, listCollections } from "@/app/(app)/dashboard/collections/actions";
-import { MarkOwnedDialog } from "@/components/app/mark-owned-dialog";
+import { MarkOwnedDialog, type OwnableCard } from "@/components/app/mark-owned-dialog";
 import { TileIconButton } from "@/components/app/tile-icon-button";
-import type { Card } from "@/lib/api-shapes";
 
 /**
  * Ours: the one thing a wishlist tile can do, on the tile. "Got it" opens the same form the card
@@ -19,7 +18,7 @@ import type { Card } from "@/lib/api-shapes";
  * when the list draws: a wishlist of forty tiles must not ask the API forty times for a form
  * nobody has opened. They arrive while the form is on screen, as they do in the sheet.
  */
-export function GotItButton({ card }: { card: Card }) {
+export function GotItButton({ card }: { card: OwnableCard }) {
     const [folders, setFolders] = useState<FolderChoice[] | null>(null);
     // The catalogue's answer, once asked: null is an answer too (nothing known), so the asking
     // is what is remembered.

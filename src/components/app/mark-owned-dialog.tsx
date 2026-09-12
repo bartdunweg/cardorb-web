@@ -27,8 +27,14 @@ import { today } from "@/lib/format";
 // A wish becomes a copy you hold. The moment to say what it is: language, condition (Near Mint
 // unless said), finish, folder, what you paid and the day you got it (today unless said). One
 // save; the wish leaves the wishlist and the sheet closes on it.
+/** What the form reads of a card: a wishlist row, or a set tile's wish, which knows less. */
+export type OwnableCard = Pick<
+    Card,
+    "id" | "name" | "image_url" | "set_name" | "set_abbr" | "number" | "grade" | "finish" | "foil_pattern" | "edition" | "tcg_id"
+>;
+
 type Props = {
-    card: Card;
+    card: OwnableCard;
     folders: FolderChoice[];
     onSaved?: () => void;
     /** The Western languages the card was printed in, when the API has said. */

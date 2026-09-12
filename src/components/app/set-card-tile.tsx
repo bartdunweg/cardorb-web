@@ -4,11 +4,13 @@ import { useState, useTransition } from "react";
 import { Check, DotsHorizontal, Heart, Minus, Plus, Rows01, Trash01 } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Button as AriaButton } from "react-aria-components";
-import { addCard, markOwned, removeCard, setCopies } from "@/app/(app)/dashboard/cards/actions";
+import { addCard, removeCard, setCopies } from "@/app/(app)/dashboard/cards/actions";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { warmCard } from "@/components/app/card-memo";
+import { GotItButton } from "@/components/app/got-it-button";
 import { TileIconButton } from "@/components/app/tile-icon-button";
+import { notify } from "@/components/app/toast";
 import { useWarm } from "@/components/app/use-warm";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
@@ -20,8 +22,9 @@ type Result = { ok: true } | { ok: false; error: string };
 
 /**
  * One card of a set, and what you can do with it from here. A card you do not hold has two round
- * buttons under it, the wishlist and the collection; one on the wishlist has a check and a menu
- * (remove it, the way to it); one you hold has the menu (a copy more or less, the way to it). Copies are only offered
+ * buttons under it, the wishlist and the collection; one on the wishlist has the wishlist's check
+ * and a menu (remove it, the way to it); one you hold has a plus for a copy more and the menu (a
+ * copy less, the way to it). Copies are only offered
  * when the card is one row, which is nearly always: a card held as two printings is managed
  * in Cards, where each printing is its own row.
  *
@@ -51,14 +54,43 @@ export function SetCardTile({
     // What the sheet will ask for, asked while the pointer rests here, so the first open is complete.
     const warm = useWarm(onOpen ? () => warmCard(card.tcgId) : undefined);
 
-    const run = (action: () => Promise<Result>) => {
+    const run = <R extends Result>(action: () => Promise<R>, then?: (res: Extract<R, { ok: true }>) => void) => {
         setError(null);
         startTransition(async () => {
             const res = await action();
-            if (res.ok) router.refresh();
-            else setError(res.error);
+            if (res.ok) {
+                router.refresh();
+                then?.(res as Extract<R, { ok: true }>);
+            } else setError(res.error);
         });
     };
+
+    /* One press adds a card, with nothing to confirm, on a grid where a thumb lands one tile off.
+       So every add says what it did and offers the way back for as long as the toast is up. The
+       way back is the opposite write: the row the add made is removed, the copy taken off again.
+       An add the API answered without the new row's id says what it did and offers nothing. */
+    const offerUndo = (done: string, undo: (() => Promise<Result>) | null) => {
+        if (!undo) return notify.done(done);
+        notify.done(done, {
+            undo: {
+                onUndo: () =>
+                    void undo().then((res) => {
+                        if (res.ok) notify.done("Undone");
+                        else notify.failed("That did not go back", { description: res.error });
+                        router.refresh();
+                    }),
+            },
+        });
+    };
+    const add = (target: "collection" | "wishlist") =>
+        run(
+            () => addCard(pokemonCardFromSetCard(card, language), target),
+            (res) =>
+                offerUndo(
+                    target === "wishlist" ? `${card.name} is on your wishlist now` : `${card.name} is in your collection now`,
+                    res.id ? () => removeCard(res.id as string) : null,
+                ),
+        );
 
     const oneRow = card.itemIds.length === 1;
     const rowId = card.itemIds[0];
@@ -183,11 +215,6 @@ export function SetCardTile({
                                         </>
                                     ) : (
                                         <>
-                                            {oneRow ? (
-                                                <Dropdown.Item icon={Plus} onAction={() => run(() => setCopies(rowId, card.quantity + 1))}>
-                                                    Add a copy
-                                                </Dropdown.Item>
-                                            ) : null}
                                             {oneRow && card.quantity > 1 ? (
                                                 <Dropdown.Item icon={Minus} onAction={() => run(() => setCopies(rowId, card.quantity - 1))}>
                                                     Remove a copy
@@ -213,22 +240,50 @@ export function SetCardTile({
                                 icon={Heart}
                                 label={`Add ${card.name} #${card.number} to your wishlist`}
                                 pending={pending}
-                                onPress={() => run(() => addCard(pokemonCardFromSetCard(card, language), "wishlist"))}
+                                onPress={() => add("wishlist")}
                             />
                             <TileIconButton
                                 icon={Plus}
                                 label={`Add ${card.name} #${card.number} to your collection`}
                                 pending={pending}
-                                onPress={() => run(() => addCard(pokemonCardFromSetCard(card, language), "collection"))}
+                                onPress={() => add("collection")}
                             />
                         </>
                     ) : null}
+                    {/* The wishlist's own check, which asks what your copy is like before it joins the
+                        collection. It used to move the card at once here and ask nothing, so the same mark
+                        did two different things depending on the page you pressed it on. */}
                     {state === "wishlist" && oneRow ? (
+                        <GotItButton
+                            card={{
+                                id: rowId,
+                                name: card.name,
+                                image_url: card.imageUrl,
+                                set_name: card.setName,
+                                set_abbr: null,
+                                number: card.number,
+                                grade: null,
+                                finish: null,
+                                foil_pattern: null,
+                                edition: null,
+                                tcg_id: card.tcgId,
+                            }}
+                        />
+                    ) : null}
+                    {/* One more of a card you hold: the same plus as a card you do not, since it is the same
+                        answer, another one in the collection. Taking one off stays in the menu, where a
+                        press that loses a card is one step further away. */}
+                    {state === "owned" && oneRow ? (
                         <TileIconButton
-                            icon={Check}
-                            label={`Got it: ${card.name} #${card.number}`}
+                            icon={Plus}
+                            label={`Add a copy of ${card.name} #${card.number}`}
                             pending={pending}
-                            onPress={() => run(() => markOwned(rowId))}
+                            onPress={() =>
+                                run(
+                                    () => setCopies(rowId, card.quantity + 1),
+                                    () => offerUndo(`${card.name}: ${card.quantity + 1} copies now`, () => setCopies(rowId, card.quantity)),
+                                )
+                            }
                         />
                     ) : null}
                 </div>
