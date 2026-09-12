@@ -34,7 +34,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     const fresh = stats.owned === 0 && stats.wishlist === 0;
 
     return (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-1 flex-col gap-6">
             <PageHeader
                 title="Home"
                 titleOnPhone={false}

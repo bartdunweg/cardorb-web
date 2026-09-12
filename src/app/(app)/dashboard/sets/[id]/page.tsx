@@ -69,7 +69,7 @@ export default async function SetPage({ params, searchParams }: { params: Promis
         .join(" · ");
 
     return (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-1 flex-col gap-6">
             <PageHeader
                 title={set.name}
                 subtitle={subtitle}
