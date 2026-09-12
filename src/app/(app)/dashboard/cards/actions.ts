@@ -50,7 +50,7 @@ export async function searchMyCards(query: string, filters: MyCardsFilters = {})
 }
 
 /**
- * The chips under a catalogue search: a set by its name and an energy type — and which catalogue
+ * The chips under a catalogue search: a set by its name and an energy type, and which catalogue
  * is asked. "en" and absent are the same, the English one; the set and the type are English
  * facets, so the screens offer them there alone.
  */
@@ -61,7 +61,7 @@ export type CatalogueFilters = { set?: string; type?: string; language?: BrowseL
 // and the type their own fields; the term may then be empty, or one character.
 //
 // An API that does not answer throws, and the box shows that it did not. It used to return an
-// empty list, which reads as "No cards found." — for a week that is what "charizard" said while
+// empty list, which reads as "No cards found."; for a week that is what "charizard" said while
 // the catalogue behind the API refused three requests in five (cardorb-api#260). A term the
 // schema refuses is still an empty answer: nothing was asked.
 //
@@ -100,7 +100,7 @@ const cardSchema = z.object({
      * say "this row is that card, in that catalogue" (cardorb-api#257).
      *
      * `nullish`, not `optional`: an English tile sends `language: null`, and `optional` refused
-     * that as "expected string, received null" — every add from every set page, since #308.
+     * that as "expected string, received null": every add from every set page, since #308.
      */
     tcgId: z.string().trim().min(1).nullish(),
     language: z.string().trim().min(2).max(5).nullish(),
@@ -143,8 +143,8 @@ export async function addCard(input: PokemonCard, target: "collection" | "wishli
 // Sets how many of one copy are held. The API refuses 0: a card you no longer hold is removed.
 //
 // `reread: false` writes and nothing more, for a caller that presses several times and re-reads
-// once, through rereadMine(). Forgetting here re-renders the page inside this action's answer —
-// updateTag does that on its own — and a press that lands while that render is reading the list
+// once, through rereadMine(). Forgetting here re-renders the page inside this action's answer
+// (updateTag does that on its own), and a press that lands while that render is reading the list
 // leaves the render's answer, from before the press, filling the cache after the press dropped
 // it. Four copies pressed down to two said ×4 on the list behind the sheet until the next write.
 export async function setCopies(cardId: string, quantity: number, { reread = true }: { reread?: boolean } = {}): Promise<Result> {
@@ -174,7 +174,7 @@ export async function removeCard(cardId: string): Promise<Result & { card?: Remo
     if (!parsed.success) return { ok: false, error: "Invalid card." };
 
     /* The row as it was, handed back by the delete because that is the last moment it exists.
-       It is what an undo puts back, and nothing is kept anywhere for it — the caller holds it
+       It is what an undo puts back, and nothing is kept anywhere for it: the caller holds it
        for as long as its toast is on screen and then it is gone, which is the honest lifetime
        of a way back.
 
@@ -311,7 +311,7 @@ export async function listCopies(card: CardName): Promise<Card[]> {
  * Every row of this card, held or wished for. For opening a sheet on a card the page knows only
  * from the catalogue: the row carries the id every action in the sheet's bar needs. `listCopies`
  * left a wish out, so a wished card opened on the catalogue's card and "Remove from wishlist"
- * answered "Invalid card" — on a set page as in the search.
+ * answered "Invalid card", on a set page as in the search.
  */
 export async function listRows(card: CardName): Promise<Card[]> {
     const set = card.set_name ?? card.set;
@@ -378,7 +378,7 @@ export type CardFacts = {
     languages: string[];
     /**
      * Every printing of this card that exists: what each one is, and what its foil looks like.
-     * A form offers no finish and no pattern that is not here — and offers everything where the
+     * A form offers no finish and no pattern that is not here, and offers everything where the
      * list is empty, because empty is the catalogue having no answer rather than none existing.
      */
     printings: { finish: "normal" | "holo" | "reverse-holo"; foilPattern: string | null }[];

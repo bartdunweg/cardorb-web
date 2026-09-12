@@ -7,10 +7,10 @@ import { BOOT_SCRIPT_HASH } from "@/lib/theme-script";
  * the root layout, is allowed by its hash instead, so it needs nothing per request.
  *
  * The public profile is covered too, and was not: this said the public pages prerender, and
- * `/user/[username]` does not — it reads cookies for the viewer, so it renders per request and a
+ * `/user/[username]` does not: it reads cookies for the viewer, so it renders per request and a
  * nonce is there for the asking. It was the one page missing a script policy while rendering
  * another person's chosen words and a hundred catalogue card names. The pages that really do
- * prerender — the landing page, the legal pages, the docs — cannot take one, and keep
+ * prerender (the landing page, the legal pages, the docs) cannot take one, and keep
  * `frame-ancestors 'none'` from the proxy; every path gets X-Frame-Options from next.config.mjs.
  */
 

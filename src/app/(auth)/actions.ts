@@ -49,8 +49,8 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
 }
 
 /**
- * The new password after a recovery link. The link's session is proof enough of who this is —
- * it came from the mailbox — so unlike Settings this does not ask for the old password, which is
+ * The new password after a recovery link. The link's session is proof enough of who this is
+ * (it came from the mailbox), so unlike Settings this does not ask for the old password, which is
  * the one thing the person does not have.
  */
 export async function setNewPassword(_prev: AuthState, formData: FormData): Promise<AuthState> {

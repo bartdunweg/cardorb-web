@@ -46,7 +46,7 @@ const sameness = (c: Card) => [rank(c), c.collection_id ?? ""].join("|");
 /**
  * Copies as a person counts them: one line per kind, with how many of it there are.
  *
- * The rows are one per purchase, and nothing ever merged them — so four identical Holo · Near
+ * The rows are one per purchase, and nothing ever merged them, so four identical Holo · Near
  * Mint copies were four lines reading "€2.81 ×1", four times, which says nothing four times.
  * They are one line of ×4. A line keeps the rows behind it, because removing it has to remove
  * all of them and the quantity has to be the sum rather than the first row's.

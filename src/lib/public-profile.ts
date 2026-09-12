@@ -19,7 +19,7 @@ import { publicTag } from "@/lib/user-cache";
  *
  * Every read here is unkeyed, so it is cached for five minutes, and every one carries the owner's
  * tag (`publicTag`): the moment they make the profile private, or take a copy off it, the write
- * drops the lot. Without the tag the page went on answering out of the cache — a profile turned
+ * drops the lot. Without the tag the page went on answering out of the cache: a profile turned
  * private and still readable for five minutes, which is the one thing a public page must get right.
  */
 export type PublicProfile = {

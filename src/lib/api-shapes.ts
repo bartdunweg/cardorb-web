@@ -128,7 +128,7 @@ export type CardItem = z.infer<typeof cardItemSchema>;
  * The row a DELETE hands back, as it was the moment before it went.
  *
  * Not `cardItemSchema`: that is the assembled item a list reads, with the set's title, the
- * pictures and the prices the API works out. This is the stored row itself — the only thing an
+ * pictures and the prices the API works out. This is the stored row itself, the only thing an
  * undo needs, because putting it back is an ordinary create of exactly these fields.
  *
  * Everything is optional and forgiving on purpose. An API that has not deployed this yet answers
@@ -536,7 +536,7 @@ export const browseCardSchema = z.object({
        numbers a card `me5-85` and everything priced is keyed `me05-085`; the set page carries it
        so a sheet opened on a card nobody holds can still ask for its price line. */
     tcgId: nullable(z.string()),
-    /* What the card costs, on the routes that price it — the set page. Absent from search, where
+    /* What the card costs, on the routes that price it, the set page. Absent from search, where
        the answer is a name to pick rather than a shelf to read. */
     price: nullable(apiPriceSchema),
     priceHolo: nullable(apiPriceSchema),
@@ -615,7 +615,7 @@ export const pokemonCardFromBrowse = (c: BrowseCard, language?: string | null): 
 /**
  * A search hit as the sheet reads a card: every field about a copy is empty, because there is
  * none. What the set page does for a tile nobody holds, so a hit opens the same sheet a tile
- * does — with its price line, which the catalogue id asks for, and the number above the tabs.
+ * does, with its price line, which the catalogue id asks for, and the number above the tabs.
  */
 export const cardFromPokemonCard = (c: PokemonCard): Card => ({
     id: c.id,
@@ -807,7 +807,7 @@ export const publicProfileAnswer = z.object({
  *
  * Every field is soft: this route answers from the catalogue, which knows a different amount
  * about every card, and the sheet already draws around what is missing. `printings` is the one
- * that matters most — a form offers no finish that is not in it.
+ * that matters most: a form offers no finish that is not in it.
  */
 export const cardFactsAnswer = z.object({
     illustrator: nullable(z.string()),

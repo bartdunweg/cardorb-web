@@ -11,7 +11,7 @@ export const isBinderPath = (pathname: string): boolean => BINDER_PATH.test(path
  * The binder a card sheet was opened on, from the page's path: `/dashboard/collections/<id>`,
  * and only when that binder is filled by hand. A rule binder fills itself, so a card added
  * from its page goes to the collection as from anywhere, and the rule decides whether it shows.
- * The path is the one fact every mounted sheet shares — the palette's sheet is mounted by the
+ * The path is the one fact every mounted sheet shares: the palette's sheet is mounted by the
  * layout beside the page, out of reach of anything the page could provide.
  */
 export function binderFromPath(pathname: string, folders: readonly Folder[]): { id: string; name: string } | null {

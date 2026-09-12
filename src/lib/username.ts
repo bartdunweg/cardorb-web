@@ -6,7 +6,7 @@ import { randomInt } from "node:crypto";
  * Sign-up asks for an email and a password only, and a profile cannot be without a username:
  * it is the name in `/user/<name>`. So the email's local part becomes the name, in the shape the
  * database checks (`^[a-z0-9][a-z0-9-]{1,29}$`), with four random characters after it so two
- * people with the same local part at different providers do not collide — a collision would fail
+ * people with the same local part at different providers do not collide; a collision would fail
  * the whole sign-up, because the profile is written in the same transaction as the account.
  */
 export function usernameFromEmail(email: string, suffix = randomSuffix()): string {

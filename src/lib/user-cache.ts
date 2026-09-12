@@ -9,7 +9,7 @@ import { elapsed, logTiming } from "@/lib/timing";
  *
  * The app layout asks the API for the profile, the folders and the stats on every screen, one
  * after the other, and the API sits in another region. Those three answers change when the
- * person writes — adds a card, renames a folder, changes their name — and not otherwise, so
+ * person writes (adds a card, renames a folder, changes their name) and not otherwise, so
  * they are kept for five minutes under one tag per person, and every write drops the tag.
  *
  * Keyed by the person's id, never by the token: the token rotates every hour and would only
@@ -32,7 +32,7 @@ export const userTag = (userId: string) => `user:${userId}`;
  * `userTag`, and nothing dropped them: a profile switched to private, or a copy hidden from it,
  * stayed readable to a visitor for the rest of the window.
  *
- * By username, not by id. The read has only the name — a visitor has no session to turn into an
+ * By username, not by id. The read has only the name: a visitor has no session to turn into an
  * id, and asking the API who owns the name would cost the very round trip the cache exists to
  * save. So the translating happens on the writing side, where a name is one cached read away
  * (`forgetMine`). Lower-cased because the API stores names lower-cased while a link may not.
@@ -46,7 +46,7 @@ const inFlight = cache(() => new Map<string, Promise<unknown>>());
  * `load` gets the session's token; its answer is kept five minutes under this person's tag.
  *
  * Also once per request: the layout and the page render at the same time and both ask for the
- * stats, and on a miss the cache does not join the two — the log showed `/stats` fetched twice in
+ * stats, and on a miss the cache does not join the two; the log showed `/stats` fetched twice in
  * one render. The second caller gets the first caller's promise, so a name is read once per
  * request whatever the cache says.
  */
@@ -89,7 +89,7 @@ export async function forgetMine(): Promise<void> {
     if (s) {
         // Before the tag goes: dropping it first would make this read a miss and cost a call.
         // The name it returns is the one from before the write, which is exactly the name whose
-        // public pages are now stale — a rename leaves nothing cached under the new one.
+        // public pages are now stale; a rename leaves nothing cached under the new one.
         const username = await myUsername();
         updateTag(userTag(s.userId));
         if (username) updateTag(publicTag(username));
@@ -102,8 +102,8 @@ export async function forgetMine(): Promise<void> {
 /**
  * The writer's own username, for `publicTag`.
  *
- * Through the same cache entry `getMyProfile()` fills — same name, same schema, so the two share
- * one value rather than making a second — which the layout filled on the render before this
+ * Through the same cache entry `getMyProfile()` fills (same name, same schema, so the two share
+ * one value rather than making a second), which the layout filled on the render before this
  * write, so it is a cache read and not a call. Best effort: a name that cannot be read only means
  * the public pages keep their five minutes, and a write that succeeded must not fail over it.
  */

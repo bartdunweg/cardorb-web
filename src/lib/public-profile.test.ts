@@ -11,7 +11,7 @@ const { countPublicCards, getAllPublicCards, getPublicCards, getPublicFolders, g
 /**
  * The reads a visitor's page makes, all five. A public read is cached for five minutes with no
  * session behind it, so one that carries no tag cannot be dropped when the owner makes the
- * profile private — it keeps answering. This is the test that catches a sixth one added without.
+ * profile private, it keeps answering. This is the test that catches a sixth one added without.
  */
 const reads: [string, () => Promise<unknown>][] = [
     ["profile", () => getPublicProfile("Bart")],
