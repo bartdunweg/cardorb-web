@@ -73,6 +73,19 @@ export async function FolderBody(props: FolderBodyProps) {
                 label={searchLabel}
                 placeholder={searchPlaceholder}
                 className="min-w-0 flex-1 sm:max-w-64"
+                // The titles it offers are the ones in this very list, filters and all. A public
+                // profile gets none: the suggestion would be read from the reader's own cards.
+                scope={
+                    props.readOnly
+                        ? undefined
+                        : {
+                              collectionId: props.filter.collectionId,
+                              wishlist: props.filter.wishlist,
+                              favoritesOnly: props.filter.favoritesOnly,
+                              set: query.set,
+                              rarity: query.rarity,
+                          }
+                }
             />
             <FiltersSheet key="filters" active={[query.set, query.rarity].filter(Boolean).length}>
                 <Suspense key="set-rarity" fallback={<CardsFilters query={query} facets={NO_FACETS} />}>

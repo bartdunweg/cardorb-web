@@ -13,6 +13,7 @@ import {
     removedCardSchema,
     searchAnswer,
 } from "@/lib/api-shapes";
+import { type CardTitle, type TitleSet, distinctTitles, matchTitles } from "@/lib/card-titles";
 import { type Card, getMyCards } from "@/lib/cards";
 import { type CardName, type CopyEdits, copyEdits, sameCard } from "@/lib/copies";
 import { type BrowseLanguage, isBrowseLanguage } from "@/lib/languages";
@@ -47,6 +48,59 @@ export async function searchMyCards(query: string, filters: MyCardsFilters = {})
 
     const { cards } = await getMyCards({ q: q || undefined, set, rarity, facets: false, limit: 20 });
     return cards;
+}
+
+/** Which list a suggestion may come from: the binder the field sits on, with its filters still on. */
+export type TitleScope = { collectionId?: string; wishlist?: boolean; favoritesOnly?: boolean; set?: string; rarity?: string };
+
+export type { CardTitle, TitleSet } from "@/lib/card-titles";
+
+/** Rows read in one go to build the index. A collection past this asks the API per term instead. */
+const INDEX_ROWS = 2500;
+
+const titleScope = z.object({
+    collectionId: choice,
+    wishlist: z.boolean().optional(),
+    favoritesOnly: z.boolean().optional(),
+    set: choice,
+    rarity: choice,
+});
+
+/**
+ * Every title in one binder, once, so the browser can answer its own typing.
+ *
+ * The command palette already works this way against the catalogue: what makes a search feel
+ * instant is that the list is in the browser, not how quickly the server answers. A collection is
+ * small enough to send whole (the names alone, not the rows), and the sets come with it: the
+ * field offers those too, because the list it filters can be narrowed to a set as well as a name.
+ *
+ * `complete` is false where the collection is larger than one read: the field then asks per term
+ * (`suggestCardTitles`), as it did before.
+ */
+export async function collectionIndex(scope: TitleScope = {}): Promise<{ titles: CardTitle[]; sets: TitleSet[]; complete: boolean }> {
+    const parsed = titleScope.safeParse(scope);
+    if (!parsed.success) return { titles: [], sets: [], complete: false };
+
+    const { cards, facets } = await getMyCards({ ...parsed.data, facets: true, limit: INDEX_ROWS });
+    return { titles: distinctTitles(cards), sets: facets.sets, complete: cards.length < INDEX_ROWS };
+}
+
+/**
+ * The titles under a binder's search field, from the API: the fallback for a collection too large
+ * to hold in the browser, and for the first keystrokes while the index is still on its way.
+ *
+ * Two letters before it asks: one letter matches most of a collection, which is a list of
+ * everything rather than a suggestion. An API that does not answer leaves the field as it was,
+ * free text, which is what it has always been.
+ */
+export async function suggestCardTitles(query: string, scope: TitleScope = {}): Promise<CardTitle[]> {
+    const parsed = titleScope.extend({ q: z.string().trim().min(2).max(100) }).safeParse({ q: query, ...scope });
+    if (!parsed.success) return [];
+    const { q, ...rest } = parsed.data;
+
+    // Rows enough to fold into a screenful of titles: one name can hold a dozen printings.
+    const { cards } = await getMyCards({ q, ...rest, facets: false, limit: 60 });
+    return matchTitles(distinctTitles(cards), q);
 }
 
 /**
