@@ -3,8 +3,8 @@ import { CardImage } from "@/components/app/card-image";
 /**
  * Ours: the band at the top of a set's page, its logo centred on the set's own colour.
  *
- * A catalogue page leads with its artwork the way an album page does — Spotify, YouTube Music and
- * TIDAL all draw the cover large with a wash of its colour behind it — and a set's logo is its
+ * A catalogue page leads with its artwork the way an album page does: Spotify, YouTube Music and
+ * TIDAL all draw the cover large with a wash of its colour behind it, and a set's logo is its
  * cover. The colour is the logo's own brightest hue, read once from the file (`logo-color.ts`),
  * running from full at the top into the page's ground at the bottom, so the band belongs to the
  * page rather than sitting on it. A logo the colour cannot be read from (grey, or a catalogue
@@ -12,7 +12,7 @@ import { CardImage } from "@/components/app/card-image";
  * as the shelf's tile does.
  *
  * The logo carries a drop shadow because it is drawn on a colour picked from itself: Base Set's
- * yellow mark on Base Set's yellow would otherwise melt into it. Decoration throughout — the h1
+ * yellow mark on Base Set's yellow would otherwise melt into it. Decoration throughout: the h1
  * under it says which set, so the picture has no alt text and the band no role.
  */
 
