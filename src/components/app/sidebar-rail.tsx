@@ -21,7 +21,7 @@ type RailItem = { label: string; href: string; icon: FC<{ className?: string }> 
  * search where the search pill stands, then the four pages, then the binders, so nothing on the
  * rail sits at a different height from the row it replaces and folding moves no icon up or down.
  * Every binder is the same folder icon, so on the rail the binders are one icon that opens a menu
- * of them (Favorites, the Pokédex, the ones you made, New binder), with the overview at its head.
+ * of them (Favorites, the ones you made, New binder), with the overview at its head.
  * At the foot the button that unfolds it and the account's avatar, which opens the card's menu.
  */
 export function SidebarRail({
@@ -91,8 +91,8 @@ export function SidebarRail({
     );
 }
 
-// One icon for every binder. The menu opens beside the rail, the overview first, then the two
-// that are always there, the ones you made as they arrive, and New binder, which opens the same
+// One icon for every binder. The menu opens beside the rail, the overview first, then Favorites,
+// which is always there, the ones you made as they arrive, and New binder, which opens the same
 // dialog the open sidebar's row does; a menu item cannot be a dialog's trigger, so the dialog is
 // controlled from here.
 function BindersMenu({ activeUrl, collections }: { activeUrl: string; collections: Promise<FolderLink[]> }) {
@@ -103,7 +103,6 @@ function BindersMenu({ activeUrl, collections }: { activeUrl: string; collection
     const here = [
         { href: "/dashboard/collections", label: "All binders" },
         { href: "/dashboard/favorites", label: "Favorites" },
-        { href: "/dashboard/pokedex", label: "Pokédex" },
         ...list.map((c) => ({ href: `/dashboard/collections/${c.id}`, label: c.name })),
     ].find((b) => b.href === activeUrl);
     return (
@@ -118,9 +117,6 @@ function BindersMenu({ activeUrl, collections }: { activeUrl: string; collection
                         <Dropdown.Separator />
                         <BinderItem href="/dashboard/favorites" activeUrl={activeUrl} icon={Star01}>
                             Favorites
-                        </BinderItem>
-                        <BinderItem href="/dashboard/pokedex" activeUrl={activeUrl} icon={Folder}>
-                            Pokédex
                         </BinderItem>
                         {list.map((c) => (
                             <BinderItem key={c.id} href={`/dashboard/collections/${c.id}`} activeUrl={activeUrl} icon={Folder}>
@@ -150,9 +146,9 @@ function BinderItem({ href, activeUrl, icon, children }: { href: string; activeU
     );
 }
 
-/** Every page that is a binder: the overview, the two that are always there, and the ones you made. */
+/** Every page that is a binder: the overview, Favorites, and the ones you made (a Pokédex among them). */
 function inBinders(activeUrl: string) {
-    return activeUrl.startsWith("/dashboard/collections") || activeUrl.startsWith("/dashboard/favorites") || activeUrl.startsWith("/dashboard/pokedex");
+    return activeUrl.startsWith("/dashboard/collections") || activeUrl.startsWith("/dashboard/favorites");
 }
 
 function AccountSlot({ account }: { account: Promise<Account> }) {
