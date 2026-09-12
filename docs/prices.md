@@ -8,16 +8,22 @@ change back.
 
 ## The sources
 
-| Source                             | What it is                                                        | Where it is used                                       |
-| ---------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------ |
-| TCGplayer, relayed by TCGdex       | A figure per printing, from sales, with a product id per printing | Every price on a card, converted to euros              |
-| TCGplayer, archived by tcgcsv.com  | The same figures, a file per set per day since 2024-02-08         | The price history, and the weekly point for every card |
-| tcgdex/price-history on GitHub     | TCGplayer sales per card per day, 2022-11 to 2024-09              | The price history before tcgcsv's archive starts       |
-| Frankfurter (the ECB's daily rate) | The dollar rate a bank statement would use                        | Converting all of the above                            |
-| eBay sold listings                 | Finished sales, linked, never read                                | The sheet's links, to check a price and a PSA 10       |
+| Source                             | What it is                                                        | Where it is used                                                                                                             |
+| ---------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| TCGplayer, relayed by TCGdex       | A figure per printing, from sales, with a product id per printing | Every price on a card, converted to euros                                                                                    |
+| TCGplayer, published by tcgcsv.com | The same figures, a file per set per day since 2024-02-08         | Browse and search, promos and subsets TCGdex does not relay, the Shadowless and 1st Edition Base Set runs, the price history |
+| tcgdex/price-history on GitHub     | TCGplayer sales per card per day, 2022-11 to 2024-09              | The price history before tcgcsv's archive starts                                                                             |
+| Frankfurter (the ECB's daily rate) | The dollar rate a bank statement would use                        | Converting all of the above                                                                                                  |
+| eBay sold listings                 | Finished sales, linked, never read                                | The sheet's links, to check a price and a PSA 10                                                                             |
 
-Cardmarket's price guide is still read by Browse and search for their shelf prices. That moves next,
-and then nothing on screen reads Cardmarket.
+Nothing reads Cardmarket for a price since cardorb-api#362 (2026-09-12): Browse, search, the
+collection, the card sheet and the history are all TCGplayer's.
+
+TCGdex relays no TCGplayer figure for the subsets and promo lines TCGplayer files as groups of their
+own (the Galarian Gallery, the Trainer Galleries, the Shiny Vaults, the Black Star promos), nor for
+Base Set's Shadowless and 1st Edition runs. `scripts/tcgplayer-links.mjs` in the API matches those
+cards to tcgcsv's products by set, number and name (968 cards and 101 Shadowless runs,
+cardorb-api#358 and #359).
 
 ## Why TCGplayer, and only TCGplayer
 
@@ -49,10 +55,12 @@ reads that trend now, and a band measured on one market is not evidence about an
 
 - **It is not this collection's market.** Dollars, American scarcity. The owner's Team Rocket's Mewtwo ex
   is €613.15 on Cardmarket and €389.54 on TCGplayer converted. Selling in Europe returns the first.
-- **About one card in eight has no price**, in a sample of 45 of the owner's cards, mostly promos.
+- **Some cards have no price.** Before the promo links, 217 of the owner's 1,609 held cards had none;
+  after them, 8. Pokémon TCG Pocket cards have none by nature, and Celebrations Classic Collection is
+  not linked yet.
 - **Korean and Chinese cards have no price.** TCGplayer does not sell them.
-- **A Shadowless copy reads the ordinary price.** TCGplayer files Shadowless as a set of its own on
-  tcgcsv ("Base Set (Shadowless)"), which is not read yet.
+- **Shadowless is offered where TCGplayer has it.** 101 of Base Set's 102 cards; Machamp has no
+  Shadowless product and no longer offers the run.
 - **The price history steps nowhere.** `card_prices` was rebuilt from TCGplayer on 2026-09-12
   (`backfill-card-prices.mjs --only recent`, cardorb-api#355): 135,271 readings written over 63,881
   Cardmarket ones, and 6,970 Cardmarket readings deleted for cards TCGplayer had no figure for.
