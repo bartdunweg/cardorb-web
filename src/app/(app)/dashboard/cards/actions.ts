@@ -13,6 +13,7 @@ import {
     removedCardSchema,
     searchAnswer,
 } from "@/lib/api-shapes";
+import { type CardTitle, TITLE_SUGGESTIONS, distinctTitles } from "@/lib/card-titles";
 import { type Card, getMyCards } from "@/lib/cards";
 import { type CardName, type CopyEdits, copyEdits, sameCard } from "@/lib/copies";
 import { type BrowseLanguage, isBrowseLanguage } from "@/lib/languages";
@@ -47,6 +48,38 @@ export async function searchMyCards(query: string, filters: MyCardsFilters = {})
 
     const { cards } = await getMyCards({ q: q || undefined, set, rarity, facets: false, limit: 20 });
     return cards;
+}
+
+/** Which list a suggestion may come from: the binder the field sits on, with its filters still on. */
+export type TitleScope = { collectionId?: string; wishlist?: boolean; favoritesOnly?: boolean; set?: string; rarity?: string };
+
+export type { CardTitle } from "@/lib/card-titles";
+
+/**
+ * The titles under a binder's search field: the names of cards you actually hold that start to
+ * match what is typed, in the same list the field filters (this binder, this set, this rarity).
+ *
+ * Two letters before it asks: one letter matches most of a collection, which is a list of
+ * everything rather than a suggestion. An API that does not answer leaves the field as it was,
+ * free text, which is what it has always been.
+ */
+export async function suggestCardTitles(query: string, scope: TitleScope = {}): Promise<CardTitle[]> {
+    const parsed = z
+        .object({
+            q: z.string().trim().min(2).max(100),
+            collectionId: choice,
+            wishlist: z.boolean().optional(),
+            favoritesOnly: z.boolean().optional(),
+            set: choice,
+            rarity: choice,
+        })
+        .safeParse({ q: query, ...scope });
+    if (!parsed.success) return [];
+    const { q, ...rest } = parsed.data;
+
+    // Rows enough to fold into a screenful of titles: one name can hold a dozen printings.
+    const { cards } = await getMyCards({ q, ...rest, facets: false, limit: 60 });
+    return distinctTitles(cards, TITLE_SUGGESTIONS);
 }
 
 /**
