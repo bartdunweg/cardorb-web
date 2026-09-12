@@ -23,6 +23,7 @@ import { cx } from "@/utils/cx";
  */
 export function PageHeader({
     title,
+    eyebrow,
     subtitle,
     back,
     actions,
@@ -33,6 +34,8 @@ export function PageHeader({
     titleOnPhone = true,
 }: {
     title: string;
+    /** A short line over the title, in the small size: what the page belongs to (a set's era). */
+    eyebrow?: string;
     /** The line under the title: a description or a count. */
     subtitle?: ReactNode;
     /** The parent page, for the bar's Back. Left out on a page the tab bar reaches. */
@@ -142,6 +145,7 @@ export function PageHeader({
                 >
                     {/* The words take what the actions leave, so a long subtitle wraps rather than pushing them under the title. */}
                     <div className="flex min-w-0 flex-1 basis-48 flex-col gap-1">
+                        {eyebrow ? <p className="text-sm font-semibold text-tertiary">{eyebrow}</p> : null}
                         <h1 ref={sentinel} className="text-display-xs font-semibold text-primary">
                             {title}
                         </h1>

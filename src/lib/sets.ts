@@ -61,6 +61,8 @@ export type SetDetail = {
     releaseDate: string | null;
     logoUrl: string | null;
     total: number;
+    /** The number printed on the cards; a set of 207 prints "165", the rest are secret rares. */
+    printedTotal: number | null;
     /** Distinct cards held, over the whole set. */
     owned: number;
     cards: SetCard[];
@@ -103,6 +105,7 @@ export async function getSet(id: string, language: BrowseLanguage = "en"): Promi
             // count where it has recorded none of them yet, so "0 of 60" says what is missing
             // rather than "0 of 0", which says nothing was ever there.
             total: totalCount || set.total,
+            printedTotal: set.printedTotal,
             owned: ownedCount,
             cards: cards.map((c) => setCardFromBrowse(c, set.abbreviation ?? null)),
         };
