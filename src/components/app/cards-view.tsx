@@ -6,6 +6,7 @@ import { CardsList } from "@/components/app/cards-list";
 import { LIST_ROW } from "@/components/app/row-search";
 import { CardsSkeleton } from "@/components/app/skeletons";
 import { ViewMenu } from "@/components/app/view-menu";
+import { useCardsView } from "@/hooks/use-cards-view";
 import type { Card, CardFilter, CardList } from "@/lib/cards";
 import type { CardsSize, CardsViewMode } from "@/lib/cards-view";
 
@@ -14,7 +15,8 @@ import type { CardsSize, CardsViewMode } from "@/lib/cards-view";
 const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-slideout").then((m) => m.CardDetailSlideout), { ssr: false });
 
 // Wraps the card list with the shared detail slideout and the View menu. The page reads the
-// layout and size from cookies and hands them in, so the HTML already shows the chosen view.
+// layout and size from cookies and hands them in, so the HTML already shows the chosen view;
+// once chosen in this tab, `use-cards-view` wins over a page the router kept from before.
 // The menu sits at the right end of the page's filter row, which comes in as `toolbar`, so
 // search, filters, sort and view share one line. The row is drawn at once; the list under it
 // is a promise the page did not wait for, and shows its outline until the cards land.
@@ -50,8 +52,7 @@ export function CardsView({
     /** Drawn in the list's place when the folder holds nothing at all. */
     empty: ReactNode;
 }) {
-    const [view, setView] = useState(initialView);
-    const [size, setSize] = useState(initialSize);
+    const { view, size } = useCardsView(initialView, initialSize);
     /*
      * The card the sheet is on, and the list it came from, so it can step to the next one without
      * going back to the grid. Kept together: the list is what was on screen when the card was
@@ -70,7 +71,7 @@ export function CardsView({
             <div className={LIST_ROW}>
                 {/* In its own box: an element that crossed the server boundary, in a list with local ones, trips the key check. */}
                 <div className="contents">{toolbar}</div>
-                <ViewMenu view={view} size={size} onView={setView} onSize={setSize} />
+                <ViewMenu view={view} size={size} />
             </div>
 
             <Suspense fallback={<CardsSkeleton />}>
