@@ -9,8 +9,10 @@ import { getMyProfile } from "@/lib/profile";
 // tab and every history entry read “Cardorb”. The word is the one the navigation uses for this page.
 export const metadata: Metadata = { title: "Settings" };
 
-export default async function SettingsPage() {
-    const { profile, email } = await getMyProfile();
+// `?profile=1` opens the profile sheet on arrival: Home's "Choose your name" sends people here
+// for one field, and that field is behind Manage.
+export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ profile?: string }> }) {
+    const [{ profile, email }, params] = await Promise.all([getMyProfile(), searchParams]);
 
     if (!profile) {
         return (
@@ -26,6 +28,7 @@ export default async function SettingsPage() {
         <SettingsForm
             profile={profile}
             email={email}
+            openProfile={params.profile === "1"}
             heading={<PageHeader title="Settings" subtitle="Manage your account and preferences." back={{ href: "/dashboard", label: "Home" }} />}
         />
     );

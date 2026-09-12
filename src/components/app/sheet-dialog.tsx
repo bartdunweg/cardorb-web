@@ -26,6 +26,7 @@ export function SheetDialog({
     children,
     content,
     className,
+    defaultOpen = false,
 }: {
     /** The trigger. A react-aria pressable — the kit's `Button` is one. */
     children: ReactNode;
@@ -33,9 +34,11 @@ export function SheetDialog({
     content: (close: () => void) => ReactNode;
     /** The modal's width from `sm`. A sheet is always the screen's width. */
     className?: string;
+    /** Open on arrival, for a page reached for what the sheet holds. Uncontrolled after that. */
+    defaultOpen?: boolean;
 }) {
     return (
-        <DialogTrigger>
+        <DialogTrigger defaultOpen={defaultOpen}>
             {children}
             {/* Bottom-aligned and flush on a phone: a sheet is attached to the edge, not floating near it. */}
             <ModalOverlay className="max-sm:items-end max-sm:p-0">

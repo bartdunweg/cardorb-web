@@ -17,7 +17,9 @@ export const LoginForm = ({ notice }: { notice?: string }) => {
             subtitle="Welcome back. Enter your details."
             footer={{ question: "Don't have an account?", href: "/signup", label: "Sign up" }}
         >
-            {notice && <output className="text-sm text-tertiary">{notice}</output>}
+            {/* A link that could not be verified is a failure, in the colour and role every other
+                failure on these forms has; as grey body text it read as a caption. */}
+            <FormError error={notice} />
 
             <form action={formAction} className="flex flex-col gap-6">
                 <div className="flex flex-col gap-5">

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderPage } from "@/components/app/folder-page";
+import { LinkButton } from "@/components/app/link-button";
 import { ListSettingsDialog } from "@/components/app/list-settings-dialog";
 import { type CardFilter, getMyCards } from "@/lib/cards";
 import { type ListSearchParams, isNarrowed, readListQuery } from "@/lib/list-query";
@@ -33,7 +34,14 @@ export default async function FavoritesPage({ searchParams }: { searchParams: Pr
             facets={facets}
             list={list}
             filter={filter}
-            empty={<AppEmptyState icon="star" title="No favorites yet" description="Star a card to keep it here for quick access" />}
+            empty={
+                // The star is on a card you own, so the way here runs through the collection.
+                <AppEmptyState icon="star" title="No favorites yet" description="Star a card you own to keep it here">
+                    <LinkButton href="/dashboard/cards" color="secondary">
+                        Go to Collection
+                    </LinkButton>
+                </AppEmptyState>
+            }
         />
     );
 }

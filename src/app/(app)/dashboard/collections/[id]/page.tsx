@@ -44,10 +44,16 @@ export default async function CollectionDetailPage({ params, searchParams }: { p
             ))}
         </ul>
     ) : null;
+    // The same plus the header has, in the middle of the room: on a phone the header's plus is
+    // in the bar at the bottom, and "press the plus" pointed at nothing in view.
     const empty = collection.rule ? (
-        <AppEmptyState icon="folder" title="Nothing matches yet" description="Cards you own that fit the rule show up here" />
+        <AppEmptyState icon="folder" title="Nothing matches yet" description="Cards you own that fit the rule show up here">
+            <AddCardButton />
+        </AppEmptyState>
     ) : (
-        <AppEmptyState icon="folder" title="No cards in this binder" description="Press the plus to fill it" />
+        <AppEmptyState icon="folder" title="No cards in this binder" description="Add a card you own, or a new one">
+            <BinderAddButton folder={{ id: collection.id, name: collection.name }} compact={false} />
+        </AppEmptyState>
     );
     const common = {
         title: collection.name,
