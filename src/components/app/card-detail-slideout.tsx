@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { ArrowRight, ChevronLeft, ChevronRight, DotsHorizontal, Heart, Phone01, Plus, Star01, Trash01, XClose } from "@untitledui/icons";
+import { ChevronLeft, ChevronRight, DotsHorizontal, Heart, Phone01, Plus, Star01, Trash01, XClose } from "@untitledui/icons";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
@@ -613,14 +613,17 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const heldRows = mine ? (copies ?? [mine]) : [];
     const inBinders = collections.filter((c) => heldRows.some((r) => (c.rule ? matchesRule(r, c.rule, facets) : r.collection_id === c.id)));
 
-    /* The two ways to take a card nobody holds, built once: from `sm` up they sit in the Copies
+    /* What to do with a card you do not hold, built once: from `sm` up it sits in the Copies
        tab under "You do not hold this card yet", and on a phone in a bar pinned to the bottom of
-       the sheet, so they are reached without scrolling past every detail. One element, so the
+       the sheet, so it is reached without scrolling past every detail. One element, so the
        labels and the handlers cannot drift between the two places, and one place at a time, so
        a screen reader never hears "Add to collection" twice. The breakpoint is read before the
-       first paint — the sheet is never rendered on the server — so neither placement flashes.
-       Under each other, each the full width: side by side made a choice out of what is really
-       two offers, the narrower one read as the lesser, and a binder's name can be any length. */
+       first paint (the sheet is never rendered on the server), so neither placement flashes.
+       A card nobody holds gets the two ways to take it, under each other, each the full width:
+       side by side made a choice out of what is really two offers, the narrower one read as the
+       lesser, and a binder's name can be any length. A wish gets the one thing to do with it,
+       becoming a copy; the form asks what the copy is like as it arrives. It used to sit above
+       the tabs, the only action not in the Copies tab, and read as part of the title. */
     const sm = useBreakpoint("sm");
     const offer =
         mine && takeable && (emptied || (!mine.owned && !mine.wishlist)) ? (
@@ -632,6 +635,12 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                     Add to wishlist
                 </Button>
             </div>
+        ) : mine?.wishlist && !emptied ? (
+            <MarkOwnedDialog card={mine} folders={collections} languages={known?.languages} facts={known} onSaved={onClose}>
+                <Button size="md" className="w-full">
+                    Mark as owned
+                </Button>
+            </MarkOwnedDialog>
         ) : null;
     const actionBar = !sm && offer;
 
@@ -902,15 +911,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                     ) : null}
                                 </p>
                             ) : null}
-                            {/* A wish becomes a copy here, above the tabs: the one thing to do with a card you do not
-                                hold yet. The form asks what the copy is like as it arrives. */}
-                            {!readOnly && mine?.wishlist ? (
-                                <MarkOwnedDialog card={mine} folders={collections} languages={known?.languages} facts={known} onSaved={onClose}>
-                                    <Button size="md" iconTrailing={ArrowRight} className="mt-3 w-full">
-                                        Mark as owned
-                                    </Button>
-                                </MarkOwnedDialog>
-                            ) : null}
                         </div>
                     </SlideoutMenu.Header>
 
@@ -1003,16 +1003,20 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                 </TabPanel>
                                 {mine ? (
                                     <TabPanel id="copies" className="flex flex-col gap-6">
-                                        {/* None yet, and the two ways to change that. This tab answers "what do I
+                                        {/* None yet, and the way to change that. This tab answers "what do I
                                             have of this", and for a card you do not hold the honest answer is
-                                            nothing — followed by the offer, which is what you opened it for. */}
+                                            nothing, followed by the offer, which is what you opened it for. */}
                                         {offer ? (
                                             /* No card around it. A card in this app holds what you have of
                                                something, and this is the panel saying you have none — a box
                                                drawn around that reads as a copy with nothing in it. */
                                             <div className="flex flex-col gap-3">
                                                 <p className="text-sm text-tertiary">
-                                                    {emptied ? "That was the last copy; it has left your collection." : "You do not hold this card yet."}
+                                                    {emptied
+                                                        ? "That was the last copy; it has left your collection."
+                                                        : mine?.wishlist
+                                                          ? "On your wishlist; you do not hold it yet."
+                                                          : "You do not hold this card yet."}
                                                 </p>
                                                 {/* On a phone the two buttons are in the bar at the bottom of the
                                                     sheet instead, under the thumb; see `offer`. */}
