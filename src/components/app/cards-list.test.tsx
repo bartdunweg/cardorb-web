@@ -156,3 +156,68 @@ describe("the runs a set heading is drawn over", () => {
         expect(setGroups([of("a", null), of("b", "Jungle")], true).map((g) => g.name)).toEqual([null, "Jungle"]);
     });
 });
+
+/*
+ * A list stops when the API says it has nothing more, not when the first page's count is reached.
+ * That count can be minutes old, and a list still short of it asked for an empty batch, drew the
+ * skeleton under the last card and asked again, for as long as the page was open.
+ */
+describe("CardsList at the end of a list", () => {
+    const of = (id: string): Card => ({ ...card, id, name: `Card ${id}` });
+    const page = (cards: Card[], total: number) =>
+        Promise.resolve({
+            cards,
+            total,
+            copies: null,
+            value: null,
+            unpriced: 0,
+            catalogueUnavailable: false,
+            facets: { sets: [], rarities: [], gens: [], types: [] },
+        } as unknown as CardList);
+
+    // An observer that sees the sentinel as soon as it watches it: the reader is at the bottom.
+    class Seen {
+        constructor(private readonly callback: IntersectionObserverCallback) {}
+        observe() {
+            queueMicrotask(() => this.callback([{ isIntersecting: true } as IntersectionObserverEntry], this as unknown as IntersectionObserver));
+        }
+        disconnect() {}
+    }
+
+    const scrollToEnd = async (first: Promise<CardList>) => {
+        vi.stubGlobal("IntersectionObserver", Seen);
+        await act(async () =>
+            render(
+                <Suspense fallback={null}>
+                    <CardsList list={first} filter={{}} narrowed={false} view="grid" size="md" onSelect={vi.fn()} noHits={null} empty={null} />
+                </Suspense>,
+            ),
+        );
+        for (let i = 0; i < 10; i++) await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
+        vi.unstubAllGlobals();
+        vi.stubGlobal("matchMedia", () => ({ matches: true, addEventListener() {}, removeEventListener() {} }));
+    };
+
+    it("stops on the count a batch answers when the first page's count was stale", async () => {
+        const { loadMoreCards } = await import("@/app/(app)/dashboard/list-actions");
+        const load = vi.mocked(loadMoreCards);
+        load.mockReset();
+        load.mockResolvedValueOnce({ cards: [of("c")], total: 3 }).mockResolvedValue({ cards: [], total: 3 });
+        await scrollToEnd(page([of("a"), of("b")], 4));
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(screen.queryByRole("button", { name: /Show more|Loading/ })).toBeNull();
+        expect(document.querySelector("[aria-live]")).toHaveTextContent("Showing 3 of 3 cards");
+    });
+
+    it("moves past a repeat rather than asking for the same rows again", async () => {
+        const { loadMoreCards } = await import("@/app/(app)/dashboard/list-actions");
+        const load = vi.mocked(loadMoreCards);
+        load.mockReset();
+        load.mockResolvedValue({ cards: [of("b")], total: 3 });
+        await scrollToEnd(page([of("a"), of("b")], 3));
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(load).toHaveBeenCalledWith(expect.objectContaining({ offset: 2 }));
+        expect(screen.queryByRole("button", { name: /Show more|Loading/ })).toBeNull();
+        expect(document.querySelector("[aria-live]")).toHaveTextContent("Showing 2 of 2 cards");
+    });
+});

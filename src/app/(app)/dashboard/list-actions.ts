@@ -9,13 +9,19 @@ import { loadMoreInput, warmListInput } from "@/lib/list-filter";
 //
 // The shape lives in `@/lib/list-filter` because a "use server" file may export nothing but
 // async functions, and a schema nobody can import is a schema nobody can test.
+//
+// The count comes back with the batch. The first page's count can be minutes old (it is cached,
+// and the API folds and refiles rows on its own), and a list that went by it believed it was
+// still owed cards: it asked for the same empty batch again and again, with the skeleton standing
+// under the last card. The count as of this batch is the one the list stops on.
 
-export async function loadMoreCards(input: unknown): Promise<Card[]> {
+export async function loadMoreCards(input: unknown): Promise<{ cards: Card[]; total: number }> {
     const parsed = loadMoreInput.safeParse(input);
-    if (!parsed.success) return [];
+    if (!parsed.success) return { cards: [], total: 0 };
     const { offset, ...filter } = parsed.data;
     // A batch on scroll reads the cards alone; the facets came with the first page.
-    return (await getMyCards({ ...filter, facets: false, limit: LIST_BATCH, offset })).cards;
+    const { cards, total } = await getMyCards({ ...filter, facets: false, limit: LIST_BATCH, offset });
+    return { cards, total };
 }
 
 /**
