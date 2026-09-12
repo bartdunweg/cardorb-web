@@ -37,6 +37,12 @@ export type CardFilter = {
     gen?: string | string[];
     /** An energy type, or several (a card of any), whole, as the catalogue names it. */
     type?: string | string[];
+    /** A copy's condition, or several (a copy in any), whole. */
+    condition?: string | string[];
+    /** A copy's finish, or several. */
+    finish?: string | string[];
+    /** A copy's language as its code, or several; a copy with none is English. */
+    language?: string | string[];
     /** A card number, whole; with `set` it names one card's every row. */
     number?: string;
     /** true: copies with a price; false: the ones nothing prices. */
@@ -71,6 +77,9 @@ export async function getMyCards({
     fullArt,
     gen,
     type,
+    condition,
+    finish,
+    language,
     number,
     priced,
     duplicates,
@@ -107,7 +116,7 @@ export async function getMyCards({
     // (forgetMine). Further batches and the odd sizes (a count, a whole Pokédex) go straight.
     const key =
         offset === 0 && limit === LIST_BATCH
-            ? `cards:${JSON.stringify([q, collectionId, favoritesOnly, wishlist, sort, order, set, rarity, fullArt, gen, type, number, priced, duplicates, wantFacets])}`
+            ? `cards:${JSON.stringify([q, collectionId, favoritesOnly, wishlist, sort, order, set, rarity, fullArt, gen, type, condition, finish, language, number, priced, duplicates, wantFacets])}`
             : null;
     const read = async (token?: string) => {
         const { cards, total, copies, facets, value, unpriced, catalogueUnavailable, counts } = await api("/cards", {
@@ -125,6 +134,9 @@ export async function getMyCards({
                 fullArt: fullArt ? 1 : undefined,
                 gen,
                 type,
+                condition,
+                finish,
+                language,
                 number,
                 priced,
                 duplicates: duplicates ? 1 : undefined,

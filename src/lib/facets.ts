@@ -6,13 +6,19 @@ export type Facets = {
     gens: string[];
     /** A to Z. */
     types: string[];
+    /** A copy's condition, Mint first and down the scale. */
+    conditions: string[];
+    /** A copy's finish, normal first. */
+    finishes: string[];
+    /** A copy's language as its code, English first; a copy with none is English. */
+    languages: string[];
 };
 
 /**
  * Nothing to offer: the menus a dialog or a sheet draws before the facets have landed, and what a
  * read that failed falls back to. Never written into, so one object serves every caller.
  */
-export const NO_FACETS: Facets = { sets: [], rarities: [], gens: [], types: [] };
+export const NO_FACETS: Facets = { sets: [], rarities: [], gens: [], types: [], conditions: [], finishes: [], languages: [] };
 
 /**
  * One entry per official name. The API keys its sets by the name the owner filed a card under,
@@ -37,4 +43,7 @@ export const facetsFrom = (raw: Partial<Facets> | undefined): Facets => ({
     rarities: raw?.rarities ?? [],
     gens: raw?.gens ?? [],
     types: raw?.types ?? [],
+    conditions: raw?.conditions ?? [],
+    finishes: raw?.finishes ?? [],
+    languages: raw?.languages ?? [],
 });

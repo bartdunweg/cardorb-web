@@ -10,11 +10,22 @@ describe("facetsFrom", () => {
             rarities: ["Rare Holo"],
             gens: [],
             types: [],
+            conditions: [],
+            finishes: [],
+            languages: [],
         });
     });
 
     it("keeps what the API sent, in the order it sent it", () => {
-        const raw = { sets: [], rarities: ["Common", "Rare"], gens: ["Scarlet & Violet", "Sword & Shield"], types: ["Fire", "Water"] };
+        const raw = {
+            sets: [],
+            rarities: ["Common", "Rare"],
+            gens: ["Scarlet & Violet", "Sword & Shield"],
+            types: ["Fire", "Water"],
+            conditions: ["Mint", "Near Mint"],
+            finishes: ["normal", "holo"],
+            languages: ["en", "ja"],
+        };
         expect(facetsFrom(raw)).toEqual(raw);
     });
 });

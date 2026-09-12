@@ -807,6 +807,10 @@ export const facetsSchema = z.object({
     rarities: z.array(z.string()),
     gens: z.array(z.string()),
     types: z.array(z.string()),
+    /** A copy's condition, finish and language, over the list's copies (cardorb-api#373); absent before it. */
+    conditions: z.array(z.string()).optional(),
+    finishes: z.array(z.string()).optional(),
+    languages: z.array(z.string()).optional(),
 });
 
 /**
@@ -819,6 +823,9 @@ export const filterCountsSchema = z.object({
     rarity: z.record(z.string(), z.number()).optional(),
     gen: z.record(z.string(), z.number()).optional(),
     type: z.record(z.string(), z.number()).optional(),
+    condition: z.record(z.string(), z.number()).optional(),
+    finish: z.record(z.string(), z.number()).optional(),
+    language: z.record(z.string(), z.number()).optional(),
     fullArt: z.number().optional(),
     duplicates: z.number().optional(),
 });
