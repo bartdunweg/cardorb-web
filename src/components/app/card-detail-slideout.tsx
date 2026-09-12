@@ -43,7 +43,7 @@ import { useBreakpoint } from "@/hooks/use-breakpoint";
 import { type PokemonCard, type RemovedCard, isReverseFinish } from "@/lib/api-shapes";
 import { binderFromPath, isBinderPath } from "@/lib/binder-from-path";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
-import { type CopyGroup, groupCopies, sortCopies } from "@/lib/copies";
+import { type CopyGroup, groupCopies, printingLabel, sortCopies } from "@/lib/copies";
 import { matchesRule } from "@/lib/folder-rule";
 import { formatDate, formatPrice } from "@/lib/format";
 import { orientationNeedsPermission, requestOrientation } from "@/lib/holo/orientation";
@@ -1162,6 +1162,31 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                 this is an estimate of what a Near Mint one does. The old label named the
                                                 input rather than the answer. */}
                                             <DetailRow label="Near Mint price" value={mine.price != null ? formatPrice(mine.price) : null} />
+                                            {/* Which market that figure is from, which printing of the card it was, and a way
+                                                to open the page it came from. The two markets differ by a median of 42% on
+                                                this collection and Cardmarket files several printings of one card under a
+                                                single product, so "where is this from" is a question with money in it
+                                                (Bart, 2026-09-12). Only TCGplayer has an address a link can be built to;
+                                                Cardmarket publishes no expansion in a product's, so there the line says the
+                                                market and stops. */}
+                                            {mine.price_source ? (
+                                                <p className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-3 text-xs text-tertiary">
+                                                    <span>
+                                                        {mine.price_source === "tcgplayer" ? "TCGplayer" : "Cardmarket"}
+                                                        {mine.price_printing ? ` · ${printingLabel(mine.price_printing)}` : ""}
+                                                    </span>
+                                                    {mine.tcgplayer_id ? (
+                                                        <a
+                                                            href={`https://www.tcgplayer.com/product/${mine.tcgplayer_id}`}
+                                                            target="_blank"
+                                                            rel="noreferrer noopener"
+                                                            className="rounded-sm font-semibold text-brand-secondary outline-focus-ring hover:underline focus-visible:outline-2"
+                                                        >
+                                                            Check it there
+                                                        </a>
+                                                    ) : null}
+                                                </p>
+                                            ) : null}
                                             {/* A graded copy is not this card. The figure above is what an ungraded Near
                                                 Mint one trades at, and a slab is a different market that neither feed
                                                 behind this app publishes (Cardmarket and TCGplayer both price the

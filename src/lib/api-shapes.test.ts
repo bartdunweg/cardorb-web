@@ -138,6 +138,16 @@ describe("priceForCopy", () => {
         expect(priceForCopy({ finish: null, edition: "1st-edition", price, priceHolo: null, priceShadowless: run })).toBe(6);
     });
 
+    it("reads the printing the API chose before any figure of the card's own", () => {
+        const price = { low: 1, market: 4, avg30: 4, nm: { low: 5, mid: 6, high: 7 } };
+        const printing = { low: 27.99, market: 53.23, avg30: null, nm: null };
+        // A Jungle Scyther holo: one product on Cardmarket with its plain rare, two printings on
+        // TCGplayer. The API works out which printing this copy is and sends that figure.
+        expect(priceForCopy({ finish: "holo", price, priceHolo: price, printingPrice: printing })).toBe(53.23);
+        // And where TCGplayer prices no printing of this card, the card's own figures stand.
+        expect(priceForCopy({ finish: "holo", price, priceHolo: null, printingPrice: null })).toBe(6);
+    });
+
     it("prices a reverse holo with the foil price, everything else with the plain one, as the API does", () => {
         expect(priceForCopy({ finish: "reverse-holo", price, priceHolo: holo })).toBe(60);
         expect(priceForCopy({ finish: "poke-ball", price, priceHolo: holo })).toBe(60);
