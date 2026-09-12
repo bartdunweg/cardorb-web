@@ -183,7 +183,14 @@ const cardSchema = z.object({
 
 // Adds a catalogue card to the collection or the wishlist. The API matches it against the
 // catalogues, picks the picture and the price; nothing about the card is stored from here.
-export async function addCard(input: PokemonCard, target: "collection" | "wishlist" = "collection", collectionId?: string): Promise<Result & { id?: string }> {
+//
+// `reread: false` as on setCopies below, for a tile that goes on pressing and re-reads once.
+export async function addCard(
+    input: PokemonCard,
+    target: "collection" | "wishlist" = "collection",
+    collectionId?: string,
+    { reread = true }: { reread?: boolean } = {},
+): Promise<Result & { id?: string }> {
     const parsed = cardSchema.safeParse(input);
     if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
@@ -217,7 +224,7 @@ export async function addCard(input: PokemonCard, target: "collection" | "wishli
         return failed(err);
     }
 
-    await forgetMine();
+    if (reread) await forgetMine();
     return { ok: true, id };
 }
 
@@ -250,7 +257,7 @@ export async function rereadMine(): Promise<void> {
 
 // Removes one row: an owned copy or a wish. The API wants a JSON content type on a delete, so
 // the body is an empty object.
-export async function removeCard(cardId: string): Promise<Result & { card?: RemovedCard }> {
+export async function removeCard(cardId: string, { reread = true }: { reread?: boolean } = {}): Promise<Result & { card?: RemovedCard }> {
     const parsed = z.string().uuid().safeParse(cardId);
     if (!parsed.success) return { ok: false, error: "Invalid card." };
 
@@ -269,7 +276,7 @@ export async function removeCard(cardId: string): Promise<Result & { card?: Remo
         return failed(err);
     }
 
-    await forgetMine();
+    if (reread) await forgetMine();
     return { ok: true, card };
 }
 
