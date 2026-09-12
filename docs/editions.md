@@ -55,24 +55,28 @@ plain `variants` flags. That read is the first piece of work whichever way the d
 | CSV out                      | Dex's own Variant column has to carry it back, or a round trip loses it                                                                                      |
 | Web                          | The copy editor (add a copy, split a copy), the card sheet's copy rows, the filters, the design page                                                         |
 
-## The three decisions
+## The three decisions, answered by Bart on 2026-09-12
 
-1. **A copy fact, or a card of its own?** Recommended: a copy fact, a column beside `finish`.
+All three as recommended. The reasons stay written out, because a decision without its reason is
+a decision the next reader reopens.
+
+1. **A copy fact, or a card of its own?** **A copy fact**, a column beside `finish`.
    Cardmarket treats it as a separate product, so the other reading is defensible, but a separate
    card row doubles the catalogue for a fact that only matters to people who hold one, and every
    binder, the Pokédex and the set pages count cards.
-2. **What is a 1st Edition copy worth, while nothing prices it?** Recommended: unpriced, and
-   marked as such. The app already shows "no price" honestly and counts unpriced copies. The
+2. **What is a 1st Edition copy worth, while nothing prices it?** **Unpriced, and marked as
+   such.** The app already shows "no price" honestly and counts unpriced copies. The
    other reading, the unlimited price with a marker, makes the collection's total look right and
    be wrong.
-3. **Does Shadowless get its own price now?** Recommended: yes, and it is the reason to do the
-   work at all. It needs the sync to read `variants_detailed` and a per-subtype figure to travel
+3. **Does Shadowless get its own price now?** **Yes**, and it is the reason to do the work at
+   all. It needs the sync to read `variants_detailed` and a per-subtype figure to travel
    with the card; without it a Shadowless copy is priced as unlimited, which is the largest known
    error in the collection's value.
 
-## What a first slice would be, once those are answered
+## The two slices
 
 The column and the vocabulary from the catalogue, the CSV import keeping what Dex already writes,
 the copy editor offering it, and the sheet showing it. The price half (the sync reading
 `variants_detailed`, a per-subtype figure, `priceForCopy` learning it) is its own slice after,
-because it moves the value history that the snapshots are built on.
+because it moves the value history that the snapshots are built on. Both are to be built; the
+order is the fact first.
