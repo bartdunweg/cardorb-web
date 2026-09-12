@@ -160,6 +160,9 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
             update((hits) => takenHit(hits, card.id, target));
             // The same mark on the recent copy of the card, where there is one.
             updateRecentCards(takenHit([card], card.id, target));
+            // The list the card went to is behind the palette, and the first one turns Home from the
+            // welcome into the stats without anyone seeing it happen: the one line that says it landed.
+            notify.done(`${card.name} added to your ${target}`);
             router.refresh();
         } else {
             // The buttons come back as they were, which reads as a missed click; the toast is the

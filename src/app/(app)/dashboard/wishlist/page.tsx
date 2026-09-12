@@ -35,9 +35,14 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
             list={list}
             filter={filter}
             empty={
-                <AppEmptyState icon="heart" title="Your wishlist is empty" description="Add cards you’re looking for but don’t own yet">
-                    {/* The words only: this node crosses to a client component, and an icon is a function. */}
-                    <AddCardButton label="Add to wishlist" />
+                <AppEmptyState
+                    icon="heart"
+                    title="Your wishlist is empty"
+                    description="Find a card you’re looking for and add it to your wishlist from its preview"
+                >
+                    {/* The palette opens with nothing preset (Bart's call, see add-card-button.tsx), so the
+                        button says what it does; "Add to wishlist" promised a step the palette leaves to you. */}
+                    <AddCardButton label="Find a card" />
                 </AppEmptyState>
             }
         />
