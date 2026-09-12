@@ -95,3 +95,14 @@ export function sortShelf(series: SetSeries[], sort: BrowseSort): SetSeries[] {
     }
     return series;
 }
+
+/**
+ * How many sets a shelf shows, and per progress how many it would with that one chosen: the
+ * numbers beside Browse's filters. Over the shelf after the search, so they answer what is typed.
+ */
+export function shelfCounts(series: SetSeries[], q: string | undefined, progress: BrowseProgress): { total: number; progress: Record<BrowseProgress, number> } {
+    const searched = searchShelf(series, q);
+    const count = (p: BrowseProgress) => progressShelf(searched, p).reduce((n, group) => n + group.sets.length, 0);
+    const byProgress = Object.fromEntries(BROWSE_PROGRESS_OPTIONS.map((o) => [o.value, count(o.value)])) as Record<BrowseProgress, number>;
+    return { total: byProgress[progress], progress: byProgress };
+}

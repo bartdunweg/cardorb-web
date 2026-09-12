@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { SetSeries, SetSummary } from "./api-shapes";
-import { browseHref, progressShelf, readBrowseQuery, searchShelf, sortShelf } from "./browse-query";
+import { browseHref, progressShelf, readBrowseQuery, searchShelf, shelfCounts, sortShelf } from "./browse-query";
 
 const set = (name: string): SetSummary => ({
     id: name.toLowerCase(),
@@ -84,6 +84,23 @@ describe("progressShelf", () => {
         expect(names(progressShelf(mixed, "complete"))).toEqual(["Jungle"]);
         expect(names(progressShelf(mixed, "new"))).toEqual(["Surging Sparks"]);
         expect(progressShelf(mixed, "complete").map((g) => g.name)).toEqual(["Base"]);
+    });
+});
+
+describe("shelfCounts", () => {
+    const at = (name: string, owned: number, total: number): SetSummary => ({ ...set(name), owned, total, complete: total > 0 && owned >= total });
+    const mixed: SetSeries[] = [
+        { name: "Scarlet & Violet", sets: [at("Surging Sparks", 0, 191), at("Obsidian Flames", 40, 197)] },
+        { name: "Base", sets: [at("Jungle", 64, 64), at("Unrecorded", 0, 0)] },
+    ];
+
+    it("counts each progress over the whole shelf, and the total is the one chosen", () => {
+        // All keeps the set with no cards recorded; the three states leave it out, so they need not add up to all.
+        expect(shelfCounts(mixed, undefined, "complete")).toEqual({ total: 1, progress: { all: 4, started: 1, complete: 1, new: 1 } });
+    });
+
+    it("counts what the search leaves", () => {
+        expect(shelfCounts(mixed, "flames", "all")).toEqual({ total: 1, progress: { all: 1, started: 1, complete: 0, new: 0 } });
     });
 });
 
