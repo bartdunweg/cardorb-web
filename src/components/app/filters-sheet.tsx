@@ -8,15 +8,21 @@ import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-m
 import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 
-// The set and rarity filters, behind one button on every screen: a sheet from the bottom on a
-// phone, a drawer from the right from sm up. Search stays in the row: it is the thing you type. `active` is how many filters are set, shown on the button so a
-// narrowed list says why. The controls apply as they change; Done only closes the sheet.
-export function FiltersSheet({ active = 0, children }: { active?: number; children: ReactNode }) {
+// The filters behind one button: a sheet from the bottom on a phone, a drawer from the right from
+// sm up. Search stays in the row: it is the thing you type. `active` is how many filters are set,
+// shown on the button so a narrowed list says why. The controls apply as they change; Done only
+// closes the sheet.
+// `inline`: from lg the controls stand in the row themselves and the button goes. For a page whose
+// filters always fit beside the search there (Browse's one menu, a set's two chips); a binder's four
+// menus do not, so it keeps the button. A fixed rule per page rather than a measured one, so the row
+// never flips between the two while a choice changes its width.
+export function FiltersSheet({ active = 0, inline = false, children }: { active?: number; inline?: boolean; children: ReactNode }) {
     const [open, setOpen] = useState(false);
 
     return (
         <>
-            <div>
+            {inline ? <div className="contents max-lg:hidden">{children}</div> : null}
+            <div className={inline ? "lg:hidden" : undefined}>
                 <RowButton icon={FilterLines} label="Filters" onClick={() => setOpen(true)}>
                     {active > 0 ? (
                         <Badge size="sm" color="gray" type="pill-color">

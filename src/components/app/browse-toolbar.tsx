@@ -20,7 +20,7 @@ const first = (keys: "all" | Set<React.Key>) => (keys === "all" ? undefined : [.
 /**
  * Ours: the row over the Browse shelf, as a binder's: the search field, then Filters, Sort and
  * View. Search narrows the shelf to sets by name; Filters holds the catalogue's language, a menu
- * in the sheet like a binder's set and rarity; Sort turns the shelf; View draws it as tiles or
+ * in the sheet on a phone and in the row itself from lg; Sort turns the shelf; View draws it as tiles or
  * rows. Search, language and sort go into the URL (`?q=`, `?language=`, `?sort=`), so the page
  * can be shared and comes back the same; the view is a cookie the server reads, so the chosen
  * layout is in the first paint. The shelf under the row re-reads on each.
@@ -42,11 +42,12 @@ export function BrowseToolbar({ query, view }: { query: BrowseQuery; view: SetsV
                 className="min-w-0 flex-1 sm:max-w-64"
                 shelf={query.language}
             />
-            <FiltersSheet active={query.language === "en" ? 0 : 1}>
+            <FiltersSheet inline active={query.language === "en" ? 0 : 1}>
                 {/* English is the default and reads as the first row, as "All sets" does in a binder's sheet. */}
                 <NativeSelect
                     aria-label="Language"
                     size="sm"
+                    className="w-auto"
                     value={query.language}
                     onChange={(event) => go({ language: isBrowseLanguage(event.target.value) ? event.target.value : "en" })}
                     options={BROWSE_LANGUAGES.map((l) => ({ label: l.label, value: l.code }))}
