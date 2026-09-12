@@ -14,7 +14,6 @@ change back.
 | TCGplayer, published by tcgcsv.com | The same figures, a file per set per day since 2024-02-08         | Browse and search, promos and subsets TCGdex does not relay, the Shadowless and 1st Edition Base Set runs, the price history |
 | tcgdex/price-history on GitHub     | TCGplayer sales per card per day, 2022-11 to 2024-09              | The price history before tcgcsv's archive starts                                                                             |
 | Frankfurter (the ECB's daily rate) | The dollar rate a bank statement would use                        | Converting all of the above                                                                                                  |
-| eBay sold listings                 | Finished sales, linked, never read                                | The sheet's links, to check a price and a PSA 10                                                                             |
 
 Nothing reads Cardmarket for a price since cardorb-api#362 (2026-09-12): Browse, search, the
 collection, the card sheet and the history are all TCGplayer's.
@@ -67,9 +66,9 @@ reads that trend now, and a band measured on one market is not evidence about an
 
 ## Checking a price
 
-The Price tab links to the TCGplayer product the figure came from, to eBay's sold listings for the
-card with graded slabs left out, and to eBay's sold PSA 10s. The last is the only graded price the app
-can offer, since neither market publishes one.
+The Price tab links to the TCGplayer product the figure came from. Links to eBay's sold listings
+(raw and PSA 10) sat beside it on 2026-09-12 and were taken out the same evening, for now. A graded
+copy has no price in the app: TCGplayer publishes none.
 
 ## When to reopen this
 
