@@ -22,6 +22,19 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-12, search.** Bart: you search a binder by the title of a card, so the field should say
+which titles it has. It does now (#459). The names of cards you hold that match what is typed,
+the set beside a title held once and a count beside one held several times over, the letters you
+typed marked in the name, and the sets under them: choosing a set is not a term but a filter, so
+the list narrows to it and the Filters button says so. What begins with your letters comes first,
+because the API matches letters wherever they sit and had put Pecharunt ex on top of a list of
+Charizards. A binder's titles are read once (up to 2500 rows, about 700 ms, kept per scope for
+the life of the tab) and searched in the browser, the way the palette searches the catalogue;
+a collection larger than one read asks the API per term. It stays free text, and a public profile
+gets no suggestions, which would be read from the reader's own cards. Walked in the pane, light
+and dark, 1280x800 and 375x812: the row the keyboard stands on is ringed at 3.8:1, where the tint
+it had first was 1.04:1.
+
 **2026-09-12, the import's stages.** Bart: the CSV import put a spinner under the drop zone and
 named the file nowhere, so the upload step did not say what it was busy with. The kit's file row
 came back, rewritten without `motion` and without `@untitledui/file-icons` (R-UI-002), and the
