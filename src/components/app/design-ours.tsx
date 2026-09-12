@@ -604,7 +604,10 @@ function FiltersSheetSample() {
                         groups={groups}
                         values={values}
                         onApply={setValues}
-                        count={(d) => 120 >> Object.values(d).flat().length}
+                        count={(d) => ({
+                            total: 120 >> Object.values(d).flat().length,
+                            options: { rarity: { common: 72, holo: 40, ultra: 8 }, language: { en: 120, ja: 14, ko: 0 } },
+                        })}
                         noun={["card", "cards"]}
                     />
                 </Cell>

@@ -1,5 +1,6 @@
 "use server";
 
+import type { FilterCounts } from "@/lib/api-shapes";
 import { type Card, LIST_BATCH, getMyCards } from "@/lib/cards";
 import { loadMoreInput, warmListInput } from "@/lib/list-filter";
 
@@ -58,13 +59,14 @@ export async function warmList(input: unknown): Promise<void> {
  * draft ("Show 42 cards"). One card asked for, no facets: the count is the whole answer wanted.
  * Null when it cannot say, and the button falls back to "Show results".
  */
-export async function countCards(input: unknown): Promise<number | null> {
+export async function countCards(input: unknown): Promise<{ total: number; counts: FilterCounts | null } | null> {
     const parsed = loadMoreInput.omit({ offset: true }).safeParse(input);
     if (!parsed.success) return null;
     try {
-        // The cards the list will show, as a narrowed page counts them under its title ("25 matches").
-        const { total } = await getMyCards({ ...parsed.data, facets: false, limit: 1 });
-        return total;
+        // The cards the list will show, as a narrowed page counts them under its title ("25 matches"),
+        // and beside each choice in the sheet what choosing it would leave.
+        const { total, counts } = await getMyCards({ ...parsed.data, facets: false, counts: true, limit: 1 });
+        return { total, counts };
     } catch {
         return null;
     }

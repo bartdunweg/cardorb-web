@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { countCards } from "@/app/(app)/dashboard/list-actions";
-import { type FilterGroup, type FilterValues, FiltersSheet } from "@/components/app/filters-sheet";
+import { type FilterAnswer, type FilterGroup, type FilterValues, FiltersSheet } from "@/components/app/filters-sheet";
 import { TypeIcon } from "@/components/app/type-icon";
 import type { CardFilter } from "@/lib/cards";
 import type { Facets } from "@/lib/cards";
@@ -11,6 +11,20 @@ import { type ListQuery, listHref } from "@/lib/list-query";
 
 const FULL_ART = "fullArt";
 const DUPLICATES = "duplicates";
+
+/**
+ * The API's counts as the sheet reads them: per group, per option. Set, rarity, generation and type
+ * come keyed as the options are; Full art and Duplicates are one number each, under "Show only".
+ */
+const answerFrom = (read: Awaited<ReturnType<typeof countCards>>): FilterAnswer | null => {
+    if (!read) return null;
+    const { counts } = read;
+    if (!counts) return { total: read.total };
+    const only: Record<string, number> = {};
+    if (counts.fullArt !== undefined) only[FULL_ART] = counts.fullArt;
+    if (counts.duplicates !== undefined) only[DUPLICATES] = counts.duplicates;
+    return { total: read.total, options: { set: counts.set ?? {}, rarity: counts.rarity ?? {}, gen: counts.gen ?? {}, type: counts.type ?? {}, only } };
+};
 
 /** The URL's filters from what the sheet chose. */
 const patchOf = (v: FilterValues) => ({
@@ -95,7 +109,7 @@ export function CardsFilters({
         (draft: FilterValues) => {
             if (!countBase) return null;
             const p = patchOf(draft);
-            return countCards({ ...countBase, ...p, fullArt: p.fullArt || undefined, duplicates: p.duplicates || undefined });
+            return countCards({ ...countBase, ...p, fullArt: p.fullArt || undefined, duplicates: p.duplicates || undefined }).then(answerFrom);
         },
         [countBase],
     );

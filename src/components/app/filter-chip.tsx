@@ -125,6 +125,7 @@ export function FilterChoices({
     options,
     multiple = false,
     focusField = true,
+    counts,
     onChange,
 }: {
     label: string;
@@ -132,6 +133,8 @@ export function FilterChoices({
     any?: string;
     /** Beside that word: English's flag, where the others wear theirs. */
     anyIcon?: ReactNode;
+    /** Per option, how many choosing it would leave; zero greys it out unless it is chosen. */
+    counts?: Record<string, number>;
     /** The caret in the field on open. Off in a sheet on a phone, where it raises the keyboard over the list it narrows. */
     focusField?: boolean;
     value: string[];
@@ -143,7 +146,11 @@ export function FilterChoices({
     const [term, setTerm] = useState("");
     const needle = useDeferredValue(term.trim().toLowerCase());
     const searchable = options.length >= SEARCHABLE_FROM;
-    const shown = needle ? options.filter((o) => `${o.label} ${o.hint ?? ""}`.toLowerCase().includes(needle)) : options;
+    const found = needle ? options.filter((o) => `${o.label} ${o.hint ?? ""}`.toLowerCase().includes(needle)) : options;
+    // With numbers, what would leave nothing sinks under what would, each part in its own order: in
+    // two hundred sets the nine that answer were scattered between zeros.
+    const empty = (o: FilterOption) => counts !== undefined && (counts[o.value] ?? 0) === 0 && !value.includes(o.value);
+    const shown = counts ? [...found.filter((o) => !empty(o)), ...found.filter(empty)] : found;
     const listId = useId();
     // The list opens to be narrowed: the caret lands in the field, so typing goes on from the chip.
     const field = useRef<HTMLInputElement>(null);
@@ -196,6 +203,8 @@ export function FilterChoices({
                         hint={o.hint}
                         icon={o.icon}
                         multiple={multiple}
+                        // Named only where found: an option missing from a counted group is zero.
+                        count={counts ? (counts[o.value] ?? 0) : undefined}
                         pressed={value.includes(o.value)}
                         onClick={() => press(o.value)}
                     />
@@ -211,6 +220,7 @@ function Choice({
     hint,
     icon,
     multiple = false,
+    count,
     pressed,
     onClick,
 }: {
@@ -218,6 +228,7 @@ function Choice({
     hint?: string;
     icon?: ReactNode;
     multiple?: boolean;
+    count?: number;
     pressed: boolean;
     onClick: () => void;
 }) {
@@ -225,8 +236,10 @@ function Choice({
         <AriaButton
             aria-pressed={pressed}
             onPress={onClick}
+            // Nothing left to show with it: passed over, unless it is chosen and has to come off again.
+            isDisabled={count === 0 && !pressed}
             className={cx(
-                "flex pressable cursor-pointer items-center gap-3 rounded-lg px-2 py-2 text-left outline-focus-ring transition-colors hover:bg-secondary focus-visible:outline-2",
+                "flex pressable cursor-pointer items-center gap-3 rounded-lg px-2 py-2 text-left outline-focus-ring transition-colors hover:bg-secondary focus-visible:outline-2 disabled:cursor-default disabled:opacity-50 disabled:hover:bg-transparent",
                 pressed && "bg-alpha-black/4",
             )}
         >
@@ -244,7 +257,23 @@ function Choice({
                     </span>
                 ) : null}
             </span>
+            {count === undefined ? null : (
+                <span className="shrink-0 text-sm">
+                    <OptionCount n={count} />
+                </span>
+            )}
             {multiple ? null : <Check aria-hidden="true" className={cx("size-4 shrink-0 text-fg-brand-primary", !pressed && "invisible")} />}
         </AriaButton>
+    );
+}
+
+/** An option's number: quiet beside its word, and read after a comma ("Rare, 42"). */
+export function OptionCount({ n }: { n: number | undefined }) {
+    if (n === undefined) return null;
+    return (
+        <span className="text-tertiary tabular-nums">
+            <span className="sr-only">, </span>
+            {n.toLocaleString("en")}
+        </span>
     );
 }

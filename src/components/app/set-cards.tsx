@@ -5,7 +5,7 @@ import { SearchLg, SwitchVertical01 } from "@untitledui/icons";
 import dynamic from "next/dynamic";
 import { listRows } from "@/app/(app)/dashboard/cards/actions";
 import { AppEmptyState } from "@/components/app/app-empty-state";
-import { type FilterValues, FiltersSheet } from "@/components/app/filters-sheet";
+import { type FilterAnswer, type FilterValues, FiltersSheet } from "@/components/app/filters-sheet";
 import { RowButton } from "@/components/app/row-button";
 import { LIST_ROW, RowSearch } from "@/components/app/row-search";
 import { SetCardTile } from "@/components/app/set-card-tile";
@@ -107,7 +107,34 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
         return [...kept].sort((a, b) => (sort === "name" ? a.name.localeCompare(b.name) : sort === "price-desc" ? price(b) - price(a) : price(a) - price(b)));
     }, [matching, holding, rarity, art, sort]);
     const narrowed = Boolean(q.trim() || holding || rarity.length || art);
-    const countDraft = useCallback((v: FilterValues) => matching(filtersOf(v)).length, [matching]);
+    /* What each choice would leave, worked out here from the set in hand: a group's numbers with every
+       other filter as chosen and its own left off, the way the API counts a binder's. */
+    const countDraft = useCallback(
+        (v: FilterValues): FilterAnswer => {
+            const f = filtersOf(v);
+            const tally = (cards: SetCard[], key: (c: SetCard) => string | null | undefined) => {
+                const out: Record<string, number> = {};
+                for (const c of cards) {
+                    const k = key(c);
+                    if (k) out[k] = (out[k] ?? 0) + 1;
+                }
+                return out;
+            };
+            const byHolding = matching({ ...f, holding: undefined });
+            return {
+                total: matching(f).length,
+                options: {
+                    holding: {
+                        all: byHolding.length,
+                        ...Object.fromEntries(HOLDINGS.map((h) => [h.value, matching({ ...f, holding: h.value }).length])),
+                    },
+                    rarity: tally(matching({ ...f, rarity: [] }), (c) => c.rarity),
+                    only: { [FULL_ART]: matching({ ...f, art: true }).length },
+                },
+            };
+        },
+        [matching],
+    );
 
     const [selected, setSelected] = useState<Card | null>(null);
     // The catalogue card behind an open sheet, so a card nobody holds can still be taken from it.

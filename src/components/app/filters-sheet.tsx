@@ -3,13 +3,14 @@
 import { useEffect, useId, useState } from "react";
 import { ArrowLeft, Check, ChevronDown, ChevronRight, FilterLines } from "@untitledui/icons";
 import { Button as AriaButton, Dialog as AriaDialog, DialogTrigger as AriaDialogTrigger, Heading as AriaHeading } from "react-aria-components";
-import { FilterChoices, type FilterOption } from "@/components/app/filter-chip";
+import { FilterChoices, type FilterOption, OptionCount } from "@/components/app/filter-chip";
 import { RowButton } from "@/components/app/row-button";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Tag, TagGroup, TagList } from "@/components/base/tags/tags";
+import { useBreakpoint } from "@/hooks/use-breakpoint";
 import { cx } from "@/utils/cx";
 
 export type { FilterOption } from "@/components/app/filter-chip";
@@ -31,6 +32,15 @@ export type FilterGroup = {
 /** What is chosen, per group id. An empty list is the filter off. */
 export type FilterValues = Record<string, string[]>;
 
+/**
+ * What a set of choices would show: the total, for the button, and per group per option how many
+ * would be left with that option chosen and the other groups as they are ("Rare 42"). An option
+ * the answer leaves out has no number; one at zero cannot be picked, because it would empty the list.
+ */
+export type FilterAnswer = { total: number | null; options?: Record<string, Record<string, number>> };
+
+export type FilterCount = (values: FilterValues) => FilterAnswer | null | Promise<FilterAnswer | null>;
+
 /** Up to this many a group is tags to tap; past it, a row that opens the list with a field to narrow it (sets). */
 const TAGS_UP_TO = 12;
 
@@ -51,8 +61,8 @@ const countOf = (values: FilterValues) => Object.values(values).reduce((n, v) =>
  * whose filters fit beside the search (Browse's two, a set's three); a binder's five do not, so it
  * keeps the panel. In the row a choice applies at once, as a menu does, with no draft to confirm.
  *
- * `count`: how many the draft would show, for the button. Null, or no `count`: the button says
- * "Show results".
+ * `count`: how many the draft would show, for the button, and what each option would leave, beside
+ * it. Null, or no `count`: the button says "Show results" and the options carry no numbers.
  */
 export function FiltersSheet({
     groups,
@@ -65,7 +75,7 @@ export function FiltersSheet({
     groups: FilterGroup[];
     values: FilterValues;
     onApply: (next: FilterValues) => void;
-    count?: (draft: FilterValues) => number | null | Promise<number | null>;
+    count?: FilterCount;
     /** What the list holds, one and several, for the button's words. */
     noun?: [string, string];
     inline?: boolean;
@@ -86,13 +96,23 @@ export function FiltersSheet({
     const clearAll = () => setDraft(Object.fromEntries(groups.map((g) => [g.id, []])));
 
     const drilled = shown.find((g) => g.id === drill);
+    const lg = useBreakpoint("lg");
+    // Two askings: the sheet's follows the draft; the row's menus, which apply at once, follow the list.
+    const sheet = useFilterAnswer(count, draft, open);
+    const row = useFilterAnswer(count, values, inline && lg);
 
     return (
         <>
             {inline ? (
                 <div className="contents max-lg:hidden">
                     {shown.map((g) => (
-                        <FilterMenu key={g.id} group={g} value={values[g.id] ?? []} onChange={(next) => onApply({ ...values, [g.id]: next })} />
+                        <FilterMenu
+                            key={g.id}
+                            group={g}
+                            value={values[g.id] ?? []}
+                            counts={row.answer?.options?.[g.id]}
+                            onChange={(next) => onApply({ ...values, [g.id]: next })}
+                        />
                     ))}
                     {active > 0 ? (
                         <Button color="link-gray" size="sm" onClick={() => onApply(Object.fromEntries(groups.map((g) => [g.id, []])))}>
@@ -146,6 +166,7 @@ export function FiltersSheet({
                                         anyIcon={drilled.all?.icon}
                                         focusField={false}
                                         value={draft[drilled.id] ?? []}
+                                        counts={sheet.answer?.options?.[drilled.id]}
                                         options={drilled.options}
                                         onChange={(next) => set(drilled.id, next)}
                                     />
@@ -155,6 +176,7 @@ export function FiltersSheet({
                                             key={g.id}
                                             group={g}
                                             value={draft[g.id] ?? []}
+                                            counts={sheet.answer?.options?.[g.id]}
                                             onChange={(next) => set(g.id, next)}
                                             onDrill={() => setDrill(g.id)}
                                         />
@@ -172,9 +194,8 @@ export function FiltersSheet({
                                             Clear all
                                         </Button>
                                         <ShowButton
-                                            draft={draft}
-                                            open={open}
-                                            count={count}
+                                            total={sheet.answer?.total ?? null}
+                                            asking={sheet.asking}
                                             noun={noun}
                                             onPress={() => {
                                                 onApply(draft);
@@ -193,7 +214,19 @@ export function FiltersSheet({
 }
 
 // One filter in the sheet: its name over its tags, or over a row that opens the long list.
-function FilterSection({ group, value, onChange, onDrill }: { group: FilterGroup; value: string[]; onChange: (next: string[]) => void; onDrill: () => void }) {
+function FilterSection({
+    group,
+    value,
+    counts,
+    onChange,
+    onDrill,
+}: {
+    group: FilterGroup;
+    value: string[];
+    counts?: Record<string, number>;
+    onChange: (next: string[]) => void;
+    onDrill: () => void;
+}) {
     const headingId = useId();
     const long = group.options.length > TAGS_UP_TO;
     const chosen = group.options.filter((o) => value.includes(o.value));
@@ -227,7 +260,7 @@ function FilterSection({ group, value, onChange, onDrill }: { group: FilterGroup
                     <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-fg-quaternary" />
                 </AriaButton>
             ) : (
-                <FilterTags group={group} value={value} onChange={onChange} />
+                <FilterTags group={group} value={value} counts={counts} onChange={onChange} />
             )}
         </section>
     );
@@ -237,9 +270,25 @@ function FilterSection({ group, value, onChange, onDrill }: { group: FilterGroup
 // The kit's TagGroup, so it is one stop in the tab order with the arrow keys between the tags, and a
 // reader hears each as selected or not. Chosen has a heavy outline, and a check says it too, so the state is
 // not carried by the colour alone.
-function FilterTags({ group, value, onChange }: { group: FilterGroup; value: string[]; onChange: (next: string[]) => void }) {
+// Each carries what choosing it would leave; one that would leave nothing is greyed and passed over,
+// unless it is chosen already and has to be taken off again.
+function FilterTags({
+    group,
+    value,
+    counts,
+    onChange,
+}: {
+    group: FilterGroup;
+    value: string[];
+    counts?: Record<string, number>;
+    onChange: (next: string[]) => void;
+}) {
     const options = group.multiple ? group.options : [...(group.all ? [{ ...group.all, value: ALL }] : []), ...group.options];
     const selected = group.multiple ? value : [value[0] ?? ALL];
+    // The "all" tag answers under the value it stands for.
+    // The answer names only what it found, so an option it leaves out of a group it did count is zero.
+    const countOf = (key: string) => (counts ? (counts[key === ALL ? (group.all?.value ?? ALL) : key] ?? 0) : undefined);
+    const empty = options.filter((o) => countOf(o.value) === 0 && !selected.includes(o.value)).map((o) => o.value);
 
     return (
         <TagGroup
@@ -248,6 +297,7 @@ function FilterTags({ group, value, onChange }: { group: FilterGroup; value: str
             selectionMode={group.multiple ? "multiple" : "single"}
             checkboxes={false}
             selectedKeys={new Set(selected)}
+            disabledKeys={new Set(empty)}
             onSelectionChange={(keys) => {
                 const next = keys === "all" ? options.map((o) => o.value) : [...keys].map(String);
                 onChange(next.filter((k) => k !== ALL));
@@ -259,11 +309,12 @@ function FilterTags({ group, value, onChange }: { group: FilterGroup; value: str
                         key={o.value}
                         id={o.value}
                         textValue={o.label}
-                        className="group min-h-9 cursor-pointer rounded-full px-3 hover:bg-primary_hover data-selected:bg-secondary data-selected:text-primary data-selected:ring-2 data-selected:ring-fg-primary"
+                        className="group min-h-9 cursor-pointer rounded-full px-3 hover:bg-primary_hover data-disabled:cursor-default data-disabled:opacity-50 data-disabled:hover:bg-primary data-selected:bg-secondary data-selected:text-primary data-selected:ring-2 data-selected:ring-fg-primary"
                     >
                         <Check aria-hidden="true" className="-ml-0.5 hidden size-3.5 shrink-0 group-data-selected:block" />
                         {o.icon ? <span className="flex shrink-0 items-center">{o.icon}</span> : null}
                         <span className="whitespace-nowrap">{o.label}</span>
+                        <OptionCount n={countOf(o.value)} />
                     </Tag>
                 ))}
             </TagList>
@@ -271,45 +322,40 @@ function FilterTags({ group, value, onChange }: { group: FilterGroup; value: str
     );
 }
 
-// The sheet's action: what applying the draft will show. The count is asked for as the draft
-// changes, a moment after the last tap so four taps are one question, and an answer to an older
-// draft never overwrites a newer one.
-function ShowButton({
-    draft,
-    open,
-    count,
-    noun,
-    onPress,
-}: {
-    draft: FilterValues;
-    open: boolean;
-    count?: (draft: FilterValues) => number | null | Promise<number | null>;
-    noun: [string, string];
-    onPress: () => void;
-}) {
-    const [n, setN] = useState<number | null>(null);
+/**
+ * What a set of choices would show, asked for as they change: a moment after the last tap, so four
+ * taps are one question, and an answer to an older set never overwrites a newer one. The last
+ * answer stands while the next is on its way, so the numbers do not blink out on every tap.
+ */
+function useFilterAnswer(count: FilterCount | undefined, values: FilterValues, enabled: boolean) {
+    const [answer, setAnswer] = useState<FilterAnswer | null>(null);
     const [asking, setAsking] = useState(false);
 
     useEffect(() => {
-        if (!open || !count) return;
+        if (!enabled || !count) return;
         let current = true;
         const timer = setTimeout(() => {
             setAsking(true);
-            Promise.resolve(count(draft))
-                .then((value) => current && setN(value))
-                .catch(() => current && setN(null))
+            Promise.resolve(count(values))
+                .then((next) => current && setAnswer(next))
+                .catch(() => current && setAnswer(null))
                 .finally(() => current && setAsking(false));
         }, 200);
         return () => {
             current = false;
             clearTimeout(timer);
         };
-    }, [draft, open, count]);
+    }, [values, enabled, count]);
 
-    const label = n === null ? "Show results" : n === 0 ? `No ${noun[1]}` : `Show ${n.toLocaleString("en")} ${n === 1 ? noun[0] : noun[1]}`;
+    return { answer, asking };
+}
+
+// The sheet's action: what applying the draft will show.
+function ShowButton({ total, asking, noun, onPress }: { total: number | null; asking: boolean; noun: [string, string]; onPress: () => void }) {
+    const label = total === null ? "Show results" : total === 0 ? `No ${noun[1]}` : `Show ${total.toLocaleString("en")} ${total === 1 ? noun[0] : noun[1]}`;
 
     return (
-        <Button color="primary" size="md" className="flex-1" onClick={onPress} isLoading={asking && n === null} showTextWhileLoading>
+        <Button color="primary" size="md" className="flex-1" onClick={onPress} isLoading={asking && total === null} showTextWhileLoading>
             {label}
         </Button>
     );
@@ -318,7 +364,17 @@ function ShowButton({
 // A filter as a menu in the row, from lg on a page with room for them: the name, what is chosen,
 // and the choices under it. Several: each press applies and the menu stays, to take the next one.
 // One: a press applies and closes it.
-function FilterMenu({ group, value, onChange }: { group: FilterGroup; value: string[]; onChange: (next: string[]) => void }) {
+function FilterMenu({
+    group,
+    value,
+    counts,
+    onChange,
+}: {
+    group: FilterGroup;
+    value: string[];
+    counts?: Record<string, number>;
+    onChange: (next: string[]) => void;
+}) {
     const [open, setOpen] = useState(false);
     const chosen = group.options.filter((o) => value.includes(o.value));
     const single = !group.multiple ? chosen[0] : undefined;
@@ -346,6 +402,7 @@ function FilterMenu({ group, value, onChange }: { group: FilterGroup; value: str
                         any={group.multiple ? undefined : group.all?.label}
                         anyIcon={group.all?.icon}
                         value={value}
+                        counts={counts}
                         options={group.options}
                         onChange={(next) => {
                             onChange(next);
