@@ -62,8 +62,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                             </main>
                         </div>
                         <MobileTabBar />
-                        <Toasts />
                     </div>
+                    {/* Outside the isolated frame, and after it: `isolate` there caps every z-index
+                    inside at that div's own place in the page, so a toast raised as high as it
+                    likes still painted under a dialog or a slideout (both fixed z-50 in a portal on
+                    the body). Out here it shares the body's stacking context with them and sonner's
+                    own z-index puts it on top, whether the dialog that caused it closes or stays. */}
+                    <Toasts />
                     <RouteProgress />
                 </CommandSearchProvider>
             </RouteProvider>
