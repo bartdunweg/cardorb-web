@@ -3,14 +3,42 @@
 import { ChevronSelectorVertical, Eye, LogOut01, Settings01 } from "@untitledui/icons";
 import { Button as AriaButton } from "react-aria-components";
 import { signOut } from "@/app/(auth)/actions";
+import { Avatar } from "@/components/base/avatar/avatar";
 import { AvatarLabelGroup } from "@/components/base/avatar/avatar-label-group";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
+import { Tooltip } from "@/components/base/tooltip/tooltip";
 import { cx } from "@/utils/cx";
 
 type Account = { name: string; email: string; avatarUrl: string | null; publicUrl?: string | null };
 
-// Account card that opens a dropdown with the public profile, Settings and Sign out.
-export function AccountMenu({ account }: { account: Account }) {
+// Account card that opens a dropdown with the public profile, Settings and Sign out. Compact, on
+// the folded sidebar's rail, it is the avatar alone, named by a tooltip, and the menu opens beside it.
+export function AccountMenu({ account, compact = false }: { account: Account; compact?: boolean }) {
+    if (compact) {
+        return (
+            <Dropdown.Root>
+                <Tooltip title={account.name} placement="right">
+                    <AriaButton
+                        aria-label={`Account: ${account.name}`}
+                        className={({ isPressed, isFocusVisible }) =>
+                            cx(
+                                "relative inline-flex cursor-pointer rounded-full outline-offset-2 outline-focus-ring",
+                                (isPressed || isFocusVisible) && "outline-2",
+                            )
+                        }
+                    >
+                        <Avatar size="md" src={account.avatarUrl ?? undefined} alt="" />
+                    </AriaButton>
+                </Tooltip>
+                <Dropdown.Popover placement="right bottom" className="w-64">
+                    <Dropdown.Menu>
+                        <AccountMenuItems publicUrl={account.publicUrl} />
+                    </Dropdown.Menu>
+                </Dropdown.Popover>
+            </Dropdown.Root>
+        );
+    }
+
     return (
         <Dropdown.Root>
             <AriaButton
