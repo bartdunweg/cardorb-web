@@ -4,9 +4,8 @@ import Image from "next/image";
  * The back of a card, for a card the catalogue knows and cannot show.
  *
  * A grey box with the name in it read as "nothing here"; the back reads as "a card, face
- * down", which is what it is: a real printing whose scan no catalogue has yet. On the Chinese
- * shelves that is most of a set (44 of 60 sampled cards, 2026-09-11), and the odd card on the
- * Japanese and English ones. The name and number stay in the caption under the tile, as they do
+ * down", which is what it is: a real printing whose scan no catalogue has yet: the odd card on
+ * the Japanese and English shelves. The name and number stay in the caption under the tile, as they do
  * under every card, so the back carries no text and says nothing a screen reader needs: `alt=""`.
  *
  * The picture is the official one, from tcg.pokemon.com, shipped as a static file: 660 × 921,

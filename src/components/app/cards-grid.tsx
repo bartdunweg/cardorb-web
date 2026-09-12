@@ -81,7 +81,7 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                                         priority={i < FIRST_ROW}
                                     />
                                 ) : (
-                                    // No art in any catalogue (some promos, most Chinese cards): face down. The words
+                                    // No art in any catalogue (some promos, the odd Japanese card): face down. The words
                                     // beside it name the card, as they do for every tile.
                                     <CardBack width={TILE_WIDTH[size]} sizes={TILE_SIZES[size]} priority={i < FIRST_ROW} />
                                 )}

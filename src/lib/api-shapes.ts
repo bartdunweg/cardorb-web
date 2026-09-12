@@ -201,8 +201,8 @@ export type Card = {
     id: string;
     name: string;
     /**
-     * What the card itself prints, where `name` is the English for it: a Japanese, Korean or
-     * Chinese card is named in English on every shelf (the app is English throughout) and the sheet
+     * What the card itself prints, where `name` is the English for it: a Japanese card is named
+     * in English on every shelf (the app is English throughout) and the sheet
      * shows the printed name in brackets after it. Absent or null on an English card, and on a row
      * read from the collection, which stores one name.
      */
@@ -459,7 +459,7 @@ export const catalogueSetSchema = z.object({
     localName: nullable(z.string()),
     /**
      * Whether the catalogue has recorded the set's cards, or only the set and its count. TCGdex
-     * lists 68 of 184 Japanese sets and 92 of 95 Korean ones without a card (2026-09-11). Absent
+     * lists 68 of 184 Japanese sets without a card (2026-09-11). Absent
      * from an API before cardorb-api#265, which reads as recorded: that was the only answer then.
      */
     cardsRecorded: z.boolean().nullish(),
@@ -524,7 +524,7 @@ export function seriesFromSets(sets: CatalogueSet[]): { series: SetSeries[]; com
 export type SetCard = {
     id: string;
     number: string;
-    /** In English on every shelf; `localName` is what a Japanese, Korean or Chinese card prints, or null. */
+    /** In English on every shelf; `localName` is what a Japanese card prints, or null. */
     name: string;
     localName: string | null;
     /** As the catalogue names the set; what a new collection row is filed under. */
@@ -662,7 +662,7 @@ export type PokemonCard = {
     /**
      * The catalogue's own id, and which catalogue it came from. Both null for an English card,
      * which the API still finds by set name the way every row before today was found. For a card
-     * off the Japanese, Korean or Chinese shelves they are the only way to find it at all: those
+     * off the Japanese shelf they are the only way to find it at all: those
      * sets have no English name to look up (cardorb-api#257).
      */
     tcgId?: string | null;
@@ -683,7 +683,7 @@ export type PokemonCard = {
 
 /**
  * `language` is the catalogue the search asked (null or "en": the English one). A hit off the
- * Japanese, Korean or Chinese catalogue carries that along, the only way the API can find it
+ * Japanese catalogue carries that along, the only way the API can find it
  * (cardorb-api#257); an English hit carries no language, as every add before did.
  *
  * The catalogue id goes with every hit, as it does with every set tile: it is what the card's

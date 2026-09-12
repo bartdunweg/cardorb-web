@@ -57,7 +57,6 @@ reads that trend now, and a band measured on one market is not evidence about an
 - **Some cards have no price.** Before the promo links, 217 of the owner's 1,609 held cards had none;
   after them, 8. Pokémon TCG Pocket cards have none by nature, and Celebrations Classic Collection is
   not linked yet.
-- **Korean and Chinese cards have no price.** TCGplayer does not sell them.
 - **Shadowless is offered where TCGplayer has it.** 101 of Base Set's 102 cards; Machamp has no
   Shadowless product and no longer offers the run.
 - **The price history steps nowhere.** `card_prices` was rebuilt from TCGplayer on 2026-09-12
