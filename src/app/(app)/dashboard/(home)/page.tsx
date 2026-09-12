@@ -6,7 +6,7 @@ import { CardsStats, StatCard } from "@/components/app/cards-stats";
 import { PhoneSearchTrigger } from "@/components/app/command-search";
 import { DexStat } from "@/components/app/dex-stat";
 import { PageHeader } from "@/components/app/page-header";
-import { ValueHeroOutline } from "@/components/app/skeletons";
+import { HomeBodyOutline, ValueHeroOutline } from "@/components/app/skeletons";
 import { TopCards } from "@/components/app/top-cards";
 import { ValueHero, type ValueList } from "@/components/app/value-hero";
 import { YouLink } from "@/components/app/you-link";
@@ -25,15 +25,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // Home: the value first, big, with its line and the period it moved over; then the counts. The
 // title and the three counts come with the page; the value section and the Pokémon tile stream
 // in behind them, each with an outline in its place.
-export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ value?: string }> }) {
-    const { value } = await searchParams;
-    const selected = value === "favorites" || value === "wishlist" || (value && UUID.test(value)) ? value : "all";
-    const stats = await getCardStats();
-    // Nothing held: the first visits after signing up. A value of €0 with an empty chart and four
-    // zeros said the account was empty and not what to do about it, and one wished-for card is
-    // still that: the value, the chart and the tiles all count owned cards only.
-    const fresh = stats.owned === 0;
-
+export default function DashboardPage({ searchParams }: { searchParams: Promise<{ value?: string }> }) {
     return (
         <div className="flex flex-1 flex-col gap-6">
             <PageHeader
@@ -47,6 +39,27 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                     </div>
                 }
             />
+            {/* The search row and the title are on screen before the stats are read, and the outline
+                stands where the value and the tiles go. */}
+            <Suspense fallback={<HomeBodyOutline />}>
+                <HomeBody searchParams={searchParams} />
+            </Suspense>
+        </div>
+    );
+}
+
+// Everything on Home that needs a number: the value with its line, the counts, and the top cards.
+async function HomeBody({ searchParams }: { searchParams: Promise<{ value?: string }> }) {
+    const { value } = await searchParams;
+    const selected = value === "favorites" || value === "wishlist" || (value && UUID.test(value)) ? value : "all";
+    const stats = await getCardStats();
+    // Nothing held: the first visits after signing up. A value of €0 with an empty chart and four
+    // zeros said the account was empty and not what to do about it, and one wished-for card is
+    // still that: the value, the chart and the tiles all count owned cards only.
+    const fresh = stats.owned === 0;
+
+    return (
+        <>
             {fresh ? (
                 <Welcome />
             ) : (
@@ -67,7 +80,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                     </Suspense>
                 </>
             )}
-        </div>
+        </>
     );
 }
 
