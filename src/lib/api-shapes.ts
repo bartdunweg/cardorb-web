@@ -505,6 +505,9 @@ export type SetCard = {
     /** As the catalogue names the set; what a new collection row is filed under. */
     setName: string;
     rarity: string | null;
+    /** "Pokemon", "Trainer" or "Energy", and for a trainer its kind; null where the shelf did not say. */
+    category: string | null;
+    trainerType: string | null;
     types: string[];
     imageUrl: string | null;
     /** The larger scan, so a set tile is as sharp as the same card on any other overview. */
@@ -527,6 +530,8 @@ export const setCardFromBrowse = (c: BrowseCard): SetCard => ({
     localName: c.localName ?? null,
     setName: c.setName,
     rarity: c.rarity,
+    category: c.category ?? null,
+    trainerType: c.trainerType ?? null,
     types: c.types,
     imageUrl: absoluteImage(c.image),
     imageHighUrl: absoluteImage(c.imageHigh),
@@ -586,6 +591,11 @@ export const browseCardSchema = z.object({
     image: nullable(z.string()),
     imageHigh: nullable(z.string()),
     rarity: nullable(z.string()),
+    /* What kind of card it is, and for a trainer which kind of trainer. Absent from an API
+       before it read them; they are what tells a full art Supporter from a gold Item, which
+       share a rarity and nothing else (`@/lib/full-art`). */
+    category: nullable(z.string()).optional(),
+    trainerType: nullable(z.string()).optional(),
     types: z.array(z.string()),
     series: z.string(),
     owned: z.boolean(),

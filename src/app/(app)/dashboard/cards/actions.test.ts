@@ -17,6 +17,8 @@ const tile = {
     localName: null,
     setName: "151",
     rarity: null,
+    category: null,
+    trainerType: null,
     types: ["Grass"],
     imageUrl: null,
     imageHighUrl: null,

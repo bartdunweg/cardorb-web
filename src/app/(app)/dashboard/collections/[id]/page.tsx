@@ -40,8 +40,8 @@ async function Binder({ params, searchParams }: { params: Promise<{ id: string }
     if (!collection) notFound();
 
     const query = readListQuery(await searchParams);
-    const { q, sort, order, set, rarity, gen, type, unpriced } = query;
-    const filter: CardFilter = { collectionId: id, q, sort, order, set, rarity, gen, type, ...(unpriced ? { priced: false } : {}) };
+    const { q, sort, order, set, rarity, fullArt, gen, type, unpriced } = query;
+    const filter: CardFilter = { collectionId: id, q, sort, order, set, rarity, fullArt, gen, type, ...(unpriced ? { priced: false } : {}) };
     const narrowed = isNarrowed(query);
     // A rule names a set by its code; the facets carry the title a chip should read.
     const chips = collection.rule ? (

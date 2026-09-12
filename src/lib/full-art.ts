@@ -35,10 +35,10 @@
  *
  * ## What it gets wrong
  *
- * The gold item cards of Sun & Moon and Sword & Shield (a gold Quick Ball, a gold Nest Ball) are
- * reprints of a Secret Rare too, and come along: four to a set. Telling them apart needs the
- * card's category, which the API does not carry yet; `category` below is read when it is there,
- * so the day it arrives this file is right without being changed.
+ * A set the catalogue has not named the categories of keeps the gold item cards of Sun & Moon
+ * and Sword & Shield (a gold Quick Ball, a gold Nest Ball): they are reprints of a Secret Rare
+ * too, four to a set. Where `trainerType` is there they are left out, because at these rarities
+ * a Supporter is the full art reprint and an Item, a Tool or a Stadium is the gold one.
  */
 
 /** A card as this rule reads it: the fields every list already holds. */
@@ -46,8 +46,10 @@ export type FullArtCard = {
     name: string;
     number: string;
     rarity: string | null;
-    /** "Pokemon", "Trainer" or "Energy", where the catalogue said; absent from the API today. */
+    /** "Pokemon", "Trainer" or "Energy", where the catalogue said. */
     category?: string | null;
+    /** "Supporter", "Item", "Tool" or "Stadium"; null for anything that is not a trainer. */
+    trainerType?: string | null;
 };
 
 /** Rarities that are full art wherever they appear, so the numbering never has to be asked. */
@@ -97,10 +99,13 @@ export function fullArtIds(cards: FullArtCard[]): Set<string> {
             continue;
         }
         if (!REPRINT_RARITIES.has(rarity)) continue;
-        // An item or a tool at these rarities is the gold card, not a full art. Only read where
-        // the catalogue said; without it the gold ones come along, which the file's head admits.
+        // An item, a tool or a stadium at these rarities is the gold card, not a full art: what
+        // the two share is a rarity and nothing else. Only read where the catalogue said; without
+        // it the gold ones come along, which the file's head admits.
         const category = (card.category ?? "").trim().toLowerCase();
         if (category === "energy") continue;
+        const trainerType = (card.trainerType ?? "").trim().toLowerCase();
+        if (category === "trainer" && trainerType && trainerType !== "supporter") continue;
         if ((first.get(card.name.trim().toLowerCase()) ?? Number.POSITIVE_INFINITY) < numberOf(card)) ids.add(card.number);
     }
     return ids;
