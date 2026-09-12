@@ -19,6 +19,8 @@ interface NavButtonProps {
     icon?: FC<{ className?: string }>;
     /** Whether the button is currently active. */
     current?: boolean;
+    /** What the tooltip and the accessible name say when there is more to say than the label. */
+    name?: string;
     /** Handler for a press, when the control is a button. */
     onPress?: () => void;
     /** Additional CSS classes to apply to the button. */
@@ -34,7 +36,7 @@ const styles = {
     current: "bg-secondary hover:bg-secondary_hover",
 };
 
-export const NavButton = ({ current, label, href, icon: Icon, className, tooltipPlacement = "right", onPress, children }: NavButtonProps) => {
+export const NavButton = ({ current, label, name, href, icon: Icon, className, tooltipPlacement = "right", onPress, children }: NavButtonProps) => {
     const iconOnly = !children;
 
     const content = (
@@ -65,13 +67,15 @@ export const NavButton = ({ current, label, href, icon: Icon, className, tooltip
     const classes = cx(styles.root, current && styles.current, iconOnly ? "size-9" : "px-2 py-1.5", className);
 
     return (
-        <Tooltip isDisabled={!label} title={label} placement={tooltipPlacement}>
+        <Tooltip isDisabled={!label} title={name ?? label} placement={tooltipPlacement}>
             {href ? (
-                <AriaLink href={href} aria-label={label} aria-current={current ? "page" : undefined} className={classes}>
+                <AriaLink href={href} aria-label={name ?? label} aria-current={current ? "page" : undefined} className={classes}>
                     {content}
                 </AriaLink>
             ) : (
-                <AriaButton aria-label={label} onPress={onPress} className={classes}>
+                // aria-current on a button that opens a menu: the rail has no label to say which
+                // binder you are in, and the tint that says it is 1.04:1.
+                <AriaButton aria-label={name ?? label} aria-current={current ? "true" : undefined} onPress={onPress} className={classes}>
                     {content}
                 </AriaButton>
             )}

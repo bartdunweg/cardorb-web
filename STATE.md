@@ -30,9 +30,12 @@ row, `SidebarRail` is the app's. Every binder carries the same folder icon, so o
 are one icon that opens a menu of them, the overview at its head and New binder at its foot.
 The state is a cookie, not local storage, so the server draws the first paint folded; the name
 lives in `src/lib/sidebar-cookie.ts` because the layout is a Server Component and a value
-imported from a client module reaches it as a client reference. Walked in the pane: folded and
-open, both directions, the tooltip on keyboard focus, dark, and a tablet, where the tab bar is
-unchanged.
+imported from a client module reaches it as a client reference. The rail carries the app's mark where the wordmark stands and its rows are the open sidebar's
+rows to the pixel (measured: 34, 84, 143, 181, 219, 257 in both), so folding moves no icon up or
+down; the button that unfolds sits at the foot, above the avatar, because the head belongs to the
+mark. Walked in the pane at 1280x800: folded and open, both directions, the tooltip and the focus
+ring on keyboard focus, the binders menu opened and closed with focus restored, dark, 640 px wide,
+and a tablet, where the tab bar is unchanged.
 
 **2026-09-12, full art is a filter of its own.** Bart saw the same cards under Full art and under
 Special illustration rare, where a card belongs to one rarity. Full art was an entry in the rarity
