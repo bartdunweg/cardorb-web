@@ -76,7 +76,7 @@ export const SignupForm = () => {
                                 <Circle className="size-4 text-fg-quaternary group-invalid:text-fg-error-secondary" />
                             )}
                             Must be at least {MIN_PASSWORD} characters.
-                            <span className="sr-only">{long ? " — met" : " — not met"}</span>
+                            <span className="sr-only">{long ? ": met" : ": not met"}</span>
                         </HintText>
                     </TextField>
                 </div>

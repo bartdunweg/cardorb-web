@@ -10,7 +10,7 @@ import type { Card } from "@/lib/api-shapes";
 
 /**
  * Ours: the one thing a wishlist tile can do, on the tile. "Got it" opens the same form the card
- * sheet opens — language, condition, folder, price, the day — so a card that arrived in the post
+ * sheet opens (language, condition, folder, price, the day), so a card that arrived in the post
  * leaves the wishlist without opening the sheet first. Instacart's saved lists and Etsy's
  * favourites carry an item's one action on the item itself; this is that.
  *

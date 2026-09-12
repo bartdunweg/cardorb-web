@@ -17,7 +17,7 @@ import { cx } from "@/utils/cx";
 
 /**
  * The dots on a binder's page: what is done to the binder itself, one press further than the
- * plus that fills it. Edit is here too, not a button of its own beside the plus — Bart's call,
+ * plus that fills it. Edit is here too, not a button of its own beside the plus; Bart's call,
  * 2026-09-11. Deleting is the one thing that cannot be undone, and the confirm dialog stands.
  */
 export function BinderMenu({
@@ -73,7 +73,7 @@ export function BinderMenu({
                 </Dropdown.Popover>
             </Dropdown.Root>
             {/* Opened by the menu items, not by buttons of their own: the overlays are controlled, and
-                DialogTrigger — which wants a pressable child — is not in the picture. */}
+                DialogTrigger, which wants a pressable child, is not in the picture. */}
             <FolderModal mode="edit" folder={folder} facets={facets} isOpen={editing} onOpenChange={setEditing} />
             <ModalOverlay isOpen={confirming} onOpenChange={setConfirming}>
                 <Modal className="max-w-sm">

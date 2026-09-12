@@ -18,7 +18,7 @@ export const overlaySections: SectionSpec[] = [
         id: "modal",
         title: "Modal",
         from: "components/application/modals",
-        note: "Four pieces — DialogTrigger, ModalOverlay, Modal, Dialog — that position and animate a centred dialog. They paint no surface: the content draws its own, which is why our SheetDialog exists to do it once.",
+        note: "Four pieces (DialogTrigger, ModalOverlay, Modal, Dialog) that position and animate a centred dialog. They paint no surface: the content draws its own, which is why our SheetDialog exists to do it once.",
         render: (
             <Panel>
                 <Group title="Live" cols="wide">
@@ -67,7 +67,7 @@ export const overlaySections: SectionSpec[] = [
         id: "slideout",
         title: "SlideoutMenu",
         from: "components/application/slideout-menus",
-        note: "A bottom sheet on a phone and a drawer from the right from sm up — the same component, told apart by CSS rather than by a breakpoint hook. Header, Content and Footer are its parts; the card detail panel is one of these.",
+        note: "A bottom sheet on a phone and a drawer from the right from sm up: the same component, told apart by CSS rather than by a breakpoint hook. Header, Content and Footer are its parts; the card detail panel is one of these.",
         render: (
             <Panel>
                 <Group title="Live" cols="wide">

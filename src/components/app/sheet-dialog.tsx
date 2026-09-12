@@ -7,8 +7,8 @@ import { cx } from "@/utils/cx";
 /**
  * A dialog that is a sheet from the bottom on a phone and a modal from `sm`.
  *
- * It exists because two dialogs that describe a copy — the one that adds or splits one, the one
- * that takes a card off the wishlist — were drawn on nothing at all. The kit's `Modal` positions
+ * It exists because two dialogs that describe a copy (the one that adds or splits one, the one
+ * that takes a card off the wishlist) were drawn on nothing at all. The kit's `Modal` positions
  * and animates; it paints no surface, and every dialog in this app that looks right paints its
  * own (`folder-dialog`, and the Add dialog that has since gone, both `rounded-2xl glass-thick p-6 shadow-xl`). Those
  * two did not, so their labels floated over the page behind them, unreadable.
@@ -20,7 +20,7 @@ import { cx } from "@/utils/cx";
  * CSS rather than a breakpoint hook, unlike `FilterChip`, which genuinely renders two different
  * things (a popover under a chip, or a slideout). This is one dialog in two positions, so one
  * tree with `max-sm:` on it keeps the trigger, the focus trap and the Escape behaviour identical
- * at every width — and there is no frame at which the two disagree about whether it is open.
+ * at every width, and there is no frame at which the two disagree about whether it is open.
  */
 export function SheetDialog({
     children,
@@ -28,7 +28,7 @@ export function SheetDialog({
     className,
     defaultOpen = false,
 }: {
-    /** The trigger. A react-aria pressable — the kit's `Button` is one. */
+    /** The trigger. A react-aria pressable; the kit's `Button` is one. */
     children: ReactNode;
     /** The dialog's own content; `close` shuts it. */
     content: (close: () => void) => ReactNode;

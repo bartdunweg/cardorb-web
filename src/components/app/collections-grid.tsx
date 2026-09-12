@@ -11,7 +11,7 @@ import type { CollectionSummary } from "@/lib/collections";
 import { cx } from "@/utils/cx";
 
 // On a phone a row: the icon, the name, the count at the end as a number alone (the sidebar's rows
-// on desktop have it the same way), and a line between rows — a list, not a stack of cards (Bart's
+// on desktop have it the same way), and a line between rows: a list, not a stack of cards (Bart's
 // call). From sm a stacked tile, three or four to a row, with "12 cards" under the name. One
 // component for every binder, the two that are always there and the ones you made. How a binder
 // was filled is not said here: by hand or by rule, it is a binder with cards in it (Bart's call).
@@ -53,7 +53,7 @@ export function NewCollectionButton({ compact }: { compact?: boolean }) {
     return (
         <FolderDialog mode="create">
             {/* A folder, not a plus: Add card stands beside it with the plus, and two pluses in one bar
-                were two guesses. Secondary for the same reason — adding a card is the app's main action. */}
+                were two guesses. Secondary for the same reason: adding a card is the app's main action. */}
             {compact ? (
                 <Button iconLeading={FolderPlus} color="secondary" size="lg" aria-label="New binder" />
             ) : (

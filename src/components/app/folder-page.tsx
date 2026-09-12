@@ -37,7 +37,7 @@ export function FolderPage({
      * A list's own two actions, drawn twice: beside the title from lg (words), and in the phone's bar
      * across from Back (icons, `compact`). One shape for All cards, Favorites, the wishlist and the
      * Pokédex, so the pair sits in the same place on every list. Given, they take the place of
-     * `actions` and `barActions` — those are not drawn beside them.
+     * `actions` and `barActions`; those are not drawn beside them.
      */
     settings?: (compact: boolean) => ReactNode;
     add?: (compact: boolean) => ReactNode;

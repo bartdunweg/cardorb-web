@@ -16,7 +16,7 @@ import { cx } from "@/utils/cx";
  * page grew by one whole card each time anything was added to it.
  *
  * A row says what it is and what it is currently, and opens the form when you want it. What
- * opens is the sheet from `sheet-dialog` — up from the bottom on a phone, a modal from `sm` —
+ * opens is the sheet from `sheet-dialog` (up from the bottom on a phone, a modal from `sm`)
  * rather than a page of its own: an errand you finish and leave, the same shape the import and
  * the copy forms already use, and no new address for something nobody links to.
  */
@@ -55,7 +55,7 @@ function RowBody({ icon: Icon, label, value }: { icon: FC<{ className?: string }
 /**
  * A row that opens a sheet.
  *
- * `content` gets `close`, so a form can shut itself once it has saved — the same contract the
+ * `content` gets `close`, so a form can shut itself once it has saved, the same contract the
  * other dialogs in this app have.
  */
 export function SettingsRow({
@@ -74,7 +74,7 @@ export function SettingsRow({
         <SheetDialog className="sm:max-w-md" content={content}>
             {/*
              * react-aria's Button, not a plain one. DialogTrigger opens on a press it attaches to
-             * its child, and a bare <button> never receives it — the row looked right and did
+             * its child, and a bare <button> never receives it: the row looked right and did
              * nothing. app-sidebar.tsx reaches for AriaButton for its own row for this reason.
              */}
             <AriaButton className={cx(rowClass, "cursor-pointer")}>
@@ -111,8 +111,8 @@ export function SettingsLinkRow({
  * A sheet's title, and the way back out of it.
  *
  * Every sheet needs one and the first three did not have one: the forms were moved into sheets
- * with their Save button and nothing else, so a phone — where there is no dimmed page beside the
- * sheet to tap — had no way to leave without saving. Escape worked and nothing said so.
+ * with their Save button and nothing else, so a phone (where there is no dimmed page beside the
+ * sheet to tap) had no way to leave without saving. Escape worked and nothing said so.
  */
 export function SheetHeader({ title, description, close }: { title: string; description?: string; close: () => void }) {
     return (

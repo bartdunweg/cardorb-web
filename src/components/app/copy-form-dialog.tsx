@@ -61,8 +61,8 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
     const [pattern, setPattern] = useState(from.foil_pattern ?? "");
     const [folder, setFolder] = useState(from.collection_id ?? "");
     const [price, setPrice] = useState(from.purchase_price != null ? String(from.purchase_price) : "");
-    /* Only asked when adding. A split keeps the row's own date — those copies were already yours,
-       they are only being told apart now — and the API is left to say so. */
+    /* Only asked when adding. A split keeps the row's own date (those copies were already yours,
+       they are only being told apart now) and the API is left to say so. */
     const [acquired, setAcquired] = useState(today());
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -70,7 +70,7 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
 
     // Only what differs goes over the wire: the row's own values are the copy's by default.
     // A card the catalogue says exists in one finish only is not a question. The row states
-    // it and the save records it, which is not a guess — it is the only possibility.
+    // it and the save records it, which is not a guess: it is the only possibility.
     const finishes = finishOptions(facts, from.finish ?? null);
     const soleFinish = soleOption(finishes);
     const effectiveFinish = finish || soleFinish?.value || "";
@@ -125,7 +125,7 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
 
     // Label above a full-width field, at every width. Side by side was the old shape and it
     // squeezed: this dialog is 448px whatever the screen is, so a viewport breakpoint fixes
-    // nothing — a select whose own text runs under its chevron looks broken and is the same
+    // nothing: a select whose own text runs under its chevron looks broken and is the same
     // on a desktop as on a phone.
     const row = "flex flex-col gap-1.5 text-sm font-medium text-secondary";
 
@@ -152,8 +152,8 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
                 <div className={row}>
                     {mode === "add" ? "How many" : `How many of the ${total}`}
                     {/* The same minus, number, plus as the card sheet's Quantity row: one control for
-                        one question, wherever it is asked. Typing still works — a number field is
-                        faster than nine presses — but the common answer is one or two either way. */}
+                        one question, wherever it is asked. Typing still works (a number field is
+                        faster than nine presses), but the common answer is one or two either way. */}
                     <span className="flex items-center gap-2">
                         <Button
                             color="secondary"
@@ -190,7 +190,7 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
                 {/*
                  * The flag inside the control, before the word. It cannot go in the list: an
                  * <option> holds text and nothing else, and this stays a native select on
-                 * purpose — on a phone that is the operating system's own wheel, which beats
+                 * purpose; on a phone that is the operating system's own wheel, which beats
                  * anything drawn here. Emoji flags would fit in the list and were tried; they
                  * are a different picture on every platform and sit badly beside the app's own.
                  */}
@@ -198,9 +198,9 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
             </div>
 
             {/*
-             * Raw or graded, and then only the question that follows. The rule was always here —
-             * every list shows `grade ?? condition`, and the condition select disabled itself the
-             * moment a grade was typed — but you found it by bumping into it. A slab has a grade
+             * Raw or graded, and then only the question that follows. The rule was always here
+             * (every list shows `grade ?? condition`, and the condition select disabled itself the
+             * moment a grade was typed), but you found it by bumping into it. A slab has a grade
              * and no condition; a loose card has a condition and no grade.
              */}
             <div className={row}>
@@ -209,7 +209,7 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
                     size="sm"
                     // Its own class is `w-max`, so the row's width has to be given; the halves
                     // then share it. justify-center because the kit's item is `items-center`
-                    // and nothing else — stretched, its word sat against the left edge.
+                    // and nothing else; stretched, its word sat against the left edge.
                     className="w-full *:flex-1 *:justify-center"
                     selectionMode="single"
                     disallowEmptySelection
@@ -276,7 +276,7 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
                 </div>
             )}
 
-            {/* A card with no foil at all has no pattern to record — the one thing about a
+            {/* A card with no foil at all has no pattern to record, the one thing about a
                 pattern any catalogue is certain of. */}
             {solePattern ? (
                 <div className={row}>

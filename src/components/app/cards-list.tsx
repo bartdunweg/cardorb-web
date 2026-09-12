@@ -53,7 +53,7 @@ export function CardsList({
     empty: ReactNode;
 }) {
     const first = use(list);
-    /* The server's first page, and whatever scrolling has appended to it — two things, not one
+    /* The server's first page, and whatever scrolling has appended to it: two things, not one
        array copied once. `useState(first.cards)` took that copy on the first render and kept it,
        so a card removed from the sheet was still on the list behind after the page re-read: the
        refresh handed down a new first page and nothing was listening.
@@ -123,7 +123,7 @@ export function CardsList({
           : `Showing ${cards.length} of ${first.total} cards`;
 
     /* Moving it above the early return is not enough on its own. `folder-body.tsx` keys the whole
-       view on the list's URL, so a search does not update this component, it replaces it — and a
+       view on the list's URL, so a search does not update this component, it replaces it, and a
        live region that arrives with its text already in it is never read out. Where the reader
        changed this list (`changed`), the region is therefore mounted empty and the sentence written a
        beat later, so what a screen reader sees is a region that was already standing and then
@@ -132,7 +132,7 @@ export function CardsList({
        writes the count straight away instead, so landing somewhere is not narrated; the node then
        stays put, and Show more speaks by changing it.
 
-       Changed, not narrowed: it used to ask "is this list filtered", which is the wrong question —
+       Changed, not narrowed: it used to ask "is this list filtered", which is the wrong question:
        clearing a search back to the whole list is as much a change as narrowing it, and was silent.
        The reader changed the list when the one they saw last, in this tab, was the same page with
        a different query. The comparison is made once, in the state's initialiser, because the

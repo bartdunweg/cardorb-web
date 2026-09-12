@@ -4,8 +4,8 @@ import type { CardStats } from "@/lib/cards";
 import { formatCount } from "@/lib/format";
 import { cx } from "@/utils/cx";
 
-// No "use client": there is nothing client about these tiles — a link, a class name and two
-// strings — and the directive made a hydration root out of markup that never changes. Both
+// No "use client": there is nothing client about these tiles (a link, a class name and two
+// strings), and the directive made a hydration root out of markup that never changes. Both
 // callers are Server Components, and `fourth` crosses as a rendered node either way.
 
 // Stat card after Untitled UI's Metric, without its featured icon: the label and the number say it.
@@ -60,8 +60,8 @@ export function CardsStats({ stats, fourth }: { stats: CardStats; fourth: ReactN
         // Two to a row on a phone, four from xl: a column of four tiles pushed the chart off the first screen.
         <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4">
             {/* Every card held, a duplicate counting twice: the number of cards in the boxes, which is
-                what "owned" means to the person who owns them. The lists count printings instead — a
-                card you hold twice is one row there — so All cards can read one lower. */}
+                what "owned" means to the person who owns them. The lists count printings instead (a
+                card you hold twice is one row there), so All cards can read one lower. */}
             <StatCard label="Owned" value={formatCount(stats.copies)} href="/dashboard/cards" delay={0} />
             <StatCard label="Wishlist" value={formatCount(stats.wishlist)} href="/dashboard/wishlist" delay={40} />
             <StatCard label="Favorites" value={formatCount(stats.favorites)} href="/dashboard/favorites" delay={80} />

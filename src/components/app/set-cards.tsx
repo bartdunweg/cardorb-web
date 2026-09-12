@@ -9,7 +9,7 @@ import type { Card } from "@/lib/cards";
 import { GRID_COLUMNS } from "@/lib/cards-view";
 
 // The card sheet, fetched on the tap that opens it: it is the app's largest client chunk and the
-// grid is drawn long before anyone touches a tile. `ssr: false` — the sheet is nothing until then.
+// grid is drawn long before anyone touches a tile. `ssr: false`: the sheet is nothing until then.
 const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-slideout").then((m) => m.CardDetailSlideout), { ssr: false });
 
 /**
@@ -18,7 +18,7 @@ const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-sl
  * The tiles were menu buttons: tapping a card answered with a list of things to do to it and
  * never with the card. Every other list in this app opens the sheet, so this one does too.
  *
- * A card you hold opens on its own row, the same way the Pokédex does it — the row carries the
+ * A card you hold opens on its own row, the same way the Pokédex does it: the row carries the
  * copies, the price you paid and the folder, none of which the catalogue knows. A card you do
  * not hold has no row, so it opens on what the set page already has: the printing, read-only,
  * with its price line. Adding it is the plus and the menu beside it, which is where it was.
@@ -68,7 +68,7 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
                 ))}
             </ul>
             {/* A card you hold opens on its row and can be changed. One you do not opens on the
-                printing, with the two ways to take it — the sheet is where you looked for them. */}
+                printing, with the two ways to take it; the sheet is where you looked for them. */}
             <CardDetailSlideout
                 card={selected}
                 onClose={() => {

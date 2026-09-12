@@ -35,7 +35,7 @@ export function FiltersSheet({ active = 0, children }: { active?: number; childr
                             </SlideoutMenu.Header>
                             {/* role="presentation", not the kit's default "main": the page already has a
                                 <main>, and a second unlabelled one is a landmark that leads nowhere.
-                                role={undefined} would not do it — the kit defaults the parameter. */}
+                                role={undefined} would not do it; the kit defaults the parameter. */}
                             {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- the rule offers <img alt="">, which this is not: the role is here only to stop the kit's default role="main". */}
                             <SlideoutMenu.Content role="presentation" className="gap-3 pb-4 *:w-full [&_select]:w-full">
                                 {children}

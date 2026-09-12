@@ -49,7 +49,7 @@ function CardPreview({
     }, [card]);
     // Back, on a phone: the selection is the preview, so clearing it is the way back to the hits.
     // Focus goes to the list the preview covered, not the field: the field would raise the
-    // keyboard over the hits just uncovered. Found from this box, not the pressed button — iOS
+    // keyboard over the hits just uncovered. Found from this box, not the pressed button: iOS
     // gives a tapped button no focus, so the button's own ancestors are not there to ask.
     const box = useRef<HTMLDivElement>(null);
     const { setSelectedKeys } = useContext(CommandMenuContext);
@@ -145,10 +145,10 @@ function CardPreview({
 const MORE = "more";
 
 /**
- * Focus back to the palette's field. A button that disables itself under the pointer — Add to
- * collection the moment it is pressed — or unmounts — Try again once hits land — drops focus on
+ * Focus back to the palette's field. A button that disables itself under the pointer (Add to
+ * collection the moment it is pressed) or unmounts (Try again once hits land) drops focus on
  * the page, and a keyboard user is back at the top of the menu. The kit's menu keeps its field to
- * itself, so it is found from the dialog the pressed button — the active element — sits in.
+ * itself, so it is found from the dialog the pressed button (the active element) sits in.
  */
 const focusField = () => document.activeElement?.closest('[role="dialog"]')?.querySelector("input")?.focus();
 
@@ -166,8 +166,8 @@ const SEARCH_WINDOW = 250;
 // the one dialog. Loaded by CommandSearchProvider the first time it is opened; the state lives there.
 //
 // #368 took the preview out and had a hit open the card's sheet over the palette, for the price
-// line the preview lacked. Bart wanted the card inside the palette — the scan, its facts and the
-// two buttons a glance away, no second panel — so the preview is back, with the price on it
+// line the preview lacked. Bart wanted the card inside the palette (the scan, its facts and the
+// two buttons a glance away, no second panel), so the preview is back, with the price on it
 // (Bart's call, 2026-09-11, over the earlier one).
 export function CommandSearchMenu({
     isOpen,

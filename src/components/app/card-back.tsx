@@ -4,7 +4,7 @@ import Image from "next/image";
  * The back of a card, for a card the catalogue knows and cannot show.
  *
  * A grey box with the name in it read as "nothing here"; the back reads as "a card, face
- * down" — which is what it is: a real printing whose scan no catalogue has yet. On the Chinese
+ * down", which is what it is: a real printing whose scan no catalogue has yet. On the Chinese
  * shelves that is most of a set (44 of 60 sampled cards, 2026-09-11), and the odd card on the
  * Japanese and English ones. The name and number stay in the caption under the tile, as they do
  * under every card, so the back carries no text and says nothing a screen reader needs: `alt=""`.
@@ -24,7 +24,7 @@ export function CardBack({
 }: {
     /** Empty where a caption names the card; the name where nothing beside it does (the Pokédex slider). */
     alt?: string;
-    /** The widest the layout draws this, in CSS pixels — the optimizer's hint, not the box. */
+    /** The widest the layout draws this, in CSS pixels: the optimizer's hint, not the box. */
     width?: number;
     sizes?: string;
     priority?: boolean;

@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 
-// The bar at the bottom of a phone's sheet that holds what you opened it to do — for a card
+// The bar at the bottom of a phone's sheet that holds what you opened it to do: for a card
 // nobody holds, the two ways to take it. On a phone the sheet is the whole screen and those
 // buttons used to sit at the end of the content, under every detail, so the person scrolled past
 // all of it to reach them; an item sheet on iOS (Keeta, Starbucks, Shopee, Vivino) pins the
@@ -12,8 +12,8 @@ import type { ReactNode } from "react";
 // Sticky on the sheet's scroll, as the top bar is, and for the same reason a direct child of the
 // scroll box: a sticky element stays only while its parent is in view. It keeps its height in the
 // flow, so the last detail comes to rest above it at the end of the scroll and is never hidden
-// under it. Its ground is the page's, opaque, with the page's own fade running out above it —
-// the treatment the tab bar has on a page — so a row passing under it is a light and not a shape.
+// under it. Its ground is the page's, opaque, with the page's own fade running out above it
+// (the treatment the tab bar has on a page), so a row passing under it is a light and not a shape.
 // The bottom padding clears the home indicator; the scroll box gives up its own so the bar is not
 // held off the edge by the same inset twice. `mt-auto` because sticky only pulls an element back
 // into view, it never pushes one down: a card with little to say ends above the fold, and the

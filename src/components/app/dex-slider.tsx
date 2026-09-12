@@ -29,7 +29,7 @@ export function DexSlider({ cards, onSelect }: { cards: DexCard[]; onSelect?: (c
                         {card.imageUrl ? (
                             // The same box as a one-card slot in the grid beside it (dex-grid.tsx), so the same
                             // hint: without it CardImage's default of 256 asked for the 640 rung for a 192 px
-                            // tile — and a slot with five cards paid it five times. `fallbackSrc` keeps a
+                            // tile, and a slot with five cards paid it five times. `fallbackSrc` keeps a
                             // catalogue that will not answer to the low scan rather than the 133 KB original.
                             <CardImage
                                 src={card.imageHighUrl ?? card.imageUrl}
@@ -47,7 +47,7 @@ export function DexSlider({ cards, onSelect }: { cards: DexCard[]; onSelect?: (c
                 ))}
             </div>
 
-            {/* The kit's icon button, which names itself after its tooltip — the same words the arrow
+            {/* The kit's icon button, which names itself after its tooltip, the same words the arrow
                 was already labelled with. Its xs size is this circle exactly: a 16 px chevron in 6 px
                 of padding. The black disc, the show-on-hover and the focus ring's own offset are this
                 slider's: an offset ring is clipped by the picture box a pixel or two away. */}

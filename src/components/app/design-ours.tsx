@@ -34,7 +34,7 @@ const sets = [
     { value: "sv4", label: "Paradox Rift", hint: "2023" },
 ];
 
-/** Ours, because the kit has nothing that fits — each one says what it does instead. */
+/** Ours, because the kit has nothing that fits; each one says what it does instead. */
 function AcquiredDatePickerSample() {
     const [date, setDate] = useState("2026-07-09");
     return <AcquiredDatePicker value={date} onChange={setDate} />;
@@ -96,7 +96,7 @@ export const ourSections: SectionSpec[] = [
                 <AppEmptyState
                     icon="folder"
                     title="No binders yet"
-                    description="A binder is a place you put cards — by hand, or by a rule that files them for you."
+                    description="A binder is a place you put cards: by hand, or by a rule that files them for you."
                 >
                     <Button size="md" iconLeading={Plus}>
                         New binder
@@ -110,7 +110,7 @@ export const ourSections: SectionSpec[] = [
         title: "AuthShell",
         from: "components/app/auth-shell",
         ours: true,
-        note: "The frame the four signed-out pages share: the wordmark, a heading, a line under it, then the form, then the one link to the other page. Ours because the kit's sign-in screens are page templates, not a component — the four pages were the same thirteen lines of markup four times. The window's own height and background come from the route's layout, so here it stands on a surface of its own.",
+        note: "The frame the four signed-out pages share: the wordmark, a heading, a line under it, then the form, then the one link to the other page. Ours because the kit's sign-in screens are page templates, not a component; the four pages were the same thirteen lines of markup four times. The window's own height and background come from the route's layout, so here it stands on a surface of its own.",
         render: (
             <div className="flex min-h-140 flex-col rounded-xl bg-primary ring-1 ring-secondary">
                 <AuthShell
@@ -159,7 +159,7 @@ export const ourSections: SectionSpec[] = [
         title: "CardImage",
         from: "components/app/card-image",
         ours: true,
-        note: "A card picture through Vercel's image optimizer rather than straight from the catalogue, which is one server in France with no CDN. Its parent sets the box — aspect-card and rounded-card are the app's own utilities — and the component fills it.",
+        note: "A card picture through Vercel's image optimizer rather than straight from the catalogue, which is one server in France with no CDN. Its parent sets the box (aspect-card and rounded-card are the app's own utilities) and the component fills it.",
         render: (
             <Panel>
                 <Group title="Sizes and ratios" cols="tight">
@@ -221,7 +221,7 @@ export const ourSections: SectionSpec[] = [
         title: "CardTile",
         from: "components/app/card-tile",
         ours: true,
-        note: "A card's picture with its words under it, as one thing you press. The kit has no clickable tile — its cards are containers, not controls — and this shape is drawn in the collection's grid, in a Pokédex slot and in the row of dearest cards on Home. One component, so the press, the focus ring and the radius cannot drift apart between them. Without onSelect it is the same tile with nothing to press, which is what a public Pokédex needs.",
+        note: "A card's picture with its words under it, as one thing you press. The kit has no clickable tile (its cards are containers, not controls), and this shape is drawn in the collection's grid, in a Pokédex slot and in the row of dearest cards on Home. One component, so the press, the focus ring and the radius cannot drift apart between them. Without onSelect it is the same tile with nothing to press, which is what a public Pokédex needs.",
         render: (
             <Panel>
                 <Group title="States" hint="press them" cols="tight">
@@ -343,7 +343,7 @@ export const ourSections: SectionSpec[] = [
         title: "FlagIcon",
         from: "components/app/flag-icon",
         ours: true,
-        note: "A language as its flag, from flag-icons' SVGs — the ten the API knows, imported one by one so only those ten files ship. The kit's BadgeWithFlag fetches its flags from untitledui.com at runtime, which this app does not do.",
+        note: "A language as its flag, from flag-icons' SVGs: the ten the API knows, imported one by one so only those ten files ship. The kit's BadgeWithFlag fetches its flags from untitledui.com at runtime, which this app does not do.",
         render: (
             <Panel>
                 <Group title="Sizes" cols="tight">
@@ -439,7 +439,7 @@ export const ourSections: SectionSpec[] = [
         title: "RowButton",
         from: "components/app/row-button",
         ours: true,
-        note: "Filters, Sort and View above a list. From sm it is icon, word and — for a menu — a chevron; on a phone the word is read out only and the button is a circle the height of the search pill beside it. Narrow the window to see it change.",
+        note: "Filters, Sort and View above a list. From sm it is icon, word and, for a menu, a chevron; on a phone the word is read out only and the button is a circle the height of the search pill beside it. Narrow the window to see it change.",
         render: (
             <Panel>
                 <Group title="Variants" cols="tight">
@@ -472,12 +472,12 @@ export const ourSections: SectionSpec[] = [
         render: (
             <Panel>
                 <Group title="Sizes" cols="wide">
-                    <Cell label='size="sm" — the sidebar' span="full">
+                    <Cell label='size="sm", the sidebar' span="full">
                         <div className="w-full max-w-72">
                             <SearchTrigger label="Search" onPress={() => notify.done("The palette would open")} />
                         </div>
                     </Cell>
-                    <Cell label='size="md" — the phone bar' span="full">
+                    <Cell label='size="md", the phone bar' span="full">
                         <div className="w-full max-w-72">
                             <SearchTrigger size="md" label="Search a card or a set" onPress={() => notify.done("The sheet would open")} />
                         </div>

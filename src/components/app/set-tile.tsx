@@ -8,12 +8,12 @@ import { cx } from "@/utils/cx";
 /**
  * Ours: one set on the Browse shelf, its logo as the tile and its name and count under it.
  *
- * A catalogue is led by its pictures — Spotify, TIDAL and Record Club all draw an album as its
+ * A catalogue is led by its pictures: Spotify, TIDAL and Record Club all draw an album as its
  * cover with the title and a line of detail beneath, and a set has a logo the way an album has a
  * cover. The shelf used to be text rows with the logo squeezed into a 48 px box beside the name,
  * where the logo was decoration; here it is the thing you scan for, and the words confirm it.
  *
- * The whole tile is the link. The count is one quiet line under the name — no bar: the owner's
+ * The whole tile is the link. The count is one quiet line under the name, no bar: the owner's
  * call, the shelf shows the sets, and how far each one is stays a number, not a meter on every
  * tile. A set with nothing in it stays on the shelf but dimmed, like an empty Pokédex slot: it
  * is the part still to collect.
@@ -32,7 +32,7 @@ import { cx } from "@/utils/cx";
  * the box's 16 px padding, so 282 px, rounded to the next step. Six columns under the 1280 px
  * container come to 192 px, four columns beside the sidebar to 223 px, a phone's two to 295 px
  * at most: every other width draws it smaller than this. Doubling it here would have the
- * optimizer ask for 4x — the 48 px box once fetched a 192 px file that way — so the number is
+ * optimizer ask for 4x (the 48 px box once fetched a 192 px file that way), so the number is
  * the drawn width, nothing more. TCGdex logos are around 230 KB as PNG originals; the
  * optimizer's resize is what makes 200 of them affordable.
  */
@@ -68,8 +68,8 @@ export function SetTile({
             )}
         >
             {/* The picture box: 4:3, since a set logo is a wide mark, and the same on every tile so
-                the rows line up whatever each logo's own shape is. The logo is decoration — the
-                name under it says which set this is — so it carries no alt text. */}
+                the rows line up whatever each logo's own shape is. The logo is decoration (the
+                name under it says which set this is), so it carries no alt text. */}
             <div className="relative flex aspect-4/3 w-full items-center justify-center overflow-hidden rounded-lg bg-secondary p-4">
                 {set.logoUrl ? (
                     <CardImage src={set.logoUrl} alt="" width={LOGO_WIDTH} ratio="square" priority={priority} className="object-contain" />

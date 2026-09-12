@@ -12,8 +12,8 @@ export function PrefetchRoutes({ hrefs }: { hrefs: string[] }) {
     // seven routes again on each one had every navigation waiting on prefetches in flight.
     useEffect(() => {
         // Only where the sidebar is. This is rendered beside the sidebar, not inside its
-        // `hidden lg:flex` wrapper, so a phone — which never sees these links, and whose tab bar's
-        // next/link items prefetch their own — was fetching every one of them on a hard load, each
+        // `hidden lg:flex` wrapper, so a phone (which never sees these links, and whose tab bar's
+        // next/link items prefetch their own) was fetching every one of them on a hard load, each
         // a dynamic route that re-runs the session check. 64rem is Tailwind's lg.
         if (!window.matchMedia("(min-width: 64rem)").matches) return;
         for (const href of hrefs) router.prefetch(href);

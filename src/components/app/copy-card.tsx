@@ -21,7 +21,7 @@ import { languageOf } from "@/lib/languages";
 import { cx } from "@/utils/cx";
 
 /**
- * Ours: one kind of copy you hold of a card — Holo · Near Mint, say — as a card of its own in the
+ * Ours: one kind of copy you hold of a card (Holo · Near Mint, say) as a card of its own in the
  * sheet's Copies tab, with how many of it there are and every fact about it the add form asks
  * for, in the add form's order and shape: a label above a full-width field.
  *
@@ -31,7 +31,7 @@ import { cx } from "@/utils/cx";
  * with a bin on it. A card per kind says each thing once, where the form already taught you to
  * look for it.
  *
- * Each field saves the moment it changes, to every row behind the kind — four identical copies
+ * Each field saves the moment it changes, to every row behind the kind: four identical copies
  * are four rows in the store, and "these are Near Mint" is said about all four. The count is the
  * sheet's to change, since taking one away may mean removing a row and the sheet owns the undo.
  */

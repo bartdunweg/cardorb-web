@@ -6,7 +6,7 @@ import { Button } from "@/components/base/buttons/button";
 
 /**
  * Add card, on a page: opens the one palette, the same one cmd+K and the sidebar's Search open,
- * with nothing preset — Bart's call, 2026-09-11: one function, no difference in the interface. It
+ * with nothing preset. Bart's call, 2026-09-11: one function, no difference in the interface. It
  * replaced a dialog of its own that searched the same catalogue with fewer filters and no sheet.
  */
 export function AddCardButton({ compact = false, label = "Add card" }: { compact?: boolean; label?: string }) {

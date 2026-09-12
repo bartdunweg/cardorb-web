@@ -4,7 +4,7 @@ import { Button } from "@/components/base/buttons/button";
 import { ImportDialog } from "./import-dialog";
 
 /*
- * What the dialog does when the action itself throws — not when it answers
+ * What the dialog does when the action itself throws: not when it answers
  * `{ ok: false }`, which every branch already handles, but when the call never
  * comes back with an answer at all. That happened in production: a 1.4 MB
  * file hit Next's server-action body limit, the promise rejected, and the
