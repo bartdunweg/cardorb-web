@@ -85,6 +85,8 @@ export function SetCardTile({
     const held = pending ? pressed : heldOnPage;
     const want = useRef(heldOnPage);
     const flying = useRef(false);
+    // The minus on the last copy takes itself away; focus goes to the plus beside it, not to the page.
+    const plusRef = useRef<HTMLButtonElement>(null);
     /* What the store holds after the last write this tile made. The page's own count is not that
        until the page drawn after the re-read is on screen: the action's answer arrives before the
        page it streams, so a press in between read "not held" and added the card a second time
@@ -344,7 +346,10 @@ export function SetCardTile({
                                 aria-label={
                                     held > 1 ? `Remove a copy of ${card.name} #${card.number}` : `Remove ${card.name} #${card.number} from your collection`
                                 }
-                                onPress={() => press(held - 1)}
+                                onPress={() => {
+                                    if (held === 1) plusRef.current?.focus();
+                                    press(held - 1);
+                                }}
                                 className={stepClass}
                             >
                                 <Minus className="size-3.5" aria-hidden="true" />
@@ -355,6 +360,7 @@ export function SetCardTile({
                                 aria-label={
                                     state === "owned" ? `Add a copy of ${card.name} #${card.number}` : `Add ${card.name} #${card.number} to your collection`
                                 }
+                                ref={plusRef}
                                 onPress={() => press(held + 1)}
                                 className={stepClass}
                             >
