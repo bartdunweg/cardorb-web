@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { AddCardButton } from "@/components/app/add-card-button";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderPage } from "@/components/app/folder-page";
+import { PokedexRarityNote } from "@/components/app/pokedex-rarity-note";
 import { PokedexSettingsDialog } from "@/components/app/pokedex-settings-dialog";
 import { type CardFilter, getAllMyCards } from "@/lib/cards";
 import { type DexList, groupByDex } from "@/lib/dex-groups";
@@ -71,7 +72,9 @@ export default async function PokedexPage({ searchParams }: { searchParams: Prom
                 </AppEmptyState>
             }
             pokedex={{ dex }}
-        />
+        >
+            <PokedexRarityNote setting={setting} />
+        </FolderPage>
     );
 }
 
