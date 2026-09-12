@@ -9,6 +9,7 @@ import { LinkButton } from "@/components/app/link-button";
 import { FileUploadDropZone } from "@/components/application/file-upload/file-upload-base";
 import { LoadingIndicator } from "@/components/application/loading-indicator/loading-indicator";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
+import { Progress, type Step } from "@/components/application/progress-steps/progress-steps";
 import { Table, TableCard } from "@/components/application/table/table";
 import { Button } from "@/components/base/buttons/button";
 import { CloseButton } from "@/components/base/buttons/close-button";
@@ -20,8 +21,16 @@ import { MAX_CSV_BYTES, readCsv } from "@/lib/csv-file";
  *
  * The shape of this is one rule: an import cannot be undone, so nothing is
  * written until somebody has been shown, in numbers and in words, what writing
- * would mean. The button is not called Import — it says how many cards it is
- * about to add — and it does not exist until there is a preview.
+ * would mean. The button is not called Import, it says how many cards it is
+ * about to add, and it does not exist until there is a preview.
+ *
+ * Three steps, one file. Upload is the drop zone and nothing else; once a file
+ * has been read the drop zone is gone and Review shows the file as one line
+ * with a way to swap it, the preview underneath and the button that writes;
+ * Done is the result. Every CSV import on Mobbin (Attio, Remote, Resend,
+ * Podia, Pipedrive) is built this way, and the reason is the same one as
+ * ours: a drop zone that stays on screen next to a preview offers a second
+ * file while you are still deciding about the first.
  *
  * A dialog rather than a page. An import is one errand you finish and leave,
  * not a place in the app: it has no address worth sharing, nothing links to it,
@@ -31,7 +40,7 @@ import { MAX_CSV_BYTES, readCsv } from "@/lib/csv-file";
  * screen, because the preview is a table and half a screen of table is worse
  * than none.
  *
- * The form mounts inside the dialog, so it starts clean on every open — the
+ * The form mounts inside the dialog, so it starts clean on every open, the
  * same reason folder-dialog.tsx does it. A dialog that remembered the last
  * file would offer to import it again, which is exactly the mistake this
  * screen exists to prevent.
@@ -76,14 +85,14 @@ function summary(p: ImportPreview): string {
      * Espeon he holds as Normal also arrives as Reverse Holo, National
      * Championships and National Championships (Staff), each at zero. So the
      * sentence names the printing, not the card, and says where they came
-     * from — because "2,439 cards you do not own" is a number that makes a
+     * from, because "2,439 cards you do not own" is a number that makes a
      * person ask where those came from, and the answer should not be a
      * conversation.
      */
     if (p.notOwned > 0) {
         parts.push(
             p.source === "dex"
-                ? `Dex also lists ${plural(p.notOwned, "printing")} you do not have — those are left alone.`
+                ? `Dex also lists ${plural(p.notOwned, "printing")} you do not have. Those are left alone.`
                 : `${plural(p.notOwned, "row")} the file marks as not owned, left alone.`,
         );
     }
@@ -91,6 +100,19 @@ function summary(p: ImportPreview): string {
     if (unreadable > 0) parts.push(`${plural(unreadable, "row")} could not be read.`);
     return parts.join(" ");
 }
+
+type StepName = "upload" | "review" | "done";
+
+const STEPS: { name: StepName; title: string }[] = [
+    { name: "upload", title: "Upload" },
+    { name: "review", title: "Review" },
+    { name: "done", title: "Done" },
+];
+
+const steps = (current: StepName): Step[] => {
+    const at = STEPS.findIndex((s) => s.name === current);
+    return STEPS.map((s, i) => ({ title: s.title, status: i < at ? "complete" : i === at ? "current" : "incomplete" }));
+};
 
 export function ImportDialog({ children }: { children: ReactNode }) {
     return (
@@ -118,6 +140,15 @@ function ImportForm({ close }: { close: () => void }) {
     const [error, setError] = useState<string | null>(null);
     const [result, setResult] = useState<ImportResult | null>(null);
 
+    /*
+     * Which step is on screen is read off the state rather than kept beside
+     * it, so the two cannot disagree. A preview, or a header handed back with
+     * the columns question, is Review; a result is Done; anything else is
+     * Upload, including a file that could not be read, whose error belongs
+     * next to the drop zone that will take the next one.
+     */
+    const step: StepName = result ? "done" : preview || header.length > 0 ? "review" : "upload";
+
     const reset = () => {
         setPreview(null);
         setResult(null);
@@ -126,10 +157,17 @@ function ImportForm({ close }: { close: () => void }) {
         setHeader([]);
     };
 
+    /** Back to the drop zone, with nothing of the last file left behind. */
+    const startOver = () => {
+        reset();
+        setFileName(null);
+        setCsv(null);
+    };
+
     /*
      * Every action here answers `{ ok: false }` for anything it saw coming, so
      * an actual throw is the case nobody wrote a sentence for: the request that
-     * never reached the action at all. That is not hypothetical — a 1.4 MB file
+     * never reached the action at all. That is not hypothetical: a 1.4 MB file
      * once tripped Next's own body limit in front of the action, the promise
      * rejected, and the dialog sat on "reading…" with the drop zone disabled
      * and no button, which the person who hit it described as "nothing
@@ -222,54 +260,69 @@ function ImportForm({ close }: { close: () => void }) {
     const unreadable = preview ? preview.skippedRows.filter((s) => !s.why.startsWith("not owned")) : [];
 
     return (
-        // A column with one scrolling middle: the title stays put, and so does
-        // the button that does the irreversible thing. On a long preview the
-        // alternative is scrolling back up to find out what you agreed to.
+        // A column with one scrolling middle: the title and the steps stay put,
+        // and so does the button that does the irreversible thing. On a long
+        // preview the alternative is scrolling back up to find out what you
+        // agreed to.
         //
         // The height is stated rather than inherited. max-h-full on the kit's
         // Modal measures against an overlay that scrolls, so the dialog grew
         // past a 560px-tall window and put the Add button off the bottom of the
-        // screen — the one control that must never be out of sight. The numbers
+        // screen, the one control that must never be out of sight. The numbers
         // are the overlay's own padding, p-4 and sm:p-8.
         <div className="flex max-h-[calc(100dvh-2rem)] w-full flex-col overflow-hidden rounded-xl bg-primary shadow-lg ring-1 ring-secondary max-sm:h-dvh max-sm:max-h-dvh max-sm:rounded-none sm:max-h-[calc(100dvh-4rem)]">
-            <div className="flex items-start justify-between gap-4 px-5 pt-5 pb-4 sm:px-6 sm:pt-6">
-                <div className="flex flex-col gap-1">
-                    <AriaHeading slot="title" className="text-lg font-semibold text-primary">
-                        Import a collection
-                    </AriaHeading>
-                    <p className="text-sm text-tertiary">A CSV export from Dex, Notion, or any spreadsheet with a card name and a set. Up to 2 MB.</p>
+            <div className="flex flex-col gap-5 px-5 pt-5 pb-4 sm:px-6 sm:pt-6">
+                <div className="flex items-start justify-between gap-4">
+                    <div className="flex flex-col gap-1">
+                        <AriaHeading slot="title" className="text-lg font-semibold text-primary">
+                            Import a collection
+                        </AriaHeading>
+                        <p className="text-sm text-tertiary">A CSV export from Dex, Notion, or any spreadsheet with a card name and a set. Up to 2 MB.</p>
+                    </div>
+                    {/*
+                     * Escape closes this and so does Cancel, but on a phone the dialog is
+                     * the whole screen: no dimmed page beside it to tap, no Escape key, and
+                     * the footer is a scroll away while a long file is being read. The cross
+                     * is the way out that is always where you expect it.
+                     */}
+                    <CloseButton onClick={close} size="sm" className="-mt-1 -mr-1" />
                 </div>
-                {/*
-                 * Escape closes this and so does Cancel, but on a phone the dialog is
-                 * the whole screen: no dimmed page beside it to tap, no Escape key, and
-                 * the footer is a scroll away while a long file is being read. The cross
-                 * is the way out that is always where you expect it.
-                 */}
-                <CloseButton onClick={close} size="sm" className="-mt-1 -mr-1" />
+                <Progress.IconsWithText items={steps(step)} size="sm" />
             </div>
 
             <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-5 pb-4 sm:px-6">
-                <FileUploadDropZone
-                    accept=".csv,text/csv,text/plain"
-                    allowsMultiple={false}
-                    maxSize={MAX_CSV_BYTES}
-                    hint="CSV, up to 2 MB. UTF-8 or UTF-16, commas or semicolons — all fine."
-                    isDisabled={busy !== null}
-                    onDropFiles={onPick}
-                    onDropUnacceptedFiles={() => setError("That is not a CSV file.")}
-                    onSizeLimitExceed={() => setError("That file is too large. The limit is 2 MB.")}
-                />
+                {step === "upload" ? (
+                    <>
+                        <FileUploadDropZone
+                            accept=".csv,text/csv,text/plain"
+                            allowsMultiple={false}
+                            maxSize={MAX_CSV_BYTES}
+                            hint="CSV, up to 2 MB. UTF-8 or UTF-16, commas or semicolons, all fine."
+                            isDisabled={busy !== null}
+                            onDropFiles={onPick}
+                            onDropUnacceptedFiles={() => setError("That is not a CSV file.")}
+                            onSizeLimitExceed={() => setError("That file is too large. The limit is 2 MB.")}
+                        />
+                        {/*
+                         * The kit's indicator while the file is being read: a 4,500-row export
+                         * takes a couple of seconds, and a line of grey text does not look like
+                         * anything is happening. The indicator is a status region, so it is heard.
+                         */}
+                        {fileName && busy === "reading" ? <LoadingIndicator size="sm" label={`Reading ${fileName}…`} className="py-2" /> : null}
+                    </>
+                ) : null}
 
-                {/*
-                 * The kit's indicator while the file is being read, not the words "reading…"
-                 * after the file name: a 4,500-row export takes a couple of seconds, and a
-                 * line of grey text does not look like anything is happening. The indicator
-                 * is a status region, so it is also heard.
-                 */}
-                {fileName && busy === "reading" ? (
-                    <LoadingIndicator size="sm" label={`Reading ${fileName}…`} className="py-2" />
-                ) : fileName ? (
-                    <p className="text-sm text-tertiary">{fileName}</p>
+                {step === "review" && fileName ? (
+                    <div className="flex items-center justify-between gap-4 rounded-lg px-4 py-3 ring-1 ring-secondary ring-inset">
+                        <p className="min-w-0 truncate text-sm font-medium text-primary">{fileName}</p>
+                        {busy === "reading" ? (
+                            <LoadingIndicator size="sm" label="Reading…" className="flex-row" />
+                        ) : (
+                            <Button size="sm" color="secondary" onClick={startOver}>
+                                Choose another file
+                            </Button>
+                        )}
+                    </div>
                 ) : null}
 
                 {/*
@@ -341,77 +394,80 @@ function ImportForm({ close }: { close: () => void }) {
                                 </Table>
                             </TableCard.Root>
                         ) : null}
-
-                        {preview.source === "generic" && header.length > 0 ? (
-                            <details className="rounded-lg ring-1 ring-secondary ring-inset">
-                                <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-secondary">Columns</summary>
-                                <div className="grid gap-3 px-4 pt-1 pb-4 sm:grid-cols-2">
-                                    {FIELDS.map((field) => (
-                                        <NativeSelect
-                                            key={field.key}
-                                            size="sm"
-                                            label={field.required ? `${field.label} (required)` : field.label}
-                                            value={map[field.key] === undefined ? "" : String(map[field.key])}
-                                            disabled={busy !== null}
-                                            onChange={(e) => void onColumn(field.key, e.target.value)}
-                                            options={[
-                                                { label: field.required ? "Choose a column" : "Not in this file", value: "" },
-                                                ...header.map((h, i) => ({ label: h || `Column ${i + 1}`, value: String(i) })),
-                                            ]}
-                                        />
-                                    ))}
-                                </div>
-                            </details>
-                        ) : null}
-
-                        {/*
-                         * Only the rows that went wrong get listed, and only when
-                         * there are any. A Dex export leaves out thousands of
-                         * cards you do not own, and listing those was twenty
-                         * identical sentences behind a disclosure — a line number
-                         * for something no line number helps with. The sentence
-                         * above already says how many. A row with no card name is
-                         * the opposite: rare, and the number is the whole point.
-                         */}
-                        {unreadable.length > 0 ? (
-                            <details className="rounded-lg ring-1 ring-secondary ring-inset">
-                                <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-secondary">
-                                    Rows that could not be read ({(preview.skipped - preview.notOwned).toLocaleString("en")})
-                                </summary>
-                                <ul className="flex flex-col gap-1 px-4 pt-1 pb-4 text-sm text-tertiary">
-                                    {unreadable.map((s) => (
-                                        <li key={s.line}>
-                                            Line {s.line}: {s.why}
-                                        </li>
-                                    ))}
-                                    {preview.skipped - preview.notOwned > unreadable.length ? (
-                                        <li>and {(preview.skipped - preview.notOwned - unreadable.length).toLocaleString("en")} more.</li>
-                                    ) : null}
-                                </ul>
-                            </details>
-                        ) : null}
-
-                        {/*
-                         * Not a choice, a warning. Every row is added, because a
-                         * file is a list of copies somebody has and a second copy
-                         * is a normal thing to own. But nothing in the database
-                         * refuses the same file twice, and there is no undo — so
-                         * the number that would say "you are about to do this
-                         * again" has to be on screen before the button is.
-                         */}
-                        {preview.existing > 0 ? (
-                            <p className="rounded-lg bg-secondary px-4 py-3 text-sm text-secondary">
-                                <span className="font-medium text-primary">{plural(preview.existing, "card")} you already have</span>{" "}
-                                {preview.existing === 1 ? "is" : "are"} in this file, and will be added again as extra copies. If you have imported this file
-                                before, that is what this number is telling you — there is no undo.
-                            </p>
+                        {writing > preview.sample.length ? (
+                            <p className="text-sm text-tertiary">And {plural(writing - preview.sample.length, "more card")}.</p>
                         ) : null}
                     </div>
+                ) : null}
+
+                {step === "review" && preview?.source !== "dex" && header.length > 0 ? (
+                    <details className="rounded-lg ring-1 ring-secondary ring-inset" open={!preview}>
+                        <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-secondary">Columns</summary>
+                        <div className="grid gap-3 px-4 pt-1 pb-4 sm:grid-cols-2">
+                            {FIELDS.map((field) => (
+                                <NativeSelect
+                                    key={field.key}
+                                    size="sm"
+                                    label={field.required ? `${field.label} (required)` : field.label}
+                                    value={map[field.key] === undefined ? "" : String(map[field.key])}
+                                    disabled={busy !== null}
+                                    onChange={(e) => void onColumn(field.key, e.target.value)}
+                                    options={[
+                                        { label: field.required ? "Choose a column" : "Not in this file", value: "" },
+                                        ...header.map((h, i) => ({ label: h || `Column ${i + 1}`, value: String(i) })),
+                                    ]}
+                                />
+                            ))}
+                        </div>
+                    </details>
+                ) : null}
+
+                {/*
+                 * Only the rows that went wrong get listed, and only when
+                 * there are any. A Dex export leaves out thousands of
+                 * cards you do not own, and listing those was twenty
+                 * identical sentences behind a disclosure, a line number
+                 * for something no line number helps with. The sentence
+                 * above already says how many. A row with no card name is
+                 * the opposite: rare, and the number is the whole point.
+                 */}
+                {preview && unreadable.length > 0 ? (
+                    <details className="rounded-lg ring-1 ring-secondary ring-inset">
+                        <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-secondary">
+                            Rows that could not be read ({(preview.skipped - preview.notOwned).toLocaleString("en")})
+                        </summary>
+                        <ul className="flex flex-col gap-1 px-4 pt-1 pb-4 text-sm text-tertiary">
+                            {unreadable.map((s) => (
+                                <li key={s.line}>
+                                    Line {s.line}: {s.why}
+                                </li>
+                            ))}
+                            {preview.skipped - preview.notOwned > unreadable.length ? (
+                                <li>and {(preview.skipped - preview.notOwned - unreadable.length).toLocaleString("en")} more.</li>
+                            ) : null}
+                        </ul>
+                    </details>
+                ) : null}
+
+                {/*
+                 * Not a choice, a warning. Every row is added, because a
+                 * file is a list of copies somebody has and a second copy
+                 * is a normal thing to own. But nothing in the database
+                 * refuses the same file twice, and there is no undo, so
+                 * the number that would say "you are about to do this
+                 * again" has to be on screen before the button is.
+                 */}
+                {preview && preview.existing > 0 ? (
+                    <p className="rounded-lg bg-secondary px-4 py-3 text-sm text-secondary">
+                        <span className="font-medium text-primary">{plural(preview.existing, "card")} you already have</span>{" "}
+                        {preview.existing === 1 ? "is" : "are"} in this file, and will be added again as extra copies. If you have imported this file before,
+                        that is what this number is telling you. There is no undo.
+                    </p>
                 ) : null}
             </div>
 
             <div className="flex justify-end gap-3 border-t border-secondary px-5 py-4 sm:px-6">
-                {result ? (
+                {step === "done" ? (
                     <>
                         <Button size="md" color="secondary" onClick={close}>
                             Close
@@ -420,17 +476,24 @@ function ImportForm({ close }: { close: () => void }) {
                             View your cards
                         </LinkButton>
                     </>
-                ) : (
+                ) : step === "review" ? (
                     <>
-                        <Button size="md" color="secondary" onClick={close} isDisabled={busy === "importing"}>
-                            Cancel
+                        <Button size="md" color="secondary" onClick={startOver} isDisabled={busy !== null}>
+                            Back
                         </Button>
-                        {preview ? (
-                            <Button size="md" isDisabled={writing === 0} isLoading={busy === "importing"} onClick={() => void onImport()}>
-                                {writing === 0 ? "Nothing to add" : `Add ${plural(writing, "card")}`}
-                            </Button>
-                        ) : null}
+                        <Button
+                            size="md"
+                            isDisabled={!preview || writing === 0 || busy === "reading"}
+                            isLoading={busy === "importing"}
+                            onClick={() => void onImport()}
+                        >
+                            {preview && writing === 0 ? "Nothing to add" : `Add ${plural(writing, "card")}`}
+                        </Button>
                     </>
+                ) : (
+                    <Button size="md" color="secondary" onClick={close} isDisabled={busy !== null}>
+                        Cancel
+                    </Button>
                 )}
             </div>
         </div>

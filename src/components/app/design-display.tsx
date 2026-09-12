@@ -5,6 +5,7 @@ import { AlertCircle, BookOpen01, Check, Folder, Heart, Home01, Star01, Trash01,
 import type { SortDescriptor } from "react-aria-components";
 import { NavItemBase } from "@/components/application/app-navigation/base-components/nav-item";
 import { LoadingIndicator } from "@/components/application/loading-indicator/loading-indicator";
+import { Progress } from "@/components/application/progress-steps/progress-steps";
 import { Table, TableCard, TableRowActionsDropdown } from "@/components/application/table/table";
 import { Tab, TabList, TabPanel, Tabs } from "@/components/application/tabs/tabs";
 import { Avatar } from "@/components/base/avatar/avatar";
@@ -265,6 +266,38 @@ export const displaySections: SectionSpec[] = [
                     </Cell>
                     <Cell label="xl">
                         <LoadingIndicator size="xl" />
+                    </Cell>
+                </Group>
+            </Panel>
+        ),
+    },
+    {
+        id: "progress-steps",
+        title: "Progress steps",
+        from: "components/application/progress-steps",
+        note: "Where you are in a short flow with a fixed order, as the import dialog's Upload, Review, Done. Trimmed from the kit to the horizontal numbered row; the description under a step is optional, and is not drawn when there is none.",
+        render: (
+            <Panel>
+                <Group title="Three steps" hint="the second one current" cols="single">
+                    <Cell label="titles only">
+                        <Progress.IconsWithText
+                            size="sm"
+                            items={[
+                                { title: "Upload", status: "complete" },
+                                { title: "Review", status: "current" },
+                                { title: "Done", status: "incomplete" },
+                            ]}
+                        />
+                    </Cell>
+                    <Cell label='size="md", with descriptions'>
+                        <Progress.IconsWithText
+                            size="md"
+                            items={[
+                                { title: "Upload", description: "Choose a CSV", status: "complete" },
+                                { title: "Review", description: "Check what it adds", status: "current" },
+                                { title: "Done", description: "See the result", status: "incomplete" },
+                            ]}
+                        />
                     </Cell>
                 </Group>
             </Panel>
