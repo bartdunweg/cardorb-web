@@ -42,8 +42,9 @@ export function PageHeader({
     /** Above the title, under the sticky bar: Home's search on a phone. */
     above?: ReactNode;
     /**
-     * A band across the very top of the page, edge to edge, under the phone's bar: a set's logo on
-     * its colour. It takes the room the bar's spacer would, since it is taller than the bar.
+     * A band at the very top of the page, under the phone's bar: a set's logo on its colours. It
+     * takes the room the bar's spacer would, since it is taller than the bar, and gets more air
+     * under it than a line of text would: the title starts a page of its own under the picture.
      */
     hero?: ReactNode;
     /** On a phone, at the bar's right end across from Back: a page's settings as a dots button. */
@@ -83,15 +84,9 @@ export function PageHeader({
         // One element, so the page's own gap applies once, under it: the distances inside are the spacer's
         // and the 16 px column, whatever the page puts between its sections.
         <div className="flex flex-col">
-            {/* As wide as main and up to its top. The column is centred in main with a ceiling on its
-                width and padding inside it (px-4 pt-4, sm:px-6 sm:py-8), so the band is made main's
-                width (100cqw, main being the container) and pulled left by half the difference, which
-                cancels the column's centring and its padding in one number. The phone's bar floats on it. */}
-            {hero ? (
-                <div className="-mt-4 mb-4 sm:-mt-8" style={{ width: "100cqw", marginLeft: "calc((100% - 100cqw) / 2)" }}>
-                    {hero}
-                </div>
-            ) : null}
+            {/* Up to the page's top, cancelling the layout's padding (pt-4, sm:py-8); the wash the band
+                draws is positioned by the app frame, so it needs no room here. */}
+            {hero ? <div className="-mt-4 mb-6 sm:-mt-8">{hero}</div> : null}
             {/* The bar is fixed to the top of the screen, like the tab bar to its bottom, so it stays through
                 the whole page and not only while the header is in view. Collapsed, it stands on the tab bar's
                 glass, running out under its bottom (the same ground as the card sheet's bar), so the buttons

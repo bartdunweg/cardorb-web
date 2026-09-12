@@ -17,7 +17,7 @@ const base: SetSummary = {
     series: "Scarlet & Violet",
     releaseDate: "2024/11/08",
     logoUrl: "https://assets.tcgdex.net/en/sv/sv08/logo.png",
-    color: "#1362ec",
+    colors: ["#1b4182", "#7a3fa8"],
     symbolUrl: "https://assets.tcgdex.net/en/sv/sv08/symbol.png",
     owned: 12,
     total: 207,

@@ -10,7 +10,7 @@ const set = (name: string): SetSummary => ({
     releaseDate: null,
     logoUrl: null,
     symbolUrl: null,
-    color: null,
+    colors: [],
     owned: 0,
     total: 0,
     complete: false,

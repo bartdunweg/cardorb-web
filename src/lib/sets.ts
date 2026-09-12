@@ -10,7 +10,7 @@ import {
     setPageAnswer,
 } from "@/lib/api-shapes";
 import type { BrowseLanguage } from "@/lib/languages";
-import { logoColors } from "@/lib/logo-color";
+import { logoPalettes } from "@/lib/logo-color";
 import { perUser } from "@/lib/user-cache";
 
 export type { SetCard, SetSeries, SetSummary } from "@/lib/api-shapes";
@@ -36,12 +36,12 @@ export async function getSets(language: BrowseLanguage = "en") {
             async (token) => (await api("/catalog/sets", { token, params: language === "en" ? {} : { language }, schema: catalogueSetsAnswer })).sets,
         );
         const shelf = seriesFromSets(sets);
-        // Every tile wears its logo's colour. Read once per logo and kept a month, so only the first
+        // Every tile wears its logo's colours. Read once per logo and kept a month, so only the first
         // shelf after a deploy pays for the reads; they run side by side, a bounded number at a time.
         const all = shelf.series.flatMap((group) => group.sets);
-        const colors = await logoColors(all.map((set) => set.logoUrl));
+        const palettes = await logoPalettes(all.map((set) => set.logoUrl));
         all.forEach((set, i) => {
-            set.color = colors[i] ?? null;
+            set.colors = palettes[i] ?? [];
         });
         return shelf;
     } catch (err) {

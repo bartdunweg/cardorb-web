@@ -1,9 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { SearchLg, SwitchVertical01 } from "@untitledui/icons";
 import dynamic from "next/dynamic";
 import { listRows } from "@/app/(app)/dashboard/cards/actions";
+import { AppEmptyState } from "@/components/app/app-empty-state";
+import { FilterChip } from "@/components/app/filter-chip";
+import { RowButton } from "@/components/app/row-button";
 import { SetCardTile } from "@/components/app/set-card-tile";
+import { Dropdown } from "@/components/base/dropdown/dropdown";
+import { Input } from "@/components/base/input/input";
 import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
 import { GRID_COLUMNS } from "@/lib/cards-view";
@@ -22,8 +28,53 @@ const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-sl
  * copies, the price you paid and the folder, none of which the catalogue knows. A card you do
  * not hold has no row, so it opens on what the set page already has: the printing, read-only,
  * with its price line. Adding it is the plus and the menu beside it, which is where it was.
+ *
+ * Above the grid, the row every list in the app has: search, filters and sort. Here it works on
+ * the cards the page already holds rather than on the URL, because a set is one page of at most
+ * a few hundred cards and the question is "where is Charizard" or "what am I missing", not a
+ * query the server should re-run. Search matches the name, the printed name and the number;
+ * the filters are what you hold and the rarity; the sort is the set's own order, the name or
+ * the price. A search that finds nothing keeps the row where it is and says so under it.
  */
+type Holding = "owned" | "missing" | "wishlist";
+type SortKey = "set" | "name" | "price-desc" | "price-asc";
+const SORTS: { value: SortKey; label: string }[] = [
+    { value: "set", label: "Set order" },
+    { value: "name", label: "Name" },
+    { value: "price-desc", label: "Price, high to low" },
+    { value: "price-asc", label: "Price, low to high" },
+];
+const HOLDINGS: { value: Holding; label: string }[] = [
+    { value: "owned", label: "Owned" },
+    { value: "missing", label: "Missing" },
+    { value: "wishlist", label: "On the wishlist" },
+];
+
 export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetCard[]; language?: string; firstRow?: number }) {
+    const [q, setQ] = useState("");
+    const [holding, setHolding] = useState<Holding | undefined>();
+    const [rarity, setRarity] = useState<string | undefined>();
+    const [sort, setSort] = useState<SortKey>("set");
+    const rarities = useMemo(
+        () => [...new Set(cards.map((c) => c.rarity).filter((r): r is string => Boolean(r)))].sort().map((r) => ({ value: r, label: r })),
+        [cards],
+    );
+    const shown = useMemo(() => {
+        const term = q.trim().toLowerCase();
+        const kept = cards.filter(
+            (c) =>
+                (!term || c.name.toLowerCase().includes(term) || (c.localName ?? "").toLowerCase().includes(term) || c.number.toLowerCase().includes(term)) &&
+                (!holding || (holding === "owned" ? c.owned : holding === "wishlist" ? c.wishlist : !c.owned && !c.wishlist)) &&
+                (!rarity || c.rarity === rarity),
+        );
+        if (sort === "set") return kept;
+        /* A card without a price sorts last either way: the question is which cards are worth what, and
+           an unpriced card has no answer to give. */
+        const price = (c: SetCard) => c.price ?? (sort === "price-desc" ? -1 : Number.POSITIVE_INFINITY);
+        return [...kept].sort((a, b) => (sort === "name" ? a.name.localeCompare(b.name) : sort === "price-desc" ? price(b) - price(a) : price(a) - price(b)));
+    }, [cards, q, holding, rarity, sort]);
+    const narrowed = Boolean(q.trim() || holding || rarity);
+
     const [selected, setSelected] = useState<Card | null>(null);
     // The catalogue card behind an open sheet, so a card nobody holds can still be taken from it.
     const [addable, setAddable] = useState<SetCard | null>(null);
@@ -32,7 +83,7 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
        whose whole point is going through a set in order. */
     const [at, setAt] = useState(-1);
     const open = async (card: SetCard) => {
-        setAt(cards.findIndex((c) => c.id === card.id));
+        setAt(shown.findIndex((c) => c.id === card.id));
         /* The card you hold opens on its row; the catalogue's own is shown while that is read, so
            the sheet is never blank waiting for it. No guard against a second tap: opening the same
            card twice costs one read and lands on the same card, and the ref that used to prevent
@@ -52,21 +103,65 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
     /* Null rather than a dead button at either end: the sheet draws no arrow where there is
        nothing to go to, the same rule the card lists follow. */
     const step = (by: number) => {
-        const next = at >= 0 ? cards[at + by] : undefined;
+        const next = at >= 0 ? shown[at + by] : undefined;
         return next ? () => void open(next) : null;
     };
 
     return (
-        <>
-            {/* The same grid as every other overview, at the same size: a set was denser than any
-                list in the app, which is what made it read as a checklist rather than a shelf. */}
-            <ul className={`grid gap-4 ${GRID_COLUMNS.md}`}>
-                {cards.map((card, i) => (
-                    <li key={card.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i, 16) * 20}ms` } as React.CSSProperties}>
-                        <SetCardTile card={card} language={language} priority={i < firstRow} onOpen={open} />
-                    </li>
-                ))}
-            </ul>
+        <div className="flex flex-1 flex-col gap-6">
+            {/* The field takes what the buttons leave, so the row is one line at every width. */}
+            <div className="flex flex-wrap items-center gap-3">
+                <Input
+                    size="sm"
+                    icon={SearchLg}
+                    aria-label="Search this set"
+                    placeholder="Search this set"
+                    value={q}
+                    onChange={setQ}
+                    className="min-w-0 flex-1 basis-48 sm:max-w-64"
+                />
+                <FilterChip label="Cards" any="All cards" value={holding} options={HOLDINGS} onChange={(next) => setHolding(next as Holding | undefined)} />
+                {rarities.length > 1 ? <FilterChip label="Rarity" value={rarity} options={rarities} onChange={setRarity} /> : null}
+                <Dropdown.Root>
+                    <RowButton icon={SwitchVertical01} label="Sort" menu />
+                    <Dropdown.Popover placement="bottom end" className="w-56">
+                        <Dropdown.Menu
+                            selectionMode="single"
+                            disallowEmptySelection
+                            selectedKeys={new Set([sort])}
+                            onSelectionChange={(keys) => {
+                                const key = keys === "all" ? undefined : [...keys][0];
+                                setSort(SORTS.find((o) => o.value === key)?.value ?? "set");
+                            }}
+                        >
+                            {SORTS.map((o) => (
+                                <Dropdown.Item key={o.value} id={o.value}>
+                                    {o.label}
+                                </Dropdown.Item>
+                            ))}
+                        </Dropdown.Menu>
+                    </Dropdown.Popover>
+                </Dropdown.Root>
+            </div>
+            {shown.length === 0 && narrowed ? (
+                <AppEmptyState
+                    icon="search"
+                    title="No cards found"
+                    description={
+                        q.trim() ? `No cards in this set match “${q.trim()}”.` : "Nothing in this set with those filters. Clear one to widen the list."
+                    }
+                />
+            ) : (
+                /* The same grid as every other overview, at the same size: a set was denser than any
+                   list in the app, which is what made it read as a checklist rather than a shelf. */
+                <ul className={`grid gap-4 ${GRID_COLUMNS.md}`}>
+                    {shown.map((card, i) => (
+                        <li key={card.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i, 16) * 20}ms` } as React.CSSProperties}>
+                            <SetCardTile card={card} language={language} priority={i < firstRow} onOpen={open} />
+                        </li>
+                    ))}
+                </ul>
+            )}
             {/* A card you hold opens on its row and can be changed. One you do not opens on the
                 printing, with the two ways to take it; the sheet is where you looked for them. */}
             <CardDetailSlideout
@@ -80,7 +175,7 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
                 onPrev={step(-1)}
                 onNext={step(1)}
             />
-        </>
+        </div>
     );
 }
 

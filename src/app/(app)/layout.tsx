@@ -44,14 +44,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     things lying on it. In dark the page stays the darkest layer; a lighter page there would
                     turn the surfaces into holes. */}
                 <SkipToContent />
-                <div className="flex min-h-dvh flex-col overflow-x-clip bg-page">
+                {/* relative isolate: a page's wash (set-hero.tsx) is positioned against this frame, across the
+                    whole window and behind the sidebar; isolate lets its negative z-index sit above the
+                    frame's own ground rather than under it. */}
+                <div className="relative isolate flex min-h-dvh flex-col overflow-x-clip bg-page">
                     <div className="flex flex-1 flex-col lg:flex-row">
                         <AppSidebar account={account} collections={collections} favoritesCount={favoritesCount} pokedexCount={pokedexCount} />
                         {/* tabIndex -1 so focus can be sent here after a navigation without putting
                             the element itself in the tab order. */}
-                        {/* A size container, so a page's band (PageHeader's `hero`) can be as wide as main
-                            is and not only as wide as the centred column inside it. */}
-                        <main id={MAIN_ID} tabIndex={-1} className="@container flex min-w-0 flex-1 flex-col outline-none">
+                        <main id={MAIN_ID} tabIndex={-1} className="flex min-w-0 flex-1 flex-col outline-none">
                             <div className="mx-auto flex w-full max-w-container flex-1 flex-col px-4 pt-4 pb-28 sm:px-6 sm:py-8 lg:pb-8">{children}</div>
                         </main>
                     </div>
