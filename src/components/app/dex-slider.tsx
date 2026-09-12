@@ -71,7 +71,10 @@ export function DexSlider({
                 className="flex size-full snap-x snap-mandatory [scrollbar-width:none] overflow-x-auto [&::-webkit-scrollbar]:hidden"
             >
                 {cards.map((card) => (
-                    <Slide key={card.id} onSelect={onSelect ? () => onSelect(card) : undefined}>
+                    // Named by its set, not only by the Pokémon: three slides all called "Bulbasaur" are
+                    // three buttons a screen reader cannot tell apart, and the set is what tells them apart.
+                    // The pictures inside carry no alt of their own then, or the button would say it twice.
+                    <Slide key={card.id} label={card.set ? `${card.name}, ${card.set}` : card.name} onSelect={onSelect ? () => onSelect(card) : undefined}>
                         {card.imageUrl ? (
                             // The same box as a one-card slot in the grid beside it (dex-grid.tsx), so the same
                             // hint: without it CardImage's default of 256 asked for the 640 rung for a 192 px
@@ -82,12 +85,12 @@ export function DexSlider({
                                 fallbackSrc={card.imageUrl}
                                 width={TILE_WIDTH.md}
                                 quality={60}
-                                alt={card.name}
+                                alt=""
                                 className="object-cover"
                             />
                         ) : (
-                            /* Face down, and named: the slot's caption says the Pokémon, not which card this is. */
-                            <CardBack width={TILE_WIDTH.md} alt={card.name} />
+                            /* Face down: the slide is named, and the slot's caption says the rest. */
+                            <CardBack width={TILE_WIDTH.md} alt="" />
                         )}
                     </Slide>
                 ))}
@@ -119,14 +122,17 @@ export function DexSlider({
     );
 }
 
-// A slide opens its card's sheet, or on a public page is a plain frame.
-function Slide({ onSelect, children }: { onSelect?: () => void; children: React.ReactNode }) {
+// A slide opens its card's sheet, or on a public page is a plain frame. On a public page the label
+// goes on the frame as well: there is no button to name, and the picture still has to be described.
+function Slide({ label, onSelect, children }: { label: string; onSelect?: () => void; children: React.ReactNode }) {
     const className = "relative size-full shrink-0 snap-start";
     return onSelect ? (
-        <AriaButton onPress={onSelect} className={cx(className, "cursor-pointer outline-focus-ring focus-visible:outline-2")}>
+        <AriaButton aria-label={label} onPress={onSelect} className={cx(className, "cursor-pointer outline-focus-ring focus-visible:outline-2")}>
             {children}
         </AriaButton>
     ) : (
-        <div className={className}>{children}</div>
+        <div className={className} role="img" aria-label={label}>
+            {children}
+        </div>
     );
 }
