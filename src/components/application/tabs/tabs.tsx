@@ -1,7 +1,7 @@
 "use client";
 
 import type { ComponentPropsWithRef, FC, ReactNode } from "react";
-import { createContext, isValidElement, useContext } from "react";
+import { createContext, isValidElement, useCallback, useContext, useLayoutEffect, useRef, useState } from "react";
 import type { TabListProps as AriaTabListProps, TabProps as AriaTabProps, TabRenderProps as AriaTabRenderProps } from "react-aria-components";
 import { Tab as AriaTab, TabList as AriaTabList, TabPanel as AriaTabPanel, Tabs as AriaTabs, TabsContext, useSlottedContext } from "react-aria-components";
 import { Badge } from "@/components/base/badges/badges";
@@ -94,10 +94,56 @@ interface TabListComponentProps<T extends object, K extends Orientation> extends
     fullWidth?: boolean;
 }
 
-const TabListContext = createContext<Omit<TabListComponentProps<TabComponentProps, Orientation>, "items">>({
+const TabListContext = createContext<Omit<TabListComponentProps<TabComponentProps, Orientation>, "items"> & { hasSlidingLine?: boolean }>({
     size: "sm",
     type: "button-brand",
 });
+
+/**
+ * Follows the selected tab so the underline slides from the old tab to the new one instead of
+ * jumping. Same movement as the mobile tab bar: 200ms on `--ease-move`.
+ */
+const useSelectedTabRect = (enabled: boolean) => {
+    const listRef = useRef<HTMLDivElement>(null);
+    const [rect, setRect] = useState<{ left: number; width: number } | null>(null);
+    const [ready, setReady] = useState(false);
+
+    const measure = useCallback(() => {
+        const list = listRef.current;
+        const selected = list?.querySelector<HTMLElement>('[role="tab"][data-selected]');
+
+        if (!list || !selected || selected.offsetWidth === 0) {
+            setRect(null);
+            return;
+        }
+
+        setRect({ left: selected.offsetLeft - list.offsetLeft, width: selected.offsetWidth });
+    }, []);
+
+    useLayoutEffect(() => {
+        if (!enabled) return;
+
+        const list = listRef.current;
+        if (!list) return;
+
+        measure();
+        // The first placement is where the line already was, so it must not travel there.
+        setReady(true);
+
+        const mutations = new MutationObserver(measure);
+        mutations.observe(list, { attributes: true, attributeFilter: ["data-selected"], subtree: true, childList: true });
+
+        const resizes = new ResizeObserver(measure);
+        resizes.observe(list);
+
+        return () => {
+            mutations.disconnect();
+            resizes.disconnect();
+        };
+    }, [enabled, measure]);
+
+    return { listRef, rect, ready };
+};
 
 export const TabList = <T extends Orientation>({
     size = "sm",
@@ -111,33 +157,50 @@ export const TabList = <T extends Orientation>({
     const context = useSlottedContext(TabsContext);
 
     const orientation = orientationProp ?? context?.orientation ?? "horizontal";
+    const hasSlidingLine = orientation === "horizontal" && type === "underline";
+    const { listRef, rect, ready } = useSelectedTabRect(hasSlidingLine);
 
     return (
-        <TabListContext.Provider value={{ size, type, orientation, fullWidth }}>
-            <AriaTabList
-                {...otherProps}
-                className={(state) =>
-                    cx(
-                        "group flex",
+        <TabListContext.Provider value={{ size, type, orientation, fullWidth, hasSlidingLine }}>
+            {/* No box of its own while there is no line to place, so a hidden tab list keeps costing nothing. */}
+            <div className={cx("relative", (!hasSlidingLine || !rect) && "contents", fullWidth && "w-full")}>
+                <AriaTabList
+                    ref={hasSlidingLine ? listRef : undefined}
+                    {...otherProps}
+                    className={(state) =>
+                        cx(
+                            "group flex",
 
-                        getHorizontalStyles({
-                            size,
-                            fullWidth,
-                        })[type as HorizontalTypes],
+                            getHorizontalStyles({
+                                size,
+                                fullWidth,
+                            })[type as HorizontalTypes],
 
-                        orientation === "vertical" && "w-max flex-col",
+                            orientation === "vertical" && "w-max flex-col",
 
-                        // Only horizontal tabs with underline type have bottom border
-                        orientation === "horizontal" &&
-                            type === "underline" &&
-                            "relative before:absolute before:inset-x-0 before:bottom-0 before:h-px before:bg-border-secondary",
+                            // Only horizontal tabs with underline type have bottom border
+                            orientation === "horizontal" &&
+                                type === "underline" &&
+                                "relative before:absolute before:inset-x-0 before:bottom-0 before:h-px before:bg-border-secondary",
 
-                        typeof className === "function" ? className(state) : className,
-                    )
-                }
-            >
-                {children ?? (otherProps.items ? (item) => <Tab {...item}>{item.children}</Tab> : undefined)}
-            </AriaTabList>
+                            typeof className === "function" ? className(state) : className,
+                        )
+                    }
+                >
+                    {children ?? (otherProps.items ? (item) => <Tab {...item}>{item.children}</Tab> : undefined)}
+                </AriaTabList>
+
+                {hasSlidingLine && rect && (
+                    <span
+                        aria-hidden="true"
+                        className={cx(
+                            "pointer-events-none absolute bottom-0 left-0 h-0.5 rounded-full bg-fg-brand-primary_alt",
+                            ready && "transition-[transform,width] duration-200 ease-move motion-reduce:transition-none",
+                        )}
+                        style={{ width: rect.width, transform: `translateX(${rect.left}px)` }}
+                    />
+                )}
+            </div>
         </TabListContext.Provider>
     );
 };
@@ -168,7 +231,7 @@ interface TabComponentProps extends AriaTabProps {
 }
 
 export const Tab = ({ label, children, badge, icon: Icon, className, ...otherProps }: TabComponentProps) => {
-    const { size = "sm", type = "button-brand", fullWidth } = useContext(TabListContext);
+    const { size = "sm", type = "button-brand", fullWidth, hasSlidingLine } = useContext(TabListContext);
 
     const showPillColorBadge = type === "underline" || type === "line" || type === "button-brand";
 
@@ -183,6 +246,8 @@ export const Tab = ({ label, children, badge, icon: Icon, className, ...otherPro
                     sizes[size].base,
                     sizes[size][type],
                     getTabStyles(prop)[type],
+                    // The list draws one line that slides between tabs, so no tab draws its own.
+                    hasSlidingLine && "border-transparent",
                     typeof className === "function" ? className(prop) : className,
                 )
             }
