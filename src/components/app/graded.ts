@@ -21,6 +21,31 @@ export const GRADERS = ["PSA", "BGS", "CGC", "SGC", "ACE", "TAG"] as const;
  */
 export const GRADES = ["10", "9.5", "9", "8.5", "8", "7", "6", "5", "4", "3", "2", "1"] as const;
 
+/**
+ * PSA's own scale, which is not that one.
+ *
+ * PSA grades in whole numbers, with 1.5 (Fair) as its only half step: there is no PSA 9.5 and no
+ * PSA 8.5, and the list offered both on every slab. BGS, CGC, SGC, ACE and TAG do grade in half
+ * steps, so they keep the list above. A grade is a company's own scale, not a number out of ten,
+ * and a form that mixes them invites somebody to record a slab that cannot exist.
+ */
+const PSA_GRADES = ["10", "9", "8", "7", "6", "5", "4", "3", "2", "1.5", "1"] as const;
+
+/** The grades one company gives, highest first. */
+export const gradesFor = (grader: string): readonly string[] => (grader.trim().toUpperCase() === "PSA" ? PSA_GRADES : GRADES);
+
+/**
+ * The grade to keep when the company changes: the same one where that company gives it, and its
+ * nearest whole number down where it does not, so switching BGS 9.5 to PSA lands on 9 rather
+ * than on a blank select.
+ */
+export function gradeUnder(grader: string, grade: string): string {
+    const list = gradesFor(grader);
+    if (list.includes(grade)) return grade;
+    const whole = String(Math.floor(Number(grade)));
+    return list.includes(whole) ? whole : (list[0] ?? "");
+}
+
 /** The one string the row stores, as a collector would write it. */
 export const gradeLabel = (grader: string, grade: string): string => [grader.trim(), grade.trim()].filter(Boolean).join(" ");
 

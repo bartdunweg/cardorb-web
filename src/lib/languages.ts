@@ -24,7 +24,13 @@ export type LanguageCode = (typeof LANGUAGES)[number]["code"];
  * Japanese, Chinese or Korean catalogue is in that language and no other; its language is the
  * catalogue's, not a choice.
  */
-export const WESTERN_LANGUAGES = LANGUAGES.filter((l) => ["en", "de", "fr", "it", "es", "pt", "nl"].includes(l.code));
+/**
+ * Dutch is not among them. No Pokémon card has been printed in it and TCGdex keeps no Dutch
+ * catalogue, so it could only ever be offered on the path where nothing could answer, and there
+ * it was the one option that is never true. It stays in LANGUAGES above so a row that carries it
+ * (an import could) still reads as Dutch rather than as English.
+ */
+export const WESTERN_LANGUAGES = LANGUAGES.filter((l) => ["en", "de", "fr", "it", "es", "pt"].includes(l.code));
 
 /**
  * The languages a copy may be set to, given the language it is in (null: English) and, when the

@@ -1,5 +1,5 @@
 import type { CardFacts } from "@/app/(app)/dashboard/cards/actions";
-import { EDITIONS, EDITION_LABELS, FOIL_PATTERN_LABELS, type FoilPattern } from "@/lib/api-shapes";
+import { EDITIONS, EDITION_LABELS, FINISH_LABELS, FINISHES as FINISH_ORDER, FOIL_PATTERN_LABELS, type FoilPattern } from "@/lib/api-shapes";
 
 /**
  * What a form may offer about one copy, given what the card actually is.
@@ -44,24 +44,22 @@ export const soleOption = (options: Options): { label: string; value: string } |
 
 const NOT_RECORDED = { label: "Not recorded", value: "" };
 
-const FINISHES = [
-    { label: "Normal", value: "normal", needs: "normal" },
-    { label: "Reverse holo", value: "reverse-holo", needs: "reverse-holo" },
-    { label: "Holo", value: "holo", needs: "holo" },
-    // Reverse holos with a pattern on them. TCGdex does not name them as printings of their own,
-    // so the honest test is the one they share: no reverse, no patterned reverse. Which cards
-    // inside 151 and Prismatic Evolutions got one is not something to guess at here.
-    { label: "Poké Ball reverse", value: "poke-ball", needs: "reverse-holo" },
-    { label: "Master Ball reverse", value: "master-ball", needs: "reverse-holo" },
-] as const;
+/*
+ * Every finish asks the catalogue about itself, the ball reverses included. They used to ask
+ * about a plain reverse instead, on the grounds that TCGdex did not name them and which cards of
+ * 151 and Prismatic Evolutions got one was not something to guess at. It does name them
+ * (`foil: "pokeball"`), the API reads them as finishes of their own since cardorb-api#342, and a
+ * card with an ordinary reverse stops offering two prints it never had.
+ */
+const FINISHES = FINISH_ORDER.map((value) => ({ value, label: FINISH_LABELS[value] }));
 
-/** The reverses, whatever their pattern, ask the catalogue about a plain reverse. */
+/** The reverses ask the catalogue about a plain reverse when asking after a foil pattern. */
 const asPrinting = (finish: string): string => (finish === "poke-ball" || finish === "master-ball" ? "reverse-holo" : finish);
 
 /** The finishes to offer, plus whichever one is already recorded. */
 export function finishOptions(facts: CardFacts | null | undefined, current: string | null | undefined): Options {
     const made = facts?.printings ?? [];
-    const offered = made.length ? FINISHES.filter((f) => made.some((p) => p.finish === f.needs)) : [...FINISHES];
+    const offered = made.length ? FINISHES.filter((f) => made.some((p) => p.finish === f.value)) : [...FINISHES];
     const kept = current && !offered.some((f) => f.value === current) ? FINISHES.filter((f) => f.value === current) : [];
     return [NOT_RECORDED, ...[...offered, ...kept].map((f) => ({ label: f.label, value: f.value }))];
 }
@@ -76,9 +74,14 @@ export function patternOptions(facts: CardFacts | null | undefined, finish: stri
     const made = facts?.printings ?? [];
     const all = Object.keys(FOIL_PATTERN_LABELS) as FoilPattern[];
 
-    // No answer from the catalogue: offer them all rather than none, but only where the copy
-    // could have a foil in the first place.
-    if (!made.length) {
+    /* No answer from the catalogue: offer them all rather than none, but only where the copy
+       could have a foil in the first place. A card whose printings are listed and whose foils
+       are not named anywhere counts as no answer too. TCGdex names the foil on a fraction of the
+       cards it knows the printings of, and reading that silence as "this card has no pattern"
+       would take the question away from somebody holding a cracked ice reverse and looking at
+       it. Where it does name a foil on this card, its silence about another printing is an
+       answer, and that is the rule below. */
+    if (!made.length || !made.some((p) => p.foilPattern)) {
         if (finish === "normal" && !current) return [];
         return [NOT_RECORDED, ...all.map((p) => ({ label: FOIL_PATTERN_LABELS[p], value: p }))];
     }
@@ -99,22 +102,27 @@ export function patternOptions(facts: CardFacts | null | undefined, finish: stri
 /**
  * Which print runs to offer, plus whichever is already recorded.
  *
- * The same two rules as the finishes above, applied to the one thing the catalogue can say
- * about a run: TCGdex knows per card whether a stamped first edition of it exists. Where it
- * says no, there is nothing to ask: the card was printed once, and offering the choice
- * invites somebody to record a run that does not exist. Empty, and the caller drops the row.
+ * The same two rules as the finishes above, applied to the runs the API says this card can be
+ * from (`editions`, cardorb-api#342): TCGdex knows whether a stamped first run exists, and
+ * Cardmarket prices Shadowless as a product of its own for 102 cards, all of Base Set. So a
+ * Jungle card offers 1st Edition and unlimited, where all three used to be offered on the
+ * grounds that nothing published which sets had a Shadowless run. Something does.
  *
- * Where it says yes, all three: a card with a 1st Edition run has an unlimited one by
- * definition, and Base Set's middle run, Shadowless, is not in any catalogue and can only come
- * from the person holding the card. Saying so on the Jungle cards too, which had no shadowless
- * run, would need a list of sets kept by hand against a fact nothing publishes; the wrong kind
- * of wrong here is a choice too many, not a choice missing.
+ * Unlimited on its own is not a question: every card was printed, so "unlimited" and "not
+ * recorded" say the same thing there and the caller drops the row, which is what a card printed
+ * once has always done.
  *
- * Where it says nothing at all, all three as well, for the reason the finish list does it: no
- * answer is not "none exist", and most cards carry no variants block yet.
+ * No answer at all means all three, for the reason the finish list does it: no answer is not
+ * "none exist". `firstEdition` is still read for an API older than the one that answers
+ * `editions`.
  */
 export function editionOptions(facts: CardFacts | null | undefined, current: string | null | undefined): Options {
-    const stamped = facts?.firstEdition;
-    if (stamped === false && !current) return [];
-    return [NOT_RECORDED, ...EDITIONS.map((e) => ({ label: EDITION_LABELS[e], value: e }))];
+    const runs = facts?.editions ?? null;
+    if (!runs) {
+        if (facts?.firstEdition === false && !current) return [];
+        return [NOT_RECORDED, ...EDITIONS.map((e) => ({ label: EDITION_LABELS[e], value: e }))];
+    }
+    const offered = EDITIONS.filter((e) => runs.includes(e) || e === current);
+    if (!current && offered.length <= 1) return [];
+    return [NOT_RECORDED, ...offered.map((e) => ({ label: EDITION_LABELS[e], value: e }))];
 }

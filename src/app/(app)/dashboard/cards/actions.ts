@@ -3,6 +3,8 @@
 import { z } from "zod";
 import { ApiError, api } from "@/lib/api";
 import {
+    type Edition,
+    type Finish,
     type PokemonCard,
     type RemovedCard,
     cardFactsAnswer,
@@ -492,12 +494,18 @@ export type CardFacts = {
      * A form offers no finish and no pattern that is not here, and offers everything where the
      * list is empty, because empty is the catalogue having no answer rather than none existing.
      */
-    printings: { finish: "normal" | "holo" | "reverse-holo"; foilPattern: string | null }[];
+    printings: { finish: Finish; foilPattern: string | null }[];
     /**
      * Whether a stamped first run of this card exists, as TCGdex says. Null is no answer, and a
      * form offers the runs then rather than none, the same rule `printings` follows.
      */
     firstEdition: boolean | null;
+    /**
+     * The print runs a copy of this card can be from: the stamped run where TCGdex says there is
+     * one, and Shadowless where Cardmarket prices one (which is Base Set and nowhere else). Null
+     * where nothing could say, and then every run is offered.
+     */
+    editions: Edition[] | null;
     /** The catalogue's own price for the printing: the market figure, its floor and its Near Mint band. */
     price: { low: number | null; market: number | null; avg30: number | null; nm: { low: number; mid: number; high: number } | null } | null;
     /** Cardmarket's averages: the all-time average, the trend, and the last seven days. */
@@ -521,6 +529,7 @@ export async function cardFacts(tcgId: string): Promise<CardFacts | null> {
             languages: Array.isArray(c.languages) && c.languages.length ? c.languages : null,
             eraRarities: Array.isArray(c.eraRarities) && c.eraRarities.length ? c.eraRarities : null,
             printings: Array.isArray(c.printings) ? c.printings : [],
+            editions: Array.isArray(c.editions) ? c.editions : null,
             firstEdition: c.firstEdition ?? null,
             price: c.price ?? null,
             market: c.market ?? null,

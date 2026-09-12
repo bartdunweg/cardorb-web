@@ -9,7 +9,7 @@ import { CONDITIONS } from "@/components/app/condition-badge";
 import { editionOptions, finishOptions, patternOptions, soleOption } from "@/components/app/copy-fields";
 import { FlagIcon } from "@/components/app/flag-icon";
 import { FolderDialog } from "@/components/app/folder-dialog";
-import { GRADERS, GRADES, gradeLabel, splitGrade } from "@/components/app/graded";
+import { GRADERS, GRADES, gradeLabel, gradeUnder, gradesFor, splitGrade } from "@/components/app/graded";
 import { LanguageSelect } from "@/components/app/language-select";
 import { notify } from "@/components/app/toast";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
@@ -209,7 +209,12 @@ export function CopyCard({
                             className="w-full"
                             disabled={disabled}
                             value={grader}
-                            onChange={(e) => void save({ grade: gradeLabel(e.target.value, gradeValue) }, "The grade did not change")}
+                            /* The grade travels with the company, because the scales differ: PSA
+                               gives no 9.5, so a BGS 9.5 slab switched to PSA is saved as PSA 9
+                               rather than as a grade that company does not award. */
+                            onChange={(e) =>
+                                void save({ grade: gradeLabel(e.target.value, gradeUnder(e.target.value, gradeValue)) }, "The grade did not change")
+                            }
                             options={GRADERS.map((g) => ({ label: g, value: g }))}
                         />
                         <NativeSelect
@@ -219,7 +224,7 @@ export function CopyCard({
                             disabled={disabled}
                             value={gradeValue}
                             onChange={(e) => void save({ grade: gradeLabel(grader, e.target.value) }, "The grade did not change")}
-                            options={GRADES.map((g) => ({ label: g, value: g }))}
+                            options={gradesFor(grader).map((g) => ({ label: g, value: g }))}
                         />
                     </span>
                 </div>

@@ -11,7 +11,7 @@ import { AcquiredDatePicker } from "@/components/app/acquired-date-picker";
 import { CONDITIONS } from "@/components/app/condition-badge";
 import { editionOptions, finishOptions, patternOptions, soleOption } from "@/components/app/copy-fields";
 import { FormError } from "@/components/app/form-error";
-import { GRADERS, GRADES, gradeLabel, splitGrade } from "@/components/app/graded";
+import { GRADERS, GRADES, gradeLabel, gradeUnder, gradesFor, splitGrade } from "@/components/app/graded";
 import { LanguageSelect } from "@/components/app/language-select";
 import { SheetDialog } from "@/components/app/sheet-dialog";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
@@ -235,7 +235,11 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
                             size="sm"
                             className="w-full"
                             value={grader}
-                            onChange={(e) => setGrader(e.target.value)}
+                            onChange={(e) => {
+                                setGrader(e.target.value);
+                                // The scales differ: PSA gives no 9.5, so switching to it keeps 9.
+                                setGradeValue(gradeUnder(e.target.value, gradeValue));
+                            }}
                             options={GRADERS.map((g) => ({ label: g, value: g }))}
                         />
                         <NativeSelect
@@ -244,7 +248,7 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
                             className="w-full"
                             value={gradeValue}
                             onChange={(e) => setGradeValue(e.target.value)}
-                            options={GRADES.map((g) => ({ label: g, value: g }))}
+                            options={gradesFor(grader).map((g) => ({ label: g, value: g }))}
                         />
                     </span>
                 </div>

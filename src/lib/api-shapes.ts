@@ -926,7 +926,14 @@ export const cardFactsAnswer = z.object({
      * absent: no answer, and then the whole hand-set list is offered.
      */
     eraRarities: z.array(z.string()).nullish(),
-    printings: z.array(z.object({ finish: z.enum(["normal", "holo", "reverse-holo"]), foilPattern: nullable(z.string()) })).nullish(),
+    /**
+     * Every printing of this card that exists, as the API reads it off the catalogue. The ball
+     * reverses are finishes here, the way this app stores them, so a card that never had one
+     * does not offer it.
+     */
+    printings: z.array(z.object({ finish: z.enum(FINISHES), foilPattern: nullable(z.string()) })).nullish(),
+    /** The print runs a copy can be from. Null or absent: no answer, and all of them are offered. */
+    editions: z.array(z.enum(EDITIONS)).nullish(),
     /** Whether a stamped first run of this card exists, as TCGdex says. Null or absent: no answer. */
     firstEdition: z.boolean().nullish(),
     price: nullable(apiPriceSchema),
