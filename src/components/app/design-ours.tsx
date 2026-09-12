@@ -20,7 +20,7 @@ import { FormError } from "./form-error";
 import { LinkButton } from "./link-button";
 import { RowButton } from "./row-button";
 import { SearchTrigger } from "./search-trigger";
-import { SetHero } from "./set-hero";
+import { SetWash } from "./set-hero";
 import { notify } from "./toast";
 
 /** A picture the catalogue serves, so CardImage is drawn by the path it actually uses. */
@@ -199,18 +199,27 @@ export const ourSections: SectionSpec[] = [
         title: "SetHero",
         from: "components/app/set-hero",
         ours: true,
-        note: "The band at the top of a set's page: the logo centred on its own brightest colour, read once from the file on the server. Grey where the colour cannot be read; the name's first word where there is no logo. Decoration, the h1 under it says which set.",
+        note: "The top of a set's page: the logo centred on a soft wash of its own two or three colours, read once from the file on the server. The wash (SetWash, shown here in a box) runs across the whole window on the page, behind the sidebar. Grey where no colour can be read; the name's first word where there is no logo. Decoration, the h1 under it says which set.",
         render: (
             <Panel>
-                <Group title="Backgrounds" hint="the colour is the logo's own" cols="wide">
-                    <Cell label="With a colour">
-                        <SetHero name="Base Set" logoUrl={BASE_SET_LOGO} color="#f2bc2b" />
+                <Group title="Washes" hint="the colours are the logo's own" cols="wide">
+                    <Cell label="Base Set's yellow and blue">
+                        <div className="relative isolate flex h-40 items-center justify-center overflow-hidden rounded-lg bg-page">
+                            <SetWash colors={["#f2bc2b", "#2a5db0"]} className="inset-0" />
+                            <div className="relative h-24 w-56 drop-shadow-xl">
+                                <CardImage src={BASE_SET_LOGO} alt="" width={224} ratio="square" className="object-contain" />
+                            </div>
+                        </div>
+                    </Cell>
+                    <Cell label="Three colours">
+                        <div className="relative isolate h-40 overflow-hidden rounded-lg bg-page">
+                            <SetWash colors={["#1b4182", "#7a3fa8", "#e0742a"]} className="inset-0" />
+                        </div>
                     </Cell>
                     <Cell label="No colour read">
-                        <SetHero name="Base Set" logoUrl={BASE_SET_LOGO} color={null} />
-                    </Cell>
-                    <Cell label="No logo">
-                        <SetHero name="Scarlet & Violet" logoUrl={null} color={null} />
+                        <div className="relative isolate h-40 overflow-hidden rounded-lg bg-page">
+                            <SetWash colors={[]} className="inset-0" />
+                        </div>
                     </Cell>
                 </Group>
             </Panel>

@@ -6,7 +6,7 @@ import { SetCards } from "@/components/app/set-cards";
 import { SetHero } from "@/components/app/set-hero";
 import { formatCount } from "@/lib/format";
 import { isBrowseLanguage } from "@/lib/languages";
-import { logoColor } from "@/lib/logo-color";
+import { logoPalette } from "@/lib/logo-color";
 import { CatalogueUnavailable, getSet, getSets } from "@/lib/sets";
 
 // The set's own name in the tab, so a history of open sets is readable.
@@ -62,8 +62,8 @@ export default async function SetPage({ params, searchParams }: { params: Promis
     }
     if (!set) notFound();
 
-    // Read once per logo and cached a month; a logo it cannot be read from gives the band its grey.
-    const color = await logoColor(set.logoUrl);
+    // Read once per logo and cached a month; a logo they cannot be read from gives the wash its grey.
+    const colors = await logoPalette(set.logoUrl);
     const released = releaseLabel(set.releaseDate);
     // The set's own name first where the title is a translation: that is what the pack says.
     const subtitle = [set.localName, set.series, released ? `released ${released}` : null, `${formatCount(set.owned)} of ${formatCount(set.total)} cards`]
@@ -79,7 +79,7 @@ export default async function SetPage({ params, searchParams }: { params: Promis
                 // The set's logo on its own colour, edge to edge over the name. Decoration: the h1 says
                 // which set. No progress bar under the title: the subtitle says the count, and the
                 // owner's call is that the page shows the cards, not a meter.
-                hero={<SetHero name={set.name} logoUrl={set.logoUrl} color={color} />}
+                hero={<SetHero name={set.name} logoUrl={set.logoUrl} colors={colors} />}
             />
 
             {set.cards.length === 0 ? (

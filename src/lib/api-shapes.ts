@@ -396,8 +396,8 @@ export type SetSummary = {
     releaseDate: string | null;
     logoUrl: string | null;
     symbolUrl: string | null;
-    /** The logo's own bright colour (`logo-color.ts`), filled in by `getSets`; null until then, or where none can be read. */
-    color: string | null;
+    /** The logo's own colours, largest first (`logo-color.ts`), filled in by `getSets`; empty until then, or where none can be read. */
+    colors: string[];
     owned: number;
     total: number;
     complete: boolean;
@@ -422,7 +422,7 @@ export function seriesFromSets(sets: CatalogueSet[]): { series: SetSeries[]; com
             releaseDate: set.releaseDate,
             logoUrl: absoluteImage(set.logo),
             symbolUrl: absoluteImage(set.symbol),
-            color: null,
+            colors: [],
             cardsRecorded: set.cardsRecorded ?? true,
             owned,
             total: set.total,
