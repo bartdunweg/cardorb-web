@@ -35,8 +35,14 @@ export function RowButton({
             // The kit wraps children in a span with its own padding, beside a gap; with the word read
             // out only, that was 8 px of nothing and a 44 by 36 pill. No text padding and no gap on a
             // phone, the padding back from sm, so the button is a 36 px circle until the word shows.
+            // The kit's text span is a block, and the badge inside it is one too, so the badge fell to
+            // a second line under the word. A flex row keeps word and badge side by side, held to the
+            // word's 20 px line so the 22 px badge sits in the padding and the button stays 36 px.
             noTextPadding
-            className={cx("max-sm:gap-0 max-sm:p-2 sm:[&>[data-text]]:px-0.5", className)}
+            className={cx(
+                "max-sm:gap-0 max-sm:p-2 [&>[data-text]]:flex [&>[data-text]]:h-5 [&>[data-text]]:items-center [&>[data-text]]:gap-1.5 sm:[&>[data-text]]:px-0.5",
+                className,
+            )}
             {...props}
         >
             <span className="max-sm:sr-only">{label}</span>
