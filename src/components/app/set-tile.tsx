@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CardImage } from "@/components/app/card-image";
+import { colorWash } from "@/components/app/set-hero";
 import { formatCount } from "@/lib/format";
 import type { BrowseLanguage } from "@/lib/languages";
 import type { SetSummary } from "@/lib/sets";
@@ -69,10 +70,15 @@ export function SetTile({
         >
             {/* The picture box: 4:3, since a set logo is a wide mark, and the same on every tile so
                 the rows line up whatever each logo's own shape is. The logo is decoration (the
-                name under it says which set this is), so it carries no alt text. */}
-            <div className="relative flex aspect-4/3 w-full items-center justify-center overflow-hidden rounded-lg bg-secondary p-4">
+                name under it says which set this is), so it carries no alt text. The box wears the
+                logo's own colour the way the set's page does, bright at the top and gone at the
+                bottom, and the drop shadow that keeps the mark off its own colour. */}
+            <div
+                className="relative flex aspect-4/3 w-full items-center justify-center overflow-hidden rounded-lg bg-secondary p-4"
+                style={{ background: colorWash(set.color) }}
+            >
                 {set.logoUrl ? (
-                    <CardImage src={set.logoUrl} alt="" width={LOGO_WIDTH} ratio="square" priority={priority} className="object-contain" />
+                    <CardImage src={set.logoUrl} alt="" width={LOGO_WIDTH} ratio="square" priority={priority} className="object-contain drop-shadow-lg" />
                 ) : (
                     // No logo: the name's first word, large and quiet, so the box says something
                     // rather than sitting grey. aria-hidden: the name is under it.

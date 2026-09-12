@@ -244,8 +244,8 @@ export function SetSkeleton() {
                 title={" "}
                 subtitle={<Line className="h-5 w-40" />}
                 back={{ href: "/dashboard/sets", label: "Browse" }}
-                // The band the logo lands in (set-hero.tsx), at its height, so the title does not move.
-                above={<div className="h-44 rounded-xl bg-skeleton sm:h-56" />}
+                // The room the band takes (set-hero.tsx), so the title does not move when it lands.
+                hero={<div className="h-52 sm:h-64" />}
             />
             <Outline className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
                 {Array.from({ length: 40 }, (_, i) => (
