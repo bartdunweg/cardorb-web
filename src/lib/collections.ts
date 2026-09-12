@@ -30,6 +30,20 @@ export async function getMyCollections(): Promise<{
 }
 
 /**
+ * The binder shown as a Pokédex, which is where the Pokédex lives now: it stopped being a fixture
+ * on the profile (`profiles.pokedex`) and became a binder like any other, one you can edit and
+ * delete. Home's tile and the old `/dashboard/pokedex` address both ask for it here.
+ *
+ * The first one, where somebody keeps two: a person with two dexes has said the second is worth
+ * keeping, not that the first stopped counting. Null where there is none, which is a person who
+ * deleted theirs, and nothing about the Pokédex is then drawn.
+ */
+export async function getDexBinder(): Promise<{ id: string; name: string; pokedex: PokedexSetting } | null> {
+    const found = (await folders()).find((f) => f.pokedex);
+    return found?.pokedex ? { id: found.id, name: found.name, pokedex: found.pokedex } : null;
+}
+
+/**
  * How many cards the Pokédex holds, for its row in the sidebar and its tile among the binders.
  *
  * The Pokédex is a binder with a rule of its own (the range and the rarities from the profile),
