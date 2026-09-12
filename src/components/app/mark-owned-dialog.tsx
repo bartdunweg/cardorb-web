@@ -112,7 +112,7 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
        and this dialog did not, so a 1st Edition Base Set card taken off the wishlist had to be
        opened again to say so. Asked only of a card that had more than one run
        (cardorb-api#342). */
-    const editions = editionOptions(facts, card.edition ?? null);
+    const editions = editionOptions(facts, card.edition ?? null, language);
 
     return (
         <form

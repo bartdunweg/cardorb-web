@@ -117,7 +117,7 @@ export function CopyCard({
     const patterns = patternOptions(facts, effectiveFinish, row.foil_pattern ?? null);
     const solePattern = soleOption(patterns);
     const edition = shown.edition !== undefined ? (shown.edition ?? "") : (row.edition ?? "");
-    const editions = editionOptions(facts, row.edition ?? null);
+    const editions = editionOptions(facts, row.edition ?? null, language);
     /* The ordinary price beside the runs that have their own, so the two can be read against each
        other. The ordinary one is `price` on a row whose edition says nothing, which is every row
        until somebody says otherwise; where a run is recorded the row already shows that run's. */
