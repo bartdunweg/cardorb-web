@@ -9,7 +9,7 @@ import { getMyCollections } from "@/lib/collections";
 export const metadata: Metadata = { title: "Binders" };
 
 export default async function CollectionsPage() {
-    const { collections, favoritesCount } = await getMyCollections();
+    const { collections, favoritesCount, pokedexCount } = await getMyCollections();
 
     return (
         <div className="flex flex-1 flex-col gap-6">
@@ -27,7 +27,7 @@ export default async function CollectionsPage() {
                 }
                 barActions={<NewCollectionButton compact />}
             />
-            <CollectionsGrid collections={collections} favoritesCount={favoritesCount} />
+            <CollectionsGrid collections={collections} favoritesCount={favoritesCount} pokedexCount={pokedexCount} />
         </div>
     );
 }

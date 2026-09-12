@@ -33,10 +33,12 @@ export function AppSidebar({
     account,
     collections,
     favoritesCount,
+    pokedexCount,
 }: {
     account: Promise<Account>;
     collections: Promise<FolderLink[]>;
     favoritesCount: Promise<number | null>;
+    pokedexCount: Promise<number | null>;
 }) {
     const pathname = usePathname();
 
@@ -54,14 +56,24 @@ export function AppSidebar({
             icon: Star01,
             badge: (
                 <Suspense fallback={null}>
-                    <FavoritesCount count={favoritesCount} />
+                    <LateCount count={favoritesCount} />
                 </Suspense>
             ),
         },
-        // A folder like the ones below it. The Pokédex is one of the two that are
-        // always there, not a different kind of thing, and drawing it as a grid
+        // A folder like the ones below it, with a count like theirs. The Pokédex is one of the
+        // two that are always there, not a different kind of thing: a binder whose rule is the
+        // range and the rarities you collect, and drawing it as a grid, or without its number,
         // said otherwise.
-        { label: "Pokédex", href: "/dashboard/pokedex", icon: Folder },
+        {
+            label: "Pokédex",
+            href: "/dashboard/pokedex",
+            icon: Folder,
+            badge: (
+                <Suspense fallback={null}>
+                    <LateCount count={pokedexCount} />
+                </Suspense>
+            ),
+        },
     ];
 
     return (
@@ -147,7 +159,8 @@ function Count({ count }: { count: number }) {
     );
 }
 
-function FavoritesCount({ count }: { count: Promise<number | null> }) {
+/** A count that arrives after the frame (Favorites, the Pokédex); null when its read failed, and the row goes without. */
+function LateCount({ count }: { count: Promise<number | null> }) {
     const n = use(count);
     return n === null ? null : <Count count={n} />;
 }

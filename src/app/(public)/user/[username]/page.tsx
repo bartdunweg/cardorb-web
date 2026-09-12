@@ -60,13 +60,11 @@ export default async function PublicProfilePage({ params, searchParams }: Params
     // take their place under the row when the last page is in, as on the owner's own page.
     const dex: Promise<DexList> | null =
         list === "pokedex"
-            ? Promise.all([getAllPublicCards(decodeURIComponent(username), query), getDexNames()]).then(([r, names]) => ({
-                  ...groupByDex(r.cards, names, profile.pokedex ?? DEFAULT_POKEDEX),
-                  total: r.total,
-                  copies: r.copies,
-                  value: null,
-                  unpriced: 0,
-              }))
+            ? Promise.all([getAllPublicCards(decodeURIComponent(username), query), getDexNames()]).then(([r, names]) => {
+                  // The count is the slots' own, as the owner's page says it; a public card has no price, so no value.
+                  const grouped = groupByDex(r.cards, names, profile.pokedex ?? DEFAULT_POKEDEX);
+                  return { ...grouped, total: grouped.cards };
+              })
             : null;
     // The paged read for every list, the Pokédex too: its first page carries the count and the facets
     // at once, while the slots' own read of every card streams in behind the row.

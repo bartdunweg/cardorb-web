@@ -75,13 +75,12 @@ export default async function CollectionDetailPage({ params, searchParams }: { p
     if (collection.pokedex) {
         // The slots need every card, not a batch; the names fill the slots the folder has none of.
         const setting = collection.pokedex;
-        const dex: Promise<DexList> = Promise.all([getAllMyCards(filter), getDexNames()]).then(([r, names]) => ({
-            ...groupByDex(r.cards, names, setting),
-            total: r.total,
-            copies: r.copies ?? undefined,
-            value: r.value,
-            unpriced: r.unpriced,
-        }));
+        // The count and the value are the slots' own, as on the built-in Pokédex: a rarity the
+        // setting leaves out is not in the binder, whatever the read returned.
+        const dex: Promise<DexList> = Promise.all([getAllMyCards(filter), getDexNames()]).then(([r, names]) => {
+            const grouped = groupByDex(r.cards, names, setting);
+            return { ...grouped, total: grouped.cards };
+        });
         const datapoints = dex.then((d) => ({
             total: d.total,
             copies: d.copies,

@@ -14,10 +14,11 @@ import { cx } from "@/utils/cx";
 // on desktop have it the same way), and a line between rows — a list, not a stack of cards (Bart's
 // call). From sm a stacked tile, three or four to a row, with "12 cards" under the name. One
 // component for every binder, the two that are always there and the ones you made. How a binder
-// was filled is not said here: by hand or by rule, it is a binder with cards in it (Bart's call);
-// `kind` remains for the Pokédex, which has no count and says what it is instead.
-function FolderCard({ href, icon, name, count, kind }: { href: string; icon: FC<{ className?: string }>; name: string; count?: number; kind?: string }) {
-    const counted = count === undefined ? null : `${count} card${count === 1 ? "" : "s"}`;
+// was filled is not said here: by hand or by rule, it is a binder with cards in it (Bart's call).
+// The Pokédex too: a binder with a rule, counted like one. `count` is null only when a count
+// could not be read, and the tile goes without.
+function FolderCard({ href, icon, name, count }: { href: string; icon: FC<{ className?: string }>; name: string; count: number | null }) {
+    const counted = count === null ? null : `${count} card${count === 1 ? "" : "s"}`;
     return (
         <Link
             href={href}
@@ -32,11 +33,10 @@ function FolderCard({ href, icon, name, count, kind }: { href: string; icon: FC<
             <FeaturedIcon color="gray" theme="modern-neue" size="lg" icon={icon} className="shrink-0" />
             <div className="flex min-w-0 flex-1 flex-col">
                 <span className="truncate text-sm font-semibold text-primary">{name}</span>
-                {/* Under the name: the kind alone on a phone, the count at the row's end; both in one line on a tile. */}
-                {kind ? <span className="text-sm text-tertiary sm:hidden">{kind}</span> : null}
-                <span className="text-sm text-tertiary max-sm:hidden">{[counted, kind].filter(Boolean).join(" · ")}</span>
+                {/* Under the name on a tile; at the row's end on a phone. */}
+                {counted ? <span className="text-sm text-tertiary max-sm:hidden">{counted}</span> : null}
             </div>
-            {counted ? (
+            {count !== null ? (
                 <span className="shrink-0 text-sm text-tertiary tabular-nums sm:hidden">
                     {count}
                     <span className="sr-only"> card{count === 1 ? "" : "s"}</span>
@@ -65,7 +65,15 @@ export function NewCollectionButton({ compact }: { compact?: boolean }) {
     );
 }
 
-export function CollectionsGrid({ collections, favoritesCount }: { collections: CollectionSummary[]; favoritesCount: number }) {
+export function CollectionsGrid({
+    collections,
+    favoritesCount,
+    pokedexCount,
+}: {
+    collections: CollectionSummary[];
+    favoritesCount: number;
+    pokedexCount: number | null;
+}) {
     const hasCollections = collections.length > 0;
 
     return (
@@ -79,8 +87,8 @@ export function CollectionsGrid({ collections, favoritesCount }: { collections: 
                     <FolderCard href="/dashboard/favorites" icon={Star01} name="Favorites" count={favoritesCount} />
                 </div>
                 <div className="arrive" style={{ "--arrive-delay": "20ms" } as React.CSSProperties}>
-                    {/* A folder like the ones beside it; see the note in app-sidebar.tsx. */}
-                    <FolderCard href="/dashboard/pokedex" icon={Folder} name="Pokédex" kind="Cards by Pokémon" />
+                    {/* A folder like the ones beside it, with a count like theirs; see the note in app-sidebar.tsx. */}
+                    <FolderCard href="/dashboard/pokedex" icon={Folder} name="Pokédex" count={pokedexCount} />
                 </div>
                 {collections.map((c, i) => (
                     <div key={c.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i + 2, 8) * 20}ms` } as React.CSSProperties}>

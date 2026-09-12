@@ -1,7 +1,9 @@
 import { ApiError, api } from "@/lib/api";
 import { type Folder, type FolderItem, folderFromApi, foldersAnswer } from "@/lib/api-shapes";
-import { getStats } from "@/lib/cards";
-import type { FolderKind, FolderRule, PokedexSetting } from "@/lib/folder-rule";
+import { getAllMyCards, getStats } from "@/lib/cards";
+import { groupByDex } from "@/lib/dex-groups";
+import { DEFAULT_POKEDEX, type FolderKind, type FolderRule, type PokedexSetting } from "@/lib/folder-rule";
+import { getMyProfile } from "@/lib/profile";
 import { perUser } from "@/lib/user-cache";
 
 export type CollectionSummary = { id: string; name: string; count: number; kind: FolderKind; rule: FolderRule | null };
@@ -12,13 +14,47 @@ export type CollectionSummary = { id: string; name: string; count: number; kind:
 const folders = (): Promise<Folder[]> =>
     perUser("folders", async (token) => (await api("/folders", { token, schema: foldersAnswer })).folders.map(folderFromApi));
 
-export async function getMyCollections(): Promise<{ collections: CollectionSummary[]; ownedCount: number; favoritesCount: number }> {
-    const [list, stats] = await Promise.all([folders(), getStats()]);
+export async function getMyCollections(): Promise<{
+    collections: CollectionSummary[];
+    ownedCount: number;
+    favoritesCount: number;
+    pokedexCount: number | null;
+}> {
+    const [list, stats, pokedexCount] = await Promise.all([folders(), getStats(), getPokedexCount()]);
     return {
         collections: list.map((f) => ({ id: f.id, name: f.name, count: f.count, kind: f.kind, rule: f.rule })),
         ownedCount: stats.cards,
         favoritesCount: stats.favorites,
+        pokedexCount,
     };
+}
+
+/**
+ * How many cards the Pokédex holds, for its row in the sidebar and its tile among the binders.
+ *
+ * The Pokédex is a binder with a rule of its own (the range and the rarities from the profile),
+ * and its count is what a rule binder's is: the copies the rule keeps, the number its own page
+ * says at the top. No API answers that in one number, and the rule is applied here (dex-groups.ts,
+ * the "Ultra Rare" split), so it is counted from every card you own. That read is the heaviest the
+ * app makes, which is why the sidebar does not prefetch the Pokédex; so the number, and nothing
+ * else of the read, is kept five minutes per person with the folders, and a write drops it with
+ * them (forgetMine). Keyed by the setting too: a change of range or rarities is a different count.
+ *
+ * Fails soft as the folders do: null draws the row without a number.
+ */
+export async function getPokedexCount(): Promise<number | null> {
+    try {
+        const setting = (await getMyProfile()).profile?.pokedex ?? DEFAULT_POKEDEX;
+        return await perUser(`pokedex-count:${JSON.stringify(setting)}`, async (token) => {
+            const { cards } = await getAllMyCards({ facets: false }, token);
+            // The names are for the slots the page draws; a count needs none of them.
+            return groupByDex(cards, new Map(), setting).copies;
+        });
+    } catch (err) {
+        if (err instanceof ApiError && err.status === 401) throw err;
+        console.error("Cards unavailable, the Pokédex drawn without its count:", err instanceof Error ? err.message : err);
+        return null;
+    }
 }
 
 /**
