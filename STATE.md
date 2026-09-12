@@ -22,6 +22,16 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-12, what the other run is worth.** The copy editor asks which print run a copy is from
+and now says what the answer is worth: "1st Edition €103.11" under the picker, against the €38.10
+that Jungle Clefable reads today (#491). Both figures were already on the wire and were dropped
+by `cardFromItem`; a card nothing prices a run for shows no line, which answers the question the
+other way. Deliberately not built: a button that marks a whole set unlimited. Unlimited is the
+ordinary price, so it would touch hundreds of rows and change no figure; the money is in the few
+copies that are a stamped run or Shadowless, and this is what finds them. The owner says his own
+classics are all unlimited, and the 210 rows still say nothing, which is not the same thing: one
+update fills them when he wants it.
+
 **2026-09-12, full art.** A set page, a collection list and the palette can each be narrowed to
 the cards whose illustration covers the whole card. That is a look and not a rarity (Bulbapedia,
 "Full Art card (TCG)"), and no catalogue records it: "Ultra Rare" is the full art ex in Scarlet &
