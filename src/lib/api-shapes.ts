@@ -529,6 +529,8 @@ export type SetCard = {
     localName: string | null;
     /** As the catalogue names the set; what a new collection row is filed under. */
     setName: string;
+    /** The code printed in the card's corner ("POR"), the set's and so the same on every card of it; null where the catalogue has none. */
+    setAbbr: string | null;
     rarity: string | null;
     /** "Pokemon", "Trainer" or "Energy", and for a trainer its kind; null where the shelf did not say. */
     category: string | null;
@@ -548,12 +550,13 @@ export type SetCard = {
     tcgId: string | null;
 };
 
-export const setCardFromBrowse = (c: BrowseCard): SetCard => ({
+export const setCardFromBrowse = (c: BrowseCard, setAbbr: string | null = null): SetCard => ({
     id: c.id,
     number: c.number,
     name: c.name,
     localName: c.localName ?? null,
     setName: c.setName,
+    setAbbr,
     rarity: c.rarity,
     category: c.category ?? null,
     trainerType: c.trainerType ?? null,
@@ -865,7 +868,8 @@ export const searchAnswer = z.object({ cards: z.array(browseCardSchema), total: 
 
 export const setPageAnswer = z.object({
     /** The catalogue's own set, without the viewer's counts: those are the page's own two fields. */
-    set: catalogueSetSchema.omit({ ownedCount: true, wishlistCount: true }),
+    /** `abbreviation` is the printed code ("POR"), cardorb-api#374; optional until every API sends it. */
+    set: catalogueSetSchema.omit({ ownedCount: true, wishlistCount: true }).extend({ abbreviation: z.string().nullish() }),
     cards: z.array(browseCardSchema),
     totalCount: z.number(),
     ownedCount: z.number(),

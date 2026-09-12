@@ -104,7 +104,7 @@ export async function getSet(id: string, language: BrowseLanguage = "en"): Promi
             // rather than "0 of 0", which says nothing was ever there.
             total: totalCount || set.total,
             owned: ownedCount,
-            cards: cards.map(setCardFromBrowse),
+            cards: cards.map((c) => setCardFromBrowse(c, set.abbreviation ?? null)),
         };
     } catch (err) {
         if (err instanceof ApiError && err.status === 404) return null;

@@ -236,9 +236,11 @@ export function SetCardTile({
                 the market price. A set page that reads like the collection's own lists. */}
             <div className="flex flex-col">
                 <span className="truncate text-sm font-medium text-primary">{card.name}</span>
-                {/* The number alone, not the set's code: every card here is from the same set, so
-                    repeating it on all 120 tiles says nothing the page's own title has not. */}
-                <span className="truncate text-xs text-tertiary tabular-nums">#{card.number}</span>
+                {/* The set's code and the number, "POR 121", the line every other list prints under a card
+                    and what the card prints in its corner. It was the number alone, on the grounds that
+                    the page's title names the set; Bart's call, 2026-09-13: one way of writing a card
+                    everywhere. A set the catalogue has no code for keeps "#121". */}
+                <span className="truncate text-xs text-tertiary tabular-nums">{card.setAbbr ? `${card.setAbbr} ${card.number}` : `#${card.number}`}</span>
                 {/* The count and the price on one line, the two controls on their own line under it.
                     The controls sat in the picture's corner, over the art you came to look at, and on
                     a grid of 129 that is 129 things floating on top of the cards. Then they shared the
@@ -317,7 +319,7 @@ export function SetCardTile({
                                 name: card.name,
                                 image_url: card.imageUrl,
                                 set_name: card.setName,
-                                set_abbr: null,
+                                set_abbr: card.setAbbr,
                                 number: card.number,
                                 grade: null,
                                 finish: null,
