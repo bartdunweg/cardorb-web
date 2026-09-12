@@ -9,14 +9,14 @@ export const metadata: Metadata = { title: "Design system" };
 /**
  * What the app is built out of, and where it is not.
  *
- * Not documentation — a check. The rule (R-UI-001) is that every control belongs to the design
+ * Not documentation, a check. The rule (R-UI-001) is that every control belongs to the design
  * system: the kit's where the kit has one, and where it does not, our own named component,
  * marked as ours. The only way to see whether that is true was to read seventy-seven files, so
  * nobody did.
  *
  * The list at the bottom is `scripts/kit-drift-baseline.json`, which `verify.sh` keeps honest:
  * the build fails on drift the baseline does not already allow, and the baseline only ever
- * shrinks. So this page cannot quietly become a lie — the number here is the number the gate
+ * shrinks. So this page cannot quietly become a lie: the number here is the number the gate
  * enforces.
  */
 export default function DesignSystemPage() {
@@ -32,7 +32,7 @@ export default function DesignSystemPage() {
             <div className="flex flex-col gap-12 pt-2">
                 <p className="max-w-2xl text-sm text-tertiary">
                     Every control belongs here. Where Untitled UI has one, we use theirs; where it does not, the markup still becomes a named component of ours,
-                    marked as ours — never written inline in a page. Green is the kit, amber is ours. Every sample is the real component: press it, open it, tab
+                    marked as ours, never written inline in a page. Green is the kit, amber is ours. Every sample is the real component: press it, open it, tab
                     into it.
                 </p>
 

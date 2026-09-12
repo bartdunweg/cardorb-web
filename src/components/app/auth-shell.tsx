@@ -7,7 +7,7 @@ import { Input } from "@/components/base/input/input";
  * The frame around every page you are not signed in on: sign in, sign up, forgot and reset.
  *
  * One centred column, the wordmark above a heading and a line of its own, then whatever the page
- * asks for — no marketing panel beside it. The four pages were the same thirteen lines of markup
+ * asks for, no marketing panel beside it. The four pages were the same thirteen lines of markup
  * four times, and a change to the frame had to be made four times or the pages drifted apart.
  *
  * `footer` is the one line under the column that sends you to the other page ("Don't have an

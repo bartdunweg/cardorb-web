@@ -7,7 +7,7 @@ import { timed } from "@/lib/timing";
  * The one way this app reads or writes cards, folders and profiles: the Card Orb API at
  * api.cardorb.com (R-DATA-003). Supabase is touched directly for auth and the session only.
  *
- * The bearer token is the Supabase session's access token — the same project signs both, so the
+ * The bearer token is the Supabase session's access token; the same project signs both, so the
  * API verifies it locally. The middleware refreshes the session on every request before a page
  * runs, so the token read here is a fresh one.
  */
@@ -16,7 +16,7 @@ export const API_URL = (process.env.CARDORB_API_URL ?? "https://api.cardorb.com/
 /**
  * How long one call to the API may take. fetch() has no limit of its own, so an API that accepts
  * the connection and never answers would hold the page until Vercel's five-minute limit. Thirty
- * seconds is longer than the API's slowest honest answer — a cold rebuild of a large collection —
+ * seconds is longer than the API's slowest honest answer (a cold rebuild of a large collection)
  * and shorter than anyone waits for a page. A timeout throws like any other failure, so a page
  * shows its error rather than a spinner.
  */
@@ -29,8 +29,8 @@ export class ApiError extends Error {
         /**
          * Whatever else the failing answer carried, for the rare route that
          * says something useful in the body of a refusal. The CSV import's 400
-         * sends back the file's header row and the columns it guessed at —
-         * exactly what the screen needs to draw the mapping it is asking about —
+         * sends back the file's header row and the columns it guessed at,
+         * exactly what the screen needs to draw the mapping it is asking about,
          * and reading only `error` threw that away, leaving the client to ask a
          * question it had already been handed the answer to.
          */
@@ -78,7 +78,7 @@ type Init = {
      * What the cached answer is filed under, so a write can throw it away before its five
      * minutes are up. Only the public routes have any: a call with a session is `no-store`,
      * where a tag would name nothing. Without one, a public route that stopped being public
-     * kept answering from the cache for the rest of the window — the profile turned private
+     * kept answering from the cache for the rest of the window: the profile turned private
      * and still readable, which is the one thing a public page must get right.
      */
     tags?: string[];
@@ -119,7 +119,7 @@ export const session = cache(async (): Promise<{ userId: string; token: string }
 export const accessToken = async (): Promise<string | null> => (await session())?.token ?? null;
 
 /**
- * Given a schema, the answer's type comes from the schema — there is no second place to state
+ * Given a schema, the answer's type comes from the schema, so there is no second place to state
  * it and so no way for the two to disagree. Without one, a caller still names the type it
  * expects and gets the old cast; every route this app calls passes a schema.
  */

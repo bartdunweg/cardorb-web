@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation";
  *
  * Two halves of one problem. The link is the first thing in the tab order and invisible until it
  * has focus; without it every page starts with the search trigger, four nav links, Favorites, the
- * Pokédex, one link per binder, "New binder" and the account menu — a dozen presses before the
+ * Pokédex, one link per binder, "New binder" and the account menu: a dozen presses before the
  * page you came for. That is WCAG 2.4.1, and it is Level A.
  *
  * The effect is the other half: following a link in the sidebar leaves focus on that link, so the

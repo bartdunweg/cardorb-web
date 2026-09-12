@@ -3,8 +3,8 @@ import { type CardFacts, type PricePoint, cardFacts, cardPriceHistory } from "@/
 /**
  * What the catalogue has said about a printing, kept for as long as the page lives.
  *
- * Facts and price readings are about a card rather than about anybody's copy — an illustrator
- * and last Tuesday's price do not change while somebody browses — so asking twice is a wait
+ * Facts and price readings are about a card rather than about anybody's copy (an illustrator
+ * and last Tuesday's price do not change while somebody browses), so asking twice is a wait
  * nobody needed. Held here rather than in a provider because it is a memo, not state: nothing
  * renders from it directly, and losing it on a navigation costs one fetch.
  *

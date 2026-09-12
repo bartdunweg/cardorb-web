@@ -18,7 +18,7 @@ import { formatCount } from "@/lib/format";
 import { cx } from "@/utils/cx";
 
 // The card sheet, fetched on the tap that opens it: it is the app's largest client chunk and the
-// grid is drawn long before anyone touches a tile. `ssr: false` — the sheet is nothing until then.
+// grid is drawn long before anyone touches a tile. `ssr: false`: the sheet is nothing until then.
 const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-slideout").then((m) => m.CardDetailSlideout), { ssr: false });
 
 /** The width a tile draws its picture at, per breakpoint: the same as a card in a list. */
@@ -39,7 +39,7 @@ const ART_SIZES = "(min-width: 1280px) 128px, 20vw";
 // same tile in grey, named, so a person knows what to find.
 //
 // The slots stand in chapters, one a generation, each under its own heading with its own "45 of
-// 151" — the way a completion grid reads in Headspace or Skillshare — so progress shows per
+// 151" (the way a completion grid reads in Headspace or Skillshare), so progress shows per
 // region and not only as one number over a thousand tiles. The chapter's count is the page's
 // count cut at the generation's edges (`groupByDex`), no rule of its own.
 /** Slots drawn per batch: two to three screens on any width, the rest as the reader scrolls. */
@@ -114,7 +114,7 @@ export function DexGrid({ generations, size = "md", linked = true }: { generatio
             })}
             {more ? (
                 <div ref={sentinel} className="flex justify-center py-2">
-                    {/* The way on when the sentinel is never seen — a keyboard, or an observer the
+                    {/* The way on when the sentinel is never seen: a keyboard, or an observer the
                         browser does not have. The kit's quietest button: the same grey word it was. */}
                     <Button color="link-gray" size="sm" onClick={() => setShown((n) => n + DEX_BATCH)}>
                         Show more
@@ -140,7 +140,7 @@ function DexTile({ slot, onSelect }: { slot: NamedDexSlot; onSelect?: (card: Dex
     // A missing slot shows the Pokémon itself, in grey: what to look for, drawn as not held. The
     // picture is the API's own copy of the official artwork, 120 px on a see-through ground, so it
     // is drawn square inside the card-shaped box and never stretched to fill it. Ratio "square":
-    // a picture that will not load leaves the grey box, not a card back — a card back would say
+    // a picture that will not load leaves the grey box, not a card back; a card back would say
     // "a card with no scan", and there is no card here. `alt=""`: the name is under the box. The
     // number stands in only where the API knew no picture.
     if (held === 0) {

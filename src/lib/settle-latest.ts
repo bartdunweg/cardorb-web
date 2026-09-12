@@ -8,8 +8,8 @@ type Outcome = { ok: true } | { ok: false; error: string };
  * next one will send, and the presses in between are never sent at all.
  *
  * What comes back is what the flight came to: `true` when every value asked for while it flew has
- * landed, `false` when a write failed — the rest is dropped and the latest ask's `failed` is told
- * why — and `null` when the ask joined a flight already in the air, whose starter gets the answer.
+ * landed, `false` when a write failed (the rest is dropped and the latest ask's `failed` is told
+ * why), and `null` when the ask joined a flight already in the air, whose starter gets the answer.
  */
 export function settleLatest<T>(write: (key: string, value: T) => Promise<Outcome>) {
     const wants = new Map<string, { value: T; failed: (error: string) => void }>();

@@ -156,7 +156,7 @@ export function holoVariant(
     else if (finish === "holo" && PLAIN.has(family)) family = "rare holo";
     // The sheen is Sword & Shield's; every holo before it was the starry cosmos foil. That is a
     // guess from the era, and it is only a guess: modern sets print cosmos cards too. A copy that
-    // was told what its foil is overrules it, the way the finish overrules the rarity above —
+    // was told what its foil is overrules it, the way the finish overrules the rarity above:
     // three cards in a real Dex export are Scarlet & Violet cosmos holos, which the era alone
     // draws as a sheen.
     if (family === "rare holo") {

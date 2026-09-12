@@ -21,7 +21,7 @@ import { cardLabel } from "@/lib/card-label";
 import { cx } from "@/utils/cx";
 
 /**
- * The plus on a hand-filled binder's page. Pressing it is the choice — Bart's call, 2026-09-11:
+ * The plus on a hand-filled binder's page. Pressing it is the choice. Bart's call, 2026-09-11:
  * when you reach for the plus you already know whether you are after a card you do not have yet
  * or one you hold. So it opens a menu of the two rather than one search that guesses:
  *
@@ -62,7 +62,7 @@ export function BinderAddButton({ folder, compact }: { folder: { id: string; nam
                 </Dropdown.Popover>
             </Dropdown.Root>
             {/* Opened by the menu item, not by a button of its own: the overlay is controlled, and
-                DialogTrigger — which wants a pressable child — is not in the picture. */}
+                DialogTrigger, which wants a pressable child, is not in the picture. */}
             <ModalOverlay isOpen={picking} onOpenChange={setPicking}>
                 <Modal className="max-w-xl">
                     <Dialog>{({ close }) => <OwnCardsPicker folder={folder} close={close} />}</Dialog>

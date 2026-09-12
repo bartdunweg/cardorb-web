@@ -36,7 +36,7 @@ beforeEach(() => api.mockClear());
  * A set tile carries null for what its shelf did not send: an English one has no language, a
  * Japanese one had no tcgId until cardorb-api sent it. Both went to the API as `null`, and a schema
  * that took only "absent" turned every add from every set page into "expected string, received
- * null" — with the button looking like it had done nothing (#308).
+ * null", with the button looking like it had done nothing (#308).
  */
 describe("addCard from a set page", () => {
     it("takes an English tile, and sends it without a language", async () => {

@@ -61,11 +61,11 @@ export function SheetBar({
             {/* Three columns, the outer two equal, so the name is centred on the bar and not between
                 one button and two. */}
             {/* Pushed clear of the status bar. The sheet is the whole screen now, so its art runs
-                under the notch on purpose — the buttons must not. Nothing on a desktop, where the
+                under the notch on purpose; the buttons must not. Nothing on a desktop, where the
                 inset is zero. */}
             <div className="relative grid h-17 grid-cols-[1fr_auto_1fr] items-center px-3" style={{ marginTop: "env(safe-area-inset-top)" }}>
                 {/* The ground: the tab bar's glass, running out under the bar's bottom rather than
-                    ending on a line — the same ground a page's bar stands on. */}
+                    ending on a line, the same ground a page's bar stands on. */}
                 <div
                     aria-hidden="true"
                     className="pointer-events-none absolute inset-x-0 -bottom-7 glass-fade"

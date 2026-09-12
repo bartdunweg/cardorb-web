@@ -8,7 +8,7 @@ import type { PublicCard } from "@/lib/cards";
 import type { CardsSize } from "@/lib/cards-view";
 
 // The card sheet, fetched on the tap that opens it: it is the app's largest client chunk and the
-// grid is drawn long before anyone touches a tile. `ssr: false` — the sheet is nothing until then.
+// grid is drawn long before anyone touches a tile. `ssr: false`: the sheet is nothing until then.
 const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-slideout").then((m) => m.CardDetailSlideout), { ssr: false });
 
 // Public, read-only card grid: tap a card for a read-only detail (no editing, no personal fields).

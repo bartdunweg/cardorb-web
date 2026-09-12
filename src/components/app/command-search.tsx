@@ -78,7 +78,7 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
     /* The English catalogue, in the browser: fetched the first time the palette is wanted (a day
        in the HTTP cache after that) and searched here, so typing is answered before a request
        could have left. Until it is in hand, and on the other shelves, the API is asked as before.
-       What the document does not know — owned, wishlist, the price — is looked up for the hits
+       What the document does not know (owned, wishlist, the price) is looked up for the hits
        on screen once they are (below). */
     const [inBrowser, setInBrowser] = useState(false);
     useEffect(() => {

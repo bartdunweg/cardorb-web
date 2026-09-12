@@ -135,7 +135,7 @@ function Choices({
     useEffect(() => field.current?.focus(), []);
 
     // What the field did, for a screen reader: a 200-set list narrowing to three, or to none, was
-    // silent — the count was nowhere and "Nothing by that name." was plain text nobody announced.
+    // silent: the count was nowhere and "Nothing by that name." was plain text nobody announced.
     // Always mounted, the way the search sheet's own region is: one that appears with its text in
     // it is never read out.
     const narrowedTo = !needle ? "" : shown.length === 0 ? "Nothing by that name." : `${shown.length} of ${options.length} shown`;

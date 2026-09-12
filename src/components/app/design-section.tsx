@@ -10,7 +10,7 @@ import { cx } from "@/utils/cx";
  *
  * The rule the layout follows is that two variants must be comparable by eye. So every sample
  * carries the name of the prop value that made it, directly above it, and samples of one kind
- * sit in one grid at one size — colours beside colours, sizes beside sizes, states beside
+ * sit in one grid at one size: colours beside colours, sizes beside sizes, states beside
  * states. A row of unlabelled chips shows that a component exists; it does not show what its
  * `color="tertiary"` looks like next to `color="secondary"`, which is the question a designer
  * actually arrives with.
@@ -23,7 +23,7 @@ export type SectionSpec = {
     title: string;
     /** Where it lives, under `src/`. */
     from: string;
-    /** Ours rather than the kit's — the label is the reason this page exists. */
+    /** Ours rather than the kit's; the label is the reason this page exists. */
     ours?: boolean;
     /** One or two sentences, where the component needs them. */
     note?: string;
@@ -40,7 +40,7 @@ export function Section({ spec }: { spec: SectionSpec }) {
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
                     <h3 className="text-lg font-semibold text-primary">{spec.title}</h3>
                     {/* The kit's Badge, after the hand-rolled chip that was here measured 2.7:1 and
-                        2.9:1 against its own background — under AA, on the one word the page exists
+                        2.9:1 against its own background, under AA, on the one word the page exists
                         to say, on a page about not building what the kit already has. */}
                     <Badge type="pill-color" size="sm" color={spec.ours ? "warning" : "success"}>
                         {spec.ours ? "Ours" : "Untitled UI"}
@@ -66,7 +66,7 @@ export function Panel({ children }: { children: ReactNode }) {
 }
 
 const columns = {
-    /** Chips, badges, icons, switches — many small things. */
+    /** Chips, badges, icons, switches: many small things. */
     tight: "grid-cols-2 @sm:grid-cols-3 @lg:grid-cols-4 @2xl:grid-cols-5",
     /** Buttons and anything with a word in it. */
     normal: "grid-cols-1 @xs:grid-cols-2 @lg:grid-cols-3 @3xl:grid-cols-4",

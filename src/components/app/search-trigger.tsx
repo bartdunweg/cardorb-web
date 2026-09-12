@@ -6,7 +6,7 @@ import { cx } from "@/utils/cx";
 
 /**
  * Ours: a button dressed as the search field, for the two places that open a search instead of
- * taking one — the palette's trigger in the desktop sidebar and the bar at the top of Home on a
+ * taking one: the palette's trigger in the desktop sidebar and the bar at the top of Home on a
  * phone. The kit's Input is a field, and a field that answers a tap by opening a dialog is a lie
  * to anything that reads it; this is a button that wears the field's ring, radius and icon.
  *

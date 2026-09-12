@@ -9,7 +9,7 @@ import type { Card, CardFilter, CardList } from "@/lib/cards";
 import type { CardsSize, CardsViewMode } from "@/lib/cards-view";
 
 // The card sheet, fetched on the tap that opens it: it is the app's largest client chunk and the
-// grid is drawn long before anyone touches a tile. `ssr: false` — the sheet is nothing until then.
+// grid is drawn long before anyone touches a tile. `ssr: false`: the sheet is nothing until then.
 const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-slideout").then((m) => m.CardDetailSlideout), { ssr: false });
 
 // Wraps the card list with the shared detail slideout and the View menu. The page reads the
@@ -35,7 +35,7 @@ export function CardsView({
     initialSize?: CardsSize;
     /**
      * The list's URL. It keys the list and nothing above it: a new search is a new list, with its
-     * own first batch and nothing scrolled-to from the last one — but the row over it, the search
+     * own first batch and nothing scrolled-to from the last one, but the row over it, the search
      * field included, must not be rebuilt, or the caret leaves the box on every keystroke that
      * lands. It used to key this whole component, which is exactly what happened.
      */

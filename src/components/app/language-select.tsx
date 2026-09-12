@@ -13,7 +13,7 @@ import { cx } from "@/utils/cx";
  * component.
  *
  * The kit's Select rather than a native one, and that is the whole reason it exists: a browser
- * draws `<option>` as text and nothing else, so a flag could only ever sit in the closed box —
+ * draws `<option>` as text and nothing else, so a flag could only ever sit in the closed box:
  * you saw which language was chosen and picked the next one from a list of bare words. This
  * listbox is drawn by the app, so the flags are in it.
  *
@@ -23,7 +23,7 @@ import { cx } from "@/utils/cx";
  * select in the app without asking.
  *
  * `printed` is what the catalogue says this card exists in. Empty or absent means "no answer",
- * and then every language is offered rather than none — the same rule the finish and pattern
+ * and then every language is offered rather than none, the same rule the finish and pattern
  * pickers follow. A language already recorded is always kept, whatever the catalogue claims,
  * because a control whose value is not among its options shows blank and would quietly clear an
  * answer somebody gave on purpose.

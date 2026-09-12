@@ -9,8 +9,8 @@ export type NamedDexSlot = DexSlot & { name: string; artwork: string | null };
 
 /**
  * One generation of the Pokédex as the page draws it: its slots, and its own "45 of 151". `caught`
- * and `total` are the page's numbers cut at the generation's edges — the sum over the generations is
- * the count at the top — so a chapter reads by the same rule as the whole.
+ * and `total` are the page's numbers cut at the generation's edges (the sum over the generations is
+ * the count at the top), so a chapter reads by the same rule as the whole.
  */
 export type DexGeneration = { label: string; from: number; to: number; slots: NamedDexSlot[]; caught: number; total: number };
 

@@ -15,7 +15,7 @@ import { SidebarNavigationSectionDividers } from "@/components/application/app-n
 type Account = { name: string; email: string; avatarUrl: string | null };
 type FolderLink = { id: string; name: string; kind: "manual" | "rule"; count: number };
 
-// Icons are component functions, so nav items are built here (client) — they can't be passed
+// Icons are component functions, so nav items are built here (client); they can't be passed
 // from a Server Component. Home, All cards, the wishlist (cards you do not have, so outside the
 // collection) and Browse (every set there has been, not your collection) at the top, the same
 // three the phone's tab bar carries plus Browse; under the Collections heading the rest, flat:

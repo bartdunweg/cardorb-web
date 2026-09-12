@@ -77,7 +77,7 @@ type Addable = {
     addable?: PokemonCard | null;
     /**
      * The card was taken, into the collection or onto the wishlist. For a list the page does not
-     * re-read — the search's hits — to mark the one it came from; every other list learns it
+     * re-read (the search's hits) to mark the one it came from; every other list learns it
      * from the refresh the sheet asks for.
      */
     onTaken?: (card: PokemonCard, list: "collection" | "wishlist") => void;
@@ -128,7 +128,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         setBusy(true);
         /* At once, not one after another. Each of these is a round trip from the browser through
            the app to the API and on to the database in another region, so a group of four in a
-           `for await` was four of those in a queue — the wait grew with the number of copies, on
+           `for await` was four of those in a queue: the wait grew with the number of copies, on
            the one action where the number of copies is the whole point. They touch different rows,
            so nothing is racing. */
         const results = await Promise.all(group.map((row) => removeCard(row.id)));
@@ -182,7 +182,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
 
     const [collections, setCollections] = useState<FolderChoice[]>([]);
     /* The hand-filled binder whose page this sheet was opened on, if any: a card taken here goes
-       into it as well. Read from the path, the one fact every mounted sheet shares — the palette's
+       into it as well. Read from the path, the one fact every mounted sheet shares: the palette's
        sheet hangs from the layout, beside the page, out of reach of anything the page provides. */
     const pathname = usePathname();
     const binder = readOnly ? null : binderFromPath(pathname, collections);
@@ -209,7 +209,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         notify.done(`Added to ${where}`, { description: takeable.name });
     };
     /* A card you hold, into the binder this page is: the first row not yet in a binder, else the
-       row shown, which then moves. A row is one kind of copy, so ×4 goes as four — as the Binder
+       row shown, which then moves. A row is one kind of copy, so ×4 goes as four, as the Binder
        select on a copy does it. Only a row the store has answered with: a sheet opened from the
        palette shows the catalogue's card until its rows land, and that card's id is no row's. */
     const fileInBinder = async () => {
@@ -282,7 +282,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         };
     }, [tcgId]);
     /*
-     * Read from what was fetched, or from what a previous open already learned — derived rather
+     * Read from what was fetched, or from what a previous open already learned. Derived rather
      * than copied into state, so a card whose answer is already known needs no effect and no
      * render to show it.
      *
@@ -319,7 +319,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
             if (e.metaKey || e.ctrlKey || e.altKey) return;
             const el = e.target as HTMLElement | null;
             /* Not only the fields: react-aria's tab list moves between tabs with the arrow keys,
-               and the price chart's arrows are the only way to reach its individual figures — the
+               and the price chart's arrows are the only way to reach its individual figures, the
                whole of its text alternative. Both sat under this handler, so on the Price tab a
                right arrow threw you onto another card instead of reading the next price. */
             if (
@@ -347,7 +347,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         if (await requestOrientation()) setTiltGranted(true);
     };
     const canTilt = tiltNeedsAsk && !tiltGranted;
-    // In the dots menu, where the card's other actions are — a bar button of its own spent one of
+    // In the dots menu, where the card's other actions are; a bar button of its own spent one of
     // the four places up there on a thing an iPhone asks once and never again. Where there is no
     // menu (somebody else's card, a read-only sheet) it stays a button, because otherwise it has
     // nowhere to live and the tilt is exactly what you want on a card you are being shown.
@@ -439,7 +439,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     /* A way back that puts the row back whole. The rows live only in this closure, for as long as
        the toast is up: the API keeps nothing, so an undo nobody presses costs nothing and leaves
        nothing behind. An API that has not deployed the change yet hands back no row, and then
-       there is nothing to offer — the removal stands and says so without an Undo, which is better
+       there is nothing to offer: the removal stands and says so without an Undo, which is better
        than a button that would quietly create a card missing everything it held. */
     const offerUndo = (rows: RemovedCard[], done: string) => {
         if (!rows.length) return notify.removed(done);
@@ -498,7 +498,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         loadFacets().then(setFacets);
     }, [readOnly, card]);
 
-    // Reset the editable collection value when a different card opens — done during render (React's
+    // Reset the editable collection value when a different card opens, done during render (React's
     // documented pattern for adjusting state on prop change) rather than in an effect.
     const [syncedCardId, setSyncedCardId] = useState(card?.id);
     if (card?.id !== syncedCardId) {
@@ -510,7 +510,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
      * Stepping through a list with the arrows swapped the art in one frame: the header's colour
      * jumped and the card teleported. Now the art crosses over. The last card's scan and blurred
      * copy stay underneath while the next card's are fetched, and each fades in over them once
-     * its own picture is on screen — not on mount, or the fade would run on an empty box and the
+     * its own picture is on screen, not on mount, or the fade would run on an empty box and the
      * picture still pop in after it. The blurred copy is opacity only. The scan also travels:
      * 12 px in from the side its arrow sits on while the last one slides 12 px out the other way,
      * so stepping through a list reads as paging rather than as one card replaced by another.
@@ -519,7 +519,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
      *
      * The picture underneath is the very element that was showing the last card, not a copy of
      * it. It used to be a copy: a second <img> mounted at the moment of the step, and an <img>
-     * that has just been put in the page paints nothing until the browser has decoded it — even
+     * that has just been put in the page paints nothing until the browser has decoded it, even
      * from cache, and next/image asks for that decode off the main thread. So for the first
      * frames after a press both layers were empty and the page's ground showed through the head:
      * a white blink on every step on a phone, where the decode takes longest. Now the layers are
@@ -845,7 +845,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                         fallbackSrc={layer.blur}
                                                         alt={shown ? card.name : ""}
                                                         // The box is max-w-44, so 176 CSS pixels: 384 asked for the 828 rung and
-                                                        // got a 50 KB file where 24 KB shows every pixel — eagerly, on every tap,
+                                                        // got a 50 KB file where 24 KB shows every pixel, eagerly, on every tap,
                                                         // because this one is priority. `width` is what the layout draws, not the
                                                         // scan you want.
                                                         width={176}
@@ -917,7 +917,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                     {/* No scroll box of its own: the sheet is the page, and the whole of it scrolls, art and all. */}
                     {/* role="presentation": the kit defaults this to `main`, and the page already has
                         one. Two unlabelled main landmarks is worse than none, and a dialog needs no
-                        landmark inside it — react-aria names the dialog from its own heading. */}
+                        landmark inside it; react-aria names the dialog from its own heading. */}
                     {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- the rule offers <img alt="">, which this is not: the role is here only to stop the kit's default role="main". */}
                     <SlideoutMenu.Content role="presentation" className="h-auto w-full flex-none overflow-visible pt-6 pb-6">
                         {/* Two tabs: the card's details, and its price with its line. A public view has no price, so no tabs. */}
@@ -930,7 +930,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                         {card ? (
                             <Tabs className="flex flex-col gap-5" defaultSelectedKey={mine ? "copies" : "details"}>
                                 {/* `hidden`, not `sr-only`: on a card you do not hold there is one tab and
-                                    nothing to choose, and sr-only leaves it in the tab order — a keyboard
+                                    nothing to choose, and sr-only leaves it in the tab order: a keyboard
                                     user landed on a tab that was not on the screen. */}
                                 <TabList aria-label="Card" type="underline" size="sm" className={mine ? undefined : "hidden"}>
                                     {mine ? <Tab id="copies" label="Your copies" badge={mine.owned && heldTotal > 1 ? heldTotal : undefined} /> : null}
@@ -1008,7 +1008,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                             nothing, followed by the offer, which is what you opened it for. */}
                                         {offer ? (
                                             /* No card around it. A card in this app holds what you have of
-                                               something, and this is the panel saying you have none — a box
+                                               something, and this is the panel saying you have none; a box
                                                drawn around that reads as a copy with nothing in it. */
                                             <div className="flex flex-col gap-3">
                                                 <p className="text-sm text-tertiary">
@@ -1023,7 +1023,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                 {sm ? offer : null}
                                             </div>
                                         ) : null}
-                                        {/* One card per kind of copy you hold — Holo · Near Mint, ×4 — with every field the
+                                        {/* One card per kind of copy you hold (Holo · Near Mint, ×4) with every field the
                                             add form asks, in its order and shape. Rows are one per purchase and nothing
                                             merged them, so four identical copies are one card saying ×4, and a change to
                                             it is made to all four. The card the sheet opened on is there at once; the
@@ -1085,7 +1085,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                             </div>
                                         ) : null}
                                         {/* Under the card, not in it. Adding a copy makes a new row beside the ones listed
-                                            above — it is not something you do to the copy the card happens to be showing,
+                                            above: it is not something you do to the copy the card happens to be showing,
                                             and sitting in that card's foot said it was. Full width, because it is the one
                                             thing this tab is for once you have read the list. */}
                                         {mine?.owned && !emptied ? (
@@ -1110,7 +1110,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                         copies come to, what was paid, and what that bought. */}
                                         {mine.tcg_id ? <CardPriceChart tcgId={mine.tcg_id} holo={isReverseFinish(mine.finish)} name={card?.name} /> : null}
                                         <dl className="flex flex-col divide-y divide-secondary">
-                                            {/* Near Mint, not market: the figure is the market price put through a measured band —
+                                            {/* Near Mint, not market: the figure is the market price put through a measured band:
                                                 above €20 about a quarter higher, between €5 and €20 about an eighth lower,
                                                 and unchanged below that. A trend price is dragged down by played copies;
                                                 this is an estimate of what a Near Mint one does. The old label named the

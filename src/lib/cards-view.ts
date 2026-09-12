@@ -23,14 +23,14 @@ export const parseCardsSize = (raw: string | undefined): CardsSize => (raw === "
  *
  * `cards-grid.tsx` is a client component, and a server component importing a plain value out of
  * one gets a client reference, not the value: the set page read `GRID_COLUMNS.md` as `undefined`
- * and drew one card per row at 639 pixels wide. Nothing failed — the class string was the word
+ * and drew one card per row at 639 pixels wide. Nothing failed: the class string was the word
  * "undefined". A module with no directive can be read from both sides.
  */
 /**
  * The widest a tile is drawn at each size, in CSS pixels, measured on the live grid.
  *
  * This is the number that decides the file, and it was not being passed: `CardImage`'s default
- * of 256 asks for 512 at 2x, there is no 512 rung, and it rounds up to 640 — a 600 px scan at
+ * of 256 asks for 512 at 2x, there is no 512 rung, and it rounds up to 640: a 600 px scan at
  * 50 KB where a 192 px tile needs 384 px and 24 KB. Forty-eight tiles carried an extra 1.25 MB
  * nobody's screen could show, and the Pokédex's ninety-six carried 2.5 MB.
  *
@@ -42,14 +42,14 @@ export const TILE_WIDTH: Record<CardsSize, number> = { sm: 128, md: 192, lg: 256
 /**
  * How wide a tile actually is, as the browser must be told it.
  *
- * `TILE_WIDTH` above is the widest a tile is ever drawn — on a desktop. Handed to `next/image`
+ * `TILE_WIDTH` above is the widest a tile is ever drawn, on a desktop. Handed to `next/image`
  * as `width` with no `sizes`, it is not a width at all: the browser gets 1x and 2x candidates
  * and picks by pixel density alone, so a phone drawing a 104 px tile asked for 384 px. Measured
  * on a public profile at 375 px: 20.4 KB a tile where 256 px costs 10.3 KB, across a hundred
  * tiles a megabyte nobody's screen could show.
  *
  * These follow `GRID_COLUMNS` below, one clause per breakpoint, rounded up rather than down: too
- * large costs bytes, too small is a blurry card. The cost is a longer srcset in the HTML —
+ * large costs bytes, too small is a blurry card. The cost is a longer srcset in the HTML,
  * measured at about 10 KB Brotli a page, against the megabyte it saves.
  */
 export const TILE_SIZES: Record<CardsSize, string> = {

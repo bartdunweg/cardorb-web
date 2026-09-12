@@ -52,7 +52,7 @@ export default async function ApiReferencePage() {
                 {(spec.servers ?? []).map((server) => (
                     <li key={server.url}>
                         <code>{server.url}</code>
-                        {server.description ? <> — {server.description}</> : null}
+                        {server.description ? <>: {server.description}</> : null}
                     </li>
                 ))}
             </ul>
@@ -78,7 +78,7 @@ export default async function ApiReferencePage() {
                                     {op.parameters.map((p) => (
                                         <li key={`${p.where}:${p.name}`}>
                                             <code>{p.name}</code> <small>{p.required ? `${p.where}, required` : p.where}</small>
-                                            {p.description ? <> — {p.description}</> : null}
+                                            {p.description ? <>: {p.description}</> : null}
                                         </li>
                                     ))}
                                 </ul>

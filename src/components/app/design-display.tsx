@@ -31,7 +31,7 @@ export const displaySections: SectionSpec[] = [
         id: "badge",
         title: "Badge",
         from: "components/base/badges/badges",
-        note: "Twelve colours across three shapes, plus five variants that put something beside the word. The modern shape has one colour by design — it is the neutral outlined chip, not a colour scale.",
+        note: "Twelve colours across three shapes, plus five variants that put something beside the word. The modern shape has one colour by design: it is the neutral outlined chip, not a colour scale.",
         render: (
             <Panel>
                 <Group title='type="pill-color"' hint="all twelve colours" cols="tight">
@@ -421,7 +421,7 @@ export const displaySections: SectionSpec[] = [
         id: "nav-item",
         title: "NavItemBase",
         from: "components/application/app-navigation/base-components/nav-item",
-        note: "One row of the sidebar. The rest of the app-navigation module — the sidebar itself, the mobile header, the account card — needs a live account and a current URL, so only the row that renders on its own is shown here; the real one is the sidebar to the left.",
+        note: "One row of the sidebar. The rest of the app-navigation module (the sidebar itself, the mobile header, the account card) needs a live account and a current URL, so only the row that renders on its own is shown here; the real one is the sidebar to the left.",
         render: (
             <Panel>
                 <Group title="States" cols="wide">

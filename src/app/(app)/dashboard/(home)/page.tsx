@@ -72,7 +72,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
 // The first thing a new account sees: the one action that fills every page, and the name the
 // account was given. Sign-up asked for no name, so the profile carries one drawn from the email
-// with four random characters after it — and it is the address of the public page, so it is worth
+// with four random characters after it, and it is the address of the public page, so it is worth
 // a line here where the person is, not only in Settings where they may never look.
 async function Welcome() {
     const { profile } = await getMyProfile();

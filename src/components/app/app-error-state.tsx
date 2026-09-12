@@ -7,7 +7,7 @@ import { Circle } from "@/components/shared-assets/background-patterns/circle";
 
 // What a signed-in screen shows when its reads threw: the same shape as AppEmptyState, so a
 // failed page and an empty one sit in the same place, with the one thing an empty page has no
-// use for — a way to try the same page again.
+// use for: a way to try the same page again.
 //
 // Nearly every throw here is the Card Orb API answering 503 because a catalogue behind it did
 // not answer (2026-09-04: TCGdex down, every page a bare Next error). That is a passing fault,

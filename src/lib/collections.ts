@@ -8,7 +8,7 @@ import { perUser } from "@/lib/user-cache";
 
 export type CollectionSummary = { id: string; name: string; count: number; kind: FolderKind; rule: FolderRule | null };
 
-// The API calls them folders — "collection" is the whole of what you own there — and the
+// The API calls them folders ("collection" is the whole of what you own there) and the
 // screens keep calling them collections. Kept five minutes per person: the layout asks on every
 // screen, and every write to a folder or a card drops the cache.
 const folders = (): Promise<Folder[]> =>

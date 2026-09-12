@@ -6,22 +6,22 @@ import { FOIL_PATTERN_LABELS, type FoilPattern } from "@/lib/api-shapes";
  *
  * Every finish this app can store is not every finish a card was printed in, and every foil
  * pattern is certainly not. Offering all of them on a card that only ever existed as a holo is
- * offering answers nobody can honestly pick — the same reasoning the language picker has run on
+ * offering answers nobody can honestly pick, the same reasoning the language picker has run on
  * for a while, applied to the rest of the form.
  *
  * The catalogue answers both, and it answers them together: a printing is a finish *and* its
- * foil. A Horsea of Shrouded Fable is a normal, a holo whose foil is cosmos, and a reverse — so
+ * foil. A Horsea of Shrouded Fable is a normal, a holo whose foil is cosmos, and a reverse, so
  * cosmos is not something that card has, it is something its holo has, and a pattern list that
  * ignored the chosen finish would still be offering something never made.
  *
  * Checked rather than assumed. Twenty owned copies across four eras: every printing recorded
- * against them is one TCGdex agrees exists. The other direction too — an export offers a reverse
+ * against them is one TCGdex agrees exists. The other direction too: an export offers a reverse
  * holo Espeon of Dark Explorers that was never made, and its owner does not have one. And
  * TCGdex calls sv06.5-010 a holo with a cosmos foil, which is one of the three cards that
  * export records as a Cosmos Holo: two sources, one answer, arrived at separately.
  *
  * Two rules run through all of it. An empty list from the catalogue means *no answer*, not "none
- * exist", so everything is offered then — most cards carry no foil field yet, and hiding a
+ * exist", so everything is offered then; most cards carry no foil field yet, and hiding a
  * picker on that basis would stop somebody recording a card they are holding. And whatever is
  * already recorded stays offered whatever the catalogue says, because a select whose value is
  * not among its options shows blank and saving the form would quietly clear it.
@@ -35,7 +35,7 @@ export type Options = { label: string; value: string }[];
  * A select holding "Not recorded" and a single real value is not a choice, and asking it is
  * worse than not asking: on a card that only ever existed as a holo, "not recorded" and "holo"
  * are the same card, so the question invites somebody to leave out something we know. The form
- * states it instead, and saves it — which is not a guess, it is the only possibility.
+ * states it instead, and saves it, which is not a guess, it is the only possibility.
  */
 export const soleOption = (options: Options): { label: string; value: string } | null => {
     const real = options.filter((o) => o.value !== "");
