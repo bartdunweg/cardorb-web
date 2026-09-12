@@ -145,7 +145,7 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
         <div className="flex flex-1 flex-col gap-6">
             {/* A round button on a phone, a short field from sm (`RowSearch`), as in a binder's row. */}
             <div className={LIST_ROW}>
-                <RowSearch label="Search this set" filled={q !== ""} onClear={() => setQ("")}>
+                <RowSearch label="Search this set" filled={q !== ""}>
                     <Input
                         size="sm"
                         icon={SearchLg}

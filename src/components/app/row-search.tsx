@@ -9,8 +9,10 @@ import { cx } from "@/utils/cx";
 // so the buttons beside it have room to breathe. On a phone the field was most of the row, so it
 // is a round search button like the three beside it (Alta's closet does the same); a press opens
 // the field across the whole row and the buttons step aside until the round close button beside
-// it (the Claude app's search) empties it and puts them back. A field with a term in it stays open,
-// or the list would be narrowed with nothing on screen saying by what.
+// it (the Claude app's search) puts them back. Closing keeps the term: emptying it there meant a
+// search could not be combined with a change of filter on a phone (Bart's call, 2026-09-13). A term
+// still in force puts a dot on the search button, or the list would be narrowed with nothing on
+// screen saying so; a page opened with a term starts with the field open, so the term is read.
 // The buttons are hidden by the row's own CSS (`LIST_ROW`), so no page has to pass state up to hide
 // its own buttons: a binder's row puts its View button outside the box the field is in.
 
@@ -25,22 +27,18 @@ export const LIST_ROW =
 export function RowSearch({
     label,
     filled,
-    onClear,
     disabled = false,
     children,
 }: {
     /** The field's own name, also the name of the button that opens it. */
     label: string;
-    /** Whether the field holds a term: it stays open while it does. */
+    /** Whether the field holds a term: the page opens with the field open, and the closed button carries a dot. */
     filled: boolean;
-    /** Empties the field, for the close button. */
-    onClear: () => void;
     disabled?: boolean;
     /** The field itself, which takes the room it is given. */
     children: ReactNode;
 }) {
-    const [expanded, setExpanded] = useState(false);
-    const open = expanded || filled;
+    const [open, setOpen] = useState(filled);
     const root = useRef<HTMLDivElement>(null);
     /** Where focus goes once the row has redrawn: into the field just opened, or back to the button that opened it. */
     const focusTo = useRef<"field" | "button" | null>(null);
@@ -71,10 +69,19 @@ export function RowSearch({
                     isDisabled={disabled}
                     className="sm:hidden"
                     onClick={() => {
-                        setExpanded(true);
+                        setOpen(true);
                         focusTo.current = "field";
                     }}
-                />
+                >
+                    {/* In the corner rather than beside the icon, so the button stays the circle its
+                        neighbours are. The words are for a screen reader: "Search your cards, on". */}
+                    {filled ? (
+                        <>
+                            <span aria-hidden="true" className="absolute top-1 right-1 size-2 rounded-full bg-brand-solid" />
+                            <span className="sr-only">, on</span>
+                        </>
+                    ) : null}
+                </RowButton>
             )}
             <div className={cx("min-w-0 flex-1", !open && "max-sm:hidden")}>{children}</div>
             {open ? (
@@ -83,8 +90,7 @@ export function RowSearch({
                     label="Close search"
                     className="sm:hidden"
                     onClick={() => {
-                        onClear();
-                        setExpanded(false);
+                        setOpen(false);
                         focusTo.current = "button";
                     }}
                 />

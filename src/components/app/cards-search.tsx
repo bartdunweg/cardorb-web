@@ -326,7 +326,7 @@ export function CardsSearch({
     );
 
     return (
-        <RowSearch label={label} filled={value !== ""} onClear={() => setValue("")}>
+        <RowSearch label={label} filled={value !== ""}>
             <div className="relative w-full">
                 {/* The ARIA combobox: a text field that offers a list, which is exactly what this is
                 (WAI-ARIA APG). The rule wants a native datalist or a dropdown instead, and a
