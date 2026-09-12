@@ -217,6 +217,8 @@ const fromCatalogue = (c: SetCard): Card => ({
     finish: null,
     foil_pattern: null,
     edition: null,
+    price_first_ed: null,
+    price_shadowless: null,
     purchase_price: null,
     purchase_date: null,
     acquired_at: null,

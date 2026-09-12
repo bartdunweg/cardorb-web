@@ -17,6 +17,7 @@ import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { NativeSelect } from "@/components/base/select/select-native";
 import { type CopyEdits, type CopyGroup, copyLabel } from "@/lib/copies";
+import { formatPrice } from "@/lib/format";
 import { languageOf } from "@/lib/languages";
 import { cx } from "@/utils/cx";
 
@@ -117,6 +118,13 @@ export function CopyCard({
     const solePattern = soleOption(patterns);
     const edition = shown.edition !== undefined ? (shown.edition ?? "") : (row.edition ?? "");
     const editions = editionOptions(facts, row.edition ?? null);
+    /* The ordinary price beside the runs that have their own, so the two can be read against each
+       other. The ordinary one is `price` on a row whose edition says nothing, which is every row
+       until somebody says otherwise; where a run is recorded the row already shows that run's. */
+    const runPrices: [string, number][] = [
+        ...(row.price_first_ed != null ? ([["1st Edition", row.price_first_ed]] as [string, number][]) : []),
+        ...(row.price_shadowless != null ? ([["Shadowless", row.price_shadowless]] as [string, number][]) : []),
+    ];
 
     /* The price field is typed into, so it saves when it is left, not on every keystroke. */
     const [priceDraft, setPriceDraft] = useState<string | null>(null);
@@ -291,6 +299,15 @@ export function CopyCard({
                         options={editions}
                     />
                 </div>
+            ) : null}
+
+            {/* What the runs are worth, beside the question. A person holding a classic cannot tell
+                from the card alone whether checking for the stamp is worth the trouble; a Jungle
+                Clefable at €38 unlimited and €96 stamped answers that, and one where both figures
+                are the same answers it the other way. Only where a run is priced at all: on Base
+                Set nothing prices the stamp, and on a modern card there is no run. */}
+            {editions.length && runPrices.length ? (
+                <p className="px-3 pb-2 text-xs text-tertiary">{runPrices.map(([label, amount]) => `${label} ${formatPrice(amount)}`).join(" · ")}</p>
             ) : null}
 
             {/* Only a binder filled by hand takes a card; a rule binder fills itself. With none

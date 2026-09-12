@@ -223,6 +223,14 @@ export type Card = {
     foil_pattern: string | null;
     /** Which print run, where somebody said. Null is "not recorded", never "unlimited". */
     edition: string | null;
+    /**
+     * What the other runs of this card trade at, as a number to show: the stamped first run from
+     * TCGplayer converted, the Shadowless one from Cardmarket's own product. Null where nobody
+     * prices that run. They are here so a person looking at a copy can see what its run is worth
+     * before deciding which one they are holding, which is the whole reason the field exists.
+     */
+    price_first_ed: number | null;
+    price_shadowless: number | null;
     purchase_price: number | null;
     purchase_date: string | null;
     acquired_at: string | null;
@@ -243,6 +251,9 @@ export type Card = {
  * The one number a copy is worth. A holo or reverse-holo copy takes the holo price when there is
  * one; the Near Mint midpoint is preferred, the market price is the fallback.
  */
+/** One figure out of a price: the Near Mint midpoint where there is one, the market price otherwise. */
+export const shownPrice = (p: ApiPrice | null | undefined): number | null => p?.nm?.mid ?? p?.market ?? null;
+
 export function priceForCopy({
     finish,
     edition,
@@ -333,6 +344,8 @@ export const cardFromItem = (item: CardItem): Card => ({
     finish: item.finish,
     foil_pattern: item.foilPattern,
     edition: item.edition ?? null,
+    price_first_ed: shownPrice(item.priceFirstEd),
+    price_shadowless: shownPrice(item.priceShadowless),
     purchase_price: item.purchasePrice,
     purchase_date: item.purchaseDate,
     acquired_at: item.acquiredAt,
@@ -713,6 +726,8 @@ export const cardFromPokemonCard = (c: PokemonCard): Card => ({
     finish: null,
     foil_pattern: null,
     edition: null,
+    price_first_ed: null,
+    price_shadowless: null,
     purchase_price: null,
     purchase_date: null,
     acquired_at: null,
