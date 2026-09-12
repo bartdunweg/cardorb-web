@@ -34,7 +34,17 @@ function StatusText({ msg }: { msg: Msg }) {
 }
 
 // `heading` replaces the Settings title: the You page puts the account there instead.
-export function SettingsForm({ profile, email, heading }: { profile: Profile; email: string | null; heading?: ReactNode }) {
+export function SettingsForm({
+    profile,
+    email,
+    heading,
+    openProfile = false,
+}: {
+    profile: Profile;
+    email: string | null;
+    heading?: ReactNode;
+    openProfile?: boolean;
+}) {
     const [displayName, setDisplayName] = useState(profile.display_name ?? "");
     const [username, setUsername] = useState(profile.username);
     const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url ?? "");
@@ -182,6 +192,7 @@ export function SettingsForm({ profile, email, heading }: { profile: Profile; em
                 </div>
                 <SheetDialog
                     className="sm:max-w-md"
+                    defaultOpen={openProfile}
                     content={(close) => (
                         <div className="flex flex-col gap-5 p-5">
                             <SheetHeader title="Manage profile" description="This is how you appear in Cardorb." close={close} />

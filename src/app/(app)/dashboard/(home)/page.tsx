@@ -83,12 +83,13 @@ async function Welcome() {
             title="Welcome to Cardorb"
             description={
                 name
-                    ? `Add your first card to start your collection. You are signed in as ${name}; choose a name of your own in Settings.`
+                    ? `Add your first card to start your collection. You are signed in as ${name}, which is also the address of your public page; choose a name of your own.`
                     : "Add your first card to start your collection."
             }
         >
             <AddCardButton label="Add your first card" />
-            <Button href="/dashboard/settings" color="secondary" size="md">
+            {/* Straight into the sheet with the name field, not the page it sits behind. */}
+            <Button href="/dashboard/settings?profile=1" color="secondary" size="md">
                 Choose your name
             </Button>
         </AppEmptyState>

@@ -33,7 +33,13 @@ export const SignupForm = () => {
     // under a form that still said "Get started" read as one more step to take.
     if (state && "success" in state) {
         return (
-            <AuthShell title="Check your email" subtitle={state.success}>
+            <AuthShell
+                title="Check your email"
+                subtitle={state.success}
+                // The one place to go from here: whoever confirmed in another tab lands back on this
+                // one, and without the line it had no way out but the wordmark.
+                footer={{ question: "Already confirmed?", href: "/login", label: "Sign in" }}
+            >
                 <output
                     ref={done}
                     tabIndex={-1}
