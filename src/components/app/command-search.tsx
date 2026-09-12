@@ -10,7 +10,6 @@ import type { FilterOption } from "@/components/app/filter-chip";
 import { SearchTrigger } from "@/components/app/search-trigger";
 import { notify } from "@/components/app/toast";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
-import { updateRecentCards, useRecentCards } from "@/hooks/use-recent-cards";
 import { type Card, cardFromPokemonCard } from "@/lib/api-shapes";
 import { loadCatalogueIndex, loadSpecies, lookupCards } from "@/lib/catalogue-client";
 import { searchIndex } from "@/lib/catalogue-index";
@@ -139,18 +138,6 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
         // A new question starts the marks over: a hit found twice is looked up twice, once per answer.
         lookedUp.current = new Set();
     }, [inputValue, filters]);
-    /* The palette's recent cards carry the marks they had when last looked at. Opening the palette
-       asks the API once what is held now and corrects them in place (use-recent-cards.ts); a
-       lookup that fails leaves them as they were. */
-    const recent = useRecentCards();
-    useEffect(() => {
-        if (!isOpen || !recent.length) return;
-        lookupCards(recent.map((c) => c.id))
-            .then(updateRecentCards)
-            .catch(() => {});
-        // Once per opening: the marks are read for the cards kept at that moment.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isOpen]);
 
     /* To the collection, or to the wishlist: the same card cannot be in both, so one press settles
        it. The hit is marked at once (takenHit), because the hits are this component's and no
@@ -168,8 +155,6 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
         setAdding(null);
         if (res.ok) {
             update((hits) => takenHit(hits, card.id, target));
-            // The same mark on the recent copy of the card, where there is one.
-            updateRecentCards(takenHit([card], card.id, target));
             wrote.current = true;
             // The hit's mark says the press landed; where the card went is a page under the
             // palette. The same sentence as the sheet's own Add.
@@ -207,7 +192,6 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
         if (!hit || row?.of !== hit.id) return;
         listRows({ set: hit.set, number: hit.number, name: hit.name }).then((rows) => {
             update((hits) => hits.map((h) => (h.id === hit.id ? hitFromRows(h, rows) : h)));
-            updateRecentCards([hitFromRows(hit, rows)]);
         });
     };
 
@@ -280,11 +264,8 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
                     card={held ?? (viewed ? cardFromPokemonCard(viewed) : null)}
                     addable={viewed && !viewed.owned && !viewed.wishlist ? viewed : null}
                     onClose={closeSheet}
-                    /* The hit the card came from says so at once, and so does its recent copy. */
-                    onTaken={(card, list) => {
-                        update((hits) => takenHit(hits, card.id, list));
-                        updateRecentCards(takenHit([card], card.id, list));
-                    }}
+                    /* The hit the card came from says so at once. */
+                    onTaken={(card, list) => update((hits) => takenHit(hits, card.id, list))}
                 />
             ) : null}
         </CommandSearchContext.Provider>

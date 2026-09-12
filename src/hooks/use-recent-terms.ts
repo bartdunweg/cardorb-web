@@ -9,8 +9,8 @@ import { useSyncExternalStore } from "react";
  * as "c", "ch", "cha" and "char" as well.
  *
  * Per list, because the wishlist and a binder are different questions, and told about across tabs
- * the way the recent cards are (`use-recent-cards.ts`): localStorage, a storage event, and an
- * event of our own for this tab. Nothing leaves the browser.
+ * the way the theme is (`providers/theme.tsx`): localStorage, a storage event, and an event of our
+ * own for this tab. Nothing leaves the browser.
  */
 const STORAGE_KEY = "recent-terms";
 const CHANGE_EVENT = "recent-terms-change";
