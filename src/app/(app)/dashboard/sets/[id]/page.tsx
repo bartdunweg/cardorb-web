@@ -83,7 +83,8 @@ export default async function SetPage({ params, searchParams }: { params: Promis
                     ) : undefined
                 }
             >
-                <ProgressBarBase value={set.owned} max={set.total || 1} className="mt-2 max-w-md" aria-label={`${set.name} completion`} />
+                {/* Thin and short: the subtitle already says the count in words; the bar is a glance, not a second headline. */}
+                <ProgressBarBase value={set.owned} max={set.total || 1} className="mt-2 h-1 max-w-xs" aria-label={`${set.name} completion`} />
             </PageHeader>
 
             {set.cards.length === 0 ? (
