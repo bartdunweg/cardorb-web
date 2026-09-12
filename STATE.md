@@ -22,6 +22,13 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-12, full art is a filter of its own.** Bart saw the same cards under Full art and under
+Special illustration rare, where a card belongs to one rarity. Full art was an entry in the rarity
+menu on the collection, a binder and a set page, and it cuts across the rarities: every special
+illustration rare is a full art, and so is a late Ultra Rare (`src/lib/full-art.ts`). It is now an
+Art menu beside Rarity, as search already had it, and the two combine. Measured live on Ascended
+Heroes: 295 cards, 66 full art, 22 full art and special illustration rare. web #509.
+
 **2026-09-12, the set says which languages it had.** Dutch was taken out of the language list this
 morning on the grounds that no Pokémon card is printed in it. Bart: Base Set had Dutch. He is right,
 and chasing the correction found the fault behind it. The list was read off TCGdex per card, and for
