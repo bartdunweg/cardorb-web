@@ -209,7 +209,73 @@ export function FiltersSheet({
                     )}
                 </SlideoutMenu>
             </div>
+            {/* After the button in the tab order, the way the chips belong to it; drawn under the row. */}
+            <ActiveFilters groups={groups} values={values} onApply={onApply} inline={inline} />
         </>
+    );
+}
+
+/** The key of one chosen value among the chips: its group and itself, apart by a character no value holds. */
+const chipKey = (group: string, value: string) => `${group}\u0000${value}`;
+
+// What is on, as a row of chips under the search, each with a cross that takes that one off, and
+// Clear all after them: "Filters 4" said how many and not which (Klarna, adidas and Faire on
+// Mobbin show them the same way). Applies at once, as the row's menus do. The kit's TagGroup, so
+// the chips are one tab stop, the arrows move between them and Delete takes one off. On a phone
+// one line that scrolls sideways; from sm they wrap. Last in the row and a line of its own, so
+// the row's buttons stay where they are. A page whose menus stand in the row from lg shows its
+// choices on them there, so the chips go.
+function ActiveFilters({
+    groups,
+    values,
+    onApply,
+    inline,
+}: {
+    groups: FilterGroup[];
+    values: FilterValues;
+    onApply: (next: FilterValues) => void;
+    inline: boolean;
+}) {
+    const chips = groups.flatMap((group) =>
+        (values[group.id] ?? []).map((value) => ({
+            key: chipKey(group.id, value),
+            group,
+            option: group.options.find((o) => o.value === value) ?? { value, label: value },
+        })),
+    );
+    if (chips.length === 0) return null;
+
+    const remove = (keys: Set<unknown>) => {
+        const next = { ...values };
+        for (const chip of chips) {
+            if (keys.has(chip.key)) next[chip.group.id] = (next[chip.group.id] ?? []).filter((v) => v !== chip.option.value);
+        }
+        onApply(next);
+    };
+
+    return (
+        <div className={cx("order-last scrollbar-hide flex min-w-0 basis-full items-center gap-2 overflow-x-auto sm:flex-wrap", inline && "lg:hidden")}>
+            <TagGroup label="Filters on" size="md" onRemove={(keys) => remove(new Set(keys))}>
+                <TagList className="flex flex-nowrap gap-1.5 sm:flex-wrap">
+                    {chips.map(({ key, group, option }) => (
+                        <Tag
+                            key={key}
+                            id={key}
+                            // The group says which filter it is ("Rarity: Rare"): "Base" is a set and a generation both.
+                            textValue={`${group.label}: ${option.label}`}
+                            className="shrink-0 cursor-default rounded-full py-0.5 pr-0.5 pl-2.5 whitespace-nowrap [&_[slot=remove]]:rounded-full [&_[slot=remove]]:p-1.5"
+                        >
+                            {option.icon ? <span className="flex shrink-0 items-center">{option.icon}</span> : null}
+                            <span className="sr-only">{group.label}: </span>
+                            {option.label}
+                        </Tag>
+                    ))}
+                </TagList>
+            </TagGroup>
+            <Button color="link-gray" size="sm" className="shrink-0" onClick={() => onApply(Object.fromEntries(groups.map((g) => [g.id, []])))}>
+                Clear all
+            </Button>
+        </div>
     );
 }
 

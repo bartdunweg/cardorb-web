@@ -17,11 +17,11 @@ const FULL_ART = "fullArt";
 const DUPLICATES = "duplicates";
 
 /**
- * A condition's dot, down Cardmarket's scale: the top two green, the middle yellow, the worn end
+ * A condition's dot, down Cardmarket's scale: Mint blue (Bart's call), Near Mint green, the middle yellow, the worn end
  * red. The word says it; the colour helps the eye run down the tags. One nobody scaled gets none.
  */
 const CONDITION_DOT: Record<string, string> = {
-    Mint: "text-fg-success-secondary",
+    Mint: "text-utility-blue-500",
     "Near Mint": "text-fg-success-secondary",
     Excellent: "text-fg-warning-secondary",
     Good: "text-fg-warning-secondary",
