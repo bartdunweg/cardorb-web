@@ -619,16 +619,11 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
        labels and the handlers cannot drift between the two places, and one place at a time, so
        a screen reader never hears "Add to collection" twice. The breakpoint is read before the
        first paint (the sheet is never rendered on the server), so neither placement flashes.
-<<<<<<< HEAD
        A card nobody holds gets the two ways to take it, under each other, each the full width:
        side by side made a choice out of what is really two offers, the narrower one read as the
        lesser, and a binder's name can be any length. A wish gets the one thing to do with it,
        becoming a copy; the form asks what the copy is like as it arrives. It used to sit above
        the tabs, the only action not in the Copies tab, and read as part of the title. */
-=======
-       Under each other, each the full width: side by side made a choice out of what is really
-       two offers, the narrower one read as the lesser, and a binder's name can be any length. */
->>>>>>> a6b8deb (Our own components say it without an em dash, and the table's empty price cell is the quoted glyph the checker knows as a placeholder (R-COPY-001))
     const sm = useBreakpoint("sm");
     const offer =
         mine && takeable && (emptied || (!mine.owned && !mine.wishlist)) ? (
