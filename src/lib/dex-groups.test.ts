@@ -25,7 +25,9 @@ describe("groupByDex", () => {
         expect(out.cards).toBe(3);
         expect(out.range).toEqual({ from: 1, to: 25 });
     });
-    it("counts the slots' cards as copies and sums their worth, leaving out what the rule does", () => {
+    it("counts every card in the range, whatever its rarity, and leaves the range's outside out", () => {
+        // The rarities say when a Pokémon counts as caught, not what you hold: a card of a rarity
+        // that does not count is still a card of yours, and still worth what it is worth.
         const held = (id: string, species_id: number, quantity: number | null, price: number | null, rarity = "Common") =>
             ({ ...card(id, species_id), quantity, price, rarity }) as Card;
         const out = groupByDex(
@@ -33,10 +35,13 @@ describe("groupByDex", () => {
             names,
             { missing: true, dex: { from: 1, to: 25 }, rarities: ["Common"] },
         );
-        expect(out.cards).toBe(2);
-        expect(out.copies).toBe(3);
-        expect(out.value).toBe(3);
+        expect(out.cards).toBe(3);
+        expect(out.copies).toBe(4);
+        expect(out.value).toBe(7);
         expect(out.unpriced).toBe(1);
+        // The rare one counts for nothing here: its Pokémon stays grey.
+        expect(out.caught).toBe(2);
+        expect(out.slots.find((s) => s.number === 3)?.cards).toEqual([]);
     });
     it("puts the card that leads a slot first, and leaves the rest in the order they came", () => {
         const face = { ...card("p2", 25), dex_face: true } as Card;

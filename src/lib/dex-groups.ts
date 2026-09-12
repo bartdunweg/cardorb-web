@@ -65,13 +65,19 @@ export function groupByDex(
     for (const card of cards) {
         const id = card.species_id;
         if (id === null || id < range.from || id > range.to) continue;
-        if (kept && !rarityKept(kept, card.rarity, card.name)) continue;
+        // Counted whatever its rarity, and that is the point: the cards and the worth say what you
+        // hold, the way every other binder says it. The rarities answer one question, which is when
+        // a Pokémon counts as caught, and they used to quietly take a thousand cards out of the
+        // number above the grid as well (Bart's call, 2026-09-12).
         const copies = Math.max(0, card.quantity ?? 1);
         count.cards += 1;
         count.copies += copies;
         // A public card carries no price at all: nothing to sum, and no value to say.
         if (card.price === null) count.unpriced += copies;
         else if (card.price !== undefined) count.value = (count.value ?? 0) + card.price * copies;
+        // The slots are the other question: a card in a rarity that does not count leaves its
+        // Pokémon grey, so it is not one of the slot's cards either.
+        if (kept && !rarityKept(kept, card.rarity, card.name)) continue;
         const list = bySlot.get(id) ?? [];
         list.push(card);
         bySlot.set(id, list);
