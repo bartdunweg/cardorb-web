@@ -41,15 +41,12 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
      * The one thing a tile of this list can do, drawn on the tile: "Got it" on the wishlist.
      * A sibling of the tile, not a child of it: the tile is a button, and a button inside a
      * button is not HTML and reads as one control to a screen reader. It sits in the words'
-     * row of its own under the price, at every width: beside the price it did not fit on one
-     * line, and the picture stays whole. Shown on hover, on focus within the tile and always on a
-     * touch screen, so a keyboard reaches it and a finger never has to hover; its row is kept while
-     * it is hidden, so a hover does not move the tiles under it.
-     *
-     * On the small grid (86 to 128 px at any width) it is the mark alone, `compact`, with the
-     * card's name in its accessible name still.
+     * row of its own under the price, a round button against the right edge: the size and the
+     * place of a set tile's plus, so the buttons under a card are one size on every list. Always
+     * shown, as a set's are: a control that appears on hover is one a phone never finds and a
+     * keyboard only finds by landing on it.
      */
-    action?: (card: T, compact: boolean) => ReactNode;
+    action?: (card: T) => ReactNode;
 }) {
     return (
         <div className={cx("grid gap-4", GRID_COLUMNS[size])}>
@@ -59,7 +56,7 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                 // The first two rows arrive one after another, 20 ms apart; everything under them comes in
                 // together once that wave has passed. A batch appended on scroll sits below the fold, so
                 // its wave is not seen and its delay has passed by the time it is.
-                <div key={card.id} className={cx("arrive", action && "group")} style={{ "--arrive-delay": `${Math.min(i, 12) * 20}ms` } as React.CSSProperties}>
+                <div key={card.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i, 12) * 20}ms` } as React.CSSProperties}>
                     <CardTile
                         onSelect={() => onSelect(card, cards)}
                         // The button has a row of its own in the cell, so the tile must not fill the cell: h-full
@@ -133,16 +130,7 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                             </div>
                         }
                     />
-                    {action ? (
-                        <div
-                            className={cx(
-                                "mt-2 flex opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100",
-                                size !== "sm" && "*:flex-1",
-                            )}
-                        >
-                            {action(card, size === "sm")}
-                        </div>
-                    ) : null}
+                    {action ? <div className="mt-1 flex justify-end">{action(card)}</div> : null}
                 </div>
             ))}
         </div>

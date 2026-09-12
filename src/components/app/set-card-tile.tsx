@@ -8,6 +8,7 @@ import { addCard, markOwned, removeCard, setCopies } from "@/app/(app)/dashboard
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { warmCard } from "@/components/app/card-memo";
+import { TileIconButton } from "@/components/app/tile-icon-button";
 import { useWarm } from "@/components/app/use-warm";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
@@ -18,9 +19,9 @@ import { cx } from "@/utils/cx";
 type Result = { ok: true } | { ok: false; error: string };
 
 /**
- * One card of a set, and what you can do with it from here. The tile is a menu button: a card
- * you do not hold offers the collection or the wishlist; one on the wishlist offers "Mark as owned";
- * one you hold offers a copy more or less, and the way to it in Cards. Copies are only offered
+ * One card of a set, and what you can do with it from here. A card you do not hold has two round
+ * buttons under it, the wishlist and the collection; one on the wishlist has a check and a menu
+ * (remove it, the way to it); one you hold has the menu (a copy more or less, the way to it). Copies are only offered
  * when the card is one row, which is nearly always: a card held as two printings is managed
  * in Cards, where each printing is its own row.
  *
@@ -157,48 +158,20 @@ export function SetCardTile({
                         ) : null}
                     </span>
                 </div>
-                <div className="mt-1 flex justify-end">
-                    <span className="flex shrink-0 items-center gap-1">
-                        {/* The menu, where the picture used to be its trigger. A dots button in the corner beside
-                    the plus, so everything the tile could do is still one press away; it is just no
-                    longer the answer to tapping the card. */}
+                {/* The buttons on a line of their own under the count and the price, every one the same
+                    round size, the one you reach for most against the right edge. A card you do not hold
+                    has two answers, the collection or the wishlist, so both are buttons and there is no
+                    menu: the heart sat behind a dots button, one press further than the plus for no reason.
+                    A card you want gets the check the wishlist's own tiles carry, in the same place; the
+                    menu stays for the rest (removing it, a copy more or less, the way to it). */}
+                <div className="mt-1 flex justify-end gap-1">
+                    {state !== "missing" ? (
                         <Dropdown.Root>
-                            <AriaButton
-                                isDisabled={pending}
-                                aria-label={`What to do with ${card.name} #${card.number}`}
-                                className={({ isFocusVisible, isHovered }) =>
-                                    cx(
-                                        "flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-primary ring-1 ring-primary outline-offset-2 outline-focus-ring ring-inset",
-                                        isHovered && "bg-primary_hover",
-                                        isFocusVisible && "outline-2",
-                                        pending && "cursor-progress opacity-50",
-                                    )
-                                }
-                            >
-                                <DotsHorizontal className="size-3.5" aria-hidden="true" />
-                            </AriaButton>
+                            <TileIconButton icon={DotsHorizontal} label={`What to do with ${card.name} #${card.number}`} pending={pending} />
                             <Dropdown.Popover className="w-56">
                                 <Dropdown.Menu>
-                                    {state === "missing" ? (
-                                        <>
-                                            <Dropdown.Item
-                                                icon={Plus}
-                                                onAction={() => run(() => addCard(pokemonCardFromSetCard(card, language), "collection"))}
-                                            >
-                                                Add to collection
-                                            </Dropdown.Item>
-                                            <Dropdown.Item icon={Heart} onAction={() => run(() => addCard(pokemonCardFromSetCard(card, language), "wishlist"))}>
-                                                Add to wishlist
-                                            </Dropdown.Item>
-                                        </>
-                                    ) : null}
                                     {state === "wishlist" ? (
                                         <>
-                                            {oneRow ? (
-                                                <Dropdown.Item icon={Check} onAction={() => run(() => markOwned(rowId))}>
-                                                    Mark as owned
-                                                </Dropdown.Item>
-                                            ) : null}
                                             {oneRow ? (
                                                 <Dropdown.Item icon={Trash01} onAction={() => run(() => removeCard(rowId))}>
                                                     Remove from wishlist
@@ -208,8 +181,7 @@ export function SetCardTile({
                                                 Open in Wishlist
                                             </Dropdown.Item>
                                         </>
-                                    ) : null}
-                                    {state === "owned" ? (
+                                    ) : (
                                         <>
                                             {oneRow ? (
                                                 <Dropdown.Item icon={Plus} onAction={() => run(() => setCopies(rowId, card.quantity + 1))}>
@@ -230,34 +202,35 @@ export function SetCardTile({
                                                 Open in Collection
                                             </Dropdown.Item>
                                         </>
-                                    ) : null}
+                                    )}
                                 </Dropdown.Menu>
                             </Dropdown.Popover>
                         </Dropdown.Root>
-                        {/* One tap to own it, for the card you do not have. The menu behind the tile still offers
-                    the wishlist and everything else; this is the one answer common enough to deserve a
-                    button, and it sits outside the tile's own button because a button inside a button is
-                    not a thing a browser will render. */}
-                        {state === "missing" ? (
-                            <AriaButton
-                                isDisabled={pending}
-                                aria-label={`Add ${card.name} #${card.number} to your collection`}
+                    ) : null}
+                    {state === "missing" ? (
+                        <>
+                            <TileIconButton
+                                icon={Heart}
+                                label={`Add ${card.name} #${card.number} to your wishlist`}
+                                pending={pending}
+                                onPress={() => run(() => addCard(pokemonCardFromSetCard(card, language), "wishlist"))}
+                            />
+                            <TileIconButton
+                                icon={Plus}
+                                label={`Add ${card.name} #${card.number} to your collection`}
+                                pending={pending}
                                 onPress={() => run(() => addCard(pokemonCardFromSetCard(card, language), "collection"))}
-                                className={({ isFocusVisible, isHovered }) =>
-                                    cx(
-                                        // size-7, not size-6: 24px clears WCAG 2.5.8's minimum by nothing at all, and this
-                                        // is a thumb target on a phone, in a grid of 129 of them.
-                                        "flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-primary ring-1 ring-primary outline-offset-2 outline-focus-ring ring-inset",
-                                        isHovered && "bg-primary_hover",
-                                        isFocusVisible && "outline-2",
-                                        pending && "cursor-progress opacity-50",
-                                    )
-                                }
-                            >
-                                <Plus className="size-3.5" aria-hidden="true" />
-                            </AriaButton>
-                        ) : null}
-                    </span>
+                            />
+                        </>
+                    ) : null}
+                    {state === "wishlist" && oneRow ? (
+                        <TileIconButton
+                            icon={Check}
+                            label={`Got it: ${card.name} #${card.number}`}
+                            pending={pending}
+                            onPress={() => run(() => markOwned(rowId))}
+                        />
+                    ) : null}
                 </div>
             </div>
             {/* Announced when it appears; the tile keeps its place so the grid does not jump. */}
