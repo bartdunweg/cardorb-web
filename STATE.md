@@ -22,6 +22,19 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-12, the run is worth its own money.** A copy has said which print run it is from since
+cardorb-api#313, and every copy was priced as the ordinary printing whatever it said. Cardmarket
+does file the runs apart, and its own nightly guide (the file this stack already reads for every
+price) carries them: what nobody had was which product is which run. TCGdex answers it per
+variant, in `variants_detailed[].thirdParty.cardmarket`. Asked about all 23,548 English cards:
+102 have a run of their own and they are Base Set, every card of it, where base1-4 Charizard is
+€3,567 as Shadowless against €583 as unlimited. So the map is committed
+(cardorb-api#329, `scripts/cardmarket-ids-editions.mjs`), the figure travels with the card,
+`copyPriceOf()` chooses it, the value chart reads it too, and this app shows it (#485). The
+stamped first run is unchanged: its only figure is TCGplayer's, which the guide does not carry,
+so such a copy still reads the ordinary price. `docs/editions.md` holds the ground and the three
+decisions behind it.
+
 **2026-09-12, a number from the phone.** Everything measured today was measured on one Mac on
 one connection, which says nothing about a phone on 4G, and the question that started it was how
 it feels on a phone. `@vercel/speed-insights` is in the root layout now: LCP and INP per route,
