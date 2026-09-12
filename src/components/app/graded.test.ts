@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { gradeLabel, splitGrade } from "./graded";
+import { gradeLabel, gradeUnder, gradesFor, splitGrade } from "./graded";
 
 describe("splitGrade", () => {
     it("reads the company and the grade apart", () => {
@@ -30,5 +30,33 @@ describe("splitGrade", () => {
     it("round-trips what it wrote", () => {
         expect(gradeLabel("PSA", "10")).toBe("PSA 10");
         expect(splitGrade(gradeLabel("BGS", "9.5"))).toEqual({ grader: "BGS", grade: "9.5" });
+    });
+});
+
+describe("gradesFor", () => {
+    it("gives PSA its own scale, which has no 9.5 and does have 1.5", () => {
+        expect(gradesFor("PSA")).not.toContain("9.5");
+        expect(gradesFor("PSA")).toContain("1.5");
+        expect(gradesFor("psa")).not.toContain("8.5");
+    });
+
+    it("leaves the half steps to the companies that award them", () => {
+        for (const g of ["BGS", "CGC", "SGC", "ACE", "TAG"]) expect(gradesFor(g)).toContain("9.5");
+    });
+});
+
+describe("gradeUnder", () => {
+    it("keeps a grade the company gives", () => {
+        expect(gradeUnder("BGS", "9.5")).toBe("9.5");
+        expect(gradeUnder("PSA", "9")).toBe("9");
+    });
+
+    it("drops to the whole number below where it does not", () => {
+        expect(gradeUnder("PSA", "9.5")).toBe("9");
+        expect(gradeUnder("PSA", "8.5")).toBe("8");
+    });
+
+    it("answers something a select can show, whatever it is handed", () => {
+        expect(gradesFor("PSA")).toContain(gradeUnder("PSA", "nonsense"));
     });
 });

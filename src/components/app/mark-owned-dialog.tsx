@@ -9,9 +9,9 @@ import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { AcquiredDatePicker } from "@/components/app/acquired-date-picker";
 import { CardImage } from "@/components/app/card-image";
 import { CONDITIONS } from "@/components/app/condition-badge";
-import { finishOptions, patternOptions, soleOption } from "@/components/app/copy-fields";
+import { editionOptions, finishOptions, patternOptions, soleOption } from "@/components/app/copy-fields";
 import { FormError } from "@/components/app/form-error";
-import { GRADERS, GRADES, gradeLabel, splitGrade } from "@/components/app/graded";
+import { GRADERS, GRADES, gradeLabel, gradeUnder, gradesFor, splitGrade } from "@/components/app/graded";
 import { LanguageSelect } from "@/components/app/language-select";
 import { SheetDialog } from "@/components/app/sheet-dialog";
 import { notify } from "@/components/app/toast";
@@ -56,6 +56,7 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
     const [gradeValue, setGradeValue] = useState(initialGrade.grade || GRADES[0]);
     const [finish, setFinish] = useState(card.finish ?? "");
     const [pattern, setPattern] = useState(card.foil_pattern ?? "");
+    const [edition, setEdition] = useState(card.edition ?? "");
     const [folder, setFolder] = useState("");
     const [price, setPrice] = useState("");
     const [date, setDate] = useState(today());
@@ -72,6 +73,7 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
             grade: graded ? gradeLabel(grader, gradeValue) : null,
             finish: (effectiveFinish || null) as CopyEdits["finish"],
             foilPattern: (effectivePattern || null) as CopyEdits["foilPattern"],
+            edition: (edition || null) as CopyEdits["edition"],
             collectionId: folder || null,
             purchasePrice: price.trim() === "" ? null : Number(price),
             acquiredAt: date || today(),
@@ -106,6 +108,11 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
     const patterns = patternOptions(facts, effectiveFinish, card.foil_pattern ?? null);
     const solePattern = soleOption(patterns);
     const effectivePattern = pattern || solePattern?.value || "";
+    /* Which run, asked here too. The card's own sheet and the add form have asked it since #313
+       and this dialog did not, so a 1st Edition Base Set card taken off the wishlist had to be
+       opened again to say so. Asked only of a card that had more than one run
+       (cardorb-api#342). */
+    const editions = editionOptions(facts, card.edition ?? null);
 
     return (
         <form
@@ -184,7 +191,11 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
                             size="sm"
                             className="w-full"
                             value={grader}
-                            onChange={(e) => setGrader(e.target.value)}
+                            onChange={(e) => {
+                                setGrader(e.target.value);
+                                // The scales differ: PSA gives no 9.5, so switching to it keeps 9.
+                                setGradeValue(gradeUnder(e.target.value, gradeValue));
+                            }}
                             options={GRADERS.map((g) => ({ label: g, value: g }))}
                         />
                         <NativeSelect
@@ -193,7 +204,7 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
                             className="w-full"
                             value={gradeValue}
                             onChange={(e) => setGradeValue(e.target.value)}
-                            options={GRADES.map((g) => ({ label: g, value: g }))}
+                            options={gradesFor(grader).map((g) => ({ label: g, value: g }))}
                         />
                     </span>
                 </div>
@@ -246,6 +257,20 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
                         value={pattern}
                         onChange={(e) => setPattern(e.target.value)}
                         options={patterns}
+                    />
+                </div>
+            ) : null}
+
+            {editions.length ? (
+                <div className={row}>
+                    Edition
+                    <NativeSelect
+                        aria-label="Edition"
+                        size="sm"
+                        className="w-full"
+                        value={edition}
+                        onChange={(e) => setEdition(e.target.value)}
+                        options={editions}
                     />
                 </div>
             ) : null}
