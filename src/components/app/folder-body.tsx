@@ -87,7 +87,7 @@ export async function FolderBody(props: FolderBodyProps) {
                           }
                 }
             />
-            <FiltersSheet key="filters" active={[query.set, query.rarity].filter(Boolean).length}>
+            <FiltersSheet key="filters" active={[query.set, query.rarity, query.fullArt].filter(Boolean).length}>
                 <Suspense key="set-rarity" fallback={<CardsFilters query={query} facets={NO_FACETS} />}>
                     <FiltersWhenReady query={query} facets={facets} />
                 </Suspense>

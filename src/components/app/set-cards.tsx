@@ -60,33 +60,35 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
     const [q, setQ] = useState("");
     const [holding, setHolding] = useState<Holding | undefined>();
     const [rarity, setRarity] = useState<string | undefined>();
+    const [art, setArt] = useState<string | undefined>();
     const [sort, setSort] = useState<SortKey>("set");
     /* Which of this set's cards are full art, read off the set itself: the same rarity means the
        opposite thing in Sun & Moon and in Scarlet & Violet, so the rule needs the whole set
        (`@/lib/full-art`). A set with none never offers the option, which is most sets before
-       Black & White. */
+       Black & White. It is a filter of its own and not an entry among the rarities, because it
+       cuts across them: every special illustration rare is a full art, and listed with them it put
+       one card under two rarities. */
     const fullArt = useMemo(() => fullArtIds(cards), [cards]);
-    const rarities = useMemo(() => {
-        const named = [...new Set(cards.map((c) => c.rarity).filter((r): r is string => Boolean(r)))].sort().map((r) => ({ value: r, label: r }));
-        // Above the rarities, because it is the question people ask of a set first, and because it
-        // cuts across them: one full art is an Ultra Rare and the next is an illustration rare.
-        return fullArt.size > 0 ? [{ value: FULL_ART, label: "Full art" }, ...named] : named;
-    }, [cards, fullArt]);
+    const rarities = useMemo(
+        () => [...new Set(cards.map((c) => c.rarity).filter((r): r is string => Boolean(r)))].sort().map((r) => ({ value: r, label: r })),
+        [cards],
+    );
     const shown = useMemo(() => {
         const term = q.trim().toLowerCase();
         const kept = cards.filter(
             (c) =>
                 (!term || c.name.toLowerCase().includes(term) || (c.localName ?? "").toLowerCase().includes(term) || c.number.toLowerCase().includes(term)) &&
                 (!holding || (holding === "owned" ? c.owned : holding === "wishlist" ? c.wishlist : !c.owned && !c.wishlist)) &&
-                (!rarity || (rarity === FULL_ART ? fullArt.has(c.number) : c.rarity === rarity)),
+                (!rarity || c.rarity === rarity) &&
+                (!art || fullArt.has(c.number)),
         );
         if (sort === "set") return kept;
         /* A card without a price sorts last either way: the question is which cards are worth what, and
            an unpriced card has no answer to give. */
         const price = (c: SetCard) => c.price ?? (sort === "price-desc" ? -1 : Number.POSITIVE_INFINITY);
         return [...kept].sort((a, b) => (sort === "name" ? a.name.localeCompare(b.name) : sort === "price-desc" ? price(b) - price(a) : price(a) - price(b)));
-    }, [cards, q, holding, rarity, sort, fullArt]);
-    const narrowed = Boolean(q.trim() || holding || rarity);
+    }, [cards, q, holding, rarity, art, sort, fullArt]);
+    const narrowed = Boolean(q.trim() || holding || rarity || art);
 
     const [selected, setSelected] = useState<Card | null>(null);
     // The catalogue card behind an open sheet, so a card nobody holds can still be taken from it.
@@ -133,7 +135,7 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
                     onChange={setQ}
                     className="min-w-0 flex-1 basis-48 sm:max-w-64"
                 />
-                <FiltersSheet inline active={[holding, rarity].filter(Boolean).length}>
+                <FiltersSheet inline active={[holding, rarity, art].filter(Boolean).length}>
                     {/* Menus, as a binder's and Browse's: from lg they stand in the row beside Sort, and a chip
                         there was a control of another height. */}
                     <NativeSelect
@@ -152,6 +154,19 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
                             value={rarity ?? ""}
                             onChange={(event) => setRarity(event.target.value || undefined)}
                             options={[{ label: "All rarities", value: "" }, ...rarities]}
+                        />
+                    ) : null}
+                    {fullArt.size > 0 ? (
+                        <NativeSelect
+                            aria-label="Art"
+                            size="sm"
+                            className="w-auto"
+                            value={art ?? ""}
+                            onChange={(event) => setArt(event.target.value || undefined)}
+                            options={[
+                                { label: "Any art", value: "" },
+                                { label: "Full art", value: FULL_ART },
+                            ]}
                         />
                     ) : null}
                 </FiltersSheet>
