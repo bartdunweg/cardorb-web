@@ -1191,9 +1191,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                     : "TCGplayer has no price for this card. Sold listings on eBay are the nearest check."}
                                             </p>
                                             {/* Where to check it: the page the figure came from, and what the card sold for,
-                                                raw and as a PSA 10, which no market here prices. A list, so a screen reader
-                                                says how many there are; each says it opens a new tab. */}
-                                            <ul className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+                                                raw and as a PSA 10, which no market here prices. The kit's secondary button,
+                                                as a link, full width and one under the other (Bart, 2026-09-12). A list, so a screen reader says how many there
+                                                are; each says it opens a new tab. */}
+                                            <ul className="flex flex-col gap-2">
                                                 {[
                                                     tcgplayerUrl(mine.tcgplayer_id) ? { label: "TCGplayer", href: tcgplayerUrl(mine.tcgplayer_id)! } : null,
                                                     card ? { label: "eBay sold", href: ebaySoldUrl(card) } : null,
@@ -1202,16 +1203,18 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                     .filter((l): l is { label: string; href: string } => l !== null)
                                                     .map((l) => (
                                                         <li key={l.label}>
-                                                            <a
+                                                            <Button
                                                                 href={l.href}
                                                                 target="_blank"
                                                                 rel="noreferrer noopener"
-                                                                className="inline-flex items-center gap-1 rounded-sm font-semibold text-brand-secondary outline-focus-ring hover:underline focus-visible:outline-2"
+                                                                color="secondary"
+                                                                size="sm"
+                                                                iconTrailing={LinkExternal01}
+                                                                className="w-full"
                                                             >
                                                                 {l.label}
-                                                                <LinkExternal01 aria-hidden="true" className="size-3.5" />
                                                                 <span className="sr-only"> (opens in a new tab)</span>
-                                                            </a>
+                                                            </Button>
                                                         </li>
                                                     ))}
                                             </ul>
