@@ -22,6 +22,17 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-12, layout pass.** Bart saw an empty state standing at the top of its page. The
+component centres itself in the room its column leaves it and claims that room with `flex-1`,
+which needs the page's column to grow; Home, Browse and a set's page were a column that did not
+(#423). The set page's progress bar went from the kit's 8 × 448 px to 4 × 320 px under a
+subtitle that already says the count (#426). Then every page walked in the pane at 1280×800 and
+375×812, overflow measured: one real fault. On a phone the wishlist's "Got it" lay under the
+next row's pictures (the tile filled a cell whose height counted the button row), so only the
+last row could be pressed; the tile stops filling under md where a button row follows (#430).
+Nothing else off. You on a phone shows the name and address twice, header and account card, as
+the code intends.
+
 **2026-09-12, later.** The toast's title is medium (#422): the kit sets title and undo link both
 semibold and tells them apart by colour, and Cardorb's brand is the same grey as the title. Read
 against the PRO `application/notifications` source; ours is that box in its parts (#424). Then
