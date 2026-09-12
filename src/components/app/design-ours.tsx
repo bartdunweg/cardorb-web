@@ -488,7 +488,7 @@ export const ourSections: SectionSpec[] = [
         title: "RowSearch",
         from: "components/app/row-search",
         ours: true,
-        note: "The search in a list row, and LIST_ROW, the row itself. From sm a field of 208 px at most; on a phone a round search button that opens the field across the row, hides the row's other buttons and puts them back with the close button beside it. A field with a term stays open. Narrow the window to a phone to try it.",
+        note: "The search in a list row, and LIST_ROW, the row itself. From sm a field of 208 px at most; on a phone a round search button that opens the field across the row, hides the row's other buttons and puts them back with the close button beside it. Closing keeps the term, and a term in force puts a dot on the search button. Narrow the window to a phone to try it.",
         render: (
             <Panel>
                 <Group title="In a row" cols="tight">
@@ -650,7 +650,7 @@ function RowSearchDemo() {
     const [q, setQ] = useState("");
     return (
         <div className={`${LIST_ROW} w-full`}>
-            <RowSearch label="Search" filled={q !== ""} onClear={() => setQ("")}>
+            <RowSearch label="Search" filled={q !== ""}>
                 <Input aria-label="Search" icon={SearchLg} placeholder="Search" size="sm" value={q} onChange={setQ} wrapperClassName="rounded-full" />
             </RowSearch>
             <RowButton icon={FilterLines} label="Filters" />
