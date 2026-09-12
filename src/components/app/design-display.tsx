@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AlertCircle, BookOpen01, Check, Folder, Heart, Home01, Star01, Trash01, User01, Zap } from "@untitledui/icons";
 import type { SortDescriptor } from "react-aria-components";
+import { NavButton } from "@/components/application/app-navigation/base-components/nav-button";
 import { NavItemBase } from "@/components/application/app-navigation/base-components/nav-item";
 import { LoadingIndicator } from "@/components/application/loading-indicator/loading-indicator";
 import { Progress } from "@/components/application/progress-steps/progress-steps";
@@ -444,6 +445,12 @@ export const displaySections: SectionSpec[] = [
                             <NavItemBase type="link" href="#nav-item" icon={Heart} badge={12}>
                                 Wishlist
                             </NavItemBase>
+                        </div>
+                    </Cell>
+                    <Cell label="NavButton (the folded sidebar's row)" span="full">
+                        <div className="flex gap-1">
+                            <NavButton icon={Home01} label="Home" href="#nav-item" />
+                            <NavButton icon={Folder} label="Binders" href="#nav-item" current />
                         </div>
                     </Cell>
                     <Cell label='type="collapsible-child"' span="full">

@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AppSidebar } from "@/components/app/app-sidebar";
 import { CommandSearchProvider } from "@/components/app/command-search";
@@ -11,13 +12,17 @@ import { WarmLists } from "@/components/app/warm-lists";
 import { ApiError } from "@/lib/api";
 import { getFavoritesCount, getMyFolders } from "@/lib/collections";
 import { type Account, accountFrom, getMyProfile } from "@/lib/profile";
+import { SIDEBAR_COOKIE } from "@/lib/sidebar-cookie";
 import { RouteProvider } from "@/providers/router-provider";
 
 // What the sidebar shows for the account until the profile read answers, or when it fails: the
 // menu still opens, Settings and Sign out still work.
 const NO_ACCOUNT: Account = { name: "Account", email: "", avatarUrl: null, publicUrl: null };
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+    // Whether the sidebar is folded to its rail, read here so the first paint is already right:
+    // decided in the browser it would open wide and snap shut after hydration on every page.
+    const sidebarCollapsed = (await cookies()).get(SIDEBAR_COOKIE)?.value === "collapsed";
     // Not awaited. The profile and the folders are reads of an API in another region, and after
     // every write both miss the cache. Awaited here, nothing reached the browser until the slower
     // of the two answered: no frame, no skeleton, a blank tab for as long as the API took. Now the
@@ -54,7 +59,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     frame's own ground rather than under it. */}
                     <div className="relative isolate flex min-h-dvh flex-col overflow-x-clip bg-page">
                         <div className="flex flex-1 flex-col lg:flex-row">
-                            <AppSidebar account={account} collections={collections} favoritesCount={favoritesCount} />
+                            <AppSidebar account={account} collections={collections} favoritesCount={favoritesCount} initialCollapsed={sidebarCollapsed} />
                             {/* tabIndex -1 so focus can be sent here after a navigation without putting
                             the element itself in the tab order. */}
                             <main id={MAIN_ID} tabIndex={-1} className="flex min-w-0 flex-1 flex-col outline-none">

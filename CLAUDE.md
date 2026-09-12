@@ -70,6 +70,7 @@ to this.
   The `collections` table, the `/collections` routes and the API's own path keep their names:
   those are addresses, and one of them is a contract the iOS app reads.
   On desktop the sidebar's Binders section is the list; on a phone the Binders tab is.
+  Folded to its rail the sidebar has one folder icon, and the list is the menu it opens.
 - **Owned / wishlist**: mutually exclusive. A card you do not own is on the wishlist, nowhere
   else. Collection views and stats exclude wishlist cards.
 - **Favorite**: a flag on a card you own, shown as a folder that is always there.

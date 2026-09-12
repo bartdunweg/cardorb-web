@@ -22,6 +22,18 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-12, the sidebar folds.** The desktop sidebar takes a rail: the button beside the
+wordmark folds it to 68 px, icons alone, each named by a tooltip, and the button at the rail's
+head opens it again. The kit has no sidebar that folds (its slim variant is a rail and stays
+one), so the rail is ours on the kit's shapes: `NavButton` came over from the kit for the icon
+row, `SidebarRail` is the app's. Every binder carries the same folder icon, so on the rail they
+are one icon that opens a menu of them, the overview at its head and New binder at its foot.
+The state is a cookie, not local storage, so the server draws the first paint folded; the name
+lives in `src/lib/sidebar-cookie.ts` because the layout is a Server Component and a value
+imported from a client module reaches it as a client reference. Walked in the pane: folded and
+open, both directions, the tooltip on keyboard focus, dark, and a tablet, where the tab bar is
+unchanged.
+
 **2026-09-12, full art is a filter of its own.** Bart saw the same cards under Full art and under
 Special illustration rare, where a card belongs to one rarity. Full art was an entry in the rarity
 menu on the collection, a binder and a set page, and it cuts across the rarities: every special

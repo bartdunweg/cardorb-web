@@ -1,16 +1,19 @@
 "use client";
 
-import { Suspense, use } from "react";
-import { BookOpen01, Folder, Heart, HomeLine, Plus, Rows01, Star01 } from "@untitledui/icons";
+import { Suspense, use, useState } from "react";
+import { BookOpen01, ChevronLeftDouble, Folder, Heart, HomeLine, Plus, Rows01, Star01 } from "@untitledui/icons";
 import { Button as AriaButton } from "react-aria-components";
 import { AccountMenu } from "@/components/app/account-menu";
 import { SidebarSearchTrigger } from "@/components/app/command-search";
 import { FolderDialog } from "@/components/app/folder-dialog";
 import { PrefetchRoutes } from "@/components/app/prefetch-routes";
 import { useRouteTarget } from "@/components/app/route-pending";
+import { type RailItem, SidebarRail } from "@/components/app/sidebar-rail";
 import { NavItemBase } from "@/components/application/app-navigation/base-components/nav-item";
 import type { NavItemDividerType, NavItemType } from "@/components/application/app-navigation/config";
 import { SidebarNavigationSectionDividers } from "@/components/application/app-navigation/sidebar-navigation/sidebar-section-dividers";
+import { ButtonUtility } from "@/components/base/buttons/button-utility";
+import { SIDEBAR_COOKIE } from "@/lib/sidebar-cookie";
 
 type Account = { name: string; email: string; avatarUrl: string | null };
 type FolderLink = { id: string; name: string; kind: "manual" | "rule"; count: number };
@@ -29,25 +32,44 @@ type FolderLink = { id: string; name: string; kind: "manual" | "rule"; count: nu
 // per request, and paying for that on the chance of a click made the page you are on wait for it.
 const SIDEBAR_ROUTES = ["/dashboard", "/dashboard/collections", "/dashboard/cards", "/dashboard/favorites", "/dashboard/sets", "/dashboard/wishlist"];
 
+// Folded or open, kept for a year; open is no cookie at all (see src/lib/sidebar-cookie.ts).
+function storeCollapsed(collapsed: boolean) {
+    document.cookie = `${SIDEBAR_COOKIE}=${collapsed ? "collapsed" : ""}; path=/; max-age=${collapsed ? 60 * 60 * 24 * 365 : 0}; SameSite=Lax`;
+}
+
 export function AppSidebar({
     account,
     collections,
     favoritesCount,
+    initialCollapsed = false,
 }: {
     account: Promise<Account>;
     collections: Promise<FolderLink[]>;
     favoritesCount: Promise<number | null>;
+    /** Folded to the rail on the first paint: what the cookie said when the layout rendered. */
+    initialCollapsed?: boolean;
 }) {
     // Where a click is going, or where we are between clicks: the row lights up on the click, not
     // when the page lands, because the page you clicked from stays on screen until the next one is
     // ready (route-pending.tsx).
     const pathname = useRouteTarget();
+    // Folded or open: a choice that stays, so it lives in the cookie and in state, not in the URL.
+    const [collapsed, setCollapsed] = useState(initialCollapsed);
+    const setFolded = (folded: boolean) => {
+        setCollapsed(folded);
+        storeCollapsed(folded);
+    };
 
-    const navItems: (NavItemType | NavItemDividerType)[] = [
+    // The four pages, on the rail as icons alone.
+    const pages: RailItem[] = [
         { label: "Home", href: "/dashboard", icon: HomeLine },
         { label: "Browse", href: "/dashboard/sets", icon: BookOpen01 },
         { label: "Wishlist", href: "/dashboard/wishlist", icon: Heart },
         { label: "Collection", href: "/dashboard/cards", icon: Rows01 },
+    ];
+
+    const navItems: (NavItemType | NavItemDividerType)[] = [
+        ...pages,
         // The head is the overview itself: on a phone the Binders tab opens it, on a desktop nothing did
         // but Back from Favorites or a binder.
         { divider: true, label: "Binders", href: "/dashboard/collections" },
@@ -77,6 +99,11 @@ export function AppSidebar({
                     activeUrl={pathname}
                     items={navItems}
                     hideMobileHeader
+                    collapsed={collapsed}
+                    rail={<SidebarRail items={pages} activeUrl={pathname} account={account} collections={collections} onExpand={() => setFolded(false)} />}
+                    headerAction={
+                        <ButtonUtility size="sm" color="tertiary" icon={ChevronLeftDouble} tooltip="Collapse sidebar" onClick={() => setFolded(true)} />
+                    }
                     search={<SidebarSearchTrigger />}
                     afterItems={
                         <>
