@@ -8,9 +8,10 @@ import {
     publicProfileAnswer,
     publicTotalAnswer,
 } from "@/lib/api-shapes";
+import { groupByDex } from "@/lib/dex-groups";
 import { type Facets, facetsFrom } from "@/lib/facets";
 import type { PokedexSetting } from "@/lib/folder-rule";
-import type { ListQuery } from "@/lib/list-query";
+import { type ListQuery, readPublicListQuery } from "@/lib/list-query";
 import { publicTag } from "@/lib/user-cache";
 
 /**
@@ -120,6 +121,19 @@ export async function getPublicFolders(username: string): Promise<PublicFolder[]
 // How many cards a public list holds, and nothing else: one item asked for, the count read off it.
 // For the line under the name, which counts the collection and the wishlist whatever list is open.
 // Copies — the list as a person counts it — where the API says them; the rows from one before it did.
+/**
+ * How many cards a public Pokédex holds, for its chip: the copies in its slots, counted as the
+ * owner's own page and sidebar count them (collections.ts, getPokedexCount), so a visitor and the
+ * owner read one number. The API's `list=pokedex` is the visibility gate alone and hands out the
+ * whole collection, and the rule (the range, the rarities) is applied here; so every card is read,
+ * through the same five-minute cache the Pokédex list itself fills, and only the number is used.
+ */
+export async function countPublicPokedex(username: string, setting: PokedexSetting): Promise<number> {
+    // No search, no filter: the whole list, as the chip stands for it whatever is open.
+    const { cards } = await getAllPublicCards(username, readPublicListQuery({}));
+    return groupByDex(cards, new Map(), setting).copies;
+}
+
 export async function countPublicCards(username: string, list?: "wishlist" | "favorites" | "pokedex"): Promise<number> {
     const { total, copies } = await api(`/public/${encodeURIComponent(username)}/cards`, {
         auth: false,
