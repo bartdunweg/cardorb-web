@@ -51,11 +51,10 @@ describe("cardFromItem", () => {
             isFavorite: true,
             acquiredAt: null,
             collectionId: "f",
-            price: { low: 1, market: 4, avg30: 5, nm: { low: 3, mid: 6, high: 9 } },
-            priceHolo: null,
+            price: { low: 1, market: 4, avg30: 5, nm: null },
         });
         expect(card).toMatchObject({
-            price: 6,
+            price: 4,
             set_name: "Base Set",
             set: "base1",
             types: ["Lightning"],
@@ -96,7 +95,6 @@ describe("cardFromItem", () => {
             acquiredAt: null,
             collectionId: null,
             price: null,
-            priceHolo: null,
         };
         expect(cardFromItem({ ...item, dexFace: true }).dex_face).toBe(true);
         expect(cardFromItem(item).dex_face).toBe(false);
@@ -104,57 +102,35 @@ describe("cardFromItem", () => {
 });
 
 describe("priceForCopy", () => {
-    const price = { low: 1, market: 4, avg30: 5, nm: { low: 3, mid: 6, high: 9 } };
-    const holo = { low: 10, market: 40, avg30: 50, nm: { low: 30, mid: 60, high: 90 } };
+    const price = { low: 1, market: 4, avg30: null, nm: null };
 
-    it("shows the Near Mint midpoint, and falls back to the market price", () => {
-        expect(priceForCopy({ finish: null, price, priceHolo: null })).toBe(6);
-        expect(priceForCopy({ finish: null, price: { ...price, nm: null }, priceHolo: null })).toBe(4);
-        expect(priceForCopy({ finish: null, price: { low: 1, market: null, avg30: null, nm: null }, priceHolo: null })).toBeNull();
-        expect(priceForCopy({ finish: null, price: null, priceHolo: null })).toBeNull();
+    it("shows the market figure, and nothing where there is none", () => {
+        expect(priceForCopy({ price })).toBe(4);
+        expect(priceForCopy({ price: { low: 1, market: null, avg30: null, nm: null } })).toBeNull();
+        expect(priceForCopy({ price: null })).toBeNull();
+    });
+
+    // The band that used to sit on this is gone: an old answer still carrying `nm` reads its
+    // market figure, not the estimate.
+    it("never reads a Near Mint estimate, even where an answer still carries one", () => {
+        expect(priceForCopy({ price: { ...price, nm: { low: 3, mid: 6, high: 9 } } })).toBe(4);
     });
 
     it("prices a 1st Edition copy as the stamped run, and falls back where there is none", () => {
-        const price = { low: 1, market: 4, avg30: 4, nm: { low: 5, mid: 6, high: 7 } };
-        const stamped = { low: 30, market: 40, avg30: 40, nm: null };
-        // The stamped run wins over both the plain and the foil series, whatever the finish.
-        expect(priceForCopy({ finish: "holo", edition: "1st-edition", price, priceHolo: null, priceFirstEd: stamped })).toBe(40);
-        expect(priceForCopy({ finish: "reverse-holo", edition: "1st-edition", price, priceHolo: price, priceFirstEd: stamped })).toBe(40);
+        const stamped = { low: 30, market: 40, avg30: null, nm: null };
+        expect(priceForCopy({ edition: "1st-edition", price, priceFirstEd: stamped })).toBe(40);
         // Nobody prices a stamped run for most cards: the ordinary price stands.
-        expect(priceForCopy({ finish: null, edition: "1st-edition", price, priceHolo: null })).toBe(6);
+        expect(priceForCopy({ edition: "1st-edition", price })).toBe(4);
         // And an unlimited copy never reads it, even where there is one.
-        expect(priceForCopy({ finish: null, edition: "unlimited", price, priceHolo: null, priceFirstEd: stamped })).toBe(6);
-    });
-
-    it("prices a Shadowless copy as the Shadowless product, and falls back where there is none", () => {
-        const price = { low: 1, market: 4, avg30: 4, nm: { low: 5, mid: 6, high: 7 } };
-        const run = { low: 950, market: 3567, avg30: 2475, nm: null };
-        // Cardmarket files the run as a product of its own: base1-4 Charizard is €3,567 there
-        // against €583 on the ordinary product, which is what a copy read until cardorb-api#329.
-        expect(priceForCopy({ finish: "holo", edition: "shadowless", price, priceHolo: price, priceShadowless: run })).toBe(3567);
-        // Nothing prices a Shadowless run outside Base Set: the ordinary price stands.
-        expect(priceForCopy({ finish: null, edition: "shadowless", price, priceHolo: null })).toBe(6);
-        // And the two runs are not one branch: a 1st Edition copy never reads the Shadowless figure.
-        expect(priceForCopy({ finish: null, edition: "1st-edition", price, priceHolo: null, priceShadowless: run })).toBe(6);
+        expect(priceForCopy({ edition: "unlimited", price, priceFirstEd: stamped })).toBe(4);
     });
 
     it("reads the printing the API chose before any figure of the card's own", () => {
-        const price = { low: 1, market: 4, avg30: 4, nm: { low: 5, mid: 6, high: 7 } };
         const printing = { low: 27.99, market: 53.23, avg30: null, nm: null };
-        // A Jungle Scyther holo: one product on Cardmarket with its plain rare, two printings on
-        // TCGplayer. The API works out which printing this copy is and sends that figure.
-        expect(priceForCopy({ finish: "holo", price, priceHolo: price, printingPrice: printing })).toBe(53.23);
-        // And where TCGplayer prices no printing of this card, the card's own figures stand.
-        expect(priceForCopy({ finish: "holo", price, priceHolo: null, printingPrice: null })).toBe(6);
-    });
-
-    it("prices a reverse holo with the foil price, everything else with the plain one, as the API does", () => {
-        expect(priceForCopy({ finish: "reverse-holo", price, priceHolo: holo })).toBe(60);
-        expect(priceForCopy({ finish: "poke-ball", price, priceHolo: holo })).toBe(60);
-        expect(priceForCopy({ finish: "master-ball", price, priceHolo: holo })).toBe(60);
-        expect(priceForCopy({ finish: "holo", price, priceHolo: holo })).toBe(6);
-        expect(priceForCopy({ finish: "normal", price, priceHolo: holo })).toBe(6);
-        expect(priceForCopy({ finish: "reverse-holo", price, priceHolo: null })).toBe(6);
+        // A Jungle Scyther holo: TCGplayer prices the holo and the plain rare apart, and the API
+        // works out which printing this copy is and sends that figure.
+        expect(priceForCopy({ price, printingPrice: printing })).toBe(53.23);
+        expect(priceForCopy({ price, printingPrice: null })).toBe(4);
     });
 });
 

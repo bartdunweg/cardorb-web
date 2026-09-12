@@ -118,13 +118,11 @@ export function CopyCard({
     const solePattern = soleOption(patterns);
     const edition = shown.edition !== undefined ? (shown.edition ?? "") : (row.edition ?? "");
     const editions = editionOptions(facts, row.edition ?? null, language);
-    /* The ordinary price beside the runs that have their own, so the two can be read against each
+    /* The ordinary price beside the run that has its own, so the two can be read against each
        other. The ordinary one is `price` on a row whose edition says nothing, which is every row
-       until somebody says otherwise; where a run is recorded the row already shows that run's. */
-    const runPrices: [string, number][] = [
-        ...(row.price_first_ed != null ? ([["1st Edition", row.price_first_ed]] as [string, number][]) : []),
-        ...(row.price_shadowless != null ? ([["Shadowless", row.price_shadowless]] as [string, number][]) : []),
-    ];
+       until somebody says otherwise; where a run is recorded the row already shows that run's.
+       Only the stamped run: Shadowless had a figure from Cardmarket and has none from TCGplayer yet. */
+    const runPrices: [string, number][] = row.price_first_ed != null ? [["1st Edition", row.price_first_ed]] : [];
 
     /* The price field is typed into, so it saves when it is left, not on every keystroke. */
     const [priceDraft, setPriceDraft] = useState<string | null>(null);

@@ -218,7 +218,6 @@ const fromCatalogue = (c: SetCard): Card => ({
     foil_pattern: null,
     edition: null,
     price_first_ed: null,
-    price_shadowless: null,
     price_source: null,
     price_printing: null,
     tcgplayer_id: null,

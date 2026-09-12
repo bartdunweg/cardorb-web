@@ -380,7 +380,7 @@ export const actionSections: SectionSpec[] = [
                         </Tooltip>
                     </Cell>
                     <Cell label="title + description">
-                        <Tooltip title="Near Mint price" description="The market price through a measured band, not the market price itself.">
+                        <Tooltip title="Market price" description="TCGplayer's figure for this printing, converted to euros.">
                             <Button size="md" color="secondary">
                                 With a description
                             </Button>

@@ -365,7 +365,7 @@ export async function setDexFace(cardId: string, previousId: string | null): Pro
     return { ok: true };
 }
 
-/** One reading of a card's price, from GET /v1/cards/{tcgId}/prices. Euros; null where Cardmarket published nothing. */
+/** One reading of a card's price, from GET /v1/cards/{tcgId}/prices. Euros; null where the market published nothing. */
 export type PricePoint = { date: string; market: number | null; holo: number | null };
 
 // A card's price day by day over the last ninety days, for the sheet. Empty, not an error, for a
@@ -475,8 +475,6 @@ export type CardFacts = {
     stage: string | null;
     evolveFrom: string | null;
     regulationMark: string | null;
-    /** Cardmarket's page for the card. */
-    cmUrl: string | null;
     /**
      * The Western languages the card was printed in; a copy can be one of these and no other.
      * Null is the catalogue not having said, and then every Western language is offered: a
@@ -506,14 +504,12 @@ export type CardFacts = {
      * where nothing could say, and then every run is offered.
      */
     editions: Edition[] | null;
-    /** The catalogue's own price for the printing: the market figure, its floor and its Near Mint band. */
-    price: { low: number | null; market: number | null; avg30: number | null; nm: { low: number; mid: number; high: number } | null } | null;
-    /** Cardmarket's averages: the all-time average, the trend, and the last seven days. */
-    market: { avg: number | null; trend: number | null; avg7: number | null } | null;
+    /** TCGplayer's price for the printing, converted: the market figure and its lowest listing. */
+    price: { low: number | null; market: number | null } | null;
 };
 
-// The card's facts for the sheet: the illustrator, HP, stage, regulation mark, the Cardmarket page
-// and what the catalogue says the printing is worth. Null when the catalogue cannot answer; the
+// The card's facts for the sheet: the illustrator, HP, stage, regulation mark and what TCGplayer
+// says the printing is worth. Null when the catalogue cannot answer; the
 // sheet is open for the row, not for these.
 export async function cardFacts(tcgId: string): Promise<CardFacts | null> {
     try {
@@ -525,14 +521,12 @@ export async function cardFacts(tcgId: string): Promise<CardFacts | null> {
             stage: c.stage ?? null,
             evolveFrom: c.evolveFrom ?? null,
             regulationMark: c.regulationMark ?? null,
-            cmUrl: c.cmUrl ?? null,
             languages: Array.isArray(c.languages) && c.languages.length ? c.languages : null,
             eraRarities: Array.isArray(c.eraRarities) && c.eraRarities.length ? c.eraRarities : null,
             printings: Array.isArray(c.printings) ? c.printings : [],
             editions: Array.isArray(c.editions) ? c.editions : null,
             firstEdition: c.firstEdition ?? null,
-            price: c.price ?? null,
-            market: c.market ?? null,
+            price: c.price ? { low: c.price.low, market: c.price.market } : null,
         };
     } catch (err) {
         console.error("Card facts unavailable:", err instanceof Error ? err.message : err);
