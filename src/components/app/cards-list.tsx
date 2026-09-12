@@ -171,12 +171,12 @@ export function CardsList({
                                            long one. `top-0` against the page's own scroll: this list has no
                                            scroller of its own, and `bg-page` because the band passes over the
                                            page's ground, which is the neutral tint and not white. */
-                                        <h3 id={headingId(group.name)} className="sticky top-0 z-10 mb-3 bg-page py-2 text-sm font-semibold text-primary">
+                                        <h2 id={headingId(group.name)} className="sticky top-0 z-10 mb-3 bg-page py-2 text-sm font-semibold text-primary">
                                             {group.name}{" "}
                                             <span className="font-normal text-tertiary">
                                                 {group.cards.length} {group.cards.length === 1 ? "card" : "cards"}
                                             </span>
-                                        </h3>
+                                        </h2>
                                     ) : null}
                                     <CardsGrid
                                         cards={group.cards}
