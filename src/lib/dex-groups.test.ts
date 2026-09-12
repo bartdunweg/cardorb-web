@@ -25,6 +25,24 @@ describe("groupByDex", () => {
         expect(out.cards).toBe(3);
         expect(out.range).toEqual({ from: 1, to: 25 });
     });
+    it("counts the slots' cards as copies and sums their worth, leaving out what the rule does", () => {
+        const held = (id: string, species_id: number, quantity: number | null, price: number | null, rarity = "Common") =>
+            ({ ...card(id, species_id), quantity, price, rarity }) as Card;
+        const out = groupByDex(
+            [held("b", 1, 2, 1.5), held("i", 2, null, null), held("far", 152, 3, 9), held("rare", 3, 1, 4, "Rare"), card("potion", null)],
+            names,
+            { missing: true, dex: { from: 1, to: 25 }, rarities: ["Common"] },
+        );
+        expect(out.cards).toBe(2);
+        expect(out.copies).toBe(3);
+        expect(out.value).toBe(3);
+        expect(out.unpriced).toBe(1);
+    });
+    it("says no value for cards that carry no price at all, as a public profile's", () => {
+        const out = groupByDex([card("b", 1)], names, { missing: false });
+        expect(out.copies).toBe(1);
+        expect(out.value).toBeNull();
+    });
     it("hands an empty slot its species' picture, and a slot nobody knows nothing", () => {
         const out = groupByDex([], names, { missing: true, dex: { from: 1, to: 4 } });
         expect(out.slots[0]).toMatchObject({ number: 1, name: "Bulbasaur", artwork: art(1) });

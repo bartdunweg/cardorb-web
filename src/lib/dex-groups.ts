@@ -24,23 +24,41 @@ export type DexGeneration = { label: string; from: number; to: number; slots: Na
 export type DexCardLike = Pick<Card, "id" | "name" | "number" | "species_id" | "rarity" | "image_url" | "image_high_url"> & {
     set?: string | null;
     set_name?: string | null;
+    /** How many of it are held; a public card says nothing and counts once. */
+    quantity?: number | null;
+    /** What one copy is worth in euros; a public card carries none, and the value is then unknown. */
+    price?: number | null;
 };
+
+/**
+ * The numbers a Pokédex says about the cards in its slots, counted as a rule binder counts what
+ * matches its rule: rows, copies (a card held twice is two), their worth, and the copies nothing
+ * prices. The Pokédex is a binder with a rule of its own (the range and the rarities kept), so the
+ * cards the rule leaves out (a trainer, a common when only the rares are kept) are not in these.
+ * `value` is null when no card carries a price, as on a public profile.
+ */
+export type DexCount = { cards: number; copies: number; value: number | null; unpriced: number };
 
 export function groupByDex(
     cards: DexCardLike[],
     species: DexSpecies,
     setting: PokedexSetting,
-): { slots: NamedDexSlot[]; generations: DexGeneration[]; caught: number; range: DexRange; cards: number } {
+): { slots: NamedDexSlot[]; generations: DexGeneration[]; caught: number; range: DexRange } & DexCount {
     const range = setting.dex ?? { from: 1, to: NATIONAL_DEX_MAX };
     // Only the rarities the setting names, compared without case: the catalogue spells some two ways.
     const kept = setting.rarities ?? null;
     const bySlot = new Map<number, DexCardLike[]>();
-    let counted = 0;
+    const count: DexCount = { cards: 0, copies: 0, value: null, unpriced: 0 };
     for (const card of cards) {
         const id = card.species_id;
         if (id === null || id < range.from || id > range.to) continue;
         if (kept && !rarityKept(kept, card.rarity, card.name)) continue;
-        counted += 1;
+        const copies = Math.max(0, card.quantity ?? 1);
+        count.cards += 1;
+        count.copies += copies;
+        // A public card carries no price at all: nothing to sum, and no value to say.
+        if (card.price === null) count.unpriced += copies;
+        else if (card.price !== undefined) count.value = (count.value ?? 0) + card.price * copies;
         const list = bySlot.get(id) ?? [];
         list.push(card);
         bySlot.set(id, list);
@@ -76,8 +94,13 @@ export function groupByDex(
         if (held.length === 0) continue;
         generations.push({ label: gen.label, from, to, slots: held, caught: held.filter((s) => s.cards.length > 0).length, total: to - from + 1 });
     }
-    return { slots, generations, caught: bySlot.size, range, cards: counted };
+    if (count.value !== null) count.value = Math.round(count.value * 100) / 100;
+    return { slots, generations, caught: bySlot.size, range, ...count };
 }
 
-/** A folder as a Pokédex, with the numbers the page says about it: the slots, plus the list's own count and worth. */
-export type DexList = ReturnType<typeof groupByDex> & { total: number; copies?: number; value: number | null; unpriced: number };
+/**
+ * A folder as a Pokédex, with the numbers the page says about it. `total` is what the page walks
+ * through (the rows in the slots; the list read more, and those are not shown), `copies`, `value`
+ * and `unpriced` the slots' own, from `DexCount`.
+ */
+export type DexList = ReturnType<typeof groupByDex> & { total: number };

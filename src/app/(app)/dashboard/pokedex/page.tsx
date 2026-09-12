@@ -31,16 +31,17 @@ export default async function PokedexPage({ searchParams }: { searchParams: Prom
     const setting = me.profile?.pokedex ?? DEFAULT_POKEDEX;
 
     // One read of every card, not awaited: the slots, the count and the Filters sheet's facets all come from it.
+    // The count, the value and the number in the sidebar are the slots' own (getPokedexCount): the
+    // Pokédex is a binder with a rule, and says what the rule keeps, not what the read returned.
     const all = getAllMyCards(filter);
     const facets = all.then((r) => r.facets);
-    const dex: Promise<DexList> = Promise.all([all, getDexNames()]).then(([r, names]) => ({
-        ...groupByDex(r.cards, names, setting),
-        total: r.total,
-        value: r.value,
-        unpriced: r.unpriced,
-    }));
+    const dex: Promise<DexList> = Promise.all([all, getDexNames()]).then(([r, names]) => {
+        const grouped = groupByDex(r.cards, names, setting);
+        return { ...grouped, total: grouped.cards };
+    });
     const datapoints = dex.then((d) => ({
         total: d.total,
+        copies: d.copies,
         narrowed,
         value: d.value,
         unpriced: d.unpriced,

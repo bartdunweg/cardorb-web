@@ -69,7 +69,8 @@ export async function getMyCards({
     number,
     priced,
     facets: wantFacets,
-}: CardFilter & { limit?: number; offset?: number } = {}): Promise<{
+    token,
+}: CardFilter & { limit?: number; offset?: number; token?: string } = {}): Promise<{
     cards: Card[];
     total: number;
     /** The list as a person counts it: an owned copy `quantity` times, a wish once. Null from an API before it said. */
@@ -126,7 +127,9 @@ export async function getMyCards({
             facets: facetsFrom(facets),
         };
     };
-    return key ? perUser(key, read) : read();
+    // A caller inside the per-user cache (getPokedexCount) hands the token in: the session cannot
+    // be read there. Such a read is never the first batch, so it is not cached twice.
+    return key && !token ? perUser(key, read) : read(token);
 }
 
 export type CardStats = {
@@ -158,12 +161,12 @@ export async function getCardStats(): Promise<CardStats> {
  * One request of up to 2,000 (the API's ceiling for an owner); should a collection outgrow it,
  * the rest follows in pages of the same size.
  */
-export async function getAllMyCards(filter: CardFilter) {
+export async function getAllMyCards(filter: CardFilter, token?: string) {
     const PAGE = 2000;
-    const first = await getMyCards({ ...filter, limit: PAGE, offset: 0 });
+    const first = await getMyCards({ ...filter, limit: PAGE, offset: 0, token });
     const got = first.cards.length;
     if (got >= first.total || got === 0) return first;
     const pages = Math.ceil((first.total - got) / got);
-    const rest = await Promise.all(Array.from({ length: pages }, (_, i) => getMyCards({ ...filter, limit: PAGE, offset: got * (i + 1) })));
+    const rest = await Promise.all(Array.from({ length: pages }, (_, i) => getMyCards({ ...filter, limit: PAGE, offset: got * (i + 1), token })));
     return { ...first, cards: [...first.cards, ...rest.flatMap((p) => p.cards)] };
 }
