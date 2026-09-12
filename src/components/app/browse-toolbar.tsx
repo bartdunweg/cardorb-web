@@ -33,7 +33,15 @@ export function BrowseToolbar({ query, view }: { query: BrowseQuery; view: SetsV
     return (
         <div className={cx("flex items-center gap-2 transition-opacity", pending && "opacity-60")}>
             {/* The field takes what the buttons leave, so the row is one line at every width. */}
-            <CardsSearch size="sm" initialValue={query.q ?? ""} label="Search sets" placeholder="Search sets" className="min-w-0 flex-1 sm:max-w-64" />
+            {/* The shelf it filters is the shelf it offers: its set names, in the language chosen. */}
+            <CardsSearch
+                size="sm"
+                initialValue={query.q ?? ""}
+                label="Search sets"
+                placeholder="Search sets"
+                className="min-w-0 flex-1 sm:max-w-64"
+                shelf={query.language}
+            />
             <FiltersSheet active={query.language === "en" ? 0 : 1}>
                 {/* English is the default and reads as the first row, as "All sets" does in a binder's sheet. */}
                 <NativeSelect

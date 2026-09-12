@@ -5,8 +5,10 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { SearchLg } from "@untitledui/icons";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type TitleScope, collectionIndex, suggestCardTitles } from "@/app/(app)/dashboard/cards/actions";
+import { listSetsShelf } from "@/app/(app)/dashboard/sets/actions";
 import { InputBase } from "@/components/base/input/input";
 import { type CardTitle, type TitleSet, matchSets, matchTitles } from "@/lib/card-titles";
+import type { BrowseLanguage } from "@/lib/languages";
 import { cx } from "@/utils/cx";
 
 /** What one binder's field knows about that binder, kept for as long as the tab lives. */
@@ -35,6 +37,7 @@ export function CardsSearch({
     className = "w-full max-w-80",
     size = "md",
     scope,
+    shelf,
 }: {
     initialValue?: string;
     label?: string;
@@ -42,8 +45,10 @@ export function CardsSearch({
     className?: string;
     /** sm beside the sm menu buttons of a folder page's row. */
     size?: "sm" | "md";
-    /** The list this field filters. Absent (Browse, a public profile) there are no suggestions. */
+    /** The list this field filters. Absent (Browse, a public profile) there are no titles to offer. */
     scope?: TitleScope;
+    /** Browse instead: the field filters a shelf of sets, so the shelf's own set names are what it offers. */
+    shelf?: BrowseLanguage;
 }) {
     const router = useRouter();
     const pathname = usePathname();
@@ -94,40 +99,51 @@ export function CardsSearch({
     /** The term a press on a suggestion already answered: it must not open the list again. */
     const [taken, setTaken] = useState<string | null>(null);
     const [index, setIndex] = useState<Index | null>(null);
-    const scopeKey = JSON.stringify(scope ?? null);
+    const suggests = Boolean(scope || shelf);
+    const sourceKey = JSON.stringify({ scope: scope ?? null, shelf: shelf ?? null });
+    /* Where the names come from: a binder reads its own cards, Browse reads the shelf it shows.
+       A shelf is one read of set names, so it is always whole; a binder may be larger than one. */
+    const read = (): Promise<Index> =>
+        scope
+            ? collectionIndex(scope)
+            : listSetsShelf(shelf).then(({ series }) => ({
+                  titles: series.flatMap((group) => group.sets.map((set) => ({ name: set.name, hint: group.name }))),
+                  sets: [],
+                  complete: true,
+              }));
 
-    // The binder's own titles, once. Asked for on the first keystroke rather than on mount: a page
+    // The list's own names, once. Asked for on the first keystroke rather than on mount: a page
     // nobody searches never asks, and the read is small enough that the first term waits on it.
     useEffect(() => {
-        if (!scope || !value.trim() || index) return;
+        if (!suggests || !value.trim() || index) return;
         let live = true;
-        const known = indexes.get(scopeKey) ?? collectionIndex(scope).catch(() => ({ titles: [], sets: [], complete: false }));
-        indexes.set(scopeKey, known);
+        const known = indexes.get(sourceKey) ?? read().catch(() => ({ titles: [], sets: [], complete: false }));
+        indexes.set(sourceKey, known);
         Promise.resolve(known).then((ready) => {
-            indexes.set(scopeKey, ready);
+            indexes.set(sourceKey, ready);
             if (live) setIndex(ready);
         });
         return () => {
             live = false;
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [value, scopeKey, index]);
+    }, [value, sourceKey, index]);
 
     /* In hand: the answer is here, so it comes with the keystroke and nothing is asked. Worked out
        while the field renders rather than in an effect, because it is a view of what is typed. */
     const local = useMemo(() => {
-        if (!scope || !index?.complete || term.length < 2) return null;
+        if (!suggests || !index?.complete || term.length < 2) return null;
         return matchTitles(index.titles, term).map((title) => ({ kind: "title" as const, title }));
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [term, index, scopeKey]);
+    }, [term, index, sourceKey]);
 
     /* The sets are the index's other half, and they come whole however large the binder is: the
        API counts them itself, so a collection too big to hold still knows every set it holds. */
     const setHits = useMemo(() => {
-        if (!scope || !index || term.length < 2) return [];
+        if (!index || term.length < 2) return [];
         return matchSets(index.sets, term).map((set) => ({ kind: "set" as const, set }));
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [term, index, scopeKey]);
+    }, [term, index, sourceKey]);
 
     // A binder too large to hold, or one still on its way: the API answers per term, behind the
     // URL's own 250 ms, because what is on screen matters more than what is offered beside it.
@@ -148,14 +164,14 @@ export function CardsSearch({
             clearTimeout(id);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [term, local, scopeKey]);
+    }, [term, local, sourceKey]);
 
     const found = [...(local ?? (remote.term === term ? remote.hits : [])), ...setHits];
     /* The term the list was put away for, by Escape, a press or a blur: it stays away until the
        next keystroke. And a term a suggestion just answered opens nothing, or choosing a title
        would offer that same title back. */
     const [dismissed, setDismissed] = useState<string | null>(null);
-    const isOpen = Boolean(scope) && found.length > 0 && dismissed !== term && taken !== term;
+    const isOpen = suggests && found.length > 0 && dismissed !== term && taken !== term;
 
     /* The keyboard starts on the typed text again whenever the text changes. Reset during render,
        the shape React asks for, as the URL above does. */
@@ -222,8 +238,10 @@ export function CardsSearch({
     // reader user never learns about. Always mounted, as the filter sheet's own region is: one
     // that appears with its text in it is never read out. Only what is there is counted, because
     // "0 titles and 1 set" is a sentence about what the reader did not ask for.
+    // On Browse the options are sets, in a binder they are the titles of cards: one word each way.
+    const noun = shelf ? "set" : "title";
     const counted = [
-        titles.length && `${titles.length} title${titles.length === 1 ? "" : "s"}`,
+        titles.length && `${titles.length} ${noun}${titles.length === 1 ? "" : "s"}`,
         sets.length && `${sets.length} set${sets.length === 1 ? "" : "s"}`,
     ].filter(Boolean);
     const offered = isOpen ? `${counted.join(" and ")}, use the arrow keys` : "";
@@ -276,10 +294,10 @@ export function CardsSearch({
                 onBlur={close}
                 size={size}
                 wrapperClassName="rounded-full"
-                role={scope ? "combobox" : undefined}
-                aria-expanded={scope ? isOpen : undefined}
-                aria-controls={scope && isOpen ? listId : undefined}
-                aria-autocomplete={scope ? "list" : undefined}
+                role={suggests ? "combobox" : undefined}
+                aria-expanded={suggests ? isOpen : undefined}
+                aria-controls={suggests && isOpen ? listId : undefined}
+                aria-autocomplete={suggests ? "list" : undefined}
                 aria-activedescendant={isOpen && active >= 0 ? `${listId}-${active}` : undefined}
             />
 
@@ -292,7 +310,7 @@ export function CardsSearch({
                 <ul
                     id={listId}
                     role="listbox"
-                    aria-label="Titles and sets"
+                    aria-label={shelf ? "Sets" : "Titles and sets"}
                     className="absolute top-full right-0 left-0 z-50 mt-1 max-h-72 overflow-y-auto rounded-lg bg-primary py-1 shadow-lg ring-1 ring-secondary_alt"
                 >
                     {/* Titles first, then the sets under a heading of their own, rather than ten
