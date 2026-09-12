@@ -1,47 +1,30 @@
 "use client";
 
-import type { ComponentProps, FC } from "react";
-import { Button as AriaButton } from "react-aria-components";
-import { cx } from "@/utils/cx";
+import type { FC } from "react";
+import { Button } from "@/components/base/buttons/button";
 
 /**
- * Ours: the round button under a card tile, in the row under the price. A set's tile carries a
- * heart and a plus there, a wishlist tile a check, and every one of them is this one size in this
- * one place, so a grid reads the same whichever list it is.
+ * Ours, on the kit's button: the round button under a card tile, in the row under the price. A
+ * set's tile carries a heart and a plus there, a wishlist tile a check, and every one of them is
+ * this one size in this one place, so a grid reads the same whichever list it is.
  *
- * Not the kit's ButtonUtility: that is a square toolbar control, and these sit under a card's
- * rounded corners in a grid of a hundred. A react-aria button, so it can be a dialog's or a
- * menu's trigger as well as a button of its own.
+ * The kit's smallest icon-only button, secondary and a pill: 32 by 32, the size of every other
+ * icon button in the app. It was a hand-built 28, the one control of its kind that size. The
+ * kit's button is a react-aria button, so it can be a dialog's or a menu's trigger as well.
  *
- * size-7, not size-6: 24px clears WCAG 2.5.8's minimum by nothing at all, and this is a thumb
- * target on a phone. The label is the whole name: the icon says nothing to a screen reader.
+ * The label is the whole name: the icon says nothing to a screen reader.
  */
 export function TileIconButton({
-    icon: Icon,
+    icon,
     label,
     pending = false,
-    ...props
-}: Omit<ComponentProps<typeof AriaButton>, "className" | "children" | "aria-label"> & {
-    icon: FC<{ className?: string; "aria-hidden"?: boolean | "true" }>;
+    onPress,
+}: {
+    icon: FC<{ className?: string }>;
     /** What it does and to which card: "Add Pikachu #25 to your collection". */
     label: string;
     pending?: boolean;
+    onPress?: () => void;
 }) {
-    return (
-        <AriaButton
-            {...props}
-            isDisabled={pending || props.isDisabled}
-            aria-label={label}
-            className={({ isFocusVisible, isHovered }) =>
-                cx(
-                    "flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-primary ring-1 ring-primary outline-offset-2 outline-focus-ring ring-inset",
-                    isHovered && "bg-primary_hover",
-                    isFocusVisible && "outline-2",
-                    pending && "cursor-progress opacity-50",
-                )
-            }
-        >
-            <Icon className="size-3.5" aria-hidden="true" />
-        </AriaButton>
-    );
+    return <Button size="xs" color="secondary" iconLeading={icon} aria-label={label} isDisabled={pending} onClick={onPress} />;
 }
