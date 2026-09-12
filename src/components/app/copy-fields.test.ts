@@ -107,3 +107,26 @@ describe("editionOptions", () => {
         expect(values(editionOptions(promo, "1st-edition"))).toContain("1st-edition");
     });
 });
+
+describe("editionOptions, in the language the copy is", () => {
+    const base = facts({ editions: ["1st-edition", "shadowless", "unlimited"], firstEdition: true });
+
+    it("offers Shadowless on an English copy, and on one whose language nobody set", () => {
+        expect(values(editionOptions(base, null, "en"))).toContain("shadowless");
+        expect(values(editionOptions(base, null, null))).toContain("shadowless");
+        expect(values(editionOptions(base, null, ""))).toContain("shadowless");
+    });
+
+    it("does not offer it on a German or French copy, which never had that layout", () => {
+        expect(values(editionOptions(base, null, "de"))).toEqual(["", "1st-edition", "unlimited"]);
+        expect(values(editionOptions(base, null, "fr"))).toEqual(["", "1st-edition", "unlimited"]);
+    });
+
+    it("keeps it where somebody recorded it, whatever the language says", () => {
+        expect(values(editionOptions(base, "shadowless", "de"))).toContain("shadowless");
+    });
+
+    it("leaves the other runs alone", () => {
+        expect(values(editionOptions(facts({}), null, "de"))).toEqual(["", "1st-edition", "unlimited"]);
+    });
+});

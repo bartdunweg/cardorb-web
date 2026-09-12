@@ -116,13 +116,28 @@ export function patternOptions(facts: CardFacts | null | undefined, finish: stri
  * "none exist". `firstEdition` is still read for an API older than the one that answers
  * `editions`.
  */
-export function editionOptions(facts: CardFacts | null | undefined, current: string | null | undefined): Options {
+export function editionOptions(facts: CardFacts | null | undefined, current: string | null | undefined, language?: string | null): Options {
     const runs = facts?.editions ?? null;
+    const all = EDITIONS.filter((e) => inLanguage(e, language) || e === current);
     if (!runs) {
         if (facts?.firstEdition === false && !current) return [];
-        return [NOT_RECORDED, ...EDITIONS.map((e) => ({ label: EDITION_LABELS[e], value: e }))];
+        return [NOT_RECORDED, ...all.map((e) => ({ label: EDITION_LABELS[e], value: e }))];
     }
-    const offered = EDITIONS.filter((e) => runs.includes(e) || e === current);
+    const offered = all.filter((e) => runs.includes(e) || e === current);
     if (!current && offered.length <= 1) return [];
     return [NOT_RECORDED, ...offered.map((e) => ({ label: EDITION_LABELS[e], value: e }))];
 }
+
+/**
+ * Whether a run exists in the language a copy is in.
+ *
+ * Shadowless is the English release and only that one. Bulbapedia, on Base Set: "Unlike the
+ * English release, 1st Edition prints in other languages were not produced using the Shadowless
+ * layout. Instead, they feature the same card design as their respective Unlimited prints." So a
+ * German Base Set card has a 1st Edition and an unlimited run and no middle one, and was being
+ * offered a layout that was never printed in German.
+ *
+ * Not recorded reads as English, which is what the rest of the app does with a language nobody
+ * set (languageOf), and which nearly every copy is.
+ */
+const inLanguage = (edition: string, language: string | null | undefined): boolean => edition !== "shadowless" || !language || language === "en";

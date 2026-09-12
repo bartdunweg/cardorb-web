@@ -80,7 +80,7 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
     const solePattern = soleOption(patterns);
     const effectivePattern = pattern || solePattern?.value || "";
     // Asked only of a card the catalogue says had a stamped run, or says nothing about.
-    const editions = editionOptions(facts, from.edition ?? null);
+    const editions = editionOptions(facts, from.edition ?? null, language);
 
     const edits = (): CopyEdits => {
         const out: CopyEdits = {};
