@@ -70,6 +70,10 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                 >
                     <CardTile
                         onSelect={() => onSelect(card, cards)}
+                        // Under md the button has a row of its own in the cell, so the tile must not fill the cell:
+                        // h-full took the whole of it and pushed "Got it" out under the next row's pictures, where
+                        // a tap on it hit a picture. From md the button floats over the tile and the fill is right.
+                        className={action && size !== "sm" ? "max-md:h-auto" : undefined}
                         onWarm={() => warmCard(card.tcg_id)}
                         picture={
                             /* Nothing of ours around the picture: a card carries its own printed border, and a hairline
