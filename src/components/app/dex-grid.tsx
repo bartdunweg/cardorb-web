@@ -2,7 +2,7 @@
 
 import { type ReactNode, Suspense, use, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { listCopies } from "@/app/(app)/dashboard/cards/actions";
+import { listCopies, setDexFace } from "@/app/(app)/dashboard/cards/actions";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { CardTile } from "@/components/app/card-tile";
@@ -14,7 +14,7 @@ import type { DexCard } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
 import { type CardsSize, GRID_COLUMNS, TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
 import type { DexGeneration, DexList, NamedDexSlot } from "@/lib/dex-groups";
-import { formatCount } from "@/lib/format";
+import { formatCount, formatPrice } from "@/lib/format";
 import { cx } from "@/utils/cx";
 
 // The card sheet, fetched on the tap that opens it: it is the app's largest client chunk and the
@@ -106,7 +106,7 @@ export function DexGrid({ generations, size = "md", linked = true }: { generatio
                         </div>
                         <div className={cx("grid gap-4", GRID_COLUMNS[size])}>
                             {gen.slots.slice(0, shown - start).map((slot) => (
-                                <DexTile key={slot.number} slot={slot} onSelect={linked ? open : undefined} />
+                                <DexTile key={slot.number} slot={slot} onSelect={linked ? open : undefined} remembers={linked} />
                             ))}
                         </div>
                     </section>
@@ -127,15 +127,37 @@ export function DexGrid({ generations, size = "md", linked = true }: { generatio
 }
 
 // `onSelect`: a card opens its sheet; on a public page there is nowhere to go, so the tile is a plain tile.
-function DexTile({ slot, onSelect }: { slot: NamedDexSlot; onSelect?: (card: DexCard) => void }) {
+// `remembers`: only the owner's own Pokédex writes down the card a swipe settles on.
+function DexTile({ slot, onSelect, remembers }: { slot: NamedDexSlot; onSelect?: (card: DexCard) => void; remembers: boolean }) {
     const held = slot.cards.length;
-    const line = `${dexNumber(slot.number)} · ${held === 0 ? "Missing" : held === 1 ? "1 card" : `${held} cards`}`;
-    const words = (
+    // The card in view. It starts on the slot's first card, which is the one its owner chose
+    // (groupByDex hands the face back first), and follows the slider from there.
+    const [shown, setShown] = useState<DexCard | null>(slot.cards[0] ?? null);
+
+    // Above the picture: the Pokémon. Its name, then its number and how many cards of it you hold.
+    // Two lines rather than one: at seven columns a tile is ninety pixels wide, and a name sharing a
+    // line with the count is cut to "Bulba".
+    const header = (
         <div className="flex flex-col">
             <span className={cx("truncate text-sm font-medium", held === 0 ? "text-tertiary" : "text-primary")}>{slot.name}</span>
-            <span className="truncate text-xs text-tertiary">{line}</span>
+            <span className="truncate text-xs text-tertiary tabular-nums">
+                {held > 1 ? `${dexNumber(slot.number)} · ${held} cards` : dexNumber(slot.number)}
+            </span>
         </div>
     );
+
+    // Under the picture: the card you are looking at, not the slot, so it changes as you swipe. A
+    // slot you hold nothing of has no card to describe and says what it is instead. A card the API
+    // prices at nothing leaves the right-hand side empty rather than writing a zero.
+    const words =
+        held === 0 ? (
+            <span className="truncate text-xs text-tertiary">Missing</span>
+        ) : (
+            <div className="flex items-baseline justify-between gap-2">
+                <span className="truncate text-xs text-tertiary">{shown?.set ?? ""}</span>
+                <span className="shrink-0 text-xs text-tertiary tabular-nums">{formatPrice(shown?.price)}</span>
+            </div>
+        );
 
     // A missing slot shows the Pokémon itself, in grey: what to look for, drawn as not held. The
     // picture is the API's own copy of the official artwork, 120 px on a see-through ground, so it
@@ -146,6 +168,7 @@ function DexTile({ slot, onSelect }: { slot: NamedDexSlot; onSelect?: (card: Dex
     if (held === 0) {
         return (
             <CardTile
+                header={header}
                 picture={
                     <div className="flex aspect-card w-full items-center justify-center rounded-card bg-tertiary">
                         {slot.artwork ? (
@@ -171,7 +194,29 @@ function DexTile({ slot, onSelect }: { slot: NamedDexSlot; onSelect?: (card: Dex
 
     // The slider is the press target here, one card at a time, so the tile around it is not one.
     if (held > 1) {
-        return <CardTile picture={<DexSlider cards={slot.cards} onSelect={onSelect} />} words={words} />;
+        return (
+            <CardTile
+                header={header}
+                picture={
+                    <DexSlider
+                        cards={slot.cards}
+                        onSelect={onSelect}
+                        onShow={setShown}
+                        // Where a swipe stops is the slot's card. Nothing is written for the card that is
+                        // already the face, and nothing at all on somebody else's profile.
+                        onSettle={
+                            remembers
+                                ? (card) => {
+                                      if (card.isFace) return;
+                                      void setDexFace(card.id, slot.cards.find((c) => c.isFace)?.id ?? null);
+                                  }
+                                : undefined
+                        }
+                    />
+                }
+                words={words}
+            />
+        );
     }
 
     const card = slot.cards[0]!;
@@ -192,7 +237,7 @@ function DexTile({ slot, onSelect }: { slot: NamedDexSlot; onSelect?: (card: Dex
             )}
         </div>
     );
-    return <CardTile picture={picture} words={words} onSelect={onSelect ? () => onSelect(card) : undefined} />;
+    return <CardTile header={header} picture={picture} words={words} onSelect={onSelect ? () => onSelect(card) : undefined} />;
 }
 
 // The Pokédex body under the shared row: the View menu offers the size alone, a slot being

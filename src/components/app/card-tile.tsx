@@ -18,12 +18,15 @@ import { cx } from "@/utils/cx";
  * where there is nowhere to go.
  */
 export function CardTile({
+    header,
     picture,
     words,
     onSelect,
     onWarm,
     className,
 }: {
+    /** A line above the picture, where a list says what the tile stands for before showing it. */
+    header?: ReactNode;
     /** The picture in its own box. Nothing of ours frames it: a card carries its own printed border. */
     picture: ReactNode;
     /** The lines under it: the name, and whatever else that list says about the card. */
@@ -39,6 +42,7 @@ export function CardTile({
     if (!onSelect) {
         return (
             <div className={cx("flex flex-col gap-2", className)}>
+                {header}
                 {picture}
                 {words}
             </div>
@@ -55,6 +59,7 @@ export function CardTile({
                 className,
             )}
         >
+            {header}
             {picture}
             {words}
         </AriaButton>

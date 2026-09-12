@@ -326,6 +326,29 @@ export async function setFavorite(cardId: string, isFavorite: boolean): Promise<
     return { ok: true };
 }
 
+// The card a Pokédex slot shows: the one you left standing on the slider. Two writes, not one,
+// because the API cannot find the card this one replaces: species_id is read from the catalogue at
+// request time and is not a column. The slot has both cards in hand, so the app clears the old one.
+//
+// No forgetMine: a Pokédex reads every card, and that read is deliberately outside the list cache
+// (getAllMyCards), so the next visit is already fresh. Dropping the cache here would redraw a
+// thousand slots for a picture that is already on screen.
+export async function setDexFace(cardId: string, previousId: string | null): Promise<Result> {
+    const parsed = z.object({ cardId: z.string().uuid(), previousId: z.string().uuid().nullable() }).safeParse({ cardId, previousId });
+    if (!parsed.success) return { ok: false, error: "Invalid card." };
+
+    try {
+        await api(`/collection/items/${parsed.data.cardId}`, { method: "PATCH", body: { dexFace: true } });
+        if (parsed.data.previousId && parsed.data.previousId !== parsed.data.cardId) {
+            await api(`/collection/items/${parsed.data.previousId}`, { method: "PATCH", body: { dexFace: false } });
+        }
+    } catch (err) {
+        return failed(err);
+    }
+
+    return { ok: true };
+}
+
 /** One reading of a card's price, from GET /v1/cards/{tcgId}/prices. Euros; null where Cardmarket published nothing. */
 export type PricePoint = { date: string; market: number | null; holo: number | null };
 

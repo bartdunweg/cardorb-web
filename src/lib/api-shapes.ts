@@ -135,6 +135,8 @@ export const cardItemSchema = z.object({
     purchaseDate: nullable(z.string()),
     notes: nullable(z.string()),
     isFavorite: z.boolean(),
+    /** This card leads its Pokémon's Pokédex slot; absent from an API before it said so. */
+    dexFace: z.boolean().nullish(),
     /** Kept off the public profile and the latest pull; absent from an API older than its #227. */
     excluded: z.boolean().nullish(),
     acquiredAt: nullable(z.string()),
@@ -204,6 +206,8 @@ export type Card = {
     quantity: number | null;
     owned: boolean | null;
     is_favorite: boolean | null;
+    /** The card its Pokémon's Pokédex slot shows: the one its owner left standing on the slider. */
+    dex_face: boolean;
     /** Kept off the public profile and the latest pull. */
     excluded: boolean;
     condition: string | null;
@@ -306,6 +310,7 @@ export const cardFromItem = (item: CardItem): Card => ({
     quantity: item.quantity,
     owned: item.owned,
     is_favorite: item.isFavorite,
+    dex_face: item.dexFace ?? false,
     excluded: item.excluded ?? false,
     condition: item.condition,
     grade: item.grade,
@@ -344,6 +349,7 @@ export type PublicCard = Pick<
     | "image_high_url"
     | "tcg_id"
     | "is_favorite"
+    | "dex_face"
     | "species_id"
 >;
 
@@ -367,6 +373,8 @@ export const publicItemSchema = z.object({
     copies: z.number(),
     /** One of the owned copies is starred; absent from an API before it said so. */
     favorite: z.boolean().nullish(),
+    /** One of the owned copies leads its Pokédex slot; absent from an API before it said so. */
+    dexFace: z.boolean().nullish(),
 });
 export type PublicItem = z.infer<typeof publicItemSchema>;
 
@@ -386,13 +394,25 @@ export const publicCardFromItem = (item: PublicItem): PublicCard => ({
     image_high_url: absoluteImage(item.imageHigh ?? null),
     tcg_id: item.tcgId,
     is_favorite: item.favorite ?? false,
+    dex_face: item.dexFace ?? false,
     species_id: item.speciesId,
 });
 
 // ── GET /v1/pokedex ───────────────────────────────────────────────────────────────────────
 
 /** One card in a Pokédex slot. `set` and `number` name it to the API, so a tap can open that card and not its namesakes. */
-export type DexCard = { id: string; name: string; set: string | null; number: string | null; imageUrl: string | null; imageHighUrl: string | null };
+export type DexCard = {
+    id: string;
+    name: string;
+    set: string | null;
+    number: string | null;
+    imageUrl: string | null;
+    imageHighUrl: string | null;
+    /** What one copy is worth in euros; null on a public profile, which carries no prices. */
+    price: number | null;
+    /** The card the slot opens on, because its owner left it standing there. */
+    isFace: boolean;
+};
 export type DexSlot = { number: number; cards: DexCard[] };
 
 // ── GET /v1/catalog/sets ──────────────────────────────────────────────────────────────────
@@ -670,6 +690,7 @@ export const cardFromPokemonCard = (c: PokemonCard): Card => ({
     quantity: c.quantity,
     owned: c.owned,
     is_favorite: false,
+    dex_face: false,
     excluded: false,
     condition: null,
     grade: null,

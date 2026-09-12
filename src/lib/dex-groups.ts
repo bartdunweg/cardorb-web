@@ -28,6 +28,8 @@ export type DexCardLike = Pick<Card, "id" | "name" | "number" | "species_id" | "
     quantity?: number | null;
     /** What one copy is worth in euros; a public card carries none, and the value is then unknown. */
     price?: number | null;
+    /** True for the card its slot shows: the one the owner left standing on the slider. */
+    dex_face?: boolean | null;
 };
 
 /**
@@ -38,6 +40,17 @@ export type DexCardLike = Pick<Card, "id" | "name" | "number" | "species_id" | "
  * `value` is null when no card carries a price, as on a public profile.
  */
 export type DexCount = { cards: number; copies: number; value: number | null; unpriced: number };
+
+/**
+ * The card a slot shows first: the one its owner left standing on the slider, then the rest in the
+ * order the list gave them. Sort is stable in every engine this runs on, so "the rest" keeps its
+ * order. Two cards of one species carrying the flag is not an error (another client may have left
+ * one behind): the first one found leads, and the next swipe settles it.
+ */
+function faceFirst(held: DexCardLike[]): DexCardLike[] {
+    if (!held.some((c) => c.dex_face)) return held;
+    return [...held].sort((a, b) => Number(!!b.dex_face) - Number(!!a.dex_face));
+}
 
 export function groupByDex(
     cards: DexCardLike[],
@@ -72,13 +85,15 @@ export function groupByDex(
             number,
             name: known?.name ?? `#${number}`,
             artwork: known?.artwork ?? null,
-            cards: held.map((c) => ({
+            cards: faceFirst(held).map((c) => ({
                 id: c.id,
                 name: c.name,
                 set: c.set_name ?? c.set ?? null,
                 number: c.number,
                 imageUrl: c.image_url,
                 imageHighUrl: c.image_high_url,
+                price: c.price ?? null,
+                isFace: !!c.dex_face,
             })),
         });
     }
