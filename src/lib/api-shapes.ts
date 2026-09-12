@@ -948,6 +948,11 @@ export const cardFactsAnswer = z.object({
     printings: z.array(z.object({ finish: z.enum(FINISHES), foilPattern: nullable(z.string()) })).nullish(),
     /** The print runs a copy can be from. Null or absent: no answer, and all of them are offered. */
     editions: z.array(z.enum(EDITIONS)).nullish(),
+    /**
+     * The foil patterns a copy of this card can be recorded with. An empty list is an answer, none
+     * (a Wizards holo had its set's one foil, cardorb-api#375); null or absent is no answer.
+     */
+    foilPatterns: z.array(z.string()).nullish(),
     /** Whether a stamped first run of this card exists, as TCGdex says. Null or absent: no answer. */
     firstEdition: z.boolean().nullish(),
     /** TCGplayer's figure for the printing, converted; null where TCGplayer prices nothing (cardorb-api#354). */

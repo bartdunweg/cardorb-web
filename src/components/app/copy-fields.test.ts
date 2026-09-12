@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CardFacts } from "@/app/(app)/dashboard/cards/actions";
-import { editionOptions, finishOptions, patternOptions } from "./copy-fields";
+import { editionOptions, finishOptions, patternOptions, soleOption } from "./copy-fields";
 
 /** Only the fields these read; the rest of the facts is not this question. */
 const facts = (of: Partial<CardFacts>): CardFacts => ({ firstEdition: null, printings: [], editions: null, languages: ["en"], ...of }) as unknown as CardFacts;
@@ -76,7 +76,44 @@ describe("patternOptions", () => {
     });
 });
 
+describe("patternOptions, where a finish is printed with and without a named foil", () => {
+    // 151 Machamp: a plain holo, a cosmos holo and a reverse (TCGdex sv03.5-068).
+    const machamp151 = facts({
+        printings: [
+            { finish: "holo", foilPattern: null },
+            { finish: "holo", foilPattern: "cosmos" },
+            { finish: "reverse-holo", foilPattern: null },
+        ],
+    });
+
+    it("offers standard beside cosmos, and does not state cosmos as the only answer", () => {
+        const offered = patternOptions(machamp151, "holo", null);
+        expect(offered.map((o) => o.label)).toEqual(["Standard", "Cosmos"]);
+        expect(soleOption(offered)).toBeNull();
+    });
+});
+
+describe("patternOptions, on a Wizards card", () => {
+    const machamp = facts({ printings: [{ finish: "holo", foilPattern: null }], foilPatterns: [] });
+
+    it("asks nothing where the era had one foil for every holo", () => {
+        expect(patternOptions(machamp, "holo", null)).toEqual([]);
+    });
+
+    it("keeps a pattern somebody recorded anyway", () => {
+        expect(values(patternOptions(machamp, "holo", "cosmos"))).toEqual(["", "cosmos"]);
+    });
+});
+
 describe("editionOptions", () => {
+    // Base Set Machamp came stamped and only stamped (cardorb-api#375).
+    it("states the one stamped run of a card never printed without the stamp", () => {
+        const stamped = facts({ printings: [{ finish: "holo", foilPattern: null }], editions: ["1st-edition"], firstEdition: true });
+        expect(soleOption(editionOptions(stamped, null, "en"))?.value).toBe("1st-edition");
+        const machamp = facts({ printings: [{ finish: "holo", foilPattern: null }], editions: ["1st-edition", "shadowless"], firstEdition: true });
+        expect(values(editionOptions(machamp, null, "en"))).toEqual(["", "1st-edition", "shadowless"]);
+    });
+
     it("asks nothing of a card that had one run", () => {
         expect(editionOptions(promo, null)).toEqual([]);
     });

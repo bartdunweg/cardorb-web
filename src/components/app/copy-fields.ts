@@ -38,11 +38,14 @@ export type Options = { label: string; value: string }[];
  * states it instead, and saves it, which is not a guess, it is the only possibility.
  */
 export const soleOption = (options: Options): { label: string; value: string } | null => {
+    // A blank that is itself an answer ("Standard") makes two real choices, not one.
+    if (options.some((o) => o.value === "" && o !== NOT_RECORDED)) return null;
     const real = options.filter((o) => o.value !== "");
     return options.length === real.length + 1 && real.length === 1 ? real[0]! : null;
 };
 
 const NOT_RECORDED = { label: "Not recorded", value: "" };
+const STANDARD = { label: "Standard", value: "" };
 
 /*
  * Every finish asks the catalogue about itself, the ball reverses included. They used to ask
@@ -72,7 +75,12 @@ export function finishOptions(facts: CardFacts | null | undefined, current: stri
  */
 export function patternOptions(facts: CardFacts | null | undefined, finish: string | null | undefined, current: string | null | undefined): Options {
     const made = facts?.printings ?? [];
-    const all = Object.keys(FOIL_PATTERN_LABELS) as FoilPattern[];
+    /* The patterns the card's era could have at all. An empty list is the API saying none: a
+       Wizards holo had its set's one foil (Starlight, then Cosmos), and asking which of five a
+       Base Set Machamp has offers five wrong answers. Null leaves it to the printings below. */
+    const era = facts?.foilPatterns ?? null;
+    const all = (Object.keys(FOIL_PATTERN_LABELS) as FoilPattern[]).filter((p) => !era || era.includes(p) || p === current);
+    if (!all.length) return [];
 
     /* No answer from the catalogue: offer them all rather than none, but only where the copy
        could have a foil in the first place. A card whose printings are listed and whose foils
@@ -96,15 +104,21 @@ export function patternOptions(facts: CardFacts | null | undefined, finish: stri
     if (current) named.add(current);
     if (!named.size) return [];
 
-    return [NOT_RECORDED, ...all.filter((p) => named.has(p)).map((p) => ({ label: FOIL_PATTERN_LABELS[p], value: p }))];
+    /* A finish printed both with a named foil and without one is a choice between the two, not
+       one answer: 151's Machamp is a plain holo from the booster and a cosmos holo from the
+       collection box, and stating "Cosmos" on every holo copy of it was wrong. The blank is then
+       "Standard", which is what a copy with no pattern recorded is. */
+    const plain = made.some((p) => !p.foilPattern && (!printing || p.finish === printing));
+    return [plain ? STANDARD : NOT_RECORDED, ...all.filter((p) => named.has(p)).map((p) => ({ label: FOIL_PATTERN_LABELS[p], value: p }))];
 }
 
 /**
  * Which print runs to offer, plus whichever is already recorded.
  *
  * The same two rules as the finishes above, applied to the runs the API says this card can be
- * from (`editions`, cardorb-api#342): TCGdex knows whether a stamped first run exists, and
- * Cardmarket prices Shadowless as a product of its own for 102 cards, all of Base Set. So a
+ * from (`editions`, cardorb-api#342 and #375): TCGdex and TCGplayer know whether a stamped run
+ * exists, TCGplayer whether an unstamped one does, and it sells Shadowless as a product of its own
+ * for Base Set. So a
  * Jungle card offers 1st Edition and unlimited, where all three used to be offered on the
  * grounds that nothing published which sets had a Shadowless run. Something does.
  *
@@ -124,7 +138,10 @@ export function editionOptions(facts: CardFacts | null | undefined, current: str
         return [NOT_RECORDED, ...all.map((e) => ({ label: EDITION_LABELS[e], value: e }))];
     }
     const offered = all.filter((e) => runs.includes(e) || e === current);
-    if (!current && offered.length <= 1) return [];
+    /* Unlimited alone is no question, as above. A stamped run alone is one, answered: Base Set
+       Machamp was printed stamped and never without, so the caller states 1st Edition rather
+       than asking whether it is (soleOption). */
+    if (!current && (offered.length === 0 || (offered.length === 1 && offered[0] === "unlimited"))) return [];
     return [NOT_RECORDED, ...offered.map((e) => ({ label: EDITION_LABELS[e], value: e }))];
 }
 
