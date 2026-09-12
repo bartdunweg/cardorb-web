@@ -467,7 +467,7 @@ export const ourSections: SectionSpec[] = [
         title: "Toast",
         from: "components/app/toast",
         ours: true,
-        note: "Ours, because Untitled UI ships no snackbar — the nearest thing in the catalogue is application/alerts, which puts a Dismiss text button beside the close cross. The box is made of that alert's parts: FeaturedIcon, Button, CloseButton.",
+        note: "Ours, in the parts of the kit's application/notifications — FeaturedIcon, Button, CloseButton on Sonner — rather than that component, which puts a Dismiss text button beside the close cross. The title is medium where the kit has semibold: the brand colour is the same grey as the title, so weight is what marks the undo as the button.",
         render: (
             <Panel>
                 <Group title="Live" cols="wide">
