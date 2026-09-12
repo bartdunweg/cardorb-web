@@ -904,7 +904,13 @@ export const cardFactsAnswer = z.object({
     evolveFrom: nullable(z.string()),
     regulationMark: nullable(z.string()),
     cmUrl: nullable(z.string()),
+    /** The Western languages the card was printed in. Null or absent: the catalogue could not say. */
     languages: z.array(z.string()).nullish(),
+    /**
+     * The rarities the card's era printed, for a card the catalogue could not name. Null or
+     * absent: no answer, and then the whole hand-set list is offered.
+     */
+    eraRarities: z.array(z.string()).nullish(),
     printings: z.array(z.object({ finish: z.enum(["normal", "holo", "reverse-holo"]), foilPattern: nullable(z.string()) })).nullish(),
     /** Whether a stamped first run of this card exists, as TCGdex says. Null or absent: no answer. */
     firstEdition: z.boolean().nullish(),

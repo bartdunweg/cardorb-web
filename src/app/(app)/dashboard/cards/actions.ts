@@ -475,8 +475,18 @@ export type CardFacts = {
     regulationMark: string | null;
     /** Cardmarket's page for the card. */
     cmUrl: string | null;
-    /** The Western languages the card was printed in; a copy can be one of these and no other. */
-    languages: string[];
+    /**
+     * The Western languages the card was printed in; a copy can be one of these and no other.
+     * Null is the catalogue not having said, and then every Western language is offered: a
+     * catalogue that times out must not read as "this card was never printed in German".
+     */
+    languages: string[] | null;
+    /**
+     * The rarities this card's era printed, for a card the catalogue could not name (a promo
+     * answers "Promo", which is the set's mark). Null where the catalogue could not say, and then
+     * the whole list is offered, the same rule `printings` follows.
+     */
+    eraRarities: string[] | null;
     /**
      * Every printing of this card that exists: what each one is, and what its foil looks like.
      * A form offers no finish and no pattern that is not here, and offers everything where the
@@ -508,7 +518,8 @@ export async function cardFacts(tcgId: string): Promise<CardFacts | null> {
             evolveFrom: c.evolveFrom ?? null,
             regulationMark: c.regulationMark ?? null,
             cmUrl: c.cmUrl ?? null,
-            languages: Array.isArray(c.languages) ? c.languages : ["en"],
+            languages: Array.isArray(c.languages) && c.languages.length ? c.languages : null,
+            eraRarities: Array.isArray(c.eraRarities) && c.eraRarities.length ? c.eraRarities : null,
             printings: Array.isArray(c.printings) ? c.printings : [],
             firstEdition: c.firstEdition ?? null,
             price: c.price ?? null,

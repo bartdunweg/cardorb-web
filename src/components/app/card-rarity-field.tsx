@@ -4,7 +4,7 @@ import { useState } from "react";
 import { setCardRarity } from "@/app/(app)/dashboard/cards/actions";
 import { notify } from "@/components/app/toast";
 import { Select } from "@/components/base/select/select";
-import { NOT_KNOWN, RARITIES_BY_HAND } from "@/lib/rarities";
+import { NOT_KNOWN, raritiesFor } from "@/lib/rarities";
 
 /**
  * What kind of printing this card is, where the catalogue could not say.
@@ -15,9 +15,25 @@ import { NOT_KNOWN, RARITIES_BY_HAND } from "@/lib/rarities";
  * spelling, so the card lands in the same filters, binder rules and Pokédex slots as any other.
  *
  * The rarity belongs to the printing, not to one copy, so it is written to every row of it at once.
+ *
+ * `era` is what the card's own era printed, as the catalogue says (see raritiesFor). Without it
+ * every kind is offered, which is what this control did on every card: a black star promo from
+ * 1999 could be named "Special illustration rare", a word the game did not have until 2023.
  */
-export function CardRarityField({ cardIds, value, onSaved }: { cardIds: string[]; value: string | null; onSaved: (rarity: string) => void }) {
+export function CardRarityField({
+    cardIds,
+    value,
+    era,
+    onSaved,
+}: {
+    cardIds: string[];
+    value: string | null;
+    /** The rarities the card's era printed, when the API has said. */
+    era?: readonly string[] | null;
+    onSaved: (rarity: string) => void;
+}) {
     const [saving, setSaving] = useState<string | null>(null);
+    const options = raritiesFor(era, value);
 
     const choose = async (value: string) => {
         if (!cardIds.length || saving) return;
@@ -43,10 +59,10 @@ export function CardRarityField({ cardIds, value, onSaved }: { cardIds: string[]
             size="sm"
             className="w-56"
             placeholder="Say what it is"
-            selectedKey={saving ?? (RARITIES_BY_HAND.some((r) => r.value === value) ? value : null)}
+            selectedKey={saving ?? (options.some((r) => r.value === value) ? value : null)}
             isDisabled={saving !== null}
             onSelectionChange={(key) => choose(String(key))}
-            items={RARITIES_BY_HAND.map((r) => ({ id: r.value, label: r.label }))}
+            items={options.map((r) => ({ id: r.value, label: r.label }))}
         >
             {(item) => (
                 <Select.Item key={item.id} id={item.id} label={item.label}>
