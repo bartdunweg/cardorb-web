@@ -91,6 +91,7 @@ export function SettingsLinkRow({
     value,
     href,
     external = false,
+    download = false,
 }: {
     icon: FC<{ className?: string }>;
     label: string;
@@ -98,7 +99,16 @@ export function SettingsLinkRow({
     href: string;
     /** A page outside the app opens in its own tab, and says so to a screen reader. */
     external?: boolean;
+    /** A file to save rather than a page to go to: a plain anchor, so the router neither prefetches nor navigates. */
+    download?: boolean;
 }) {
+    if (download) {
+        return (
+            <a href={href} download className={rowClass}>
+                <RowBody icon={icon} label={label} value={value} />
+            </a>
+        );
+    }
     return (
         <Link href={href} className={rowClass} {...(external ? { target: "_blank", rel: "noreferrer" } : {})}>
             <RowBody icon={icon} label={label} value={value} />
