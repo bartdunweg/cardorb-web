@@ -20,6 +20,12 @@ export const isUnnamedRarity = (rarity: string | null | undefined): boolean => {
  * The list is the kinds this app is for, not the whole vocabulary: the plain ones are at the end
  * for a promo that is simply a promo.
  */
+/**
+ * The chooser's own word for "nobody has said", which is not a rarity and is never stored: picked,
+ * the card's rarity is cleared. A select needs a key for every row, and null is not one.
+ */
+export const NOT_KNOWN = "__not-known__";
+
 export const RARITIES_BY_HAND: { value: string; label: string }[] = [
     { value: "Special illustration rare", label: "Special illustration rare" },
     { value: "Illustration rare", label: "Illustration rare" },
@@ -31,8 +37,8 @@ export const RARITIES_BY_HAND: { value: string; label: string }[] = [
     { value: "Rare", label: "Rare" },
     { value: "Uncommon", label: "Uncommon" },
     { value: "Common", label: "Common" },
-    /* The catalogue's own word, back again: a rarity said by hand replaces it, and this is the way
-       to take that back. Chosen, the card reads as unnamed once more and the choice returns, so a
-       wrong answer is never permanent. */
-    { value: "Promo", label: "Promo (not said)" },
+    /* Taking an answer back. It writes nothing rather than the catalogue's "Promo": that word names
+       the set, and a set is not a rarity, so the field holding it said something untrue. Chosen, the
+       card reads as unnamed once more and the choice returns, so a wrong answer is never permanent. */
+    { value: NOT_KNOWN, label: "Not known" },
 ];
