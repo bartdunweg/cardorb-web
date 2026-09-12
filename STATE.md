@@ -146,6 +146,15 @@ for the failures that leave no trace — and everything both passes found is clo
   English-only: TCGdex publishes no types on the other shelves. The same chip stands on Browse,
   in the add dialog and in the phone's search (web #347); the row of flags is gone. A visitor's
   sheet on a public profile shows the brackets too (cardorb-api#287).
+- **Browse has a binder's row** (2026-09-12): the search field, then Filters, Sort and View over the
+  shelf, as a binder has them. Search narrows the shelf to sets whose name or local name has the
+  term (`?q=`, the binder's own field). The language sits behind Filters as a menu in the sheet, with the badge
+  on when it is not English; the chip row of its own is gone. Sort is Newest first (the API's
+  order), Oldest first (the series and the sets in each turned around) or Name (one A to Z list,
+  no series headings), in `?sort=`. View is Grid (the tiles) or List (rows: small logo, name,
+  release date or local name, count), in a `sets-view` cookie the server reads. Measured in the
+  pane on the dev server: the three menus, the badge, `?language=ja&sort=oldest`, the rows, and
+  "jungle" leaving one tile with the caret still in the field; the row is one line at 375 px.
 - **The small thumbnails lie face down too** (#324): table rows, the add dialog, the folder's
   card search and the Pokédex slider. The Fomantis acquired date is put right (2026-09-07),
   through the sheet on the dev server.
