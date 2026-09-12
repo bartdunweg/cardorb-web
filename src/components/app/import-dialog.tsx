@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode, useState } from "react";
+import { SearchLg } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import { type ColumnMap, type ImportPreview, type ImportResult, commitImport, previewImport } from "@/app/(app)/dashboard/settings/import-actions";
@@ -13,6 +14,7 @@ import { Table, TableCard } from "@/components/application/table/table";
 import { Button } from "@/components/base/buttons/button";
 import { CloseButton } from "@/components/base/buttons/close-button";
 import { Checkbox } from "@/components/base/checkbox/checkbox";
+import { Input } from "@/components/base/input/input";
 import { NativeSelect } from "@/components/base/select/select-native";
 import { MAX_CSV_BYTES, readCsv } from "@/lib/csv-file";
 import { cx } from "@/utils/cx";
@@ -181,6 +183,8 @@ function ImportForm({ close }: { close: () => void }) {
      */
     const [excluded, setExcluded] = useState<ReadonlySet<number>>(new Set());
     const [shown, setShown] = useState(PAGE);
+    /** Narrows the list to the rows whose card or set matches. Never narrows what is imported. */
+    const [query, setQuery] = useState("");
 
     /*
      * Which step is on screen is read off the state rather than kept beside
@@ -199,6 +203,7 @@ function ImportForm({ close }: { close: () => void }) {
         setHeader([]);
         setExcluded(new Set());
         setShown(PAGE);
+        setQuery("");
     };
 
     /** Back to the drop zone, with nothing of the last file left behind. */
@@ -244,6 +249,7 @@ function ImportForm({ close }: { close: () => void }) {
             // off rows nobody looked at.
             setExcluded(new Set());
             setShown(PAGE);
+            setQuery("");
             setHeader(outcome.preview.header ?? []);
             if (outcome.preview.guessed) setMap(outcome.preview.guessed);
             return;
@@ -340,12 +346,39 @@ function ImportForm({ close }: { close: () => void }) {
      */
     const rows = preview?.rows ?? [];
     const writing = preview ? (rows.length > 0 ? rows.length - excluded.size : preview.seen - preview.skipped) : 0;
-    const somePicked = rows.length > 0 && excluded.size < rows.length;
-    const allPicked = rows.length > 0 && excluded.size === 0;
+
+    /*
+     * What the list shows, which is never what the import writes. A search
+     * narrows the rows on screen and nothing else: a row filtered out of sight
+     * keeps its tick, because typing a word is how somebody looks for a card,
+     * not how they say what to leave behind.
+     */
+    const needle = query.trim().toLowerCase();
+    const listed = needle ? rows.filter((r) => `${r.name} ${r.setName}`.toLowerCase().includes(needle)) : rows;
+
+    // The tick at the top of the list acts on the list: what a search narrowed
+    // it to, drawn or still behind the button.
+    const pickedInList = listed.filter((r) => !excluded.has(r.line)).length;
+    const somePicked = pickedInList > 0;
+    const allPicked = listed.length > 0 && pickedInList === listed.length;
+
+    /** Rows naming a card the collection already holds, and how many are still ticked. */
+    const alreadyHeld = rows.filter((r) => r.existing);
+    const heldStillPicked = alreadyHeld.filter((r) => !excluded.has(r.line)).length;
 
     const toggle = (line: number) => {
         const next = new Set(excluded);
         if (!next.delete(line)) next.add(line);
+        setExcluded(next);
+    };
+
+    /** Every row in the list at once, which is the only bulk action worth having. */
+    const pickAll = (pick: boolean) => {
+        const next = new Set(excluded);
+        for (const row of listed) {
+            if (pick) next.delete(row.line);
+            else next.add(row.line);
+        }
         setExcluded(next);
     };
 
@@ -490,11 +523,55 @@ function ImportForm({ close }: { close: () => void }) {
                          * by what is on screen, so a row you never scrolled to is
                          * still part of the import.
                          */}
+                        {/*
+                         * The two things a list of two thousand rows needs: a way
+                         * to find one, and a way to deal with the ones that are
+                         * already in the collection. The search narrows what is
+                         * drawn and never what is written; the button is the only
+                         * answer to "93 of these you already have" that does not
+                         * end in scrolling.
+                         */}
                         {rows.length > 0 ? (
+                            <div className="flex flex-wrap items-end justify-between gap-3">
+                                <Input
+                                    size="sm"
+                                    icon={SearchLg}
+                                    label="Find a card in this file"
+                                    placeholder="Card or set"
+                                    value={query}
+                                    onChange={(value) => {
+                                        setQuery(value);
+                                        setShown(PAGE);
+                                    }}
+                                    className="w-full sm:w-72"
+                                />
+                                {heldStillPicked > 0 ? (
+                                    <Button size="sm" color="secondary" onClick={() => setExcluded(new Set([...excluded, ...alreadyHeld.map((r) => r.line)]))}>
+                                        Untick the {heldStillPicked.toLocaleString("en")} you already have
+                                    </Button>
+                                ) : null}
+                            </div>
+                        ) : null}
+
+                        {needle ? (
+                            <p aria-live="polite" className="text-sm text-tertiary">
+                                {listed.length === 0
+                                    ? `No card in this file matches "${query.trim()}".`
+                                    : `${plural(listed.length, "row")} of ${rows.length.toLocaleString("en")} shown. The rest keep their ticks.`}
+                            </p>
+                        ) : null}
+
+                        {listed.length > 0 ? (
                             <TableCard.Root size="sm">
                                 <Table aria-label="The cards this import would add">
                                     <Table.Header>
-                                        <Table.Head id="pick" label="" className="w-10">
+                                        {/*
+                                         * The ticks stay put when the table is
+                                         * scrolled sideways, which on a phone it
+                                         * always is: a row whose tick is off the
+                                         * screen is a row you cannot take out.
+                                         */}
+                                        <Table.Head id="pick" label="" className="sticky left-0 z-10 w-10 bg-secondary">
                                             <Checkbox
                                                 // The kit's table hands a CheckboxContext down for
                                                 // react-aria's own row selection, which these are not:
@@ -505,10 +582,13 @@ function ImportForm({ close }: { close: () => void }) {
                                                 // would do: a checkbox already announces its state,
                                                 // and a name that flips with it is read out as a
                                                 // contradiction ("Leave every row out, checked").
-                                                aria-label="Import every row"
+                                                // "This list" rather than "the file": with a search
+                                                // on, it acts on what the search left, which is what
+                                                // somebody who just typed a word means by all.
+                                                aria-label="Import every row in this list"
                                                 isSelected={somePicked}
                                                 isIndeterminate={somePicked && !allPicked}
-                                                onChange={() => setExcluded(allPicked ? new Set(rows.map((r) => r.line)) : new Set())}
+                                                onChange={() => pickAll(!allPicked)}
                                             />
                                         </Table.Head>
                                         <Table.Head id="card" label="Card" isRowHeader />
@@ -518,10 +598,10 @@ function ImportForm({ close }: { close: () => void }) {
                                         <Table.Head id="copies" label="Copies" />
                                         <Table.Head id="where" label="Where" />
                                     </Table.Header>
-                                    <Table.Body items={rows.slice(0, shown).map((row) => ({ ...row, id: String(row.line) }))}>
+                                    <Table.Body items={listed.slice(0, shown).map((row) => ({ ...row, id: String(row.line) }))}>
                                         {(row) => (
                                             <Table.Row id={row.id}>
-                                                <Table.Cell>
+                                                <Table.Cell className="sticky left-0 z-10 bg-primary">
                                                     <Checkbox
                                                         slot={null}
                                                         // Named by the card, not by "row 12": the
@@ -531,7 +611,18 @@ function ImportForm({ close }: { close: () => void }) {
                                                         onChange={() => toggle(row.line)}
                                                     />
                                                 </Table.Cell>
-                                                <Table.Cell className="font-medium text-primary">{row.name}</Table.Cell>
+                                                <Table.Cell className="font-medium text-primary">
+                                                    {row.name}
+                                                    {/*
+                                                     * Said in words under the name, not marked in a
+                                                     * colour: it is the one thing on this screen
+                                                     * somebody might act on row by row, and a tint
+                                                     * nobody can see is not a warning (R-A11Y-001).
+                                                     */}
+                                                    {row.existing ? (
+                                                        <span className="block text-xs font-normal text-tertiary">You already have this</span>
+                                                    ) : null}
+                                                </Table.Cell>
                                                 <Table.Cell>{row.setName}</Table.Cell>
                                                 <Table.Cell>{row.number || "—"}</Table.Cell>
                                                 <Table.Cell>
@@ -589,11 +680,11 @@ function ImportForm({ close }: { close: () => void }) {
                             </TableCard.Root>
                         ) : null}
 
-                        {rows.length > shown ? (
+                        {listed.length > shown ? (
                             <Button size="sm" color="secondary" onClick={() => setShown((n) => n + PAGE)} className="self-start">
-                                {rows.length - shown <= PAGE
-                                    ? `Show the last ${plural(rows.length - shown, "row")}`
-                                    : `Show ${PAGE.toLocaleString("en")} more of the ${(rows.length - shown).toLocaleString("en")} left`}
+                                {listed.length - shown <= PAGE
+                                    ? `Show the last ${plural(listed.length - shown, "row")}`
+                                    : `Show ${PAGE.toLocaleString("en")} more of the ${(listed.length - shown).toLocaleString("en")} left`}
                             </Button>
                         ) : null}
                         {rows.length === 0 && writing > preview.sample.length ? (

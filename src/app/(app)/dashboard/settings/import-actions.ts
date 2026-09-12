@@ -84,6 +84,8 @@ const importPreviewRow = z.object({
     finish: nullable(z.string()),
     foilPattern: nullable(z.string()),
     edition: nullable(z.string()),
+    /** This row names a card the collection already holds. Defaulted for an API that does not say yet. */
+    existing: z.boolean().default(false),
 });
 export type ImportPreviewRow = z.infer<typeof importPreviewRow>;
 

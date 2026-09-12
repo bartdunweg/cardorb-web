@@ -38,9 +38,10 @@ const dropFile = async () => {
     fireEvent.change(input, { target: { files: [new File(["Name,Set\nPikachu,Base"], "cards.csv", { type: "text/csv" })] } });
 };
 
-const row = (line: number, name: string) => ({
+const row = (line: number, name: string, existing = false) => ({
     line,
     name,
+    existing,
     number: String(line),
     setName: "Base Set",
     rarity: null,
@@ -178,11 +179,79 @@ describe("ImportDialog when rows are ticked off", () => {
         previewImport.mockResolvedValue(threeRows);
         await dropFile();
 
-        const all = await screen.findByRole("checkbox", { name: "Import every row" });
+        const all = await screen.findByRole("checkbox", { name: "Import every row in this list" });
         fireEvent.click(all);
 
         expect(screen.getByRole("button", { name: "Nothing to add" })).toBeDisabled();
-        fireEvent.click(screen.getByRole("checkbox", { name: "Import every row" }));
+        fireEvent.click(screen.getByRole("checkbox", { name: "Import every row in this list" }));
+        expect(screen.getByRole("button", { name: "Add 3 cards" })).toBeVisible();
+    });
+});
+
+/*
+ * The search field is matched loosely: the kit's Label always writes the
+ * required asterisk into the DOM and hides it with CSS, and jsdom loads no CSS,
+ * so the accessible name here ends in a "*" that a browser never shows.
+ */
+describe("ImportDialog with a file it has seen before", () => {
+    beforeEach(() => {
+        previewImport.mockReset();
+        commitImport.mockReset();
+    });
+
+    const held = {
+        ok: true,
+        preview: {
+            seen: 3,
+            skipped: 0,
+            notOwned: 0,
+            existing: 2,
+            sample: [],
+            source: "generic",
+            header: ["Name", "Set"],
+            skippedRows: [],
+            rows: [row(2, "Pikachu"), row(3, "Charizard", true), row(4, "Mew", true)],
+        },
+    };
+
+    it("says which rows it means, and takes all of them out at once", async () => {
+        previewImport.mockResolvedValue(held);
+        await dropFile();
+
+        // The count alone leaves somebody to find the rows themselves.
+        expect(await screen.findAllByText("You already have this")).toHaveLength(2);
+
+        fireEvent.click(screen.getByRole("button", { name: "Untick the 2 you already have" }));
+
+        expect(screen.getByRole("button", { name: "Add 1 card" })).toBeVisible();
+        // Nothing left to untick, so the button has nothing left to say.
+        expect(screen.queryByRole("button", { name: /you already have/ })).toBeNull();
+    });
+
+    it("searches the list without changing what is imported", async () => {
+        previewImport.mockResolvedValue(held);
+        await dropFile();
+
+        fireEvent.change(await screen.findByRole("textbox", { name: /Find a card in this file/ }), { target: { value: "pika" } });
+
+        expect(screen.getByText("1 row of 3 shown. The rest keep their ticks.")).toBeVisible();
+        expect(screen.queryByText("Charizard")).toBeNull();
+        // Out of sight, still going in: a search is how you look for a card, not
+        // how you say what to leave behind.
+        expect(screen.getByRole("button", { name: "Add 3 cards" })).toBeVisible();
+
+        // And the tick at the top acts on what the search left, not on the file.
+        fireEvent.click(screen.getByRole("checkbox", { name: "Import every row in this list" }));
+        expect(screen.getByRole("button", { name: "Add 2 cards" })).toBeVisible();
+    });
+
+    it("says so when a search matches nothing", async () => {
+        previewImport.mockResolvedValue(held);
+        await dropFile();
+
+        fireEvent.change(await screen.findByRole("textbox", { name: /Find a card in this file/ }), { target: { value: "zzz" } });
+
+        expect(screen.getByText('No card in this file matches "zzz".')).toBeVisible();
         expect(screen.getByRole("button", { name: "Add 3 cards" })).toBeVisible();
     });
 });
