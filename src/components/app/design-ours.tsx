@@ -589,10 +589,7 @@ function FiltersSheetSample() {
             id: "language",
             label: "Language",
             all: { value: "en", label: "English", icon: <FlagIcon language="en" labelled /> },
-            options: [
-                { value: "ja", label: "Japanese", icon: <FlagIcon language="ja" labelled /> },
-                { value: "ko", label: "Korean", icon: <FlagIcon language="ko" labelled /> },
-            ],
+            options: [{ value: "ja", label: "Japanese", icon: <FlagIcon language="ja" labelled /> }],
         },
     ];
 

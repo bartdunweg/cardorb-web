@@ -60,16 +60,15 @@ export function languageOf(code: string | null | undefined): Language {
 }
 
 /**
- * The catalogues a person can browse and add from: the English one, and TCGdex's Japanese,
- * Chinese (traditional and simplified) and Korean, each with its own sets and ids. `short` is
- * what a chip shows beside the flag, the word in full; `country` the flag.
+ * The catalogues a person can browse and add from: the English one and TCGdex's Japanese, each
+ * with its own sets and ids. `short` is what a chip shows beside the flag, the word in full;
+ * `country` the flag. Chinese (traditional and simplified) and Korean were offered too until
+ * 2026-09-13, when Bart narrowed the start to English and Japanese; a copy already in one of
+ * them still reads through `LANGUAGES`.
  */
 export const BROWSE_LANGUAGES = [
     { code: "en", label: "English", short: "English", country: "gb" },
     { code: "ja", label: "Japanese", short: "Japanese", country: "jp" },
-    { code: "zh-tw", label: "Traditional Chinese", short: "Traditional Chinese", country: "tw" },
-    { code: "zh-cn", label: "Simplified Chinese", short: "Simplified Chinese", country: "cn" },
-    { code: "ko", label: "Korean", short: "Korean", country: "kr" },
 ] as const;
 export type BrowseLanguage = (typeof BROWSE_LANGUAGES)[number]["code"];
 export const isBrowseLanguage = (v: unknown): v is BrowseLanguage => BROWSE_LANGUAGES.some((l) => l.code === v);
