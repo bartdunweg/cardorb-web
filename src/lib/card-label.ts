@@ -22,3 +22,15 @@ export function cardLabel(card: { set_name?: string | null; set_abbr?: string | 
 
     return [card.set_name, number ? `#${number}` : null].filter(Boolean).join(" · ");
 }
+
+/**
+ * The line under the title on a card's own sheet, where there is room for both: the set's name
+ * and the code printed on the card ("151 · MEW 199"). The name alone was not enough for a set
+ * whose name reads like a code itself: "151 · #199" looked like the abbreviation and hid MEW.
+ */
+export function cardLabelFull(card: { set_name?: string | null; set_abbr?: string | null; number?: string | null }): string {
+    const number = card.number?.trim() || null;
+    const printed = card.set_abbr ? [card.set_abbr, number].filter(Boolean).join(" ") : number ? `#${number}` : null;
+
+    return [card.set_name, printed].filter(Boolean).join(" · ");
+}
