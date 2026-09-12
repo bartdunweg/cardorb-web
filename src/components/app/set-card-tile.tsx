@@ -151,7 +151,7 @@ export function SetCardTile({
                     <span className="ml-auto text-sm font-medium text-primary tabular-nums">
                         {card.price != null ? (
                             <>
-                                <span className="sr-only">Near Mint price </span>
+                                <span className="sr-only">Market price </span>
                                 {formatPrice(card.price)}
                             </>
                         ) : null}

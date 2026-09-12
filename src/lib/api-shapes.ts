@@ -47,7 +47,11 @@ export const absoluteImage = (image: string | null | undefined): string | null =
 
 // ── GET /v1/cards ─────────────────────────────────────────────────────────────────────────
 
-/** One card's Cardmarket price, in euros. `nm.mid` is the number the grid shows. */
+/**
+ * One card's price, in euros. On a collection card it is TCGplayer's since cardorb-api#354; Browse
+ * and search still read Cardmarket's guide until the API moves them. `nm` is always null from
+ * the collection and is not read here: the estimated Near Mint band is gone.
+ */
 export const apiPriceSchema = z.object({
     low: nullable(z.number()),
     market: nullable(z.number()),
@@ -142,21 +146,14 @@ export const cardItemSchema = z.object({
     acquiredAt: nullable(z.string()),
     collectionId: nullable(z.string()),
     price: nullable(apiPriceSchema),
-    priceHolo: nullable(apiPriceSchema),
-    /** What the stamped first run trades at, where anything prices that run apart. */
+    /** What the stamped first run trades at, where TCGplayer prices that run apart. */
     priceFirstEd: nullable(apiPriceSchema).optional(),
     /**
-     * What the Shadowless run trades at. Cardmarket files that run as a product of its own for
-     * Base Set, every card of it, and the API reads its figures out of the same nightly guide
-     * (cardorb-api#329). Null everywhere else, and absent from an API older than that.
+     * Where this copy's figure came from: which printing of the card it was in TCGplayer's own
+     * words, and their product id for it. One market since cardorb-api#354, so the source is
+     * TCGplayer or nothing; `priceHolo` and `priceShadowless`, Cardmarket's two, are no longer read.
      */
-    priceShadowless: nullable(apiPriceSchema).optional(),
-    /**
-     * Where this copy's figure came from: which market answered, which printing of the card it
-     * was in TCGplayer's own words, and their product id for it. Absent from an API before its
-     * #346. A price nobody can open is a price nobody can check.
-     */
-    priceSource: z.enum(["tcgplayer", "cardmarket"]).nullish(),
+    priceSource: z.enum(["tcgplayer"]).nullish(),
     pricePrinting: nullable(z.string()).optional(),
     tcgplayerId: nullable(z.number()).optional(),
     /** What that printing trades at: the figure this copy reads, where TCGplayer priced its printing. */
@@ -234,22 +231,21 @@ export type Card = {
     /** Which print run, where somebody said. Null is "not recorded", never "unlimited". */
     edition: string | null;
     /**
-     * What the other runs of this card trade at, as a number to show: the stamped first run from
-     * TCGplayer converted, the Shadowless one from Cardmarket's own product. Null where nobody
-     * prices that run. They are here so a person looking at a copy can see what its run is worth
-     * before deciding which one they are holding, which is the whole reason the field exists.
+     * What the stamped first run of this card trades at, TCGplayer's figure converted; null where
+     * nobody prices that run. Here so a person looking at a copy can see what its run is worth
+     * before deciding which one they are holding. The Shadowless run had one too, from Cardmarket,
+     * and has none until TCGplayer's Shadowless products are read.
      */
     price_first_ed: number | null;
-    /** Which market this copy's price came from, which printing it was, and TCGplayer's id for it. */
-    price_source: "tcgplayer" | "cardmarket" | null;
+    /** Whether this copy has a TCGplayer price, which printing it was, and TCGplayer's id for it. */
+    price_source: "tcgplayer" | null;
     price_printing: string | null;
     tcgplayer_id: number | null;
-    price_shadowless: number | null;
     purchase_price: number | null;
     purchase_date: string | null;
     acquired_at: string | null;
     notes: string | null;
-    /** What one copy trades at today, in euros; null when Cardmarket has no number. */
+    /** What one copy trades at today, in euros; null when TCGplayer has no number. */
     price: number | null;
     image_url: string | null;
     /** The larger scan (600 px), for a tile a phone draws at two pixels per point; null where the catalogue has one size. */
@@ -261,44 +257,22 @@ export type Card = {
     species_id: number | null;
 };
 
-/**
- * The one number a copy is worth. A holo or reverse-holo copy takes the holo price when there is
- * one; the Near Mint midpoint is preferred, the market price is the fallback.
- */
-/** One figure out of a price: the Near Mint midpoint where there is one, the market price otherwise. */
-export const shownPrice = (p: ApiPrice | null | undefined): number | null => p?.nm?.mid ?? p?.market ?? null;
+/** One figure out of a price: the market figure. The Near Mint midpoint it used to prefer is gone. */
+export const shownPrice = (p: ApiPrice | null | undefined): number | null => p?.market ?? null;
 
+/**
+ * The one number a copy is worth: the TCGplayer printing it is, where the API priced it, then the
+ * stamped run's figure for a 1st Edition copy, then the card's own. The API's rule, copyPriceOf()
+ * in its price-basis.mjs, which chooses the printing and sends that figure as `printingPrice`.
+ * A copy of a card TCGplayer does not price has no price.
+ */
 export function priceForCopy({
-    finish,
     edition,
     price,
-    priceHolo,
     priceFirstEd,
-    priceShadowless,
     printingPrice,
-}: Pick<CardItem, "finish" | "price" | "priceHolo"> & Partial<Pick<CardItem, "edition" | "priceFirstEd" | "priceShadowless" | "printingPrice">>):
-    number | null {
-    /*
-     * The API's rule, copyPriceOf() in its price-basis.mjs, in the same order: a run of its own
-     * where anything prices that run apart, the stamped first run from TCGplayer and the
-     * Shadowless one from Cardmarket's own guide, then the foil series for a reverse (patterned
-     * or not), then the plain price. A copy of a card nobody prices a run for falls back to the
-     * ordinary price, as it does there.
-     *
-     * The two runs are not one branch: a card can be priced for either, both or neither, and on
-     * Base Set the difference is €583 against €3,567 (base1-4 Charizard, read 2026-09-12).
-     */
-    const chosen =
-        // The printing this copy is, where TCGplayer priced it: the API works out which of its
-        // printings this copy reads (copyPriceOf in its price-basis.mjs) and sends that figure
-        // beside the card's own. It is the one market that tells a holo from the plain card,
-        // and Cardmarket files those together often enough to be wrong by multiples.
-        printingPrice ??
-        (edition === "1st-edition" ? priceFirstEd : null) ??
-        (edition === "shadowless" ? priceShadowless : null) ??
-        (isReverseFinish(finish) ? priceHolo : null) ??
-        price;
-    return chosen?.nm?.mid ?? chosen?.market ?? null;
+}: Pick<CardItem, "price"> & Partial<Pick<CardItem, "edition" | "priceFirstEd" | "printingPrice">>): number | null {
+    return shownPrice(printingPrice ?? (edition === "1st-edition" ? priceFirstEd : null) ?? price);
 }
 
 /**
@@ -369,7 +343,6 @@ export const cardFromItem = (item: CardItem): Card => ({
     price_source: item.priceSource ?? null,
     price_printing: item.pricePrinting ?? null,
     tcgplayer_id: item.tcgplayerId ?? null,
-    price_shadowless: shownPrice(item.priceShadowless),
     purchase_price: item.purchasePrice,
     purchase_date: item.purchaseDate,
     acquired_at: item.acquiredAt,
@@ -592,7 +565,7 @@ export const setCardFromBrowse = (c: BrowseCard): SetCard => ({
     quantity: c.quantity,
     itemIds: c.itemIds,
     // The same rule the collection uses, so one card does not carry two prices across two screens.
-    price: priceForCopy({ finish: null, price: c.price, priceHolo: c.priceHolo }),
+    price: priceForCopy({ price: c.price }),
     tcgId: c.tcgId,
 });
 
@@ -731,7 +704,7 @@ export const pokemonCardFromBrowse = (c: BrowseCard, language?: string | null): 
     owned: c.owned,
     wishlist: c.wishlist,
     quantity: c.quantity ?? 0,
-    price: priceForCopy({ finish: null, price: c.price, priceHolo: c.priceHolo }),
+    price: priceForCopy({ price: c.price }),
 });
 
 /**
@@ -761,7 +734,6 @@ export const cardFromPokemonCard = (c: PokemonCard): Card => ({
     foil_pattern: null,
     edition: null,
     price_first_ed: null,
-    price_shadowless: null,
     price_source: null,
     price_printing: null,
     tcgplayer_id: null,
@@ -945,7 +917,6 @@ export const cardFactsAnswer = z.object({
     stage: nullable(z.string()),
     evolveFrom: nullable(z.string()),
     regulationMark: nullable(z.string()),
-    cmUrl: nullable(z.string()),
     /** The Western languages the card was printed in. Null or absent: the catalogue could not say. */
     languages: z.array(z.string()).nullish(),
     /**
@@ -963,6 +934,6 @@ export const cardFactsAnswer = z.object({
     editions: z.array(z.enum(EDITIONS)).nullish(),
     /** Whether a stamped first run of this card exists, as TCGdex says. Null or absent: no answer. */
     firstEdition: z.boolean().nullish(),
+    /** TCGplayer's figure for the printing, converted; null where TCGplayer prices nothing (cardorb-api#354). */
     price: nullable(apiPriceSchema),
-    market: nullable(z.object({ avg: nullable(z.number()), trend: nullable(z.number()), avg7: nullable(z.number()) })),
 });

@@ -478,7 +478,7 @@ function TableSample() {
                     <Table.Head id="name" label="Card" isRowHeader allowsSorting />
                     <Table.Head id="set" label="Set" allowsSorting />
                     <Table.Head id="rarity" label="Rarity" />
-                    <Table.Head id="price" label="Price" tooltip="Near Mint, in euros." />
+                    <Table.Head id="price" label="Price" tooltip="TCGplayer, in euros." />
                     <Table.Head id="actions">
                         <span className="sr-only">Actions</span>
                     </Table.Head>

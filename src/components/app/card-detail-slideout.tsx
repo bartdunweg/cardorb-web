@@ -8,6 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import {
     type CardFacts,
+    type PricePoint,
     addCard,
     editCopies,
     listCopies,
@@ -22,7 +23,7 @@ import { type FolderChoice, listCollections, loadFacets } from "@/app/(app)/dash
 import { NO_ART, artStack, nextArt } from "@/components/app/card-art";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
-import { knownCardFacts, preloadCardFacts, preloadPriceHistory } from "@/components/app/card-memo";
+import { knownCardFacts, knownPriceHistory, preloadCardFacts, preloadPriceHistory } from "@/components/app/card-memo";
 import { CardPriceChart } from "@/components/app/card-price-chart";
 import { CardRarityField } from "@/components/app/card-rarity-field";
 import { CopyCard } from "@/components/app/copy-card";
@@ -43,11 +44,12 @@ import { useBreakpoint } from "@/hooks/use-breakpoint";
 import { type PokemonCard, type RemovedCard, isReverseFinish } from "@/lib/api-shapes";
 import { binderFromPath, isBinderPath } from "@/lib/binder-from-path";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
-import { type CopyGroup, groupCopies, printingLabel, sortCopies } from "@/lib/copies";
+import { type CopyGroup, groupCopies, sortCopies } from "@/lib/copies";
 import { matchesRule } from "@/lib/folder-rule";
 import { formatDate, formatPrice } from "@/lib/format";
 import { orientationNeedsPermission, requestOrientation } from "@/lib/holo/orientation";
-import { priceChange } from "@/lib/price-change";
+import { average30, priceChange } from "@/lib/price-change";
+import { ebaySoldUrl, tcgplayerUrl } from "@/lib/price-links";
 import { isUnnamedRarity } from "@/lib/rarities";
 import { settleLatest } from "@/lib/settle-latest";
 import { cx } from "@/utils/cx";
@@ -271,12 +273,22 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     // the catalogue answers at 559 ms, and the `arrive` on those rows spends that gap drawing
     // attention to it. The second time there is no gap to draw.
     const [facts, setFacts] = useState<{ tcgId: string; facts: CardFacts | null } | null>(null);
+    const [history, setHistory] = useState<{ tcgId: string; points: PricePoint[] } | null>(null);
     const tcgId = card?.tcg_id ?? null;
     useEffect(() => {
         if (!tcgId) return;
         // The price line too, so the Price tab opens on it rather than on "No readings" for the
-        // half second the API takes. Its answer lives with the chart; nothing here renders from it.
-        void preloadPriceHistory(tcgId);
+        // half second the API takes. The header's arrow reads the same answer, for its average.
+        let live = true;
+        preloadPriceHistory(tcgId).then((points) => {
+            if (live) setHistory({ tcgId, points });
+        });
+        return () => {
+            live = false;
+        };
+    }, [tcgId]);
+    useEffect(() => {
+        if (!tcgId) return;
         if (knownCardFacts(tcgId) !== undefined) return;
         let live = true;
         preloadCardFacts(tcgId).then((f) => {
@@ -296,8 +308,11 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
      * to it. Opened a second time there is no gap, so nothing animates.
      */
     const known = tcgId ? (facts?.tcgId === tcgId ? facts.facts : (knownCardFacts(tcgId) ?? null)) : null;
-    // The line beside the price in the header, from the same answer: no request of its own.
-    const change = mine ? priceChange(mine.price, known?.price?.avg30) : null;
+    // The line beside the price in the header: the price against the card's own last thirty days,
+    // out of its history, which is the same market. It read Cardmarket's month until the price
+    // stopped being Cardmarket's.
+    const points = tcgId ? (history?.tcgId === tcgId ? history.points : (knownPriceHistory(tcgId) ?? [])) : [];
+    const change = mine ? priceChange(mine.price, average30(points, new Date().toISOString().slice(0, 10), isReverseFinish(mine.finish))) : null;
 
     /*
      * The arrow keys, which is how anybody who is already looking at a list expects to move
@@ -938,8 +953,8 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                         {formatPrice(mine.price)}
                                         <span className="sr-only"> market price</span>
                                     </span>
-                                    {/* Beside it, which way it moved: the Near Mint price against the catalogue's
-                                        30-day average, the way an asset page puts the change next to the price so a
+                                    {/* Beside it, which way it moved: the price against the card's own 30-day
+                                        average, the way an asset page puts the change next to the price so a
                                         glance says up or down. The sign is in the text, so colour is never the only
                                         carrier; a screen reader gets it spelled out ("Up €0.12, 5 percent…") from a
                                         span of its own, because a bare span takes no aria-label. `arrive` because
@@ -1155,85 +1170,80 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                         {/* The line first, then the numbers around it: what one copy trades at, what all the
                                         copies come to, what was paid, and what that bought. */}
                                         {mine.tcg_id ? <CardPriceChart tcgId={mine.tcg_id} holo={isReverseFinish(mine.finish)} name={card?.name} /> : null}
-                                        <dl className="flex flex-col divide-y divide-secondary">
-                                            {/* Near Mint, not market: the figure is the market price put through a measured band:
-                                                above €20 about a quarter higher, between €5 and €20 about an eighth lower,
-                                                and unchanged below that. A trend price is dragged down by played copies;
-                                                this is an estimate of what a Near Mint one does. The old label named the
-                                                input rather than the answer. */}
-                                            <DetailRow label="Near Mint price" value={mine.price != null ? formatPrice(mine.price) : null} />
-                                            {/* Which market that figure is from, which printing of the card it was, and a way
-                                                to open the page it came from. The two markets differ by a median of 42% on
-                                                this collection and Cardmarket files several printings of one card under a
-                                                single product, so "where is this from" is a question with money in it
-                                                (Bart, 2026-09-12). Only TCGplayer has an address a link can be built to;
-                                                Cardmarket publishes no expansion in a product's, so there the line says the
-                                                market and stops. */}
-                                            {mine.price_source ? (
-                                                <p className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-3 text-xs text-tertiary">
-                                                    <span>
-                                                        {mine.price_source === "tcgplayer" ? "TCGplayer" : "Cardmarket"}
-                                                        {mine.price_printing ? ` · ${printingLabel(mine.price_printing)}` : ""}
-                                                    </span>
-                                                    {mine.tcgplayer_id ? (
-                                                        <a
-                                                            href={`https://www.tcgplayer.com/product/${mine.tcgplayer_id}`}
-                                                            target="_blank"
-                                                            rel="noreferrer noopener"
-                                                            className="rounded-sm font-semibold text-brand-secondary outline-focus-ring hover:underline focus-visible:outline-2"
-                                                        >
-                                                            Check it there
-                                                        </a>
-                                                    ) : null}
-                                                </p>
-                                            ) : null}
-                                            {/* A graded copy is not this card. The figure above is what an ungraded Near
-                                                Mint one trades at, and a slab is a different market that neither feed
-                                                behind this app publishes (Cardmarket and TCGplayer both price the
-                                                printing, not the grade). Said out loud rather than left to be assumed:
-                                                the number is honest about what it is, and silent about what it is not. */}
-                                            {(copies ?? [mine]).some((c) => c.grade) ? (
-                                                <p className="pt-3 text-xs text-tertiary">
-                                                    Ungraded. A graded copy trades on its own market, which is not priced here.
-                                                </p>
-                                            ) : null}
-                                            {/* What the catalogue says about the printing, once it answers: where today's
-                                                figure sits against the week and the month, and the band a copy is listed in. */}
-                                            {known?.market?.trend != null ? <DetailRow label="Trend" value={formatPrice(known.market.trend)} late /> : null}
-                                            {known?.market?.avg7 != null ? (
-                                                <DetailRow label="7-day average" value={formatPrice(known.market.avg7)} late />
-                                            ) : null}
-                                            {known?.price?.avg30 != null ? (
-                                                <DetailRow label="30-day average" value={formatPrice(known.price.avg30)} late />
-                                            ) : null}
-                                            {known?.price?.nm ? (
+                                        {/* The market first, apart from what is yours: one figure from one market, where
+                                            it is from, and where to check it. TCGplayer only since cardorb-api#354 (Bart,
+                                            2026-09-12): two markets side by side read as a number and a correction, and
+                                            nobody could tell which to believe. */}
+                                        <section aria-labelledby="price-market" className="flex flex-col gap-3">
+                                            <h3 id="price-market" className="text-sm font-semibold text-primary">
+                                                Market price
+                                            </h3>
+                                            <dl className="flex flex-col divide-y divide-secondary">
+                                                <DetailRow label="Price" value={mine.price != null ? formatPrice(mine.price) : "No price known"} />
+                                                {known?.price?.low != null ? (
+                                                    <DetailRow label="Lowest listing" value={formatPrice(known.price.low)} late />
+                                                ) : null}
+                                            </dl>
+                                            {/* Where to check it: the page the figure came from, and what the card sold for,
+                                                raw and as a PSA 10, which no market here prices. The kit's secondary button,
+                                                as a link, full width and one under the other (Bart, 2026-09-12). A list, so a screen reader says how many there
+                                                are; each says it opens a new tab. */}
+                                            <ul className="flex flex-col gap-2">
+                                                {[
+                                                    tcgplayerUrl(mine.tcgplayer_id) ? { label: "TCGplayer", href: tcgplayerUrl(mine.tcgplayer_id)! } : null,
+                                                    card ? { label: "eBay sold", href: ebaySoldUrl(card) } : null,
+                                                    card ? { label: "eBay sold, PSA 10", href: ebaySoldUrl(card, "psa10") } : null,
+                                                ]
+                                                    .filter((l): l is { label: string; href: string } => l !== null)
+                                                    .map((l) => (
+                                                        <li key={l.label}>
+                                                            <Button
+                                                                href={l.href}
+                                                                target="_blank"
+                                                                rel="noreferrer noopener"
+                                                                color="secondary"
+                                                                size="sm"
+                                                                className="w-full"
+                                                            >
+                                                                {l.label}
+                                                                <span className="sr-only"> (opens in a new tab)</span>
+                                                            </Button>
+                                                        </li>
+                                                    ))}
+                                            </ul>
+                                        </section>
+                                        <section aria-labelledby="price-yours" className="flex flex-col gap-3">
+                                            <h3 id="price-yours" className="text-sm font-semibold text-primary">
+                                                Your copies
+                                            </h3>
+                                            <dl className="flex flex-col divide-y divide-secondary">
+                                                <DetailRow label="Copies" value={mine.quantity ?? 1} />
                                                 <DetailRow
-                                                    label="Near Mint range"
-                                                    value={`${formatPrice(known.price.nm.low)} – ${formatPrice(known.price.nm.high)}`}
-                                                    late
+                                                    label="Holding value"
+                                                    value={mine.price != null ? formatPrice(mine.price * (mine.quantity ?? 1)) : null}
                                                 />
-                                            ) : known?.price?.low != null ? (
-                                                <DetailRow label="Lowest listing" value={formatPrice(known.price.low)} late />
-                                            ) : null}
-                                            <DetailRow label="Copies" value={mine.quantity ?? 1} />
-                                            <DetailRow
-                                                label="Holding value"
-                                                value={mine.price != null ? formatPrice(mine.price * (mine.quantity ?? 1)) : null}
-                                            />
-                                            <DetailRow label="Purchase price" value={mine.purchase_price != null ? formatPrice(mine.purchase_price) : null} />
-                                            {mine.purchase_price != null && mine.price != null ? (
                                                 <DetailRow
-                                                    label="Since purchase"
-                                                    value={
-                                                        <span className={mine.price - mine.purchase_price >= 0 ? "text-success-primary" : "text-error-primary"}>
-                                                            {mine.price - mine.purchase_price >= 0 ? "+" : "−"}
-                                                            {formatPrice(Math.abs(mine.price - mine.purchase_price))}
-                                                        </span>
-                                                    }
+                                                    label="Purchase price"
+                                                    value={mine.purchase_price != null ? formatPrice(mine.purchase_price) : null}
                                                 />
-                                            ) : null}
-                                            <DetailRow label="Purchase date" value={mine.purchase_date ? formatDate(mine.purchase_date) : null} />
-                                        </dl>
+                                                {mine.purchase_price != null && mine.price != null ? (
+                                                    <DetailRow
+                                                        label="Since purchase"
+                                                        value={
+                                                            <span
+                                                                className={
+                                                                    mine.price - mine.purchase_price >= 0 ? "text-success-primary" : "text-error-primary"
+                                                                }
+                                                            >
+                                                                {mine.price - mine.purchase_price >= 0 ? "+" : "−"}
+                                                                {formatPrice(Math.abs(mine.price - mine.purchase_price))}
+                                                            </span>
+                                                        }
+                                                    />
+                                                ) : null}
+                                                <DetailRow label="Purchase date" value={mine.purchase_date ? formatDate(mine.purchase_date) : null} />
+                                            </dl>
+                                        </section>
                                     </TabPanel>
                                 ) : null}
                             </Tabs>

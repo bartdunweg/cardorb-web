@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Card } from "@/lib/api-shapes";
-import { copyLabel, groupCopies, printingLabel, sameCard } from "./copies";
+import { copyLabel, groupCopies, sameCard } from "./copies";
 
 const copy = (over: Partial<Card> = {}): Card =>
     ({
@@ -92,19 +92,5 @@ describe("sameCard", () => {
         expect(sameCard(stored, { name: "Pikachu", set: "SVP Black Star Promos", number: "088" })).toBe(false);
         expect(sameCard(stored, { name: "Raichu", set: "SVP Black Star Promos", number: "027" })).toBe(false);
         expect(sameCard({ name: "Pikachu", set: null, number: "027" }, { name: "Pikachu", set: null, number: "027" })).toBe(true);
-    });
-});
-
-describe("printingLabel", () => {
-    it("says TCGplayer's word for a printing the way a person reads it", () => {
-        expect(printingLabel("unlimited-holofoil")).toBe("Unlimited holo");
-        expect(printingLabel("1st-edition-holofoil")).toBe("1st Edition holo");
-        expect(printingLabel("reverse-holofoil")).toBe("Reverse holo");
-        expect(printingLabel("normal")).toBe("Normal");
-    });
-
-    it("passes a word it does not know through, rather than dropping it", () => {
-        // Their list grows; a printing nobody named here is still where the figure came from.
-        expect(printingLabel("some-new-foil")).toBe("Some new foil");
     });
 });

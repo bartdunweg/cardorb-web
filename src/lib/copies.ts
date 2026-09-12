@@ -104,20 +104,3 @@ export const copyEdits = z
     })
     .partial();
 export type CopyEdits = z.infer<typeof copyEdits>;
-
-/**
- * TCGplayer's own name for a printing, as a person reads it: "unlimited-holofoil" is Unlimited
- * holo. Their vocabulary is the foil and the run joined by a dash, and it is shown beside a
- * figure so it is clear which printing of the card that money belongs to. An unknown word is
- * passed through rather than dropped: their list grows and a printing nobody named here is still
- * the truth about where the figure came from.
- */
-export const printingLabel = (printing: string): string => {
-    const words = printing
-        .replace(/holofoil/g, "holo")
-        .replace(/1st-edition/g, "1st Edition")
-        .split("-")
-        .filter(Boolean);
-    const said = words.join(" ");
-    return said.charAt(0).toUpperCase() + said.slice(1);
-};
