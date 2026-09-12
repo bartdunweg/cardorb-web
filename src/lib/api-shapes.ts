@@ -145,6 +145,12 @@ export const cardItemSchema = z.object({
     priceHolo: nullable(apiPriceSchema),
     /** What the stamped first run trades at, where anything prices that run apart. */
     priceFirstEd: nullable(apiPriceSchema).optional(),
+    /**
+     * What the Shadowless run trades at. Cardmarket files that run as a product of its own for
+     * Base Set, every card of it, and the API reads its figures out of the same nightly guide
+     * (cardorb-api#329). Null everywhere else, and absent from an API older than that.
+     */
+    priceShadowless: nullable(apiPriceSchema).optional(),
 });
 export type CardItem = z.infer<typeof cardItemSchema>;
 
@@ -243,14 +249,23 @@ export function priceForCopy({
     price,
     priceHolo,
     priceFirstEd,
-}: Pick<CardItem, "finish" | "price" | "priceHolo"> & Partial<Pick<CardItem, "edition" | "priceFirstEd">>): number | null {
+    priceShadowless,
+}: Pick<CardItem, "finish" | "price" | "priceHolo"> & Partial<Pick<CardItem, "edition" | "priceFirstEd" | "priceShadowless">>): number | null {
     /*
-     * The API's rule, copyPriceOf() in its price-basis.mjs, in the same order: the stamped
-     * first run where anything prices that run apart, then the foil series for a reverse
-     * (patterned or not), then the plain price. A 1st Edition copy of a card nobody prices a
-     * stamped run for falls back to the ordinary price, as it does there.
+     * The API's rule, copyPriceOf() in its price-basis.mjs, in the same order: a run of its own
+     * where anything prices that run apart, the stamped first run from TCGplayer and the
+     * Shadowless one from Cardmarket's own guide, then the foil series for a reverse (patterned
+     * or not), then the plain price. A copy of a card nobody prices a run for falls back to the
+     * ordinary price, as it does there.
+     *
+     * The two runs are not one branch: a card can be priced for either, both or neither, and on
+     * Base Set the difference is €583 against €3,567 (base1-4 Charizard, read 2026-09-12).
      */
-    const chosen = (edition === "1st-edition" ? priceFirstEd : null) ?? (isReverseFinish(finish) ? priceHolo : null) ?? price;
+    const chosen =
+        (edition === "1st-edition" ? priceFirstEd : null) ??
+        (edition === "shadowless" ? priceShadowless : null) ??
+        (isReverseFinish(finish) ? priceHolo : null) ??
+        price;
     return chosen?.nm?.mid ?? chosen?.market ?? null;
 }
 
