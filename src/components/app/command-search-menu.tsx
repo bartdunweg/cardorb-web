@@ -60,7 +60,12 @@ function CardPreview({
     return (
         <div
             ref={box}
-            className="flex w-full flex-col gap-4 overflow-y-auto border-secondary p-6 max-md:border-t max-sm:absolute max-sm:inset-0 max-sm:z-10 max-sm:border-t-0 max-sm:bg-primary md:max-h-[70vh] md:w-90 md:border-l"
+            /* As tall as the hits beside it and no taller, the kit's 424 px at most: on a short screen the
+               dialog shrinks to the window, the hits with it, and the preview keeps their height and scrolls
+               inside. It used to stop at 70 vh on its own, a hand short of the hits' edge, and its children could
+               shrink: the scan, the one with nothing inside to hold it open, went to nothing first (measured at
+               620 px). */
+            className="flex min-h-0 w-full flex-col gap-4 overflow-y-auto border-secondary p-6 *:shrink-0 max-md:border-t max-sm:absolute max-sm:inset-0 max-sm:z-10 max-sm:border-t-0 max-sm:bg-primary md:max-h-106 md:w-90 md:border-l"
         >
             <Button
                 color="secondary"
@@ -83,25 +88,11 @@ function CardPreview({
                 <p className="text-sm text-tertiary">{card.supertype ?? "Card"}</p>
             </div>
 
-            <dl className="flex flex-col divide-y divide-secondary">
-                <DetailRow label="Price" value={formatPrice(card.price)} />
-                <DetailRow label="Set" value={card.set || null} />
-                <DetailRow label="Series" value={card.series} />
-                <DetailRow label="Number" value={card.number ? `${card.number}${card.setPrintedTotal ? ` / ${card.setPrintedTotal}` : ""}` : null} />
-                <DetailRow label="Rarity" value={card.rarity} />
-                <DetailRow label="Type" value={card.types?.length ? card.types.join(", ") : null} />
-                <DetailRow label="Subtypes" value={card.subtypes?.length ? card.subtypes.join(", ") : null} />
-                <DetailRow label="HP" value={card.hp} />
-                <DetailRow label="Pokédex №" value={card.nationalPokedexNumbers?.length ? card.nationalPokedexNumbers.join(", ") : null} />
-                <DetailRow label="Artist" value={card.artist} />
-                <DetailRow label="Released" value={formatDate(card.releaseDate)} />
-            </dl>
-
-            {card.flavorText ? <p className="text-sm text-tertiary italic">{card.flavorText}</p> : null}
-
-            {/* Owned or wished for, never both. A card you hold closes both buttons; a wish closes its own
-                and leaves the collection open, because taking a wished card is what settles a wish. The hit
-                itself says which it is (takenHit marks it the moment a press lands). */}
+            {/* The two ways to take it, before the facts: what you came to do is in view on any screen, and
+                the facts scroll under it (Bart's call, 2026-09-12). Owned or wished for, never both. A card
+                you hold closes both buttons; a wish closes its own and leaves the collection open, because
+                taking a wished card is what settles a wish. The hit itself says which it is (takenHit marks
+                it the moment a press lands). */}
             <div className="flex flex-col gap-2">
                 <Button
                     onClick={() => {
@@ -130,6 +121,22 @@ function CardPreview({
                     View details
                 </Button>
             </div>
+
+            <dl className="flex flex-col divide-y divide-secondary">
+                <DetailRow label="Price" value={formatPrice(card.price)} />
+                <DetailRow label="Set" value={card.set || null} />
+                <DetailRow label="Series" value={card.series} />
+                <DetailRow label="Number" value={card.number ? `${card.number}${card.setPrintedTotal ? ` / ${card.setPrintedTotal}` : ""}` : null} />
+                <DetailRow label="Rarity" value={card.rarity} />
+                <DetailRow label="Type" value={card.types?.length ? card.types.join(", ") : null} />
+                <DetailRow label="Subtypes" value={card.subtypes?.length ? card.subtypes.join(", ") : null} />
+                <DetailRow label="HP" value={card.hp} />
+                <DetailRow label="Pokédex №" value={card.nationalPokedexNumbers?.length ? card.nationalPokedexNumbers.join(", ") : null} />
+                <DetailRow label="Artist" value={card.artist} />
+                <DetailRow label="Released" value={formatDate(card.releaseDate)} />
+            </dl>
+
+            {card.flavorText ? <p className="text-sm text-tertiary italic">{card.flavorText}</p> : null}
         </div>
     );
 }
