@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Download01, FilterLines, Grid01, Plus } from "@untitledui/icons";
+import { Download01, FilterLines, Grid01, Plus, SearchLg, SwitchVertical01 } from "@untitledui/icons";
 import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
+import { Input } from "@/components/base/input/input";
 import type { Card } from "@/lib/api-shapes";
 import { AcquiredDatePicker } from "./acquired-date-picker";
 import { AppEmptyState } from "./app-empty-state";
@@ -19,6 +20,7 @@ import { FlagIcon } from "./flag-icon";
 import { FormError } from "./form-error";
 import { LinkButton } from "./link-button";
 import { RowButton } from "./row-button";
+import { LIST_ROW, RowSearch } from "./row-search";
 import { SearchTrigger } from "./search-trigger";
 import { SetWash } from "./set-hero";
 import { notify } from "./toast";
@@ -448,7 +450,7 @@ export const ourSections: SectionSpec[] = [
         title: "RowButton",
         from: "components/app/row-button",
         ours: true,
-        note: "Filters, Sort and View above a list. From sm it is icon, word and, for a menu, a chevron; on a phone the word is read out only and the button is a circle the height of the search pill beside it. Narrow the window to see it change.",
+        note: "Filters, Sort and View above a list. From sm it is icon, word and, for a menu, a chevron; on a phone the word is read out only and the button is a 36 px circle, as the search beside it is (RowSearch). Narrow the window to see it change.",
         render: (
             <Panel>
                 <Group title="Variants" cols="tight">
@@ -467,6 +469,22 @@ export const ourSections: SectionSpec[] = [
                     </Cell>
                     <Cell label="isDisabled">
                         <RowButton icon={Download01} label="Export" isDisabled />
+                    </Cell>
+                </Group>
+            </Panel>
+        ),
+    },
+    {
+        id: "row-search",
+        title: "RowSearch",
+        from: "components/app/row-search",
+        ours: true,
+        note: "The search in a list row, and LIST_ROW, the row itself. From sm a field of 208 px at most; on a phone a round search button that opens the field across the row, hides the row's other buttons and puts them back with the close button beside it. A field with a term stays open. Narrow the window to a phone to try it.",
+        render: (
+            <Panel>
+                <Group title="In a row" cols="tight">
+                    <Cell label="search, Filters, Sort, View">
+                        <RowSearchDemo />
                     </Cell>
                 </Group>
             </Panel>
@@ -567,5 +585,20 @@ function FilterChipSample() {
                 </Cell>
             </Group>
         </Panel>
+    );
+}
+
+/** A list row with a search that works, so the phone's open and close can be tried here. */
+function RowSearchDemo() {
+    const [q, setQ] = useState("");
+    return (
+        <div className={`${LIST_ROW} w-full`}>
+            <RowSearch label="Search" filled={q !== ""} onClear={() => setQ("")}>
+                <Input aria-label="Search" icon={SearchLg} placeholder="Search" size="sm" value={q} onChange={setQ} wrapperClassName="rounded-full" />
+            </RowSearch>
+            <RowButton icon={FilterLines} label="Filters" />
+            <RowButton icon={SwitchVertical01} label="Sort" menu />
+            <RowButton icon={Grid01} label="View" menu className="ml-auto" />
+        </div>
     );
 }

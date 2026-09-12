@@ -3,6 +3,7 @@
 import { type ReactNode, Suspense, useState } from "react";
 import dynamic from "next/dynamic";
 import { CardsList } from "@/components/app/cards-list";
+import { LIST_ROW } from "@/components/app/row-search";
 import { CardsSkeleton } from "@/components/app/skeletons";
 import { ViewMenu } from "@/components/app/view-menu";
 import type { Card, CardFilter, CardList } from "@/lib/cards";
@@ -66,7 +67,7 @@ export function CardsView({
     return (
         // A column that grows: an empty state under the row takes the rest of the page and sits in the middle of it.
         <div className="flex flex-1 flex-col gap-4">
-            <div className="flex flex-wrap items-center gap-3">
+            <div className={LIST_ROW}>
                 {/* In its own box: an element that crossed the server boundary, in a list with local ones, trips the key check. */}
                 <div className="contents">{toolbar}</div>
                 <ViewMenu view={view} size={size} onView={setView} onSize={setSize} />
