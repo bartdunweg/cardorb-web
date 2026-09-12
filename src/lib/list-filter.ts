@@ -14,6 +14,9 @@ import type { CardFilter } from "@/lib/cards";
  * `facets` is left out on purpose: a batch on scroll never reads them, and `loadMoreCards` sets
  * it to false itself.
  */
+/** One value or several, as a filter chosen more than once carries them. */
+const choices = z.union([z.string().max(100), z.array(z.string().max(100)).max(50)]).optional();
+
 const filterShape: { [K in keyof Required<Omit<CardFilter, "facets">>]: z.ZodType<CardFilter[K]> } = {
     q: z.string().max(100).optional(),
     collectionId: z.string().max(64).optional(),
@@ -21,11 +24,11 @@ const filterShape: { [K in keyof Required<Omit<CardFilter, "facets">>]: z.ZodTyp
     wishlist: z.boolean().optional(),
     sort: z.enum(["name", "price", "added", "dex"]).optional(),
     order: z.enum(["asc", "desc"]).optional(),
-    set: z.string().max(100).optional(),
-    rarity: z.string().max(100).optional(),
+    set: choices,
+    rarity: choices,
     fullArt: z.boolean().optional(),
-    gen: z.string().max(100).optional(),
-    type: z.string().max(100).optional(),
+    gen: choices,
+    type: choices,
     number: z.string().max(20).optional(),
     priced: z.boolean().optional(),
     duplicates: z.boolean().optional(),

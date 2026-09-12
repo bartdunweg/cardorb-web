@@ -56,7 +56,7 @@ export async function searchMyCards(query: string, filters: MyCardsFilters = {})
 }
 
 /** Which list a suggestion may come from: the binder the field sits on, with its filters still on. */
-export type TitleScope = { collectionId?: string; wishlist?: boolean; favoritesOnly?: boolean; set?: string; rarity?: string };
+export type TitleScope = { collectionId?: string; wishlist?: boolean; favoritesOnly?: boolean; set?: string | string[]; rarity?: string | string[] };
 
 export type { CardTitle, TitleSet } from "@/lib/card-titles";
 
@@ -67,8 +67,8 @@ const titleScope = z.object({
     collectionId: choice,
     wishlist: z.boolean().optional(),
     favoritesOnly: z.boolean().optional(),
-    set: choice,
-    rarity: choice,
+    set: z.union([choice, z.array(z.string().trim().min(1).max(100)).max(50)]),
+    rarity: z.union([choice, z.array(z.string().trim().min(1).max(100)).max(50)]),
 });
 
 /**

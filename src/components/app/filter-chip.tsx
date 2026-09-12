@@ -4,11 +4,13 @@ import { type ReactNode, useDeferredValue, useEffect, useId, useRef, useState } 
 import { Check, ChevronDown, SearchLg } from "@untitledui/icons";
 import { Button as AriaButton, Dialog as AriaDialog, DialogTrigger as AriaDialogTrigger, Heading as AriaHeading } from "react-aria-components";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
+import { CheckboxBase } from "@/components/base/checkbox/checkbox";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
 import { cx } from "@/utils/cx";
 
-export type FilterOption = { value: string; label: string; hint?: string };
+/** One choice. `icon` goes before the word: a language's flag, a type's disc, a state's dot. */
+export type FilterOption = { value: string; label: string; hint?: string; icon?: ReactNode };
 
 /** Past this many choices the list gets a field to narrow it: a person knows the set's name, not its place in the list. */
 const SEARCHABLE_FROM = 12;
@@ -63,6 +65,7 @@ export function FilterChip({
     );
     const chipContent = (
         <>
+            {chosen?.icon ? <span className="flex shrink-0 items-center">{chosen.icon}</span> : null}
             <span aria-hidden="true">{chosen ? chosen.label : label}</span>
             <ChevronDown aria-hidden="true" className="size-3.5 shrink-0 text-fg-quaternary" />
         </>
@@ -77,7 +80,7 @@ export function FilterChip({
                 </AriaButton>
                 <Dropdown.Popover placement="bottom start" className="w-72">
                     <AriaDialog aria-label={label} className="flex max-h-80 flex-col outline-hidden">
-                        <Choices label={label} any={any} value={value} options={options} onPick={pick} />
+                        <FilterChoices label={label} any={any} value={value ? [value] : []} options={options} onChange={(next) => pick(next[0])} />
                     </AriaDialog>
                 </Dropdown.Popover>
             </AriaDialogTrigger>
@@ -102,7 +105,7 @@ export function FilterChip({
                         {/* role="presentation", not the kit's default "main": the page already has a <main>. */}
                         {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- the rule offers <img alt="">, which this is not: the role is here only to stop the kit's default role="main". */}
                         <SlideoutMenu.Content role="presentation" className="pb-4">
-                            <Choices label={label} any={any} value={value} options={options} onPick={pick} />
+                            <FilterChoices label={label} any={any} value={value ? [value] : []} options={options} onChange={(next) => pick(next[0])} />
                         </SlideoutMenu.Content>
                     </>
                 )}
@@ -111,20 +114,32 @@ export function FilterChip({
     );
 }
 
-// The choices: "Any" on top, then each option, the chosen one with a check. A long list has a field over it.
-function Choices({
+// The choices: "Any" on top where there is one, then each option. One to pick: the chosen one has a
+// check and a press replaces it. `multiple`: each has a box and a press adds or takes it away, so a
+// list can be several sets at once. A long list has a field over it.
+export function FilterChoices({
     label,
     any,
+    anyIcon,
     value,
     options,
-    onPick,
+    multiple = false,
+    focusField = true,
+    onChange,
 }: {
     label: string;
-    any: string;
-    value: string | undefined;
+    /** The first row's word, the one that takes the filter off; none, no such row. */
+    any?: string;
+    /** Beside that word: English's flag, where the others wear theirs. */
+    anyIcon?: ReactNode;
+    /** The caret in the field on open. Off in a sheet on a phone, where it raises the keyboard over the list it narrows. */
+    focusField?: boolean;
+    value: string[];
     options: FilterOption[];
-    onPick: (next: string | undefined) => void;
+    multiple?: boolean;
+    onChange: (next: string[]) => void;
 }) {
+    const press = (option: string) => onChange(multiple ? (value.includes(option) ? value.filter((v) => v !== option) : [...value, option]) : [option]);
     const [term, setTerm] = useState("");
     const needle = useDeferredValue(term.trim().toLowerCase());
     const searchable = options.length >= SEARCHABLE_FROM;
@@ -132,7 +147,9 @@ function Choices({
     const listId = useId();
     // The list opens to be narrowed: the caret lands in the field, so typing goes on from the chip.
     const field = useRef<HTMLInputElement>(null);
-    useEffect(() => field.current?.focus(), []);
+    useEffect(() => {
+        if (focusField) field.current?.focus();
+    }, [focusField]);
 
     // What the field did, for a screen reader: a 200-set list narrowing to three, or to none, was
     // silent: the count was nowhere and "Nothing by that name." was plain text nobody announced.
@@ -171,9 +188,17 @@ function Choices({
             </output>
             <fieldset id={listId} className="flex min-h-0 flex-col overflow-y-auto sm:p-1">
                 <legend className="sr-only">{label}</legend>
-                <Choice label={any} pressed={value === undefined} onClick={() => onPick(undefined)} />
+                {any ? <Choice label={any} icon={anyIcon} pressed={value.length === 0} onClick={() => onChange([])} /> : null}
                 {shown.map((o) => (
-                    <Choice key={o.value} label={o.label} hint={o.hint} pressed={o.value === value} onClick={() => onPick(o.value)} />
+                    <Choice
+                        key={o.value}
+                        label={o.label}
+                        hint={o.hint}
+                        icon={o.icon}
+                        multiple={multiple}
+                        pressed={value.includes(o.value)}
+                        onClick={() => press(o.value)}
+                    />
                 ))}
             </fieldset>
         </div>
@@ -181,7 +206,21 @@ function Choices({
 }
 
 // A choice is the kit's button (react-aria), which answers Enter and Space itself, like the chip.
-function Choice({ label, hint, pressed, onClick }: { label: string; hint?: string; pressed: boolean; onClick: () => void }) {
+function Choice({
+    label,
+    hint,
+    icon,
+    multiple = false,
+    pressed,
+    onClick,
+}: {
+    label: string;
+    hint?: string;
+    icon?: ReactNode;
+    multiple?: boolean;
+    pressed: boolean;
+    onClick: () => void;
+}) {
     return (
         <AriaButton
             aria-pressed={pressed}
@@ -191,6 +230,9 @@ function Choice({ label, hint, pressed, onClick }: { label: string; hint?: strin
                 pressed && "bg-alpha-black/4",
             )}
         >
+            {/* The box leads, as in a checklist; one to pick keeps its check at the end. */}
+            {multiple ? <CheckboxBase isSelected={pressed} /> : null}
+            {icon ? <span className="flex shrink-0 items-center">{icon}</span> : null}
             <span className="flex min-w-0 flex-1 flex-col">
                 <span className="truncate text-sm font-medium text-primary">{label}</span>
                 {/* The comma is read, not seen: the two lines run together into one accessible name
@@ -202,7 +244,7 @@ function Choice({ label, hint, pressed, onClick }: { label: string; hint?: strin
                     </span>
                 ) : null}
             </span>
-            <Check aria-hidden="true" className={cx("size-4 shrink-0 text-fg-brand-primary", !pressed && "invisible")} />
+            {multiple ? null : <Check aria-hidden="true" className={cx("size-4 shrink-0 text-fg-brand-primary", !pressed && "invisible")} />}
         </AriaButton>
     );
 }

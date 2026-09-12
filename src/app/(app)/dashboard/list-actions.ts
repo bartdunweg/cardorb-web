@@ -52,3 +52,20 @@ export async function warmList(input: unknown): Promise<void> {
         // A warm that fails is a tap that pays for its own read, which is what it did before.
     }
 }
+
+/**
+ * How many cards a filter finds, for the Filters sheet's button while the choices are still a
+ * draft ("Show 42 cards"). One card asked for, no facets: the count is the whole answer wanted.
+ * Null when it cannot say, and the button falls back to "Show results".
+ */
+export async function countCards(input: unknown): Promise<number | null> {
+    const parsed = loadMoreInput.omit({ offset: true }).safeParse(input);
+    if (!parsed.success) return null;
+    try {
+        // The cards the list will show, as a narrowed page counts them under its title ("25 matches").
+        const { total } = await getMyCards({ ...parsed.data, facets: false, limit: 1 });
+        return total;
+    } catch {
+        return null;
+    }
+}

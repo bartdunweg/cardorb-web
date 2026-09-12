@@ -1,17 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { SearchLg, SwitchVertical01 } from "@untitledui/icons";
 import dynamic from "next/dynamic";
 import { listRows } from "@/app/(app)/dashboard/cards/actions";
 import { AppEmptyState } from "@/components/app/app-empty-state";
-import { FiltersSheet } from "@/components/app/filters-sheet";
+import { type FilterValues, FiltersSheet } from "@/components/app/filters-sheet";
 import { RowButton } from "@/components/app/row-button";
 import { LIST_ROW, RowSearch } from "@/components/app/row-search";
 import { SetCardTile } from "@/components/app/set-card-tile";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Input } from "@/components/base/input/input";
-import { NativeSelect } from "@/components/base/select/select-native";
+import { Dot } from "@/components/foundations/dot-icon";
 import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
 import { GRID_COLUMNS } from "@/lib/cards-view";
@@ -44,6 +44,12 @@ const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-sl
  * price. A search that finds nothing keeps the row where it is and says so under it.
  */
 type Holding = "owned" | "missing" | "wishlist";
+/** The page's filters from what the sheet chose. */
+const filtersOf = (v: FilterValues) => ({
+    holding: HOLDINGS.find((h) => h.value === v.holding?.[0])?.value,
+    rarity: v.rarity ?? [],
+    art: (v.only ?? []).includes(FULL_ART),
+});
 type SortKey = "set" | "name" | "price-desc" | "price-asc";
 const SORTS: { value: SortKey; label: string }[] = [
     { value: "set", label: "Set order" },
@@ -51,17 +57,18 @@ const SORTS: { value: SortKey; label: string }[] = [
     { value: "price-desc", label: "Price, high to low" },
     { value: "price-asc", label: "Price, low to high" },
 ];
-const HOLDINGS: { value: Holding; label: string }[] = [
-    { value: "owned", label: "Owned" },
-    { value: "missing", label: "Missing" },
-    { value: "wishlist", label: "On the wishlist" },
+/* Each state with a dot of its own colour, as a status tag: held, not held, wished for. The word says it; the colour only helps find it. */
+const HOLDINGS: { value: Holding; label: string; dot: string }[] = [
+    { value: "owned", label: "Owned", dot: "text-fg-success-secondary" },
+    { value: "missing", label: "Missing", dot: "text-fg-quaternary" },
+    { value: "wishlist", label: "On the wishlist", dot: "text-fg-warning-secondary" },
 ];
 
 export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetCard[]; language?: string; firstRow?: number }) {
     const [q, setQ] = useState("");
     const [holding, setHolding] = useState<Holding | undefined>();
-    const [rarity, setRarity] = useState<string | undefined>();
-    const [art, setArt] = useState<string | undefined>();
+    const [rarity, setRarity] = useState<string[]>([]);
+    const [art, setArt] = useState(false);
     const [sort, setSort] = useState<SortKey>("set");
     /* Which of this set's cards are full art, read off the set itself: the same rarity means the
        opposite thing in Sun & Moon and in Scarlet & Violet, so the rule needs the whole set
@@ -74,22 +81,33 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
         () => [...new Set(cards.map((c) => c.rarity).filter((r): r is string => Boolean(r)))].sort().map((r) => ({ value: r, label: r })),
         [cards],
     );
+    /* One test for the grid and for the sheet's count, so "Show 12 cards" is the twelve it shows. */
+    const matching = useCallback(
+        (f: { holding?: Holding; rarity: string[]; art: boolean }) => {
+            const term = q.trim().toLowerCase();
+            return cards.filter(
+                (c) =>
+                    (!term ||
+                        c.name.toLowerCase().includes(term) ||
+                        (c.localName ?? "").toLowerCase().includes(term) ||
+                        c.number.toLowerCase().includes(term)) &&
+                    (!f.holding || (f.holding === "owned" ? c.owned : f.holding === "wishlist" ? c.wishlist : !c.owned && !c.wishlist)) &&
+                    (f.rarity.length === 0 || (c.rarity !== null && c.rarity !== undefined && f.rarity.includes(c.rarity))) &&
+                    (!f.art || fullArt.has(c.number)),
+            );
+        },
+        [cards, q, fullArt],
+    );
     const shown = useMemo(() => {
-        const term = q.trim().toLowerCase();
-        const kept = cards.filter(
-            (c) =>
-                (!term || c.name.toLowerCase().includes(term) || (c.localName ?? "").toLowerCase().includes(term) || c.number.toLowerCase().includes(term)) &&
-                (!holding || (holding === "owned" ? c.owned : holding === "wishlist" ? c.wishlist : !c.owned && !c.wishlist)) &&
-                (!rarity || c.rarity === rarity) &&
-                (!art || fullArt.has(c.number)),
-        );
+        const kept = matching({ holding, rarity, art });
         if (sort === "set") return kept;
         /* A card without a price sorts last either way: the question is which cards are worth what, and
            an unpriced card has no answer to give. */
         const price = (c: SetCard) => c.price ?? (sort === "price-desc" ? -1 : Number.POSITIVE_INFINITY);
         return [...kept].sort((a, b) => (sort === "name" ? a.name.localeCompare(b.name) : sort === "price-desc" ? price(b) - price(a) : price(a) - price(b)));
-    }, [cards, q, holding, rarity, art, sort, fullArt]);
-    const narrowed = Boolean(q.trim() || holding || rarity || art);
+    }, [matching, holding, rarity, art, sort]);
+    const narrowed = Boolean(q.trim() || holding || rarity.length || art);
+    const countDraft = useCallback((v: FilterValues) => matching(filtersOf(v)).length, [matching]);
 
     const [selected, setSelected] = useState<Card | null>(null);
     // The catalogue card behind an open sheet, so a card nobody holds can still be taken from it.
@@ -138,41 +156,29 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
                         wrapperClassName="rounded-full"
                     />
                 </RowSearch>
-                <FiltersSheet inline active={[holding, rarity, art].filter(Boolean).length}>
-                    {/* Menus, as a binder's and Browse's: from lg they stand in the row beside Sort, and a chip
-                        there was a control of another height. */}
-                    <NativeSelect
-                        aria-label="Cards"
-                        size="sm"
-                        className="w-auto"
-                        value={holding ?? ""}
-                        onChange={(event) => setHolding(HOLDINGS.find((h) => h.value === event.target.value)?.value)}
-                        options={[{ label: "All cards", value: "" }, ...HOLDINGS]}
-                    />
-                    {rarities.length > 1 ? (
-                        <NativeSelect
-                            aria-label="Rarity"
-                            size="sm"
-                            className="w-auto"
-                            value={rarity ?? ""}
-                            onChange={(event) => setRarity(event.target.value || undefined)}
-                            options={[{ label: "All rarities", value: "" }, ...rarities]}
-                        />
-                    ) : null}
-                    {fullArt.size > 0 ? (
-                        <NativeSelect
-                            aria-label="Art"
-                            size="sm"
-                            className="w-auto"
-                            value={art ?? ""}
-                            onChange={(event) => setArt(event.target.value || undefined)}
-                            options={[
-                                { label: "Any art", value: "" },
-                                { label: "Full art", value: FULL_ART },
-                            ]}
-                        />
-                    ) : null}
-                </FiltersSheet>
+                <FiltersSheet
+                    inline
+                    noun={["card", "cards"]}
+                    groups={[
+                        {
+                            id: "holding",
+                            label: "Cards",
+                            all: { value: "all", label: "All cards" },
+                            options: HOLDINGS.map((h) => ({ ...h, icon: <Dot size="md" aria-hidden="true" className={h.dot} /> })),
+                        },
+                        ...(rarities.length > 1 ? [{ id: "rarity", label: "Rarity", multiple: true, options: rarities }] : []),
+                        // Full art cuts across the rarities, so it is its own yes-or-no, not one of them.
+                        ...(fullArt.size > 0 ? [{ id: "only", label: "Show only", multiple: true, options: [{ value: FULL_ART, label: "Full art" }] }] : []),
+                    ]}
+                    values={{ holding: holding ? [holding] : [], rarity, only: art ? [FULL_ART] : [] }}
+                    count={countDraft}
+                    onApply={(v) => {
+                        const next = filtersOf(v);
+                        setHolding(next.holding);
+                        setRarity(next.rarity);
+                        setArt(next.art);
+                    }}
+                />
                 <Dropdown.Root>
                     <RowButton icon={SwitchVertical01} label="Sort" menu />
                     <Dropdown.Popover placement="bottom end" className="w-56">

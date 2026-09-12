@@ -56,7 +56,8 @@ export class ApiShapeError extends ApiError {
     }
 }
 
-type Params = Record<string, string | number | boolean | undefined>;
+/** A list is the key once per value (`?rarity=Rare&rarity=Promo`), the way the API reads several. */
+type Params = Record<string, string | number | boolean | readonly string[] | undefined>;
 
 type Init = {
     method?: "GET" | "POST" | "PATCH" | "DELETE";
@@ -128,7 +129,8 @@ export async function api<T>(path: string, init?: Init): Promise<T>;
 export async function api(path: string, init: Init = {}): Promise<unknown> {
     const url = new URL(`${API_URL}${path}`);
     for (const [key, value] of Object.entries(init.params ?? {})) {
-        if (value !== undefined) url.searchParams.set(key, String(value));
+        if (Array.isArray(value)) for (const one of value) url.searchParams.append(key, one);
+        else if (value !== undefined) url.searchParams.set(key, String(value));
     }
 
     const headers: Record<string, string> = { accept: "application/json" };
