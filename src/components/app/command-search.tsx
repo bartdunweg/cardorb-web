@@ -27,7 +27,10 @@ const CommandSearchMenu = dynamic(() => import("@/components/app/command-search-
 // The card sheet the preview's View details opens, fetched on that press: it is the app's largest client chunk.
 const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-slideout").then((m) => m.CardDetailSlideout), { ssr: false });
 
-const CommandSearchContext = createContext<{ open: () => void }>({ open: () => {} });
+/** Which list the palette's preview offers first. The collection, unless a page says otherwise. */
+export type AddList = "collection" | "wishlist";
+
+const CommandSearchContext = createContext<{ open: (opts?: { list?: AddList }) => void }>({ open: () => {} });
 export const useCommandSearch = () => useContext(CommandSearchContext);
 
 // A search-field-looking button that opens the command palette (used in the desktop sidebar).
@@ -53,6 +56,10 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
     const [isOpen, setIsOpen] = useState(false);
     // True from the first open on: the menu stays mounted after, so closing still animates.
     const [wanted, setWanted] = useState(false);
+    // The list the preview leads with. "Add to wishlist" on the wishlist page opened the same
+    // palette as everywhere, leading with Add to collection: the button promised one list and the
+    // palette offered the other first. Both buttons stay; the page's own list goes on top.
+    const [preset, setPreset] = useState<AddList>("collection");
     const [inputValue, setInputValue] = useState("");
     // The chips under the field: a language, a set of that language's shelf and an energy type. All
     // go to the API's fielded search beside the term. Each shelf's sets are asked for once, the
@@ -78,7 +85,7 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
     /* The English catalogue, in the browser: fetched the first time the palette is wanted (a day
        in the HTTP cache after that) and searched here, so typing is answered before a request
        could have left. Until it is in hand, and on the other shelves, the API is asked as before.
-       What the document does not know — owned, wishlist, the price — is looked up for the hits
+       What the document does not know (owned, wishlist, the price) is looked up for the hits
        on screen once they are (below). */
     const [inBrowser, setInBrowser] = useState(false);
     useEffect(() => {
@@ -226,7 +233,8 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
     return (
         <CommandSearchContext.Provider
             value={{
-                open: () => {
+                open: (opts) => {
+                    setPreset(opts?.list ?? "collection");
                     setWanted(true);
                     setIsOpen(true);
                 },
@@ -237,6 +245,7 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
             {wanted ? (
                 <CommandSearchMenu
                     isOpen={isOpen}
+                    preset={preset}
                     onOpenChange={(o) => {
                         setIsOpen(o);
                         // An empty term and no chips clear the hits through the hook.

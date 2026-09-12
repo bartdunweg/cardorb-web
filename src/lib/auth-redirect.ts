@@ -6,7 +6,7 @@ import { z } from "zod";
  * The three emails (`confirmation`, `email-change`, `recovery`) are Supabase templates written
  * for the previous Cardorb app, and their `next=` values name that app's routes: `/cards`,
  * `/settings`, `/settings/password`. Those paths do not exist here, so `next` is not trusted
- * at all — the link's `type` decides, and the mapping lives here where a test can read it.
+ * at all: the link's `type` decides, and the mapping lives here where a test can read it.
  */
 export const linkParamsSchema = z.object({
     token_hash: z.string().min(1),

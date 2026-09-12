@@ -6,7 +6,7 @@ import { type PokemonCard } from "@/lib/api-shapes";
  *
  * A search that asked a server was 0.7 to 1.0 s of round trips with the query itself at 1 ms
  * (measured 2026-09-11). So the API hands the whole catalogue over once a day as one compact
- * document — `GET /v1/catalog/index`, 23,000 cards, a few hundred kilobytes compressed — and
+ * document (`GET /v1/catalog/index`, 23,000 cards, a few hundred kilobytes compressed) and
  * the typing is answered here, in memory, before a request could have left. What is personal
  * (owned, wishlist) or daily (price) is asked afterwards, for the twenty hits on screen.
  *

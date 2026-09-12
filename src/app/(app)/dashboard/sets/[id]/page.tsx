@@ -13,7 +13,7 @@ import { CatalogueUnavailable, getSet, getSets } from "@/lib/sets";
 // The set's own name in the tab, so a history of open sets is readable.
 //
 // The shelf, not getSet: the shelf is one cached read per person (five minutes), while getSet pages
-// through every card in the set — up to ten requests, and it is not deduplicated, so asking it here
+// through every card in the set, up to ten requests, and it is not deduplicated, so asking it here
 // would read the whole set twice to write a title. A catalogue that will not answer is the page's
 // story to tell, not the tab's, so it falls back to the plain word.
 export async function generateMetadata({

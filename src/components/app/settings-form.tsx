@@ -135,7 +135,7 @@ export function SettingsForm({
 
     const { theme, setTheme } = useTheme();
     // The theme is undefined on the server and first client render alike, so "system" shows on
-    // both until it resolves after hydration — no mount flag, no mismatch.
+    // both until it resolves after hydration: no mount flag, no mismatch.
     const currentTheme = theme ?? "system";
 
     const saveProfile = async () => {
@@ -181,7 +181,7 @@ export function SettingsForm({
                 </div>
             )}
 
-            {/* Who you are, before anything you can change about it — and the way to change it, on
+            {/* Who you are, before anything you can change about it, and the way to change it, on
                 the card that shows it. It was a row in the list below, one line under the picture of
                 the thing it edits. */}
             <div className="flex items-center gap-4 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary ring-inset">

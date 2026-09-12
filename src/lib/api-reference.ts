@@ -4,8 +4,8 @@ import { parse } from "yaml";
  * What the API reference page says, decided here rather than while rendering.
  *
  * The contract is `https://api.cardorb.com/openapi.yaml`, the one description of what the API
- * answers; this page draws it in the site's own theme. The decisions — which tag files an
- * operation, what "same-origin" is called, how a referenced response is resolved — live in
+ * answers; this page draws it in the site's own theme. The decisions (which tag files an
+ * operation, what "same-origin" is called, how a referenced response is resolved) live in
  * plain functions so a test can call them. Nothing here talks to the network.
  */
 

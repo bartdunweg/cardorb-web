@@ -5,7 +5,7 @@ export type Datapoints = {
     /** Rows in the list: what a page of it walks through. */
     total: number;
     /**
-     * The list as a person counts it — an owned copy `quantity` times — which is the number a
+     * The list as a person counts it (an owned copy `quantity` times), which is the number a
      * page says for it. Three screens said three numbers for one binder (rows, distinct cards,
      * copies) and each was right about something else; copies is the one, everywhere, since
      * 2026-09-11. Absent from an API before it, when the rows stand in.

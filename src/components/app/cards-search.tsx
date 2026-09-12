@@ -26,7 +26,7 @@ export function CardsSearch({
     const searchParams = useSearchParams();
     const [value, setValue] = useState(initialValue);
     /* The field used to keep up with the URL by being rebuilt: its whole view carried the URL as a
-       key. That rebuild is gone — it took the caret out of the box on every committed keystroke —
+       key. That rebuild is gone (it took the caret out of the box on every committed keystroke),
        so the field follows the URL itself. Without this, the browser's Back button moved the list
        and left the old term sitting in the box.
        Reset during render rather than in an effect, the shape React asks for and the one

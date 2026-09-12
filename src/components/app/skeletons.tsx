@@ -39,7 +39,7 @@ export function SkeletonFrame({ children }: { children: ReactNode }) {
 /**
  * A card list: the tiles' own ratio, in the grid's own columns, without the surface a tile no
  * longer has. `heading`: the Pokédex, whose slots stand under a generation's heading and its
- * count — a line at the left and a short one at the right, before the first row, so the first
+ * count: a line at the left and a short one at the right, before the first row, so the first
  * heading does not push the tiles down when it lands.
  */
 export function CardsSkeleton({ count = 12, heading = false }: { count?: number; heading?: boolean }) {
@@ -110,7 +110,7 @@ export function ListSkeleton({
 
 /**
  * A page of panels rather than a grid: Settings and You, which both read the profile before they
- * can draw anything. Their titles are known without the read — "Settings" is always "Settings" —
+ * can draw anything. Their titles are known without the read ("Settings" is always "Settings"),
  * so the frame carries the real heading and leaves only the panels outlined.
  */
 export function PanelsSkeleton({ title, subtitle, panels = 3 }: { title: string; subtitle?: string; panels?: number }) {

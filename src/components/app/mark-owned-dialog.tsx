@@ -84,7 +84,7 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
         }
         onSaved?.();
         // This form and the sheet behind it both close, so the card is gone from the screen a
-        // moment after the save; where it went — off the wishlist, into the Collection — is on a
+        // moment after the save; where it went (off the wishlist, into the Collection) is on a
         // page the user is not on.
         notify.done(`${card.name} is in your collection now`);
         router.refresh();
@@ -93,12 +93,12 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
 
     // Label above a full-width field, at every width. Side by side was the old shape and it
     // squeezed: this dialog is 448px whatever the screen is, so a viewport breakpoint fixes
-    // nothing — a select whose own text runs under its chevron looks broken and is the same
+    // nothing: a select whose own text runs under its chevron looks broken and is the same
     // on a desktop as on a phone.
     const row = "flex flex-col gap-1.5 text-sm font-medium text-secondary";
 
     // A card the catalogue says exists in one finish only is not a question. The row states
-    // it and the save records it, which is not a guess — it is the only possibility.
+    // it and the save records it, which is not a guess: it is the only possibility.
     const finishes = finishOptions(facts, card.finish ?? null);
     const soleFinish = soleOption(finishes);
     const effectiveFinish = finish || soleFinish?.value || "";
@@ -144,7 +144,7 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
                 {/*
                  * The flag inside the control, before the word. It cannot go in the list: an
                  * <option> holds text and nothing else, and this stays a native select on
-                 * purpose — on a phone that is the operating system's own wheel, which beats
+                 * purpose; on a phone that is the operating system's own wheel, which beats
                  * anything drawn here. Emoji flags would fit in the list and were tried; they
                  * are a different picture on every platform and sit badly beside the app's own.
                  */}
@@ -152,9 +152,9 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
             </div>
 
             {/*
-             * Raw or graded, and then only the question that follows. The rule was always here —
-             * every list shows `grade ?? condition`, and the condition select disabled itself the
-             * moment a grade was typed — but you found it by bumping into it. A slab has a grade
+             * Raw or graded, and then only the question that follows. The rule was always here
+             * (every list shows `grade ?? condition`, and the condition select disabled itself the
+             * moment a grade was typed), but you found it by bumping into it. A slab has a grade
              * and no condition; a loose card has a condition and no grade.
              */}
             <div className={row}>
@@ -163,7 +163,7 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
                     size="sm"
                     // Its own class is `w-max`, so the row's width has to be given; the halves
                     // then share it. justify-center because the kit's item is `items-center`
-                    // and nothing else — stretched, its word sat against the left edge.
+                    // and nothing else; stretched, its word sat against the left edge.
                     className="w-full *:flex-1 *:justify-center"
                     selectionMode="single"
                     disallowEmptySelection
@@ -229,7 +229,7 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
                     />
                 </div>
             )}
-            {/* A card with no foil at all has no pattern to record — the one thing about a
+            {/* A card with no foil at all has no pattern to record, the one thing about a
     pattern any catalogue is certain of. */}
             {solePattern ? (
                 <div className={row}>

@@ -3,7 +3,7 @@ import { forgetCards, knownCardFacts, preloadCardFacts, preloadPriceHistory, war
 
 /*
  * A tile warms what its sheet will ask for while the pointer rests on it, and the sheet asks
- * again when it opens. One card, one request each, however many times either asks — and a
+ * again when it opens. One card, one request each, however many times either asks, and a
  * second ask while the first is still out joins it rather than sending another.
  */
 

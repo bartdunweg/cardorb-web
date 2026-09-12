@@ -4,8 +4,8 @@ import type { SetSummary } from "@/lib/sets";
 import { SetTile } from "./set-tile";
 
 /*
- * The tile is a picture with the words under it. What matters is that the box is never blank —
- * the logo, else the name's first word — and that the words say what the old row
+ * The tile is a picture with the words under it. What matters is that the box is never blank
+ * (the logo, else the name's first word) and that the words say what the old row
  * said: the name and the count once, no bar. A set the catalogue has no cards for says so
  * instead of "0 of 60".
  */

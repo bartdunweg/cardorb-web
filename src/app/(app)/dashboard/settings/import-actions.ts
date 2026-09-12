@@ -9,7 +9,7 @@ import { forgetMine } from "@/lib/user-cache";
  * The two halves of an import: show me what you would do, then do it.
  *
  * Both are the same call to the API with one flag between them, which is what
- * makes the preview worth trusting — it is not a second implementation that
+ * makes the preview worth trusting: it is not a second implementation that
  * might disagree, it is the same code stopping one step early.
  */
 
@@ -41,7 +41,7 @@ const request = z.object({
 
 /*
  * The schemas stay inside this file. A "use server" file may export nothing but
- * async functions — Next checks that when the module is evaluated, and one
+ * async functions. Next checks that when the module is evaluated, and one
  * exported zod object was enough for every import to answer 500 from the 7th
  * of September (#263) until somebody said "nothing happens". Types are fine,
  * they do not exist at runtime.
@@ -75,7 +75,7 @@ const importPreviewAnswer = z.object({
      */
     notOwned: z.number(),
     /**
-     * Rows naming a card the collection already holds. Said out loud, not acted on — every row
+     * Rows naming a card the collection already holds. Said out loud, not acted on: every row
      * is added. It is the only warning there is against importing the same file a second time.
      */
     existing: z.number(),
@@ -140,7 +140,7 @@ export async function previewImport(input: unknown): Promise<PreviewOutcome> {
  *
  * Two minutes rather than the usual thirty seconds. The API allows itself five
  * for this and a few thousand inserts can use them; giving up at thirty would
- * abandon a write that is going to finish anyway and report it as a failure —
+ * abandon a write that is going to finish anyway and report it as a failure,
  * on the one operation in this app that nobody can undo. On a timeout the
  * screen says the write may still be finishing, rather than inviting a second
  * run that would double everything the first one wrote.
@@ -161,7 +161,7 @@ export async function commitImport(input: unknown): Promise<{ ok: true; result: 
         if (err instanceof Error && err.name === "TimeoutError") {
             return {
                 ok: false,
-                error: "That import is taking longer than expected. It may still be finishing — close this, reload, and check your cards before trying again.",
+                error: "That import is taking longer than expected. It may still be finishing. Close this, reload, and check your cards before trying again.",
             };
         }
         return failed(err);

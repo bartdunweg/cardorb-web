@@ -4,12 +4,12 @@ import { formatCount, formatPrice, formatValue } from "@/lib/format";
 import { linePath, pointsFor } from "@/lib/value-chart-math";
 
 /**
- * Ours: the landing's picture of the product — Home in miniature, drawn from the app's own parts.
+ * Ours: the landing's picture of the product: Home in miniature, drawn from the app's own parts.
  *
  * A landing for a tracking product shows the product (Origin, Oku and Monarch all put the
  * dashboard in the hero), and a screenshot of it goes stale the week after it is taken. This is
  * not a screenshot: it is the value block, the four stat tiles and the row of dearest cards,
- * laid out as Home lays them out, on sample numbers — so it redraws itself with every change
+ * laid out as Home lays them out, on sample numbers, so it redraws itself with every change
  * to the tiles, the tokens or the type, and the picture the visitor sees is the app they get.
  *
  * What it borrows and what it does not. The tiles are Home's `StatCard`; the pictures go through
@@ -61,7 +61,7 @@ export function LandingPreview({ className }: { className?: string }) {
             aria-label="Preview of the Cardorb dashboard"
             // The page's own ground, not a surface of its own: bg-primary is what the landing is
             // drawn on, so the frame is the same colour as what is around it and reads as the
-            // product on the page, held by one hairline, as Linear's does — while still covering
+            // product on the page, held by one hairline, as Linear's does, while still covering
             // the dot grid, which must not run through the dashboard. The darker bg-page read as
             // tooling laid over the page, plainest in the dark. The owner's calls, both.
             className={`pointer-events-none flex flex-col gap-5 overflow-hidden rounded-2xl bg-primary p-4 ring-1 ring-primary select-none ring-inset sm:gap-6 sm:p-6 ${className ?? ""}`}

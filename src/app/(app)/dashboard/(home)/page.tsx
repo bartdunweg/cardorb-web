@@ -29,9 +29,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     const { value } = await searchParams;
     const selected = value === "favorites" || value === "wishlist" || (value && UUID.test(value)) ? value : "all";
     const stats = await getCardStats();
-    // Nothing held and nothing wanted: the first visit after signing up. A value of €0 with an
-    // empty chart and four zeros said the account was empty and not what to do about it.
-    const fresh = stats.owned === 0 && stats.wishlist === 0;
+    // Nothing held: the first visits after signing up. A value of €0 with an empty chart and four
+    // zeros said the account was empty and not what to do about it. A wishlist alone does not end
+    // it: a wished card is not held, and the stats are of what is held (owned and wishlist are
+    // exclusive, CLAUDE.md), so one wish turned the welcome into that same €0 and four zeros.
+    const fresh = stats.owned === 0;
 
     return (
         <div className="flex flex-1 flex-col gap-6">
@@ -47,7 +49,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                 }
             />
             {fresh ? (
-                <Welcome />
+                <Welcome wishlist={stats.wishlist} />
             ) : (
                 <>
                     <Suspense fallback={<ValueHeroOutline />}>
@@ -72,9 +74,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
 // The first thing a new account sees: the one action that fills every page, and the name the
 // account was given. Sign-up asked for no name, so the profile carries one drawn from the email
-// with four random characters after it — and it is the address of the public page, so it is worth
+// with four random characters after it, and it is the address of the public page, so it is worth
 // a line here where the person is, not only in Settings where they may never look.
-async function Welcome() {
+async function Welcome({ wishlist }: { wishlist: number }) {
     const { profile } = await getMyProfile();
     const name = profile?.display_name || profile?.username;
     return (
@@ -92,6 +94,12 @@ async function Welcome() {
             <Button href="/dashboard/settings?profile=1" color="secondary" size="md">
                 Choose your name
             </Button>
+            {/* The wishes are somewhere, and this page is not it. */}
+            {wishlist > 0 ? (
+                <Button href="/dashboard/wishlist" color="link-gray" size="md">
+                    {wishlist === 1 ? "1 card on your wishlist" : `${wishlist} cards on your wishlist`}
+                </Button>
+            ) : null}
         </AppEmptyState>
     );
 }

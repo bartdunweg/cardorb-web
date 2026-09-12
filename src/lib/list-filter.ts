@@ -7,7 +7,7 @@ import type { CardFilter } from "@/lib/cards";
  *
  * The shape is typed as a whole record of `CardFilter`, which is the point of the file. `gen`,
  * `type` and `number` were missing here while every list page passed them, and `z.object` strips
- * what it does not know rather than complaining — so the first 48 cards were the generation you
+ * what it does not know rather than complaining, so the first 48 cards were the generation you
  * asked for and everything after it was the whole collection, with no error anywhere. Written
  * this way, a filter added to `CardFilter` and forgotten here is a type error at build time.
  *

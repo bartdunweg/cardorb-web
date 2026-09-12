@@ -116,7 +116,7 @@ export const formSections: SectionSpec[] = [
         id: "checkbox",
         title: "Checkbox",
         from: "components/base/checkbox/checkbox",
-        note: "Two sizes, and the three values a checkbox can hold: off, on, and the indeterminate middle a parent row shows when only some of its children are ticked. In dark mode a ticked box is white and its tick is white too — 1.02:1, invisible. The kit assumes a coloured brand; ours is a grayscale ramp whose solid is near-white in the dark. Toggle already carries the fix for this (its knob flips to black); Checkbox, RadioButton and the checkbox inside Select and Dropdown do not.",
+        note: "Two sizes, and the three values a checkbox can hold: off, on, and the indeterminate middle a parent row shows when only some of its children are ticked. In dark mode a ticked box is white and its tick is white too: 1.02:1, invisible. The kit assumes a coloured brand; ours is a grayscale ramp whose solid is near-white in the dark. Toggle already carries the fix for this (its knob flips to black); Checkbox, RadioButton and the checkbox inside Select and Dropdown do not.",
         render: (
             <Panel>
                 <Group title="States" cols="tight">
@@ -144,7 +144,7 @@ export const formSections: SectionSpec[] = [
                         <Checkbox size="md" label="Only cards I own" defaultSelected />
                     </Cell>
                     <Cell label="label + hint" span={2}>
-                        <Checkbox size="md" label="Public profile" hint="Anyone with the link can see the cards you own — never the prices or the notes." />
+                        <Checkbox size="md" label="Public profile" hint="Anyone with the link can see the cards you own, never the prices or the notes." />
                     </Cell>
                 </Group>
             </Panel>
@@ -206,7 +206,7 @@ export const formSections: SectionSpec[] = [
         id: "toggle",
         title: "Toggle",
         from: "components/base/toggle/toggle",
-        note: "A switch that acts the moment it is flipped — never a switch you have to save. Changed from the kit: the knob goes black in dark mode, where the selected track is white.",
+        note: "A switch that acts the moment it is flipped, never a switch you have to save. Changed from the kit: the knob goes black in dark mode, where the selected track is white.",
         render: (
             <Panel>
                 <Group title="States" cols="tight">
@@ -252,7 +252,7 @@ export const formSections: SectionSpec[] = [
         id: "select",
         title: "Select",
         from: "components/base/select/select",
-        note: "The kit's own listbox: it can carry an icon, an avatar and a second line per row, which the browser's select cannot. Click one open — the popover is the component, not a screenshot of it.",
+        note: "The kit's own listbox: it can carry an icon, an avatar and a second line per row, which the browser's select cannot. Click one open: the popover is the component, not a screenshot of it.",
         render: (
             <Panel>
                 <Group title="Sizes" cols="wide">
@@ -385,7 +385,7 @@ export const formSections: SectionSpec[] = [
                             className="w-full"
                             accept=".csv,text/csv"
                             allowsMultiple={false}
-                            hint="CSV, up to 2 MB. Commas or semicolons — all fine."
+                            hint="CSV, up to 2 MB. Commas or semicolons, all fine."
                         />
                     </Cell>
                     <Cell label="isDisabled" span={2}>

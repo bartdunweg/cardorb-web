@@ -15,7 +15,7 @@ export const actionSections: SectionSpec[] = [
         id: "button",
         title: "Button",
         from: "components/base/buttons/button",
-        note: 'Nine colours in three weights — solid, outlined, quiet — each with a destructive twin, plus three link colours that carry no box. Changed from the kit: every button is a pill unless it says shape="rect".',
+        note: 'Nine colours in three weights (solid, outlined, quiet), each with a destructive twin, plus three link colours that carry no box. Changed from the kit: every button is a pill unless it says shape="rect".',
         render: (
             <Panel>
                 <Group title="Colours" hint='size="md"'>
@@ -214,7 +214,7 @@ export const actionSections: SectionSpec[] = [
         id: "button-group",
         title: "ButtonGroup",
         from: "components/base/button-group/button-group",
-        note: "One choice out of a few, joined into a single control — Collection or Wishlist, grid or list. Selection is uncontrolled here, so the samples answer to a click.",
+        note: "One choice out of a few, joined into a single control: Collection or Wishlist, grid or list. Selection is uncontrolled here, so the samples answer to a click.",
         render: (
             <Panel>
                 <Group title="Sizes" cols="wide">
@@ -271,7 +271,7 @@ export const actionSections: SectionSpec[] = [
         id: "dropdown",
         title: "Dropdown",
         from: "components/base/dropdown/dropdown",
-        note: "A menu under a trigger. Its item takes an icon, a keyboard hint on the right, and one of four selection indicators — the same checkbox, radio and toggle bases the form controls use, so a menu that toggles something looks like the thing it toggles.",
+        note: "A menu under a trigger. Its item takes an icon, a keyboard hint on the right, and one of four selection indicators: the same checkbox, radio and toggle bases the form controls use, so a menu that toggles something looks like the thing it toggles.",
         render: (
             <Panel>
                 <Group title="Contents" cols="wide">

@@ -16,14 +16,14 @@ import { Section, type SectionSpec } from "./design-section";
  * variant of it side by side, and an index that says where you are.
  *
  * Everything in here is drawn by the component the app actually uses, never by a copy made for
- * the page — a gallery of look-alikes is worse than no gallery, because it agrees with you. Which
+ * the page: a gallery of look-alikes is worse than no gallery, because it agrees with you. Which
  * is also why nothing on this page is a screenshot: a disabled button is disabled, a dropdown
  * opens, a toast appears.
  *
  * The navigation is an in-page index rather than a rail of its own. The app already has a
  * sidebar from `lg`, and a second full-height column beside it reads as a nested app; so on
  * `xl` the index is a sticky column on the *right* of the content, the side nothing else is
- * using, and below `xl` it is a button at the top of the page that opens the same list — not
+ * using, and below `xl` it is a button at the top of the page that opens the same list, not
  * sticky, because on a phone the page header's own bar is already fixed over the top.
  */
 
@@ -67,11 +67,11 @@ export function KitGallery({ children }: { children?: ReactNode }) {
  *
  * From `xl` it is a rail stuck to the very top of the window and scrollable inside itself, not
  * offset to `top-8`: the list is taller than a laptop screen, and a sticky column taller than the
- * viewport hides its own tail — the last five components were unreachable. The 32 px that used to
+ * viewport hides its own tail: the last five components were unreachable. The 32 px that used to
  * be the offset is padding inside the scroller instead.
  *
  * Below `xl` it starts closed behind a button. Open, this list is 900 px tall, which on a phone is
- * a whole screen of index before the first component — a table of contents nobody asked to read.
+ * a whole screen of index before the first component, a table of contents nobody asked to read.
  */
 function Index({ active }: { active: string }) {
     const [open, setOpen] = useState(false);

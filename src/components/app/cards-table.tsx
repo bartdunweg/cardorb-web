@@ -52,7 +52,7 @@ export function CardsTable({ cards, onSelect }: { cards: Card[]; onSelect: (card
                             <Table.Cell>{card.number ?? "—"}</Table.Cell>
                             <Table.Cell>{card.rarity ?? "—"}</Table.Cell>
                             <Table.Cell className="text-right font-medium text-primary tabular-nums">
-                                {card.price != null ? formatPrice(card.price) : <span className="text-tertiary">—</span>}
+                                {card.price != null ? formatPrice(card.price) : <span className="text-tertiary">{"—"}</span>}
                             </Table.Cell>
                             <Table.Cell className="text-right text-primary tabular-nums">{card.quantity ?? 1}</Table.Cell>
                         </Table.Row>

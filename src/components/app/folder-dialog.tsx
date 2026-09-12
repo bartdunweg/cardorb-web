@@ -46,7 +46,7 @@ export function FolderDialog({ children, ...form }: FormProps & { children: Reac
 }
 
 /**
- * The same dialog, opened by something that is not a pressable child — a menu item on the
+ * The same dialog, opened by something that is not a pressable child: a menu item on the
  * binder's page. The overlay is controlled; DialogTrigger is not in the picture.
  */
 export function FolderModal({ isOpen, onOpenChange, ...form }: FormProps & { isOpen: boolean; onOpenChange: (open: boolean) => void }) {
@@ -122,7 +122,7 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
         // A new rule folder is worth seeing filled; a renamed one is where it was. An opener that
         // asked for the id stays where it is and gets it.
         if (onSaved) {
-            // No toast: the opener puts the new binder in front of you — the card sheet's select
+            // No toast: the opener puts the new binder in front of you; the card sheet's select
             // switches to it the moment this returns.
             onSaved(res.id);
             router.refresh();

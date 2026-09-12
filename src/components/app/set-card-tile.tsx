@@ -24,7 +24,7 @@ type Result = { ok: true } | { ok: false; error: string };
  * when the card is one row, which is nearly always: a card held as two printings is managed
  * in Cards, where each printing is its own row.
  *
- * The picture carries no text of its own — the caption under it and the button's name say
+ * The picture carries no text of its own: the caption under it and the button's name say
  * which card this is and whether it is yours, so the grey is never the only signal.
  *
  * `language` is the shelf this tile is on, carried into the add so the API can find the card in
@@ -81,7 +81,7 @@ export function SetCardTile({
                 className={({ isPressed, isFocusVisible }) =>
                     cx(
                         // The shared tile's own frame: a card is its own surface, so nothing of ours
-                        // sits behind it — a card with no picture shows its back, not a grey box.
+                        // sits behind it: a card with no picture shows its back, not a grey box.
                         "relative block aspect-card w-full cursor-pointer overflow-hidden rounded-card outline-offset-2 outline-focus-ring",
                         (isPressed || isFocusVisible) && "outline-2",
                         pending && "cursor-progress",
@@ -91,7 +91,7 @@ export function SetCardTile({
                 {card.imageUrl ? (
                     /* In full colour, whether or not it is yours. A set read as a checklist while
                            every other list in the app reads as a shelf, and dimming a card to 30% grey
-                           is the one presentation that hides the thing you came to look at — what you
+                           is the one presentation that hides the thing you came to look at, what you
                            are missing. What you hold is said by the mark in the corner instead. */
                     <CardImage
                         src={card.imageHighUrl ?? card.imageUrl}
@@ -111,8 +111,8 @@ export function SetCardTile({
                     <span
                         className={cx(
                             "absolute top-1.5 right-1.5 flex h-5 min-w-5 items-center justify-center gap-0.5 rounded-full px-1 text-2xs font-semibold shadow-xs",
-                            // The wishlist heart is a meaningful graphic — on a grid of 129 tiles it is
-                            // the one mark that says "you already want this" — so it owes 3:1 against the
+                            // The wishlist heart is a meaningful graphic (on a grid of 129 tiles it is
+                            // the one mark that says "you already want this"), so it owes 3:1 against the
                             // tile it sits on. fg-quaternary is 2.58:1 on white; fg-tertiary clears it in
                             // both themes.
                             state === "owned" ? "bg-primary-solid text-primary_on-brand" : "bg-primary text-fg-tertiary ring-1 ring-secondary",
@@ -160,7 +160,7 @@ export function SetCardTile({
                 <div className="mt-1 flex justify-end">
                     <span className="flex shrink-0 items-center gap-1">
                         {/* The menu, where the picture used to be its trigger. A dots button in the corner beside
-                    the plus, so everything the tile could do is still one press away — it is just no
+                    the plus, so everything the tile could do is still one press away; it is just no
                     longer the answer to tapping the card. */}
                         <Dropdown.Root>
                             <AriaButton

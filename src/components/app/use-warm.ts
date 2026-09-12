@@ -7,7 +7,7 @@ import { useEffect, useRef } from "react";
  *
  * Hover, and only once the pointer has rested for 150 ms: a pointer crossing a grid on its way
  * somewhere else touches a dozen tiles, and asking for each would be a dozen requests for
- * nothing. Focus warms at once — a keyboard lands on a tile on purpose. React Aria's hover
+ * nothing. Focus warms at once: a keyboard lands on a tile on purpose. React Aria's hover
  * ignores the hover a touch screen emulates, so a phone warms nothing and its tap opens the
  * sheet as before. Nothing happens without `warm`: a tile that leads nowhere has nothing to ask.
  */

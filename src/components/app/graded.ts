@@ -1,8 +1,8 @@
 /**
  * A copy is raw or it is graded, and never both.
  *
- * The rule was always there — `grade ?? condition` is what every list shows, and the condition
- * select disabled itself the moment a grade was typed — but it was a rule you discovered by
+ * The rule was always there (`grade ?? condition` is what every list shows, and the condition
+ * select disabled itself the moment a grade was typed), but it was a rule you discovered by
  * bumping into it. A slab has a grade on it and no condition; a loose card has a condition and no
  * grade. Asking which one first, and then only the question that follows, says that out loud.
  *
@@ -28,7 +28,7 @@ export const gradeLabel = (grader: string, grade: string): string => [grader.tri
  * The company and the grade back out of that string.
  *
  * Loose on purpose, because the column is free text and held whatever anybody typed before this
- * form existed — "PSA 10", "psa10", "BGS 9.5". A value it cannot read comes back as a grade with
+ * form existed: "PSA 10", "psa10", "BGS 9.5". A value it cannot read comes back as a grade with
  * no company, which keeps it visible and editable rather than silently dropped.
  */
 export function splitGrade(value: string | null | undefined): { grader: string; grade: string } {

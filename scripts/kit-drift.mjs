@@ -3,20 +3,20 @@
  * Where our own code builds a control by hand that the Untitled UI kit already has.
  *
  * This is a measurement, not a rule: a bare `<button>` is sometimes right, and the answer to
- * every hit here is not "convert it". It exists because the drift is otherwise invisible —
- * you can only find it by reading 77 files — and because the design system page renders this
+ * every hit here is not "convert it". It exists because the drift is otherwise invisible
+ * (you can only find it by reading 77 files) and because the design system page renders this
  * list, so what it says stays true rather than being a claim someone typed once.
  *
  * Ours is `src/app` and `src/components/app`. Everything else under `src/components` is the
  * vendored kit, and a bare element in there is the kit doing its job.
  *
- * A site with a reason written above it — `kit-drift: <why>` in a comment — is a decision, not
+ * A site with a reason written above it, `kit-drift: <why>` in a comment, is a decision, not
  * drift, and is listed apart. Same idea as `docs/accessibility-decisions.md`: an exception someone
  * can reread and overturn is fine, a silent one is a blind spot.
  *
  * `node scripts/kit-drift.mjs` prints it, `--json` writes the shape the design system page reads,
  * and `--check` is the gate: it fails on drift the baseline does not already know about. The
- * baseline only ever shrinks — that is the whole mechanism. It is not a licence for the fifteen
+ * baseline only ever shrinks; that is the whole mechanism. It is not a licence for the fifteen
  * sites in it, it is a floor under them.
  */
 import { readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
@@ -104,7 +104,7 @@ if (process.argv.includes("--json")) {
         process.exit(1);
     }
     if (better.length) {
-        console.log(`${better.length} file${better.length === 1 ? "" : "s"} improved — run \`node scripts/kit-drift.mjs --save\` to lower the baseline.`);
+        console.log(`${better.length} file${better.length === 1 ? "" : "s"} improved; run \`node scripts/kit-drift.mjs --save\` to lower the baseline.`);
     }
     console.log(`ok   kit-drift (${drift.length} known, ${deliberate.length} deliberate)`);
 } else if (process.argv.includes("--save")) {

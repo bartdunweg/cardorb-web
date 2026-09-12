@@ -1,7 +1,7 @@
 # State
 
 Where this project stands right now. Read it at the start of a session; update it at the end.
-This file is deliberately short — it orients, it does not document. The rules that apply now
+This file is deliberately short: it orients, it does not document. The rules that apply now
 live in `CONVENTIONS.md`.
 
 Rewrite it in place. This file has no history worth keeping; the history is in git.
@@ -17,7 +17,7 @@ Supabase is auth and the session only. `src/lib/api.ts` is the client, `src/lib/
 turns the API's answers into what the screens render, zod at every boundary.
 
 Live: landing, Home, Collection, Browse, Binders, Favorites, wishlist, Pokédex, set pages,
-command-palette search, Settings, public profile, and `/dashboard/design` — the design system,
+command-palette search, Settings, public profile, and `/dashboard/design`, the design system,
 reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
@@ -29,9 +29,12 @@ Then the first of the open items from the new-account map: a card added from the
 behind is re-read when the palette closes rather than on every add, so Home swaps its welcome for
 the stats on the screen you come back to, not under a palette still open. Seen in the pane: the
 toast sits above the palette's overlay. **The add itself was not pressed** (it writes to the
-live collection). Still open from that map: "Add to wishlist" on the wishlist page opens the
-palette without the wishlist preset; one wishlist card flips Home from the welcome to a €0 hero
-with four zeros; the new-account flow has not been walked as the test account.
+live collection). Then the other two from that map: the wishlist page's Add opens the palette
+with Add to wishlist as the primary button, on top, Add to collection in grey under it,
+rendered in that order so the tab order is the one you see, seen in the pane; and Home keeps its welcome
+until a card is *owned*, with a line to the wishlist when there are wishes, so one wish no
+longer turns it into €0 and four zeros (not seen: Bart's account owns cards). Still open: the
+new-account flow has not been walked as the test account (its password is Bart's).
 
 **2026-09-12, layout pass.** Bart saw an empty state standing at the top of its page. The
 component centres itself in the room its column leaves it and claims that room with `flex-1`,
@@ -65,18 +68,18 @@ eight characters where Supabase wants ten; a server error emptied the address; t
 email" line sat under a form still saying Get started; and Home after confirming was €0, an empty
 chart and four zeros with nothing to do. Now the floor is ten everywhere, the address stays, the
 sent state replaces the form, and an account that holds and wants nothing gets a welcome on Home
-with Add your first card and Choose your name — the generated `bart-cardorb-test-boaw` kind of
+with Add your first card and Choose your name: the generated `bart-cardorb-test-boaw` kind of
 name is the public address, and the person is told so where they are. Test account
 `bart+cardorb-test@strakzat.com` is still in the database. Later that day the set page got its
 band: the logo centred on its own brightest colour, read once from the PNG on the server
 (`src/lib/logo-color.ts`, cached a month by address) and drawn by `SetHero`; grey where no colour
 can be read, the name's first word where there is no logo.
 
-**2026-09-10 and 11.** The API had never been audited. It was, twice — once for security, once
-for the failures that leave no trace — and everything both passes found is closed.
+**2026-09-10 and 11.** The API had never been audited. It was, twice (once for security, once
+for the failures that leave no trace), and everything both passes found is closed.
 
-- **A signed-in stranger could read every private column of any public collection** — purchase
-  price, notes, condition, grade, the wishlist — straight from PostgREST, around this API and
+- **A signed-in stranger could read every private column of any public collection**: purchase
+  price, notes, condition, grade, the wishlist, straight from PostgREST, around this API and
   around the layer that exists to strip exactly those fields. Measured on the live database, not
   read off the migrations: the policy applied to every role, and `authenticated` held select on
   all 28 columns against `anon`'s 13. Closed and applied (cardorb-api#251). Public reads already
@@ -89,7 +92,7 @@ for the failures that leave no trace — and everything both passes found is clo
   market where the cron blends two, and used a different reverse-holo rule. On a €100 card that is
   +12.1%; under €20 it reverses to −7.2%, so the error's size *and direction* depended on what you
   hold. The script records nothing now. One bad night also valued a whole collection on one
-  market, permanently — the quiet period is per set with a breaker.
+  market, permanently; the quiet period is per set with a breaker.
 - **Languages, step 2** (cardorb-api#257, web #308). A card off the Japanese, Korean or Chinese
   shelves can be added. The wall was that the collection found a set by its English name; the way
   past was already in the table, because a row carries `tcg_id` and a TCGdex id names its own set.
@@ -98,7 +101,7 @@ for the failures that leave no trace — and everything both passes found is clo
   in those languages, from the PokéAPI CSV the English list already came from, longest name first
   so ミュウ does not swallow ミュウツー.
 - **A Japanese set page has prices** (cardorb-api#261). It showed a blank line under every card
-  while Cardmarket priced them — all 92 of one set were in the guide the API downloads daily —
+  while Cardmarket priced them (all 92 of one set were in the guide the API downloads daily),
   because the only map from a card to its Cardmarket product held English cards somebody owns.
   A script asked TCGdex once about every card on the four shelves (21,333) and committed the
   product of each, one map per catalogue since the ids collide: ja 10,350 of 12,781, zh-tw
@@ -110,12 +113,12 @@ for the failures that leave no trace — and everything both passes found is clo
   missing) and Korean are not on Limitless; the odd gap in a photographed Japanese set stays.
 - **Search, the English shelf and the second-market price left pokemontcg.io** (cardorb-api#260,
   #266, #268, #270). Measured on 2026-09-11: that host answered 500 or 502 to three requests in
-  five, so a search for "charizard" failed all three attempts about half the time — and the web
+  five, so a search for "charizard" failed all three attempts about half the time, and the web
   turned the failure into "No cards found". TCGdex answers the same questions in ~200 ms: search
   by name with the set and the type as filters, the 203 English sets with logos and release dates,
   and TCGplayer's price relayed per card. Set ids are TCGdex's now (`sv03.5`, `me05`); the old
   ids still open the same page. TCGdex also carries Pokémon TCG Pocket, the mobile game's fifteen
-  sets — Bart's call: left out of the shelf, the set pages and the search. Ownership on the shelf
+  sets. Bart's call: left out of the shelf, the set pages and the search. Ownership on the shelf
   joins by set id, checked against the old counts (Black Bolt 170 of 172, 151 207 of 207). Only
   set logos and a scan fallback still ask pokemontcg.io, behind a day-long cache.
 - **A failed search is not an empty one** (#312, #316, #317, #318). Every search box says "The
@@ -134,23 +137,23 @@ for the failures that leave no trace — and everything both passes found is clo
   stylesheet 260 → 204 KB (37.4 → 30.8 KB gzip), confirmed on production. The GPL question stands.
 - **Measured, so nobody need re-check:** of 1,946 rows with a catalogue id, 1,924 are English
   and 22 carry no language (all English ids); none is Japanese, Korean or Chinese. No `zh` row
-  exists, and no row lost its language to the bug #269 fixed — nothing from those shelves had
+  exists, and no row lost its language to the bug #269 fixed; nothing from those shelves had
   been added yet. A script to pin `zh` rows to their catalogue was written and dropped: it had
   nothing to act on.
 - **Chinese is two languages** (cardorb-api#269, web #326). Bart's call, and it turned out to
   be a fix: a card added from a Chinese shelf arrived as `zh-tw`, failed a list that knew only
-  `zh`, and was stored with no language — then looked up as an English card by its set's name.
+  `zh`, and was stored with no language, then looked up as an English card by its set's name.
   `zh-tw` and `zh-cn` are languages now, each asking its own catalogue; `zh` stays for old rows
   and asks both. The note that held this back feared an enum the iOS app decodes; checked, it
   decodes no language field at all. Old `zh` rows are not rewritten.
 - **Every shelf reads in English** (cardorb-api#275, web #338). Bart's call: the app is English
   throughout, and a Japanese set page named its cards リザードンex. The API names a Japanese,
   Korean or Chinese card off Cardmarket's product list (through the committed product id maps)
-  or, failing that, its species and printed suffix — 12,308 of 12,781 Japanese cards, 6,582 of
+  or, failing that, its species and printed suffix: 12,308 of 12,781 Japanese cards, 6,582 of
   7,436 Traditional Chinese, 823 of 877 Simplified, all 239 Korean; the rest, old-era trainers
   mostly, keep their printed name. The eras are English too (Scarlet & Violet, not ポケモンカード
   ゲーム スカーレット&バイオレット). The printed name travels as `localName` and the sheet shows
-  it in brackets after the English one — "Oddish (ナゾノクサ)" — on a set page's card, owned or
+  it in brackets after the English one, "Oddish (ナゾノクサ)", on a set page's card, owned or
   not; a collection row stores one name, English from now on. Set names still come off the
   hand-kept lists: SV4a is Shiny Treasure ex now (TCGdex mislabels it), and the 46 Simplified
   Chinese sets and three coming MEGA sets have no English name yet. Measured in the pane against
@@ -158,7 +161,7 @@ for the failures that leave no trace — and everything both passes found is clo
 - **…and the rest of the way** (cardorb-api#279, web #341). A collection row off those shelves
   carries the printed name too, so its sheet reads the same brackets. The palette's language chips
   (#336) now find a card by the English name the app shows it under: "charizard" on the Japanese
-  shelf answers 67 Lizardons — the API scans its committed names, no request, and reads only the
+  shelf answers 67 Lizardons: the API scans its committed names, no request, and reads only the
   sets on the page shown; a term in the shelf's own script still asks TCGdex. The 46 Simplified
   Chinese sets have English titles now, literal renderings flagged as such; M3 (ムニキスゼロ) still
   does not, CP5 does (cardorb-api#282, which also drops TCGdex's fifteen cloned placeholder sets
@@ -184,16 +187,16 @@ for the failures that leave no trace — and everything both passes found is clo
   68 of 184 Japanese sets and 92 of 95 Korean ones with a count and no card; the page opened on
   nothing under "0 of 0 cards". The page shows an empty state naming the count the catalogue
   claims, and the shelf tile says "No cards in the catalogue yet" in place of the count and
-  the bar. The API reads which sets those are off the committed Cardmarket id maps — no request
-  — so it is as current as the maps' last run; a set's own page reads the cards live.
+  the bar. The API reads which sets those are off the committed Cardmarket id maps, no request,
+  so it is as current as the maps' last run; a set's own page reads the cards live.
 - **A test that guards the wrong thing** (cardorb-api#258). Five of them, and the sharpest mocked
-  the payload it was meant to inspect — so the suite was green with the field-stripping deleted.
+  the payload it was meant to inspect, so the suite was green with the field-stripping deleted.
   Each is now checked by breaking what it guards and watching it go red. The ten undocumented
   statuses were fixed by a mechanism rather than one at a time: the spec test reads each handler's
   own source, and found two the review had missed.
 - **The web got lighter** (#306). The card sheet was in the first load of every page with a grid:
   the public profile went 389.4 KB → 255.6 KB Brotli, measured by rebuilding. Tiles asked for
-  384 px pictures into a 104 px box — about a megabyte a page on a phone. `global-error.tsx` and
+  384 px pictures into a 104 px box, about a megabyte a page on a phone. `global-error.tsx` and
   a frame for the public profile, which had neither.
 - **Thirteen accessibility findings** (#301, #302), none of which `jsx-a11y` could catch. Two
   Level A: no skip link, and the card sheet's arrow keys stealing ← and → from the price chart,
@@ -203,14 +206,14 @@ for the failures that leave no trace — and everything both passes found is clo
 
 - **The add button on every set page was dead for seventeen hours** (#333, cardorb-api#271).
   Since #308 (01:10) a tile handed the add action `language: null` and `tcgId: null`, and a
-  schema that took only "absent" answered "Invalid input: expected string, received null" — a
+  schema that took only "absent" answered "Invalid input: expected string, received null", a
   red line under the tile that reads as nothing happening. English too; only the palette, whose
   hits carry neither key, could add. Found by adding a Japanese トランセル to check #259. Behind
   it the language shelves sent no `tcgId` at all, so a Japanese card would have gone to the API
   with a language and no id. Both fixed and **measured end to end on the dev server against
   production**: the row is stored `ja` / `SV2a-011`, and the `/cards` item comes back with
-  `speciesId: 11`. The slot still reads "Missing" on Bart's page — his Pokédex keeps five
-  rarities and a common is not one — which is the setting, not a bug. The test card was removed.
+  `speciesId: 11`. The slot still reads "Missing" on Bart's page (his Pokédex keeps five
+  rarities and a common is not one), which is the setting, not a bug. The test card was removed.
 - **The API's `check` job was red on main since #270** (cardorb-api#272): the card route's test
   made five real TCGdex requests and timed out on the runner. Mocked; 223 ms.
 - **Search can ask a language's catalogue** (cardorb-api#273, web #336). Bart's ask: the palette
@@ -225,24 +228,24 @@ for the failures that leave no trace — and everything both passes found is clo
   the guess without a probe. Measured in the palette: "リザードン" 20 of 20 with a picture (14
   Limitless, 6 TCGdex), 0 broken, where it was 6 of 20.
 - **A TCGdex outage is found out once** (cardorb-api#283, closes cardorb-api#164). #165 had
-  already made the answer right — rows without the catalogue, flagged — but every request in an
+  already made the answer right (rows without the catalogue, flagged), but every request in an
   outage still waited on three attempts, up to ~25 s, before getting there. A breaker in the
   client: after one failed call, twenty seconds of refusing at once, then one probe; a 404 never
   trips it; per instance. The web frame already survives a failed folder list. Not taken: the
-  vendor comment on #164 offering pokemontcgapi.com as a third catalogue — Bart's call.
+  vendor comment on #164 offering pokemontcgapi.com as a third catalogue; Bart's call.
 - **A profile change made through the API reaches cardorb.com at once** (cardorb-api#285, web
   #345). `forgetMine()` only ever dropped this app's cache for writes made here; a switch to
   private in the iOS app stayed open on the web for five minutes. `PATCH /profile` now posts who
   changed to `POST /api/revalidate`, behind a shared secret (`REVALIDATE_SECRET` here,
   `WEB_REVALIDATE_URL` + `WEB_REVALIDATE_SECRET` on the API, production and preview), which
-  drops the public and the user tag — `revalidateTag(…, "max")`, since Next refuses `updateTag`
+  drops the public and the user tag, `revalidateTag(…, "max")`, since Next refuses `updateTag`
   in a route handler. Measured on production: PATCH 19:34:25 → POST /api/revalidate 19:34:26 →
   `/user/bartdunweg` "Collection not found" at 19:34:39; flipped back, page back. Every
   collection write followed (cardorb-api#288): cards, copies, split, folders and the CSV import
   say the same word beside their own `revalidateTag`, with two seconds for the web at most.
 - **A page audit, eleven pages wide and four narrow** (2026-09-11, without Mobbin: the connector
   is not in the session). No overflow, no broken picture, no contrast fault seen. Four findings,
-  all fixed (web #352, #354, cardorb-api#292, #293, #295): one count for a collection — the collection said
+  all fixed (web #352, #354, cardorb-api#292, #293, #295): one count for a collection; the collection said
   1,915 (rows), the public page 1,609 (distinct cards), Home 1,933 (copies) about the same binder,
   and copies is the number everywhere now, `copies` beside `total` in every list answer and the
   folder counts; the public page said "You hold ×1" to a visitor, and says "Holds"; no "×1"
@@ -252,7 +255,7 @@ for the failures that leave no trace — and everything both passes found is clo
   folders distinct cards (#293), and then still the rows, because the public shape carries no
   quantity by design: #295 lays the count over each item off the private rows, the way
   `favorite` is. Measured live at the end: cardorb.com/user/bartdunweg "1,931 cards", the API
-  `copies: 1931`, Kanto 734, and the database's own sum of owned quantities 1,931 — one number. Keyboard on the menu is not measured: the pane delivers no
+  `copies: 1931`, Kanto 734, and the database's own sum of owned quantities 1,931: one number. Keyboard on the menu is not measured: the pane delivers no
   key to a react-aria button. The Mobbin pass stays owed until the connector is on.
 - **Waiting has a component** (2026-09-11, web #358, #365, #367). The kit's LoadingIndicator is
   in the design system under Data display, from the kit's GitHub source rather than the CLI,
@@ -270,7 +273,7 @@ for the failures that leave no trace — and everything both passes found is clo
 - **One place to search and add** (2026-09-11, web #373, then #375). Search (cmd+K) and Add card
   opened two dialogs on the same catalogue, and the palette was the better one: set and type
   filters, the next page on scroll, and since #368 the card's sheet with its price line. Bart's
-  call: one solution for both, and then sharper — the same function, no difference in the
+  call: one solution for both, and then sharper: the same function, no difference in the
   interface. Add card on every page opens the plain palette; the sheet offers the collection
   first and the wishlist second wherever it was opened from. #373 had let the page tilt that
   pair and file a card in a binder; #375 took that out again. The Add dialog and the
@@ -281,26 +284,26 @@ for the failures that leave no trace — and everything both passes found is clo
 - **Two screen-reader points closed** (2026-09-11, web #379). Clearing a search back to the whole
   list was silent: the count's live region asked "is this list filtered" where the question is
   "did the reader change this list, or arrive at it". It now remembers, per tab, the URL of the
-  list shown last — a module variable read once in the state's initialiser, written by an effect
-  — and treats the same page with a different query as a change: mounted empty, spoken a beat
+  list shown last (a module variable read once in the state's initialiser, written by an effect)
+  and treats the same page with a different query as a change: mounted empty, spoken a beat
   later. Arriving from another page still writes the count at once and is not narrated. And the
   sidebar kit's root is a `<div>` instead of an `<aside>`, so Chrome no longer exposes a nameless
   complementary landmark inside the navigation. Measured in the pane's accessibility tree: one
-  navigation landmark, no complementary. The clear-a-search path is measured by its DOM — region
-  empty at mount, the count 100 ms later — not with a screen reader.
+  navigation landmark, no complementary. The clear-a-search path is measured by its DOM (region
+  empty at mount, the count 100 ms later), not with a screen reader.
 - **A binder's page: the plus asks which kind, the dots hold the rest** (2026-09-11, branch
   `palette-from-tablet-width`). Bart's calls, three in a row: Edit rule goes behind the dots; a
   plus sits beside them; and pressing that plus is the choice, since you already know whether
   you are after a card you do not have or one you hold. So on a hand-filled binder the plus is a
-  menu of two — Search all cards (the palette) and From your collection (your own cards, a
-  checkbox per hit, one "Add 3 cards" press through `editCopies`) — and the dots hold Edit
+  menu of two, Search all cards (the palette) and From your collection (your own cards, a
+  checkbox per hit, one "Add 3 cards" press through `editCopies`), and the dots hold Edit
   binder and Delete binder. A rule binder fills itself: its plus is the plain Add card. The
   sheet reads the binder from the path (`binderFromPath`; the palette's sheet hangs from the
   layout, out of reach of anything the page provides) and, opened on a hand-filled binder's
   page, puts "Add to <binder>" first: a card you do not own lands in the collection and the
   binder in one press, a card you hold gets its first unfiled row moved there. Found on the
   way: `FolderPage` drops `actions` whenever `settings` or `add` is given, so since #172 a
-  hand-filled binder had shown only the plus — no Edit, no Delete, and an "Add cards" dialog
+  hand-filled binder had shown only the plus: no Edit, no Delete, and an "Add cards" dialog
   nobody could reach; both kinds use the `settings`/`add` pair now. The Binders overview's
   phone bar had lost its plus on main the same hour; the desktop pair from #375 stands.
 - **Pokémon Card 151's Japanese cards looked like reverse holos** (cardorb-api#277). Bart saw it;
@@ -327,29 +330,29 @@ for the failures that leave no trace — and everything both passes found is clo
   parts with sample data so it moves with the design, not a screenshot (#381, then his three
   calls in the same PR: under the copy and half below the fold, then on the page's own ground
   so the dot grid stops at its edge); Browse draws a set as its logo with the name and count
-  under it, no bar — his call (#383); a wishlist tile carries "Got it", a sibling of the
+  under it, no bar; his call (#383); a wishlist tile carries "Got it", a sibling of the
   pressable so no button sits in a button (#382). The four not taken, ready when wanted: the
   public-profile switch and URL visible on Settings (Clay); recent cards, not terms, in the
   palette, with a ⌘K/Esc footer (v0, Bonsai); the Pokédex grouped per generation with a count
   each (Headspace); the price's change beside the price in the sheet (Fey). Not measured: the
   public profile (Bart's is private), the set page (the query returned onboarding "set-up"
-  screens — name the object, never the word "set"). Seen in passing: `/dashboard/you` renders
+  screens: name the object, never the word "set"). Seen in passing: `/dashboard/you` renders
   the Settings page under another heading.
 - **One search on a phone too** (2026-09-11). The bar at the top of Home opened a full-screen
-  sheet of its own — the collection search with every set listed under it — while Add card on
+  sheet of its own (the collection search with every set listed under it) while Add card on
   the page beside it opened the palette as a floating card. Bart's call: the phone gets the same
   elements as the desktop, the mobile version of the one thing. The bar opens the palette now,
   as the sidebar's trigger and Add card do; the sheet, its shelf list and the top row are gone
   (`searchMyCards` stays: the binder's add-from-collection dialog is on it). The sheet was also
-  the only way into Browse on a phone, so Browse has a tab, the sidebar's order — Home, Browse,
-  Wishlist, Collection, Binders — with the pill a fifth wide, and the Browse page wears its title
+  the only way into Browse on a phone, so Browse has a tab, the sidebar's order (Home, Browse,
+  Wishlist, Collection, Binders) with the pill a fifth wide, and the Browse page wears its title
   on a phone as the other tabs do. Measured on the dev server at 375 px: the bar opens the palette
   over Home with the recent searches, five tabs of 67 px each, Browse's pill on its page.
 - **The Mobbin pass, the rest of it** (2026-09-11, web #387, #388, #389, #395, #397, #399).
   Bart picked the four departures left and three more he saw the same evening, all merged: the
   skeletons a step off the page in both themes, barely there (#387, his call after #367 still
-  read as blocks); the palette opens on "Recently viewed" — a card that stood a second in the
-  preview, eight kept in the browser, previewed and taken as hits are, marks re-read on open —
+  read as blocks); the palette opens on "Recently viewed" (a card that stood a second in the
+  preview, eight kept in the browser, previewed and taken as hits are, marks re-read on open),
   and recent searches are gone with their hook (#388); on a phone the binders are rows with a
   line between, and the bar there adds a binder, not a card (#389); the sheet's price carries its
   change against the 30-day average the sheet already had, sign and colour, no new request
@@ -358,7 +361,7 @@ for the failures that leave no trace — and everything both passes found is clo
   nine sections, "Gen 1 · Kanto" with "69 of 151" each, from the same count as the top line,
   cut at the range setting (#399). Not measured in a browser: the palette's one-second dwell,
   the binder rows at 375, the sheet's line in the light theme. Left where it was: the palette's
-  list does not stretch to the preview's height — the `palette-from-tablet-width` branch of
+  list does not stretch to the preview's height; the `palette-from-tablet-width` branch of
   another session is in that layout. Glass on the palette: no; card art behind translucent
   prices is unreadable, and Linear and v0 keep the panel solid too.
 
@@ -379,17 +382,17 @@ for the failures that leave no trace — and everything both passes found is clo
   `config.toml` with `supabase config push`; a second push reported every remote config up to
   date. The clients refresh on their own; not lower, since under five minutes iOS on a poor
   connection refreshes while you scroll. Same day: a set tile's two buttons moved to a line of
-  their own under the price (#391) — on a phone's 110 px tile they broke the price and ran past
-  the tile — and a probe of twelve screens at 393 px found nothing else overflowing.
+  their own under the price (#391); on a phone's 110 px tile they broke the price and ran past
+  the tile. A probe of twelve screens at 393 px found nothing else overflowing.
 - **The palette is the whole screen on a phone, and the preview has View details** (2026-09-11).
   It floated in the middle with the page blurred behind it, and that felt like a modal; the
   keyboard took its lower half the moment the field was focused. Bart's calls, three in a row:
   full screen, sliding up from the bottom as the card sheet does, on the page's own ground, with
   Close at the right end of the field's row since a phone has no Escape and no scrim to tap; a
   pressed hit's preview lays itself over the list, the whole screen under the field, with Back
-  at its top (it used to sit under the list and squeeze it to a strip of 20 px — main did that
-  too); and View details in the preview, at every width, opens the card's sheet over the palette
-  — the preview is a preview, the sheet is the card. The kit's `CommandMenuContext` is exported
+  at its top (it used to sit under the list and squeeze it to a strip of 20 px; main did that
+  too); and View details in the preview, at every width, opens the card's sheet over the palette:
+  the preview is a preview, the sheet is the card. The kit's `CommandMenuContext` is exported
   for Back, which clears the selection. The sheet reads the hit's rows whether the hit is marked
   or not, because the marks land a beat after the hits (the lookup in `command-search.tsx`) and
   a hit pressed before they land has none. Measured on the dev server at 375 px: the dialog at
@@ -405,14 +408,14 @@ for the failures that leave no trace — and everything both passes found is clo
   it stood.
 - **The palette's phone screen is one surface** (2026-09-11, #404 follow-up). On the page's grey
   ground the kit's field, white and `rounded-xl`, drew itself as a rounded card at the top of the
-  screen, a sheet's head over a list, and the whole read as a bottom sheet — on a desktop the
+  screen, a sheet's head over a list, and the whole read as a bottom sheet; on a desktop the
   card's `overflow-hidden` clips those corners. Bart's call: the phone keeps the desktop card's
   own ground (`glass-thick`, blur off) edge to edge, the field loses its corners under `sm`
   (a one-class kit edit, marked ours), the preview sits on `bg-primary` to match. Slide-up,
   Close and Back stay. Not yet seen on the dev server at 375 px: the pane had no session.
 - **The landing page's dots came back only on a refresh** (2026-09-12). The pattern was a
-  picture fetched from untitledui.com, and the pages a person clicks to the landing from — sign
-  out, the Cardorb link on /login — carry the image policy that names the card hosts and not that
+  picture fetched from untitledui.com, and the pages a person clicks to the landing from (sign
+  out, the Cardorb link on /login) carry the image policy that names the card hosts and not that
   one; a click keeps the document, so the browser refused it without a request or a word, and a
   refresh, which loads the landing as its own document with only the frame rule, showed it. The
   two SVGs (1.2 KB each) are in `public/patterns` now, under `'self'`. Measured in headless
@@ -422,7 +425,7 @@ for the failures that leave no trace — and everything both passes found is clo
 ## Next
 
 - **Condition and grade do not reach the price.** A Poor copy and a PSA 10 show what a Near Mint
-  one does. Neither Cardmarket nor TCGplayer publishes either — checked, both feeds carry
+  one does. Neither Cardmarket nor TCGplayer publishes either; checked, both feeds carry
   printing and no condition. PokemonPriceTracker does, RAW and PSA, at $9.99 a month, from the
   American market. **Needs a decision before it needs code.**
 - **"Buy on Cardmarket" is off** (cardorb-api#267): `cmUrl` is null until an address can be
@@ -450,7 +453,7 @@ for the failures that leave no trace — and everything both passes found is clo
 - **Verified this session, so nobody need re-check:** cardorb-api scopes card writes by
   `id AND user_id` *and* by RLS, with `cards.user_id` defaulting to `auth.uid()`; the service-role
   key is reachable from two routes and neither touches cards; HSTS is set on both hosts; and the
-  `/api/v1/*` rewrite is not a CSRF surface — the API answers 401 to a cookie with no bearer.
+  `/api/v1/*` rewrite is not a CSRF surface: the API answers 401 to a cookie with no bearer.
 - Supabase's own side is in `docs/supabase.md`. The advisor still lists few MFA options and
   `citext` in `public`; neither is on the list.
 - Accepted accessibility decisions live in `docs/accessibility-decisions.md` and are not raised

@@ -19,7 +19,7 @@ import { publicTag } from "@/lib/user-cache";
  *
  * Every read here is unkeyed, so it is cached for five minutes, and every one carries the owner's
  * tag (`publicTag`): the moment they make the profile private, or take a copy off it, the write
- * drops the lot. Without the tag the page went on answering out of the cache — a profile turned
+ * drops the lot. Without the tag the page went on answering out of the cache: a profile turned
  * private and still readable for five minutes, which is the one thing a public page must get right.
  */
 export type PublicProfile = {
@@ -120,7 +120,7 @@ export async function getPublicFolders(username: string): Promise<PublicFolder[]
 
 // How many cards a public list holds, and nothing else: one item asked for, the count read off it.
 // For the line under the name, which counts the collection and the wishlist whatever list is open.
-// Copies — the list as a person counts it — where the API says them; the rows from one before it did.
+// Copies (the list as a person counts it) where the API says them; the rows from one before it did.
 /**
  * How many cards a public Pokédex holds, for its chip: the copies in its slots, counted as the
  * owner's own page and sidebar count them (collections.ts, getPokedexCount), so a visitor and the

@@ -5,7 +5,7 @@ import { z } from "zod";
 import { publicTag, userTag } from "@/lib/user-cache";
 
 /**
- * The Card Orb API's word that a person's profile changed through it — the iOS app's write — so
+ * The Card Orb API's word that a person's profile changed through it (the iOS app's write), so
  * this app drops what it remembers of them: the public page under their name and their own
  * dashboard, both kept five minutes otherwise (`forgetMine` does the same after a write made
  * here). Until this route, a profile switched to private in the app stayed open on cardorb.com

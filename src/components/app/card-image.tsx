@@ -7,7 +7,7 @@ import { CardBack } from "@/components/app/card-back";
 /**
  * A card picture, through Vercel's image optimizer rather than straight from the catalogue.
  *
- * The catalogues hand out one origin each and no CDN — TCGdex is a single server in France —
+ * The catalogues hand out one origin each and no CDN (TCGdex is a single server in France),
  * so a grid of a hundred cards used to make a hundred round trips there, every visit, at the
  * file's full size. Through `next/image` the optimizer fetches each picture once, resizes it to
  * what the layout actually draws and serves it from Vercel's cache after that; the catalogue
@@ -21,7 +21,7 @@ import { CardBack } from "@/components/app/card-back";
  * Quality 60: the source is a scan of a printed card, and at the sizes drawn here 60 is not
  * told apart from 75 while the file is a third smaller (next.config.mjs lists the qualities).
  *
- * If the optimizer cannot get the file — the catalogue not answering when it first asks — the
+ * If the optimizer cannot get the file (the catalogue not answering when it first asks), the
  * browser is sent to the original URL instead, so a slow source costs one retry, never the card.
  */
 
@@ -58,7 +58,7 @@ export function CardImage({
     /**
      * What to try when the optimizer will not answer for `src`.
      *
-     * Without it the fallback is `src` itself, unoptimized — and since the tiles began asking
+     * Without it the fallback is `src` itself, unoptimized, and since the tiles began asking
      * for the high scan that is a 133 KB original per tile against 31 KB for the low one. On a
      * page of 129 that is 17 MB instead of 4, at exactly the moment the picture host is already
      * struggling, which is the only moment this path runs.
@@ -81,13 +81,13 @@ export function CardImage({
     /** A card is 63 by 88; a set logo or a badge is drawn square. */
     ratio?: "card" | "square";
     /**
-     * Once the picture is on screen — also when it came from cache — for whatever fades it in.
+     * Once the picture is on screen (also when it came from cache), for whatever fades it in.
      * Also when there is no picture and the back stands in, so the fade never waits for nothing.
      */
     onLoad?: () => void;
 }) {
     // Once the optimizer fails, the original is tried; when that fails too there is no picture.
-    // A card then shows its back — a shelf hands out addresses it has not checked, and a 404
+    // A card then shows its back: a shelf hands out addresses it has not checked, and a 404
     // there is a real card with no scan, not a broken tile. A logo or a badge shows nothing.
     const [direct, setDirect] = useState(false);
     const [gone, setGone] = useState(false);

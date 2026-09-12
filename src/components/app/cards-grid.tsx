@@ -39,7 +39,7 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
     size?: CardsSize;
     /**
      * The one thing a tile of this list can do, drawn on the tile: "Got it" on the wishlist.
-     * A sibling of the tile, not a child of it — the tile is a button, and a button inside a
+     * A sibling of the tile, not a child of it: the tile is a button, and a button inside a
      * button is not HTML and reads as one control to a screen reader. It sits in the words'
      * bottom row, in the slot the count keeps on every other list (a wish has no count), so the
      * picture stays whole. Shown on hover, on focus within the tile and always on a touch screen,
@@ -114,15 +114,15 @@ export function CardsGrid<T extends PublicCard & { is_favorite?: boolean | null;
                                     listed once however many copies you have, so without this the only way to learn
                                     you own three was to open the sheet.
 
-                                    Every tile, including the ones at one. It was hidden below two — a ×1 under all
-                                    forty-eight of them is a column of the same character — but a number that appears
+                                    Every tile, including the ones at one. It was hidden below two (a ×1 under all
+                                    forty-eight of them is a column of the same character), but a number that appears
                                     only sometimes is one you have to notice the absence of, and the owner would
                                     rather read it down the column than work it out. */}
                                 {card.quantity != null || card.price != null || action ? (
                                     <span className={cx("mt-0.5 flex justify-between gap-2 text-sm font-medium tabular-nums", inRow)}>
                                         <span className="text-tertiary">
                                             {/* A wish is not a holding: no count under it, and no "×1" that read as one.
-                                                On a visitor's screen the count is the owner's, and says so — a screen
+                                                On a visitor's screen the count is the owner's, and says so; a screen
                                                 reader used to be told "You hold" about somebody else's binder. */}
                                             {card.quantity != null && card.owned !== false ? (
                                                 <>

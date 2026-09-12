@@ -5,6 +5,7 @@ import { ChevronLeft, Trash01, XClose } from "@untitledui/icons";
 import { Heading as AriaHeading, ListBoxLoadMoreItem } from "react-aria-components";
 import type { CatalogueFilters, PokemonCard } from "@/app/(app)/dashboard/cards/actions";
 import { CardImage } from "@/components/app/card-image";
+import type { AddList } from "@/components/app/command-search";
 import { FilterChip, FilterChipRow, type FilterOption } from "@/components/app/filter-chip";
 import { LanguageFilterChip } from "@/components/app/language-filter-chip";
 import { CommandMenu, CommandMenuContext, type CommandMenuGroupType } from "@/components/application/command-menus/command-menu";
@@ -32,11 +33,13 @@ function DetailRow({ label, value }: { label: string; value: ReactNode }) {
 function CardPreview({
     card,
     adding,
+    preset,
     onAdd,
     onView,
 }: {
     card: PokemonCard;
     adding: boolean;
+    preset: AddList;
     onAdd: (target: "collection" | "wishlist") => void;
     onView: () => void;
 }) {
@@ -49,7 +52,7 @@ function CardPreview({
     }, [card]);
     // Back, on a phone: the selection is the preview, so clearing it is the way back to the hits.
     // Focus goes to the list the preview covered, not the field: the field would raise the
-    // keyboard over the hits just uncovered. Found from this box, not the pressed button — iOS
+    // keyboard over the hits just uncovered. Found from this box, not the pressed button: iOS
     // gives a tapped button no focus, so the button's own ancestors are not there to ask.
     const box = useRef<HTMLDivElement>(null);
     const { setSelectedKeys } = useContext(CommandMenuContext);
@@ -94,27 +97,32 @@ function CardPreview({
                 taking a wished card is what settles a wish. The hit itself says which it is (takenHit marks
                 it the moment a press lands). */}
             <div className="flex flex-col gap-2">
-                <Button
-                    onClick={() => {
-                        onAdd("collection");
-                        focusField();
-                    }}
-                    isDisabled={adding || card.owned}
-                    className="w-full"
-                >
-                    {card.owned ? "In your collection" : adding ? "Adding…" : "Add to collection"}
-                </Button>
-                <Button
-                    color="secondary"
-                    onClick={() => {
-                        onAdd("wishlist");
-                        focusField();
-                    }}
-                    isDisabled={adding || card.owned || card.wishlist}
-                    className="w-full"
-                >
-                    {card.wishlist ? "On your wishlist" : adding ? "Adding…" : "Add to wishlist"}
-                </Button>
+                {/* The page's own list leads, as the primary button and on top; the other one stays
+                    under it in grey. Rendered in that order, so the tab order is the one you see. */}
+                {(preset === "wishlist" ? (["wishlist", "collection"] as const) : (["collection", "wishlist"] as const)).map((list) => (
+                    <Button
+                        key={list}
+                        color={list === preset ? "primary" : "secondary"}
+                        onClick={() => {
+                            onAdd(list);
+                            focusField();
+                        }}
+                        isDisabled={adding || card.owned || (list === "wishlist" && card.wishlist)}
+                        className="w-full"
+                    >
+                        {list === "collection"
+                            ? card.owned
+                                ? "In your collection"
+                                : adding
+                                  ? "Adding…"
+                                  : "Add to collection"
+                            : card.wishlist
+                              ? "On your wishlist"
+                              : adding
+                                ? "Adding…"
+                                : "Add to wishlist"}
+                    </Button>
+                ))}
                 {/* The card in full: the sheet over the palette, with the price line, the copies and the
                     binders the preview has no room for. */}
                 <Button color="tertiary" onClick={onView} className="w-full">
@@ -145,10 +153,10 @@ function CardPreview({
 const MORE = "more";
 
 /**
- * Focus back to the palette's field. A button that disables itself under the pointer — Add to
- * collection the moment it is pressed — or unmounts — Try again once hits land — drops focus on
+ * Focus back to the palette's field. A button that disables itself under the pointer (Add to
+ * collection the moment it is pressed) or unmounts (Try again once hits land) drops focus on
  * the page, and a keyboard user is back at the top of the menu. The kit's menu keeps its field to
- * itself, so it is found from the dialog the pressed button — the active element — sits in.
+ * itself, so it is found from the dialog the pressed button (the active element) sits in.
  */
 const focusField = () => document.activeElement?.closest('[role="dialog"]')?.querySelector("input")?.focus();
 
@@ -166,8 +174,8 @@ const SEARCH_WINDOW = 250;
 // the one dialog. Loaded by CommandSearchProvider the first time it is opened; the state lives there.
 //
 // #368 took the preview out and had a hit open the card's sheet over the palette, for the price
-// line the preview lacked. Bart wanted the card inside the palette — the scan, its facts and the
-// two buttons a glance away, no second panel — so the preview is back, with the price on it
+// line the preview lacked. Bart wanted the card inside the palette (the scan, its facts and the
+// two buttons a glance away, no second panel), so the preview is back, with the price on it
 // (Bart's call, 2026-09-11, over the earlier one).
 export function CommandSearchMenu({
     isOpen,
@@ -176,6 +184,7 @@ export function CommandSearchMenu({
     onInputChange,
     filters,
     onFiltersChange,
+    preset,
     sets,
     hits,
     loading,
@@ -195,6 +204,7 @@ export function CommandSearchMenu({
     onInputChange: (value: string) => void;
     filters: CatalogueFilters;
     onFiltersChange: (next: CatalogueFilters) => void;
+    preset: AddList;
     /** Every set the catalogue knows, for the Set chip; empty until the list lands. */
     sets: FilterOption[];
     hits: PokemonCard[];
@@ -379,7 +389,15 @@ export function CommandSearchMenu({
                         // A hit, or a recent card, which is previewed and taken the same way.
                         const card = hits.find((h) => h.id === selectedId) ?? recent.find((c) => recentId(c) === selectedId);
                         if (!card) return null;
-                        return <CardPreview card={card} adding={adding === card.id} onAdd={(target) => onAdd(card, target)} onView={() => onView(card)} />;
+                        return (
+                            <CardPreview
+                                card={card}
+                                adding={adding === card.id}
+                                preset={preset}
+                                onAdd={(target) => onAdd(card, target)}
+                                onView={() => onView(card)}
+                            />
+                        );
                     }}
                 </CommandMenu.Preview>
             </CommandMenu.Group>

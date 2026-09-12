@@ -8,12 +8,12 @@ import { CHART_HEIGHT, ValueChart } from "@/components/app/value-chart";
 import type { ValueSnapshot } from "@/lib/value-history";
 
 /**
- * One card's price over time — the same chart Home draws for the whole collection.
+ * One card's price over time, the same chart Home draws for the whole collection.
  *
  * It was a 320×56 sparkline with no axis, no scrubbing and no periods: a shape, not a reading.
  * The collection's chart already had all three, so the card gets that one rather than a second
  * one grown to look like it. `ValueChart` takes `ValueSnapshot`, whose `cards` counts copies, so
- * the tooltip's count line is turned off here — one card's price is a price, not a sum.
+ * the tooltip's count line is turned off here: one card's price is a price, not a sum.
  *
  * The API answers with every reading it has, so the periods are a filter over what is already in
  * hand rather than a new request each time.
@@ -22,7 +22,7 @@ export function CardPriceChart({ tcgId, holo = false, name }: { tcgId: string; h
     // Kept with the id it was read for, so a sheet reopened on another card never shows this one's line.
     const [loaded, setLoaded] = useState<{ tcgId: string; points: PricePoint[] } | null>(null);
     const [period, setPeriod] = useState<PeriodKey>("6m");
-    // What was fetched, or what an earlier open already learned — derived, so a known line needs
+    // What was fetched, or what an earlier open already learned. Derived, so a known line needs
     // no effect and no second render to show.
     const points = loaded?.tcgId === tcgId ? loaded.points : (knownPriceHistory(tcgId) ?? null);
 

@@ -8,8 +8,8 @@ import { cx } from "@/utils/cx";
 /**
  * The top of a dashboard page: its title, a line under it, and whatever acts on the page.
  *
- * On a phone it behaves like a native screen. A bar stays at the top with Back on the left — to the
- * parent page, so a shared link still has somewhere to go — and the title sits large underneath,
+ * On a phone it behaves like a native screen. A bar stays at the top with Back on the left (to the
+ * parent page, so a shared link still has somewhere to go) and the title sits large underneath,
  * scrolling with the content. Once the large title has scrolled out of view the bar shows the
  * same words small in its centre, so the reader always knows where they are. The bottom tab bar
  * stays; Back adds a way out, it takes nothing away.
@@ -19,7 +19,7 @@ import { cx } from "@/utils/cx";
  *
  * The one moving part is the small title's opacity, which is state indication seen tens of times a
  * day, so it is near-imperceptible: a 150 ms fade, no movement. Reduced motion keeps the fade. The
- * large title does not animate — it just scrolls, which is what a title on a page does.
+ * large title does not animate; it just scrolls, which is what a title on a page does.
  */
 export function PageHeader({
     title,
@@ -79,7 +79,7 @@ export function PageHeader({
         <div className="flex flex-col">
             {/* The bar is fixed to the top of the screen, like the tab bar to its bottom, so it stays through
                 the whole page and not only while the header is in view. Collapsed, it stands on the tab bar's
-                glass, running out under its bottom — the same ground as the card sheet's bar — so the buttons
+                glass, running out under its bottom (the same ground as the card sheet's bar), so the buttons
                 and the small title stay readable over whatever scrolls under; content runs out under the bar
                 the way it runs out under the tab bar. */}
             <div

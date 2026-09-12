@@ -9,7 +9,7 @@ import type { CardsSize } from "@/lib/cards-view";
  * collector reads it at a glance. On a large tile, or on the card's own page, there is room for
  * the name and the name is friendlier.
  *
- * The code is the catalogue's own — `abbreviation.official` on a TCGdex set, which the API has
+ * The code is the catalogue's own, `abbreviation.official` on a TCGdex set, which the API has
  * always read for its Limitless links. It is missing for exactly one of the 69 sets in a real
  * collection, so the fallback is the full name rather than a blank.
  */
