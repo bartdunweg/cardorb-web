@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { type PokemonCard } from "@/lib/api-shapes";
+import { type PokemonCard, absoluteImage } from "@/lib/api-shapes";
 
 /**
  * The English catalogue as the browser holds it, and a search over it.
@@ -95,7 +95,12 @@ export function searchIndex(index: CatalogueIndex, term: string, filters: IndexF
 function hitOf(index: CatalogueIndex, card: CatalogueIndex["cards"][number]): PokemonCard {
     const [id, setId, number, name, rarity, types, own] = card;
     const set = index.sets[setId];
-    const stem = card.length > 6 ? (own ?? null) : set?.image ? `${set.image}/${number}` : null;
+    const stored = card.length > 6 ? (own ?? null) : set?.image ? `${set.image}/${number}` : null;
+    /* Most cards carry a scan's folder, and the size is the reader's: `${stem}/low.webp`. A card
+       TCGdex has no scan of carries a whole file instead, the second catalogue's, which the API
+       resolved while it filled the copy and of which there is one size. A path rather than a
+       whole address is the API's cover proxy, and it is a file too. */
+    const file = stored && (stored.startsWith("/") || /\.(webp|png|jpe?g)(\?|$)/i.test(stored));
     return {
         id,
         tcgId: id,
@@ -103,7 +108,7 @@ function hitOf(index: CatalogueIndex, card: CatalogueIndex["cards"][number]): Po
         set: set?.name ?? setId,
         number,
         rarity,
-        image: stem ? `${stem}/low.webp` : null,
+        image: stored ? absoluteImage(file ? stored : `${stored}/low.webp`) : null,
         supertype: null,
         subtypes: null,
         hp: null,
