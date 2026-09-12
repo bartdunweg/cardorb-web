@@ -22,6 +22,21 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-13, filters are a sheet of tags with numbers.** The dropdowns behind Filters are gone.
+On a phone Filters opens a bottom sheet, from sm a panel from the right, in the shape Mobbin's
+filter sheets share (Etsy, Best Buy, Airwallex, Alan): each filter a section of the kit's Tags
+(vendored, `src/components/base/tags`), a long one (sets) a row that opens a searchable
+checklist, and a pinned "Show 24 cards". Choices are a draft until then. Browse and a set page
+keep menus in the row from lg. Set, rarity, generation and type take several values, a repeated
+query key the API ORs (cardorb-api#369); Full art and Duplicates are "Show only" toggles. A
+language wears its flag, a type its disc, a set's progress and holding a coloured dot. Every
+option says what choosing it would leave, with the other filters as they are: a binder asks the
+API (`counts=1`, cardorb-api#372), a set page counts the set in hand, Browse counts each
+catalogue's shelf (`countShelf`). An option at zero is greyed and skipped, and in a long list sinks
+under the ones that answer. A public profile offers set and rarity only, what its route reads.
+web #520, #523 and this one. Measured against the production API from a local server (the pane is
+not signed in on cardorb.com): Rare 293, Rare + Common 705, Browse 48 + 6 + 149 = 203.
+
 **2026-09-12, the sidebar folds.** The desktop sidebar takes a rail: the button beside the
 wordmark folds it to 68 px, icons alone, each named by a tooltip, and the button at the rail's
 head opens it again. The kit has no sidebar that folds (its slim variant is a rail and stays

@@ -1,10 +1,11 @@
 "use client";
 
-import { useTransition } from "react";
+import { useCallback, useTransition } from "react";
 import { Grid01, Rows01, SwitchVertical01 } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
+import { countShelf } from "@/app/(app)/dashboard/sets/actions";
 import { CardsSearch } from "@/components/app/cards-search";
-import { FiltersSheet } from "@/components/app/filters-sheet";
+import { type FilterAnswer, type FilterValues, FiltersSheet } from "@/components/app/filters-sheet";
 import { FlagIcon } from "@/components/app/flag-icon";
 import { RowButton } from "@/components/app/row-button";
 import { LIST_ROW } from "@/components/app/row-search";
@@ -38,6 +39,14 @@ const first = (keys: "all" | Set<React.Key>) => (keys === "all" ? undefined : [.
 export function BrowseToolbar({ query, view }: { query: BrowseQuery; view: SetsViewMode }) {
     const router = useRouter();
     const [pending, startTransition] = useTransition();
+    // Per choice, the sets it would leave (the search as typed); the button's total with it.
+    const count = useCallback(
+        async (v: FilterValues): Promise<FilterAnswer> => {
+            const answer = await countShelf({ language: v.language?.[0] ?? "en", progress: v.progress?.[0] ?? "all", q: query.q });
+            return { total: answer.total, options: { progress: answer.progress, ...(answer.language ? { language: answer.language } : {}) } };
+        },
+        [query.q],
+    );
     const go = (patch: Partial<BrowseQuery>) => startTransition(() => router.replace(browseHref(query, patch), { scroll: false }));
 
     return (
@@ -71,6 +80,7 @@ export function BrowseToolbar({ query, view }: { query: BrowseQuery; view: SetsV
                     },
                 ]}
                 values={{ language: query.language === "en" ? [] : [query.language], progress: query.progress === "all" ? [] : [query.progress] }}
+                count={count}
                 onApply={(next) => {
                     const language = next.language?.[0];
                     const progress = next.progress?.[0];
