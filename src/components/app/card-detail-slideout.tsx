@@ -24,6 +24,7 @@ import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { knownCardFacts, preloadCardFacts, preloadPriceHistory } from "@/components/app/card-memo";
 import { CardPriceChart } from "@/components/app/card-price-chart";
+import { CardRarityField } from "@/components/app/card-rarity-field";
 import { CopyCard } from "@/components/app/copy-card";
 import { CopyFormDialog } from "@/components/app/copy-form-dialog";
 import { HoloCard } from "@/components/app/holo-card";
@@ -47,6 +48,7 @@ import { matchesRule } from "@/lib/folder-rule";
 import { formatDate, formatPrice } from "@/lib/format";
 import { orientationNeedsPermission, requestOrientation } from "@/lib/holo/orientation";
 import { priceChange } from "@/lib/price-change";
+import { isUnnamedRarity } from "@/lib/rarities";
 import { settleLatest } from "@/lib/settle-latest";
 import { cx } from "@/utils/cx";
 
@@ -97,6 +99,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     // Every row of this card the person holds, read when the sheet opens and after each write.
     const copiesKey = (c: Card) => `${c.set_name ?? c.set ?? ""}|${c.number ?? ""}|${c.name}`;
     const [copiesState, setCopiesState] = useState<{ of: string; rows: Card[] } | null>(null);
+    // A rarity said by hand, shown on the row at once; the store follows and the lists reread. Kept
+    // with the card it was said about, so the next card opens on the catalogue's answer again.
+    const [named, setNamed] = useState<{ of: string; rarity: string } | null>(null);
     const copies = mine && copiesState?.of === copiesKey(mine) ? copiesState.rows : null;
     /* Counts the presses the sheet has answered on screen before the store has. A read that
        started before one of those would put the old number back over the new one, so it is
@@ -429,6 +434,25 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     /* Every copy of this card, not just the row on screen: the tab says how many there are before
        anybody opens it. The listed rows once they are read, the shown row's own count until then. */
     const heldTotal = copies ? copies.reduce((n, r) => n + (r.quantity ?? 1), 0) : (mine?.quantity ?? 1);
+
+    /* What the Rarity row shows. A card the catalogue could not name ("Promo" is the set's mark,
+       not a rarity) offers the choice instead, on a card of your own: nothing published tells a
+       full art promo from a plain one, and the person holding it can see which it is. Every row of
+       the printing takes the answer, because a rarity is the printing's and not one copy's. */
+    const saidByHand = named && card && named.of === card.id ? named.rarity : null;
+    const rarityIds = (copies ?? (mine ? [mine] : [])).map((r) => r.id);
+    const rarity = saidByHand ?? card?.rarity ?? null;
+    /* The catalogue's own answer decides whether the choice is offered, not the row's: a rarity
+       said by hand is written to the row, so reading the row would hide the control the moment it
+       was used, and a wrong answer would be permanent. The row's answer stands in until the
+       catalogue has spoken, which is the same thing on every card nobody has named. */
+    const unnamed = known ? isUnnamedRarity(known.rarity) : isUnnamedRarity(rarity);
+    const rarityValue =
+        mine && unnamed && rarityIds.length ? (
+            <CardRarityField cardIds={rarityIds} value={rarity} onSaved={(said) => card && setNamed({ of: card.id, rarity: said })} />
+        ) : (
+            rarity
+        );
 
     const closeSheet = async () => {
         flushRefresh();
@@ -961,7 +985,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                 </TabList>
                                 <TabPanel id="details" className="flex flex-col gap-6">
                                     <dl className="flex flex-col divide-y divide-secondary">
-                                        <DetailRow label="Rarity" value={card?.rarity} />
+                                        <DetailRow label="Rarity" value={rarityValue} />
                                         {/* From the catalogue, once it answers: who drew it, and the card's own facts. */}
                                         {known?.illustrator ? <DetailRow label="Illustrator" value={known.illustrator} late /> : null}
                                         {known?.hp != null ? <DetailRow label="HP" value={known.hp} late /> : null}

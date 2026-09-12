@@ -813,6 +813,7 @@ export const publicProfileAnswer = z.object({
  * that matters most: a form offers no finish that is not in it.
  */
 export const cardFactsAnswer = z.object({
+    rarity: nullable(z.string()),
     illustrator: nullable(z.string()),
     hp: nullable(z.number()),
     stage: nullable(z.string()),

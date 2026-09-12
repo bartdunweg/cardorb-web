@@ -421,6 +421,13 @@ export async function splitCopy(cardId: string, edits: CopyEdits, count = 1): Pr
 
 /** What the catalogue knows about a printing beyond what the row carries (GET /v1/cards/{tcgId}). */
 export type CardFacts = {
+    /**
+     * The catalogue's own word for the printing's rarity, which is not the same as the row's: a
+     * rarity said by hand is written to the row, and this stays what the catalogue answered. It is
+     * how the sheet knows to keep offering the choice, so a card named by hand can be named again
+     * or put back to unnamed.
+     */
+    rarity: string | null;
     illustrator: string | null;
     hp: number | null;
     stage: string | null;
@@ -449,6 +456,7 @@ export async function cardFacts(tcgId: string): Promise<CardFacts | null> {
     try {
         const c = await api(`/cards/${encodeURIComponent(tcgId)}`, { schema: cardFactsAnswer });
         return {
+            rarity: c.rarity ?? null,
             illustrator: c.illustrator ?? null,
             hp: c.hp ?? null,
             stage: c.stage ?? null,
@@ -478,6 +486,25 @@ export async function editCopies(cardIds: string[], edits: CopyEdits): Promise<R
     if (!parsed.success || Object.keys(parsed.data.edits).length === 0) return { ok: false, error: "Invalid input." };
     try {
         await api("/collection/items", { method: "PATCH", body: { ids: parsed.data.cardIds, ...parsed.data.edits } });
+    } catch (err) {
+        return failed(err);
+    }
+    await forgetMine();
+    return { ok: true };
+}
+
+// What kind of printing a card is, said by its owner, on every row of it at once.
+//
+// Only for a card the catalogue could not name: a promo set answers "Promo" for every card in it,
+// which names the set. The rarity is the printing's and not one copy's, so every row of the
+// printing gets it; the API's own PATCH takes the ids beside the field.
+export async function setCardRarity(cardIds: string[], rarity: string | null): Promise<Result> {
+    const parsed = z
+        .object({ cardIds: z.array(z.string().uuid()).min(1).max(100), rarity: z.string().trim().min(1).max(100).nullable() })
+        .safeParse({ cardIds: [...new Set(cardIds)], rarity });
+    if (!parsed.success) return { ok: false, error: "Invalid input." };
+    try {
+        await api("/collection/items", { method: "PATCH", body: { ids: parsed.data.cardIds, rarity: parsed.data.rarity } });
     } catch (err) {
         return failed(err);
     }
