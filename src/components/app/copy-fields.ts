@@ -1,5 +1,5 @@
 import type { CardFacts } from "@/app/(app)/dashboard/cards/actions";
-import { FOIL_PATTERN_LABELS, type FoilPattern } from "@/lib/api-shapes";
+import { EDITIONS, EDITION_LABELS, FOIL_PATTERN_LABELS, type FoilPattern } from "@/lib/api-shapes";
 
 /**
  * What a form may offer about one copy, given what the card actually is.
@@ -94,4 +94,27 @@ export function patternOptions(facts: CardFacts | null | undefined, finish: stri
     if (!named.size) return [];
 
     return [NOT_RECORDED, ...all.filter((p) => named.has(p)).map((p) => ({ label: FOIL_PATTERN_LABELS[p], value: p }))];
+}
+
+/**
+ * Which print runs to offer, plus whichever is already recorded.
+ *
+ * The same two rules as the finishes above, applied to the one thing the catalogue can say
+ * about a run: TCGdex knows per card whether a stamped first edition of it exists. Where it
+ * says no, there is nothing to ask: the card was printed once, and offering the choice
+ * invites somebody to record a run that does not exist. Empty, and the caller drops the row.
+ *
+ * Where it says yes, all three: a card with a 1st Edition run has an unlimited one by
+ * definition, and Base Set's middle run, Shadowless, is not in any catalogue and can only come
+ * from the person holding the card. Saying so on the Jungle cards too, which had no shadowless
+ * run, would need a list of sets kept by hand against a fact nothing publishes; the wrong kind
+ * of wrong here is a choice too many, not a choice missing.
+ *
+ * Where it says nothing at all, all three as well, for the reason the finish list does it: no
+ * answer is not "none exist", and most cards carry no variants block yet.
+ */
+export function editionOptions(facts: CardFacts | null | undefined, current: string | null | undefined): Options {
+    const stamped = facts?.firstEdition;
+    if (stamped === false && !current) return [];
+    return [NOT_RECORDED, ...EDITIONS.map((e) => ({ label: EDITION_LABELS[e], value: e }))];
 }

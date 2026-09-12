@@ -6,7 +6,7 @@ import { type CardFacts, editCopies } from "@/app/(app)/dashboard/cards/actions"
 import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { AcquiredDatePicker } from "@/components/app/acquired-date-picker";
 import { CONDITIONS } from "@/components/app/condition-badge";
-import { finishOptions, patternOptions, soleOption } from "@/components/app/copy-fields";
+import { editionOptions, finishOptions, patternOptions, soleOption } from "@/components/app/copy-fields";
 import { FlagIcon } from "@/components/app/flag-icon";
 import { FolderDialog } from "@/components/app/folder-dialog";
 import { GRADERS, GRADES, gradeLabel, splitGrade } from "@/components/app/graded";
@@ -115,6 +115,8 @@ export function CopyCard({
     const effectiveFinish = finish || soleFinish?.value || "";
     const patterns = patternOptions(facts, effectiveFinish, row.foil_pattern ?? null);
     const solePattern = soleOption(patterns);
+    const edition = shown.edition !== undefined ? (shown.edition ?? "") : (row.edition ?? "");
+    const editions = editionOptions(facts, row.edition ?? null);
 
     /* The price field is typed into, so it saves when it is left, not on every keystroke. */
     const [priceDraft, setPriceDraft] = useState<string | null>(null);
@@ -270,6 +272,23 @@ export function CopyCard({
                         value={pattern}
                         onChange={(e) => void save({ foilPattern: (e.target.value || null) as CopyEdits["foilPattern"] }, "The foil pattern did not change")}
                         options={patterns}
+                    />
+                </div>
+            ) : null}
+
+            {/* Asked only where the catalogue says a stamped run of this card exists, or says
+                nothing at all. A card printed once has no run to choose. */}
+            {editions.length ? (
+                <div className={field}>
+                    Edition
+                    <NativeSelect
+                        aria-label="Edition"
+                        size="sm"
+                        className="w-full"
+                        disabled={disabled}
+                        value={edition}
+                        onChange={(e) => void save({ edition: (e.target.value || null) as CopyEdits["edition"] }, "The edition did not change")}
+                        options={editions}
                     />
                 </div>
             ) : null}

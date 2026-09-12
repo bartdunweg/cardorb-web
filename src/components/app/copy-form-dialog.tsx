@@ -9,7 +9,7 @@ import type { CardFacts } from "@/app/(app)/dashboard/cards/actions";
 import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { AcquiredDatePicker } from "@/components/app/acquired-date-picker";
 import { CONDITIONS } from "@/components/app/condition-badge";
-import { finishOptions, patternOptions, soleOption } from "@/components/app/copy-fields";
+import { editionOptions, finishOptions, patternOptions, soleOption } from "@/components/app/copy-fields";
 import { FormError } from "@/components/app/form-error";
 import { GRADERS, GRADES, gradeLabel, splitGrade } from "@/components/app/graded";
 import { LanguageSelect } from "@/components/app/language-select";
@@ -59,6 +59,7 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
     const [gradeValue, setGradeValue] = useState(initialGrade.grade || GRADES[0]);
     const [finish, setFinish] = useState(from.finish ?? "");
     const [pattern, setPattern] = useState(from.foil_pattern ?? "");
+    const [edition, setEdition] = useState(from.edition ?? "");
     const [folder, setFolder] = useState(from.collection_id ?? "");
     const [price, setPrice] = useState(from.purchase_price != null ? String(from.purchase_price) : "");
     /* Only asked when adding. A split keeps the row's own date (those copies were already yours,
@@ -78,6 +79,8 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
     const patterns = patternOptions(facts, effectiveFinish, from.foil_pattern ?? null);
     const solePattern = soleOption(patterns);
     const effectivePattern = pattern || solePattern?.value || "";
+    // Asked only of a card the catalogue says had a stamped run, or says nothing about.
+    const editions = editionOptions(facts, from.edition ?? null);
 
     const edits = (): CopyEdits => {
         const out: CopyEdits = {};
@@ -90,6 +93,8 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
         if (fin !== (from.finish ?? null)) out.finish = fin;
         const pat = (effectivePattern || null) as CopyEdits["foilPattern"];
         if (pat !== (from.foil_pattern ?? null)) out.foilPattern = pat;
+        const ed = (edition || null) as CopyEdits["edition"];
+        if (ed !== (from.edition ?? null)) out.edition = ed;
         if ((folder || null) !== (from.collection_id ?? null)) out.collectionId = folder || null;
         const p = price.trim() === "" ? null : Number(price);
         if (p !== null && !Number.isFinite(p)) return out;
@@ -293,6 +298,20 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
                         value={pattern}
                         onChange={(e) => setPattern(e.target.value)}
                         options={patterns}
+                    />
+                </div>
+            ) : null}
+
+            {editions.length ? (
+                <div className={row}>
+                    Edition
+                    <NativeSelect
+                        aria-label="Edition"
+                        size="sm"
+                        className="w-full"
+                        value={edition}
+                        onChange={(e) => setEdition(e.target.value)}
+                        options={editions}
                     />
                 </div>
             ) : null}
