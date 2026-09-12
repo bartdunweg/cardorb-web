@@ -22,6 +22,10 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-13, no more "Recently viewed".** Bart's call: the palette opens empty again, "Type to
+search for a card.", with no list of the cards last previewed. The hook (`use-recent-cards.ts`),
+its test, the clear row and the lookup that re-read their marks on open are gone.
+
 **2026-09-13, English and Japanese only.** Bart's call: Card Orb supports two catalogues, English
 and Japanese. Chinese (traditional, simplified, the old `zh`) and Korean are gone from the web
 (filters #533, then the language list, flags and copy); the API drops them in its own PR. The live `cards` table
