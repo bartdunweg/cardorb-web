@@ -126,6 +126,14 @@ kit_drift() {
 run "kit-drift" kit_drift
 
 # shellcheck disable=SC2329  # invoked indirectly, through `run` below.
+# R-COPY-001: no em dashes in what we write. Same mechanism as kit-drift: a baseline per file
+# that only shrinks, so this fails on a new one and never on the 408 that were there first.
+em_dash() {
+  node scripts/em-dash.mjs --check
+}
+run "em-dash" em_dash
+
+# shellcheck disable=SC2329  # invoked indirectly, through `run` below.
 # Finder makes "name 2.ts" beside a file it could not overwrite; two of them reached a commit on
 # 2026-09-02. A tracked file whose name ends in a space and a number is one of those, never ours.
 finder_copies() {
