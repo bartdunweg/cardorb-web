@@ -13,6 +13,9 @@ describe("readListQuery", () => {
             rarity: [],
             gen: [],
             type: [],
+            condition: [],
+            finish: [],
+            language: [],
             fullArt: false,
             unpriced: false,
             duplicates: false,
@@ -27,6 +30,9 @@ describe("readListQuery", () => {
             rarity: [],
             gen: [],
             type: [],
+            condition: [],
+            finish: [],
+            language: [],
             fullArt: false,
             unpriced: false,
             duplicates: false,
@@ -99,6 +105,14 @@ describe("set and rarity", () => {
         expect(isNarrowed(q)).toBe(true);
         expect(activeFilterCount(q)).toBe(4);
         expect(isNarrowed(readListQuery({}))).toBe(false);
+    });
+
+    it("carry a copy's condition, finish and language the same way", () => {
+        const q = readListQuery({ condition: ["Near Mint", "Mint"], finish: "holo", language: "ja" });
+        expect(q).toMatchObject({ condition: ["Near Mint", "Mint"], finish: ["holo"], language: ["ja"] });
+        expect(listHref("/dashboard/cards", q, {})).toBe("/dashboard/cards?condition=Near+Mint&condition=Mint&finish=holo&language=ja");
+        expect(activeFilterCount(q)).toBe(4);
+        expect(listHref("/dashboard/cards", q, { condition: [], finish: [], language: [] })).toBe("/dashboard/cards");
     });
 
     it("keeps no more than fifty of one", () => {

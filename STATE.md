@@ -45,7 +45,7 @@ option says what choosing it would leave, with the other filters as they are: a 
 API (`counts=1`, cardorb-api#372), a set page counts the set in hand, Browse counts each
 catalogue's shelf (`countShelf`). An option at zero is greyed and skipped, and in a long list sinks
 under the ones that answer. A public profile offers set and rarity only, what its route reads.
-web #520, #523 and this one. Measured against the production API from a local server (the pane is
+web #520, #523, #526. The copy's condition (a coloured dot down Cardmarket's scale), finish and language (a flag) are filters too, each shown once the collection holds two values of it; a value chosen that the list no longer holds stays in the sheet to be taken off (cardorb-api#373). Measured against the production API from a local server (the pane is
 not signed in on cardorb.com): Rare 293, Rare + Common 705, Browse 48 + 6 + 149 = 203.
 
 **2026-09-12, the sidebar folds.** The desktop sidebar takes a rail: the button beside the

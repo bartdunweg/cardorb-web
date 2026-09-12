@@ -42,6 +42,12 @@ export type ListQuery = {
     gen: string[];
     /** The energy types, as the catalogue names them; a card of any of them. */
     type: string[];
+    /** A copy's conditions ("Near Mint"); a copy in any of them. */
+    condition: string[];
+    /** A copy's finishes ("holo"); a copy with any of them. */
+    finish: string[];
+    /** A copy's languages, as codes ("ja"); a copy in any of them. */
+    language: string[];
     /** A public profile's folder, by id; the owner's own lists carry the folder in the path instead. */
     folder: string | undefined;
     /** A public profile's wishlist, favorites or Pokédex instead of its collection. */
@@ -68,6 +74,9 @@ export type ListSearchParams = {
     fullArt?: string;
     gen?: string | string[];
     type?: string | string[];
+    condition?: string | string[];
+    finish?: string | string[];
+    language?: string | string[];
     folder?: string;
     list?: string;
     unpriced?: string;
@@ -76,11 +85,19 @@ export type ListSearchParams = {
 
 /** A search or a filter is on. */
 export const isNarrowed = (q: ListQuery): boolean =>
-    [q.q, q.fullArt, q.unpriced, q.duplicates].some(Boolean) || [q.set, q.rarity, q.gen, q.type].some((values) => values.length > 0);
+    [q.q, q.fullArt, q.unpriced, q.duplicates].some(Boolean) ||
+    [q.set, q.rarity, q.gen, q.type, q.condition, q.finish, q.language].some((values) => values.length > 0);
 
 /** How many filters are on, for the badge on the Filters button: each value chosen counts, the search does not. */
 export const activeFilterCount = (q: ListQuery): number =>
-    q.set.length + q.rarity.length + q.gen.length + q.type.length + [q.fullArt, q.duplicates].filter(Boolean).length;
+    q.set.length +
+    q.rarity.length +
+    q.gen.length +
+    q.type.length +
+    q.condition.length +
+    q.finish.length +
+    q.language.length +
+    [q.fullArt, q.duplicates].filter(Boolean).length;
 
 /** More than this per filter is not a choice anybody made by hand; the API refuses past fifty. */
 const MAX_VALUES = 50;
@@ -111,6 +128,9 @@ export function readListQuery(params: ListSearchParams): ListQuery {
         fullArt: params.fullArt === "1",
         gen: texts(params.gen),
         type: texts(params.type),
+        condition: texts(params.condition),
+        finish: texts(params.finish),
+        language: texts(params.language),
         folder: text(params.folder),
         list: (PUBLIC_LISTS as readonly string[]).includes(params.list ?? "") ? (params.list as PublicList) : undefined,
         unpriced: params.unpriced === "1",
@@ -138,7 +158,26 @@ export function readPublicListQuery(params: Parameters<typeof readListQuery>[0])
 export function listHref(
     pathname: string,
     current: ListQuery,
-    patch: Partial<Pick<ListQuery, "page" | "sortKey" | "q" | "set" | "rarity" | "fullArt" | "gen" | "type" | "folder" | "list" | "unpriced" | "duplicates">>,
+    patch: Partial<
+        Pick<
+            ListQuery,
+            | "page"
+            | "sortKey"
+            | "q"
+            | "set"
+            | "rarity"
+            | "fullArt"
+            | "gen"
+            | "type"
+            | "condition"
+            | "finish"
+            | "language"
+            | "folder"
+            | "list"
+            | "unpriced"
+            | "duplicates"
+        >
+    >,
     /** The sort this page reads a bare URL as; anything else is written into it. */
     defaultSortKey: SortKey = "set",
 ): string {
@@ -148,6 +187,9 @@ export function listHref(
     const fullArt = "fullArt" in patch ? patch.fullArt : current.fullArt;
     const gen = "gen" in patch ? patch.gen : current.gen;
     const type = "type" in patch ? patch.type : current.type;
+    const condition = "condition" in patch ? patch.condition : current.condition;
+    const finish = "finish" in patch ? patch.finish : current.finish;
+    const language = "language" in patch ? patch.language : current.language;
     const folder = "folder" in patch ? patch.folder : current.folder;
     const list = "list" in patch ? patch.list : current.list;
     const unpriced = "unpriced" in patch ? patch.unpriced : current.unpriced;
@@ -162,6 +204,9 @@ export function listHref(
     if (fullArt) p.set("fullArt", "1");
     for (const one of gen ?? []) p.append("gen", one);
     for (const one of type ?? []) p.append("type", one);
+    for (const one of condition ?? []) p.append("condition", one);
+    for (const one of finish ?? []) p.append("finish", one);
+    for (const one of language ?? []) p.append("language", one);
     if (folder) p.set("folder", folder);
     if (list) p.set("list", list);
     if (unpriced) p.set("unpriced", "1");
