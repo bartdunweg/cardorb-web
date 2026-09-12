@@ -16,31 +16,48 @@ export const BROWSE_SORT_OPTIONS = [
 export type BrowseSort = (typeof BROWSE_SORT_OPTIONS)[number]["value"];
 export const isBrowseSort = (v: unknown): v is BrowseSort => BROWSE_SORT_OPTIONS.some((o) => o.value === v);
 
+/**
+ * How far along a set is: the question Browse is for, "which sets am I finishing". Started is
+ * some cards and not all; a set the catalogue counts no cards for is none of the three.
+ */
+export const BROWSE_PROGRESS_OPTIONS = [
+    { value: "all", label: "All sets" },
+    { value: "started", label: "In progress" },
+    { value: "complete", label: "Complete" },
+    { value: "new", label: "Not started" },
+] as const;
+
+export type BrowseProgress = (typeof BROWSE_PROGRESS_OPTIONS)[number]["value"];
+export const isBrowseProgress = (v: unknown): v is BrowseProgress => BROWSE_PROGRESS_OPTIONS.some((o) => o.value === v);
+
 export type BrowseQuery = {
     language: BrowseLanguage;
     sort: BrowseSort;
+    progress: BrowseProgress;
     /** What was typed in the row's search field: part of a set's name, or of its local one. */
     q: string | undefined;
 };
 
-export type BrowseSearchParams = { language?: string; sort?: string; q?: string };
+export type BrowseSearchParams = { language?: string; sort?: string; progress?: string; q?: string };
 
-/** Read forgivingly: nonsense means English, newest first, nothing searched. */
+/** Read forgivingly: nonsense means English, newest first, every set, nothing searched. */
 export function readBrowseQuery(params: BrowseSearchParams): BrowseQuery {
     return {
         language: isBrowseLanguage(params.language) ? params.language : "en",
         sort: isBrowseSort(params.sort) ? params.sort : "newest",
+        progress: isBrowseProgress(params.progress) ? params.progress : "all",
         q: params.q?.trim().slice(0, 100) || undefined,
     };
 }
 
 /** Browse's URL with some of it changed; defaults stay out so the plain path stays plain. */
 export function browseHref(current: BrowseQuery, patch: Partial<BrowseQuery>): string {
-    const { language, sort, q } = { ...current, ...patch };
+    const { language, sort, progress, q } = { ...current, ...patch };
     const p = new URLSearchParams();
     if (q) p.set("q", q);
     if (language !== "en") p.set("language", language);
     if (sort !== "newest") p.set("sort", sort);
+    if (progress !== "all") p.set("progress", progress);
     const s = p.toString();
     return s ? `/dashboard/sets?${s}` : "/dashboard/sets";
 }
@@ -55,6 +72,14 @@ export function searchShelf(series: SetSeries[], q: string | undefined): SetSeri
     return series
         .map((group) => ({ ...group, sets: group.sets.filter((s) => `${s.name} ${s.localName ?? ""}`.toLowerCase().includes(needle)) }))
         .filter((group) => group.sets.length > 0);
+}
+
+/** The shelf narrowed to how far along each set is; a series with none left goes. All is the whole shelf. */
+export function progressShelf(series: SetSeries[], progress: BrowseProgress): SetSeries[] {
+    if (progress === "all") return series;
+    const keep = (s: SetSeries["sets"][number]) =>
+        s.total > 0 && (progress === "complete" ? s.owned >= s.total : progress === "started" ? s.owned > 0 && s.owned < s.total : s.owned === 0);
+    return series.map((group) => ({ ...group, sets: group.sets.filter(keep) })).filter((group) => group.sets.length > 0);
 }
 
 /**
