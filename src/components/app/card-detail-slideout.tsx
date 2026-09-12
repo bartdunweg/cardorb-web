@@ -442,8 +442,8 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
        there is nothing to offer — the removal stands and says so without an Undo, which is better
        than a button that would quietly create a card missing everything it held. */
     const offerUndo = (rows: RemovedCard[], done: string) => {
-        if (!rows.length) return notify.done(done);
-        notify.done(done, {
+        if (!rows.length) return notify.removed(done);
+        notify.removed(done, {
             undo: {
                 label: "Put back",
                 onUndo: () => {

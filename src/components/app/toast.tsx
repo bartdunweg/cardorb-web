@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, CheckCircle } from "@untitledui/icons";
+import { AlertCircle, CheckCircle, Trash01 } from "@untitledui/icons";
 import { Toaster as SonnerToaster, toast as sonner } from "sonner";
 import { Button } from "@/components/base/buttons/button";
 import { CloseButton } from "@/components/base/buttons/close-button";
@@ -10,21 +10,28 @@ import { FeaturedIcon } from "@/components/foundations/featured-icon/featured-ic
  * What the app says back when something happened somewhere you are not looking.
  *
  * The rule for using it, so this does not become wallpaper: a toast is for a change you cannot
- * see. A star that fills, a tile that appears in the list under your thumb, a sheet that closes —
+ * see. A star that fills, a tile that appears in the list under your thumb, a sheet that closes:
  * those answer for themselves and get no toast. A card filed into a Binder on another page, a
  * write whose only proof is that nothing broke, and every failure: those get one.
  *
- * The box is the kit's `application/notifications` in its parts — FeaturedIcon, Button,
- * CloseButton on Sonner — rather than that component itself, which puts a "Dismiss" text button
+ * The box is the kit's `application/notifications` in its parts (FeaturedIcon, Button,
+ * CloseButton on Sonner) rather than that component itself, which puts a "Dismiss" text button
  * beside the close cross. Two ways to do nothing, and with an undo beside them, three. Sonner is
  * only the shelf: the positioning, the stacking, the swipe and the live region are its work.
  *
- * One departure: the kit sets the title and the link button both semibold and tells them apart by
- * colour. Cardorb's brand colour is the same grey as secondary text, so here the title is medium
- * and the undo is the one bold word in the box.
+ * Three tones, each with its own icon, so the picture says what happened before the sentence
+ * does: a tick for something that worked, a bin for something taken away, an alert for something
+ * that did not happen. The kit's notification knows success, error and an info default; the bin
+ * is its `icon` prop used, in the grey it gives the default.
+ *
+ * Two departures from the kit. The undo sits beside the sentence, not under it: one line, the way
+ * the toast that says "Removed" with "Undo" at its end reads everywhere else, and a shorter box in
+ * the middle of the screen. And the kit sets the title and the link button both semibold and
+ * tells them apart by colour. Cardorb's brand colour is the same grey as secondary text, so here
+ * the title is medium and the undo is the one bold word in the box.
  */
 
-type Tone = "done" | "failed";
+type Tone = "done" | "removed" | "failed";
 
 type Options = {
     /** A second line, when the title alone leaves the obvious question unanswered. */
@@ -39,7 +46,13 @@ type Options = {
 // notice only after it has gone is not a way back. A failure does not leave on its own at all: it
 // is the only report that a write did not happen, and if it goes while you are looking elsewhere
 // the screen is left saying nothing is wrong. It goes when you say so.
-const DURATION = { done: 4000, failed: Number.POSITIVE_INFINITY, undo: 10000 };
+const DURATION = { done: 4000, removed: 4000, failed: Number.POSITIVE_INFINITY, undo: 10000 };
+
+const ICON = {
+    done: { icon: CheckCircle, color: "success", theme: "outline" },
+    removed: { icon: Trash01, color: "gray", theme: "modern" },
+    failed: { icon: AlertCircle, color: "error", theme: "outline" },
+} as const;
 
 function show(tone: Tone, title: string, options: Options = {}) {
     return sonner.custom((toastId) => <ToastCard tone={tone} toastId={toastId} title={title} {...options} />, {
@@ -51,6 +64,8 @@ function show(tone: Tone, title: string, options: Options = {}) {
 export const notify = {
     /** Something worked, and the proof of it is off screen. */
     done: (title: string, options?: Options) => show("done", title, options),
+    /** Something is gone: a card, a copy, a binder. Offer the way back where there is one. */
+    removed: (title: string, options?: Options) => show("removed", title, options),
     /** Something did not work. Say what, in the app's own words, not the API's. */
     failed: (title: string, options?: Options) => show("failed", title, options),
     dismiss: (id?: string | number) => sonner.dismiss(id),
@@ -70,36 +85,33 @@ function ToastCard({
     const dismiss = () => sonner.dismiss(toastId);
 
     return (
-        <div className="relative flex w-full gap-4 rounded-xl border border-primary bg-primary_alt p-4 shadow-lg">
-            <FeaturedIcon icon={tone === "done" ? CheckCircle : AlertCircle} color={tone === "done" ? "success" : "error"} theme="outline" size="md" />
+        <div className="flex w-full items-center gap-3 rounded-xl border border-primary bg-primary_alt p-3 pl-4 shadow-lg">
+            <FeaturedIcon {...ICON[tone]} size="md" />
 
-            <div className="flex flex-1 flex-col gap-3 pr-6">
-                <div className="flex flex-col gap-1">
-                    {/* No truncation: a toast that cuts off the sentence it exists to say is worse
-                        than a toast two lines tall. */}
-                    <p className="text-sm font-medium text-secondary">{title}</p>
-                    {description ? <p className="text-sm text-tertiary">{description}</p> : null}
-                </div>
-
-                {undo ? (
-                    <div className="flex">
-                        <Button
-                            size="sm"
-                            color="link-color"
-                            onClick={() => {
-                                undo.onUndo();
-                                dismiss();
-                            }}
-                        >
-                            {undo.label ?? "Undo"}
-                        </Button>
-                    </div>
-                ) : null}
+            {/* No truncation: a toast that cuts off the sentence it exists to say is worse than a
+                toast two lines tall. */}
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <p className="text-sm font-medium text-secondary">{title}</p>
+                {description ? <p className="text-sm text-tertiary">{description}</p> : null}
             </div>
+
+            {undo ? (
+                <Button
+                    size="sm"
+                    color="link-color"
+                    className="shrink-0"
+                    onClick={() => {
+                        undo.onUndo();
+                        dismiss();
+                    }}
+                >
+                    {undo.label ?? "Undo"}
+                </Button>
+            ) : null}
 
             {/* It leaves on its own and can be swiped away, but neither of those is something you
                 can do with a keyboard. */}
-            <CloseButton onClick={dismiss} size="sm" label="Close" className="absolute top-2 right-2" />
+            <CloseButton onClick={dismiss} size="sm" label="Close" className="shrink-0" />
         </div>
     );
 }
@@ -111,14 +123,14 @@ function ToastCard({
 export function Toasts() {
     return (
         <SonnerToaster
-            position="bottom-right"
-            // The phone's tab bar is a floating pill at the bottom edge; a toast under it would be
-            // half a toast. This clears it.
-            // Only the bottom is ours: the phone's tab bar is a floating pill at the bottom edge and
-            // a toast under it would be half a toast. Naming left and right as well made the box
-            // 375px wide *and* pushed it 16px right, so it hung off the screen; the sides are
-            // sonner's own, which shrink the box instead of moving it.
-            mobileOffset={{ bottom: "5.5rem" }}
+            // Top and centre, where the eye already is after a press in a sheet or a dialog, and
+            // clear of the phone's tab bar, which sits at the bottom. On a phone sonner drops the
+            // fixed width and spans the screen between its side offsets, which are the page's own
+            // gutter; only the top is ours, so the box clears a notch.
+            position="top-center"
+            mobileOffset={{ top: "max(1rem, env(safe-area-inset-top))" }}
+            // Wider than sonner's default: the sentence, the undo and the cross share one line.
+            style={{ "--width": "28rem" } as React.CSSProperties}
             toastOptions={{ unstyled: true, classNames: { toast: "w-full" } }}
         />
     );

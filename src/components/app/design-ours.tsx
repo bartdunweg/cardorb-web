@@ -467,7 +467,7 @@ export const ourSections: SectionSpec[] = [
         title: "Toast",
         from: "components/app/toast",
         ours: true,
-        note: "Ours, in the parts of the kit's application/notifications — FeaturedIcon, Button, CloseButton on Sonner — rather than that component, which puts a Dismiss text button beside the close cross. The title is medium where the kit has semibold: the brand colour is the same grey as the title, so weight is what marks the undo as the button.",
+        note: "Ours, in the parts of the kit's application/notifications (FeaturedIcon, Button, CloseButton on Sonner) rather than that component, which puts a Dismiss text button beside the close cross and its actions under the text. Three tones with their own icon: a tick, a bin, an alert. The undo sits beside the sentence, and the title is medium where the kit has semibold: the brand colour is the same grey as the title, so weight is what marks the undo as the button.",
         render: (
             <Panel>
                 <Group title="Live" cols="wide">
@@ -485,18 +485,18 @@ export const ourSections: SectionSpec[] = [
                             Show a failure
                         </Button>
                     </Cell>
-                    <Cell label="notify.done with undo">
+                    <Cell label="notify.removed with undo">
                         <Button
                             size="md"
                             color="secondary"
                             onClick={() =>
-                                notify.done("Removed from your collection", {
+                                notify.removed("Removed from your collection", {
                                     description: "Fomantis · Pitch Black #085",
-                                    undo: { onUndo: () => notify.done("Put back") },
+                                    undo: { label: "Put back", onUndo: () => notify.done("It is back") },
                                 })
                             }
                         >
-                            Show an undo
+                            Show a removal
                         </Button>
                     </Cell>
                 </Group>
