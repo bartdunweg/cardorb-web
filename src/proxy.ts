@@ -46,7 +46,9 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-    // Run on all routes except static assets, image files and /api. Everything under /api/v1 is
-    // rewritten to the previous Cardorb app (see vercel.json), so a session refresh there is wasted.
-    matcher: ["/((?!_next/static|_next/image|favicon.ico|api/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
+    // Run on all routes except static assets, image files, /api and /_vercel. Everything under
+    // /api/v1 is rewritten to the previous Cardorb app (see vercel.json), so a session refresh
+    // there is wasted; `_vercel` is the platform's own path (the Speed Insights script and the
+    // measurements it posts back), which has no session to refresh and no page to frame.
+    matcher: ["/((?!_next/static|_next/image|_vercel|favicon.ico|api/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
 };
