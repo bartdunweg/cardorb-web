@@ -126,6 +126,18 @@ describe("priceForCopy", () => {
         expect(priceForCopy({ finish: null, edition: "unlimited", price, priceHolo: null, priceFirstEd: stamped })).toBe(6);
     });
 
+    it("prices a Shadowless copy as the Shadowless product, and falls back where there is none", () => {
+        const price = { low: 1, market: 4, avg30: 4, nm: { low: 5, mid: 6, high: 7 } };
+        const run = { low: 950, market: 3567, avg30: 2475, nm: null };
+        // Cardmarket files the run as a product of its own: base1-4 Charizard is €3,567 there
+        // against €583 on the ordinary product, which is what a copy read until cardorb-api#329.
+        expect(priceForCopy({ finish: "holo", edition: "shadowless", price, priceHolo: price, priceShadowless: run })).toBe(3567);
+        // Nothing prices a Shadowless run outside Base Set: the ordinary price stands.
+        expect(priceForCopy({ finish: null, edition: "shadowless", price, priceHolo: null })).toBe(6);
+        // And the two runs are not one branch: a 1st Edition copy never reads the Shadowless figure.
+        expect(priceForCopy({ finish: null, edition: "1st-edition", price, priceHolo: null, priceShadowless: run })).toBe(6);
+    });
+
     it("prices a reverse holo with the foil price, everything else with the plain one, as the API does", () => {
         expect(priceForCopy({ finish: "reverse-holo", price, priceHolo: holo })).toBe(60);
         expect(priceForCopy({ finish: "poke-ball", price, priceHolo: holo })).toBe(60);
