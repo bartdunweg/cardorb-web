@@ -5,7 +5,6 @@ import { loadMoreCards } from "@/app/(app)/dashboard/list-actions";
 import { CardsGrid } from "@/components/app/cards-grid";
 import { CardsTable } from "@/components/app/cards-table";
 import { GotItButton } from "@/components/app/got-it-button";
-import { CardsSkeleton } from "@/components/app/skeletons";
 import { Button } from "@/components/base/buttons/button";
 import type { Card, CardFilter, CardList } from "@/lib/cards";
 import type { CardsSize, CardsViewMode } from "@/lib/cards-view";
@@ -205,8 +204,9 @@ export function CardsList({
                     ) : (
                         <CardsTable cards={cards} onSelect={onSelect} />
                     )}
-                    {pending ? <CardsSkeleton count={6} /> : null}
-                    {/* Where the next batch is asked for. Also the manual way in: a browser without the observer, or a
+                    {/* The skeleton is the page's first load and nothing after it: a further batch shows the button's
+                        own spinner, so the grid does not draw a second set of empty tiles under the cards already in.
+                        Where the next batch is asked for. Also the manual way in: a browser without the observer, or a
                         reader who would rather press. One button through loading and failure alike, so a keyboard
                         that pressed it keeps its place; it unmounts only when the last card is in. */}
                     {more ? (
