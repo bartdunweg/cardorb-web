@@ -35,6 +35,14 @@ gets no suggestions, which would be read from the reader's own cards. Walked in 
 and dark, 1280x800 and 375x812: the row the keyboard stands on is ringed at 3.8:1, where the tint
 it had first was 1.04:1.
 
+Then the same field on Browse and before a letter is typed (#462). Browse offers the set names of
+the shelf it shows, the series beside each, out of the one read the page already makes; an empty
+field in hand offers the last five terms searched for in that list, kept in this browser
+(`use-recent-terms.ts`), remembered on Enter or on a suggestion taken and not on the way there.
+The field counts and names what is in it: titles in a binder, sets on Browse, recent searches
+when it is empty. A key written as a stringified object had filed the Collection's own history
+under a name the Collection did not ask for; both keys are now written out field by field.
+
 **2026-09-12, the import's stages.** Bart: the CSV import put a spinner under the drop zone and
 named the file nowhere, so the upload step did not say what it was busy with. The kit's file row
 came back, rewritten without `motion` and without `@untitledui/file-icons` (R-UI-002), and the
