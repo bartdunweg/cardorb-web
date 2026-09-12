@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppEmptyState } from "@/components/app/app-empty-state";
@@ -13,7 +14,15 @@ import { formatCount } from "@/lib/format";
 import { type ListSearchParams, PUBLIC_DEFAULT_SORT, PUBLIC_SORT_OPTIONS, isNarrowed, listHref, readPublicListQuery } from "@/lib/list-query";
 import { getDexNames } from "@/lib/pokedex";
 import { getViewer } from "@/lib/profile";
-import { PUBLIC_PAGE_SIZE, countPublicCards, getAllPublicCards, getPublicCards, getPublicFolders, getPublicProfile } from "@/lib/public-profile";
+import {
+    PUBLIC_PAGE_SIZE,
+    countPublicCards,
+    countPublicPokedex,
+    getAllPublicCards,
+    getPublicCards,
+    getPublicFolders,
+    getPublicProfile,
+} from "@/lib/public-profile";
 
 type Params = { params: Promise<{ username: string }>; searchParams: Promise<ListSearchParams> };
 
@@ -66,6 +75,10 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                   return { ...grouped, total: grouped.cards };
               })
             : null;
+    // The Pokédex chip's number, the same the owner's sidebar says (countPublicPokedex). It is read
+    // from every card, so it is not awaited either: the chip gets it when it is in, and a read that
+    // fails leaves the chip without a number rather than the page without a chip.
+    const pokedexCount = profile.pokedex_public ? countPublicPokedex(decodeURIComponent(username), profile.pokedex ?? DEFAULT_POKEDEX).catch(() => null) : null;
     // The paged read for every list, the Pokédex too: its first page carries the count and the facets
     // at once, while the slots' own read of every card streams in behind the row.
     const [{ cards, total, facets }, folders, viewer, owned, wishes] = await Promise.all([
@@ -105,8 +118,12 @@ export default async function PublicProfilePage({ params, searchParams }: Params
         empty: emptyState,
     };
     // With a search or a filter on, the count is what matched; otherwise the collection and the wishlist.
+    // On the Pokédex what matched is what is in its slots, as the owner's page counts it: the read
+    // returned every card, and a trainer or a rarity the setting leaves out is not in the binder.
     const counts = narrowed
-        ? datapointsLine({ total, narrowed })
+        ? dex
+            ? dex.then((d) => datapointsLine({ total: d.cards, narrowed })).catch(() => "")
+            : datapointsLine({ total, narrowed })
         : [datapointsLine({ total: owned, narrowed: false }), wishes != null ? `${formatCount(wishes)} on the wishlist` : null].filter(Boolean).join(" · ");
 
     return (
@@ -121,7 +138,16 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                     <div className="flex flex-col items-center gap-1">
                         <h1 className="text-display-sm font-semibold text-primary">{name}</h1>
                         {handle ? <p className="text-md text-tertiary">{handle}</p> : null}
-                        <p className="text-md font-medium text-secondary tabular-nums">{counts}</p>
+                        <p className="text-md font-medium text-secondary tabular-nums">
+                            {typeof counts === "string" ? (
+                                counts
+                            ) : (
+                                // A blank of the line's height until the number is in, so nothing under it moves.
+                                <Suspense fallback={"\u00a0"}>
+                                    <Late text={counts} />
+                                </Suspense>
+                            )}
+                        </p>
                     </div>
                 </div>
 
@@ -165,6 +191,12 @@ export default async function PublicProfilePage({ params, searchParams }: Params
                                     aria-current={query.list === id ? "page" : undefined}
                                 >
                                     {label}
+                                    {/* The Pokédex has a count like a folder's; the other two say nothing, as before. */}
+                                    {id === "pokedex" && pokedexCount ? (
+                                        <Suspense fallback={null}>
+                                            <ChipCount count={pokedexCount} />
+                                        </Suspense>
+                                    ) : null}
                                 </LinkButton>
                             ))}
                     </nav>
@@ -174,4 +206,15 @@ export default async function PublicProfilePage({ params, searchParams }: Params
             </main>
         </div>
     );
+}
+
+/** A line of text that arrives after the frame. */
+async function Late({ text }: { text: Promise<string> }) {
+    return await text;
+}
+
+/** A chip's number, drawn as the folder chips draw theirs; nothing when the read failed. */
+async function ChipCount({ count }: { count: Promise<number | null> }) {
+    const n = await count;
+    return n === null ? null : <span className="ml-1.5 tabular-nums opacity-70">{formatCount(n)}</span>;
 }
