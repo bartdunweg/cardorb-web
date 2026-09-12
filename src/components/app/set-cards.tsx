@@ -209,6 +209,7 @@ const fromCatalogue = (c: SetCard): Card => ({
     quantity: 0,
     owned: false,
     is_favorite: false,
+    dex_face: false,
     excluded: false,
     condition: null,
     grade: null,

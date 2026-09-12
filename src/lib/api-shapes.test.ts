@@ -66,6 +66,41 @@ describe("cardFromItem", () => {
             image_url: "https://api.cardorb.com/api/cover?url=p",
         });
     });
+
+    it("reads which card leads its Pokédex slot, and says false where an older API is silent", () => {
+        const item = {
+            id: "row",
+            name: "Pikachu",
+            number: "58",
+            set: "base1",
+            setTitle: "Base Set",
+            setAbbr: null,
+            rarity: null,
+            gen: null,
+            type: null,
+            image: null,
+            imageHigh: null,
+            speciesId: 25,
+            tcgId: null,
+            owned: true,
+            finish: null,
+            foilPattern: null,
+            quantity: 1,
+            condition: null,
+            grade: null,
+            language: null,
+            purchasePrice: null,
+            purchaseDate: null,
+            notes: null,
+            isFavorite: false,
+            acquiredAt: null,
+            collectionId: null,
+            price: null,
+            priceHolo: null,
+        };
+        expect(cardFromItem({ ...item, dexFace: true }).dex_face).toBe(true);
+        expect(cardFromItem(item).dex_face).toBe(false);
+    });
 });
 
 describe("priceForCopy", () => {
