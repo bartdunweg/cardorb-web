@@ -49,7 +49,7 @@ import { matchesRule } from "@/lib/folder-rule";
 import { formatDate, formatPrice } from "@/lib/format";
 import { orientationNeedsPermission, requestOrientation } from "@/lib/holo/orientation";
 import { average30, priceChange } from "@/lib/price-change";
-import { ebaySoldUrl, tcgplayerUrl } from "@/lib/price-links";
+import { tcgplayerUrl } from "@/lib/price-links";
 import { isUnnamedRarity } from "@/lib/rarities";
 import { settleLatest } from "@/lib/settle-latest";
 import { cx } from "@/utils/cx";
@@ -1184,33 +1184,22 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                     <DetailRow label="Lowest listing" value={formatPrice(known.price.low)} late />
                                                 ) : null}
                                             </dl>
-                                            {/* Where to check it: the page the figure came from, and what the card sold for,
-                                                raw and as a PSA 10, which no market here prices. The kit's secondary button,
-                                                as a link, full width and one under the other (Bart, 2026-09-12). A list, so a screen reader says how many there
-                                                are; each says it opens a new tab. */}
-                                            <ul className="flex flex-col gap-2">
-                                                {[
-                                                    tcgplayerUrl(mine.tcgplayer_id) ? { label: "TCGplayer", href: tcgplayerUrl(mine.tcgplayer_id)! } : null,
-                                                    card ? { label: "eBay sold", href: ebaySoldUrl(card) } : null,
-                                                    card ? { label: "eBay sold, PSA 10", href: ebaySoldUrl(card, "psa10") } : null,
-                                                ]
-                                                    .filter((l): l is { label: string; href: string } => l !== null)
-                                                    .map((l) => (
-                                                        <li key={l.label}>
-                                                            <Button
-                                                                href={l.href}
-                                                                target="_blank"
-                                                                rel="noreferrer noopener"
-                                                                color="secondary"
-                                                                size="sm"
-                                                                className="w-full"
-                                                            >
-                                                                {l.label}
-                                                                <span className="sr-only"> (opens in a new tab)</span>
-                                                            </Button>
-                                                        </li>
-                                                    ))}
-                                            </ul>
+                                            {/* Where to check it: the TCGplayer page the figure came from. The kit's secondary
+                                                button, as a link, full width (Bart, 2026-09-12). eBay's sold listings sat
+                                                beside it and were taken out for now. It says it opens a new tab. */}
+                                            {tcgplayerUrl(mine.tcgplayer_id) ? (
+                                                <Button
+                                                    href={tcgplayerUrl(mine.tcgplayer_id)!}
+                                                    target="_blank"
+                                                    rel="noreferrer noopener"
+                                                    color="secondary"
+                                                    size="sm"
+                                                    className="w-full"
+                                                >
+                                                    TCGplayer
+                                                    <span className="sr-only"> (opens in a new tab)</span>
+                                                </Button>
+                                            ) : null}
                                         </section>
                                         <section aria-labelledby="price-yours" className="flex flex-col gap-3">
                                             <h3 id="price-yours" className="text-sm font-semibold text-primary">
