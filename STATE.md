@@ -22,6 +22,17 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-12, evening.** The toast has three faces and one line (#435): a tick, a bin or an
+alert, the undo beside the sentence, top centre, the phone's width between the page's gutters.
+Then the first of the open items from the new-account map: a card added from the palette says so
+(`is in your collection now` / `is on your wishlist now`, the sheet's own sentence), and the page
+behind is re-read when the palette closes rather than on every add, so Home swaps its welcome for
+the stats on the screen you come back to, not under a palette still open. Seen in the pane: the
+toast sits above the palette's overlay. **The add itself was not pressed** (it writes to the
+live collection). Still open from that map: "Add to wishlist" on the wishlist page opens the
+palette without the wishlist preset; one wishlist card flips Home from the welcome to a €0 hero
+with four zeros; the new-account flow has not been walked as the test account.
+
 **2026-09-12, layout pass.** Bart saw an empty state standing at the top of its page. The
 component centres itself in the room its column leaves it and claims that room with `flex-1`,
 which needs the page's column to grow; Home, Browse and a set's page were a column that did not
