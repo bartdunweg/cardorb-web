@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/base/buttons/button";
 import { NativeSelect } from "@/components/base/select/select-native";
 import type { Facets } from "@/lib/cards";
+import { FULL_ART } from "@/lib/full-art";
 import { type ListQuery, listHref } from "@/lib/list-query";
 
 // Four menus beside the search: set, rarity, generation, type, each with "All" on top. A choice
@@ -14,9 +15,9 @@ import { type ListQuery, listHref } from "@/lib/list-query";
 export function CardsFilters({ query, facets }: { query: ListQuery; facets: Facets }) {
     const router = useRouter();
     const pathname = usePathname();
-    const go = (patch: Partial<Pick<ListQuery, "set" | "rarity" | "gen" | "type">>) =>
+    const go = (patch: Partial<Pick<ListQuery, "set" | "rarity" | "fullArt" | "gen" | "type">>) =>
         router.replace(listHref(pathname, query, { ...patch, page: 1 }), { scroll: false });
-    const active = Boolean(query.set || query.rarity || query.gen || query.type);
+    const active = Boolean(query.set || query.rarity || query.fullArt || query.gen || query.type);
 
     return (
         <div className="contents">
@@ -33,9 +34,19 @@ export function CardsFilters({ query, facets }: { query: ListQuery; facets: Face
                 aria-label="Rarity"
                 size="sm"
                 className="w-auto"
-                value={query.rarity ?? ""}
-                onChange={(event) => go({ rarity: event.target.value || undefined })}
-                options={[{ label: "All rarities", value: "" }, ...facets.rarities.map((r) => ({ label: r, value: r }))]}
+                /* Full art sits above the rarities and takes the place of one, because it is a
+                   question of the same kind and because it cuts across them: one full art is an
+                   Ultra Rare and the next an illustration rare (`@/lib/full-art`). The API works
+                   it out per set and answers it; here it is one more thing the menu can say. */
+                value={query.fullArt ? FULL_ART : (query.rarity ?? "")}
+                onChange={(event) =>
+                    go(event.target.value === FULL_ART ? { fullArt: true, rarity: undefined } : { fullArt: false, rarity: event.target.value || undefined })
+                }
+                options={[
+                    { label: "All rarities", value: "" },
+                    { label: "Full art", value: FULL_ART },
+                    ...facets.rarities.map((r) => ({ label: r, value: r })),
+                ]}
             />
             {facets.gens.length > 1 || query.gen ? (
                 <NativeSelect
@@ -58,7 +69,7 @@ export function CardsFilters({ query, facets }: { query: ListQuery; facets: Face
                 />
             ) : null}
             {active ? (
-                <Button color="link-gray" size="sm" onClick={() => go({ set: undefined, rarity: undefined, gen: undefined, type: undefined })}>
+                <Button color="link-gray" size="sm" onClick={() => go({ set: undefined, rarity: undefined, fullArt: false, gen: undefined, type: undefined })}>
                     Clear filters
                 </Button>
             ) : null}

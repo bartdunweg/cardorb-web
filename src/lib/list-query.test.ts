@@ -9,6 +9,7 @@ describe("readListQuery", () => {
             sort: "added",
             order: "desc",
             q: "pika",
+            fullArt: false,
             unpriced: false,
         });
         expect(readListQuery({ page: "x", sort: "colour" })).toEqual({
@@ -17,9 +18,23 @@ describe("readListQuery", () => {
             sort: undefined,
             order: undefined,
             q: undefined,
+            fullArt: false,
             unpriced: false,
         });
         expect(readListQuery({})).toMatchObject({ page: 1, sortKey: "set" });
+    });
+});
+
+describe("full art in the URL", () => {
+    /* Not a rarity: it cuts across them, so it is its own parameter and choosing one clears the
+       other. The menu shows the two in one list all the same, which is where they belong. */
+    it("reads ?fullArt=1 and writes it back, and the two never stand together", () => {
+        expect(readListQuery({ fullArt: "1" }).fullArt).toBe(true);
+        expect(readListQuery({ fullArt: "true" }).fullArt).toBe(false);
+        expect(readListQuery({}).fullArt).toBe(false);
+        const query = readListQuery({ rarity: "Rare" });
+        expect(listHref("/dashboard/cards", query, { fullArt: true, rarity: undefined })).toBe("/dashboard/cards?fullArt=1");
+        expect(listHref("/dashboard/cards", readListQuery({ fullArt: "1" }), { fullArt: false, rarity: "Rare" })).toBe("/dashboard/cards?rarity=Rare");
     });
 });
 

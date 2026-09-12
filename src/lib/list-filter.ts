@@ -23,6 +23,7 @@ const filterShape: { [K in keyof Required<Omit<CardFilter, "facets">>]: z.ZodTyp
     order: z.enum(["asc", "desc"]).optional(),
     set: z.string().max(100).optional(),
     rarity: z.string().max(100).optional(),
+    fullArt: z.boolean().optional(),
     gen: z.string().max(100).optional(),
     type: z.string().max(100).optional(),
     number: z.string().max(20).optional(),

@@ -86,7 +86,10 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
         loadCatalogueIndex().then((found) => setInBrowser(Boolean(found)));
     }, [wanted]);
     const search = async (term: string, params: CatalogueFilters, page: number) => {
-        if ((params.language ?? "en") === "en") {
+        /* Full art goes to the API whatever the browser holds: the document carries a rarity and
+           not the kind of card, and which cards are full art is worked out per set and kept in
+           the catalogue's copy behind the API (`@/lib/full-art` says why the rarity will not do). */
+        if (!params.fullArt && (params.language ?? "en") === "en") {
             const index = await loadCatalogueIndex();
             if (index) return searchIndex(index, term, { set: params.set, type: params.type }, page);
         }

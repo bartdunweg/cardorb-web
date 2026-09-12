@@ -111,7 +111,7 @@ export async function suggestCardTitles(query: string, scope: TitleScope = {}): 
  * is asked. "en" and absent are the same, the English one; the set and the type are English
  * facets, so the screens offer them there alone.
  */
-export type CatalogueFilters = { set?: string; type?: string; language?: BrowseLanguage };
+export type CatalogueFilters = { set?: string; type?: string; language?: BrowseLanguage; fullArt?: boolean };
 
 // Searches the catalogue through the API, which also says whether each hit is already yours. With
 // a filter on, the API's fielded mode is asked instead: the term matches the name only, the set
@@ -127,15 +127,29 @@ export type CatalogueFilters = { set?: string; type?: string; language?: BrowseL
 // and the first twenty were the only ones anyone could reach.
 export async function searchPokemon(query: string, filters: CatalogueFilters = {}, page = 1): Promise<{ items: PokemonCard[]; total?: number }> {
     const parsed = z
-        .object({ q: term, set: choice, type: choice, language: z.custom<BrowseLanguage>(isBrowseLanguage).optional(), page: z.number().int().min(1).max(50) })
+        .object({
+            q: term,
+            set: choice,
+            type: choice,
+            language: z.custom<BrowseLanguage>(isBrowseLanguage).optional(),
+            fullArt: z.boolean().optional(),
+            page: z.number().int().min(1).max(50),
+        })
         .safeParse({ q: query, ...filters, page });
     if (!parsed.success) return { items: [] };
-    const { q, set, type } = parsed.data;
+    const { q, set, type, fullArt } = parsed.data;
     // The English catalogue is the API's default; naming it would only be a longer way to ask.
     const language = parsed.data.language && parsed.data.language !== "en" ? parsed.data.language : null;
     const fields = set || type ? { ...(q ? { name: q } : {}), ...(set ? { set } : {}), ...(type ? { type } : {}) } : q.length >= 2 ? { query: q } : null;
-    if (!fields) return { items: [] };
-    const params = { ...fields, ...(language ? { language } : {}), ...(parsed.data.page > 1 ? { page: parsed.data.page } : {}) };
+    /* Full art on its own is a question the API answers: every full art, newest set first. So it
+       stands where a term would otherwise be too short to ask anything. */
+    if (!fields && !fullArt) return { items: [] };
+    const params = {
+        ...(fields ?? {}),
+        ...(fullArt ? { fullArt: 1 } : {}),
+        ...(language ? { language } : {}),
+        ...(parsed.data.page > 1 ? { page: parsed.data.page } : {}),
+    };
 
     const { cards, total } = await api("/catalog/search", { params, schema: searchAnswer });
     return { items: cards.map((c) => pokemonCardFromBrowse(c, language)), total };

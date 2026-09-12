@@ -13,6 +13,7 @@ import { Button } from "@/components/base/buttons/button";
 import { clearRecentCards, rememberCard, useRecentCards } from "@/hooks/use-recent-cards";
 import { CARD_TYPES } from "@/lib/card-types";
 import { formatDate, formatPrice } from "@/lib/format";
+import { FULL_ART } from "@/lib/full-art";
 import { searchHitDescription } from "@/lib/search-hit";
 import { cx } from "@/utils/cx";
 
@@ -219,7 +220,7 @@ export function CommandSearchMenu({
     /** View details pressed in the preview: the card's full sheet over the palette. */
     onView: (card: PokemonCard) => void;
 }) {
-    const filtering = Boolean(filters.set || filters.type);
+    const filtering = Boolean(filters.set || filters.type || filters.fullArt);
     // Which catalogue is asked; the set and the type are the English one's facets, so its chips go with it.
     const language = filters.language ?? "en";
     const searching = inputValue.trim().length >= 2 || filtering;
@@ -353,6 +354,20 @@ export function CommandSearchMenu({
                         value={filters.type}
                         options={CARD_TYPES.map((t) => ({ value: t, label: t }))}
                         onChange={(type) => onFiltersChange({ ...filters, type })}
+                    />
+                ) : null}
+                {/* Full art is a chip of its own rather than an entry under a rarity, because it
+                    cuts across the rarities: one full art is an Ultra Rare and the next is an
+                    illustration rare (`@/lib/full-art`). On the English shelf alone, which is the
+                    only one the catalogue's copy holds the answer for. On its own it is still a
+                    question: every full art there is, newest set first. */}
+                {language === "en" ? (
+                    <FilterChip
+                        label="Art"
+                        any="Any art"
+                        value={filters.fullArt ? FULL_ART : undefined}
+                        options={[{ value: FULL_ART, label: "Full art" }]}
+                        onChange={(next) => onFiltersChange({ ...filters, fullArt: next === FULL_ART ? true : undefined })}
                     />
                 ) : null}
             </FilterChipRow>

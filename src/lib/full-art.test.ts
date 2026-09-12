@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { type FullArtCard, fullArtIds } from "@/lib/full-art";
 
-const card = (number: string, name: string, rarity: string | null, category?: string): FullArtCard => ({ number, name, rarity, category });
+const card = (number: string, name: string, rarity: string | null, category?: string, trainerType?: string): FullArtCard => ({
+    number,
+    name,
+    rarity,
+    category,
+    trainerType,
+});
 
 describe("fullArtIds", () => {
     it("takes the rarities that are only ever full art", () => {
@@ -34,6 +40,19 @@ describe("fullArtIds", () => {
         expect([...fullArtIds(cards)]).toEqual([]);
     });
 
+    // Sword & Shield prints Marnie twice at the back of the set, and Quick Ball once. All three
+    // are Secret Rare; only the trainer's kind says which of them is the full art.
+    it("takes a Supporter reprint and leaves the gold Item and Tool beside it", () => {
+        const cards = [
+            card("169", "Marnie", "Uncommon", "Trainer", "Supporter"),
+            card("102", "Quick Ball", "Uncommon", "Trainer", "Item"),
+            card("208", "Marnie", "Secret Rare", "Trainer", "Supporter"),
+            card("216", "Quick Ball", "Secret Rare", "Trainer", "Item"),
+            card("213", "Air Balloon", "Secret Rare", "Trainer", "Tool"),
+        ];
+        expect([...fullArtIds(cards)]).toEqual(["208"]);
+    });
+
     it("leaves a gold item out where the catalogue names the category", () => {
         const cards = [
             card("102", "Quick Ball", "Uncommon", "Trainer"),
@@ -41,7 +60,7 @@ describe("fullArtIds", () => {
             card("169", "Marnie", "Uncommon", "Trainer"),
             card("200", "Marnie", "Ultra Rare", "Trainer"),
         ];
-        // Both are trainers; the category alone cannot split them yet, so the gold ball comes along.
+        // The category alone cannot split them: a shelf that named no trainer kind keeps the gold ball.
         expect([...fullArtIds(cards)]).toEqual(["216", "200"]);
     });
 
