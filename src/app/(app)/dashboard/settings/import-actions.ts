@@ -37,6 +37,14 @@ export type ColumnMap = z.infer<typeof columnMap>;
 const request = z.object({
     csv: z.string().trim().min(1, "That file is empty.").max(MAX_CSV_BYTES, "That file is too large. The limit is 2 MB."),
     map: columnMap.optional(),
+    /**
+     * Lines of the file not to write, as the preview numbered them.
+     *
+     * Line numbers rather than positions in the list: the same file and the
+     * same column map parse to the same lines every time, so a tick taken off
+     * a row still means that row by the time the write goes out.
+     */
+    exclude: z.array(z.number().int().min(0)).optional(),
 });
 
 /*
@@ -64,6 +72,21 @@ const importRow = z.object({
 });
 export type ImportRow = z.infer<typeof importRow>;
 
+/** One row the import would write, with the line of the file it came from. */
+const importPreviewRow = z.object({
+    line: z.number(),
+    name: z.string(),
+    number: z.string(),
+    setName: z.string(),
+    rarity: nullable(z.string()),
+    owned: z.boolean(),
+    quantity: nullable(z.number()),
+    finish: nullable(z.string()),
+    foilPattern: nullable(z.string()),
+    edition: nullable(z.string()),
+});
+export type ImportPreviewRow = z.infer<typeof importPreviewRow>;
+
 const importPreviewAnswer = z.object({
     /** Everything the file held, rows written and rows passed over alike. */
     seen: z.number(),
@@ -85,6 +108,12 @@ const importPreviewAnswer = z.object({
     header: z.array(z.string()),
     guessed: columnMap.optional(),
     skippedRows: z.array(z.object({ line: z.number(), why: z.string() })),
+    /**
+     * Every row that would be written, not the twenty of `sample`: the list a
+     * person ticks rows off in. Defaulted, so a web deploy that lands before
+     * the API's still previews, with the sample table it always had.
+     */
+    rows: z.array(importPreviewRow).default([]),
 });
 export type ImportPreview = z.infer<typeof importPreviewAnswer>;
 
@@ -94,6 +123,10 @@ const importResultAnswer = z.object({
     skipped: z.number(),
     notOwned: z.number(),
     existing: z.number(),
+    /** Rows struck off by hand. Apart from `skipped`, which is what could not be read. */
+    excluded: z.number().default(0),
+    /** What the collection holds now the writing is done, where it could be counted. */
+    total: nullable(z.number()),
 });
 export type ImportResult = z.infer<typeof importResultAnswer>;
 
@@ -122,6 +155,8 @@ export async function previewImport(input: unknown): Promise<PreviewOutcome> {
     try {
         const preview = await api("/import/csv", {
             method: "POST",
+            // No `exclude` on a preview: the list is what somebody ticks in, so
+            // it has to arrive whole. The ticking is applied on the write.
             body: { csv: parsed.data.csv, map: parsed.data.map },
             schema: importPreviewAnswer,
         });
@@ -152,7 +187,7 @@ export async function commitImport(input: unknown): Promise<{ ok: true; result: 
     try {
         const result = await api("/import/csv", {
             method: "POST",
-            body: { csv: parsed.data.csv, map: parsed.data.map, commit: true },
+            body: { csv: parsed.data.csv, map: parsed.data.map, commit: true, exclude: parsed.data.exclude },
             timeoutMs: 120_000,
             schema: importResultAnswer,
         });

@@ -38,6 +38,19 @@ const dropFile = async () => {
     fireEvent.change(input, { target: { files: [new File(["Name,Set\nPikachu,Base"], "cards.csv", { type: "text/csv" })] } });
 };
 
+const row = (line: number, name: string) => ({
+    line,
+    name,
+    number: String(line),
+    setName: "Base Set",
+    rarity: null,
+    owned: true,
+    quantity: 1,
+    finish: null,
+    foilPattern: null,
+    edition: null,
+});
+
 describe("ImportDialog when the action throws", () => {
     beforeEach(() => {
         previewImport.mockReset();
@@ -115,5 +128,61 @@ describe("ImportDialog when the write is done", () => {
         expect(screen.getByText("Line 4: no card name")).toBeVisible();
         // Nothing of Review is left: no table, and no button that writes again.
         expect(screen.queryByRole("button", { name: /^Add / })).toBeNull();
+    });
+});
+
+describe("ImportDialog when rows are ticked off", () => {
+    beforeEach(() => {
+        previewImport.mockReset();
+        commitImport.mockReset();
+    });
+
+    const threeRows = {
+        ok: true,
+        preview: {
+            seen: 3,
+            skipped: 0,
+            notOwned: 0,
+            existing: 0,
+            sample: [],
+            source: "generic",
+            header: ["Name", "Set"],
+            skippedRows: [],
+            rows: [row(2, "Pikachu"), row(3, "Charizard"), row(4, "Bulbasaur")],
+        },
+    };
+
+    it("starts with every row in, and writes the lines that are still ticked", async () => {
+        previewImport.mockResolvedValue(threeRows);
+        commitImport.mockResolvedValue({ ok: true, result: { seen: 3, added: 2, skipped: 0, notOwned: 0, existing: 0, excluded: 1, total: 1_600 } });
+        await dropFile();
+
+        // A file somebody chose to import starts as a file they mean to import.
+        expect(await screen.findByRole("button", { name: "Add 3 cards" })).toBeVisible();
+
+        fireEvent.click(screen.getByRole("checkbox", { name: "Import Charizard, Base Set" }));
+
+        expect(screen.getByRole("button", { name: "Add 2 cards" })).toBeVisible();
+        fireEvent.click(screen.getByRole("button", { name: "Add 2 cards" }));
+
+        await waitFor(() => expect(commitImport).toHaveBeenCalled());
+        // The line, not the position: line 3 is what the file calls Charizard.
+        expect(commitImport.mock.calls[0]![0]).toMatchObject({ exclude: [3] });
+
+        // And the write says how many were left out, and what the collection holds.
+        expect(await screen.findByText("Left out by you")).toBeVisible();
+        expect(screen.getByText("Your collection holds 1,600 cards now.")).toBeVisible();
+    });
+
+    it("takes every row out at once, and puts them back", async () => {
+        previewImport.mockResolvedValue(threeRows);
+        await dropFile();
+
+        const all = await screen.findByRole("checkbox", { name: "Import every row" });
+        fireEvent.click(all);
+
+        expect(screen.getByRole("button", { name: "Nothing to add" })).toBeDisabled();
+        fireEvent.click(screen.getByRole("checkbox", { name: "Import every row" }));
+        expect(screen.getByRole("button", { name: "Add 3 cards" })).toBeVisible();
     });
 });
