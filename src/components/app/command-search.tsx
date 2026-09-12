@@ -12,7 +12,7 @@ import { notify } from "@/components/app/toast";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import { updateRecentCards, useRecentCards } from "@/hooks/use-recent-cards";
 import { type Card, cardFromPokemonCard } from "@/lib/api-shapes";
-import { loadCatalogueIndex, lookupCards } from "@/lib/catalogue-client";
+import { loadCatalogueIndex, loadSpecies, lookupCards } from "@/lib/catalogue-client";
 import { searchIndex } from "@/lib/catalogue-index";
 import type { BrowseLanguage } from "@/lib/languages";
 import { hitFromRows, takenHit } from "@/lib/search-hit";
@@ -84,14 +84,15 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         if (!wanted) return;
         loadCatalogueIndex().then((found) => setInBrowser(Boolean(found)));
+        void loadSpecies();
     }, [wanted]);
     const search = async (term: string, params: CatalogueFilters, page: number) => {
         /* Full art goes to the API whatever the browser holds: the document carries a rarity and
            not the kind of card, and which cards are full art is worked out per set and kept in
            the catalogue's copy behind the API (`@/lib/full-art` says why the rarity will not do). */
         if (!params.fullArt && (params.language ?? "en") === "en") {
-            const index = await loadCatalogueIndex();
-            if (index) return searchIndex(index, term, { set: params.set, type: params.type }, page);
+            const [index, species] = await Promise.all([loadCatalogueIndex(), loadSpecies()]);
+            if (index) return searchIndex(index, term, { set: params.set, type: params.type }, page, species);
         }
         return searchPokemon(term, params, page);
     };
@@ -125,7 +126,8 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
         lookupCards(ids)
             .then((known) => {
                 const byId = new Map(known.map((c) => [c.id, c]));
-                update((current) => current.map((h) => byId.get(h.id) ?? h));
+                // Laid over the hit rather than in its place: the heading is the document's, not the API's.
+                update((current) => current.map((h) => ({ ...h, ...byId.get(h.id) })));
             })
             .catch(() => {
                 for (const id of ids) lookedUp.current.delete(id);

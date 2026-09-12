@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { type PokemonCard, absoluteImage } from "@/lib/api-shapes";
+import { type CardGroup, type SpeciesTable, cardGroup } from "@/lib/card-group";
 import { bestBand } from "@/lib/name-rank";
 
 /**
@@ -55,6 +56,16 @@ const haystackOf = (index: CatalogueIndex): string[] => {
     return cached;
 };
 
+/** Each card's heading, worked out once per catalogue and species list and kept. */
+const groupings = new WeakMap<CatalogueIndex, { table: SpeciesTable; groups: CardGroup[] }>();
+const groupsOf = (index: CatalogueIndex, table: SpeciesTable): CardGroup[] => {
+    const cached = groupings.get(index);
+    if (cached?.table === table) return cached.groups;
+    const groups = index.cards.map((card) => cardGroup(card[3], table));
+    groupings.set(index, { table, groups });
+    return groups;
+};
+
 /**
  * The hits for a term and the chips, the way the API's search reads them: every word must be
  * in the name, the number or the set name; a word that is an energy type filters on type; a
@@ -65,8 +76,20 @@ const haystackOf = (index: CatalogueIndex): string[] => {
  * with, then the rest: the document is newest set first, which had "char" answering Pecharunt ex
  * above every Charizard. Inside a band the document's order stands, so a name is still answered
  * newest printing first.
+ *
+ * Given the species, a typed term answers by Pokémon (`card-group.ts`): every printing of one
+ * under one heading, the headings in the same bands (a heading takes the best band of its name
+ * and its cards' names, and a heading that is the whole term goes before them all), and inside a
+ * heading the document's order. Each hit says its heading and how many the whole search holds
+ * under it. The chips alone (a set, a type) are a shelf to read in order, and stay ungrouped.
  */
-export function searchIndex(index: CatalogueIndex, term: string, filters: IndexFilters = {}, page = 1): { items: PokemonCard[]; total: number } {
+export function searchIndex(
+    index: CatalogueIndex,
+    term: string,
+    filters: IndexFilters = {},
+    page = 1,
+    species?: SpeciesTable | null,
+): { items: PokemonCard[]; total: number } {
     const words: string[] = [];
     let type = filters.type ? (energyType(filters.type) ?? filters.type) : undefined;
     for (const word of term.trim().split(/\s+/).filter(Boolean).slice(0, MAX_WORDS)) {
@@ -94,9 +117,34 @@ export function searchIndex(index: CatalogueIndex, term: string, filters: IndexF
     }
     // Banded by the name, the document's order kept inside a band. Sorted whole rather than per
     // page, so page two of a search is the next twenty of one order and not a second one.
+    const from = (Math.max(1, page) - 1) * INDEX_PAGE_SIZE;
+    if (words.length && species?.size) {
+        const groups = groupsOf(index, species);
+        const whole = words.join(" ");
+        // Per heading: its best band, where it first appears in the document, and how many it holds.
+        const heads = new Map<string, { band: number; first: number; size: number }>();
+        for (const i of matched) {
+            const group = groups[i]!;
+            const cardBand = bestBand(index.cards[i]![3], words);
+            const head = heads.get(group.key);
+            if (head) {
+                head.band = Math.min(head.band, cardBand);
+                head.size++;
+            } else {
+                const titleBand = group.title.toLowerCase() === whole ? -1 : bestBand(group.title, words);
+                heads.set(group.key, { band: Math.min(titleBand, cardBand), first: i, size: 1 });
+            }
+        }
+        const headOf = (i: number) => heads.get(groups[i]!.key)!;
+        matched.sort((a, b) => headOf(a).band - headOf(b).band || headOf(a).first - headOf(b).first || a - b);
+        const items = matched.slice(from, from + INDEX_PAGE_SIZE).map((i) => ({
+            ...hitOf(index, index.cards[i]!),
+            group: { ...groups[i]!, size: headOf(i).size },
+        }));
+        return { items, total: matched.length };
+    }
     if (words.length) matched.sort((a, b) => bestBand(index.cards[a]![3], words) - bestBand(index.cards[b]![3], words) || a - b);
 
-    const from = (Math.max(1, page) - 1) * INDEX_PAGE_SIZE;
     return { items: matched.slice(from, from + INDEX_PAGE_SIZE).map((i) => hitOf(index, index.cards[i]!)), total: matched.length };
 }
 
