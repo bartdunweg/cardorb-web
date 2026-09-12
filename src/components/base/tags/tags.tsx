@@ -1,7 +1,8 @@
 "use client";
 
 // Changed from the kit: `textValue` passes through to the tag, for one whose children are more than a
-// word (a flag and a name); and `checkboxes` on TagGroup, so a group you pick one of (a state, a language)
+// word (a flag and a name), and names its remove button ("Remove Rarity: Rare", not five of "Remove
+// this tag"); and `checkboxes` on TagGroup, so a group you pick one of (a state, a language)
 // can be selectable without a box in every tag, which reads as "pick several". A re-fetch through
 // the Untitled UI CLI or MCP overwrites this; re-apply it, and the tick colour in tag-checkbox.tsx.
 import { type ImgHTMLAttributes, type PropsWithChildren, type RefAttributes, createContext, useContext, useState } from "react";
@@ -185,7 +186,12 @@ export const Tag = ({
                     </div>
 
                     {(onClose || allowsRemoving) && (
-                        <TagCloseX size={context.size} excludeFromTabOrder={allowsRemoving} onPress={() => id && onClose?.(id.toString())} />
+                        <TagCloseX
+                            size={context.size}
+                            excludeFromTabOrder={allowsRemoving}
+                            aria-label={textValue ? `Remove ${textValue}` : undefined}
+                            onPress={() => id && onClose?.(id.toString())}
+                        />
                     )}
                 </>
             )}
