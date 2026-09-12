@@ -22,6 +22,15 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-12, one order for every search.** The rule the collection's field learned in #459 was
+missing from the palette, the search everyone actually uses: the catalogue document is newest set
+first, so "char" answered Pecharunt ex above every Charizard. `band()` and `rank()` now live in
+`src/lib/name-rank.ts`, one definition for the palette, the binder's field, Browse and the
+add-from-collection dialog: what the name begins with, then what a word inside it begins with,
+then the rest, the document's order kept inside a band (#471). Left as it was: the API's answer
+for the other language shelves, where the palette pages a search it did not sort, and re-ordering
+one page would read as an order the whole search does not have.
+
 **2026-09-12, the warm lists.** Two more things measured and thrown away: a first batch of 24
 instead of 48 (266 to 353 ms against 264 to 399 ms) and skipping the API's facets pass (243 to
 442 ms). The row count and the facets are not what the read costs, so nothing in this app makes it
