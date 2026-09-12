@@ -72,9 +72,15 @@ sent state replaces the form, and an account that holds and wants nothing gets a
 with Add your first card and Choose your name: the generated `bart-cardorb-test-boaw` kind of
 name is the public address, and the person is told so where they are. Test account
 `bart+cardorb-test@strakzat.com` is still in the database. Later that day the set page got its
-band: the logo centred on its own brightest colour, read once from the PNG on the server
-(`src/lib/logo-color.ts`, cached a month by address) and drawn by `SetHero`; grey where no colour
-can be read, the name's first word where there is no logo.
+head: the logo centred on a soft wash of the logo's own two or three colours, read once from the
+PNG on the server (`src/lib/logo-color.ts`, cached a month by address) and drawn by `SetHero`.
+The wash hangs on the app frame, not on the page's column, so it runs the window's full width
+behind the floating sidebar; it is grey where no colour can be read, and a set without a logo
+shows its name's first word. The shelf's tiles wear the same wash. The set's cards got the row
+every list has, working on the cards the page already holds: the search field, Filters and Sort,
+all three 36 px. Contrast under the wash was measured in both themes (title 17:1 light, 18:1
+dark). Binders have no cover to read a colour from, and a card scan's own palette is its yellow
+border, so they keep their plain head for now; where a binder's colour should come from is open.
 
 **2026-09-10 and 11.** The API had never been audited. It was, twice (once for security, once
 for the failures that leave no trace), and everything both passes found is closed.
