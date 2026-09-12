@@ -196,7 +196,7 @@ export function CardsList({
                                         size={size}
                                         // The wishlist's tiles carry "Got it": the list says which list it is, rather than
                                         // the grid reading it off a card's fields, so the collection never grows the button.
-                                        action={filter.wishlist ? (card, compact) => <GotItButton card={card} compact={compact} /> : undefined}
+                                        action={filter.wishlist ? (card) => <GotItButton card={card} /> : undefined}
                                     />
                                 </section>
                             ))}
