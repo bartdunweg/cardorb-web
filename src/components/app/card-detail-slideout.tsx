@@ -1162,6 +1162,16 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                 this is an estimate of what a Near Mint one does. The old label named the
                                                 input rather than the answer. */}
                                             <DetailRow label="Near Mint price" value={mine.price != null ? formatPrice(mine.price) : null} />
+                                            {/* A graded copy is not this card. The figure above is what an ungraded Near
+                                                Mint one trades at, and a slab is a different market that neither feed
+                                                behind this app publishes (Cardmarket and TCGplayer both price the
+                                                printing, not the grade). Said out loud rather than left to be assumed:
+                                                the number is honest about what it is, and silent about what it is not. */}
+                                            {(copies ?? [mine]).some((c) => c.grade) ? (
+                                                <p className="pt-3 text-xs text-tertiary">
+                                                    Ungraded. A graded copy trades on its own market, which is not priced here.
+                                                </p>
+                                            ) : null}
                                             {/* What the catalogue says about the printing, once it answers: where today's
                                                 figure sits against the week and the month, and the band a copy is listed in. */}
                                             {known?.market?.trend != null ? <DetailRow label="Trend" value={formatPrice(known.market.trend)} late /> : null}
