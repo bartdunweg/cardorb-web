@@ -120,7 +120,7 @@ export async function getPublicFolders(username: string): Promise<PublicFolder[]
 
 // How many cards a public list holds, and nothing else: one item asked for, the count read off it.
 // For the line under the name, which counts the collection and the wishlist whatever list is open.
-// Copies — the list as a person counts it — where the API says them; the rows from one before it did.
+// Copies (the list as a person counts it) where the API says them; the rows from one before it did.
 /**
  * How many cards a public Pokédex holds, for its chip: the copies in its slots, counted as the
  * owner's own page and sidebar count them (collections.ts, getPokedexCount), so a visitor and the
