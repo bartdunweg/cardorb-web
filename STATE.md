@@ -16,11 +16,33 @@ Cards, binders and profiles are read and written through the Card Orb API
 Supabase is auth and the session only. `src/lib/api.ts` is the client, `src/lib/api-shapes.ts`
 turns the API's answers into what the screens render, zod at every boundary.
 
-Live: landing, Home, Collection, Browse, Binders, Favorites, wishlist, Pokédex, set pages,
+Live: landing, Home, Collection, Browse, Binders, Favorites, wishlist, set pages,
 command-palette search, Settings, public profile, and `/dashboard/design`, the design system,
 reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
+
+**2026-09-12, the Pokédex.** Two things Bart asked for in one afternoon, and they met in the
+middle. First: a slot can hold several cards of one Pokémon and nothing said which one belongs
+there. Where you stop swiping is now the slot's card, written to `cards.dex_face`
+(cardorb-api#319) and read back face first by `groupByDex`, so the slot opens on it here, on the
+public profile and in the iOS app, with no state of its own. The tile says two things now: above
+the picture the Pokémon (name, then number and how many cards), under it the card in view (set and
+price), changing as you swipe (#478).
+
+Then: only Favorites is always there. The Pokédex became a binder you make yourself, which it
+already could be (`collections.pokedex`), so the work was moving the data onto that and deleting
+the fixture. Every profile's setting became a real binder with the rule that fills it
+(cardorb-api#330, #331), the route, the sidebar row, the grid card, the settings dialog and the
+separate count went, `/dashboard/pokedex` redirects, and a public profile draws a Pokédex binder
+as slots (#489). The two profile columns, `GET /v1/pokedex` and the `list=pokedex` gate went the
+same day (cardorb-api#335, #493): Bart's rule is that nothing legacy may sit on an account for a
+thing the app no longer has, so a migration and its drops ship together.
+
+Two things found by opening the page rather than by reading the code: the binders were made by
+hand and said "0 cards", and the Pokédex counted only the rarities that count, so the sidebar said
+1,789 cards and the page 748. The cards and the worth are the binder's now; the rarities answer
+one question, which is when a Pokémon counts as caught.
 
 **2026-09-12, what the other run is worth.** The copy editor asks which print run a copy is from
 and now says what the answer is worth: "1st Edition €103.11" under the picker, against the €38.10
