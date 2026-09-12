@@ -49,7 +49,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                         <AppSidebar account={account} collections={collections} favoritesCount={favoritesCount} pokedexCount={pokedexCount} />
                         {/* tabIndex -1 so focus can be sent here after a navigation without putting
                             the element itself in the tab order. */}
-                        <main id={MAIN_ID} tabIndex={-1} className="flex min-w-0 flex-1 flex-col outline-none">
+                        {/* A size container, so a page's band (PageHeader's `hero`) can be as wide as main
+                            is and not only as wide as the centred column inside it. */}
+                        <main id={MAIN_ID} tabIndex={-1} className="@container flex min-w-0 flex-1 flex-col outline-none">
                             <div className="mx-auto flex w-full max-w-container flex-1 flex-col px-4 pt-4 pb-28 sm:px-6 sm:py-8 lg:pb-8">{children}</div>
                         </main>
                     </div>
