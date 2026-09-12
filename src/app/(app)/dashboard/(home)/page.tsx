@@ -29,9 +29,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     const { value } = await searchParams;
     const selected = value === "favorites" || value === "wishlist" || (value && UUID.test(value)) ? value : "all";
     const stats = await getCardStats();
-    // Nothing held and nothing wanted: the first visit after signing up. A value of €0 with an
-    // empty chart and four zeros said the account was empty and not what to do about it.
-    const fresh = stats.owned === 0 && stats.wishlist === 0;
+    // Nothing held: the first visits after signing up. A value of €0 with an empty chart and four
+    // zeros said the account was empty and not what to do about it, and one wished-for card is
+    // still that: the value, the chart and the tiles all count owned cards only.
+    const fresh = stats.owned === 0;
 
     return (
         <div className="flex flex-1 flex-col gap-6">
