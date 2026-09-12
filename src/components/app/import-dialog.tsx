@@ -7,7 +7,9 @@ import { type ColumnMap, type ImportPreview, type ImportResult, commitImport, pr
 import { FormError } from "@/components/app/form-error";
 import { LinkButton } from "@/components/app/link-button";
 import { FileUploadDropZone } from "@/components/application/file-upload/file-upload-base";
+import { LoadingIndicator } from "@/components/application/loading-indicator/loading-indicator";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
+import { Table, TableCard } from "@/components/application/table/table";
 import { Button } from "@/components/base/buttons/button";
 import { CloseButton } from "@/components/base/buttons/close-button";
 import { NativeSelect } from "@/components/base/select/select-native";
@@ -258,11 +260,16 @@ function ImportForm({ close }: { close: () => void }) {
                     onSizeLimitExceed={() => setError("That file is too large. The limit is 2 MB.")}
                 />
 
-                {fileName ? (
-                    <p className="text-sm text-tertiary">
-                        {fileName}
-                        {busy === "reading" ? " — reading…" : null}
-                    </p>
+                {/*
+                 * The kit's indicator while the file is being read, not the words "reading…"
+                 * after the file name: a 4,500-row export takes a couple of seconds, and a
+                 * line of grey text does not look like anything is happening. The indicator
+                 * is a status region, so it is also heard.
+                 */}
+                {fileName && busy === "reading" ? (
+                    <LoadingIndicator size="sm" label={`Reading ${fileName}…`} className="py-2" />
+                ) : fileName ? (
+                    <p className="text-sm text-tertiary">{fileName}</p>
                 ) : null}
 
                 {/*
@@ -297,39 +304,25 @@ function ImportForm({ close }: { close: () => void }) {
                             </p>
                         </div>
 
+                        {/* The kit's table, as the collection's list view uses it (R-UI-001). Rows do nothing: this is a preview. */}
                         {preview.sample.length > 0 ? (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-sm">
-                                    <caption className="sr-only">The first {preview.sample.length} cards this import would add</caption>
-                                    <thead>
-                                        <tr className="border-b border-secondary text-left text-tertiary">
-                                            <th scope="col" className="py-2 pr-4 font-medium">
-                                                Card
-                                            </th>
-                                            <th scope="col" className="py-2 pr-4 font-medium">
-                                                Set
-                                            </th>
-                                            <th scope="col" className="py-2 pr-4 font-medium">
-                                                Number
-                                            </th>
-                                            <th scope="col" className="py-2 pr-4 font-medium">
-                                                Printing
-                                            </th>
-                                            <th scope="col" className="py-2 pr-4 font-medium">
-                                                Copies
-                                            </th>
-                                            <th scope="col" className="py-2 font-medium">
-                                                Where
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {preview.sample.map((row, i) => (
-                                            <tr key={`${row.setName}-${row.number}-${row.name}-${i}`} className="border-b border-secondary last:border-0">
-                                                <td className="py-2 pr-4 text-primary">{row.name}</td>
-                                                <td className="py-2 pr-4 text-secondary">{row.setName}</td>
-                                                <td className="py-2 pr-4 text-secondary">{row.number || "—"}</td>
-                                                <td className="py-2 pr-4 text-secondary">
+                            <TableCard.Root size="sm">
+                                <Table aria-label={`The first ${preview.sample.length} cards this import would add`}>
+                                    <Table.Header>
+                                        <Table.Head id="card" label="Card" isRowHeader />
+                                        <Table.Head id="set" label="Set" />
+                                        <Table.Head id="number" label="Number" />
+                                        <Table.Head id="printing" label="Printing" />
+                                        <Table.Head id="copies" label="Copies" />
+                                        <Table.Head id="where" label="Where" />
+                                    </Table.Header>
+                                    <Table.Body items={preview.sample.map((row, i) => ({ ...row, id: `${row.setName}-${row.number}-${row.name}-${i}` }))}>
+                                        {(row) => (
+                                            <Table.Row id={row.id}>
+                                                <Table.Cell className="font-medium text-primary">{row.name}</Table.Cell>
+                                                <Table.Cell>{row.setName}</Table.Cell>
+                                                <Table.Cell>{row.number || "—"}</Table.Cell>
+                                                <Table.Cell>
                                                     {row.finish ?? "—"}
                                                     {/*
                                                      * The pattern under the finish, because they are
@@ -339,14 +332,14 @@ function ImportForm({ close }: { close: () => void }) {
                                                     {row.foilPattern ? (
                                                         <span className="block text-xs text-tertiary">{row.foilPattern.replace("-", " ")}</span>
                                                     ) : null}
-                                                </td>
-                                                <td className="py-2 pr-4 text-secondary">{row.quantity ?? 1}</td>
-                                                <td className="py-2 text-secondary">{row.owned ? "Collection" : "Wishlist"}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                                                </Table.Cell>
+                                                <Table.Cell className="tabular-nums">{row.quantity ?? 1}</Table.Cell>
+                                                <Table.Cell>{row.owned ? "Collection" : "Wishlist"}</Table.Cell>
+                                            </Table.Row>
+                                        )}
+                                    </Table.Body>
+                                </Table>
+                            </TableCard.Root>
                         ) : null}
 
                         {preview.source === "generic" && header.length > 0 ? (

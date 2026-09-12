@@ -49,7 +49,7 @@ describe("ImportDialog when the action throws", () => {
         await dropFile();
 
         await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("Something went wrong"));
-        expect(screen.queryByText(/reading…/)).toBeNull();
+        expect(screen.queryByText(/Reading /)).toBeNull();
         expect(screen.getByRole("dialog").querySelector("input[type=file]")).not.toBeDisabled();
     });
 
