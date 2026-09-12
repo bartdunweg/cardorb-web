@@ -68,3 +68,52 @@ describe("ImportDialog when the action throws", () => {
         expect(screen.getByRole("button", { name: "Add 1 card" })).not.toBeDisabled();
     });
 });
+
+describe("ImportDialog when the write is done", () => {
+    beforeEach(() => {
+        previewImport.mockReset();
+        commitImport.mockReset();
+    });
+
+    it("counts what the write did, once it is done", async () => {
+        previewImport.mockResolvedValue({
+            ok: true,
+            preview: {
+                seen: 5,
+                skipped: 3,
+                notOwned: 2,
+                existing: 1,
+                sample: [],
+                source: "generic",
+                header: ["Name", "Set"],
+                skippedRows: [{ line: 4, why: "no card name" }],
+            },
+        });
+        commitImport.mockResolvedValue({ ok: true, result: { seen: 5, added: 2, skipped: 3, notOwned: 2, existing: 1 } });
+        await dropFile();
+
+        fireEvent.click(await screen.findByRole("button", { name: "Add 2 cards" }));
+
+        // The figures on Done, each under its own word: the sentence above them
+        // says how many were added, the columns say where the rest went.
+        expect(await screen.findByText("2 cards added to your collection.")).toBeVisible();
+        for (const [label, value] of [
+            ["Rows read", "5"],
+            ["Added", "2"],
+            ["Already had", "1"],
+            ["Not owned", "2"],
+            ["Could not be read", "1"],
+        ]) {
+            expect(screen.getByText(label).parentElement).toHaveTextContent(value);
+        }
+        // And the line numbers survive the write, so a file that went half wrong
+        // can still be opened up and looked at. Folded shut, because most files
+        // have nothing in here worth a paragraph.
+        const rows = screen.getByText("Rows that could not be read (1)");
+        expect(rows.closest("details")).not.toHaveAttribute("open");
+        fireEvent.click(rows);
+        expect(screen.getByText("Line 4: no card name")).toBeVisible();
+        // Nothing of Review is left: no table, and no button that writes again.
+        expect(screen.queryByRole("button", { name: /^Add / })).toBeNull();
+    });
+});

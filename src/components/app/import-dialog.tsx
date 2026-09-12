@@ -6,8 +6,7 @@ import { Heading as AriaHeading } from "react-aria-components";
 import { type ColumnMap, type ImportPreview, type ImportResult, commitImport, previewImport } from "@/app/(app)/dashboard/settings/import-actions";
 import { FormError } from "@/components/app/form-error";
 import { LinkButton } from "@/components/app/link-button";
-import { FileUploadDropZone } from "@/components/application/file-upload/file-upload-base";
-import { LoadingIndicator } from "@/components/application/loading-indicator/loading-indicator";
+import { FileUploadDropZone, FileUploadList, FileUploadListItem, type FileUploadStatus } from "@/components/application/file-upload/file-upload-base";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { Progress, type Step } from "@/components/application/progress-steps/progress-steps";
 import { Table, TableCard } from "@/components/application/table/table";
@@ -15,6 +14,7 @@ import { Button } from "@/components/base/buttons/button";
 import { CloseButton } from "@/components/base/buttons/close-button";
 import { NativeSelect } from "@/components/base/select/select-native";
 import { MAX_CSV_BYTES, readCsv } from "@/lib/csv-file";
+import { cx } from "@/utils/cx";
 
 /**
  * Choosing a file, seeing what it would do, and then doing it.
@@ -24,13 +24,16 @@ import { MAX_CSV_BYTES, readCsv } from "@/lib/csv-file";
  * would mean. The button is not called Import, it says how many cards it is
  * about to add, and it does not exist until there is a preview.
  *
- * Three steps, one file. Upload is the drop zone and nothing else; once a file
- * has been read the drop zone is gone and Review shows the file as one line
- * with a way to swap it, the preview underneath and the button that writes;
- * Done is the result. Every CSV import on Mobbin (Attio, Remote, Resend,
- * Podia, Pipedrive) is built this way, and the reason is the same one as
- * ours: a drop zone that stays on screen next to a preview offers a second
- * file while you are still deciding about the first.
+ * Three steps, one file. Upload is the drop zone; the moment a file is chosen
+ * it appears under the zone as a row that names it and spins while it is read,
+ * and that row is then the one thing carried through all three steps: on
+ * Review the drop zone is gone and the row keeps the file above the preview
+ * and the button that writes, on Done it stands above the figures as what was
+ * imported. Every CSV import on Mobbin (Attio, Remote, Resend, Podia,
+ * Pipedrive) is built this way, and the reason is the same one as ours: a drop
+ * zone that stays on screen next to a preview offers a second file while you
+ * are still deciding about the first, and a spinner with no file name beside
+ * it does not say what it is waiting for.
  *
  * A dialog rather than a page. An import is one errand you finish and leave,
  * not a place in the app: it has no address worth sharing, nothing links to it,
@@ -101,6 +104,25 @@ function summary(p: ImportPreview): string {
     return parts.join(" ");
 }
 
+/**
+ * The reckoning on Done: every row the file held, in the column it ended up in.
+ *
+ * "Rows read" and "Added" are always there, because they are the two numbers
+ * somebody came for. The other three are only drawn when they are not zero: a
+ * column of zeroes reads as a list of things that went wrong, and none of them
+ * did.
+ */
+const figures = (r: ImportResult): { label: string; value: number; alarming?: boolean }[] => {
+    const unreadable = r.skipped - r.notOwned;
+    return [
+        { label: "Rows read", value: r.seen },
+        { label: "Added", value: r.added },
+        ...(r.existing > 0 ? [{ label: "Already had", value: r.existing }] : []),
+        ...(r.notOwned > 0 ? [{ label: "Not owned", value: r.notOwned }] : []),
+        ...(unreadable > 0 ? [{ label: "Could not be read", value: unreadable, alarming: true }] : []),
+    ];
+};
+
 type StepName = "upload" | "review" | "done";
 
 const STEPS: { name: StepName; title: string }[] = [
@@ -131,7 +153,7 @@ export function ImportDialog({ children }: { children: ReactNode }) {
 function ImportForm({ close }: { close: () => void }) {
     const router = useRouter();
 
-    const [fileName, setFileName] = useState<string | null>(null);
+    const [file, setFile] = useState<{ name: string; size: number } | null>(null);
     const [csv, setCsv] = useState<string | null>(null);
     const [preview, setPreview] = useState<ImportPreview | null>(null);
     const [map, setMap] = useState<ColumnMap>({});
@@ -160,7 +182,7 @@ function ImportForm({ close }: { close: () => void }) {
     /** Back to the drop zone, with nothing of the last file left behind. */
     const startOver = () => {
         reset();
-        setFileName(null);
+        setFile(null);
         setCsv(null);
     };
 
@@ -208,14 +230,14 @@ function ImportForm({ close }: { close: () => void }) {
     };
 
     const onPick = (files: FileList) => {
-        const file = files[0];
-        if (!file) return;
+        const picked = files[0];
+        if (!picked) return;
 
         void guard(async () => {
             reset();
-            setFileName(file.name);
+            setFile({ name: picked.name, size: picked.size });
             setBusy("reading");
-            const read = readCsv(await file.arrayBuffer());
+            const read = readCsv(await picked.arrayBuffer());
             if (!read.ok) {
                 setBusy(null);
                 setCsv(null);
@@ -248,11 +270,35 @@ function ImportForm({ close }: { close: () => void }) {
                 return;
             }
             setResult(outcome.result);
-            setPreview(null);
             // The collection this just wrote to is read through a cache the write
             // dropped; without this the cards page would show yesterday's count.
             router.refresh();
         }, "Something went wrong, and the import may or may not have finished. Close this, reload, and check your cards before trying again.");
+
+    /*
+     * What the row under the drop zone says.
+     *
+     * Reading covers both awaits, the file itself and the preview the API
+     * answers with, because to the person waiting those are one wait. The two
+     * unhappy endings are kept apart on purpose: a file that came back with its
+     * header and a question about its columns is not a broken file, and putting
+     * a red ring round it says the opposite of what the form underneath is
+     * asking. Red is only for a file nothing could be made of. And a file with
+     * unreadable rows in it is neither: those rows are counted, not fatal.
+     */
+    const fileStatus: FileUploadStatus = busy !== null ? "busy" : !error ? "ready" : header.length > 0 ? "attention" : "failed";
+    const fileStatusLabel =
+        busy === "reading"
+            ? "Reading…"
+            : busy === "importing"
+              ? "Importing…"
+              : fileStatus === "failed"
+                ? "Could not be read"
+                : fileStatus === "attention"
+                  ? "Needs its columns"
+                  : result
+                    ? "Imported"
+                    : "Ready to import";
 
     const writing = preview ? preview.seen - preview.skipped : 0;
     // The sample the API sends holds the first twenty skipped rows, mixed; only
@@ -292,37 +338,37 @@ function ImportForm({ close }: { close: () => void }) {
 
             <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-5 pb-4 sm:px-6">
                 {step === "upload" ? (
-                    <>
-                        <FileUploadDropZone
-                            accept=".csv,text/csv,text/plain"
-                            allowsMultiple={false}
-                            maxSize={MAX_CSV_BYTES}
-                            hint="CSV, up to 2 MB. UTF-8 or UTF-16, commas or semicolons, all fine."
-                            isDisabled={busy !== null}
-                            onDropFiles={onPick}
-                            onDropUnacceptedFiles={() => setError("That is not a CSV file.")}
-                            onSizeLimitExceed={() => setError("That file is too large. The limit is 2 MB.")}
-                        />
-                        {/*
-                         * The kit's indicator while the file is being read: a 4,500-row export
-                         * takes a couple of seconds, and a line of grey text does not look like
-                         * anything is happening. The indicator is a status region, so it is heard.
-                         */}
-                        {fileName && busy === "reading" ? <LoadingIndicator size="sm" label={`Reading ${fileName}…`} className="py-2" /> : null}
-                    </>
+                    <FileUploadDropZone
+                        accept=".csv,text/csv,text/plain"
+                        allowsMultiple={false}
+                        maxSize={MAX_CSV_BYTES}
+                        hint="CSV, up to 2 MB. UTF-8 or UTF-16, commas or semicolons, all fine."
+                        isDisabled={busy !== null}
+                        onDropFiles={onPick}
+                        onDropUnacceptedFiles={() => setError("That is not a CSV file.")}
+                        onSizeLimitExceed={() => setError("That file is too large. The limit is 2 MB.")}
+                    />
                 ) : null}
 
-                {step === "review" && fileName ? (
-                    <div className="flex items-center justify-between gap-4 rounded-lg px-4 py-3 ring-1 ring-secondary ring-inset">
-                        <p className="min-w-0 truncate text-sm font-medium text-primary">{fileName}</p>
-                        {busy === "reading" ? (
-                            <LoadingIndicator size="sm" label="Reading…" className="flex-row" />
-                        ) : (
-                            <Button size="sm" color="secondary" onClick={startOver}>
-                                Choose another file
-                            </Button>
-                        )}
-                    </div>
+                {/*
+                 * The file you chose, on every step, in the same row. A 4,500-row
+                 * export takes a couple of seconds to read, and a spinner floating
+                 * under the drop zone did not say what it was busy with: the file's
+                 * name was nowhere on screen until Review. Now the row arrives with
+                 * the file, spins while it is read, and stays afterwards as what
+                 * this import is about.
+                 */}
+                {file ? (
+                    <FileUploadList>
+                        <FileUploadListItem
+                            name={file.name}
+                            size={file.size}
+                            status={fileStatus}
+                            statusLabel={fileStatusLabel}
+                            onRemove={busy === null && step !== "done" ? startOver : undefined}
+                            removeLabel="Choose another file"
+                        />
+                    </FileUploadList>
                 ) : null}
 
                 {/*
@@ -333,18 +379,31 @@ function ImportForm({ close }: { close: () => void }) {
                 <FormError error={error} arrive />
 
                 {result ? (
-                    <output className="flex arrive flex-col gap-1 text-sm">
-                        <span className="font-medium text-primary">{plural(result.added, "card")} added to your collection.</span>
-                        <span className="text-tertiary">
-                            {plural(result.seen, "row")} read.
-                            {result.existing > 0 ? ` ${plural(result.existing, "card")} you already had, left alone.` : ""}
-                            {result.notOwned > 0 ? ` ${plural(result.notOwned, "card")} you do not own, left alone.` : ""}
-                            {result.skipped - result.notOwned > 0 ? ` ${plural(result.skipped - result.notOwned, "row")} could not be read.` : ""}
-                        </span>
+                    <output className="flex arrive flex-col gap-4">
+                        <p className="text-sm font-medium text-primary">{plural(result.added, "card")} added to your collection.</p>
+                        {/*
+                         * The figures, once the writing is done. The preview above
+                         * deliberately says its numbers in a sentence, because there
+                         * the question is "what will this do" and arithmetic is in
+                         * the way of an answer. Here the question is the other one,
+                         * "what did it do", and that is a reckoning: four numbers
+                         * that add up, side by side, so a file that went half wrong
+                         * can be seen to have gone half wrong.
+                         */}
+                        <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                            {figures(result).map((figure) => (
+                                <div key={figure.label} className="flex flex-col gap-0.5 rounded-lg px-4 py-3 ring-1 ring-secondary ring-inset">
+                                    <dt className="text-xs text-tertiary">{figure.label}</dt>
+                                    <dd className={cx("text-lg font-semibold tabular-nums", figure.alarming ? "text-error-primary" : "text-primary")}>
+                                        {figure.value.toLocaleString("en")}
+                                    </dd>
+                                </div>
+                            ))}
+                        </dl>
                     </output>
                 ) : null}
 
-                {preview ? (
+                {step === "review" && preview ? (
                     <div className="flex arrive flex-col gap-4">
                         <div className="flex flex-col gap-1">
                             <p aria-live="polite" className="text-sm font-medium text-primary">
@@ -457,7 +516,7 @@ function ImportForm({ close }: { close: () => void }) {
                  * the number that would say "you are about to do this
                  * again" has to be on screen before the button is.
                  */}
-                {preview && preview.existing > 0 ? (
+                {step === "review" && preview && preview.existing > 0 ? (
                     <p className="rounded-lg bg-secondary px-4 py-3 text-sm text-secondary">
                         <span className="font-medium text-primary">{plural(preview.existing, "card")} you already have</span>{" "}
                         {preview.existing === 1 ? "is" : "are"} in this file, and will be added again as extra copies. If you have imported this file before,
