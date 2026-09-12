@@ -22,6 +22,16 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-12, Browse's shelf.** Measured what a tab switch actually costs, per step: the session
+check is 0 to 1 ms, the profile, binders and stats are cache hits, the page's shell is 20 to 70 ms,
+and the list at the API is 334 to 445 ms when its five minutes are up or a write dropped it. So the
+API read is the wait, and Cache Components would buy the 20 to 70 ms, which is why it is still not
+done. One thing did come out of the measuring: Browse drew all 204 sets on the server, 408 KB of
+markup in the answer to every switch (35 KB over a compressed wire, so never the bandwidth, but the
+phone laid out 204 tiles before the first one was up). The sets come over as data now and the shelf
+draws 36 at a time, a screen ahead of the sentinel, the way the Pokédex already did: 104 KB, no
+long task over 50 ms, on screen in 216 ms in dev.
+
 **2026-09-12, tab switching.** Switching tabs felt slow: the page you tapped from vanished at
 once and you looked at the route's `loading.tsx` skeleton until the API answered. Every one of
 those files is gone (R-UI-003); each page carries its own Suspense boundary now, so the page you

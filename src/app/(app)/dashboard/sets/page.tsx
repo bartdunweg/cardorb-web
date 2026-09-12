@@ -4,8 +4,7 @@ import { cookies } from "next/headers";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { BrowseToolbar } from "@/components/app/browse-toolbar";
 import { PageHeader } from "@/components/app/page-header";
-import { SetRow } from "@/components/app/set-row";
-import { FIRST_ROW, SETS_COLUMNS, SetTile } from "@/components/app/set-tile";
+import { SetsShelf } from "@/components/app/sets-shelf";
 import { SetsOutline } from "@/components/app/skeletons";
 import { type BrowseQuery, type BrowseSearchParams, readBrowseQuery, searchShelf, sortShelf } from "@/lib/browse-query";
 import { CatalogueUnavailable, getSets } from "@/lib/sets";
@@ -51,36 +50,7 @@ async function Shelf({ query, view }: { query: BrowseQuery; view: SetsViewMode }
         return <AppEmptyState icon="search" title="No sets found" description={`No set is called “${query.q}”. Try another name.`} />;
     }
 
-    return (
-        <>
-            {series.map((group, g) => {
-                // Sorted by name the shelf is one group with no name: a section still, but no heading.
-                const id = group.name ? `series-${slug(group.name)}` : undefined;
-                return (
-                    <section key={group.name || "all"} aria-labelledby={id} aria-label={id ? undefined : "Sets"} className="flex flex-col gap-3">
-                        {group.name ? (
-                            <h2 id={id} className="text-lg font-semibold text-primary">
-                                {group.name}
-                            </h2>
-                        ) : null}
-                        <ul className={view === "grid" ? `grid gap-4 ${SETS_COLUMNS}` : "flex flex-col gap-2"}>
-                            {/* The first row of each series arrives 30 ms apart; the rest of it together. */}
-                            {group.sets.map((set, i) => (
-                                <li key={set.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i, 5) * 30}ms` } as React.CSSProperties}>
-                                    {view === "grid" ? (
-                                        // Only the first series' first row is on screen at load; every tile under it loads as it scrolls in.
-                                        <SetTile set={set} language={query.language} priority={g === 0 && i < FIRST_ROW} />
-                                    ) : (
-                                        <SetRow set={set} language={query.language} />
-                                    )}
-                                </li>
-                            ))}
-                        </ul>
-                    </section>
-                );
-            })}
-        </>
-    );
+    // The sets as data, not as 204 tiles' worth of markup: the shelf draws a few screens and the
+    // rest as you scroll (sets-shelf.tsx).
+    return <SetsShelf series={series} language={query.language} view={view} />;
 }
-
-const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
