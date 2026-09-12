@@ -63,30 +63,43 @@ export function CardsList({
        Reset during render rather than in an effect, which is the shape React asks for and the one
        this repo's lint allows. */
     const [appended, setAppended] = useState<Card[]>([]);
+    /* How far into the list the API has answered, repeats included: where the next batch starts.
+       Not `cards.length`, which a dropped repeat holds back, so the same rows were asked for again.
+       And `end`, once a batch says there is nothing after it: the first page's count can be stale
+       (it is cached, and the API folds rows on its own), and going by it alone, a list short of that
+       count asked for an empty batch, drew the skeleton, and asked again, for as long as you looked. */
+    const [read, setRead] = useState(first.cards.length);
+    const [end, setEnd] = useState(false);
     const [seed, setSeed] = useState(first.cards);
     if (seed !== first.cards) {
         setSeed(first.cards);
         setAppended([]);
+        setRead(first.cards.length);
+        setEnd(false);
     }
     const cards = appended.length ? [...first.cards, ...appended] : first.cards;
     const setCards = (next: (have: Card[]) => Card[]) => setAppended((have) => next([...first.cards, ...have]).slice(first.cards.length));
     const [failed, setFailed] = useState(false);
     const [pending, startTransition] = useTransition();
     const sentinel = useRef<HTMLDivElement>(null);
-    const more = cards.length < first.total;
+    const more = !end && read < first.total;
+    // Once the list has run out, what it holds is the count, whatever the first page said.
+    const total = end ? cards.length : first.total;
 
     const loadMore = () => {
         if (pending) return;
         setFailed(false);
         startTransition(async () => {
             try {
-                const next = await loadMoreCards({ ...filter, offset: cards.length });
+                const batch = await loadMoreCards({ ...filter, offset: read });
                 // A card added while the reader scrolled shifts the batches by one; a card seen
                 // twice would be one key twice, so a repeat is dropped rather than drawn again.
                 setCards((have) => {
                     const seen = new Set(have.map((c) => c.id));
-                    return [...have, ...next.filter((c) => !seen.has(c.id))];
+                    return [...have, ...batch.cards.filter((c) => !seen.has(c.id))];
                 });
+                setRead(read + batch.cards.length);
+                if (batch.cards.length === 0 || read + batch.cards.length >= batch.total) setEnd(true);
             } catch {
                 setFailed(true);
             }
@@ -109,9 +122,9 @@ export function CardsList({
         );
         observer.observe(el);
         return () => observer.disconnect();
-        // loadMore closes over the current length; the effect reruns when it changes.
+        // loadMore closes over how far the list has read; the effect reruns when it changes.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [more, pending, failed, cards.length]);
+    }, [more, pending, failed, read]);
 
     /* The count a screen reader hears. The zero case is in it, and the region is the first thing
        returned rather than the last: it used to sit after the list, behind the early return that a
@@ -123,7 +136,7 @@ export function CardsList({
           ? narrowed
               ? "No cards found."
               : ""
-          : `Showing ${cards.length} of ${first.total} cards`;
+          : `Showing ${cards.length} of ${total} cards`;
 
     /* Moving it above the early return is not enough on its own. `folder-body.tsx` keys the whole
        view on the list's URL, so a search does not update this component, it replaces it, and a
