@@ -73,7 +73,7 @@ function ToastCard({
                 <div className="flex flex-col gap-1">
                     {/* No truncation: a toast that cuts off the sentence it exists to say is worse
                         than a toast two lines tall. */}
-                    <p className="text-sm font-semibold text-secondary">{title}</p>
+                    <p className="text-sm font-medium text-secondary">{title}</p>
                     {description ? <p className="text-sm text-tertiary">{description}</p> : null}
                 </div>
 
