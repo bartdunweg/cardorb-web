@@ -22,6 +22,15 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-12, the warm lists.** Two more things measured and thrown away: a first batch of 24
+instead of 48 (266 to 353 ms against 264 to 399 ms) and skipping the API's facets pass (243 to
+442 ms). The row count and the facets are not what the read costs, so nothing in this app makes it
+faster. It happens earlier instead: the app's frame reads the collection, the wishlist and the
+favorites on idle, once per load, into the same five-minute cache the pages read from
+(`warm-lists.tsx`, `warmList` in `dashboard/list-actions.ts`). On a cold cache the three reads
+cost 247 to 326 ms each with nobody waiting for them, and the tap that follows logs
+`cache cards 1ms hit` where it logged `326ms miss`. The Pokédex is not warmed, for the reason it
+is not prefetched either: it reads every card you own.
 **2026-09-12, search.** Bart: you search a binder by the title of a card, so the field should say
 which titles it has. It does now (#459). The names of cards you hold that match what is typed,
 the set beside a title held once and a count beside one held several times over, the letters you

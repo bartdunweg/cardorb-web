@@ -33,3 +33,9 @@ export const loadMoreInput = z.object({
     ...filterShape,
     offset: z.number().int().min(0).max(100_000),
 });
+
+/**
+ * Which list to warm, for `warmList`: the three the navigation leads to whose first batch is one
+ * read of the API. Named, not a filter, so nothing but these three can be asked for.
+ */
+export const warmListInput = z.object({ list: z.enum(["collection", "wishlist", "favorites"]) });
