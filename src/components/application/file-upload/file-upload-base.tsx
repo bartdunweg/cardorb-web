@@ -1,17 +1,24 @@
 "use client";
 
 /**
- * Untitled UI's file upload, trimmed to the drop zone.
+ * Untitled UI's file upload: the drop zone, and the file underneath it.
  *
  * Vendored through the MCP as `file-upload-base` and cut down rather than kept
- * whole, which R-STRUCT-001 asks for — only what is imported stays. What was
- * dropped is the list of files with their progress bars and delete buttons,
- * which this app has no use for: it takes one CSV, not a queue of uploads.
+ * whole, which R-STRUCT-001 asks for: only what is imported stays.
  *
- * Cutting them removed both dependencies the component would have added.
- * `motion` animated the list, and `@untitledui/file-icons` drew a badge per
- * file type — the same package R-UI-002 already declines for shipping 60 KB of
- * icons. The drop zone itself needs neither.
+ * The kit's list item came back, rewritten. A drop zone on its own answers a
+ * file with nothing: the import dialog put a spinner beside it and the file you
+ * had chosen was named nowhere, so "what is it busy with" had no answer on
+ * screen. The kit's own answer to that is a row per file, which is the right
+ * shape, so the row is here, with the file's name, its size and what is
+ * happening to it, and a way to take it back off.
+ *
+ * Rewritten, not copied, because the kit's version is a progress bar and both
+ * of its dependencies are for things this app does not do. There is no percent
+ * to show: reading a CSV is one await, not a transfer, so the row spins while
+ * it reads and says so. `motion` animated a list that is never more than one
+ * row long, and `@untitledui/file-icons` drew a badge per file type, the same
+ * package R-UI-002 declines for shipping 60 KB of icons. Neither is here.
  *
  * One change inside the drop zone, listed here because R-STRUCT-001 owns
  * these files rather than leaving them untouched: the label around the upload
@@ -20,8 +27,10 @@
  * input is `sr-only` and the kit marked it `peer` without ever reading that.
  */
 import { useId, useRef, useState } from "react";
-import { UploadCloud02 } from "@untitledui/icons";
+import { AlertCircle, CheckCircle, File02, Trash01, UploadCloud02, XCircle } from "@untitledui/icons";
+import { LoadingIndicator } from "@/components/application/loading-indicator/loading-indicator";
 import { Button } from "@/components/base/buttons/button";
+import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { FeaturedIcon } from "@/components/foundations/featured-icon/featured-icon";
 import { cx } from "@/utils/cx";
 
@@ -268,3 +277,88 @@ export const FileUploadDropZone = ({
         </div>
     );
 };
+
+/**
+ * Where a chosen file has got to: being read, read, waiting on an answer, or
+ * refused. `attention` is the one that is not a failure: the file arrived and
+ * was parsed, something about it still has to be settled, so it is drawn in
+ * the warning colour and does not put an error ring around the row.
+ */
+export type FileUploadStatus = "busy" | "ready" | "attention" | "failed";
+
+export interface FileUploadListItemProps {
+    /** The file's name, as the person chose it. */
+    name: string;
+    /** The file's size in bytes, where it is known. */
+    size?: number;
+    status: FileUploadStatus;
+    /** What is happening to it, in words: "Reading…", "Ready", "Could not be read". */
+    statusLabel: string;
+    /** Takes the file back off. Without one, no button is drawn. */
+    onRemove?: () => void;
+    /** What that button says, for the tooltip and for a screen reader. */
+    removeLabel?: string;
+    className?: string;
+}
+
+/**
+ * One chosen file, with what is happening to it.
+ *
+ * The status is drawn and written both: an icon beside a word, never a colour
+ * on its own, because "failed" as a red ring is not readable to everybody
+ * (R-A11Y-001). While it is busy the row is a live region, so the spinner is
+ * heard as well as seen.
+ */
+export const FileUploadListItem = ({ name, size, status, statusLabel, onRemove, removeLabel = "Remove", className }: FileUploadListItemProps) => (
+    <li
+        className={cx(
+            "flex items-start gap-3 rounded-xl bg-primary p-4 ring-1 ring-secondary ring-inset",
+            status === "failed" && "ring-2 ring-error",
+            className,
+        )}
+    >
+        <FeaturedIcon
+            icon={File02}
+            color={status === "failed" ? "error" : status === "attention" ? "warning" : "gray"}
+            theme="modern"
+            size="md"
+            className="shrink-0"
+        />
+
+        <div className="flex min-w-0 flex-1 flex-col">
+            <p className="truncate text-sm font-medium text-secondary">{name}</p>
+            <div className="mt-0.5 flex items-center gap-2" aria-live={status === "busy" ? "polite" : undefined}>
+                {size === undefined ? null : (
+                    <>
+                        <p className="text-sm whitespace-nowrap text-tertiary">{getReadableFileSize(size)}</p>
+                        <hr className="h-3 w-px rounded-full border-none bg-border-primary" />
+                    </>
+                )}
+                <div className="flex min-w-0 items-center gap-1.5">
+                    {status === "busy" ? <LoadingIndicator size="sm" className="shrink-0 [&_svg]:size-4" /> : null}
+                    {status === "ready" ? <CheckCircle aria-hidden="true" className="size-4 shrink-0 stroke-[2.5px] text-fg-success-primary" /> : null}
+                    {status === "attention" ? <AlertCircle aria-hidden="true" className="size-4 shrink-0 text-fg-warning-primary" /> : null}
+                    {status === "failed" ? <XCircle aria-hidden="true" className="size-4 shrink-0 text-fg-error-primary" /> : null}
+                    {/*
+                     * `attention` says its piece in the ordinary text colour, not
+                     * in yellow: the warning token is yellow-600, which measures
+                     * 2.94:1 on this row's white and misses AA for text by a
+                     * distance no weight makes up. The icon beside it carries the
+                     * colour, the words carry the meaning, and the words are the
+                     * ones that have to be readable (R-A11Y-001).
+                     */}
+                    <p className={cx("truncate text-sm font-medium", status === "failed" ? "text-error-primary" : "text-tertiary")}>{statusLabel}</p>
+                </div>
+            </div>
+        </div>
+
+        {onRemove ? (
+            <ButtonUtility color="tertiary" size="xs" icon={Trash01} tooltip={removeLabel} className="-mt-1 -mr-1 shrink-0" onClick={onRemove} />
+        ) : null}
+    </li>
+);
+
+/** The list the rows sit in. One file here, but a list is what a row belongs to. */
+export const FileUploadList = ({ className, children }: { className?: string; children: React.ReactNode }) => (
+    <ul className={cx("flex flex-col gap-3", className)}>{children}</ul>
+);

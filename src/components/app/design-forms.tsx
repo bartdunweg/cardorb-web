@@ -3,7 +3,7 @@
 import { parseDate } from "@internationalized/date";
 import { Mail01, SearchLg, Star01, Tag01 } from "@untitledui/icons";
 import { DatePicker } from "@/components/application/date-picker/date-picker";
-import { FileUploadDropZone } from "@/components/application/file-upload/file-upload-base";
+import { FileUploadDropZone, FileUploadList, FileUploadListItem } from "@/components/application/file-upload/file-upload-base";
 import { Checkbox } from "@/components/base/checkbox/checkbox";
 import { Input } from "@/components/base/input/input";
 import { RadioButton, RadioGroup } from "@/components/base/radio-buttons/radio-buttons";
@@ -373,7 +373,7 @@ export const formSections: SectionSpec[] = [
         id: "file-upload",
         title: "FileUploadDropZone",
         from: "components/application/file-upload/file-upload-base",
-        note: "Drag a file onto it, or click to open the picker. The app uses it once, for the CSV import.",
+        note: "Drag a file onto it, or click to open the picker. The app uses it once, for the CSV import. The row underneath is the file you chose, and what is happening to it.",
         render: (
             <Panel>
                 <Group title="States" cols="wide">
@@ -390,6 +390,49 @@ export const formSections: SectionSpec[] = [
                     </Cell>
                     <Cell label="isDisabled" span={2}>
                         <FileUploadDropZone className="w-full" isDisabled hint="Not while an import is running." />
+                    </Cell>
+                </Group>
+                <Group title="FileUploadListItem" cols="wide">
+                    <Cell label="busy" span={2}>
+                        <FileUploadList className="w-full">
+                            <FileUploadListItem name="collection.csv" size={412_000} status="busy" statusLabel="Reading…" />
+                        </FileUploadList>
+                    </Cell>
+                    <Cell label="ready" span={2}>
+                        <FileUploadList className="w-full">
+                            <FileUploadListItem
+                                name="collection.csv"
+                                size={412_000}
+                                status="ready"
+                                statusLabel="Ready to import"
+                                onRemove={() => {}}
+                                removeLabel="Choose another file"
+                            />
+                        </FileUploadList>
+                    </Cell>
+                    <Cell label="attention" span={2}>
+                        <FileUploadList className="w-full">
+                            <FileUploadListItem
+                                name="notion-export.csv"
+                                size={88_000}
+                                status="attention"
+                                statusLabel="Needs its columns"
+                                onRemove={() => {}}
+                                removeLabel="Choose another file"
+                            />
+                        </FileUploadList>
+                    </Cell>
+                    <Cell label="failed" span={2}>
+                        <FileUploadList className="w-full">
+                            <FileUploadListItem
+                                name="notes.txt"
+                                size={1_200}
+                                status="failed"
+                                statusLabel="Could not be read"
+                                onRemove={() => {}}
+                                removeLabel="Choose another file"
+                            />
+                        </FileUploadList>
                     </Cell>
                 </Group>
             </Panel>

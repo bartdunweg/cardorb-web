@@ -22,6 +22,18 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-12, the import's stages.** Bart: the CSV import put a spinner under the drop zone and
+named the file nowhere, so the upload step did not say what it was busy with. The kit's file row
+came back, rewritten without `motion` and without `@untitledui/file-icons` (R-UI-002), and the
+file you chose now rides all three steps: it spins while it is read, says whether it is ready,
+needs its columns or could not be read at all, and stands above the figures on Done. Done is a
+reckoning now, not one sentence: rows read, added, already had, not owned, could not be read,
+and the line numbers of the rows that failed survive the write, folded shut, so a file that went
+half wrong can be opened up and looked at. The stepper's emphasis was backwards, a solid green
+tick on the step you had finished beside a grey outline on the step asking you for something:
+the brand fill moved to the current step and the finished one is a quiet outline with a tick in
+it. Ticking rows off before importing is not built; it needs an API that takes a selection.
+
 **2026-09-12, Browse's shelf.** Measured what a tab switch actually costs, per step: the session
 check is 0 to 1 ms, the profile, binders and stats are cache hits, the page's shell is 20 to 70 ms,
 and the list at the API is 334 to 445 ms when its five minutes are up or a write dropped it. So the

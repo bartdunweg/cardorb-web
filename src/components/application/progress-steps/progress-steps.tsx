@@ -11,9 +11,10 @@
  * name and props, so the rest can come back from the same source when a
  * second screen needs it.
  *
- * One change: `description` is optional, and the paragraph is not drawn
+ * Two changes. `description` is optional, and the paragraph is not drawn
  * without one. The kit always drew it, and an empty <p> under every step is
- * a line of nothing for a screen reader to stop on.
+ * a line of nothing for a screen reader to stop on. And the emphasis is
+ * inverted, for the reason written above `statuses`.
  */
 import { cx } from "@/utils/cx";
 
@@ -23,14 +24,32 @@ export type Step = {
     status: "incomplete" | "current" | "complete";
 };
 
+/*
+ * Which step you are on is the loud one. The kit fills the finished step solid
+ * green and leaves the current one a grey outline, so a stepper read backwards:
+ * the step you had already dealt with drew the eye, and the step asking you for
+ * something did not. So the brand fill moves to `current`, and `complete`
+ * becomes the same quiet outline as `incomplete` with a tick in it, which is
+ * all a finished step has to say.
+ */
 const statuses = {
     incomplete: "bg-primary ring-1 ring-inset ring-secondary text-quaternary",
-    current: "bg-primary ring-1 ring-inset ring-secondary text-secondary",
-    complete: "bg-success-solid text-fg-white",
+    current: "bg-brand-solid text-white",
+    complete: "bg-primary ring-1 ring-inset ring-secondary text-tertiary",
+};
+
+/** The title, for the same reason: the current step is the one in full contrast. */
+const titles = {
+    incomplete: "text-secondary",
+    current: "text-primary",
+    complete: "text-tertiary",
 };
 
 const IconTopNumber = ({ status, title, description, step, connector, size }: Step & { step: number; connector: boolean; size: "sm" | "md" }) => (
-    <div className={cx("flex w-full flex-col items-center justify-center gap-4", size === "sm" && "gap-3")}>
+    <div
+        aria-current={status === "current" ? "step" : undefined}
+        className={cx("flex w-full flex-col items-center justify-center gap-4", size === "sm" && "gap-3")}
+    >
         <div className="relative flex w-full flex-col items-center self-stretch">
             <span
                 className={cx(
@@ -40,9 +59,16 @@ const IconTopNumber = ({ status, title, description, step, connector, size }: St
                     size === "sm" ? "size-6" : "size-8",
                 )}
             >
+                {/*
+                 * The tick is a picture, so where it stands for a word the word is
+                 * said too: a finished step otherwise reads out as nothing but its
+                 * own title, which is also what the step you have not reached yet
+                 * reads out as.
+                 */}
+                {status === "complete" ? <span className="sr-only">Completed: </span> : null}
                 {status === "complete" ? (
                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className={cx(size === "sm" ? "size-3" : "size-4")} aria-hidden="true">
-                        <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                 ) : (
                     <span className={cx("font-semibold", size === "sm" ? "text-xs" : "text-sm")}>{step}</span>
@@ -66,7 +92,7 @@ const IconTopNumber = ({ status, title, description, step, connector, size }: St
             )}
         </div>
         <div className={cx("flex w-full flex-col items-start gap-0.5 self-stretch", status === "incomplete" && "opacity-60", size === "sm" && "gap-0")}>
-            <p className={cx("w-full text-center text-secondary", size === "sm" ? "text-sm font-semibold" : "text-md font-semibold")}>{title}</p>
+            <p className={cx("w-full text-center", titles[status], size === "sm" ? "text-sm font-semibold" : "text-md font-semibold")}>{title}</p>
             {description ? <p className={cx("w-full text-center text-tertiary", size === "sm" ? "text-sm" : "text-md")}>{description}</p> : null}
         </div>
     </div>
