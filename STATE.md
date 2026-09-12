@@ -29,9 +29,13 @@ Then the first of the open items from the new-account map: a card added from the
 behind is re-read when the palette closes rather than on every add, so Home swaps its welcome for
 the stats on the screen you come back to, not under a palette still open. Seen in the pane: the
 toast sits above the palette's overlay. **The add itself was not pressed** (it writes to the
-live collection). Still open from that map: "Add to wishlist" on the wishlist page opens the
-palette without the wishlist preset; one wishlist card flips Home from the welcome to a €0 hero
-with four zeros; the new-account flow has not been walked as the test account.
+live collection). What the map left open then is closed in the paragraph below (#444); the
+new-account flow has still not been walked as the test account.
+
+**2026-09-12, night.** The card sheet opened on its frame's shadow around nothing until the scan
+had landed: a ghost of a card, for as long as the picture took. The 64 px copy the head already
+fetches for its colour now sits inside the frame too, scaled up and blurred, over a flat fill
+until even that is in; the scan fades over it as before, and nothing new is requested (#449).
 
 **2026-09-12, layout pass.** Bart saw an empty state standing at the top of its page. The
 component centres itself in the room its column leaves it and claims that room with `flex-1`,
