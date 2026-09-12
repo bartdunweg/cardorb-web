@@ -36,8 +36,8 @@ export function setStats(cards: SetCard[], total: number): SetStats {
     return { owned, total, value, toComplete, unpriced, wishlist };
 }
 
-/** "165 + 42 secret": the number printed on the cards and the ones past it. Null where they agree or one is unknown. */
-export function secretLabel(total: number, printedTotal: number | null): string | null {
+/** The cards past the number printed on them (207 against "165" is 42); null where they agree or one is unknown. */
+export function secretCount(total: number, printedTotal: number | null): number | null {
     if (printedTotal == null || printedTotal <= 0 || total <= printedTotal) return null;
-    return `${printedTotal} + ${total - printedTotal} secret`;
+    return total - printedTotal;
 }

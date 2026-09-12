@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { SetCard } from "@/lib/api-shapes";
-import { secretLabel, setStats } from "@/lib/set-stats";
+import { secretCount, setStats } from "@/lib/set-stats";
 
 const card = (over: Partial<SetCard>): SetCard => ({
     id: "x",
@@ -39,12 +39,12 @@ describe("setStats", () => {
     });
 });
 
-describe("secretLabel", () => {
+describe("secretCount", () => {
     it("names the cards past the printed number", () => {
-        expect(secretLabel(207, 165)).toBe("165 + 42 secret");
+        expect(secretCount(207, 165)).toBe(42);
     });
     it("says nothing where the counts agree or one is missing", () => {
-        expect(secretLabel(102, 102)).toBeNull();
-        expect(secretLabel(102, null)).toBeNull();
+        expect(secretCount(102, 102)).toBeNull();
+        expect(secretCount(102, null)).toBeNull();
     });
 });
