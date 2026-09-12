@@ -15,12 +15,16 @@ interface NativeSelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>
 }
 
 const styles = {
-    // Changed from the kit: room on the right for the chevron. It is positioned absolutely at
+    // Changed from the kit: room on the right for the chevron, and sm draws its 14 px the no-zoom
+    // way (see below). It is positioned absolutely at
     // right-2.5 and the box had padding on the left only, so "Near Mint" ran under its own arrow.
     // `lg` already had px-3.5 on both sides, which is why only these two showed it. A re-fetch
     // through the Untitled UI CLI or MCP overwrites this; re-apply it.
     sm: {
-        root: "py-2 pr-8 pl-3 text-sm",
+        // 14 px text without Safari zooming the page in on focus: .field-text-sm in globals.css
+        // draws it at 16 and scales it back, so the padding is in em to ride along and --field-box
+        // is the height it had (8 + 20 + 8), which the negative margin there takes back.
+        root: "field-text-sm py-[calc(8em/14)] pr-[calc(32em/14)] pl-[calc(12em/14)] [--field-box:calc(36em/14)]",
         icon: "size-4 right-2.5 stroke-[2.25px]",
     },
     md: {
@@ -46,7 +50,11 @@ export const NativeSelect = ({ label, hint, options, className, selectClassName,
                 </Label>
             )}
 
-            <div className="relative grid w-full items-center">
+            {/* grid-cols-1, not the kit's bare grid: the column sized itself to the select, and a select
+                that is 1/0.875 wide (see .field-text-sm) then measured that percentage against its own
+                width and came out narrower than the box it fills. One column of 1fr is a width to
+                measure against, and on a desktop it is the same 100% the select already had. */}
+            <div className="relative grid w-full grid-cols-1 items-center">
                 <select
                     {...props}
                     id={selectId}
