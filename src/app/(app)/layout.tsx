@@ -7,6 +7,7 @@ import { RoutePendingProvider } from "@/components/app/route-pending";
 import { RouteProgress } from "@/components/app/route-progress";
 import { MAIN_ID, SkipToContent } from "@/components/app/skip-to-content";
 import { Toasts } from "@/components/app/toast";
+import { WarmLists } from "@/components/app/warm-lists";
 import { ApiError } from "@/lib/api";
 import { getFavoritesCount, getMyFolders, getPokedexCount } from "@/lib/collections";
 import { type Account, accountFrom, getMyProfile } from "@/lib/profile";
@@ -70,6 +71,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     own z-index puts it on top, whether the dialog that caused it closes or stays. */}
                     <Toasts />
                     <RouteProgress />
+                    {/* The lists a tab leads to, read while this page is being read (warm-lists.tsx). */}
+                    <WarmLists />
                 </CommandSearchProvider>
             </RouteProvider>
         </RoutePendingProvider>
