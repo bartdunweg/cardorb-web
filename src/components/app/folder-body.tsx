@@ -55,6 +55,8 @@ export async function FolderBody(props: FolderBodyProps) {
     const { query, basePath, facets, sortOptions = SORT_OPTIONS, defaultSortKey = "set", searchLabel, searchPlaceholder, empty } = props;
     const narrowed = isNarrowed(query);
     const { q } = query;
+    // Your own cards, not wishes: the only lists with a second copy of anything.
+    const offerDuplicates = !props.readOnly && !props.filter.wishlist;
 
     const jar = await cookies();
     const view = parseCardsView(jar.get(CARDS_VIEW_COOKIE)?.value);
@@ -87,9 +89,9 @@ export async function FolderBody(props: FolderBodyProps) {
                           }
                 }
             />
-            <FiltersSheet key="filters" active={[query.set, query.rarity, query.fullArt, query.gen, query.type].filter(Boolean).length}>
-                <Suspense key="set-rarity" fallback={<CardsFilters query={query} facets={NO_FACETS} />}>
-                    <FiltersWhenReady query={query} facets={facets} />
+            <FiltersSheet key="filters" active={[query.set, query.rarity, query.fullArt, query.gen, query.type, query.duplicates].filter(Boolean).length}>
+                <Suspense key="set-rarity" fallback={<CardsFilters query={query} facets={NO_FACETS} offerDuplicates={offerDuplicates} />}>
+                    <FiltersWhenReady query={query} facets={facets} offerDuplicates={offerDuplicates} />
                 </Suspense>
             </FiltersSheet>
             <CardsSort key="sort" query={query} options={sortOptions} defaultSortKey={defaultSortKey} />
@@ -189,6 +191,6 @@ async function CatalogueNotice({ list }: { list: Promise<CardList> }) {
 
 // The Filters sheet's fields once the sets and rarities are known: they ride with the list's first
 // page, so a page no longer waits for a second read before its first byte.
-async function FiltersWhenReady({ query, facets }: { query: ListQuery; facets: Facets | Promise<Facets> }) {
-    return <CardsFilters query={query} facets={await facets} />;
+async function FiltersWhenReady({ query, facets, offerDuplicates }: { query: ListQuery; facets: Facets | Promise<Facets>; offerDuplicates: boolean }) {
+    return <CardsFilters query={query} facets={await facets} offerDuplicates={offerDuplicates} />;
 }

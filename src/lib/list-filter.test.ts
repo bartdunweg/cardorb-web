@@ -46,6 +46,7 @@ describe("loadMoreInput", () => {
             type: "f",
             number: "g",
             priced: true,
+            duplicates: true,
         };
 
         const parsed = loadMoreInput.parse({ ...everyField, offset: 0 });

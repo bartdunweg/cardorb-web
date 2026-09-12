@@ -28,6 +28,7 @@ const filterShape: { [K in keyof Required<Omit<CardFilter, "facets">>]: z.ZodTyp
     type: z.string().max(100).optional(),
     number: z.string().max(20).optional(),
     priced: z.boolean().optional(),
+    duplicates: z.boolean().optional(),
 };
 
 export const loadMoreInput = z.object({

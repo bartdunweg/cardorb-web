@@ -11,6 +11,7 @@ describe("readListQuery", () => {
             q: "pika",
             fullArt: false,
             unpriced: false,
+            duplicates: false,
         });
         expect(readListQuery({ page: "x", sort: "colour" })).toEqual({
             page: 1,
@@ -20,8 +21,18 @@ describe("readListQuery", () => {
             q: undefined,
             fullArt: false,
             unpriced: false,
+            duplicates: false,
         });
         expect(readListQuery({})).toMatchObject({ page: 1, sortKey: "set" });
+    });
+});
+
+describe("duplicates in the URL", () => {
+    it("reads ?duplicates=1 and writes it back, and it narrows the list", () => {
+        expect(readListQuery({ duplicates: "1" }).duplicates).toBe(true);
+        expect(readListQuery({ duplicates: "true" }).duplicates).toBe(false);
+        expect(listHref("/dashboard/cards", readListQuery({}), { duplicates: true })).toBe("/dashboard/cards?duplicates=1");
+        expect(listHref("/dashboard/cards", readListQuery({ duplicates: "1" }), { duplicates: false })).toBe("/dashboard/cards");
     });
 });
 

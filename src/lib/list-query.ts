@@ -47,6 +47,8 @@ export type ListQuery = {
     list: PublicList | undefined;
     /** Only the copies nothing prices: what the total leaves out. */
     unpriced: boolean;
+    /** Only the printings held more than once: the copies to trade or sell. The API counts them over the whole collection. */
+    duplicates: boolean;
 };
 
 /** The lists a public profile can show beside the collection, each behind its own setting. */
@@ -66,10 +68,11 @@ export type ListSearchParams = {
     folder?: string;
     list?: string;
     unpriced?: string;
+    duplicates?: string;
 };
 
 /** A search or a filter is on. */
-export const isNarrowed = (q: ListQuery): boolean => [q.q, q.set, q.rarity, q.fullArt, q.gen, q.type, q.unpriced].some(Boolean);
+export const isNarrowed = (q: ListQuery): boolean => [q.q, q.set, q.rarity, q.fullArt, q.gen, q.type, q.unpriced, q.duplicates].some(Boolean);
 
 const isSortKey = (v: unknown): v is SortKey => SORT_OPTIONS.some((o) => o.value === v);
 
@@ -98,6 +101,7 @@ export function readListQuery(params: ListSearchParams): ListQuery {
         folder: text(params.folder),
         list: (PUBLIC_LISTS as readonly string[]).includes(params.list ?? "") ? (params.list as PublicList) : undefined,
         unpriced: params.unpriced === "1",
+        duplicates: params.duplicates === "1",
     };
 }
 
@@ -121,7 +125,7 @@ export function readPublicListQuery(params: Parameters<typeof readListQuery>[0])
 export function listHref(
     pathname: string,
     current: ListQuery,
-    patch: Partial<Pick<ListQuery, "page" | "sortKey" | "q" | "set" | "rarity" | "fullArt" | "gen" | "type" | "folder" | "list" | "unpriced">>,
+    patch: Partial<Pick<ListQuery, "page" | "sortKey" | "q" | "set" | "rarity" | "fullArt" | "gen" | "type" | "folder" | "list" | "unpriced" | "duplicates">>,
     /** The sort this page reads a bare URL as; anything else is written into it. */
     defaultSortKey: SortKey = "set",
 ): string {
@@ -134,6 +138,7 @@ export function listHref(
     const folder = "folder" in patch ? patch.folder : current.folder;
     const list = "list" in patch ? patch.list : current.list;
     const unpriced = "unpriced" in patch ? patch.unpriced : current.unpriced;
+    const duplicates = "duplicates" in patch ? patch.duplicates : current.duplicates;
     const sortKey = patch.sortKey ?? current.sortKey;
     const page = patch.page ?? current.page;
     const p = new URLSearchParams();
@@ -147,6 +152,7 @@ export function listHref(
     if (folder) p.set("folder", folder);
     if (list) p.set("list", list);
     if (unpriced) p.set("unpriced", "1");
+    if (duplicates) p.set("duplicates", "1");
     if (page > 1) p.set("page", String(page));
     const s = p.toString();
     return s ? `${pathname}?${s}` : pathname;

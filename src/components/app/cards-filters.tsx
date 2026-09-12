@@ -12,12 +12,14 @@ import { type ListQuery, listHref } from "@/lib/list-query";
 // whole. A menu the collection has nothing for stays out: a collection of one era offers no era.
 // "Clear filters" shows only while one is on, so the row stays quiet otherwise. Renders its
 // pieces into the caller's row (`display: contents`), so one row holds them all.
-export function CardsFilters({ query, facets }: { query: ListQuery; facets: Facets }) {
+// `offerDuplicates`: a list of cards you own adds Copies, the printings held more than once. A
+// wishlist or someone else's profile has no second copy to trade, so it offers none.
+export function CardsFilters({ query, facets, offerDuplicates = false }: { query: ListQuery; facets: Facets; offerDuplicates?: boolean }) {
     const router = useRouter();
     const pathname = usePathname();
-    const go = (patch: Partial<Pick<ListQuery, "set" | "rarity" | "fullArt" | "gen" | "type">>) =>
+    const go = (patch: Partial<Pick<ListQuery, "set" | "rarity" | "fullArt" | "gen" | "type" | "duplicates">>) =>
         router.replace(listHref(pathname, query, { ...patch, page: 1 }), { scroll: false });
-    const active = Boolean(query.set || query.rarity || query.fullArt || query.gen || query.type);
+    const active = Boolean(query.set || query.rarity || query.fullArt || query.gen || query.type || query.duplicates);
 
     return (
         <div className="contents">
@@ -73,8 +75,25 @@ export function CardsFilters({ query, facets }: { query: ListQuery; facets: Face
                     options={[{ label: "All types", value: "" }, ...facets.types.map((t) => ({ label: t, value: t }))]}
                 />
             ) : null}
+            {offerDuplicates || query.duplicates ? (
+                <NativeSelect
+                    aria-label="Copies"
+                    size="sm"
+                    className="w-auto"
+                    value={query.duplicates ? "duplicates" : ""}
+                    onChange={(event) => go({ duplicates: event.target.value === "duplicates" })}
+                    options={[
+                        { label: "All copies", value: "" },
+                        { label: "Duplicates", value: "duplicates" },
+                    ]}
+                />
+            ) : null}
             {active ? (
-                <Button color="link-gray" size="sm" onClick={() => go({ set: undefined, rarity: undefined, fullArt: false, gen: undefined, type: undefined })}>
+                <Button
+                    color="link-gray"
+                    size="sm"
+                    onClick={() => go({ set: undefined, rarity: undefined, fullArt: false, gen: undefined, type: undefined, duplicates: false })}
+                >
                     Clear filters
                 </Button>
             ) : null}
