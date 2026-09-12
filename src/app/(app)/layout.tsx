@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { AppSidebar } from "@/components/app/app-sidebar";
 import { CommandSearchProvider } from "@/components/app/command-search";
 import { MobileTabBar } from "@/components/app/mobile-nav";
+import { RoutePendingProvider } from "@/components/app/route-pending";
+import { RouteProgress } from "@/components/app/route-progress";
 import { MAIN_ID, SkipToContent } from "@/components/app/skip-to-content";
 import { Toasts } from "@/components/app/toast";
 import { ApiError } from "@/lib/api";
@@ -34,33 +36,38 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     const pokedexCount = getPokedexCount().catch(() => null);
 
     return (
-        <RouteProvider>
-            <CommandSearchProvider>
-                <Suspense fallback={null}>
-                    <SessionGuard reads={[me, folders]} />
-                </Suspense>
-                {/* overflow-x-clip: a decoration wider than a phone (the empty state's rings) must not widen the page, or the fixed tab bar drifts off the screen. */}
-                {/* A page a shade off white, so the surfaces on it (tiles, inputs, the chart) read as white
+        // Which page a tap is going to, above the router that reports it: the navigation answers a
+        // tap while the page you tapped from is still on screen (route-pending.tsx).
+        <RoutePendingProvider>
+            <RouteProvider>
+                <CommandSearchProvider>
+                    <Suspense fallback={null}>
+                        <SessionGuard reads={[me, folders]} />
+                    </Suspense>
+                    {/* overflow-x-clip: a decoration wider than a phone (the empty state's rings) must not widen the page, or the fixed tab bar drifts off the screen. */}
+                    {/* A page a shade off white, so the surfaces on it (tiles, inputs, the chart) read as white
                     things lying on it. In dark the page stays the darkest layer; a lighter page there would
                     turn the surfaces into holes. */}
-                <SkipToContent />
-                {/* relative isolate: a page's wash (set-hero.tsx) is positioned against this frame, across the
+                    <SkipToContent />
+                    {/* relative isolate: a page's wash (set-hero.tsx) is positioned against this frame, across the
                     whole window and behind the sidebar; isolate lets its negative z-index sit above the
                     frame's own ground rather than under it. */}
-                <div className="relative isolate flex min-h-dvh flex-col overflow-x-clip bg-page">
-                    <div className="flex flex-1 flex-col lg:flex-row">
-                        <AppSidebar account={account} collections={collections} favoritesCount={favoritesCount} pokedexCount={pokedexCount} />
-                        {/* tabIndex -1 so focus can be sent here after a navigation without putting
+                    <div className="relative isolate flex min-h-dvh flex-col overflow-x-clip bg-page">
+                        <div className="flex flex-1 flex-col lg:flex-row">
+                            <AppSidebar account={account} collections={collections} favoritesCount={favoritesCount} pokedexCount={pokedexCount} />
+                            {/* tabIndex -1 so focus can be sent here after a navigation without putting
                             the element itself in the tab order. */}
-                        <main id={MAIN_ID} tabIndex={-1} className="flex min-w-0 flex-1 flex-col outline-none">
-                            <div className="mx-auto flex w-full max-w-container flex-1 flex-col px-4 pt-4 pb-28 sm:px-6 sm:py-8 lg:pb-8">{children}</div>
-                        </main>
+                            <main id={MAIN_ID} tabIndex={-1} className="flex min-w-0 flex-1 flex-col outline-none">
+                                <div className="mx-auto flex w-full max-w-container flex-1 flex-col px-4 pt-4 pb-28 sm:px-6 sm:py-8 lg:pb-8">{children}</div>
+                            </main>
+                        </div>
+                        <MobileTabBar />
+                        <Toasts />
                     </div>
-                    <MobileTabBar />
-                    <Toasts />
-                </div>
-            </CommandSearchProvider>
-        </RouteProvider>
+                    <RouteProgress />
+                </CommandSearchProvider>
+            </RouteProvider>
+        </RoutePendingProvider>
     );
 }
 

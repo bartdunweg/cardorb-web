@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AddCardButton } from "@/components/app/add-card-button";
@@ -5,6 +6,7 @@ import { AppEmptyState } from "@/components/app/app-empty-state";
 import { BinderAddButton } from "@/components/app/binder-add-button";
 import { BinderMenu } from "@/components/app/binder-menu";
 import { FolderPage } from "@/components/app/folder-page";
+import { ListSkeleton } from "@/components/app/skeletons";
 import { Badge } from "@/components/base/badges/badges";
 import { type CardFilter, getAllMyCards, getFacets, getMyCards } from "@/lib/cards";
 import { getCollection } from "@/lib/collections";
@@ -23,7 +25,16 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 // A folder of your own: filed by hand, or filled by its rule; as a list, or as a Pokédex. The
 // folder itself and the facets are cached reads; the cards are not awaited (see cards/page.tsx).
-export default async function CollectionDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<ListSearchParams> }) {
+export default function CollectionDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<ListSearchParams> }) {
+    // The binder's name comes with the folder list, so the title waits on that read; Back does not.
+    return (
+        <Suspense fallback={<ListSkeleton back={{ href: "/dashboard/collections", label: "Binders" }} />}>
+            <Binder params={params} searchParams={searchParams} />
+        </Suspense>
+    );
+}
+
+async function Binder({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<ListSearchParams> }) {
     const { id } = await params;
     const [collection, facets] = await Promise.all([getCollection(id), getFacets()]);
     if (!collection) notFound();

@@ -1,9 +1,11 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { PageHeader } from "@/components/app/page-header";
 import { SetCards } from "@/components/app/set-cards";
 import { SetHero } from "@/components/app/set-hero";
+import { SetSkeleton } from "@/components/app/skeletons";
 import { formatCount } from "@/lib/format";
 import { isBrowseLanguage } from "@/lib/languages";
 import { logoPalette } from "@/lib/logo-color";
@@ -43,7 +45,17 @@ function releaseLabel(date: string | null): string | null {
     return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 }
 
-export default async function SetPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ language?: string }> }) {
+export default function SetPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ language?: string }> }) {
+    // The name, the wash and the cards all come from the catalogue, so there is nothing to draw
+    // before it answers; the outline stands inside the page rather than in place of the last one.
+    return (
+        <Suspense fallback={<SetSkeleton />}>
+            <Set params={params} searchParams={searchParams} />
+        </Suspense>
+    );
+}
+
+async function Set({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ language?: string }> }) {
     const { id } = await params;
     const { language: raw } = await searchParams;
     const language = isBrowseLanguage(raw) ? raw : "en";

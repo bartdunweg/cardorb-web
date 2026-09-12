@@ -22,6 +22,17 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-12, tab switching.** Switching tabs felt slow: the page you tapped from vanished at
+once and you looked at the route's `loading.tsx` skeleton until the API answered. Every one of
+those files is gone (R-UI-003); each page carries its own Suspense boundary now, so the page you
+came from stays until the next one is ready, and the outline stands only where that page's data
+goes. The navigation answers the tap instead: the tab bar's pill and the sidebar's row move to
+where you are going, not to where you are, and a hairline crosses the top of the window after
+150 ms (`route-pending.tsx`, `route-progress.tsx`). Measured in the pane on a warm cache: the
+sidebar answers at the click, the page swaps 80 to 480 ms later. What is still on the table is
+the second half, making the page shells static with Next 16's Cache Components, which is a
+migration of `unstable_cache` and every session read and not a small one.
+
 **2026-09-12, evening.** The toast has three faces and one line (#435): a tick, a bin or an
 alert, the undo beside the sentence, top centre, the phone's width between the page's gutters.
 Then the first of the open items from the new-account map: a card added from the palette says so

@@ -2,7 +2,7 @@
 
 import { BookOpen01, Folder, Heart, HomeLine, Rows01 } from "@untitledui/icons";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useRouteTarget, useStartRoute } from "@/components/app/route-pending";
 import { cx } from "@/utils/cx";
 
 const tabs = [
@@ -28,7 +28,10 @@ const tabClass = "pressable relative flex flex-1 flex-col items-center gap-1 rou
 // its tab (Bart's call, 2026-09-11). The bar's side inset matches the content's padding, so bar and
 // page share an edge.
 export function MobileTabBar() {
-    const pathname = usePathname();
+    // Where the app is going, or where it is: the pill moves on the tap, not when the page lands,
+    // because the page you tapped from stays on screen until the next one is ready (route-pending.tsx).
+    const pathname = useRouteTarget();
+    const start = useStartRoute();
     // A page outside the five (Settings, You) has no pill.
     const activeIndex = tabs.findIndex((tab) => tab.match(pathname));
 
@@ -62,6 +65,8 @@ export function MobileTabBar() {
                             href={tab.href}
                             // The whole page, fetched when the bar mounts, so a tap draws it at once rather than its outline.
                             prefetch={true}
+                            // Says where the bar is going the moment it is tapped, so the pill moves at once.
+                            onNavigate={() => start(tab.href)}
                             aria-current={active ? "page" : undefined}
                             className={cx(tabClass, active ? "text-primary" : "text-tertiary")}
                         >

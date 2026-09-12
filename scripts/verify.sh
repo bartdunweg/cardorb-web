@@ -117,6 +117,20 @@ direct_db() {
 run "no-direct-db" direct_db
 
 # shellcheck disable=SC2329  # invoked indirectly, through `run` below.
+# R-UI-003: a route-level loading file replaces the page you came from the moment you tap, so
+# every tab switch went through a screen of grey blocks. A page's own Suspense boundary keeps the
+# last page standing and outlines only where its data goes (src/components/app/route-pending.tsx).
+no_route_loading() {
+  local hits
+  hits="$(find 'src/app/(app)' -name 'loading.tsx' 2>/dev/null || true)"
+  if [[ -n "$hits" ]]; then
+    printf 'loading.tsx under src/app/(app) (R-UI-003), use the page own Suspense boundary:\n%s\n' "$hits"
+    return 1
+  fi
+}
+run "no-route-loading" no_route_loading
+
+# shellcheck disable=SC2329  # invoked indirectly, through `run` below.
 # R-UI-001: a control the kit already has, built by hand again. The baseline is what is already
 # there, so this fails on new drift only and the number can go one way. A site with a reason
 # written above it (`kit-drift: <why>`) is a decision and is not counted.

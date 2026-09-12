@@ -7,8 +7,12 @@ import { GRID_COLUMNS } from "@/lib/cards-view";
 // What a page shows while it fetches: the page's own frame, with outlines only where the data
 // will be. The title, the subtitle, Back and the row are the real components with the real words,
 // so nothing moves when the content lands; the count line, the tiles and the cards are blocks in
-// the real grid's columns. Every loading.tsx under the dashboard composes these. The shell (sidebar,
-// tab bar) streams before any of them.
+// the real grid's columns. The shell (sidebar, tab bar) streams before any of them.
+//
+// These are the fallbacks of the pages' own Suspense boundaries, not `loading.tsx` files. A
+// `loading.tsx` replaced the page you were on the moment you tapped, so every tab switch went
+// through a screen of grey blocks; inside the page, the outline stands only where that page's
+// data goes, and the page you tapped from stays until this one is ready (route-pending.tsx).
 
 // A shade under the page, its own token: a block the page's own colour would be no outline at all,
 // and the shared quaternary stood at 1.2:1 against the page in the light but 2.7:1 in the dark, an
@@ -128,11 +132,10 @@ export function PanelsSkeleton({ title, subtitle, panels = 3 }: { title: string;
     );
 }
 
-/** Home: the title, the value section's outline, then the four stat tiles in their grid. */
-export function HomeSkeleton() {
+/** Home under its own title: the value section's outline, then the four stat tiles in their grid. */
+export function HomeBodyOutline() {
     return (
         <SkeletonFrame>
-            <PageHeader title="Home" titleOnPhone={false} />
             <ValueHeroOutline />
             <Outline className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4">
                 {Array.from({ length: 4 }, (_, i) => (
@@ -179,11 +182,10 @@ export function ValueHeroOutline() {
     );
 }
 
-/** Collection: the title and its line, then the folder tiles in their grid, each an icon square and two lines. */
-export function FoldersSkeleton() {
+/** The binder tiles under a title the page has already drawn: an icon square and two lines each. */
+export function FoldersOutline() {
     return (
         <SkeletonFrame>
-            <PageHeader title="Collection" />
             <Outline className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
                 {Array.from({ length: 4 }, (_, i) => (
                     <div
@@ -198,16 +200,6 @@ export function FoldersSkeleton() {
                     </div>
                 ))}
             </Outline>
-        </SkeletonFrame>
-    );
-}
-
-/** Browse: the title, then a series heading and tiles of logo box, name and bar in the shelf's grid. */
-export function SetsSkeleton() {
-    return (
-        <SkeletonFrame>
-            <PageHeader title="Browse" />
-            <SetsOutline />
         </SkeletonFrame>
     );
 }

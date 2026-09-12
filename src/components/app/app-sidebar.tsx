@@ -2,12 +2,12 @@
 
 import { Suspense, use } from "react";
 import { BookOpen01, Folder, Heart, HomeLine, Plus, Rows01, Star01 } from "@untitledui/icons";
-import { usePathname } from "next/navigation";
 import { Button as AriaButton } from "react-aria-components";
 import { AccountMenu } from "@/components/app/account-menu";
 import { SidebarSearchTrigger } from "@/components/app/command-search";
 import { FolderDialog } from "@/components/app/folder-dialog";
 import { PrefetchRoutes } from "@/components/app/prefetch-routes";
+import { useRouteTarget } from "@/components/app/route-pending";
 import { NavItemBase } from "@/components/application/app-navigation/base-components/nav-item";
 import type { NavItemDividerType, NavItemType } from "@/components/application/app-navigation/config";
 import { SidebarNavigationSectionDividers } from "@/components/application/app-navigation/sidebar-navigation/sidebar-section-dividers";
@@ -40,7 +40,10 @@ export function AppSidebar({
     favoritesCount: Promise<number | null>;
     pokedexCount: Promise<number | null>;
 }) {
-    const pathname = usePathname();
+    // Where a click is going, or where we are between clicks: the row lights up on the click, not
+    // when the page lands, because the page you clicked from stays on screen until the next one is
+    // ready (route-pending.tsx).
+    const pathname = useRouteTarget();
 
     const navItems: (NavItemType | NavItemDividerType)[] = [
         { label: "Home", href: "/dashboard", icon: HomeLine },

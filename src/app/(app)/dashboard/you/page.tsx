@@ -1,8 +1,10 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { LinkButton } from "@/components/app/link-button";
 import { PageHeader } from "@/components/app/page-header";
 import { SettingsForm } from "@/components/app/settings-form";
+import { PanelsSkeleton } from "@/components/app/skeletons";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { accountFrom, getMyProfile } from "@/lib/profile";
 
@@ -12,7 +14,16 @@ export const metadata: Metadata = { title: "You" };
 
 // You, on a phone: the account at the top, the settings under it, Sign out at the end. On desktop
 // the sidebar's account menu and the Settings page carry the same.
-export default async function YouPage() {
+export default function YouPage() {
+    // The name and the address are what is being read, so the outline carries no title.
+    return (
+        <Suspense fallback={<PanelsSkeleton title=" " panels={2} />}>
+            <You />
+        </Suspense>
+    );
+}
+
+async function You() {
     // The same read the layout made: one per name per request, so no second call.
     const me = await getMyProfile();
     const account = accountFrom(me);

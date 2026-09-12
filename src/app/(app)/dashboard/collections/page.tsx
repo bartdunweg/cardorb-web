@@ -1,16 +1,16 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { AddCardButton } from "@/components/app/add-card-button";
 import { CollectionsGrid, NewCollectionButton } from "@/components/app/collections-grid";
 import { PageHeader } from "@/components/app/page-header";
+import { FoldersOutline } from "@/components/app/skeletons";
 import { getMyCollections } from "@/lib/collections";
 
 // The tab's name, which the root layout's template finishes as “… · Cardorb”: without it every
 // tab and every history entry read “Cardorb”. The word is the one the navigation uses for this page.
 export const metadata: Metadata = { title: "Binders" };
 
-export default async function CollectionsPage() {
-    const { collections, favoritesCount, pokedexCount } = await getMyCollections();
-
+export default function CollectionsPage() {
     return (
         <div className="flex flex-1 flex-col gap-6">
             <PageHeader
@@ -27,7 +27,15 @@ export default async function CollectionsPage() {
                 }
                 barActions={<NewCollectionButton compact />}
             />
-            <CollectionsGrid collections={collections} favoritesCount={favoritesCount} pokedexCount={pokedexCount} />
+            {/* The tiles are the read; the title and both actions are not, so they do not wait for it. */}
+            <Suspense fallback={<FoldersOutline />}>
+                <Binders />
+            </Suspense>
         </div>
     );
+}
+
+async function Binders() {
+    const { collections, favoritesCount, pokedexCount } = await getMyCollections();
+    return <CollectionsGrid collections={collections} favoritesCount={favoritesCount} pokedexCount={pokedexCount} />;
 }

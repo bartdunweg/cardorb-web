@@ -1,8 +1,10 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { LinkButton } from "@/components/app/link-button";
 import { PageHeader } from "@/components/app/page-header";
 import { SettingsForm } from "@/components/app/settings-form";
+import { PanelsSkeleton } from "@/components/app/skeletons";
 import { getMyProfile } from "@/lib/profile";
 
 // The tab's name, which the root layout's template finishes as “… · Cardorb”: without it every
@@ -11,7 +13,15 @@ export const metadata: Metadata = { title: "Settings" };
 
 // `?profile=1` opens the profile sheet on arrival: Home's "Choose your name" sends people here
 // for one field, and that field is behind Manage.
-export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ profile?: string }> }) {
+export default function SettingsPage({ searchParams }: { searchParams: Promise<{ profile?: string }> }) {
+    return (
+        <Suspense fallback={<PanelsSkeleton title="Settings" subtitle="Manage your account and preferences." panels={4} />}>
+            <Settings searchParams={searchParams} />
+        </Suspense>
+    );
+}
+
+async function Settings({ searchParams }: { searchParams: Promise<{ profile?: string }> }) {
     const [{ profile, email }, params] = await Promise.all([getMyProfile(), searchParams]);
 
     if (!profile) {

@@ -185,6 +185,45 @@
     }
 }
 
+/* Route progress: the hairline that travels across the top of the window while the next page is
+   fetched (route-progress.tsx). 1.1 s per pass on the move curve, so it reads as working rather
+   than as counting down to something: the app cannot know how long the API will take. Reduced
+   motion leaves it standing across the whole width instead. */
+/* The track the line travels in: nothing for the first 150 ms it is on screen, and then 120 ms of
+   fading in, in CSS rather than a timer. A navigation that lands inside the delay shows nothing at
+   all, and one that lands just after it (a warm page, 170 ms) is a tenth of a line rather than a
+   flash. */
+@utility route-progress-track {
+    animation: route-progress-appear 120ms linear 150ms both;
+}
+
+@keyframes route-progress-appear {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@utility route-progress {
+    animation: route-progress 1100ms var(--ease-move) infinite;
+
+    @media (prefers-reduced-motion: reduce) {
+        animation: none;
+        width: 100%;
+    }
+}
+
+@keyframes route-progress {
+    from {
+        translate: -100% 0;
+    }
+    to {
+        translate: 250% 0;
+    }
+}
+
 @utility transition-inherit-all {
     transition-property: inherit;
     transition-duration: inherit;

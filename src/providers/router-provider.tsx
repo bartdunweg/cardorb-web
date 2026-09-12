@@ -3,6 +3,7 @@
 import type { PropsWithChildren } from "react";
 import { useRouter } from "next/navigation";
 import { RouterProvider } from "react-aria-components";
+import { useStartRoute } from "@/components/app/route-pending";
 
 declare module "react-aria-components" {
     interface RouterConfig {
@@ -12,6 +13,18 @@ declare module "react-aria-components" {
 
 export const RouteProvider = ({ children }: PropsWithChildren) => {
     const router = useRouter();
+    // Every react-aria link in the app follows this one road, so saying where we are going here
+    // says it for the sidebar, a card tile and a Back link alike (see route-pending.tsx).
+    const start = useStartRoute();
 
-    return <RouterProvider navigate={router.push}>{children}</RouterProvider>;
+    return (
+        <RouterProvider
+            navigate={(href, options) => {
+                start(href);
+                router.push(href, options);
+            }}
+        >
+            {children}
+        </RouterProvider>
+    );
 };
