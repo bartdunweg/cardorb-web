@@ -66,15 +66,14 @@ export async function FolderBody(props: FolderBodyProps) {
     // thing you type, so it stays in the row; the set and rarity filters are a sheet.
     const toolbar = (
         <>
-            {/* The field takes what the three buttons leave, so the row is one line at every width; on a
-                phone the buttons are their icons alone to leave it enough. */}
+            {/* The field is a round button on a phone and a short field from sm (`RowSearch`), so the row
+                is one line at every width with room between the field and the buttons. */}
             <CardsSearch
                 key="search"
                 size="sm"
                 initialValue={q ?? ""}
                 label={searchLabel}
                 placeholder={searchPlaceholder}
-                className="min-w-0 flex-1 sm:max-w-64"
                 // The titles it offers are the ones in this very list, filters and all. A public
                 // profile gets none: the suggestion would be read from the reader's own cards.
                 scope={

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { CardsSearch } from "@/components/app/cards-search";
 import { FiltersSheet } from "@/components/app/filters-sheet";
 import { RowButton } from "@/components/app/row-button";
+import { LIST_ROW } from "@/components/app/row-search";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { NativeSelect } from "@/components/base/select/select-native";
 import { BROWSE_PROGRESS_OPTIONS, BROWSE_SORT_OPTIONS, type BrowseQuery, browseHref, isBrowseProgress, isBrowseSort } from "@/lib/browse-query";
@@ -32,17 +33,10 @@ export function BrowseToolbar({ query, view }: { query: BrowseQuery; view: SetsV
     const go = (patch: Partial<BrowseQuery>) => startTransition(() => router.replace(browseHref(query, patch), { scroll: false }));
 
     return (
-        <div className={cx("flex items-center gap-2 transition-opacity", pending && "opacity-60")}>
-            {/* The field takes what the buttons leave, so the row is one line at every width. */}
+        <div className={cx(LIST_ROW, "transition-opacity", pending && "opacity-60")}>
+            {/* A round button on a phone, a short field from sm (`RowSearch`), as in a binder's row. */}
             {/* The shelf it filters is the shelf it offers: its set names, in the language chosen. */}
-            <CardsSearch
-                size="sm"
-                initialValue={query.q ?? ""}
-                label="Search sets"
-                placeholder="Search sets"
-                className="min-w-0 flex-1 sm:max-w-64"
-                shelf={query.language}
-            />
+            <CardsSearch size="sm" initialValue={query.q ?? ""} label="Search sets" placeholder="Search sets" shelf={query.language} />
             <FiltersSheet inline active={[query.language !== "en", query.progress !== "all"].filter(Boolean).length}>
                 {/* English is the default and reads as the first row, as "All sets" does in a binder's sheet. */}
                 <NativeSelect

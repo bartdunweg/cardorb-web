@@ -6,6 +6,7 @@ import { SearchLg } from "@untitledui/icons";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type TitleScope, collectionIndex, suggestCardTitles } from "@/app/(app)/dashboard/cards/actions";
 import { listSetsShelf } from "@/app/(app)/dashboard/sets/actions";
+import { RowSearch } from "@/components/app/row-search";
 import { InputBase } from "@/components/base/input/input";
 import { MAX_RECENT_TERMS, rememberTerm, useRecentTerms } from "@/hooks/use-recent-terms";
 import { type CardTitle, type TitleSet, matchSets, matchTitles } from "@/lib/card-titles";
@@ -35,7 +36,6 @@ export function CardsSearch({
     initialValue = "",
     label = "Search your cards",
     placeholder = "Search",
-    className = "w-full max-w-80",
     size = "md",
     scope,
     shelf,
@@ -43,7 +43,6 @@ export function CardsSearch({
     initialValue?: string;
     label?: string;
     placeholder?: string;
-    className?: string;
     /** sm beside the sm menu buttons of a folder page's row. */
     size?: "sm" | "md";
     /** The list this field filters. Absent (Browse, a public profile) there are no titles to offer. */
@@ -327,75 +326,77 @@ export function CardsSearch({
     );
 
     return (
-        <div className={cx("relative", className)}>
-            {/* The ARIA combobox: a text field that offers a list, which is exactly what this is
+        <RowSearch label={label} filled={value !== ""} onClear={() => setValue("")}>
+            <div className="relative w-full">
+                {/* The ARIA combobox: a text field that offers a list, which is exactly what this is
                 (WAI-ARIA APG). The rule wants a native datalist or a dropdown instead, and a
                 datalist draws neither the count beside a title nor a hit area a thumb can reach. */}
-            {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- see above: a native datalist cannot render these options. */}
-            <InputBase
-                aria-label={label}
-                icon={SearchLg}
-                placeholder={placeholder}
-                value={value}
-                onChange={(event) => {
-                    wrote.current = false;
-                    setTaken(null);
-                    setValue(event.target.value);
-                }}
-                onKeyDown={onKeyDown}
-                onFocus={() => {
-                    setHasFocus(true);
-                    // Coming back to the field opens it again: what was put away was put away then.
-                    setDismissed(null);
-                    setTaken(null);
-                }}
-                onBlur={() => {
-                    setHasFocus(false);
-                    close();
-                }}
-                size={size}
-                wrapperClassName="rounded-full"
-                role={suggests ? "combobox" : undefined}
-                aria-expanded={suggests ? isOpen : undefined}
-                aria-controls={suggests && isOpen ? listId : undefined}
-                aria-autocomplete={suggests ? "list" : undefined}
-                aria-activedescendant={isOpen && active >= 0 ? `${listId}-${active}` : undefined}
-            />
+                {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- see above: a native datalist cannot render these options. */}
+                <InputBase
+                    aria-label={label}
+                    icon={SearchLg}
+                    placeholder={placeholder}
+                    value={value}
+                    onChange={(event) => {
+                        wrote.current = false;
+                        setTaken(null);
+                        setValue(event.target.value);
+                    }}
+                    onKeyDown={onKeyDown}
+                    onFocus={() => {
+                        setHasFocus(true);
+                        // Coming back to the field opens it again: what was put away was put away then.
+                        setDismissed(null);
+                        setTaken(null);
+                    }}
+                    onBlur={() => {
+                        setHasFocus(false);
+                        close();
+                    }}
+                    size={size}
+                    wrapperClassName="rounded-full"
+                    role={suggests ? "combobox" : undefined}
+                    aria-expanded={suggests ? isOpen : undefined}
+                    aria-controls={suggests && isOpen ? listId : undefined}
+                    aria-autocomplete={suggests ? "list" : undefined}
+                    aria-activedescendant={isOpen && active >= 0 ? `${listId}-${active}` : undefined}
+                />
 
-            <output aria-live="polite" className="sr-only">
-                {offered}
-            </output>
+                <output aria-live="polite" className="sr-only">
+                    {offered}
+                </output>
 
-            {isOpen && (
-                /* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- the listbox half of the combobox above; a dropdown control is not a combobox's popup. */
-                <ul
-                    id={listId}
-                    role="listbox"
-                    aria-label={showRecents ? "Recent searches" : shelf ? "Sets" : "Titles and sets"}
-                    className="absolute top-full right-0 left-0 z-50 mt-1 max-h-72 overflow-y-auto rounded-lg bg-primary py-1 shadow-lg ring-1 ring-secondary_alt"
-                >
-                    {/* Titles first, then the sets under a heading of their own, rather than ten
+                {isOpen && (
+                    /* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- the listbox half of the combobox above; a dropdown control is not a combobox's popup. */
+                    <ul
+                        id={listId}
+                        role="listbox"
+                        aria-label={showRecents ? "Recent searches" : shelf ? "Sets" : "Titles and sets"}
+                        className="absolute top-full right-0 left-0 z-50 mt-1 max-h-72 overflow-y-auto rounded-lg bg-primary py-1 shadow-lg ring-1 ring-secondary_alt"
+                    >
+                        {/* Titles first, then the sets under a heading of their own, rather than ten
                         rows where a set looks like a card you own. Each set option says "Set"
                         beside it, which is what a screen reader reads out with the name: the
                         heading is the same thing said to the eye. */}
-                    {showRecents && (
-                        // Hidden from a screen reader on purpose: each option below carries the word itself.
-                        <li aria-hidden="true" className="px-3 pt-2 pb-1 text-xs font-semibold text-tertiary">
-                            Recent
-                        </li>
-                    )}
-                    {showRecents && found.map((hit, at) => option(hit, at))}
-                    {titles.map((hit) => option(hit, found.indexOf(hit)))}
-                    {sets.length > 0 && (
-                        // Hidden from a screen reader on purpose: each option below carries the word itself.
-                        <li aria-hidden="true" className="px-3 pt-2 pb-1 text-xs font-semibold text-tertiary">
-                            Sets
-                        </li>
-                    )}
-                    {sets.map((hit) => option(hit, found.indexOf(hit)))}
-                </ul>
-            )}
-        </div>
+                        {showRecents && (
+                            // Hidden from a screen reader on purpose: each option below carries the word itself.
+                            <li aria-hidden="true" className="px-3 pt-2 pb-1 text-xs font-semibold text-tertiary">
+                                Recent
+                            </li>
+                        )}
+                        {showRecents && found.map((hit, at) => option(hit, at))}
+                        {titles.map((hit) => option(hit, found.indexOf(hit)))}
+                        {sets.length > 0 && (
+                            // Hidden from a screen reader on purpose: each option below carries the word itself.
+                            <li aria-hidden="true" className="px-3 pt-2 pb-1 text-xs font-semibold text-tertiary">
+                                Sets
+                            </li>
+                        )}
+                        {sets.map((hit) => option(hit, found.indexOf(hit)))}
+                    </ul>
+                )}
+            </div>
+        </RowSearch>
     );
 }
 

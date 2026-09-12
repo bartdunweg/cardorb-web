@@ -7,6 +7,7 @@ import { listRows } from "@/app/(app)/dashboard/cards/actions";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FiltersSheet } from "@/components/app/filters-sheet";
 import { RowButton } from "@/components/app/row-button";
+import { LIST_ROW, RowSearch } from "@/components/app/row-search";
 import { SetCardTile } from "@/components/app/set-card-tile";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Input } from "@/components/base/input/input";
@@ -124,17 +125,19 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
 
     return (
         <div className="flex flex-1 flex-col gap-6">
-            {/* The field takes what the buttons leave, so the row is one line at every width. */}
-            <div className="flex flex-wrap items-center gap-3">
-                <Input
-                    size="sm"
-                    icon={SearchLg}
-                    aria-label="Search this set"
-                    placeholder="Search this set"
-                    value={q}
-                    onChange={setQ}
-                    className="min-w-0 flex-1 basis-48 sm:max-w-64"
-                />
+            {/* A round button on a phone, a short field from sm (`RowSearch`), as in a binder's row. */}
+            <div className={LIST_ROW}>
+                <RowSearch label="Search this set" filled={q !== ""} onClear={() => setQ("")}>
+                    <Input
+                        size="sm"
+                        icon={SearchLg}
+                        aria-label="Search this set"
+                        placeholder="Search this set"
+                        value={q}
+                        onChange={setQ}
+                        wrapperClassName="rounded-full"
+                    />
+                </RowSearch>
                 <FiltersSheet inline active={[holding, rarity, art].filter(Boolean).length}>
                     {/* Menus, as a binder's and Browse's: from lg they stand in the row beside Sort, and a chip
                         there was a control of another height. */}
