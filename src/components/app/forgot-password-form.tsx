@@ -26,7 +26,7 @@ export const ForgotPasswordForm = () => {
 
                     {state && "error" in state && <FormError error={state.error} />}
 
-                    <Button type="submit" size="lg" isDisabled={pending} isLoading={pending} showTextWhileLoading>
+                    <Button type="submit" size="lg" isLoading={pending} showTextWhileLoading>
                         {pending ? "Sending…" : "Send reset link"}
                     </Button>
                 </form>
