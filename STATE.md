@@ -22,6 +22,19 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-12, a card is offered what its era had.** Two pickers offered combinations that do not
+exist. The language list came from asking every Western catalogue whether it carries the card,
+which is right for German, French, Italian and Spanish and wrong for Portuguese: TCGdex' Portuguese
+catalogue carries translations of cards that were only ever English, so svp-085 (Pikachu with Grey
+Felt Hat) offered English and Portuguese. Portuguese now counts only beside the European run, and a
+catalogue that is asked and does not answer makes the whole list null rather than dropping itself
+from it, which had read as "never printed in it". The rarity a promo is named by hand was one fixed
+list of ten on every card, so a 1999 black star promo was offered "Special illustration rare". The
+API answers `eraRarities` now, measured from the sets of the card's own TCGdex series (one GraphQL
+call per era, cached a day, asked for only where the catalogue has no rarity to give), and the
+chooser offers those: Common, Rare and Uncommon for the Base era, the Scarlet & Violet words for an
+SVP promo. cardorb-api#337, web #496, both seen live on the dev server.
+
 **2026-09-12, what the figure is the price of.** The owner holds one graded card, a PSA 7 Base
 Set Charizard, and the sheet put €746.83 under it saying nothing about what that figure is: an
 ungraded Near Mint copy's, because both feeds here price the printing and not the grade. It says
