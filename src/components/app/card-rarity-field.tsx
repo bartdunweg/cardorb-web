@@ -4,7 +4,7 @@ import { useState } from "react";
 import { setCardRarity } from "@/app/(app)/dashboard/cards/actions";
 import { notify } from "@/components/app/toast";
 import { Select } from "@/components/base/select/select";
-import { RARITIES_BY_HAND } from "@/lib/rarities";
+import { NOT_KNOWN, RARITIES_BY_HAND } from "@/lib/rarities";
 
 /**
  * What kind of printing this card is, where the catalogue could not say.
@@ -22,7 +22,7 @@ export function CardRarityField({ cardIds, value, onSaved }: { cardIds: string[]
     const choose = async (value: string) => {
         if (!cardIds.length || saving) return;
         setSaving(value);
-        const res = await setCardRarity(cardIds, value);
+        const res = await setCardRarity(cardIds, value === NOT_KNOWN ? null : value);
         setSaving(null);
         if (!res.ok) {
             notify.failed(res.error);
@@ -30,8 +30,8 @@ export function CardRarityField({ cardIds, value, onSaved }: { cardIds: string[]
         }
         // The row on screen answers at once; the toast says it landed, because the sheet stays open
         // and nothing else on it moves.
-        onSaved(value);
-        notify.done(`Saved as ${value}`);
+        onSaved(value === NOT_KNOWN ? "" : value);
+        notify.done(value === NOT_KNOWN ? "Cleared" : `Saved as ${value}`);
     };
 
     return (
