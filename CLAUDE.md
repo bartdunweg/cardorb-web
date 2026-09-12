@@ -92,6 +92,8 @@ Project-specific rules with an ID (R-DATA-002, R-DATA-003, …) live in `CONVENT
 
 Interface language is English. Strings live in the components themselves; there is no
 translation file. Everything on disk is English; answer the owner in the language they write in.
+No em dashes anywhere, on screen or in a comment (R-COPY-001): two sentences, a comma, a colon
+or parentheses instead.
 
 ## Watch out for
 
