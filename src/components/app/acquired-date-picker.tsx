@@ -2,11 +2,10 @@
 
 import { useState } from "react";
 import { type CalendarDate, getLocalTimeZone, parseDate, today } from "@internationalized/date";
-import { Calendar as CalendarIcon } from "@untitledui/icons";
 import { useDateFormatter } from "react-aria";
-import { DatePicker as AriaDatePicker, Group as AriaGroup } from "react-aria-components";
+import { DatePicker as AriaDatePicker } from "react-aria-components";
 import { Calendar } from "@/components/application/date-picker/calendar";
-import { DatePicker } from "@/components/application/date-picker/date-picker";
+import { DatePicker, DatePickerTrigger } from "@/components/application/date-picker/date-picker";
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { Button } from "@/components/base/buttons/button";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
@@ -21,6 +20,9 @@ import { cx } from "@/utils/cx";
  * only handed on when Apply is pressed; Cancel drops what was picked and the field says what it
  * said before. That is the kit picker's own model, and it is why the sheet's copy card can save
  * straight from here without saving every day the user hovers past.
+ *
+ * Always the kit picker's `field` variant: an acquired date sits in a form under a label, beside
+ * inputs and selects, so it takes their shape and the width it is given, not a pill's hug.
  *
  * On a phone the calendar is a sheet from the bottom, not the kit's popover. The popover hangs
  * off the button, and the button sits inside a form inside a sheet: a month grid anchored there
@@ -67,6 +69,7 @@ export function AcquiredDatePicker({
                 isDisabled={isDisabled}
                 maxValue={today(getLocalTimeZone())}
                 value={shown}
+                variant="field"
                 onChange={pick}
                 onApply={apply}
                 onCancel={cancel}
@@ -123,11 +126,9 @@ function AcquiredDateSheet({
             value={value}
             onChange={(next) => onChange(next ? parseDate(next.toString()) : null)}
         >
-            <AriaGroup>
-                <Button size="sm" color="secondary" iconLeading={CalendarIcon}>
-                    {formattedDate}
-                </Button>
-            </AriaGroup>
+            <DatePickerTrigger variant="field" isPlaceholder={!value}>
+                {formattedDate}
+            </DatePickerTrigger>
             {/* The sheet's shape is `SheetDialog`'s: bottom-aligned and flush, rising rather than zooming. */}
             <ModalOverlay className="items-end p-0">
                 <Modal
