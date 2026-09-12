@@ -437,6 +437,14 @@ for the failures that leave no trace), and everything both passes found is close
 
 ## Open
 
+- **A printing's edition is not a field anywhere.** Bart raised it on 2026-09-12: the classics have
+  Shadowless and 1st Edition, and a 1st Edition Charizard is not the same card as an unlimited one,
+  in the collection or in the price. Today a copy has a finish (normal, holo, reverse, the two ball
+  reverses) and a foil pattern, and no third axis. Dex writes "1st Edition" in its Variant column,
+  which `finishFrom()` reads as nothing, so the fact is dropped on import and cannot be written by
+  hand. Doing it touches the `cards` check constraint, the API's zod shapes, the iOS app, the CSV
+  import and export, and the price lookup, so it is its own piece of work and not a side effect of
+  one. Nothing is lost while it waits: no row claims an edition it does not have.
 - **Seen in passing on 2026-09-11:** on the dev server the sheet's chunk (`card-detail-slideout`)
   is refused by the CSP nonce. **Dev-only, measured the same day:** the seven scripts without a
   nonce on a dev page are all Turbopack's HMR runtime and what it inserts; on the production build
