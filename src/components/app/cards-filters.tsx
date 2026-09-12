@@ -7,7 +7,7 @@ import type { Facets } from "@/lib/cards";
 import { FULL_ART } from "@/lib/full-art";
 import { type ListQuery, listHref } from "@/lib/list-query";
 
-// Four menus beside the search: set, rarity, generation, type, each with "All" on top. A choice
+// The menus beside the search: set, rarity, art, generation, type, each with "All" on top. A choice
 // goes into the URL (page back to one) and the server page asks the API, which matches each one
 // whole. A menu the collection has nothing for stays out: a collection of one era offers no era.
 // "Clear filters" shows only while one is on, so the row stays quiet otherwise. Renders its
@@ -34,18 +34,23 @@ export function CardsFilters({ query, facets }: { query: ListQuery; facets: Face
                 aria-label="Rarity"
                 size="sm"
                 className="w-auto"
-                /* Full art sits above the rarities and takes the place of one, because it is a
-                   question of the same kind and because it cuts across them: one full art is an
-                   Ultra Rare and the next an illustration rare (`@/lib/full-art`). The API works
-                   it out per set and answers it; here it is one more thing the menu can say. */
-                value={query.fullArt ? FULL_ART : (query.rarity ?? "")}
-                onChange={(event) =>
-                    go(event.target.value === FULL_ART ? { fullArt: true, rarity: undefined } : { fullArt: false, rarity: event.target.value || undefined })
-                }
+                value={query.rarity ?? ""}
+                onChange={(event) => go({ rarity: event.target.value || undefined })}
+                options={[{ label: "All rarities", value: "" }, ...facets.rarities.map((r) => ({ label: r, value: r }))]}
+            />
+            {/* Full art is a menu of its own and not an entry among the rarities, because it cuts
+                across them: every special illustration rare is a full art, and so is a late Ultra
+                Rare (`@/lib/full-art`). Listed with the rarities it put one card under two of
+                them. On its own it combines with a rarity, which the API answers together. */}
+            <NativeSelect
+                aria-label="Art"
+                size="sm"
+                className="w-auto"
+                value={query.fullArt ? FULL_ART : ""}
+                onChange={(event) => go({ fullArt: event.target.value === FULL_ART })}
                 options={[
-                    { label: "All rarities", value: "" },
+                    { label: "Any art", value: "" },
                     { label: "Full art", value: FULL_ART },
-                    ...facets.rarities.map((r) => ({ label: r, value: r })),
                 ]}
             />
             {facets.gens.length > 1 || query.gen ? (
