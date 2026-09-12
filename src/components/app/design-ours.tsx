@@ -20,11 +20,13 @@ import { FormError } from "./form-error";
 import { LinkButton } from "./link-button";
 import { RowButton } from "./row-button";
 import { SearchTrigger } from "./search-trigger";
+import { SetHero } from "./set-hero";
 import { notify } from "./toast";
 
 /** A picture the catalogue serves, so CardImage is drawn by the path it actually uses. */
 const CHARIZARD = "https://assets.tcgdex.net/en/base/base1/4/high.png";
 const CHARIZARD_LOW = "https://assets.tcgdex.net/en/base/base1/4/low.png";
+const BASE_SET_LOGO = "https://assets.tcgdex.net/en/base/base1/logo.png";
 
 const sets = [
     { value: "base1", label: "Base Set", hint: "1999" },
@@ -187,6 +189,28 @@ export const ourSections: SectionSpec[] = [
                         <div className="relative aspect-card w-24 overflow-hidden rounded-card bg-quaternary">
                             <CardImage src="https://assets.tcgdex.net/en/nothing/here.png" alt="" width={96} className="object-cover" />
                         </div>
+                    </Cell>
+                </Group>
+            </Panel>
+        ),
+    },
+    {
+        id: "set-hero",
+        title: "SetHero",
+        from: "components/app/set-hero",
+        ours: true,
+        note: "The band at the top of a set's page: the logo centred on its own brightest colour, read once from the file on the server. Grey where the colour cannot be read; the name's first word where there is no logo. Decoration, the h1 under it says which set.",
+        render: (
+            <Panel>
+                <Group title="Backgrounds" hint="the colour is the logo's own" cols="wide">
+                    <Cell label="With a colour">
+                        <SetHero name="Base Set" logoUrl={BASE_SET_LOGO} color="#f2bc2b" />
+                    </Cell>
+                    <Cell label="No colour read">
+                        <SetHero name="Base Set" logoUrl={BASE_SET_LOGO} color={null} />
+                    </Cell>
+                    <Cell label="No logo">
+                        <SetHero name="Scarlet & Violet" logoUrl={null} color={null} />
                     </Cell>
                 </Group>
             </Panel>
