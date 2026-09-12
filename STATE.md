@@ -22,6 +22,17 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-12, what the figure is the price of.** The owner holds one graded card, a PSA 7 Base
+Set Charizard, and the sheet put €746.83 under it saying nothing about what that figure is: an
+ungraded Near Mint copy's, because both feeds here price the printing and not the grade. It says
+so now (#494). Measured before deciding: of 1,917 owned rows, 1,914 are Near Mint with no grade,
+one is Mint, one says nothing, one is the PSA 7. A third source (PokemonPriceTracker, free at 100
+credits a day or $9.99 a month for 20,000, both carrying RAW and PSA off TCGplayer and eBay in
+dollars) would be a third market to keep agreeing with the two we have, for one card. Bart's call:
+park it, name it, revisit at a couple of dozen graded or played copies. "Buy on Cardmarket" stays
+off for the reason it was: TCGdex hands over the product id and no address, and the guide is ids
+without names.
+
 **2026-09-12, the Pokédex.** Two things Bart asked for in one afternoon, and they met in the
 middle. First: a slot can hold several cards of one Pokémon and nothing said which one belongs
 there. Where you stop swiping is now the slot's card, written to `cards.dex_face`
@@ -601,10 +612,12 @@ for the failures that leave no trace), and everything both passes found is close
 
 ## Next
 
-- **Condition and grade do not reach the price.** A Poor copy and a PSA 10 show what a Near Mint
-  one does. Neither Cardmarket nor TCGplayer publishes either; checked, both feeds carry
-  printing and no condition. PokemonPriceTracker does, RAW and PSA, at $9.99 a month, from the
-  American market. **Needs a decision before it needs code.**
+- **Condition and grade do not reach the price, and that is a decision now.** A Poor copy and a
+  PSA 10 show what a Near Mint one does. Neither Cardmarket nor TCGplayer publishes either;
+  PokemonPriceTracker does, RAW and PSA, free at 100 credits a day and $9.99 a month for 20,000.
+  Parked on 2026-09-12 because it is one card in this collection (the PSA 7 Charizard) and a
+  third market to reconcile; the sheet says the figure is the ungraded one instead (#494).
+  Revisit at a couple of dozen graded or played copies.
 - **"Buy on Cardmarket" is off** (cardorb-api#267): `cmUrl` is null until an address can be
   guaranteed to land on the card's own page. Cardmarket publishes product ids but not the
   expansion half of a product's address, and its site answers every probe from a tool with a
