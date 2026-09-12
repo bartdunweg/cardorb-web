@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
-import { ChevronRight, Code01, File02, Lock01, Monitor04, Moon01, Sun, UploadCloud01 } from "@untitledui/icons";
+import { ChevronRight, Code01, Download01, File02, Lock01, Monitor04, Moon01, Sun, UploadCloud01 } from "@untitledui/icons";
 import { Button as AriaButton } from "react-aria-components";
 import { checkUsername, removeAvatar, updateEmail, updatePassword, updateProfile, uploadAvatar } from "@/app/(app)/dashboard/settings/actions";
 import { signOut } from "@/app/(auth)/actions";
@@ -356,6 +356,8 @@ export function SettingsForm({
                         <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-fg-quaternary" />
                     </AriaButton>
                 </ImportDialog>
+                {/* A file, not a page: the row is a plain link the browser saves, named by the day. */}
+                <SettingsLinkRow icon={Download01} label="Export a CSV file" value="Dex format" href="/dashboard/settings/export" download />
             </SettingsGroup>
 
             <SettingsGroup title="Support">
