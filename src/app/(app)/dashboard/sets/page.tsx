@@ -16,7 +16,7 @@ export default async function SetsPage({ searchParams }: { searchParams: Promise
     const { language: raw } = await searchParams;
     const language: BrowseLanguageCode = isBrowseLanguage(raw) ? raw : "en";
     return (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-1 flex-col gap-6">
             {/* The title alone: how far the shelf is comes per set, on its tile, not as one number over all of them. */}
             <PageHeader title="Browse" />
             {/* The shelf is not awaited: the title and the search go out first, the sets when the catalogue answers. */}
