@@ -44,6 +44,7 @@ import { Tooltip } from "@/components/base/tooltip/tooltip";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
 import { type PokemonCard, type RemovedCard, isReverseFinish } from "@/lib/api-shapes";
 import { binderFromPath, isBinderPath } from "@/lib/binder-from-path";
+import { cardLabelFull } from "@/lib/card-label";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
 import { type CopyGroup, groupCopies, sortCopies } from "@/lib/copies";
 import { matchesRule } from "@/lib/folder-rule";
@@ -954,9 +955,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                     this is the one place what the card says is worth a look. */}
                                 {card ? ("local_name" in card && card.local_name ? `${card.name} (${card.local_name})` : card.name) : null}
                             </AriaHeading>
-                            <p className="text-sm text-tertiary">
-                                {[card?.set_name, card?.number ? `#${card.number}` : null].filter(Boolean).join(" · ") || "—"}
-                            </p>
+                            <p className="text-sm text-tertiary">{(card && cardLabelFull(card)) || "—"}</p>
                             {/* The price sits under the title, where a product panel puts it, not among the attributes. */}
                             {mine?.price != null ? (
                                 <p className="flex items-baseline gap-2 text-md font-semibold text-primary tabular-nums">
