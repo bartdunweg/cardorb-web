@@ -6,12 +6,17 @@ const index: CatalogueIndex = {
     sets: {
         "sv03.5": { name: "151", series: "Scarlet & Violet", date: "2023/09/22", image: "https://assets.tcgdex.net/en/sv/sv03.5" },
         base1: { name: "Base Set", series: "Base", date: "1999/01/09", image: null },
+        svp: { name: "SVP Black Star Promos", series: "Scarlet & Violet", date: "2023/06/30", image: null },
     },
     cards: [
         ["sv03.5-006", "sv03.5", "006", "Charizard ex", "Double Rare", ["Fire"]],
         ["sv03.5-007", "sv03.5", "007", "Squirtle", "Common", ["Water"], "https://elsewhere/007"],
         ["base1-4", "base1", "4", "Charizard", "Rare Holo", ["Fire"], null],
         ["base1-58", "base1", "58", "Pikachu", "Common", ["Lightning"]],
+        // A card TCGdex has no scan of: the copy holds the second catalogue's whole file.
+        ["svp-085", "svp", "085", "Pikachu with Grey Felt Hat", "Promo", ["Lightning"], "https://images.pokemontcg.io/svp/85.png"],
+        // The same, through the API's cover proxy, which is a path on the API's own origin.
+        ["svp-102", "svp", "102", "Mew with Grey Felt Hat", "Promo", ["Psychic"], "/api/cover?url=https%3A%2F%2Flimitless%2FSVP_102.png"],
     ],
 };
 
@@ -61,6 +66,13 @@ describe("searchIndex", () => {
         });
         expect(squirtle?.image).toBe("https://elsewhere/007/low.webp");
         expect(searchIndex(index, "charizard base").items[0]?.image).toBeNull();
+    });
+
+    it("draws a whole file as the one size it is, and a proxy path off the API's origin", () => {
+        const pikachu = searchIndex(index, "grey felt hat pikachu").items[0];
+        expect(pikachu?.image).toBe("https://images.pokemontcg.io/svp/85.png");
+        const mew = searchIndex(index, "grey felt hat mew").items[0];
+        expect(mew?.image).toBe("https://api.cardorb.com/api/cover?url=https%3A%2F%2Flimitless%2FSVP_102.png");
     });
 
     it("pages twenty at a time", () => {
