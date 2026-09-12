@@ -827,12 +827,12 @@ of the upstream file keeps them.
 
 One material in two weights, utilities in `globals.css` over tokens in `theme.css`:
 
-- `glass` — thin, for chrome that content scrolls under: the phone tab bar and page bar.
+- `glass`: thin, for chrome that content scrolls under: the phone tab bar and page bar.
   `bg-glass` is the page surface at 64% with a 20 px blur.
-- `glass-thick` — for a surface that holds content of its own: the desktop sidebar, a sheet, a
+- `glass-thick`: for a surface that holds content of its own: the desktop sidebar, a sheet, a
   dialog, a popover, the search palette. `bg-glass-thick` is the page surface at 92% with a 40 px
   blur.
-- `border-glass` / `ring-glass` — the bright edge, black 8% in light, white 12% in dark, for a
+- `border-glass` / `ring-glass`: the bright edge, black 8% in light, white 12% in dark, for a
   glass surface that carries no shadow.
 
 Both derive from `bg-primary`, so they follow light and dark on their own.
@@ -872,11 +872,11 @@ lift of `lg` with its rim left out, so the edge is still one line.
 Small rules that compound. They live in tokens and utilities, so a new screen gets them by using the
 existing pieces, not by remembering them.
 
-- `pressable` — scale 0.96 on press, 160 ms, `cubic-bezier(0.2, 0, 0, 1)`; on a kit Button the
+- `pressable`: scale 0.96 on press, 160 ms, `cubic-bezier(0.2, 0, 0, 1)`; on a kit Button the
   press follows the Button's own 100 ms linear transition, which comes later in the sheet. On every
   Button, the tab bar's tabs, tappable cards and the search bars. No scale at all under "reduce
   motion".
-- `ring-image` — a 1 px edge on every picture: black 10% in light, white 10% in dark, never a
+- `ring-image`: a 1 px edge on every picture: black 10% in light, white 10% in dark, never a
   tinted grey. With `ring-1 ring-inset` on the image's wrapper.
 - Transitions name their properties: `transition-colors`, `transition-opacity`, never bare
   `transition`. A property that is not changing must not be waiting.
