@@ -13,9 +13,10 @@ interface NativeSelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>
     selectClassName?: string;
     size?: "sm" | "md" | "lg";
     /**
-     * Changed from the kit: the options are still on their way. The chevron becomes a spinner and
-     * the select cannot be opened, so a field whose only option reads "Loading sets…" says that
-     * with a moving thing rather than with a word alone.
+     * Changed from the kit: the options are still on their way. The chevron becomes a spinner, so a
+     * field whose only option reads "Loading sets…" says that with a moving thing rather than with a
+     * word alone. The field stays operable: disabling it takes it out of the tab order, and with the
+     * spinner hidden from a screen reader that would leave nothing at all to hear.
      */
     isLoading?: boolean;
     options: { label: string; value: string; disabled?: boolean }[];
@@ -64,7 +65,6 @@ export const NativeSelect = ({ label, hint, options, className, selectClassName,
             <div className="relative grid w-full grid-cols-1 items-center">
                 <select
                     {...props}
-                    disabled={props.disabled || isLoading}
                     id={selectId}
                     aria-describedby={hintId}
                     aria-labelledby={selectId}
