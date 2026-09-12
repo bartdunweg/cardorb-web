@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { ChevronLeft, ChevronRight, DotsHorizontal, Heart, LinkExternal01, Phone01, Plus, Star01, Trash01, XClose } from "@untitledui/icons";
+import { ChevronLeft, ChevronRight, DotsHorizontal, Heart, Phone01, Plus, Star01, Trash01, XClose } from "@untitledui/icons";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
@@ -1209,7 +1209,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                                 rel="noreferrer noopener"
                                                                 color="secondary"
                                                                 size="sm"
-                                                                iconTrailing={LinkExternal01}
                                                                 className="w-full"
                                                             >
                                                                 {l.label}
