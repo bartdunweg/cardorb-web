@@ -8,6 +8,7 @@ const card = (over: Partial<SetCard>): SetCard => ({
     name: "Bulbasaur",
     localName: null,
     setName: "151",
+    setAbbr: null,
     rarity: null,
     category: null,
     trainerType: null,
