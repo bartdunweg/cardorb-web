@@ -22,6 +22,20 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-12, full art.** A set page, a collection list and the palette can each be narrowed to
+the cards whose illustration covers the whole card. That is a look and not a rarity (Bulbapedia,
+"Full Art card (TCG)"), and no catalogue records it: "Ultra Rare" is the full art ex in Scarlet &
+Violet, the full art V in Sword & Shield, and the *plain* GX in Sun & Moon, whose full arts are
+that set's Secret Rares. What holds in every era is that a full art is a reprint, the same name
+a second time later in the set, so that is the rule (`src/lib/full-art.ts`, #474). It needs a
+whole set in hand, which a list page does not have, so the API works it out per set as its
+nightly copy writes it and both other lists read the answer (cardorb-api#328, #486). Gold is not
+full art: `trainerType` is what tells a full art Supporter from a gold Item, which share a
+rarity and nothing else. Measured against the live catalogue: 2,544 full arts over 21,068 cards,
+and per set 151 gives 39, Sword & Shield 30, Sun & Moon 24, XY 6. Found on the way and fixed
+first: TCGdex's id filter matches on contains, so `sm1` spent its window of 500 on sm10, sm11
+and sm12 and 64 of Sun & Moon's 172 cards came back with no rarity at all (cardorb-api#321).
+
 **2026-09-12, the run is worth its own money.** A copy has said which print run it is from since
 cardorb-api#313, and every copy was priced as the ordinary printing whatever it said. Cardmarket
 does file the runs apart, and its own nightly guide (the file this stack already reads for every
