@@ -515,14 +515,15 @@ for the failures that leave no trace), and everything both passes found is close
 
 ## Open
 
-- **A printing's edition is not a field anywhere.** Bart raised it on 2026-09-12: the classics have
-  Shadowless and 1st Edition, and a 1st Edition Charizard is not the same card as an unlimited one,
-  in the collection or in the price. Today a copy has a finish (normal, holo, reverse, the two ball
-  reverses) and a foil pattern, and no third axis. Dex writes "1st Edition" in its Variant column,
-  which `finishFrom()` reads as nothing, so the fact is dropped on import and cannot be written by
-  hand. Doing it touches the `cards` check constraint, the API's zod shapes, the iOS app, the CSV
-  import and export, and the price lookup, so it is its own piece of work and not a side effect of
-  one. Nothing is lost while it waits: no row claims an edition it does not have.
+- **A printing's edition is a field now, and the euro price still is not.** The owner raised it on
+  2026-09-12 and it shipped the same day: `cards.edition` holds `1st-edition`, `shadowless` or
+  `unlimited`, null where nobody has said, and a stamped copy is its own row in the store and
+  its own line at read time. The CSV import reads the run from Dex's Variant word and from a
+  column of its own; the export writes it. What is not done is the money: TCGplayer prices the
+  two runs apart for Jungle, Fossil, Team Rocket, Gym and Neo and a 1st Edition copy reads that
+  figure, converted, but Cardmarket publishes one figure per card id and its public product
+  list does not name the runs, so Base Set's own runs and the value chart are the ordinary
+  price. Naming a Cardmarket product as a run would need something nothing published.
 - **Seen in passing on 2026-09-11:** on the dev server the sheet's chunk (`card-detail-slideout`)
   is refused by the CSP nonce. **Dev-only, measured the same day:** the seven scripts without a
   nonce on a dev page are all Turbopack's HMR runtime and what it inserts; on the production build
