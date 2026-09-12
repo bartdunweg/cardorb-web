@@ -191,7 +191,14 @@ function Choice({ label, hint, pressed, onClick }: { label: string; hint?: strin
         >
             <span className="flex min-w-0 flex-1 flex-col">
                 <span className="truncate text-sm font-medium text-primary">{label}</span>
-                {hint ? <span className="truncate text-xs text-tertiary">{hint}</span> : null}
+                {/* The comma is read, not seen: the two lines run together into one accessible name
+                    otherwise ("Base Set1999", "Full art39 cards"), which is what a screen reader says. */}
+                {hint ? (
+                    <span className="truncate text-xs text-tertiary">
+                        <span className="sr-only">, </span>
+                        {hint}
+                    </span>
+                ) : null}
             </span>
             <Check aria-hidden="true" className={cx("size-4 shrink-0 text-fg-brand-primary", !pressed && "invisible")} />
         </AriaButton>
