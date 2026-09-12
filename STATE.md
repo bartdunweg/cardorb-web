@@ -51,11 +51,11 @@ the new-account flow, from the code (#429): five screens a fresh account reaches
 onward and have one now (Favorites, both empty binders, Check your email, an expired link on
 /login); Choose your name opens the profile sheet and says the name is the public address; a
 private profile's address says so instead of the site's 404. **Not yet walked in the browser as
-the test account** (its password is Bart's). Still open from the same map: adding the first card
-is silent and the palette stays over a Home that has switched to the stats; "Add to wishlist" on
-the wishlist page opens the palette without the wishlist preset; one wishlist card flips Home
-from the welcome to a €0 hero with four zeros; the Binders hub on a phone has no empty state, by
-design.
+the test account** (its password is Bart's). The rest of the map is closed: an add from the
+palette says so and the page behind is re-read on close (#443); the wishlist's empty state says
+Find a card, since the palette opens with nothing preset by Bart's call (#444); the welcome stands
+until a card is owned, so one wish no longer brings back the €0 hero (#444). Left by design: the
+Binders hub on a phone has no empty state.
 
 **2026-09-12.** The sign-up was walked as a stranger, with a real address. The mail arrived and
 its button went to `env%28SUPABASE_AUTH_SITE_URL%29/…`: a `config push` from a shell without
