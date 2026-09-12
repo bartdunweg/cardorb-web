@@ -12,6 +12,7 @@ import { Progress, type Step } from "@/components/application/progress-steps/pro
 import { Table, TableCard } from "@/components/application/table/table";
 import { Button } from "@/components/base/buttons/button";
 import { CloseButton } from "@/components/base/buttons/close-button";
+import { Checkbox } from "@/components/base/checkbox/checkbox";
 import { NativeSelect } from "@/components/base/select/select-native";
 import { MAX_CSV_BYTES, readCsv } from "@/lib/csv-file";
 import { cx } from "@/utils/cx";
@@ -77,8 +78,13 @@ const plural = (n: number, one: string, many = `${one}s`) => `${n.toLocaleString
  * being answered is "what happens if I press the button", and a row of figures
  * makes the reader do the arithmetic that decides whether to trust it.
  */
-function summary(p: ImportPreview): string {
-    const parts = [`${plural(p.seen - p.skipped, "card")} will be added.`];
+function summary(p: ImportPreview, writing: number): string {
+    const writable = p.seen - p.skipped;
+    const parts = [
+        writing === writable
+            ? `${plural(writing, "card")} will be added.`
+            : `${plural(writing, "card")} will be added, of ${writable.toLocaleString("en")} in the file.`,
+    ];
     /*
      * Three things used to be one word, "skipped", and each rewording of it was
      * still wrong until somebody looked at what those rows actually are.
@@ -117,11 +123,15 @@ const figures = (r: ImportResult): { label: string; value: number; alarming?: bo
     return [
         { label: "Rows read", value: r.seen },
         { label: "Added", value: r.added },
+        ...(r.excluded > 0 ? [{ label: "Left out by you", value: r.excluded }] : []),
         ...(r.existing > 0 ? [{ label: "Already had", value: r.existing }] : []),
         ...(r.notOwned > 0 ? [{ label: "Not owned", value: r.notOwned }] : []),
         ...(unreadable > 0 ? [{ label: "Could not be read", value: unreadable, alarming: true }] : []),
     ];
 };
+
+/** How many rows the list draws at once. A Dex export has thousands; a screen has none. */
+const PAGE = 100;
 
 type StepName = "upload" | "review" | "done";
 
@@ -161,6 +171,16 @@ function ImportForm({ close }: { close: () => void }) {
     const [busy, setBusy] = useState<"reading" | "importing" | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [result, setResult] = useState<ImportResult | null>(null);
+    /**
+     * Rows struck off, by the line of the file they came from.
+     *
+     * The lines rather than the rows: the list is redrawn from a fresh preview
+     * every time a column changes, and a line number means the same thing
+     * across that where a position in an array does not. Empty is everything
+     * ticked, which is what a file somebody chose to import should start as.
+     */
+    const [excluded, setExcluded] = useState<ReadonlySet<number>>(new Set());
+    const [shown, setShown] = useState(PAGE);
 
     /*
      * Which step is on screen is read off the state rather than kept beside
@@ -177,6 +197,8 @@ function ImportForm({ close }: { close: () => void }) {
         setError(null);
         setMap({});
         setHeader([]);
+        setExcluded(new Set());
+        setShown(PAGE);
     };
 
     /** Back to the drop zone, with nothing of the last file left behind. */
@@ -217,6 +239,11 @@ function ImportForm({ close }: { close: () => void }) {
 
         if (outcome.ok) {
             setPreview(outcome.preview);
+            // A re-read under a different column map is a different list, with
+            // different lines in it. Carrying the old ticking over would strike
+            // off rows nobody looked at.
+            setExcluded(new Set());
+            setShown(PAGE);
             setHeader(outcome.preview.header ?? []);
             if (outcome.preview.guessed) setMap(outcome.preview.guessed);
             return;
@@ -262,7 +289,11 @@ function ImportForm({ close }: { close: () => void }) {
             if (!csv) return;
             setBusy("importing");
             setError(null);
-            const outcome = await commitImport({ csv, map: Object.keys(map).length ? map : undefined });
+            const outcome = await commitImport({
+                csv,
+                map: Object.keys(map).length ? map : undefined,
+                exclude: excluded.size ? [...excluded] : undefined,
+            });
             setBusy(null);
 
             if (!outcome.ok) {
@@ -300,7 +331,24 @@ function ImportForm({ close }: { close: () => void }) {
                     ? "Imported"
                     : "Ready to import";
 
-    const writing = preview ? preview.seen - preview.skipped : 0;
+    /**
+     * The rows on offer, and what is left ticked.
+     *
+     * `rows` is empty against an API that does not hand the list back yet, and
+     * then nothing here can be struck off: `writing` falls back to the count
+     * the preview reported, which is what this screen always used.
+     */
+    const rows = preview?.rows ?? [];
+    const writing = preview ? (rows.length > 0 ? rows.length - excluded.size : preview.seen - preview.skipped) : 0;
+    const somePicked = rows.length > 0 && excluded.size < rows.length;
+    const allPicked = rows.length > 0 && excluded.size === 0;
+
+    const toggle = (line: number) => {
+        const next = new Set(excluded);
+        if (!next.delete(line)) next.add(line);
+        setExcluded(next);
+    };
+
     // The sample the API sends holds the first twenty skipped rows, mixed; only
     // the ones that actually failed are worth a line number.
     const unreadable = preview ? preview.skippedRows.filter((s) => !s.why.startsWith("not owned")) : [];
@@ -400,6 +448,15 @@ function ImportForm({ close }: { close: () => void }) {
                                 </div>
                             ))}
                         </dl>
+                        {/*
+                         * The collection's own size, which is the number the
+                         * figures above cannot give: "1,204 added" is not
+                         * checkable on its own, and "it says 1,204 and I have
+                         * 1,600" is the question an import leaves behind.
+                         */}
+                        {typeof result.total === "number" ? (
+                            <p className="text-sm text-tertiary">Your collection holds {plural(result.total, "card")} now.</p>
+                        ) : null}
                     </output>
                 ) : null}
 
@@ -407,7 +464,7 @@ function ImportForm({ close }: { close: () => void }) {
                     <div className="flex arrive flex-col gap-4">
                         <div className="flex flex-col gap-1">
                             <p aria-live="polite" className="text-sm font-medium text-primary">
-                                {summary(preview)}
+                                {summary(preview, writing)}
                             </p>
                             <p className="text-sm text-tertiary">
                                 {preview.source === "dex"
@@ -416,11 +473,44 @@ function ImportForm({ close }: { close: () => void }) {
                             </p>
                         </div>
 
-                        {/* The kit's table, as the collection's list view uses it (R-UI-001). Rows do nothing: this is a preview. */}
-                        {preview.sample.length > 0 ? (
+                        {/*
+                         * The kit's table, as the collection's list view uses it
+                         * (R-UI-001), with a tick in front of every row.
+                         *
+                         * Every row is ticked when the list arrives, because a file
+                         * somebody chose to import is a file they mean to import;
+                         * the ticks are there to take a row out, not to build the
+                         * import up one row at a time.
+                         *
+                         * Not every row is drawn. A Dex export is four and a half
+                         * thousand lines and two thousand of them would be written:
+                         * laying that many rows out costs seconds and scrolls past
+                         * anything worth reading. A hundred at a time, more on the
+                         * button, and the ticking is kept by line number rather than
+                         * by what is on screen, so a row you never scrolled to is
+                         * still part of the import.
+                         */}
+                        {rows.length > 0 ? (
                             <TableCard.Root size="sm">
-                                <Table aria-label={`The first ${preview.sample.length} cards this import would add`}>
+                                <Table aria-label="The cards this import would add">
                                     <Table.Header>
+                                        <Table.Head id="pick" label="" className="w-10">
+                                            <Checkbox
+                                                // The kit's table hands a CheckboxContext down for
+                                                // react-aria's own row selection, which these are not:
+                                                // the ticking is ours, kept by line number. Opting out
+                                                // of the slot is how a checkbox says so.
+                                                slot={null}
+                                                // Named for what it is, not for what clicking it
+                                                // would do: a checkbox already announces its state,
+                                                // and a name that flips with it is read out as a
+                                                // contradiction ("Leave every row out, checked").
+                                                aria-label="Import every row"
+                                                isSelected={somePicked}
+                                                isIndeterminate={somePicked && !allPicked}
+                                                onChange={() => setExcluded(allPicked ? new Set(rows.map((r) => r.line)) : new Set())}
+                                            />
+                                        </Table.Head>
                                         <Table.Head id="card" label="Card" isRowHeader />
                                         <Table.Head id="set" label="Set" />
                                         <Table.Head id="number" label="Number" />
@@ -428,9 +518,19 @@ function ImportForm({ close }: { close: () => void }) {
                                         <Table.Head id="copies" label="Copies" />
                                         <Table.Head id="where" label="Where" />
                                     </Table.Header>
-                                    <Table.Body items={preview.sample.map((row, i) => ({ ...row, id: `${row.setName}-${row.number}-${row.name}-${i}` }))}>
+                                    <Table.Body items={rows.slice(0, shown).map((row) => ({ ...row, id: String(row.line) }))}>
                                         {(row) => (
                                             <Table.Row id={row.id}>
+                                                <Table.Cell>
+                                                    <Checkbox
+                                                        slot={null}
+                                                        // Named by the card, not by "row 12": the
+                                                        // name is what somebody is deciding about.
+                                                        aria-label={`Import ${row.name}, ${row.setName}`}
+                                                        isSelected={!excluded.has(row.line)}
+                                                        onChange={() => toggle(row.line)}
+                                                    />
+                                                </Table.Cell>
                                                 <Table.Cell className="font-medium text-primary">{row.name}</Table.Cell>
                                                 <Table.Cell>{row.setName}</Table.Cell>
                                                 <Table.Cell>{row.number || "—"}</Table.Cell>
@@ -452,8 +552,51 @@ function ImportForm({ close }: { close: () => void }) {
                                     </Table.Body>
                                 </Table>
                             </TableCard.Root>
+                        ) : preview.sample.length > 0 ? (
+                            /*
+                             * The old sample table, for an API that does not hand
+                             * back the whole list yet. Twenty rows, no ticks, which
+                             * is what this screen showed before and still true.
+                             */
+                            <TableCard.Root size="sm">
+                                <Table aria-label={`The first ${preview.sample.length} cards this import would add`}>
+                                    <Table.Header>
+                                        <Table.Head id="card" label="Card" isRowHeader />
+                                        <Table.Head id="set" label="Set" />
+                                        <Table.Head id="number" label="Number" />
+                                        <Table.Head id="printing" label="Printing" />
+                                        <Table.Head id="copies" label="Copies" />
+                                        <Table.Head id="where" label="Where" />
+                                    </Table.Header>
+                                    <Table.Body items={preview.sample.map((row, i) => ({ ...row, id: `${row.setName}-${row.number}-${row.name}-${i}` }))}>
+                                        {(row) => (
+                                            <Table.Row id={row.id}>
+                                                <Table.Cell className="font-medium text-primary">{row.name}</Table.Cell>
+                                                <Table.Cell>{row.setName}</Table.Cell>
+                                                <Table.Cell>{row.number || "—"}</Table.Cell>
+                                                <Table.Cell>
+                                                    {row.finish ?? "—"}
+                                                    {row.foilPattern ? (
+                                                        <span className="block text-xs text-tertiary">{row.foilPattern.replace("-", " ")}</span>
+                                                    ) : null}
+                                                </Table.Cell>
+                                                <Table.Cell className="tabular-nums">{row.quantity ?? 1}</Table.Cell>
+                                                <Table.Cell>{row.owned ? "Collection" : "Wishlist"}</Table.Cell>
+                                            </Table.Row>
+                                        )}
+                                    </Table.Body>
+                                </Table>
+                            </TableCard.Root>
                         ) : null}
-                        {writing > preview.sample.length ? (
+
+                        {rows.length > shown ? (
+                            <Button size="sm" color="secondary" onClick={() => setShown((n) => n + PAGE)} className="self-start">
+                                {rows.length - shown <= PAGE
+                                    ? `Show the last ${plural(rows.length - shown, "row")}`
+                                    : `Show ${PAGE.toLocaleString("en")} more of the ${(rows.length - shown).toLocaleString("en")} left`}
+                            </Button>
+                        ) : null}
+                        {rows.length === 0 && writing > preview.sample.length ? (
                             <p className="text-sm text-tertiary">And {plural(writing - preview.sample.length, "more card")}.</p>
                         ) : null}
                     </div>

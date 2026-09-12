@@ -61,6 +61,16 @@ The field counts and names what is in it: titles in a binder, sets on Browse, re
 when it is empty. A key written as a stringified object had filed the Collection's own history
 under a name the Collection did not ask for; both keys are now written out field by field.
 
+**2026-09-12, ticking rows off.** The second half of what Bart asked for, and it needed the API
+first (cardorb-api #323): a preview now hands back every row it would write, each with the line
+of the file it came from, and a commit takes `exclude`, the lines not to write, counting them
+apart from the rows it could not read. `total`, the collection's size after the write, comes back
+with it. On the web the Review table has a tick in front of every row, all on when the list
+arrives, a hundred rows at a time with the rest on a button, and the ticking kept by line number
+so a row nobody scrolled to is still part of the import. Done says what the collection holds now.
+The old twenty-row sample table is still in the file, drawn only when `rows` comes back empty,
+which is a web deploy that lands before the API's.
+
 **2026-09-12, the import's stages.** Bart: the CSV import put a spinner under the drop zone and
 named the file nowhere, so the upload step did not say what it was busy with. The kit's file row
 came back, rewritten without `motion` and without `@untitledui/file-icons` (R-UI-002), and the
