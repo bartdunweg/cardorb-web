@@ -22,6 +22,13 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-12, a number from the phone.** Everything measured today was measured on one Mac on
+one connection, which says nothing about a phone on 4G, and the question that started it was how
+it feels on a phone. `@vercel/speed-insights` is in the root layout now: LCP and INP per route,
+from the devices the app is actually read on. Same origin in production, so the nonce policy needs
+nothing added; the proxy's matcher skips `_vercel`. **It needs turning on in the Vercel dashboard
+(Project, Speed Insights, Enable)**, and until it is, the script it asks for is not served.
+
 **2026-09-12, one order for every search.** The rule the collection's field learned in #459 was
 missing from the palette, the search everyone actually uses: the catalogue document is newest set
 first, so "char" answered Pecharunt ex above every Charizard. `band()` and `rank()` now live in

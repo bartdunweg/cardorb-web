@@ -35,6 +35,9 @@ importers:
       '@untitledui/icons':
         specifier: ^0.0.22
         version: 0.0.22(react@19.2.8)
+      '@vercel/speed-insights':
+        specifier: ^2.0.0
+        version: 2.0.0(next@16.3.4(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
       flag-icons:
         specifier: 7.5.0
         version: 7.5.0
@@ -1552,6 +1555,32 @@ packages:
     resolution: {integrity: sha512-lEUdk2Ni7SocXMjIokJDoBeECzmZO1qAIuZc+91rAqwSMln0CKRnk+r2dC2TJ9ccION/1ZFed2fIeKvAEAs0lQ==}
     peerDependencies:
       react: '>= 16'
+
+  '@vercel/speed-insights@2.0.0':
+    resolution: {integrity: sha512-jwkNcrTeafWxjmWq4AHBaptSqZiJkYU5adLC9QBSqeim0GcqDMgN5Ievh8OG1rJ6W3A4l1oiP7qr9CWxGuzu3w==}
+    peerDependencies:
+      '@sveltejs/kit': ^1 || ^2
+      next: '>= 13'
+      nuxt: '>= 3'
+      react: ^18 || ^19 || ^19.0.0-rc
+      svelte: '>= 4'
+      vue: ^3
+      vue-router: ^4
+    peerDependenciesMeta:
+      '@sveltejs/kit':
+        optional: true
+      next:
+        optional: true
+      nuxt:
+        optional: true
+      react:
+        optional: true
+      svelte:
+        optional: true
+      vue:
+        optional: true
+      vue-router:
+        optional: true
 
   '@vitejs/plugin-react@6.1.0':
     resolution: {integrity: sha512-qd2BzUBehkov86WFhg0JkEFEYyCLG9uPCe6qWTY/kRlss9OvJrOF2UbIWT7p+8IzZHkEu0DNGHc4HSv+JdDLsw==}
@@ -4615,6 +4644,11 @@ snapshots:
 
   '@untitledui/icons@0.0.22(react@19.2.8)':
     dependencies:
+      react: 19.2.8
+
+  '@vercel/speed-insights@2.0.0(next@16.3.4(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)':
+    optionalDependencies:
+      next: 16.3.4(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react: 19.2.8
 
   '@vitejs/plugin-react@6.1.0(vite@8.2.2(@types/node@25.9.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0))':

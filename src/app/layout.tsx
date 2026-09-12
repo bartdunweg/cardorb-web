@@ -1,3 +1,4 @@
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { BOOT_SCRIPT } from "@/lib/theme-script";
@@ -59,6 +60,13 @@ export default function RootLayout({
                 {/* No RouteProvider here: the public pages are static text with plain links, and the
                     provider's react-aria dependency belongs to the signed-in and auth layouts. */}
                 <ThemeProvider>{children}</ThemeProvider>
+                {/* How long a page takes on the devices it is actually read on, per route: LCP for
+                    what is drawn and INP for how fast a tap is answered. Everything we know about
+                    the app's speed until now was measured on one Mac on one connection, which
+                    says nothing about a phone on 4G, and "it feels slow" deserves a number.
+                    Same origin (the script and the beacon are both /_vercel/…), so the nonce
+                    policy in lib/csp.ts needs nothing added, and the proxy skips the path. */}
+                <SpeedInsights />
             </body>
         </html>
     );
