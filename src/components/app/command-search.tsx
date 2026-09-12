@@ -152,6 +152,10 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
        refresh re-reads them: the row under the closed preview would still offer the card as one
        you did not have. `adding` holds the hit whose add is in flight, so its buttons wait. */
     const [adding, setAdding] = useState<string | null>(null);
+    /* The page behind is re-read when the palette closes, not on every add: read at once, Home
+       swapped its welcome for the stats under a palette still open, and the change landed on a
+       screen nobody was looking at. Read on close, it lands on the screen you come back to. */
+    const wrote = useRef(false);
     const add = async (card: PokemonCard, target: "collection" | "wishlist") => {
         setAdding(card.id);
         const res = await addCard(card, target);
@@ -160,7 +164,10 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
             update((hits) => takenHit(hits, card.id, target));
             // The same mark on the recent copy of the card, where there is one.
             updateRecentCards(takenHit([card], card.id, target));
-            router.refresh();
+            wrote.current = true;
+            // The hit's mark says the press landed; where the card went is a page under the
+            // palette. The same sentence as the sheet's own Add.
+            notify.done(target === "wishlist" ? `${card.name} is on your wishlist now` : `${card.name} is in your collection now`);
         } else {
             // The buttons come back as they were, which reads as a missed click; the toast is the
             // only thing that says the card is not there.
@@ -236,6 +243,10 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
                         if (!o) {
                             setInputValue("");
                             setFilters({});
+                            if (wrote.current) {
+                                wrote.current = false;
+                                router.refresh();
+                            }
                         }
                     }}
                     inputValue={inputValue}
