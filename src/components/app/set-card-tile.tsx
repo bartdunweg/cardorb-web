@@ -1,15 +1,16 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Check, Heart, Minus, Plus } from "@untitledui/icons";
 import { Button as AriaButton } from "react-aria-components";
-import { addCard, removeCard, rereadMine, restoreCard, setCopies } from "@/app/(app)/dashboard/cards/actions";
+import { addCard, removeCard, restoreCard } from "@/app/(app)/dashboard/cards/actions";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { warmCard } from "@/components/app/card-memo";
 import { GotItButton } from "@/components/app/got-it-button";
 import { TileIconButton } from "@/components/app/tile-icon-button";
 import { notify } from "@/components/app/toast";
+import { useCopySteps } from "@/components/app/use-copy-steps";
 import { useWarm } from "@/components/app/use-warm";
 import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
 import { TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
@@ -26,11 +27,7 @@ type Result = { ok: true } | { ok: false; error: string };
  * when the card is one row, which is nearly always: a card held as two printings is managed
  * in Cards, where each printing is its own row.
  *
- * The count changes under the finger. A press used to wait for the write and then for the whole
- * page to be drawn again, twice (in the action's answer and once more by a refresh), with every
- * button disabled in between: on 2026-09-12 one add set off twenty API reads that took sixteen
- * seconds. Now the tile shows the new count at once and the store follows: one write in the air at
- * a time, always for the last count pressed, and the page read again once the presses have landed.
+ * The plus and the minus change the count under the finger (`useCopySteps`).
  *
  * The picture carries no text of its own: the caption under it and the button's name say
  * which card this is and whether it is yours, so the grey is never the only signal.
@@ -53,7 +50,7 @@ export function SetCardTile({
     onOpen?: (card: SetCard) => void;
 }) {
     const [pending, startTransition] = useTransition();
-    const [error, setError] = useState<string | null>(null);
+    const [runError, setError] = useState<string | null>(null);
     // What the sheet will ask for, asked while the pointer rests here, so the first open is complete.
     const warm = useWarm(onOpen ? () => warmCard(card.tcgId) : undefined);
 
@@ -94,91 +91,24 @@ export function SetCardTile({
                 ),
         );
 
-    /* How many you hold, as last pressed: shown while the writes and the re-read are under way (the
-       transition stays pending until the page drawn after them is on screen), the page's own count
-       from then on, so the two never disagree for a frame. */
-    const heldOnPage = card.owned ? card.quantity : 0;
-    const [pressed, setPressed] = useState(heldOnPage);
-    const held = pending ? pressed : heldOnPage;
-    const want = useRef(heldOnPage);
-    const flying = useRef(false);
-    /* What the store holds after this tile's last write. The page's count is not that until the
-       page drawn after the re-read lands: an action answers before the page it streams, so a press
-       in between read "not held" and added the card again (every add is a new row), and two plus
-       presses made four copies. So the page is believed only once it has changed since last read. */
-    const stored = useRef<{ quantity: number; id: string | undefined }>({ quantity: heldOnPage, id: undefined });
-    const seen = useRef<string | null>(null);
-    const buttons = useRef<HTMLDivElement>(null);
-    const press = (quantity: number) => {
-        setError(null);
-        /* Owning the card or no longer owning it swaps the buttons (the heart for the minus), so the
-           one a keyboard was on is gone: focus goes to the plus, the last button, once it is drawn. */
-        if ((held === 0) !== (quantity === 0) && buttons.current?.contains(document.activeElement)) {
-            requestAnimationFrame(() => [...(buttons.current?.querySelectorAll("button") ?? [])].at(-1)?.focus());
-        }
-        setPressed(quantity);
-        want.current = quantity;
-        if (flying.current) return;
-        flying.current = true;
-        const page = `${heldOnPage}:${card.itemIds.join(",")}`;
-        if (!pending && seen.current !== page) {
-            seen.current = page;
-            stored.current = { quantity: heldOnPage, id: card.owned ? card.itemIds[0] : undefined };
-        }
-        let { quantity: have, id } = stored.current;
-        startTransition(async () => {
-            let failure: string | null = null;
-            do {
-                while (want.current !== have) {
-                    const target = want.current;
-                    if (have === 0) {
-                        const res = await addCard(pokemonCardFromSetCard(card, language), "collection", undefined, { reread: false });
-                        if (!res.ok || !res.id) {
-                            failure = res.ok ? "The card was added, but this page could not follow. Reload to see it." : res.error;
-                            break;
-                        }
-                        const added = res.id;
-                        id = added;
-                        // The press that loses nothing but may be a thumb one tile off: said, with the way back.
-                        offerUndo(`${card.name} is in your collection now`, () => removeCard(added));
-                    } else if (target === 0 && id) {
-                        const res = await removeCard(id, { reread: false });
-                        if (!res.ok) {
-                            failure = res.error;
-                            break;
-                        }
-                        const removed = res.card;
-                        id = undefined;
-                        notify.removed(
-                            `${card.name} is out of your collection`,
-                            removed ? { undo: { label: "Put back", onUndo: () => void restoreCard(removed) } } : {},
-                        );
-                    } else if (id) {
-                        const res = await setCopies(id, target, { reread: false });
-                        if (!res.ok) {
-                            failure = res.error;
-                            break;
-                        }
-                    } else break;
-                    have = have === 0 ? 1 : target;
-                    stored.current = { quantity: have, id };
-                }
-                // Once, with nothing in the air to race it; a press during the re-read goes round again.
-                await rereadMine();
-            } while (!failure && want.current !== have);
-            flying.current = false;
-            if (failure) {
-                want.current = have;
-                setError(failure);
-            }
-        });
-    };
+    const {
+        held,
+        press,
+        buttons,
+        error: stepError,
+    } = useCopySteps({
+        name: card.name,
+        held: card.owned ? card.quantity : 0,
+        rowId: card.owned ? card.itemIds[0] : undefined,
+        add: () => addCard(pokemonCardFromSetCard(card, language), "collection", undefined, { reread: false }),
+    });
+    const error = runError ?? stepError;
 
     const oneRow = card.itemIds.length === 1;
     const rowId = card.itemIds[0];
     const state = held > 0 ? "owned" : card.wishlist ? "wishlist" : "missing";
     // A copy more or less from here: a card you do not hold, or one you hold as one row.
-    const steps = state === "missing" || (state === "owned" && (oneRow || !card.owned));
+    const stepping = state === "missing" || (state === "owned" && (oneRow || !card.owned));
     const stateLabel = {
         owned: held > 1 ? `${held} copies` : "in your collection",
         wishlist: "on your wishlist",
@@ -332,7 +262,7 @@ export function SetCardTile({
                     {/* A card you hold: the minus where the heart was (a card you own cannot be wished for),
                         then the same plus as a card you do not, since it is the same answer. The minus on
                         the last copy takes the card out, with the way back in the toast. */}
-                    {state === "owned" && steps ? (
+                    {state === "owned" && stepping ? (
                         <>
                             <TileIconButton
                                 icon={Minus}

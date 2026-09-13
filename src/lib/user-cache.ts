@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { revalidatePath, unstable_cache, updateTag } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache, updateTag } from "next/cache";
 import { ApiError, api, session } from "@/lib/api";
 import { ownProfileSchema } from "@/lib/api-shapes";
 import { elapsed, logTiming } from "@/lib/timing";
@@ -97,6 +97,25 @@ export async function forgetMine(): Promise<void> {
     // The render after this action runs in the same request; it must not get a read from before the write.
     inFlight().clear();
     revalidatePath("/dashboard", "layout");
+}
+
+/**
+ * After a write the screen already shows: the cached answers go, and nothing is drawn again now.
+ *
+ * For a list you are stepping copies on, through `/api/forget-mine`: forgetMine() in an action
+ * redraws the page in the action's answer, and so does any tag dropped in an action, and a redrawn
+ * list starts again from its first batch. False when there is no session to forget for.
+ *
+ * "max" is the profile a route handler may name; the entries these tags cover are `unstable_cache`
+ * ones, which a revalidated tag turns into a miss on the next read.
+ */
+export async function forgetMineLater(): Promise<boolean> {
+    const s = await session();
+    if (!s) return false;
+    const username = await myUsername();
+    revalidateTag(userTag(s.userId), "max");
+    if (username) revalidateTag(publicTag(username), "max");
+    return true;
 }
 
 /**
