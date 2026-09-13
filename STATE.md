@@ -22,6 +22,23 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-13, a press on a tile answers at once, on every list.** Bart: the plus on a set tile
+took seconds and nearly hung. One press rendered the page twice with the buttons disabled, and on
+the API one add set off ~20 reads that took 15 to 16 s. Now `useCopySteps` shows the count under
+the finger, sends one write at a time for the last count pressed, and re-reads once. The tile keeps
+what it wrote until the page changes: an action answers before the page it streams, and a second
+press read "not held" and added a second row (two pluses made ×4 in a test). Tiles on every list
+match the set page: not held `♥ +`, held `− +` (the minus on the last copy removes, with Put back),
+a wish a filled heart on pink beside Got it, a favourite star filled on yellow in the sheet, no
+dots menu, price left and count right, and "POR 121" on a set tile (cardorb-api#374). A list does
+not redraw after a press: any tag dropped in a server action hands the page back redrawn and
+CardsList restarts from its first batch, so a list's tiles forget through `POST /api/forget-mine`
+(expired at once; "max" lagged one press). The count and value under a list's title and the
+sidebar's binder counts follow the presses (`list-totals.tsx`, `sidebarCounts`). API side, the
+collection-facts bundle is kept per person and rate with a signature per set, so an add re-reads one
+set from TCGdex, not all 52: `/stats` 8.3 s to 1.0 s, `/folders` 8.5 s to 0.8 s (cardorb-api#376;
+the entry is 1.17 MB of the Data Cache's silent 2 MB). web #524, #527, #532, #539, #541, #543.
+
 **2026-09-13, no more "Recently viewed".** Bart's call: the palette opens empty again, "Type to
 search for a card.", with no list of the cards last previewed. The hook (`use-recent-cards.ts`),
 its test, the clear row and the lookup that re-read their marks on open are gone.
