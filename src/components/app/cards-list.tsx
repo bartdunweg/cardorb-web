@@ -5,6 +5,7 @@ import { loadMoreCards } from "@/app/(app)/dashboard/list-actions";
 import { CardsGrid } from "@/components/app/cards-grid";
 import { CardsTable } from "@/components/app/cards-table";
 import { GotItButton } from "@/components/app/got-it-button";
+import { WishHeartButton } from "@/components/app/wish-heart-button";
 import { Button } from "@/components/base/buttons/button";
 import type { Card, CardFilter, CardList } from "@/lib/cards";
 import type { CardsSize, CardsViewMode } from "@/lib/cards-view";
@@ -194,9 +195,19 @@ export function CardsList({
                                         cards={group.cards}
                                         onSelect={(card) => onSelect(card, cards)}
                                         size={size}
-                                        // The wishlist's tiles carry "Got it": the list says which list it is, rather than
-                                        // the grid reading it off a card's fields, so the collection never grows the button.
-                                        action={filter.wishlist ? (card) => <GotItButton card={card} /> : undefined}
+                                        // The wishlist's tiles carry the pink heart and "Got it", every other list a minus and a
+                                        // plus: the list says which list it is, rather than the grid reading it off a card's fields.
+                                        action={
+                                            filter.wishlist
+                                                ? (card, leave) => (
+                                                      <>
+                                                          <WishHeartButton card={card} onGone={leave} />
+                                                          <GotItButton card={card} />
+                                                      </>
+                                                  )
+                                                : undefined
+                                        }
+                                        steps={!filter.wishlist}
                                     />
                                 </section>
                             ))}

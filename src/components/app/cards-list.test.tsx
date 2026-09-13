@@ -90,9 +90,10 @@ describe("CardsList on the wishlist", () => {
         expect(gotIt.parentElement?.closest("button")).toBeNull();
         expect(gotIt.querySelector("button")).toBeNull();
         expect(document.querySelectorAll("button button")).toHaveLength(0);
-        // Two focus stops: the tile and the action.
+        // Three focus stops: the tile, the heart that takes it off the wishlist, and Got it.
+        expect(screen.getByRole("button", { name: "Remove Pikachu from your wishlist" })).toHaveAttribute("aria-pressed", "true");
         const buttons = screen.getAllByRole("button");
-        expect(buttons).toHaveLength(2);
+        expect(buttons).toHaveLength(3);
         expect(buttons.every((b) => b.tabIndex === 0)).toBe(true);
     });
 
@@ -119,6 +120,30 @@ describe("CardsList elsewhere", () => {
         await draw(false);
         expect(await screen.findAllByRole("button")).toHaveLength(1);
         expect(screen.queryByRole("button", { name: /Got it/ })).toBeNull();
+    });
+
+    // A card you hold has the minus and the plus a set tile has, beside the tile and not in it.
+    it("draws a minus and a plus under a card you hold", async () => {
+        const held = { ...card, id: "0c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f", owned: true, quantity: 1 } as Card;
+        await act(async () =>
+            render(
+                <Suspense fallback={null}>
+                    <CardsList
+                        list={Promise.resolve({ cards: [held], total: 1, facets: { sets: [], rarities: [], gens: [], types: [] } } as unknown as CardList)}
+                        filter={{}}
+                        narrowed={false}
+                        view="grid"
+                        size="md"
+                        onSelect={vi.fn()}
+                        noHits={null}
+                        empty={null}
+                    />
+                </Suspense>,
+            ),
+        );
+        expect(await screen.findByRole("button", { name: "Remove Pikachu from your collection" })).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Add a copy of Pikachu" })).toBeInTheDocument();
+        expect(document.querySelectorAll("button button")).toHaveLength(0);
     });
 });
 
