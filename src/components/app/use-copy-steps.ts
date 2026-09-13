@@ -140,6 +140,9 @@ export function useCopySteps({
  */
 export const forgetMineQuietly = () =>
     fetch("/api/forget-mine", { method: "POST" }).then(
-        () => undefined,
+        () => void window.dispatchEvent(new Event(CARDS_CHANGED)),
         () => undefined,
     );
+
+/** Said on the window once a quiet write's cache is gone, for what reads its own numbers again (the sidebar). */
+export const CARDS_CHANGED = "cardorb:cards-changed";

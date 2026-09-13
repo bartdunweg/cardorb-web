@@ -1,14 +1,16 @@
 "use client";
 
-import { Suspense, use, useState } from "react";
+import { Suspense, use, useEffect, useState } from "react";
 import { BookOpen01, ChevronLeftDouble, Folder, Heart, HomeLine, Plus, Rows01, Star01 } from "@untitledui/icons";
 import { Button as AriaButton } from "react-aria-components";
+import { sidebarCounts } from "@/app/(app)/sidebar-actions";
 import { AccountMenu } from "@/components/app/account-menu";
 import { SidebarSearchTrigger } from "@/components/app/command-search";
 import { FolderDialog } from "@/components/app/folder-dialog";
 import { PrefetchRoutes } from "@/components/app/prefetch-routes";
 import { useRouteTarget } from "@/components/app/route-pending";
 import { type RailItem, SidebarRail } from "@/components/app/sidebar-rail";
+import { CARDS_CHANGED } from "@/components/app/use-copy-steps";
 import { NavItemBase } from "@/components/application/app-navigation/base-components/nav-item";
 import type { NavItemDividerType, NavItemType } from "@/components/application/app-navigation/config";
 import { SidebarNavigationSectionDividers } from "@/components/application/app-navigation/sidebar-navigation/sidebar-section-dividers";
@@ -60,6 +62,17 @@ export function AppSidebar({
         storeCollapsed(folded);
     };
 
+    /* The numbers read again after a list's tiles stepped copies. Those presses do not draw the page
+       again, so the layout's read stays from before them; the sidebar asks for its own, and puts
+       the answer over the layout's until the layout reads again (a navigation that redraws it). */
+    const [fresh, setFresh] = useState<{ of: Promise<FolderLink[]>; collections: FolderLink[]; favorites: number | null } | null>(null);
+    useEffect(() => {
+        const reread = () => void sidebarCounts().then((r) => setFresh({ of: collections, ...r }));
+        window.addEventListener(CARDS_CHANGED, reread);
+        return () => window.removeEventListener(CARDS_CHANGED, reread);
+    }, [collections]);
+    const override = fresh?.of === collections ? fresh : null;
+
     // The four pages, on the rail as icons alone.
     const pages: RailItem[] = [
         { label: "Home", href: "/dashboard", icon: HomeLine },
@@ -79,7 +92,7 @@ export function AppSidebar({
             icon: Star01,
             badge: (
                 <Suspense fallback={null}>
-                    <LateCount count={favoritesCount} />
+                    <LateCount count={favoritesCount} fresh={override ? override.favorites : undefined} />
                 </Suspense>
             ),
         },
@@ -108,7 +121,7 @@ export function AppSidebar({
                     afterItems={
                         <>
                             <Suspense fallback={null}>
-                                <FolderRows collections={collections} activeUrl={pathname} />
+                                <FolderRows collections={collections} fresh={override?.collections} activeUrl={pathname} />
                             </Suspense>
                             {/* An item like the others: the same padding, icon size and type, at the list's end. */}
                             <li className="py-px">
@@ -138,8 +151,9 @@ export function AppSidebar({
 }
 
 // The folders you made: more items of the same list, at the same padding and row height.
-function FolderRows({ collections, activeUrl }: { collections: Promise<FolderLink[]>; activeUrl: string }) {
-    const list = use(collections);
+function FolderRows({ collections, fresh, activeUrl }: { collections: Promise<FolderLink[]>; fresh?: FolderLink[]; activeUrl: string }) {
+    // Read again after a press on a list's tiles, where there is an answer; the layout's otherwise.
+    const list = fresh ?? use(collections);
     return (
         <>
             {list.map((c) => {
@@ -174,8 +188,8 @@ function Count({ count }: { count: number }) {
 }
 
 /** A count that arrives after the frame (Favorites); null when its read failed, and the row goes without. */
-function LateCount({ count }: { count: Promise<number | null> }) {
-    const n = use(count);
+function LateCount({ count, fresh }: { count: Promise<number | null>; fresh?: number | null }) {
+    const n = fresh !== undefined ? fresh : use(count);
     return n === null ? null : <Count count={n} />;
 }
 
