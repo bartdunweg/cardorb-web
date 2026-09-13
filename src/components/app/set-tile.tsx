@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { HoverPrefetchLink } from "@/components/app/hover-prefetch-link";
 import { SetWash } from "@/components/app/set-hero";
 import { SetLogo } from "@/components/app/set-logo";
 import { formatCount } from "@/lib/format";
@@ -61,7 +61,7 @@ export function SetTile({
 }) {
     const empty = set.owned === 0;
     return (
-        <Link
+        <HoverPrefetchLink
             href={`/dashboard/sets/${encodeURIComponent(set.id)}${language === "en" ? "" : `?language=${language}`}`}
             className={cx(
                 "flex h-full pressable flex-col gap-3 rounded-xl bg-primary p-3 shadow-lift-xs ring-1 ring-primary outline-focus-ring transition-[color,background-color,box-shadow] ring-inset hover:bg-secondary focus-visible:outline-2",
@@ -101,7 +101,7 @@ export function SetTile({
                     <span className="text-xs text-tertiary">No cards in the catalogue yet</span>
                 )}
             </div>
-        </Link>
+        </HoverPrefetchLink>
     );
 }
 

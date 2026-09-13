@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { CardImage } from "@/components/app/card-image";
+import { HoverPrefetchLink } from "@/components/app/hover-prefetch-link";
 import { formatCount, formatDate } from "@/lib/format";
 import type { BrowseLanguage } from "@/lib/languages";
 import type { SetSummary } from "@/lib/sets";
@@ -16,7 +16,7 @@ const LOGO_WIDTH = 96;
 export function SetRow({ set, language }: { set: SetSummary; language: BrowseLanguage }) {
     const empty = set.owned === 0;
     return (
-        <Link
+        <HoverPrefetchLink
             href={`/dashboard/sets/${encodeURIComponent(set.id)}${language === "en" ? "" : `?language=${language}`}`}
             className={cx(
                 "flex pressable items-center gap-3 rounded-xl bg-primary p-2 pr-3 shadow-lift-xs ring-1 ring-primary outline-focus-ring transition-[color,background-color,box-shadow] ring-inset hover:bg-secondary focus-visible:outline-2",
@@ -46,7 +46,7 @@ export function SetRow({ set, language }: { set: SetSummary; language: BrowseLan
             ) : (
                 <span className="shrink-0 text-xs text-tertiary">No cards yet</span>
             )}
-        </Link>
+        </HoverPrefetchLink>
     );
 }
 
