@@ -12,6 +12,12 @@ export type ValueSnapshot = {
     cards: number;
     priced: number;
     unpriced: number;
+    /**
+     * Copies added since the reading before, and what they were worth that night. What the line
+     * gained by holding more rather than by prices moving; absent on a folder's line, read as zero.
+     */
+    added?: number;
+    addedValue?: number;
 };
 
 // Oldest first, as the API sends it. Kept five minutes per person like the other whole-collection

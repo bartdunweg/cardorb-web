@@ -41,4 +41,17 @@ describe("ValueChart", () => {
         rerender(<ValueChart snapshots={two} />);
         expect(container.querySelector("svg[tabindex]")).not.toBeNull();
     });
+
+    // Bart, 2026-09-13: "ik zie het toevoegen van kaarten niet terug in de grafiek".
+    it("rings the readings on which cards were added, and says so in the description", () => {
+        const readings = [
+            { date: "2026-09-09", value: 100, cards: 10, priced: 10, unpriced: 0, added: 4, addedValue: 30 },
+            { date: "2026-09-10", value: 140, cards: 12, priced: 12, unpriced: 0, added: 2, addedValue: 35 },
+            { date: "2026-09-11", value: 141, cards: 12, priced: 12, unpriced: 0, added: 0, addedValue: 0 },
+        ];
+        const { container, getByText } = render(<ValueChart snapshots={readings} />);
+        // The first reading's additions came before what is shown: one ring, not two.
+        expect(container.querySelectorAll("circle").length).toBe(1);
+        expect(getByText(/Cards were added on 1 reading/)).toBeTruthy();
+    });
 });
