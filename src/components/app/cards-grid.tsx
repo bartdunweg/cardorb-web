@@ -8,6 +8,7 @@ import { warmCard } from "@/components/app/card-memo";
 import { CardTile } from "@/components/app/card-tile";
 import { FavoriteStar } from "@/components/app/favorite-star";
 import { FlagIcon } from "@/components/app/flag-icon";
+import { useListTotals } from "@/components/app/list-totals";
 import { TileIconButton } from "@/components/app/tile-icon-button";
 import { useCopySteps } from "@/components/app/use-copy-steps";
 import { cardLabel } from "@/lib/card-label";
@@ -98,7 +99,20 @@ function GridCell<T extends GridCard>({
     /* Quiet: the list is not drawn again after a press, because a redrawn list starts over from its
        first batch and a card pressed two hundred tiles down took the scroll back to the top. The
        tile says its own count; the next screen you open reads fresh. */
-    const { held: stepped, press, error, buttons: buttonsRef } = useCopySteps({ name: card.name, held: card.quantity ?? 0, rowId: card.id, quiet: true });
+    const totals = useListTotals();
+    const {
+        held: stepped,
+        press,
+        error,
+        buttons: buttonsRef,
+    } = useCopySteps({
+        name: card.name,
+        held: card.quantity ?? 0,
+        rowId: card.id,
+        quiet: true,
+        // The line under the title: copies, what they are worth, and the row when the tile leaves or comes back.
+        onShown: (from, to) => totals?.({ copies: to - from, value: (to - from) * (card.price ?? 0), rows: (to > 0 ? 1 : 0) - (from > 0 ? 1 : 0) }),
+    });
     const held = steps ? stepped : card.quantity;
     // Taken off this list by one of its own buttons (a wish un-hearted), without drawing the list again.
     const [left, setLeft] = useState(false);
@@ -197,7 +211,10 @@ function GridCell<T extends GridCard>({
                             <TileIconButton icon={Plus} label={`Add a copy of ${card.name}`} onPress={() => press((held ?? 0) + 1)} />
                         </>
                     ) : null}
-                    {action?.(card, () => setLeft(true))}
+                    {action?.(card, () => {
+                        setLeft(true);
+                        totals?.({ copies: -(card.quantity ?? 1), value: -(card.quantity ?? 1) * (card.price ?? 0), rows: -1 });
+                    })}
                 </div>
             ) : null}
             {/* Announced when it appears; the tile keeps its place so the grid does not jump. */}
