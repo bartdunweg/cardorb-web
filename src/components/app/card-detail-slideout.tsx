@@ -237,22 +237,42 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         void reloadCopies();
     };
     const [facets, setFacets] = useState<Facets | undefined>(undefined);
-    // The star, kept here so a tap answers at once; the page re-reads the flag after the save.
-    const [starred, setStarred] = useState<boolean | null>(null);
-    const [starring, setStarring] = useState(false);
-    const isStarred = starred ?? mine?.is_favorite ?? false;
-    const toggleStar = async () => {
+    /*
+     * The star, kept here so a tap answers at once: it fills or empties on the press and the save
+     * runs behind it, with no spinner, because a favourite is a mark and not a task to wait for.
+     * Bart's call, 2026-09-13. The button stays pressable while a save is out, so the writes go
+     * one after the other (a second tap cannot land before the first), and only the last tap's
+     * failure puts the star back, to what it was before that tap.
+     */
+    // Kept with the row it was pressed on, so a save that fails after the arrows moved on puts
+    // back that card's star and not the one now showing.
+    const [starred, setStarred] = useState<{ id: string; on: boolean } | null>(null);
+    const isStarred = starred && starred.id === mine?.id ? starred.on : (mine?.is_favorite ?? false);
+    const starWrites = useRef<Promise<unknown>>(Promise.resolve());
+    const starTaps = useRef(0);
+    const toggleStar = () => {
         if (!mine) return;
+        const id = mine.id;
         const next = !isStarred;
-        setStarred(next);
-        setStarring(true);
-        const res = await setFavorite(mine.id, next);
-        setStarring(false);
-        if (res.ok) scheduleRefresh();
-        else {
-            setStarred(!next);
-            notify.failed(next ? "That card is not a Favorite" : "That card is still a Favorite", { description: res.error });
-        }
+        const tap = ++starTaps.current;
+        setStarred({ id, on: next });
+        const write = starWrites.current.then(() => setFavorite(id, next));
+        starWrites.current = write.catch(() => undefined);
+        void write.then(
+            (res) => {
+                if (tap !== starTaps.current) return;
+                if (res.ok) scheduleRefresh();
+                else {
+                    setStarred({ id, on: !next });
+                    notify.failed(next ? "That card is not a Favorite" : "That card is still a Favorite", { description: res.error });
+                }
+            },
+            () => {
+                if (tap !== starTaps.current) return;
+                setStarred({ id, on: !next });
+                notify.failed(next ? "That card is not a Favorite" : "That card is still a Favorite");
+            },
+        );
     };
     // The generation's logo, asked for when a card opens; kept with the series it was read for.
     const [logo, setLogo] = useState<{ series: string; url: string | null } | null>(null);
@@ -744,7 +764,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                     }
                                                     aria-label="Favorite"
                                                     aria-pressed={isStarred}
-                                                    isLoading={starring}
                                                     onClick={toggleStar}
                                                     className={isStarred ? MARK_ON.favorite : "glass text-primary ring-1 ring-glass ring-inset"}
                                                 />
