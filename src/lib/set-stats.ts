@@ -36,8 +36,13 @@ export function setStats(cards: SetCard[], total: number): SetStats {
     return { owned, total, value, toComplete, unpriced, wishlist };
 }
 
-/** The cards past the number printed on them (207 against "165" is 42); null where they agree or one is unknown. */
-export function secretCount(total: number, printedTotal: number | null): number | null {
-    if (printedTotal == null || printedTotal <= 0 || total <= printedTotal) return null;
-    return total - printedTotal;
+/**
+ * The cards past the number printed on them (207 against "165" is 42); null where they agree or one
+ * is unknown. A gallery shown inside the set is not among them: Brilliant Stars' 216 are 172
+ * printed, 14 secret and 30 Trainer Gallery.
+ */
+export function secretCount(total: number, printedTotal: number | null, galleryTotal = 0): number | null {
+    const own = total - galleryTotal;
+    if (printedTotal == null || printedTotal <= 0 || own <= printedTotal) return null;
+    return own - printedTotal;
 }

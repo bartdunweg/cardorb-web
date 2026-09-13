@@ -63,6 +63,8 @@ export type SetDetail = {
     total: number;
     /** The number printed on the cards; a set of 207 prints "165", the rest are secret rares. */
     printedTotal: number | null;
+    /** The set's gallery, whose cards are part of `total` and are not secret rares. */
+    gallery: { name: string; total: number } | null;
     /** Distinct cards held, over the whole set. */
     owned: number;
     cards: SetCard[];
@@ -106,6 +108,7 @@ export async function getSet(id: string, language: BrowseLanguage = "en"): Promi
             // rather than "0 of 0", which says nothing was ever there.
             total: totalCount || set.total,
             printedTotal: set.printedTotal,
+            gallery: set.gallery ?? null,
             owned: ownedCount,
             cards: cards.map((c) => setCardFromBrowse(c, set.abbreviation ?? null)),
         };

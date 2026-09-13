@@ -14,18 +14,26 @@ import { type SetStats as Stats, secretCount } from "@/lib/set-stats";
 // See-through, so the wash shows through the tiles the way it shows through the page behind them.
 const onWash = "bg-primary/70 backdrop-blur-md";
 
-export function SetStatTiles({ stats, printedTotal, released }: { stats: Stats; printedTotal: number | null; released: string | null }) {
-    const secret = secretCount(stats.total, printedTotal);
+export function SetStatTiles({
+    stats,
+    printedTotal,
+    released,
+    gallery = null,
+}: {
+    stats: Stats;
+    printedTotal: number | null;
+    released: string | null;
+    /** The set's gallery, counted in `stats.total` and named apart from the secret rares. */
+    gallery?: { name: string; total: number } | null;
+}) {
+    const secret = secretCount(stats.total, printedTotal, gallery?.total ?? 0);
+    const detail = [secret ? `${formatCount(secret)} secret` : null, gallery ? `${formatCount(gallery.total)} ${gallery.name}` : null]
+        .filter(Boolean)
+        .join(" · ");
     return (
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
             <StatCard label="Released" value={released ?? "Unknown"} className={onWash} delay={0} />
-            <StatCard
-                label="Cards in set"
-                value={formatCount(stats.total)}
-                detail={secret ? `${formatCount(secret)} secret` : undefined}
-                className={onWash}
-                delay={40}
-            />
+            <StatCard label="Cards in set" value={formatCount(stats.total)} detail={detail || undefined} className={onWash} delay={40} />
             <StatCard label="Your cards" value={formatCount(stats.owned)} className={onWash} delay={80} />
             <StatCard label="Value" value={formatValue(stats.value)} className={onWash} delay={120} />
             <StatCard

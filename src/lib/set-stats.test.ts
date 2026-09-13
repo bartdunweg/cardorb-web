@@ -49,3 +49,11 @@ describe("secretCount", () => {
         expect(secretCount(102, null)).toBeNull();
     });
 });
+
+describe("secretCount, with a gallery inside the set", () => {
+    // Brilliant Stars on the English shelf since 2026-09-13: 172 printed, 14 secret, 30 Trainer Gallery.
+    it("does not count the gallery as secret rares", () => {
+        expect(secretCount(216, 172, 30)).toBe(14);
+        expect(secretCount(202, 172, 30)).toBeNull();
+    });
+});

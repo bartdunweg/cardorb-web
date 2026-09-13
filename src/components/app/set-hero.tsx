@@ -1,4 +1,4 @@
-import { CardImage } from "@/components/app/card-image";
+import { SetLogo } from "@/components/app/set-logo";
 import { cx } from "@/utils/cx";
 
 /**
@@ -57,7 +57,7 @@ export function SetHero({ name, logoUrl, colors }: { name: string; logoUrl: stri
             <div aria-hidden="true" className="flex h-28 w-full items-center justify-center sm:h-32">
                 {logoUrl ? (
                     <div className="relative h-16 w-48 drop-shadow-lg sm:h-20 sm:w-56">
-                        <CardImage src={logoUrl} alt="" width={LOGO_WIDTH} ratio="square" priority className="object-contain" />
+                        <SetLogo src={logoUrl} width={LOGO_WIDTH} priority boxRatio={3} area={0.55} />
                     </div>
                 ) : (
                     <span className="truncate px-6 text-display-xs font-semibold text-tertiary">{firstWord(name)}</span>

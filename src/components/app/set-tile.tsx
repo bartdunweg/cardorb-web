@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { CardImage } from "@/components/app/card-image";
 import { SetWash } from "@/components/app/set-hero";
+import { SetLogo } from "@/components/app/set-logo";
 import { formatCount } from "@/lib/format";
 import type { BrowseLanguage } from "@/lib/languages";
 import type { SetSummary } from "@/lib/sets";
@@ -76,7 +76,7 @@ export function SetTile({
             <div className="relative isolate flex aspect-4/3 w-full items-center justify-center overflow-hidden rounded-lg bg-secondary p-4">
                 <SetWash colors={set.colors} className="inset-0" />
                 {set.logoUrl ? (
-                    <CardImage src={set.logoUrl} alt="" width={LOGO_WIDTH} ratio="square" priority={priority} className="object-contain drop-shadow-lg" />
+                    <SetLogo src={set.logoUrl} width={LOGO_WIDTH} priority={priority} boxRatio={4 / 3} className="drop-shadow-lg" />
                 ) : (
                     // No logo: the name's first word, large and quiet, so the box says something
                     // rather than sitting grey. aria-hidden: the name is under it.

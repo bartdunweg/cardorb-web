@@ -84,7 +84,7 @@ export function CardImage({
      * Once the picture is on screen (also when it came from cache), for whatever fades it in.
      * Also when there is no picture and the back stands in, so the fade never waits for nothing.
      */
-    onLoad?: () => void;
+    onLoad?: (img?: HTMLImageElement) => void;
 }) {
     // Once the optimizer fails, the original is tried; when that fails too there is no picture.
     // A card then shows its back: a shelf hands out addresses it has not checked, and a 404
@@ -107,7 +107,7 @@ export function CardImage({
             priority={priority}
             quality={quality}
             unoptimized={direct || !isOptimised(shown)}
-            onLoad={onLoad}
+            onLoad={onLoad ? (e) => onLoad(e.currentTarget) : undefined}
             onError={() => {
                 if (!direct && isOptimised(shown)) {
                     setDirect(true);
