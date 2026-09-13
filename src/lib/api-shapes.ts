@@ -453,6 +453,11 @@ export const catalogueSetSchema = z.object({
     total: z.number(),
     /** The number printed on the cards; a set of 207 may print "165". */
     printedTotal: nullable(z.number()),
+    /**
+     * The set's gallery (Trainer Gallery, Galarian Gallery), shown inside the set on the English
+     * shelf since cardorb-api 2026-09-13: its name and how many of `total` are its cards.
+     */
+    gallery: z.object({ name: z.string(), total: z.number() }).nullish(),
     logo: nullable(z.string()),
     symbol: nullable(z.string()),
     /** The set's own name where `name` is a translation (a Japanese set); null for English. */
