@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { BarChart01 } from "@untitledui/icons";
 import type { PricePoint } from "@/app/(app)/dashboard/cards/actions";
 import { knownPriceHistory, preloadPriceHistory } from "@/components/app/card-memo";
 import { ChartPeriods, type PeriodKey, withinPeriod } from "@/components/app/chart-periods";
@@ -18,7 +19,23 @@ import type { ValueSnapshot } from "@/lib/value-history";
  * The API answers with every reading it has, so the periods are a filter over what is already in
  * hand rather than a new request each time.
  */
-export function CardPriceChart({ tcgId, holo = false, name }: { tcgId: string; holo?: boolean; name?: string | null }) {
+export function CardPriceChart({
+    tcgId,
+    holo = false,
+    name,
+    soon = false,
+}: {
+    tcgId: string;
+    holo?: boolean;
+    name?: string | null;
+    /**
+     * A card whose history is not kept yet: the Japanese, Chinese and Korean catalogues. Their
+     * price is TCGplayer's, read live, but no reading of it is stored (cardorb-api, 2026-09-13), so
+     * an empty chart would say "no readings" about a card that has a price. Bart: "price history
+     * coming soon".
+     */
+    soon?: boolean;
+}) {
     // Kept with the id it was read for, so a sheet reopened on another card never shows this one's line.
     const [loaded, setLoaded] = useState<{ tcgId: string; points: PricePoint[] } | null>(null);
     const [period, setPeriod] = useState<PeriodKey>("6m");
@@ -27,7 +44,7 @@ export function CardPriceChart({ tcgId, holo = false, name }: { tcgId: string; h
     const points = loaded?.tcgId === tcgId ? loaded.points : (knownPriceHistory(tcgId) ?? null);
 
     useEffect(() => {
-        if (knownPriceHistory(tcgId)) return;
+        if (soon || knownPriceHistory(tcgId)) return;
         let live = true;
         preloadPriceHistory(tcgId).then((p) => {
             if (live) setLoaded({ tcgId, points: p });
@@ -36,6 +53,16 @@ export function CardPriceChart({ tcgId, holo = false, name }: { tcgId: string; h
             live = false;
         };
     }, [tcgId]);
+
+    // The chart's own empty state, the same height and icon, with what is true instead.
+    if (soon) {
+        return (
+            <div className="flex flex-col items-center justify-center gap-2 text-center" style={{ minHeight: CHART_HEIGHT }}>
+                <BarChart01 aria-hidden="true" className="size-5 text-fg-quaternary" />
+                <p className="text-sm text-tertiary">Price history coming soon</p>
+            </div>
+        );
+    }
 
     // Still on its way: the height the line will take, and nothing said. "No readings" is an
     // answer, and this is not one yet.
