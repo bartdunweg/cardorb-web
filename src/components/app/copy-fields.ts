@@ -32,7 +32,7 @@ export type Options = { label: string; value: string }[];
 /**
  * The one answer, where a list has only one.
  *
- * A select holding "Not recorded" and a single real value is not a choice, and asking it is
+ * A select holding a single real value, with or without "Not recorded" beside it, is not a choice, and asking it is
  * worse than not asking: on a card that only ever existed as a holo, "not recorded" and "holo"
  * are the same card, so the question invites somebody to leave out something we know. The form
  * states it instead, and saves it, which is not a guess, it is the only possibility.
@@ -41,7 +41,7 @@ export const soleOption = (options: Options): { label: string; value: string } |
     // A blank that is itself an answer ("Standard") makes two real choices, not one.
     if (options.some((o) => o.value === "" && o !== NOT_RECORDED)) return null;
     const real = options.filter((o) => o.value !== "");
-    return options.length === real.length + 1 && real.length === 1 ? real[0]! : null;
+    return real.length === 1 && options.length - real.length <= 1 ? real[0]! : null;
 };
 
 const NOT_RECORDED = { label: "Not recorded", value: "" };
@@ -59,13 +59,26 @@ const FINISHES = FINISH_ORDER.map((value) => ({ value, label: FINISH_LABELS[valu
 /** The reverses ask the catalogue about a plain reverse when asking after a foil pattern. */
 const asPrinting = (finish: string): string => (finish === "poke-ball" || finish === "master-ball" ? "reverse-holo" : finish);
 
-/** The finishes to offer, plus whichever one is already recorded. */
+/**
+ * The finishes to offer, plus whichever one is already recorded.
+ *
+ * No "Not recorded": a copy you own has a finish since 2026-09-13 (cardorb-api#382). An empty
+ * finish bought no price, and two copies differing only in the finish nobody wrote down were one
+ * copy to the store, which is how a normal and a reverse holo of seven cards became one of two.
+ */
 export function finishOptions(facts: CardFacts | null | undefined, current: string | null | undefined): Options {
     const made = facts?.printings ?? [];
     const offered = made.length ? FINISHES.filter((f) => made.some((p) => p.finish === f.value)) : [...FINISHES];
     const kept = current && !offered.some((f) => f.value === current) ? FINISHES.filter((f) => f.value === current) : [];
-    return [NOT_RECORDED, ...[...offered, ...kept].map((f) => ({ label: f.label, value: f.value }))];
+    return [...offered, ...kept].map((f) => ({ label: f.label, value: f.value }));
 }
+
+/**
+ * The finish a form starts on when the copy has none: the only one offered, normal where it is
+ * offered, the first otherwise. The API's defaultFinish() reads the catalogue the same way.
+ */
+export const defaultFinishOf = (options: Options): string =>
+    soleOption(options)?.value ?? options.find((o) => o.value === "normal")?.value ?? options[0]?.value ?? "normal";
 
 /**
  * The foil patterns to offer for the finish somebody has chosen, plus whichever is recorded.

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CardFacts } from "@/app/(app)/dashboard/cards/actions";
-import { editionOptions, finishOptions, patternOptions, soleOption } from "./copy-fields";
+import { defaultFinishOf, editionOptions, finishOptions, patternOptions, soleOption } from "./copy-fields";
 
 /** Only the fields these read; the rest of the facts is not this question. */
 const facts = (of: Partial<CardFacts>): CardFacts => ({ firstEdition: null, printings: [], editions: null, languages: ["en"], ...of }) as unknown as CardFacts;
@@ -22,21 +22,47 @@ const prismatic = facts({
 
 describe("finishOptions", () => {
     it("offers a promo the one finish it has", () => {
-        expect(values(finishOptions(promo, null))).toEqual(["", "normal"]);
+        expect(values(finishOptions(promo, null))).toEqual(["normal"]);
     });
 
     it("offers the ball reverses only where the card has them", () => {
-        expect(values(finishOptions(prismatic, null))).toEqual(["", "normal", "reverse-holo", "poke-ball", "master-ball"]);
+        expect(values(finishOptions(prismatic, null))).toEqual(["normal", "reverse-holo", "poke-ball", "master-ball"]);
         const plain = facts({ printings: [{ finish: "reverse-holo", foilPattern: null }] });
-        expect(values(finishOptions(plain, null))).toEqual(["", "reverse-holo"]);
+        expect(values(finishOptions(plain, null))).toEqual(["reverse-holo"]);
     });
 
     it("offers every finish where the catalogue said nothing, rather than none", () => {
-        expect(values(finishOptions(facts({}), null))).toEqual(["", "normal", "reverse-holo", "holo", "poke-ball", "master-ball"]);
+        expect(values(finishOptions(facts({}), null))).toEqual(["normal", "reverse-holo", "holo", "poke-ball", "master-ball"]);
     });
 
     it("keeps a finish already recorded, whatever the catalogue says", () => {
-        expect(values(finishOptions(promo, "holo"))).toEqual(["", "normal", "holo"]);
+        expect(values(finishOptions(promo, "holo"))).toEqual(["normal", "holo"]);
+    });
+
+    it("offers no blank: a copy you own has a finish", () => {
+        expect(values(finishOptions(facts({}), null))).not.toContain("");
+    });
+});
+
+describe("defaultFinishOf", () => {
+    it("starts on the only finish a card has", () => {
+        const sir = facts({ printings: [{ finish: "holo", foilPattern: null }] });
+        expect(defaultFinishOf(finishOptions(sir, null))).toBe("holo");
+    });
+
+    it("starts on normal where it is one of several", () => {
+        expect(defaultFinishOf(finishOptions(prismatic, null))).toBe("normal");
+        expect(defaultFinishOf(finishOptions(facts({}), null))).toBe("normal");
+    });
+
+    it("starts on the first where normal is not offered", () => {
+        const foils = facts({
+            printings: [
+                { finish: "reverse-holo", foilPattern: null },
+                { finish: "holo", foilPattern: null },
+            ],
+        });
+        expect(defaultFinishOf(finishOptions(foils, null))).toBe("reverse-holo");
     });
 });
 

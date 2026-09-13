@@ -9,7 +9,7 @@ import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { AcquiredDatePicker } from "@/components/app/acquired-date-picker";
 import { CardImage } from "@/components/app/card-image";
 import { CONDITIONS } from "@/components/app/condition-badge";
-import { editionOptions, finishOptions, patternOptions, soleOption } from "@/components/app/copy-fields";
+import { defaultFinishOf, editionOptions, finishOptions, patternOptions, soleOption } from "@/components/app/copy-fields";
 import { FormError } from "@/components/app/form-error";
 import { GRADERS, GRADES, gradeLabel, gradeUnder, gradesFor, splitGrade } from "@/components/app/graded";
 import { LanguageSelect } from "@/components/app/language-select";
@@ -109,7 +109,7 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
     // it and the save records it, which is not a guess: it is the only possibility.
     const finishes = finishOptions(facts, card.finish ?? null);
     const soleFinish = soleOption(finishes);
-    const effectiveFinish = finish || soleFinish?.value || "";
+    const effectiveFinish = finish || defaultFinishOf(finishes);
     // The pattern list follows the finish: cosmos on a holo is not cosmos on a normal.
     const patterns = patternOptions(facts, effectiveFinish, card.foil_pattern ?? null);
     const solePattern = soleOption(patterns);
@@ -243,7 +243,7 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
                         aria-label="Finish"
                         size="sm"
                         className="w-full"
-                        value={finish}
+                        value={effectiveFinish}
                         onChange={(e) => setFinish(e.target.value)}
                         options={finishes}
                     />

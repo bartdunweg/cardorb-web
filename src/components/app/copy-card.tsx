@@ -6,7 +6,7 @@ import { type CardFacts, editCopies } from "@/app/(app)/dashboard/cards/actions"
 import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { AcquiredDatePicker } from "@/components/app/acquired-date-picker";
 import { CONDITIONS } from "@/components/app/condition-badge";
-import { editionOptions, finishOptions, patternOptions, soleOption } from "@/components/app/copy-fields";
+import { defaultFinishOf, editionOptions, finishOptions, patternOptions, soleOption } from "@/components/app/copy-fields";
 import { FlagIcon } from "@/components/app/flag-icon";
 import { FolderDialog } from "@/components/app/folder-dialog";
 import { GRADERS, GRADES, gradeLabel, gradeUnder, gradesFor, splitGrade } from "@/components/app/graded";
@@ -113,7 +113,7 @@ export function CopyCard({
     // The same lists as the add form, with the catalogue as their limit and the recorded value kept.
     const finishes = finishOptions(facts, row.finish ?? null);
     const soleFinish = soleOption(finishes);
-    const effectiveFinish = finish || soleFinish?.value || "";
+    const effectiveFinish = finish || defaultFinishOf(finishes);
     const patterns = patternOptions(facts, effectiveFinish, row.foil_pattern ?? null);
     const solePattern = soleOption(patterns);
     const edition = shown.edition !== undefined ? (shown.edition ?? "") : (row.edition ?? "");
@@ -255,7 +255,7 @@ export function CopyCard({
                         size="sm"
                         className="w-full"
                         disabled={disabled}
-                        value={finish}
+                        value={effectiveFinish}
                         onChange={(e) => {
                             const next = (e.target.value || null) as CopyEdits["finish"];
                             // The pattern list follows the finish; one the new finish never had goes.
