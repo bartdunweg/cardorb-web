@@ -106,15 +106,16 @@ export async function forgetMine(): Promise<void> {
  * redraws the page in the action's answer, and so does any tag dropped in an action, and a redrawn
  * list starts again from its first batch. False when there is no session to forget for.
  *
- * "max" is the profile a route handler may name; the entries these tags cover are `unstable_cache`
- * ones, which a revalidated tag turns into a miss on the next read.
+ * Expired at once, not "max": under "max" the next read was handed the answer from before the
+ * press while a fresh one was fetched behind it, so the sidebar read after a plus still said the
+ * old count and caught up one press late (measured 2026-09-13).
  */
 export async function forgetMineLater(): Promise<boolean> {
     const s = await session();
     if (!s) return false;
     const username = await myUsername();
-    revalidateTag(userTag(s.userId), "max");
-    if (username) revalidateTag(publicTag(username), "max");
+    revalidateTag(userTag(s.userId), { expire: 0 });
+    if (username) revalidateTag(publicTag(username), { expire: 0 });
     return true;
 }
 
