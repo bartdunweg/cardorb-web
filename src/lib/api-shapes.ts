@@ -891,6 +891,9 @@ export const valueHistoryAnswer = z.object({
             cards: z.number(),
             priced: z.number(),
             unpriced: z.number(),
+            /** Copies added since the point before, and their worth that day (cardorb-api#379). Absent on a folder's line. */
+            added: z.number().optional(),
+            addedValue: z.number().optional(),
         }),
     ),
 });

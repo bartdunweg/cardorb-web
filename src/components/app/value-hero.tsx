@@ -8,8 +8,12 @@ import { ValueChart } from "@/components/app/value-chart";
 import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { formatValue } from "@/lib/format";
+import { splitChange } from "@/lib/value-change";
 import type { ValueSnapshot } from "@/lib/value-history";
 import { cx } from "@/utils/cx";
+
+/** An amount with its direction spelled out, the minus a real one. */
+const signed = (n: number, format: (v: number) => string) => `${n < 0 ? "−" : "+"}${format(Math.abs(n))}`;
 
 // Home's first thing: what the collection is worth, big, with how that has moved over a period
 // and the line behind it. The name beside the label is a menu: All cards, Favorites, or one of the
@@ -40,8 +44,8 @@ export function ValueHero({
     const [period, setPeriod] = useState<PeriodKey>("1m");
     const chosen = PERIODS.find((p) => p.key === period) ?? PERIODS[1];
     const shown = chosen.days === null ? snapshots : snapshots.filter((s) => s.date >= isoDaysAgo(chosen.days));
-    const from = shown[0];
-    const change = from ? Math.round(value) - from.value : null;
+    const split = splitChange(shown, value);
+    const change = split ? split.change : null;
     const list = lists.find((l) => l.id === selected) ?? lists[0];
 
     return (
@@ -90,6 +94,14 @@ export function ValueHero({
                           ? `Unchanged ${chosen.said}`
                           : `${change > 0 ? "+" : "−"}${formatValue(Math.abs(change))} ${chosen.said}`}
                 </p>
+                {/* Which part of that was holding more and which was prices moving. Only where cards
+                    were added in the period: otherwise the whole change is prices, and the line above
+                    says it. Plain text with signs, no colour of its own. */}
+                {split && split.added > 0 ? (
+                    <p className="text-sm text-tertiary tabular-nums">
+                        {signed(split.added, formatValue)} from cards added · {signed(split.prices, formatValue)} from prices
+                    </p>
+                ) : null}
             </div>
 
             <ValueChart snapshots={shown} label={`${list.name} value over time`}>

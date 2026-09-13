@@ -15,7 +15,9 @@ import { cx } from "@/utils/cx";
  *
  * The line is the brand colour at 2 px with a faint fill under it; the grid and axis text stay
  * recessive. Hovering or focusing finds the nearest reading and shows a crosshair, an 8 px marker
- * and a tooltip with the date, the value and how many copies had no price. Arrow keys walk the
+ * and a tooltip with the date, the value and how many copies had no price. A reading on which cards
+ * were added carries a small ring on the line, and its tooltip says how many and what they were
+ * worth: the step the line takes when a collection grows, which a value alone does not explain. Arrow keys walk the
  * readings for a keyboard, and the description under the figure says first, last and the change,
  * so nothing is carried by the picture alone.
  */
@@ -99,9 +101,13 @@ export function ValueChart({
     // The line's class sets the stroke only: a fill class would win over its fill="none".
     const strokeTone = "stroke-fg-primary";
     const fadeId = `${svgTitleId}-fade`;
+    // Additions on the first reading came before what is shown, as the total above leaves them out.
+    const addedAt = snapshots.map((s, i) => i > 0 && (s.added ?? 0) > 0);
+    const addedValue = snapshots.reduce((sum, s, i) => sum + (addedAt[i] ? (s.addedValue ?? 0) : 0), 0);
+    const addedDays = addedAt.filter(Boolean).length;
     const summary = `${formatPrice(first.value)} on ${dayYear.format(dateOf(first))} to ${formatPrice(last.value)} on ${dayYear.format(dateOf(last))}, ${
         change === 0 ? "unchanged" : `${change > 0 ? "up" : "down"} ${formatPrice(Math.abs(change))}`
-    }.`;
+    }.${addedDays ? ` Cards were added on ${formatCount(addedDays)} ${addedDays === 1 ? "reading" : "readings"}, worth ${formatPrice(addedValue)} then.` : ""}`;
 
     // Three date labels: first, middle, last. More would collide on a phone.
     const labelled = new Set([0, Math.floor((snapshots.length - 1) / 2), snapshots.length - 1]);
@@ -193,6 +199,13 @@ export function ValueChart({
                         <g key={`${first.date}/${last.date}`} className="chart-draw">
                             <path d={areaPath(points, baseline)} fill={`url(#${fadeId})`} className="text-fg-primary" />
                             <path d={linePath(points)} className={strokeTone} strokeWidth={2} fill="none" strokeLinejoin="round" strokeLinecap="round" />
+                            {/* A ring where cards were added: a shape on the line, not a colour, hollow so
+                                it reads apart from the filled marker of the reading being looked at. */}
+                            {points.map((p, i) =>
+                                addedAt[i] ? (
+                                    <circle key={snapshots[i].date} cx={p.x} cy={p.y} r={3.5} className="fill-bg-primary stroke-fg-primary" strokeWidth={1.5} />
+                                ) : null,
+                            )}
                         </g>
 
                         {currentPoint ? (
@@ -216,6 +229,11 @@ export function ValueChart({
                             <span className="text-tertiary tabular-nums">
                                 {formatCount(current.cards)} {countLabel}
                                 {current.unpriced > 0 ? ` · ${formatCount(current.unpriced)} without a price` : ""}
+                            </span>
+                        ) : null}
+                        {countLabel && active !== null && addedAt[active] ? (
+                            <span className="text-tertiary tabular-nums">
+                                +{formatCount(current.added ?? 0)} {countLabel} added, worth {formatPrice(current.addedValue ?? 0)}
                             </span>
                         ) : null}
                     </output>
