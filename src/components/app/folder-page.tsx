@@ -1,7 +1,8 @@
 import { type ReactNode, Suspense } from "react";
 import { FolderBody, type FolderBodyProps } from "@/components/app/folder-body";
+import { ListTotalsProvider, LiveDatapoints } from "@/components/app/list-totals";
 import { PageHeader } from "@/components/app/page-header";
-import { type Datapoints, datapointsLines } from "@/lib/folder-datapoints";
+import type { Datapoints } from "@/lib/folder-datapoints";
 
 // Every folder page, top to bottom: the title, what it holds (count and value), the folder's
 // actions where it has any, then the row and the list. One shape, so All cards, a folder of
@@ -45,57 +46,52 @@ export function FolderPage({
     children?: ReactNode;
 }) {
     return (
-        <div className="flex flex-1 flex-col gap-6">
-            <PageHeader
-                title={title}
-                subtitle={
-                    <>
-                        {subtitle ? <span className="block">{subtitle}</span> : null}
-                        <Suspense fallback={<CountOutline lines={datapointLines} />}>
-                            {/* The outline keeps the line's height, so the row and the cards do not move when the numbers land. */}
-                            <DatapointsText datapoints={datapoints} />
-                        </Suspense>
-                    </>
-                }
-                back={back}
-                actions={
-                    settings || add ? (
-                        <div className="flex items-center gap-3 max-lg:hidden">
-                            {settings?.(false)}
-                            {add?.(false)}
-                        </div>
-                    ) : (
-                        actions
-                    )
-                }
-                barActions={
-                    settings || add ? (
+        // The count under the title follows the presses on the tiles below it (list-totals.tsx).
+        <ListTotalsProvider>
+            <div className="flex flex-1 flex-col gap-6">
+                <PageHeader
+                    title={title}
+                    subtitle={
                         <>
-                            {settings?.(true)}
-                            {add?.(true)}
+                            {subtitle ? <span className="block">{subtitle}</span> : null}
+                            <Suspense fallback={<CountOutline lines={datapointLines} />}>
+                                {/* The outline keeps the line's height, so the row and the cards do not move when the numbers land. */}
+                                <DatapointsText datapoints={datapoints} />
+                            </Suspense>
                         </>
-                    ) : (
-                        barActions
-                    )
-                }
-            >
-                {children}
-            </PageHeader>
-            <FolderBody {...body} />
-        </div>
+                    }
+                    back={back}
+                    actions={
+                        settings || add ? (
+                            <div className="flex items-center gap-3 max-lg:hidden">
+                                {settings?.(false)}
+                                {add?.(false)}
+                            </div>
+                        ) : (
+                            actions
+                        )
+                    }
+                    barActions={
+                        settings || add ? (
+                            <>
+                                {settings?.(true)}
+                                {add?.(true)}
+                            </>
+                        ) : (
+                            barActions
+                        )
+                    }
+                >
+                    {children}
+                </PageHeader>
+                <FolderBody {...body} />
+            </div>
+        </ListTotalsProvider>
     );
 }
 
 async function DatapointsText({ datapoints }: { datapoints: Datapoints | Promise<Datapoints> }) {
-    return (
-        <>
-            {datapointsLines(await datapoints).map((line) => (
-                <span key={line} className="block arrive">
-                    {line}
-                </span>
-            ))}
-        </>
-    );
+    return <LiveDatapoints datapoints={await datapoints} />;
 }
 
 // What stands where the numbers will: a block per line, the line's height, so nothing under it moves.

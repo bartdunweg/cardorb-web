@@ -32,6 +32,7 @@ export function useCopySteps({
     rowId,
     add,
     quiet = false,
+    onShown,
 }: {
     /** The card's name, for the toasts. */
     name: string;
@@ -41,6 +42,8 @@ export function useCopySteps({
     rowId: string | undefined;
     add?: () => Promise<Added>;
     quiet?: boolean;
+    /** Every change to the count this tile shows, from and to: a list's line under its title follows it. */
+    onShown?: (from: number, to: number) => void;
 }) {
     const [pending, startTransition] = useTransition();
     const [error, setError] = useState<string | null>(null);
@@ -62,6 +65,7 @@ export function useCopySteps({
             requestAnimationFrame(() => [...(buttons.current?.querySelectorAll("button") ?? [])].at(-1)?.focus());
         }
         setPressed({ quantity, on: page });
+        onShown?.(held, quantity);
         want.current = quantity;
         if (flying.current) return;
         flying.current = true;
@@ -119,6 +123,7 @@ export function useCopySteps({
             } while (!failure && want.current !== have);
             flying.current = false;
             if (failure) {
+                onShown?.(want.current, have);
                 want.current = have;
                 setPressed({ quantity: have, on: page });
                 setError(failure);
