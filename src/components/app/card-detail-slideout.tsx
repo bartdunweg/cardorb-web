@@ -945,7 +945,19 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                 announce its name changing. So the sheet says which card it is now.
                                 Always mounted, or the first change would be silent too. */}
                             <output aria-live="polite" className="sr-only">
-                                {card ? [card.name, card.set_name, card.number ? `#${card.number}` : null].filter(Boolean).join(", ") : ""}
+                                {card
+                                    ? [
+                                          card.name,
+                                          card.set_name,
+                                          "set_abbr" in card && card.set_abbr
+                                              ? [card.set_abbr, card.number].filter(Boolean).join(" ")
+                                              : card.number
+                                                ? `#${card.number}`
+                                                : null,
+                                      ]
+                                          .filter(Boolean)
+                                          .join(", ")
+                                    : ""}
                             </output>
                             <AriaHeading ref={titleRef} slot="title" className="text-lg font-semibold text-primary">
                                 {/* No star here. The bar above carries it as a button you can press;

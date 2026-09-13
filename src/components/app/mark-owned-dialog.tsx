@@ -20,7 +20,7 @@ import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { NativeSelect } from "@/components/base/select/select-native";
 import type { Card } from "@/lib/api-shapes";
-import { cardLabel } from "@/lib/card-label";
+import { cardLabelFull } from "@/lib/card-label";
 import type { CopyEdits } from "@/lib/copies";
 import { today } from "@/lib/format";
 
@@ -150,7 +150,7 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
                     <AriaHeading slot="title" className="truncate text-lg font-semibold text-primary">
                         {card.name}
                     </AriaHeading>
-                    <p className="truncate text-sm text-tertiary">{cardLabel(card, "lg")}</p>
+                    <p className="truncate text-sm text-tertiary">{cardLabelFull(card)}</p>
                 </div>
             </div>
             <p className="-mt-2 text-sm text-tertiary">Say what your copy is like. It leaves the wishlist and joins your collection.</p>
