@@ -4,6 +4,9 @@ const nextConfig = {
     // the hosts the Card Orb API hands out pictures from; the component keeps the same list.
     images: {
         remotePatterns: [
+            // Our own copy of every card picture (Cloudflare R2), what the API hands out since
+            // cardorb-api#394; the catalogues below stay for a picture not copied yet.
+            { protocol: "https", hostname: "images.cardorb.com" },
             { protocol: "https", hostname: "assets.tcgdex.net" },
             { protocol: "https", hostname: "images.pokemontcg.io" },
             { protocol: "https", hostname: "images.scrydex.com" },

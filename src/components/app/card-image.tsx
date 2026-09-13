@@ -26,6 +26,7 @@ import { CardBack } from "@/components/app/card-back";
  */
 
 const OPTIMISED_HOSTS = new Set([
+    "images.cardorb.com",
     "assets.tcgdex.net",
     "images.pokemontcg.io",
     "images.scrydex.com",

@@ -53,6 +53,7 @@ const IMAGE_HOSTS = [
         SUPABASE_HOST,
         API_HOST,
         "https://api.cardorb.com",
+        "https://images.cardorb.com",
         "https://assets.tcgdex.net",
         "https://images.pokemontcg.io",
         "https://images.scrydex.com",
