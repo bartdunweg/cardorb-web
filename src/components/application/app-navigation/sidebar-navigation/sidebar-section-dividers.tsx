@@ -64,9 +64,10 @@ export const SidebarNavigationSectionDividers = ({
                     "--width": `${width}px`,
                 } as React.CSSProperties
             }
-            // The same hairline ring as an input and the search pill inside it, so the sidebar's edge and
-            // the controls on it are one line; the lift without the scale's own rim, so it is one line.
-            className="flex h-full w-full max-w-full flex-col justify-between overflow-x-hidden overflow-y-auto glass-thick pt-4 shadow-lift-lg ring-1 ring-primary transition-[width] duration-200 ease-out ring-inset motion-reduce:transition-none lg:w-(--width) lg:rounded-xl lg:pt-5"
+            // Flush against the window's left edge, as the kit's simple sidebar stands: the full height, a
+            // hairline on its right, no corners, no shadow. It used to float as a card. The material and
+            // the edge are the phone's tab bar's (glass, border-primary), so both navigations are one thing.
+            className="flex h-full w-full max-w-full flex-col justify-between overflow-x-hidden overflow-y-auto border-primary glass pt-4 transition-[width] duration-200 ease-out motion-reduce:transition-none lg:w-(--width) lg:border-r lg:pt-5"
         >
             {collapsed ? (
                 rail
@@ -107,13 +108,12 @@ export const SidebarNavigationSectionDividers = ({
             {!hideMobileHeader && <MobileNavigationHeader>{content}</MobileNavigationHeader>}
 
             {/* Desktop sidebar navigation */}
-            {/* 12 px around the panel: it floats on glass with a shadow, and the kit's 4 px read as none. */}
-            <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:py-3 lg:pl-3">{content}</div>
+            <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex">{content}</div>
 
             {/* Placeholder to take up physical space because the real sidebar has `fixed` position. */}
             <div
                 style={{
-                    paddingLeft: width + 12, // The 12 px inset of the sidebar wrapper
+                    paddingLeft: width,
                 }}
                 className={cx(
                     "invisible hidden transition-[padding] duration-200 ease-out motion-reduce:transition-none lg:sticky lg:top-0 lg:bottom-0 lg:left-0 lg:block",

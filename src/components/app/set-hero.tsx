@@ -49,7 +49,7 @@ export function SetHero({ name, logoUrl, colors }: { name: string; logoUrl: stri
     return (
         <>
             {/* Across the whole window: positioned by the app frame (the `relative isolate` root in the
-                app layout), not by the page's column, so the sidebar floats on it. */}
+                app layout), not by the page's column, so it runs behind the sidebar too. */}
             {/* Twice the band's height, so the colour keeps fading well past the logo rather than
                 stopping with it. It reaches the title and the line under it at a fraction of its own
                 strength; measured there, both stay far above the AA contrast they need. */}
