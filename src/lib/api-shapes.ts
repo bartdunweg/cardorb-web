@@ -120,6 +120,10 @@ export const FINISH_LABELS: Record<Finish, string> = {
     "team-rocket": "Team Rocket reverse",
 };
 
+/** What one copy's price did over a window, and `total`, what that did to the list (times the copies). */
+const priceChangeSchema = z.object({ was: z.number(), now: z.number(), change: z.number(), total: z.number(), from: z.string(), to: z.string() });
+export type PriceChange = z.infer<typeof priceChangeSchema>;
+
 export const cardItemSchema = z.object({
     id: z.string(),
     name: z.string(),
@@ -169,6 +173,8 @@ export const cardItemSchema = z.object({
     tcgplayerId: nullable(z.number()).optional(),
     /** What that printing trades at: the figure this copy reads, where TCGplayer priced its printing. */
     printingPrice: nullable(apiPriceSchema).optional(),
+    /** Only on a list sorted by price change (cardorb-api#470): the move over the window, null without two readings. */
+    priceChange: nullable(priceChangeSchema).optional(),
 });
 export type CardItem = z.infer<typeof cardItemSchema>;
 
@@ -266,6 +272,8 @@ export type Card = {
     wishlist: boolean | null;
     /** The national Pokédex number the API read from the card; null for a trainer or energy. */
     species_id: number | null;
+    /** On a list sorted by price change only: the move over its window, null without two readings. */
+    price_change?: PriceChange | null;
 };
 
 /** One figure out of a price: the market figure. The Near Mint midpoint it used to prefer is gone. */
@@ -371,6 +379,7 @@ export const cardFromItem = (item: CardItem): Card => ({
     collection_id: item.collectionId,
     species_id: item.speciesId,
     wishlist: !item.owned,
+    ...(item.priceChange !== undefined ? { price_change: item.priceChange } : {}),
 });
 
 // ── GET /v1/public/{username}/cards ───────────────────────────────────────────────────────

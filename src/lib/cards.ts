@@ -27,8 +27,11 @@ export type CardFilter = {
     collectionId?: string;
     favoritesOnly?: boolean;
     wishlist?: boolean;
-    sort?: "name" | "price" | "added" | "dex";
+    sort?: "name" | "price" | "added" | "dex" | "change";
     order?: "asc" | "desc";
+    /** `sort: "change"` only: the window's first and last day, yyyy-mm-dd. */
+    from?: string;
+    to?: string;
     set?: string | string[];
     rarity?: string | string[];
     /** Only the cards whose illustration covers the whole card; the API works it out per set. */
@@ -72,6 +75,8 @@ export async function getMyCards({
     wishlist = false,
     sort,
     order,
+    from,
+    to,
     set,
     rarity,
     fullArt,
@@ -116,7 +121,7 @@ export async function getMyCards({
     // (forgetMine). Further batches and the odd sizes (a count, a whole Pokédex) go straight.
     const key =
         offset === 0 && limit === LIST_BATCH
-            ? `cards:${JSON.stringify([q, collectionId, favoritesOnly, wishlist, sort, order, set, rarity, fullArt, gen, type, condition, finish, language, number, priced, duplicates, wantFacets])}`
+            ? `cards:${JSON.stringify([q, collectionId, favoritesOnly, wishlist, sort, order, from, to, set, rarity, fullArt, gen, type, condition, finish, language, number, priced, duplicates, wantFacets])}`
             : null;
     const read = async (token?: string) => {
         const { cards, total, copies, facets, value, unpriced, catalogueUnavailable, counts } = await api("/cards", {
@@ -129,6 +134,7 @@ export async function getMyCards({
                 collection: collectionId,
                 sort,
                 order,
+                ...(sort === "change" ? { from, to } : {}),
                 set,
                 rarity,
                 fullArt: fullArt ? 1 : undefined,

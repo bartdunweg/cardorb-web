@@ -12,14 +12,43 @@ export const SORT_OPTIONS = [
     { value: "added-asc", label: "Oldest first", sort: "added", order: "asc" },
     { value: "price-desc", label: "Highest price", sort: "price", order: "desc" },
     { value: "price-asc", label: "Lowest price", sort: "price", order: "asc" },
+    // By what a card's price did over a period (`period`, or `from` and `to`), times the copies held.
+    { value: "change-desc", label: "Biggest gain", sort: "change", order: "desc" },
+    { value: "change-asc", label: "Biggest loss", sort: "change", order: "asc" },
 ] as const;
+
+/**
+ * The periods a change sort reads over: the value chart's, and `custom` for two days of your own
+ * (`from` and `to`). Here and not beside the chart, which is a client module: a server page reading
+ * a value out of one gets a reference, not the value (cards-view.ts says how that went once).
+ */
+export const CHANGE_PERIODS = [
+    { key: "7d", label: "7D", said: "Last 7 days", days: 7 },
+    { key: "1m", label: "1M", said: "Last 30 days", days: 30 },
+    { key: "3m", label: "3M", said: "Last 3 months", days: 91 },
+    { key: "6m", label: "6M", said: "Last 6 months", days: 182 },
+    { key: "max", label: "Max", said: "Since the first reading", days: null },
+] as const;
+export type ChangePeriod = (typeof CHANGE_PERIODS)[number]["key"] | "custom";
+const DEFAULT_CHANGE_PERIOD: ChangePeriod = "1m";
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+/** The days a change sort compares, as the API takes them: `to` left out is today. */
+export function changeWindow(q: Pick<ListQuery, "period" | "from" | "to">): { from: string; to?: string } {
+    if (q.period === "custom" && q.from) return { from: q.from, to: q.to };
+    const period = CHANGE_PERIODS.find((p) => p.key === q.period) ?? CHANGE_PERIODS[1];
+    if (period.days === null) return { from: "2000-01-01" };
+    const d = new Date();
+    d.setDate(d.getDate() - period.days);
+    return { from: d.toISOString().slice(0, 10) };
+}
 
 export type SortKey = (typeof SORT_OPTIONS)[number]["value"];
 export type SortOption = (typeof SORT_OPTIONS)[number];
 
 /** What a public collection can be sorted by: it carries no price, and its dates stay with the owner. */
 export const PUBLIC_SORT_OPTIONS = SORT_OPTIONS.filter((o) => o.sort === undefined || o.sort === "name" || o.value === "added-desc");
-export type ApiSort = "name" | "price" | "added" | "dex";
+export type ApiSort = "name" | "price" | "added" | "dex" | "change";
 export type ApiOrder = "asc" | "desc";
 
 export type ListQuery = {
@@ -27,6 +56,10 @@ export type ListQuery = {
     sortKey: SortKey;
     sort: ApiSort | undefined;
     order: ApiOrder | undefined;
+    /** A change sort's period; `custom` reads `from` and `to`. */
+    period: ChangePeriod;
+    from: string | undefined;
+    to: string | undefined;
     q: string | undefined;
     /** The sets, as the API names them; a card in any of them. None: every set. */
     set: string[];
@@ -66,6 +99,9 @@ export type PublicList = (typeof PUBLIC_LISTS)[number];
 export type ListSearchParams = {
     page?: string;
     sort?: string;
+    period?: string;
+    from?: string;
+    to?: string;
     q?: string;
     /* A filter chosen twice comes as two of the same key (`?rarity=Rare&rarity=Promo`), which
        Next hands over as an array. */
@@ -122,6 +158,7 @@ export function readListQuery(params: ListSearchParams): ListQuery {
         sortKey,
         sort: option.sort,
         order: option.order,
+        ...readPeriod(params),
         q: text(params.q),
         set: texts(params.set),
         rarity: texts(params.rarity),
@@ -136,6 +173,15 @@ export function readListQuery(params: ListSearchParams): ListQuery {
         unpriced: params.unpriced === "1",
         duplicates: params.duplicates === "1",
     };
+}
+
+/** A change sort's period from the URL: a known key, or `custom` with a valid `from` (and `to` not before it). */
+function readPeriod(params: ListSearchParams): Pick<ListQuery, "period" | "from" | "to"> {
+    const from = params.from && ISO_DAY.test(params.from) ? params.from : undefined;
+    const to = params.to && ISO_DAY.test(params.to) && (!from || params.to >= from) ? params.to : undefined;
+    if (params.period === "custom" && from) return { period: "custom", from, to };
+    const known = CHANGE_PERIODS.some((p) => p.key === params.period);
+    return { period: known ? (params.period as ChangePeriod) : DEFAULT_CHANGE_PERIOD, from: undefined, to: undefined };
 }
 
 /**
@@ -163,6 +209,9 @@ export function listHref(
             ListQuery,
             | "page"
             | "sortKey"
+            | "period"
+            | "from"
+            | "to"
             | "q"
             | "set"
             | "rarity"
@@ -195,10 +244,21 @@ export function listHref(
     const unpriced = "unpriced" in patch ? patch.unpriced : current.unpriced;
     const duplicates = "duplicates" in patch ? patch.duplicates : current.duplicates;
     const sortKey = patch.sortKey ?? current.sortKey;
+    const period = "period" in patch ? (patch.period ?? DEFAULT_CHANGE_PERIOD) : current.period;
+    const from = "from" in patch ? patch.from : current.from;
+    const to = "to" in patch ? patch.to : current.to;
     const page = patch.page ?? current.page;
     const p = new URLSearchParams();
     if (q) p.set("q", q);
     if (sortKey !== defaultSortKey) p.set("sort", sortKey);
+    // The period only means something to a change sort, and only leaves the URL plain at its default.
+    if (sortKey.startsWith("change-")) {
+        if (period === "custom" && from) {
+            p.set("period", "custom");
+            p.set("from", from);
+            if (to) p.set("to", to);
+        } else if (period !== DEFAULT_CHANGE_PERIOD && period !== "custom") p.set("period", period);
+    }
     for (const one of set ?? []) p.append("set", one);
     for (const one of rarity ?? []) p.append("rarity", one);
     if (fullArt) p.set("fullArt", "1");

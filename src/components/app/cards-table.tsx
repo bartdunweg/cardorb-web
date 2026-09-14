@@ -3,6 +3,7 @@
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { FavoriteStar } from "@/components/app/favorite-star";
+import { PriceChangeLine } from "@/components/app/price-change";
 import { Table, TableCard } from "@/components/application/table/table";
 import type { Card } from "@/lib/cards";
 import { formatPrice } from "@/lib/format";
@@ -53,6 +54,7 @@ export function CardsTable({ cards, onSelect }: { cards: Card[]; onSelect: (card
                             <Table.Cell>{card.rarity ?? "—"}</Table.Cell>
                             <Table.Cell className="text-right font-medium text-primary tabular-nums">
                                 {card.price != null ? formatPrice(card.price) : <span className="text-tertiary">{"—"}</span>}
+                                {card.price_change !== undefined ? <PriceChangeLine change={card.price_change} className="block" /> : null}
                             </Table.Cell>
                             <Table.Cell className="text-right text-primary tabular-nums">{card.quantity ?? 1}</Table.Cell>
                         </Table.Row>
