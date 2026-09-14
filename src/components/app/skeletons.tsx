@@ -137,7 +137,7 @@ export function HomeBodyOutline() {
     return (
         <SkeletonFrame>
             <ValueHeroOutline />
-            <Outline className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4">
+            <Outline className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-4">
                 {Array.from({ length: 4 }, (_, i) => (
                     <div key={i} className="rounded-xl bg-page shadow-lift-xs ring-1 ring-primary ring-inset">
                         <div className="flex flex-col gap-3 px-3 py-4 sm:gap-4 sm:px-4 sm:py-5 md:gap-5 md:px-5">

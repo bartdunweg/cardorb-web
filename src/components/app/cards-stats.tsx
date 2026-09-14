@@ -30,7 +30,7 @@ export const StatCard = ({
     delay?: number;
 }) => {
     const body = (
-        <div className="flex flex-col gap-3 px-3 py-4 sm:gap-4 sm:px-4 sm:py-5 md:gap-5 md:px-5">
+        <div className="flex flex-col gap-3 px-3 py-4 sm:gap-4 sm:px-4 sm:py-5 md:gap-5 lg:px-5">
             <div className="flex flex-col gap-2">
                 <h3 className="text-sm font-semibold text-tertiary">{label}</h3>
                 <p className="text-display-xs font-semibold text-primary tabular-nums sm:text-display-sm">
@@ -59,7 +59,7 @@ export const StatCard = ({
 export function CardsStats({ stats, fourth }: { stats: CardStats; fourth: ReactNode }) {
     return (
         // Two to a row on a phone, four from xl: a column of four tiles pushed the chart off the first screen.
-        <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-4">
             {/* Every card held, a duplicate counting twice: the number of cards in the boxes, which is
                 what "owned" means to the person who owns them. The lists count printings instead (a
                 card you hold twice is one row there), so All cards can read one lower. */}
