@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { average30, priceChange } from "./price-change";
+import { average30, priceChange, printingsOfLine } from "./price-change";
 
 describe("priceChange", () => {
     it("says how far above the 30-day average the price sits, with the sign in the words", () => {
@@ -45,12 +45,34 @@ describe("average30", () => {
         expect(average30(points, today, false)).toBe(11);
     });
 
-    it("reads the foil series for a reverse copy, and the plain one where the foil has no point", () => {
-        expect(average30(points, today, true)).toBeCloseTo((30 + 12 + 40) / 3);
+    // A day the foil has no figure is left out, never read at the plain price (cardorb-api#443).
+    it("reads the foil series for a reverse copy, and only the foil", () => {
+        expect(average30(points, today, true)).toBeCloseTo((30 + 40) / 2);
+    });
+
+    // ex8-15: a holo copy at €22.51 read "+648%" against a stray plain series at €3.
+    it("reads the copy's own printing where it is known", () => {
+        const lines = [
+            { date: "2026-09-10", market: 3, holo: null, printings: { normal: 3, holofoil: 22 } },
+            { date: "2026-09-12", market: 3, holo: null, printings: { normal: 3, holofoil: 23 } },
+        ];
+        expect(average30(lines, today, false, "holofoil")).toBeCloseTo(22.5);
+        expect(average30(lines, today, false, "reverse-holofoil")).toBeNull();
     });
 
     it("is nothing without a point in the window", () => {
         expect(average30([{ date: "2026-07-01", market: 5, holo: null }], today, false)).toBeNull();
         expect(average30([], today, false)).toBeNull();
+    });
+});
+
+describe("printingsOfLine", () => {
+    it("names the printings a card has readings for, in reading order", () => {
+        expect(
+            printingsOfLine([
+                { date: "2026-09-01", market: 1, holo: null, printings: { "reverse-holofoil": 2, normal: 1 } },
+                { date: "2026-09-02", market: 1, holo: null, printings: { "1st-edition-holofoil": 9, "shadowless-holofoil": 5 } },
+            ]).map((p) => p.label),
+        ).toEqual(["Normal", "Reverse Holo", "1st Edition Holo", "Shadowless Holo"]);
     });
 });
