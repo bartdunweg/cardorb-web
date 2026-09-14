@@ -67,9 +67,11 @@ Modal.displayName = "Modal";
 interface DialogProps extends AriaDialogProps, RefAttributes<HTMLElement> {}
 
 export const Dialog = (props: DialogProps) => (
+    // Changed from the kit: no aria-label="Slideout menu". A fixed label wins over the Heading slot="title"
+    // every sheet here has, so a screen reader heard "Slideout menu" for a card's sheet instead of the
+    // card's name (2026-09-14). Without it React Aria names the dialog after its title.
     <AriaDialog
         role="dialog"
-        aria-label="Slideout menu"
         {...props}
         className={cx(
             "relative flex size-full max-h-[85dvh] flex-col items-start gap-6 overflow-y-auto rounded-t-2xl glass-thick pb-[env(safe-area-inset-bottom)] outline-hidden sm:max-h-full sm:rounded-none sm:pb-0",
