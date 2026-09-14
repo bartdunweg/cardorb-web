@@ -45,6 +45,8 @@ const FAMILY: Record<string, string> = {
     "double rare": "rare holo v",
     "illustration rare": "rare holo v",
     "rare holo lv.x": "rare holo v",
+    // The API's spelling since cardorb-api's one-spelling change (2026-09-14); the word order above stays for old data.
+    "holo rare lv.x": "rare holo v",
     "holo rare vmax": "rare holo vmax",
     "holo rare vstar": "rare holo vstar",
     "ultra rare": "rare ultra",
