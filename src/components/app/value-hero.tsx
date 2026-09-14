@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { ChevronDown } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { ChartPeriods, PERIODS, type PeriodKey, forChart, isoDaysAgo } from "@/components/app/chart-periods";
+import { Movers } from "@/components/app/movers";
 import { ValueChart } from "@/components/app/value-chart";
 import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
@@ -97,6 +98,9 @@ export function ValueHero({
             <ValueChart snapshots={forChart(shown, period)} label={`${list.name} value over time`}>
                 <ChartPeriods period={period} onPick={setPeriod} />
             </ValueChart>
+            {/* What moved the number, over the chart's own period. The collection's alone: the movers are
+                read over every card held, so under a binder's line they would answer another question. */}
+            {selected === "all" ? <Movers period={period} said={chosen.said} /> : null}
         </section>
     );
 }
