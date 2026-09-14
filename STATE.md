@@ -16,11 +16,29 @@ Cards, binders and profiles are read and written through the Card Orb API
 Supabase is auth and the session only. `src/lib/api.ts` is the client, `src/lib/api-shapes.ts`
 turns the API's answers into what the screens render, zod at every boundary.
 
+Card pictures come from our own Cloudflare R2 bucket at `images.cardorb.com` (English cards;
+cardorb-api README, Card pictures), through Vercel's image optimizer (`card-image.tsx`).
+
 Live: landing, Home, Collection, Browse, Binders, Favorites, wishlist, set pages,
 command-palette search, Settings, public profile, and `/dashboard/design`, the design system,
 reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
+
+**2026-09-14, every English card picture lives in our own bucket.** Bart: Giratina VSTAR (Crown
+Zenith GG69) showed its back. The catalogue copy asked other catalogues about at most 40 cards a
+set and never asked a blank again: 213 cards (cardorb-api#392). Then the question grew: 649 cards
+had no picture and we only kept addresses. Now 20,878 of 21,068 catalogue cards and 1,609 of
+Bart's 1,611 sit in R2 bucket `cardorb-images` (WEUR), written through the Worker
+`cardorb-images-writer` with `IMAGES_WRITE_SECRET`; TCGplayer is a picture source by product id
+(474 blanks filled, #394), and so for a TCGdex scan that is a 404 (#403). The collection kept
+TCGdex addresses through two cache key bumps: `set-facts` holds pictures for a day under tag
+`catalogue` and nothing dropped it, so the catalogue cron drops it when a run changes a picture
+(#400). Web: `images.cardorb.com` allowed in the optimizer, `card-image.tsx` and the CSP (#550).
+Measured and decided: straight from the bucket is 77 ms against 211 ms through Vercel, but
+Vercel's AVIF is 2 to 4 times smaller, so the optimizer stays; the three-size experiment was
+deleted. The whole collection is English; no Japanese card in it. A scheduled task checks the
+first nightly run on 2026-09-15 08:30.
 
 **2026-09-13, a press on a tile answers at once, on every list.** Bart: the plus on a set tile
 took seconds and nearly hung. One press rendered the page twice with the buttons disabled, and on
@@ -744,6 +762,11 @@ for the failures that leave no trace), and everything both passes found is close
 
 ## Open
 
+- **Card pictures not in our bucket:** the Japanese and other language shelves (read live from
+  TCGdex and Limitless; no such card in Bart's collection), and 187 English catalogue cards no
+  catalogue has a scan of (five XY and SM trainer kits; Scrydex has them, paid). The bucket holds
+  copies of TCGdex, TCGplayer, pokemontcg.io and Limitless scans; fine while Cardorb is free,
+  worth a look before it charges.
 - **A printing's edition, and which of the two feeds prices it.** `cards.edition` holds
   `1st-edition`, `shadowless` or `unlimited`, null where nobody has said; such a copy is its own
   row in the store and its own line at read time, the CSV import reads the run from Dex's Variant
