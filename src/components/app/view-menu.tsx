@@ -4,15 +4,16 @@ import { Grid01, Rows01 } from "@untitledui/icons";
 import { Header as AriaHeader } from "react-aria-components";
 import { RowButton } from "@/components/app/row-button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
-import { setCardsSize, setCardsView } from "@/hooks/use-cards-view";
-import type { CardsSize, CardsViewMode } from "@/lib/cards-view";
+import { setCardsGroup, setCardsSize, setCardsView } from "@/hooks/use-cards-view";
+import type { CardsGroup, CardsSize, CardsViewMode } from "@/lib/cards-view";
 
 const first = (keys: "all" | Set<React.Key>) => (keys === "all" ? undefined : [...keys][0]);
 
 // One View menu for every list: the layout (grid or list) and the tile size. `layouts` off
 // leaves the size alone, for a list that has no table (the public profile). A choice goes to
-// `use-cards-view`, which every list reads, so the next page shows it too.
-export function ViewMenu({ view, size, layouts = true }: { view: CardsViewMode; size: CardsSize; layouts?: boolean }) {
+// `use-cards-view`, which every list reads, so the next page shows it too. `group` is given only
+// where the list is sorted by set: a heading over each set, or one list in set order.
+export function ViewMenu({ view, size, layouts = true, group }: { view: CardsViewMode; size: CardsSize; layouts?: boolean; group?: CardsGroup }) {
     return (
         <Dropdown.Root>
             <RowButton icon={view === "grid" ? Grid01 : Rows01} label="View" menu className="ml-auto" />
@@ -58,6 +59,26 @@ export function ViewMenu({ view, size, layouts = true }: { view: CardsViewMode; 
                         <Dropdown.Item id="md">Medium</Dropdown.Item>
                         <Dropdown.Item id="lg">Large</Dropdown.Item>
                     </Dropdown.Section>
+                    {group ? (
+                        <>
+                            <Dropdown.Separator />
+                            <Dropdown.Section
+                                selectionMode="single"
+                                disallowEmptySelection
+                                selectedKeys={new Set([group])}
+                                onSelectionChange={(keys) => {
+                                    const key = first(keys);
+                                    if (key === "sets" || key === "none") {
+                                        setCardsGroup(key);
+                                    }
+                                }}
+                            >
+                                <AriaHeader className="px-3 pt-2 pb-1 text-xs font-semibold text-quaternary">Sets</AriaHeader>
+                                <Dropdown.Item id="sets">Group by set</Dropdown.Item>
+                                <Dropdown.Item id="none">One list</Dropdown.Item>
+                            </Dropdown.Section>
+                        </>
+                    ) : null}
                 </Dropdown.Menu>
             </Dropdown.Popover>
         </Dropdown.Root>

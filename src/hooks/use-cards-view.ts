@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { CARDS_SIZE_COOKIE, CARDS_VIEW_COOKIE, type CardsSize, type CardsViewMode } from "@/lib/cards-view";
+import { CARDS_GROUP_COOKIE, CARDS_SIZE_COOKIE, CARDS_VIEW_COOKIE, type CardsGroup, type CardsSize, type CardsViewMode } from "@/lib/cards-view";
 
 /**
  * The View menu's layout and size, as this tab last chose them.
@@ -18,7 +18,7 @@ import { CARDS_SIZE_COOKIE, CARDS_VIEW_COOKIE, type CardsSize, type CardsViewMod
  */
 const ONE_YEAR = 60 * 60 * 24 * 365;
 
-let chosen: { view: CardsViewMode | null; size: CardsSize | null } = { view: null, size: null };
+let chosen: { view: CardsViewMode | null; size: CardsSize | null; group: CardsGroup | null } = { view: null, size: null, group: null };
 const listeners = new Set<() => void>();
 
 const subscribe = (listener: () => void) => {
@@ -46,17 +46,22 @@ export const setCardsSize = (size: CardsSize) => {
     choose({ size });
 };
 
-/** Nothing chosen on the server: it renders what the cookie says, and hydration agrees. */
-const NOTHING = { view: null, size: null };
+export const setCardsGroup = (group: CardsGroup) => {
+    remember(CARDS_GROUP_COOKIE, group);
+    choose({ group });
+};
 
-export function useCardsView(initialView: CardsViewMode, initialSize: CardsSize) {
+/** Nothing chosen on the server: it renders what the cookie says, and hydration agrees. */
+const NOTHING = { view: null, size: null, group: null };
+
+export function useCardsView(initialView: CardsViewMode, initialSize: CardsSize, initialGroup: CardsGroup = "sets") {
     const current = useSyncExternalStore(
         subscribe,
         () => chosen,
         () => NOTHING,
     );
-    return { view: current.view ?? initialView, size: current.size ?? initialSize };
+    return { view: current.view ?? initialView, size: current.size ?? initialSize, group: current.group ?? initialGroup };
 }
 
 /** For tests: forget what this module was told. */
-export const resetCardsView = () => choose({ view: null, size: null });
+export const resetCardsView = () => choose({ view: null, size: null, group: null });

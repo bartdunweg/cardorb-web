@@ -10,7 +10,7 @@ import { CardsView } from "@/components/app/cards-view";
 import { DexView } from "@/components/app/dex-grid";
 import { PublicCardsView } from "@/components/app/public-cards-view";
 import type { CardFilter, CardList, PublicCard } from "@/lib/cards";
-import { CARDS_SIZE_COOKIE, CARDS_VIEW_COOKIE, parseCardsSize, parseCardsView } from "@/lib/cards-view";
+import { CARDS_GROUP_COOKIE, CARDS_SIZE_COOKIE, CARDS_VIEW_COOKIE, parseCardsGroup, parseCardsSize, parseCardsView } from "@/lib/cards-view";
 import type { DexList } from "@/lib/dex-groups";
 import { type Facets, NO_FACETS } from "@/lib/facets";
 import { type ListQuery, SORT_OPTIONS, type SortKey, type SortOption, isNarrowed, listHref } from "@/lib/list-query";
@@ -60,6 +60,7 @@ export async function FolderBody(props: FolderBodyProps) {
     const jar = await cookies();
     const view = parseCardsView(jar.get(CARDS_VIEW_COOKIE)?.value);
     const size = parseCardsSize(jar.get(CARDS_SIZE_COOKIE)?.value);
+    const group = parseCardsGroup(jar.get(CARDS_GROUP_COOKIE)?.value);
 
     // The row: the search field, then three menu buttons, Filters, Sort and View. Search is the
     // thing you type, so it stays in the row; the set and rarity filters are a sheet.
@@ -171,7 +172,8 @@ export async function FolderBody(props: FolderBodyProps) {
                 // "Set" asks the API for nothing: its own order is set by set, newest first, number
                 // by number. That grouping was on screen and invisible, so the list read as unsorted
                 // and the menu as broken. The headings are the grouping, said out loud.
-                groupedBySet={query.sortKey === "set"}
+                sortedBySet={query.sortKey === "set"}
+                initialGroup={group}
                 initialView={view}
                 initialSize={size}
                 toolbar={toolbar}
