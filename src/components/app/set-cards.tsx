@@ -9,10 +9,10 @@ import { type FilterAnswer, type FilterValues, FiltersSheet } from "@/components
 import { RowButton } from "@/components/app/row-button";
 import { LIST_ROW, RowSearch } from "@/components/app/row-search";
 import { SetCardTile } from "@/components/app/set-card-tile";
+import { Tab, TabList, TabPanel, Tabs } from "@/components/application/tabs/tabs";
 import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Input } from "@/components/base/input/input";
-import { Dot } from "@/components/foundations/dot-icon";
 import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
 import { GRID_COLUMNS } from "@/lib/cards-view";
@@ -41,13 +41,12 @@ const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-sl
  * It works on the cards the page already holds rather than on the URL, because a set is one page
  * of at most a few hundred cards and the question is "where is Charizard" or "what am I missing",
  * not a query the server should re-run. Search matches the name, the printed name and the number;
- * the filters are what you hold and the rarity; the sort is the set's own order, the name or the
- * price. A search that finds nothing keeps the row where it is and says so under it.
+ * what you hold is the tab bar over the row, with a count on each; the sheet keeps the rarity and
+ * full art; the sort is the set's own order, the name or the price. A search that finds nothing keeps the row where it is and says so under it.
  */
 type Holding = "owned" | "missing" | "wishlist";
 /** The page's filters from what the sheet chose. */
 const filtersOf = (v: FilterValues) => ({
-    holding: HOLDINGS.find((h) => h.value === v.holding?.[0])?.value,
     rarity: v.rarity ?? [],
     art: (v.only ?? []).includes(FULL_ART),
 });
@@ -58,11 +57,13 @@ const SORTS: { value: SortKey; label: string }[] = [
     { value: "price-desc", label: "Price, high to low" },
     { value: "price-asc", label: "Price, low to high" },
 ];
-/* Each state with a dot of its own colour, as a status tag: held, not held, wished for. The word says it; the colour only helps find it. */
-const HOLDINGS: { value: Holding; label: string; dot: string }[] = [
-    { value: "owned", label: "Owned", dot: "text-fg-success-secondary" },
-    { value: "missing", label: "Missing", dot: "text-fg-quaternary" },
-    { value: "wishlist", label: "On the wishlist", dot: "text-fg-warning-secondary" },
+/* The tabs over the row, in the owner's order. Missing is neither held nor wished for, so the three
+   after All add up to it. */
+const HOLDINGS: { value: Holding | "all"; label: string }[] = [
+    { value: "all", label: "All" },
+    { value: "wishlist", label: "Wishlisted" },
+    { value: "owned", label: "Owned" },
+    { value: "missing", label: "Missing" },
 ];
 
 /**
@@ -154,21 +155,22 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
                 }
                 return out;
             };
-            const byHolding = matching({ ...f, holding: undefined });
+            const withTab = { ...f, holding };
             return {
-                total: matching(f).length,
+                total: matching(withTab).length,
                 options: {
-                    holding: {
-                        all: byHolding.length,
-                        ...Object.fromEntries(HOLDINGS.map((h) => [h.value, matching({ ...f, holding: h.value }).length])),
-                    },
-                    rarity: tally(matching({ ...f, rarity: [] }), (c) => c.rarity),
-                    only: { [FULL_ART]: matching({ ...f, art: true }).length },
+                    rarity: tally(matching({ ...withTab, rarity: [] }), (c) => c.rarity),
+                    only: { [FULL_ART]: matching({ ...withTab, art: true }).length },
                 },
             };
         },
-        [matching],
+        [matching, holding],
     );
+    /* Each tab's count under the search and the sheet's filters, so a tab says what it would show. */
+    const tabCounts = useMemo(() => {
+        const f = { rarity, art };
+        return Object.fromEntries(HOLDINGS.map((h) => [h.value, matching({ ...f, holding: h.value === "all" ? undefined : h.value }).length]));
+    }, [matching, rarity, art]);
 
     const [selected, setSelected] = useState<Card | null>(null);
     // The catalogue card behind an open sheet, so a card nobody holds can still be taken from it.
@@ -206,7 +208,19 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
     };
 
     return (
-        <div className="flex flex-1 flex-col gap-6">
+        <Tabs
+            className="flex flex-1 flex-col gap-6"
+            selectedKey={holding ?? "all"}
+            onSelectionChange={(key) => setHolding(key === "all" ? undefined : (key as Holding))}
+        >
+            {/* The kit's underline tabs, as the card sheet has them; scrolls sideways on a phone too narrow for four. */}
+            <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+                <TabList aria-label="Cards in this set" type="underline" size="sm" className="min-w-max">
+                    {HOLDINGS.map((h) => (
+                        <Tab key={h.value} id={h.value} label={h.label} badge={tabCounts[h.value]} />
+                    ))}
+                </TabList>
+            </div>
             {/* A round button on a phone, a short field from sm (`RowSearch`), as in a binder's row. */}
             <div className={LIST_ROW}>
                 <RowSearch label="Search this set" filled={q !== ""}>
@@ -224,21 +238,14 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
                     inline
                     noun={["card", "cards"]}
                     groups={[
-                        {
-                            id: "holding",
-                            label: "Cards",
-                            all: { value: "all", label: "All cards" },
-                            options: HOLDINGS.map((h) => ({ ...h, icon: <Dot size="md" aria-hidden="true" className={h.dot} /> })),
-                        },
                         ...(rarities.length > 1 ? [{ id: "rarity", label: "Rarity", multiple: true, options: rarities }] : []),
                         // Full art cuts across the rarities, so it is its own yes-or-no, not one of them.
                         ...(fullArt.size > 0 ? [{ id: "only", label: "Show only", multiple: true, options: [{ value: FULL_ART, label: "Full art" }] }] : []),
                     ]}
-                    values={{ holding: holding ? [holding] : [], rarity, only: art ? [FULL_ART] : [] }}
+                    values={{ rarity, only: art ? [FULL_ART] : [] }}
                     count={countDraft}
                     onApply={(v) => {
                         const next = filtersOf(v);
-                        setHolding(next.holding);
                         setRarity(next.rarity);
                         setArt(next.art);
                     }}
@@ -264,34 +271,37 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
                     </Dropdown.Popover>
                 </Dropdown.Root>
             </div>
-            {shown.length === 0 && narrowed ? (
-                <AppEmptyState
-                    icon="search"
-                    title="No cards found"
-                    description={
-                        q.trim() ? `No cards in this set match “${q.trim()}”.` : "Nothing in this set with those filters. Clear one to widen the list."
-                    }
-                />
-            ) : (
-                /* The same grid as every other overview, at the same size: a set was denser than any
+            {/* One panel, named after the tab chosen: the grid is the same list filtered, not four lists. */}
+            <TabPanel id={holding ?? "all"} className="flex flex-col gap-6">
+                {shown.length === 0 && narrowed ? (
+                    <AppEmptyState
+                        icon="search"
+                        title="No cards found"
+                        description={
+                            q.trim() ? `No cards in this set match “${q.trim()}”.` : "Nothing in this set with those filters. Clear one to widen the list."
+                        }
+                    />
+                ) : (
+                    /* The same grid as every other overview, at the same size: a set was denser than any
                    list in the app, which is what made it read as a checklist rather than a shelf. */
-                <ul className={`grid gap-4 ${GRID_COLUMNS.md}`}>
-                    {shown.slice(0, limit).map((card, i) => (
-                        <li key={card.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i, 16) * 20}ms` } as React.CSSProperties}>
-                            <SetCardTile card={card} language={language} priority={i < firstRow} onOpen={open} />
-                        </li>
-                    ))}
-                </ul>
-            )}
-            {more && shown.length > 0 ? (
-                <div ref={sentinel} className="flex justify-center py-2">
-                    {/* The way on when the sentinel is never seen: a keyboard, or an observer the
+                    <ul className={`grid gap-4 ${GRID_COLUMNS.md}`}>
+                        {shown.slice(0, limit).map((card, i) => (
+                            <li key={card.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i, 16) * 20}ms` } as React.CSSProperties}>
+                                <SetCardTile card={card} language={language} priority={i < firstRow} onOpen={open} />
+                            </li>
+                        ))}
+                    </ul>
+                )}
+                {more && shown.length > 0 ? (
+                    <div ref={sentinel} className="flex justify-center py-2">
+                        {/* The way on when the sentinel is never seen: a keyboard, or an observer the
                         browser does not have. The kit's quietest button, as the shelf has it. */}
-                    <Button color="link-gray" size="sm" onClick={() => drawUpTo(limit + CARD_BATCH)}>
-                        Show more
-                    </Button>
-                </div>
-            ) : null}
+                        <Button color="link-gray" size="sm" onClick={() => drawUpTo(limit + CARD_BATCH)}>
+                            Show more
+                        </Button>
+                    </div>
+                ) : null}
+            </TabPanel>
             {/* A card you hold opens on its row and can be changed. One you do not opens on the
                 printing, with the two ways to take it; the sheet is where you looked for them. */}
             <CardDetailSlideout
@@ -305,7 +315,7 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
                 onPrev={step(-1)}
                 onNext={step(1)}
             />
-        </div>
+        </Tabs>
     );
 }
 
