@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import type { CardStats } from "@/lib/cards";
 import { formatCount } from "@/lib/format";
+import { TILE_SURFACE } from "@/lib/tile";
 import { cx } from "@/utils/cx";
 
 // No "use client": there is nothing client about these tiles (a link, a class name and two
@@ -41,7 +42,7 @@ export const StatCard = ({
         </div>
     );
     // The page's own ground, not a lighter surface on it: the ring and the lift mark the tile.
-    const surface = cx("block arrive rounded-xl bg-page shadow-lift-xs ring-1 ring-primary ring-inset", className);
+    const surface = cx("block arrive", TILE_SURFACE, className);
     const style = { "--arrive-delay": `${delay ?? 0}ms` } as React.CSSProperties;
     return href ? (
         <Link href={href} className={cx(surface, "pressable outline-focus-ring hover:bg-alpha-black/4 focus-visible:outline-2")} style={style}>

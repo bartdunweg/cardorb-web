@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { TopCardsRow } from "@/components/app/top-cards-row";
 import { getMyCards } from "@/lib/cards";
+import { TILE_SURFACE } from "@/lib/tile";
 
 // Home's most valuable cards: the twelve dearest copies you hold, as a row that scrolls sideways,
 // each tile its picture, name and price, opening the card's sheet. The heading leads to the whole list sorted the same way. Read
@@ -19,7 +20,10 @@ export async function TopCards() {
                     See all
                 </Link>
             </div>
-            <TopCardsRow cards={top} />
+            {/* In a tile like the movers above it: the row scrolls inside it. */}
+            <div className={`${TILE_SURFACE} p-4 sm:p-5`}>
+                <TopCardsRow cards={top} />
+            </div>
         </section>
     );
 }
