@@ -213,7 +213,7 @@ export function SetsOutline() {
                     <Block className="h-6 w-40" />
                     <div className={`grid gap-4 ${SETS_COLUMNS}`}>
                         {Array.from({ length: 6 }, (_, i) => (
-                            <div key={i} className="flex flex-col gap-3 rounded-xl bg-page p-3 shadow-lift-xs ring-1 ring-primary ring-inset">
+                            <div key={i} className="flex flex-col gap-2.5">
                                 <Block className="aspect-4/3 w-full rounded-lg" />
                                 <div className="flex flex-col gap-2.5">
                                     <Block className="h-4 w-3/4" />

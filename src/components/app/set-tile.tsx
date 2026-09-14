@@ -14,7 +14,10 @@ import { cx } from "@/utils/cx";
  * cover. The shelf used to be text rows with the logo squeezed into a 48 px box beside the name,
  * where the logo was decoration; here it is the thing you scan for, and the words confirm it.
  *
- * The whole tile is the link. The count is one quiet line under the name, no bar: the owner's
+ * No card around it: the logo's box and the words under it are the tile, as an album is its cover
+ * and its title, not a card holding both. The ring, the lift and the padding of a card made the
+ * shelf a wall of frames around frames, and its hover lit the whole card grey (Bart's call, 2026-09-14): the
+ * press gives way a little and that is all. The whole tile is the link. The count is one quiet line under the name, no bar: the owner's
  * call, the shelf shows the sets, and how far each one is stays a number, not a meter on every
  * tile. A set with nothing in it stays on the shelf but dimmed, like an empty Pokédex slot: it
  * is the part still to collect.
@@ -64,7 +67,7 @@ export function SetTile({
         <HoverPrefetchLink
             href={`/dashboard/sets/${encodeURIComponent(set.id)}${language === "en" ? "" : `?language=${language}`}`}
             className={cx(
-                "flex h-full pressable flex-col gap-3 rounded-xl bg-page p-3 shadow-lift-xs ring-1 ring-primary outline-focus-ring transition-[color,background-color,box-shadow] ring-inset hover:bg-secondary focus-visible:outline-2",
+                "flex h-full pressable flex-col gap-2.5 rounded-lg outline-offset-4 outline-focus-ring focus-visible:outline-2",
                 empty && "opacity-70 hover:opacity-100",
             )}
         >
