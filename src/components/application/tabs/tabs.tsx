@@ -117,7 +117,9 @@ const useSelectedTabRect = (enabled: boolean) => {
             return;
         }
 
-        setRect({ left: selected.offsetLeft - list.offsetLeft, width: selected.offsetWidth });
+        // From the boxes on screen rather than offsetLeft, which counts from whichever ancestor is
+        // positioned at that moment, and that changes once the line's wrapper takes its box.
+        setRect({ left: selected.getBoundingClientRect().left - list.getBoundingClientRect().left, width: selected.offsetWidth });
     }, []);
 
     useLayoutEffect(() => {
@@ -133,11 +135,24 @@ const useSelectedTabRect = (enabled: boolean) => {
         const mutations = new MutationObserver(measure);
         mutations.observe(list, { attributes: true, attributeFilter: ["data-selected"], subtree: true, childList: true });
 
+        // Every tab as well as the list: a count in an earlier tab growing from 3 to 33 moves the
+        // selected tab without the list changing width, and the line stayed where the tab had been.
         const resizes = new ResizeObserver(measure);
-        resizes.observe(list);
+        const observeAll = () => {
+            resizes.disconnect();
+            resizes.observe(list);
+            list.querySelectorAll('[role="tab"]').forEach((tab) => resizes.observe(tab));
+        };
+        observeAll();
+        const tabsChanged = new MutationObserver(() => {
+            observeAll();
+            measure();
+        });
+        tabsChanged.observe(list, { childList: true });
 
         return () => {
             mutations.disconnect();
+            tabsChanged.disconnect();
             resizes.disconnect();
         };
     }, [enabled, measure]);
