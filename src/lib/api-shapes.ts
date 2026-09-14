@@ -920,6 +920,26 @@ export const valueHistoryAnswer = z.object({
     ),
 });
 
+/** One card's move over a period (GET /v1/movers, cardorb-api#464): per copy, and times the copies held. */
+const moverSchema = z.object({
+    tcgId: z.string(),
+    name: z.string(),
+    number: z.string(),
+    set: z.string(),
+    image: nullable(z.string()),
+    copies: z.number(),
+    was: z.number(),
+    now: z.number(),
+    change: z.number(),
+    pct: z.number(),
+    total: z.number(),
+    from: z.string(),
+    to: z.string(),
+});
+export type Mover = z.infer<typeof moverSchema>;
+
+export const moversAnswer = z.object({ up: z.array(moverSchema), down: z.array(moverSchema) });
+
 export const pricePointsAnswer = z.object({
     // `printings`: every printing's figure that day (normal, holofoil, reverse-holofoil, 1st-edition-holofoil,
     // shadowless-holofoil, ...), so the chart can draw the one a copy is. It was stripped here until 2026-09-14.
