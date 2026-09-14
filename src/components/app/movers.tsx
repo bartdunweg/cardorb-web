@@ -1,14 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+import { Button as AriaButton } from "react-aria-components";
 import { moversFor } from "@/app/(app)/dashboard/(home)/actions";
+import { listRows } from "@/app/(app)/dashboard/cards/actions";
 import { CardImage } from "@/components/app/card-image";
 import { PERIODS, type PeriodKey } from "@/components/app/chart-periods";
 import { useHomePeriod } from "@/components/app/home-period";
+import type { Card } from "@/lib/cards";
 import { formatPrice } from "@/lib/format";
 import type { Mover } from "@/lib/movers";
 import { TILE_SURFACE } from "@/lib/tile";
 import { cx } from "@/utils/cx";
+
+// The card sheet, fetched on the tap that opens it, as the other lists on Home have it.
+const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-slideout").then((m) => m.CardDetailSlideout), { ssr: false });
 
 type Answer = { up: Mover[]; down: Mover[] } | null;
 
@@ -42,6 +49,20 @@ export function Movers() {
     }, [period, known]);
     const answer = answers[period];
 
+    /* A row opens the card's sheet on your own row of it, read by set, number and name the way the set
+       page opens a card, and the arrows step through Up and then Down. `at` is where in that list the
+       open card is; a tap that finds no row (sold since the reading) leaves the sheet closed. */
+    const all = answer ? [...answer.up, ...answer.down] : [];
+    const [open, setOpen] = useState<{ card: Card; at: number } | null>(null);
+    const show = async (at: number) => {
+        const m = all[at];
+        if (!m) return;
+        const rows = await listRows({ set: m.set, number: m.number, name: m.name });
+        const row = rows.find((r) => r.owned) ?? rows[0];
+        if (row) setOpen({ card: row, at });
+    };
+    const step = (by: number) => (open && all[open.at + by] ? () => void show(open.at + by) : null);
+
     return (
         <section aria-labelledby="movers-heading" className="flex flex-col gap-4">
             <div className="flex flex-col">
@@ -67,43 +88,52 @@ export function Movers() {
                 <p className="text-sm text-tertiary">No card moved more than ten cents in this period.</p>
             ) : (
                 <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
-                    <MoverList title="Up" movers={answer.up} empty="No card went up." />
-                    <MoverList title="Down" movers={answer.down} empty="No card went down." />
+                    <MoverList title="Up" movers={answer.up} empty="No card went up." onOpen={(i) => void show(i)} />
+                    <MoverList title="Down" movers={answer.down} empty="No card went down." onOpen={(i) => void show(answer.up.length + i)} />
                 </div>
             )}
+            <CardDetailSlideout card={open?.card ?? null} onClose={() => setOpen(null)} onPrev={step(-1)} onNext={step(1)} />
         </section>
     );
 }
 
-function MoverList({ title, movers, empty }: { title: string; movers: Mover[]; empty: string }) {
+function MoverList({ title, movers, empty, onOpen }: { title: string; movers: Mover[]; empty: string; onOpen: (index: number) => void }) {
     return (
         <div className={cx(TILE, "flex flex-col gap-3")}>
             <h3 className="text-sm font-semibold text-tertiary">{title}</h3>
             {movers.length === 0 ? (
                 <p className="text-sm text-tertiary">{empty}</p>
             ) : (
-                <ol className="flex flex-col gap-3">
-                    {movers.map((m) => (
-                        <li key={m.tcgId} className="flex items-center gap-3">
-                            <div className="relative aspect-card w-9 shrink-0 overflow-hidden rounded-sm bg-quaternary">
-                                {m.image ? <CardImage src={m.image} alt="" width={72} className="object-cover" /> : null}
-                            </div>
-                            <div className="flex min-w-0 flex-1 flex-col">
-                                <span className="truncate text-sm font-medium text-primary">{m.name}</span>
-                                <span className="truncate text-xs text-tertiary">
-                                    {m.set}
-                                    {m.copies > 1 ? ` · ×${m.copies}` : ""}
-                                </span>
-                            </div>
-                            <div className="flex shrink-0 flex-col items-end">
-                                <span className={cx("text-sm font-medium tabular-nums", m.total > 0 ? "text-success-primary" : "text-error-primary")}>
-                                    {m.total > 0 ? "+" : "−"}
-                                    {formatPrice(Math.abs(m.total))}
-                                </span>
-                                <span className="text-xs text-tertiary tabular-nums">
-                                    {formatPrice(m.was)} → {formatPrice(m.now)}
-                                </span>
-                            </div>
+                <ol className="flex flex-col gap-1">
+                    {movers.map((m, i) => (
+                        <li key={m.tcgId}>
+                            {/* The whole row opens the card. It reaches past the tile's padding by 8 px so the
+                                hover tint has room around the picture and the numbers. */}
+                            <AriaButton
+                                onPress={() => onOpen(i)}
+                                aria-label={`${m.name}, ${m.set}: ${m.total > 0 ? "up" : "down"} ${formatPrice(Math.abs(m.total))}`}
+                                className="-mx-2 flex w-[calc(100%+1rem)] pressable cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 text-left outline-focus-ring transition-colors hover:bg-alpha-black/4 data-focus-visible:outline-2"
+                            >
+                                <div className="relative aspect-card w-9 shrink-0 overflow-hidden rounded-sm bg-quaternary">
+                                    {m.image ? <CardImage src={m.image} alt="" width={72} className="object-cover" /> : null}
+                                </div>
+                                <div className="flex min-w-0 flex-1 flex-col">
+                                    <span className="truncate text-sm font-medium text-primary">{m.name}</span>
+                                    <span className="truncate text-xs text-tertiary">
+                                        {m.set}
+                                        {m.copies > 1 ? ` · ×${m.copies}` : ""}
+                                    </span>
+                                </div>
+                                <div className="flex shrink-0 flex-col items-end">
+                                    <span className={cx("text-sm font-medium tabular-nums", m.total > 0 ? "text-success-primary" : "text-error-primary")}>
+                                        {m.total > 0 ? "+" : "−"}
+                                        {formatPrice(Math.abs(m.total))}
+                                    </span>
+                                    <span className="text-xs text-tertiary tabular-nums">
+                                        {formatPrice(m.was)} → {formatPrice(m.now)}
+                                    </span>
+                                </div>
+                            </AriaButton>
                         </li>
                     ))}
                 </ol>
