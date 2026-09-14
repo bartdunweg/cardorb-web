@@ -45,12 +45,19 @@ const ENERGY_TYPES = ["Grass", "Fire", "Water", "Lightning", "Psychic", "Fightin
 const MAX_WORDS = 6;
 const energyType = (word: string) => ENERGY_TYPES.find((t) => t.toLowerCase() === word.toLowerCase());
 
-/** The text a word is matched against: name, number and set name, lowercased, built once per card and kept. */
+/**
+ * Text folded the way the API's search folds it (cardorb-api migration 20260915100000): lowercase, a
+ * gold star also read as the word ("Mewtwo ☆" is found by "mewtwo star"), and a hyphen as a space
+ * ("Shaymin-EX" by "shaymin ex", "shaymin-ex" by "Shaymin EX").
+ */
+const folded = (s: string) => s.toLowerCase().replace(/[☆★]/g, " ☆ star ").replace(/-/g, " ");
+
+/** The text a word is matched against: name, number and set name, folded, built once per card and kept. */
 const haystacks = new WeakMap<CatalogueIndex, string[]>();
 const haystackOf = (index: CatalogueIndex): string[] => {
     let cached = haystacks.get(index);
     if (!cached) {
-        cached = index.cards.map(([, setId, number, name]) => `${name} ${number} ${index.sets[setId]?.name ?? setId}`.toLowerCase());
+        cached = index.cards.map(([, setId, number, name]) => folded(`${name} ${number} ${index.sets[setId]?.name ?? setId}`));
         haystacks.set(index, cached);
     }
     return cached;
@@ -92,7 +99,7 @@ export function searchIndex(
 ): { items: PokemonCard[]; total: number } {
     const words: string[] = [];
     let type = filters.type ? (energyType(filters.type) ?? filters.type) : undefined;
-    for (const word of term.trim().split(/\s+/).filter(Boolean).slice(0, MAX_WORDS)) {
+    for (const word of folded(term).trim().split(/\s+/).filter(Boolean).slice(0, MAX_WORDS)) {
         const energy = energyType(word);
         if (energy && !type) type = energy;
         else words.push(word.toLowerCase());

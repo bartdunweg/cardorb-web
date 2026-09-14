@@ -53,6 +53,20 @@ describe("searchIndex", () => {
         expect(searchIndex(index, "pika", { set: "151" }).items).toEqual([]);
     });
 
+    it("finds a gold star by the word and a hyphen by a space, as the API does", () => {
+        const named: CatalogueIndex = {
+            ...index,
+            cards: [
+                ["ex13-103", "base1", "103", "Mewtwo ☆", "Ultra Rare", ["Psychic"]],
+                ["xy6-77", "base1", "77", "Shaymin-EX", "Ultra Rare", ["Colorless"]],
+            ],
+        };
+        expect(searchIndex(named, "mewtwo star").items.map((c) => c.id)).toEqual(["ex13-103"]);
+        expect(searchIndex(named, "mewtwo ☆").items.map((c) => c.id)).toEqual(["ex13-103"]);
+        expect(searchIndex(named, "shaymin ex").items.map((c) => c.id)).toEqual(["xy6-77"]);
+        expect(searchIndex(named, "Shaymin-EX").items.map((c) => c.id)).toEqual(["xy6-77"]);
+    });
+
     it("answers nothing for nothing", () => {
         expect(searchIndex(index, "   ")).toEqual({ items: [], total: 0 });
     });
