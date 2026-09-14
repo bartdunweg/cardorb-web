@@ -32,6 +32,8 @@ const FRAME: Omit<Frame, "width"> = { height: HEIGHT, top: 12, right: 0, bottom:
 const day = new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short" });
 const dayYear = new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short", year: "numeric" });
 const dateOf = (s: ValueSnapshot) => new Date(`${s.date}T00:00:00`);
+/** A reading's day, or its week where the chart shows one a week: "Jun 7 – 13, 2025". */
+const whenOf = (s: ValueSnapshot) => (s.weekFrom ? dayYear.formatRange(new Date(`${s.weekFrom}T00:00:00`), dateOf(s)) : dayYear.format(dateOf(s)));
 
 export function ValueChart({
     snapshots,
@@ -80,7 +82,7 @@ export function ValueChart({
                 <p className="text-sm text-tertiary">
                     {snapshots.length === 0
                         ? "No readings in this period yet; the line starts once there are two."
-                        : `One reading so far, ${formatPrice(snapshots[0].value)} on ${dayYear.format(dateOf(snapshots[0]))}. The line starts tomorrow.`}
+                        : `One reading so far, ${formatPrice(snapshots[0].value)} on ${whenOf(snapshots[0])}. The line starts tomorrow.`}
                 </p>
             </div>
         );
@@ -105,7 +107,7 @@ export function ValueChart({
     const addedAt = snapshots.map((s, i) => i > 0 && (s.added ?? 0) > 0);
     const addedValue = snapshots.reduce((sum, s, i) => sum + (addedAt[i] ? (s.addedValue ?? 0) : 0), 0);
     const addedDays = addedAt.filter(Boolean).length;
-    const summary = `${formatPrice(first.value)} on ${dayYear.format(dateOf(first))} to ${formatPrice(last.value)} on ${dayYear.format(dateOf(last))}, ${
+    const summary = `${formatPrice(first.value)} on ${whenOf(first)} to ${formatPrice(last.value)} on ${whenOf(last)}, ${
         change === 0 ? "unchanged" : `${change > 0 ? "up" : "down"} ${formatPrice(Math.abs(change))}`
     }.${addedDays ? ` Cards were added on ${formatCount(addedDays)} ${addedDays === 1 ? "reading" : "readings"}, worth ${formatPrice(addedValue)} then.` : ""}`;
 
@@ -223,7 +225,7 @@ export function ValueChart({
                         className="pointer-events-none absolute top-2 flex flex-col gap-0.5 rounded-lg bg-primary px-3 py-2 text-xs shadow-lg"
                         style={{ left: tooltipLeft, right: tooltipRight }}
                     >
-                        <span className="font-medium text-secondary">{dayYear.format(dateOf(current))}</span>
+                        <span className="font-medium text-secondary">{whenOf(current)}</span>
                         <span className="text-sm font-semibold text-primary tabular-nums">{formatPrice(current.value)}</span>
                         {countLabel ? (
                             <span className="text-tertiary tabular-nums">

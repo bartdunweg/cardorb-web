@@ -54,4 +54,14 @@ describe("ValueChart", () => {
         expect(container.querySelectorAll("circle").length).toBe(1);
         expect(getByText(/Cards were added on 1 reading/)).toBeTruthy();
     });
+
+    // Bart, 2026-09-14: a weekly point names its week, so a Tuesday's reading on a Saturday is not a lie.
+    it("names the week of a weekly reading in the description", () => {
+        const weeks = [
+            { date: "2025-06-14", weekFrom: "2025-06-08", value: 2, cards: 1, priced: 1, unpriced: 0 },
+            { date: "2025-06-21", weekFrom: "2025-06-15", value: 3, cards: 1, priced: 1, unpriced: 0 },
+        ];
+        const { getByText } = render(<ValueChart snapshots={weeks} countLabel={null} />);
+        expect(getByText(/Jun 8\s*–\s*14, 2025 to .* on Jun 15\s*–\s*21, 2025/)).toBeTruthy();
+    });
 });

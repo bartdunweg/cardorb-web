@@ -18,6 +18,11 @@ export type ValueSnapshot = {
      */
     added?: number;
     addedValue?: number;
+    /**
+     * The Sunday its week began, where the chart shows one reading a week (Max): `date` is then the
+     * week's Saturday, or its last reading in the week still running, and the tooltip names the week.
+     */
+    weekFrom?: string;
 };
 
 // Oldest first, as the API sends it. Kept five minutes per person like the other whole-collection
