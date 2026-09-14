@@ -69,6 +69,21 @@ describe("copyLabel", () => {
     });
 });
 
+describe("sameCard, across spellings", () => {
+    it("matches the catalogue's hyphenated name to the row stored with a space", () => {
+        // Cosmic Eclipse 216: the set page reads "Solgaleo & Lunala-GX", the row "Solgaleo & Lunala GX".
+        const row = { name: "Solgaleo & Lunala GX", set: "Cosmic Eclipse", number: "216" };
+        expect(sameCard(row, { name: "Solgaleo & Lunala-GX", set: "Cosmic Eclipse", number: "216" })).toBe(true);
+    });
+
+    it("takes a shared catalogue id as the same card whatever the names, and still tells two numbers apart", () => {
+        const row = { name: "Solgaleo & Lunala GX", set: "Cosmic Eclipse", number: "216", tcg_id: "sm12-216" };
+        expect(sameCard(row, { name: "Solgaleo and Lunala", set: "Cosmic Eclipse", number: "216", tcg_id: "sm12-216" })).toBe(true);
+        expect(sameCard(row, { name: "Solgaleo & Lunala-GX", set: "Cosmic Eclipse", number: "75" })).toBe(false);
+        expect(sameCard(row, { name: "Umbreon & Darkrai GX", set: "Cosmic Eclipse", number: "216", tcg_id: "sm12-999" })).toBe(false);
+    });
+});
+
 describe("sameCard", () => {
     const stored = { name: "Pikachu", set: "SV Black Star Promos", set_name: "SVP Black Star Promos", number: "027" };
 

@@ -206,7 +206,7 @@ export function SetCards({
         setAddable(card.owned || card.wishlist ? null : card);
         setSelected(fromCatalogue(card));
         if (!card.owned && !card.wishlist) return;
-        const rows = await listRows({ set: card.setName, number: card.number, name: card.name });
+        const rows = await listRows({ set: card.setName, number: card.number, name: card.name, tcg_id: card.tcgId });
         const row = rows[0];
         if (row) {
             setAddable(null);
