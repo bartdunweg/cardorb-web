@@ -128,6 +128,15 @@ describe("priceForCopy", () => {
         expect(priceForCopy({ price, printingPrice: printing })).toBe(53.23);
         expect(priceForCopy({ price, printingPrice: null })).toBe(4);
     });
+
+    it("leaves a reverse without its own printing's figure unpriced, never at the card's own", () => {
+        const reverse = { low: 0.2, market: 0.29, avg30: null, nm: null };
+        expect(priceForCopy({ finish: "reverse-holo", price, printingPrice: reverse })).toBe(0.29);
+        // Skyridge Gengar: TCGplayer prices the normal card only, so its reverse has no price.
+        expect(priceForCopy({ finish: "reverse-holo", price, printingPrice: null })).toBeNull();
+        expect(priceForCopy({ finish: "poke-ball", price })).toBeNull();
+        expect(priceForCopy({ finish: "reverse-holo", edition: "1st-edition", price, priceFirstEd: price })).toBeNull();
+    });
 });
 
 describe("publicCardFromItem", () => {
