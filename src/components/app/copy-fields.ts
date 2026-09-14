@@ -20,11 +20,13 @@ import { EDITIONS, EDITION_LABELS, FINISH_LABELS, FINISHES as FINISH_ORDER, FOIL
  * TCGdex calls sv06.5-010 a holo with a cosmos foil, which is one of the three cards that
  * export records as a Cosmos Holo: two sources, one answer, arrived at separately.
  *
- * Two rules run through all of it. An empty list from the catalogue means *no answer*, not "none
- * exist", so everything is offered then; most cards carry no foil field yet, and hiding a
- * picker on that basis would stop somebody recording a card they are holding. And whatever is
- * already recorded stays offered whatever the catalogue says, because a select whose value is
- * not among its options shows blank and saving the form would quietly clear it.
+ * Two rules run through all of it. For the finishes, an empty list from the catalogue means *no
+ * answer*, not "none exist", so everything is offered then. The foil pattern is the exception
+ * since 2026-09-14: TCGplayer sells every pattern print as a product of its own
+ * (`patternPrints`, cardorb-api#452), so a card with none listed has none, and the form asks
+ * nothing. And whatever is already recorded stays offered whatever the catalogue says, because a
+ * select whose value is not among its options shows blank and saving the form would quietly
+ * clear it.
  */
 
 export type Options = { label: string; value: string }[];
@@ -67,7 +69,10 @@ const asPrinting = (finish: string): string => (finish === "poke-ball" || finish
  * copy to the store, which is how a normal and a reverse holo of seven cards became one of two.
  */
 export function finishOptions(facts: CardFacts | null | undefined, current: string | null | undefined): Options {
-    const made = facts?.printings ?? [];
+    /* A pattern print is a printing too: a common Rowlet of Sun & Moon is a normal and a reverse in
+       its set and a cosmos holo from a blister, and recording that copy needs the holo. */
+    const sold = facts?.patternPrints?.prints ?? [];
+    const made = [...(facts?.printings ?? []), ...(facts?.printings?.length ? sold : [])];
     const offered = made.length ? FINISHES.filter((f) => made.some((p) => p.finish === f.value)) : [...FINISHES];
     const kept = current && !offered.some((f) => f.value === current) ? FINISHES.filter((f) => f.value === current) : [];
     return [...offered, ...kept].map((f) => ({ label: f.label, value: f.value }));
@@ -83,47 +88,47 @@ export const defaultFinishOf = (options: Options): string =>
 /**
  * The foil patterns to offer for the finish somebody has chosen, plus whichever is recorded.
  *
- * Empty means there is nothing to ask, and the caller drops the row. That is the honest answer
- * for a plain normal: it has no foil, so it has no pattern.
+ * Bart, 2026-09-14: "bij alles wat holo is kan ik foil pattern kiezen, maar dat is niet de
+ * bedoeling, dat moet voor je worden geselecteerd". Only patterns that exist for this card in this
+ * finish: the ones TCGplayer sells a print of (`patternPrints`) and the ones TCGdex names on a
+ * printing. None of either and nothing recorded is an empty list, and the caller drops the row:
+ * the copy is Standard, and nobody is asked.
+ *
+ * Where a pattern exists, Standard sits beside it when a print of this finish without a pattern
+ * exists too, and starts selected (the blank value, which is what a copy with no pattern is):
+ * 151's Machamp is a plain holo from the booster and a cosmos holo from the collection box. Where
+ * none does, the list is the pattern alone and soleOption states it: a common Rowlet of Sun & Moon
+ * was never a plain holo, so a holo copy of it is the cosmos one.
  */
 export function patternOptions(facts: CardFacts | null | undefined, finish: string | null | undefined, current: string | null | undefined): Options {
     const made = facts?.printings ?? [];
-    /* The patterns the card's era could have at all. An empty list is the API saying none: a
-       Wizards holo had its set's one foil (Starlight, then Cosmos), and asking which of five a
-       Base Set Machamp has offers five wrong answers. Null leaves it to the printings below. */
-    const era = facts?.foilPatterns ?? null;
-    const all = (Object.keys(FOIL_PATTERN_LABELS) as FoilPattern[]).filter((p) => !era || era.includes(p) || p === current);
-    if (!all.length) return [];
-
-    /* No answer from the catalogue: offer them all rather than none, but only where the copy
-       could have a foil in the first place. A card whose printings are listed and whose foils
-       are not named anywhere counts as no answer too. TCGdex names the foil on a fraction of the
-       cards it knows the printings of, and reading that silence as "this card has no pattern"
-       would take the question away from somebody holding a cracked ice reverse and looking at
-       it. Where it does name a foil on this card, its silence about another printing is an
-       answer, and that is the rule below. */
-    if (!made.length || !made.some((p) => p.foilPattern)) {
-        if (finish === "normal" && !current) return [];
-        return [NOT_RECORDED, ...all.map((p) => ({ label: FOIL_PATTERN_LABELS[p], value: p }))];
-    }
-
+    const sold = facts?.patternPrints ?? null;
     const printing = finish ? asPrinting(finish) : null;
-    const named = new Set(
-        made
-            .filter((p) => !printing || p.finish === printing)
-            .map((p) => p.foilPattern)
-            .filter((p): p is string => Boolean(p)),
-    );
+    const ofFinish = (p: { finish: string }) => !printing || p.finish === printing;
+
+    const named = new Set<string>([
+        ...made.filter(ofFinish).flatMap((p) => (p.foilPattern ? [p.foilPattern] : [])),
+        ...(sold?.prints ?? []).filter(ofFinish).map((p) => p.foilPattern),
+    ]);
     if (current) named.add(current);
     if (!named.size) return [];
 
-    /* A finish printed both with a named foil and without one is a choice between the two, not
-       one answer: 151's Machamp is a plain holo from the booster and a cosmos holo from the
-       collection box, and stating "Cosmos" on every holo copy of it was wrong. The blank is then
-       "Standard", which is what a copy with no pattern recorded is. */
-    const plain = made.some((p) => !p.foilPattern && (!printing || p.finish === printing));
-    return [plain ? STANDARD : NOT_RECORDED, ...all.filter((p) => named.has(p)).map((p) => ({ label: FOIL_PATTERN_LABELS[p], value: p }))];
+    /* A print of this finish with no pattern. TCGdex's printings say so where they are listed;
+       where they are not, TCGplayer's `standard` is the answer, and it is false only for a card
+       that was never sold without its pattern. */
+    const plain = sold?.standard !== false && (made.length ? made.some((p) => !p.foilPattern && ofFinish(p)) : true);
+    const order = Object.keys(FOIL_PATTERN_LABELS) as FoilPattern[];
+    const known = order.filter((p) => named.has(p)).map((p) => ({ label: FOIL_PATTERN_LABELS[p], value: p }));
+    return [plain ? STANDARD : NOT_RECORDED, ...known];
 }
+
+/**
+ * The pattern a form saves: the one chosen while it is still offered, the only one where the list
+ * has one, and Standard otherwise. A pattern picked for a holo does not ride along when the
+ * finish changes to one that never had it.
+ */
+export const effectivePatternOf = (options: Options, chosen: string): string =>
+    (chosen && options.some((o) => o.value === chosen) ? chosen : soleOption(options)?.value) ?? "";
 
 /**
  * Which print runs to offer, plus whichever is already recorded.

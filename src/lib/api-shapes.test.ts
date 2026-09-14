@@ -4,6 +4,7 @@ import {
     absoluteImage,
     apiPriceSchema,
     browseCardSchema,
+    cardFactsAnswer,
     cardFromItem,
     cardFromPokemonCard,
     folderFromApi,
@@ -441,5 +442,30 @@ describe("apiPriceSchema", () => {
     // 2026-09-14. An answer from before the API drops them still parses, and keeps only the market.
     it("reads an answer that still carries the dropped fields", () => {
         expect(apiPriceSchema.parse({ low: 1, market: 4, avg30: 5, nm: null })).toEqual({ market: 4 });
+    });
+});
+
+describe("cardFactsAnswer patternPrints", () => {
+    const base = { rarity: null, illustrator: null, hp: null, stage: null, evolveFrom: null, regulationMark: null, price: null };
+
+    it("reads the pattern prints TCGplayer sells, and drops a pattern this app has no word for", () => {
+        const facts = cardFactsAnswer.parse({
+            ...base,
+            patternPrints: {
+                standard: true,
+                prints: [
+                    { foilPattern: "cosmos", finish: "holo", tcgplayerId: 662070, price: { market: 1.2 } },
+                    { foilPattern: "water-web", finish: "holo", tcgplayerId: 1, price: null },
+                ],
+            },
+        });
+        expect(facts.patternPrints).toEqual({
+            standard: true,
+            prints: [{ foilPattern: "cosmos", finish: "holo", tcgplayerId: 662070, price: { market: 1.2 } }],
+        });
+    });
+
+    it("is no answer from an API that does not send it", () => {
+        expect(cardFactsAnswer.parse(base).patternPrints).toBeUndefined();
     });
 });

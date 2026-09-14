@@ -957,6 +957,32 @@ export const publicProfileAnswer = z.object({
  * about every card, and the sheet already draws around what is missing. `printings` is the one
  * that matters most: a form offers no finish that is not in it.
  */
+/**
+ * The foil patterns a copy of a card can have, from TCGplayer's own products: one line per finish
+ * and pattern, with its price, and whether a print without a pattern exists. A pattern this app
+ * has no word for is dropped here rather than failing the whole card.
+ */
+const patternPrintsSchema = z.object({
+    standard: z.boolean(),
+    prints: z
+        .array(
+            z.object({
+                foilPattern: z.string(),
+                finish: z.string(),
+                tcgplayerId: z.number(),
+                price: nullable(apiPriceSchema),
+            }),
+        )
+        .transform((prints) =>
+            prints.flatMap((p) =>
+                p.foilPattern in FOIL_PATTERN_LABELS && (FINISHES as readonly string[]).includes(p.finish)
+                    ? [{ ...p, foilPattern: p.foilPattern as FoilPattern, finish: p.finish as Finish }]
+                    : [],
+            ),
+        ),
+});
+export type PatternPrints = z.infer<typeof patternPrintsSchema>;
+
 export const cardFactsAnswer = z.object({
     rarity: nullable(z.string()),
     illustrator: nullable(z.string()),
@@ -984,6 +1010,8 @@ export const cardFactsAnswer = z.object({
      * (a Wizards holo had its set's one foil, cardorb-api#375); null or absent is no answer.
      */
     foilPatterns: z.array(z.string()).nullish(),
+    /** The pattern prints TCGplayer sells of this card (cardorb-api#452). Null or absent: no answer. */
+    patternPrints: patternPrintsSchema.nullish(),
     /** Whether a stamped first run of this card exists, as TCGdex says. Null or absent: no answer. */
     firstEdition: z.boolean().nullish(),
     /** TCGplayer's figure for the printing, converted; null where TCGplayer prices nothing (cardorb-api#354). */
