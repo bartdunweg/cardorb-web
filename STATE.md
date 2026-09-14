@@ -748,6 +748,14 @@ for the failures that leave no trace), and everything both passes found is close
 
 ## Next
 
+- **Japanese cards to the level English reached on 2026-09-14.** English has its catalogue in
+  Postgres, every picture in our bucket, its data checked against TCGplayer and history from
+  2024-02-08. Japanese has none of the first three: Browse reads its 12,781 cards live from TCGdex
+  (only 3,882 name a picture; Limitless guesses the rest). Plan: a nightly Japanese copy, pictures
+  into the bucket with Limitless and TCGplayer Japan as fallbacks, an audit against tcgcsv's
+  Japanese category. History cannot start before 2024-12. Parked by Bart until the English nightly
+  run is confirmed (scheduled check 2026-09-15 08:30).
+
 - **Condition and grade do not reach the price, and that is a decision now.** A Poor copy and a
   PSA 10 show what a Near Mint one does. Neither Cardmarket nor TCGplayer publishes either;
   PokemonPriceTracker does, RAW and PSA, free at 100 credits a day and $9.99 a month for 20,000.
