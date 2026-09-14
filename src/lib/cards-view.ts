@@ -19,6 +19,16 @@ export type CardsSize = "sm" | "md" | "lg";
 export const parseCardsSize = (raw: string | undefined): CardsSize => (raw === "sm" || raw === "lg" ? raw : "md");
 
 /**
+ * A list sorted by set: a heading over each set's cards, or one list in set order. A cookie like the
+ * view and the size. Headings until the cookie says otherwise, as the lists always had them.
+ */
+export const CARDS_GROUP_COOKIE = "cards-group";
+
+export type CardsGroup = "sets" | "none";
+
+export const parseCardsGroup = (raw: string | undefined): CardsGroup => (raw === "none" ? "none" : "sets");
+
+/**
  * Where the grid's own numbers live, rather than in the component that draws it.
  *
  * `cards-grid.tsx` is a client component, and a server component importing a plain value out of

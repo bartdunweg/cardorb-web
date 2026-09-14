@@ -8,7 +8,7 @@ import { CardsSkeleton } from "@/components/app/skeletons";
 import { ViewMenu } from "@/components/app/view-menu";
 import { useCardsView } from "@/hooks/use-cards-view";
 import type { Card, CardFilter, CardList } from "@/lib/cards";
-import type { CardsSize, CardsViewMode } from "@/lib/cards-view";
+import type { CardsGroup, CardsSize, CardsViewMode } from "@/lib/cards-view";
 
 // The card sheet, fetched on the tap that opens it: it is the app's largest client chunk and the
 // grid is drawn long before anyone touches a tile. `ssr: false`: the sheet is nothing until then.
@@ -26,7 +26,8 @@ export function CardsView({
     narrowed,
     initialView,
     initialSize = "md",
-    groupedBySet = false,
+    sortedBySet = false,
+    initialGroup = "sets",
     listKey,
     toolbar,
     noHits,
@@ -37,8 +38,10 @@ export function CardsView({
     narrowed: boolean;
     initialView: CardsViewMode;
     initialSize?: CardsSize;
-    /** The list arrives set by set: the grid says so with a heading over each one. */
-    groupedBySet?: boolean;
+    /** The list arrives set by set: the grid says so with a heading over each one, unless the View menu chose one list. */
+    sortedBySet?: boolean;
+    /** Headings or one list, as the cookie holds it, for the first paint. */
+    initialGroup?: CardsGroup;
     /**
      * The list's URL. It keys the list and nothing above it: a new search is a new list, with its
      * own first batch and nothing scrolled-to from the last one, but the row over it, the search
@@ -52,7 +55,7 @@ export function CardsView({
     /** Drawn in the list's place when the folder holds nothing at all. */
     empty: ReactNode;
 }) {
-    const { view, size } = useCardsView(initialView, initialSize);
+    const { view, size, group } = useCardsView(initialView, initialSize, initialGroup);
     /*
      * The card the sheet is on, and the list it came from, so it can step to the next one without
      * going back to the grid. Kept together: the list is what was on screen when the card was
@@ -71,7 +74,7 @@ export function CardsView({
             <div className={LIST_ROW}>
                 {/* In its own box: an element that crossed the server boundary, in a list with local ones, trips the key check. */}
                 <div className="contents">{toolbar}</div>
-                <ViewMenu view={view} size={size} />
+                <ViewMenu view={view} size={size} group={sortedBySet ? group : undefined} />
             </div>
 
             <Suspense fallback={<CardsSkeleton />}>
@@ -83,7 +86,7 @@ export function CardsView({
                     narrowed={narrowed}
                     view={view}
                     size={size}
-                    groupedBySet={groupedBySet}
+                    groupedBySet={sortedBySet && group === "sets"}
                     onSelect={(card, siblings) => setSelected({ card, siblings })}
                     noHits={noHits}
                     empty={empty}
