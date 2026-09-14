@@ -223,101 +223,108 @@ export function SetCards({
     };
 
     return (
-        <Tabs
-            className="flex flex-1 flex-col gap-6"
-            selectedKey={holding ?? "all"}
-            onSelectionChange={(key) => setHolding(key === "all" ? undefined : (key as Holding))}
-        >
-            {/* The kit's underline tabs, as the card sheet has them; scrolls sideways on a phone too narrow for four. */}
-            <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-                <TabList aria-label="Cards in this set" type="underline" size="sm" className="min-w-max">
-                    {HOLDINGS.map((h) => (
-                        <Tab key={h.value} id={h.value} label={h.label} badge={String(tabCounts[h.value] ?? 0)} />
-                    ))}
-                </TabList>
-            </div>
-            {/* A round button on a phone, a short field from sm (`RowSearch`), as in a binder's row. */}
-            <div className={LIST_ROW}>
-                <RowSearch label="Search this set" filled={q !== ""}>
-                    <Input
-                        size="sm"
-                        icon={SearchLg}
-                        aria-label="Search this set"
-                        placeholder="Search this set"
-                        value={q}
-                        onChange={setQ}
-                        wrapperClassName="rounded-full"
-                    />
-                </RowSearch>
-                <FiltersSheet
-                    inline
-                    noun={["card", "cards"]}
-                    groups={[
-                        ...(rarities.length > 1 ? [{ id: "rarity", label: "Rarity", multiple: true, options: rarities }] : []),
-                        // Full art cuts across the rarities, so it is its own yes-or-no, not one of them.
-                        ...(fullArt.size > 0 ? [{ id: "only", label: "Show only", multiple: true, options: [{ value: FULL_ART, label: "Full art" }] }] : []),
-                    ]}
-                    values={{ rarity, only: art ? [FULL_ART] : [] }}
-                    count={countDraft}
-                    onApply={(v) => {
-                        const next = filtersOf(v);
-                        setRarity(next.rarity);
-                        setArt(next.art);
-                    }}
-                />
-                <Dropdown.Root>
-                    <RowButton icon={SwitchVertical01} label="Sort" menu />
-                    <Dropdown.Popover placement="bottom end" className="w-56">
-                        <Dropdown.Menu
-                            selectionMode="single"
-                            disallowEmptySelection
-                            selectedKeys={new Set([sort])}
-                            onSelectionChange={(keys) => {
-                                const key = keys === "all" ? undefined : [...keys][0];
-                                setSort(SORTS.find((o) => o.value === key)?.value ?? "set");
-                            }}
-                        >
-                            {SORTS.map((o) => (
-                                <Dropdown.Item key={o.value} id={o.value}>
-                                    {o.label}
-                                </Dropdown.Item>
-                            ))}
-                        </Dropdown.Menu>
-                    </Dropdown.Popover>
-                </Dropdown.Root>
-                <ViewMenu view="grid" size={size} layouts={false} />
-            </div>
-            {/* One panel, named after the tab chosen: the grid is the same list filtered, not four lists. */}
-            <TabPanel id={holding ?? "all"} className="flex flex-col gap-6">
-                {shown.length === 0 && narrowed ? (
-                    <AppEmptyState
-                        icon="search"
-                        title="No cards found"
-                        description={
-                            q.trim() ? `No cards in this set match “${q.trim()}”.` : "Nothing in this set with those filters. Clear one to widen the list."
-                        }
-                    />
-                ) : (
-                    /* The same grid as every other overview, at the same size: a set was denser than any
-                   list in the app, which is what made it read as a checklist rather than a shelf. */
-                    <ul className={`grid gap-4 ${GRID_COLUMNS[size]}`}>
-                        {shown.slice(0, limit).map((card, i) => (
-                            <li key={card.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i, 16) * 20}ms` } as React.CSSProperties}>
-                                <SetCardTile card={card} language={language} size={size} priority={i < firstRow} onOpen={open} />
-                            </li>
+        <>
+            <Tabs
+                className="flex flex-1 flex-col gap-6"
+                selectedKey={holding ?? "all"}
+                onSelectionChange={(key) => setHolding(key === "all" ? undefined : (key as Holding))}
+            >
+                {/* The kit's underline tabs, as the card sheet has them; scrolls sideways on a phone too narrow for four. */}
+                <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+                    <TabList aria-label="Cards in this set" type="underline" size="sm" className="min-w-max">
+                        {HOLDINGS.map((h) => (
+                            <Tab key={h.value} id={h.value} label={h.label} badge={String(tabCounts[h.value] ?? 0)} />
                         ))}
-                    </ul>
-                )}
-                {more && shown.length > 0 ? (
-                    <div ref={sentinel} className="flex justify-center py-2">
-                        {/* The way on when the sentinel is never seen: a keyboard, or an observer the
+                    </TabList>
+                </div>
+                {/* A round button on a phone, a short field from sm (`RowSearch`), as in a binder's row. */}
+                <div className={LIST_ROW}>
+                    <RowSearch label="Search this set" filled={q !== ""}>
+                        <Input
+                            size="sm"
+                            icon={SearchLg}
+                            aria-label="Search this set"
+                            placeholder="Search this set"
+                            value={q}
+                            onChange={setQ}
+                            wrapperClassName="rounded-full"
+                        />
+                    </RowSearch>
+                    <FiltersSheet
+                        inline
+                        noun={["card", "cards"]}
+                        groups={[
+                            ...(rarities.length > 1 ? [{ id: "rarity", label: "Rarity", multiple: true, options: rarities }] : []),
+                            // Full art cuts across the rarities, so it is its own yes-or-no, not one of them.
+                            ...(fullArt.size > 0
+                                ? [{ id: "only", label: "Show only", multiple: true, options: [{ value: FULL_ART, label: "Full art" }] }]
+                                : []),
+                        ]}
+                        values={{ rarity, only: art ? [FULL_ART] : [] }}
+                        count={countDraft}
+                        onApply={(v) => {
+                            const next = filtersOf(v);
+                            setRarity(next.rarity);
+                            setArt(next.art);
+                        }}
+                    />
+                    <Dropdown.Root>
+                        <RowButton icon={SwitchVertical01} label="Sort" menu />
+                        <Dropdown.Popover placement="bottom end" className="w-56">
+                            <Dropdown.Menu
+                                selectionMode="single"
+                                disallowEmptySelection
+                                selectedKeys={new Set([sort])}
+                                onSelectionChange={(keys) => {
+                                    const key = keys === "all" ? undefined : [...keys][0];
+                                    setSort(SORTS.find((o) => o.value === key)?.value ?? "set");
+                                }}
+                            >
+                                {SORTS.map((o) => (
+                                    <Dropdown.Item key={o.value} id={o.value}>
+                                        {o.label}
+                                    </Dropdown.Item>
+                                ))}
+                            </Dropdown.Menu>
+                        </Dropdown.Popover>
+                    </Dropdown.Root>
+                    <ViewMenu view="grid" size={size} layouts={false} />
+                </div>
+                {/* One panel, named after the tab chosen: the grid is the same list filtered, not four lists. */}
+                <TabPanel id={holding ?? "all"} className="flex flex-col gap-6">
+                    {shown.length === 0 && narrowed ? (
+                        <AppEmptyState
+                            icon="search"
+                            title="No cards found"
+                            description={
+                                q.trim() ? `No cards in this set match “${q.trim()}”.` : "Nothing in this set with those filters. Clear one to widen the list."
+                            }
+                        />
+                    ) : (
+                        /* The same grid as every other overview, at the same size: a set was denser than any
+                   list in the app, which is what made it read as a checklist rather than a shelf. */
+                        <ul className={`grid gap-4 ${GRID_COLUMNS[size]}`}>
+                            {shown.slice(0, limit).map((card, i) => (
+                                <li key={card.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i, 16) * 20}ms` } as React.CSSProperties}>
+                                    <SetCardTile card={card} language={language} size={size} priority={i < firstRow} onOpen={open} />
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                    {more && shown.length > 0 ? (
+                        <div ref={sentinel} className="flex justify-center py-2">
+                            {/* The way on when the sentinel is never seen: a keyboard, or an observer the
                         browser does not have. The kit's quietest button, as the shelf has it. */}
-                        <Button color="link-gray" size="sm" onClick={() => drawUpTo(limit + CARD_BATCH)}>
-                            Show more
-                        </Button>
-                    </div>
-                ) : null}
-            </TabPanel>
+                            <Button color="link-gray" size="sm" onClick={() => drawUpTo(limit + CARD_BATCH)}>
+                                Show more
+                            </Button>
+                        </div>
+                    ) : null}
+                </TabPanel>
+            </Tabs>
+            {/* Outside the Tabs: inside them the sheet's own tabs (Your copies, Details, Price) were
+                counted into the page's tab list and drawn beside All, Owned and Missing, and the sheet
+                opened with none (2026-09-15). The sheet is a portal, so where it sits changes no layout. */}
             {/* A card you hold opens on its row and can be changed. One you do not opens on the
                 printing, with the two ways to take it; the sheet is where you looked for them. */}
             <CardDetailSlideout
@@ -331,7 +338,7 @@ export function SetCards({
                 onPrev={step(-1)}
                 onNext={step(1)}
             />
-        </Tabs>
+        </>
     );
 }
 
