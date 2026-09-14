@@ -418,13 +418,10 @@
     --color-bg-page: var(--color-bg-primary);
     /* What a flat tile (a card in a grid) turns into under the pointer: one step off the white page. */
     --color-bg-page-raised: var(--color-bg-primary_hover);
-    /* The desktop sidebar: in light the grey the page had (neutral-50), the two swapped, as glass (the `glass-sidebar`
-       utility); its rows go white under the pointer and when current, which the page's greys would
-       not show on it. In dark it is the tab bar's glass and the rows keep the kit's fills. */
+    /* The desktop sidebar: in light the grey the page had (neutral-50), the two swapped, as glass (the
+       `glass-sidebar` utility). In dark it is the tab bar's glass. */
     --color-bg-sidebar: color-mix(in oklab, var(--color-neutral-50) 90%, transparent);
     --color-bg-sidebar-solid: var(--color-neutral-50);
-    --color-bg-sidebar-item_hover: var(--color-bg-primary);
-    --color-bg-sidebar-item_current: var(--color-bg-primary);
     --color-bg-quaternary: var(--color-neutral-200);
     /* The outline a page draws where its content will land: one step off the page in either theme,
        barely there — an outline is a promise of content, not content. Bart's call, after two
@@ -470,8 +467,6 @@
        token exists but the class does not, and the page stays white. */
     --background-color-page: var(--color-bg-page);
     --background-color-page-raised: var(--color-bg-page-raised);
-    --background-color-sidebar-item_hover: var(--color-bg-sidebar-item_hover);
-    --background-color-sidebar-item_current: var(--color-bg-sidebar-item_current);
     --background-color-skeleton: var(--color-bg-skeleton);
     --background-color-tertiary: var(--color-bg-tertiary);
     --background-color-brand-primary: var(--color-bg-brand-primary);
@@ -843,8 +838,6 @@
         --color-bg-page-raised: var(--color-neutral-800);
         --color-bg-sidebar: color-mix(in oklab, var(--color-bg-primary) 62%, transparent);
         --color-bg-sidebar-solid: var(--color-bg-primary);
-        --color-bg-sidebar-item_hover: var(--color-bg-primary_hover);
-        --color-bg-sidebar-item_current: var(--color-bg-secondary);
         --color-bg-skeleton: var(--color-neutral-800);
         --color-bg-quaternary: var(--color-neutral-600);
         --color-bg-primary_alt: var(--color-bg-secondary);
@@ -893,8 +886,6 @@
         --background-color-success-solid: var(--color-bg-success-solid);
         --background-color-secondary_hover: var(--color-bg-secondary_hover);
         --background-color-primary_hover: var(--color-bg-primary_hover);
-        --background-color-sidebar-item_hover: var(--color-bg-sidebar-item_hover);
-        --background-color-sidebar-item_current: var(--color-bg-sidebar-item_current);
         --background-color-active: var(--color-bg-active);
         --background-color-brand-solid_hover: var(--color-bg-brand-solid_hover);
         --background-color-error-primary: var(--color-bg-error-primary);

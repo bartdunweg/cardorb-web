@@ -7,11 +7,11 @@ import { Badge } from "@/components/base/badges/badges";
 import { cx, sortCx } from "@/utils/cx";
 
 // Changed from the kit: no bg-primary at rest, so the sidebar's glass runs behind the rows instead
-// of a strip under each one; hover and the current row take the sidebar's own fills (theme.css),
-// white on its light tint, where the kit's greys did not show.
+// of a strip under each one. Hover and the current row are the tab bar's pill (alpha-black, white in
+// dark) at 4 and 8 %, so the page you are on reads the same on both navigations, on any tint.
 const styles = sortCx({
-    root: "group relative flex max-h-9 w-full cursor-pointer items-center rounded-md outline-focus-ring transition duration-100 ease-linear select-none hover:bg-sidebar-item_hover focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2",
-    rootSelected: "bg-sidebar-item_current hover:bg-sidebar-item_current",
+    root: "group relative flex max-h-9 w-full cursor-pointer items-center rounded-md outline-focus-ring transition duration-100 ease-linear select-none hover:bg-alpha-black/4 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2",
+    rootSelected: "bg-alpha-black/8 hover:bg-alpha-black/8",
 });
 
 interface NavItemBaseProps {

@@ -32,8 +32,8 @@ interface NavButtonProps {
 }
 
 const styles = {
-    root: "group/item relative flex w-full cursor-pointer items-center justify-center gap-1 rounded-md outline-focus-ring transition duration-100 ease-linear select-none hover:bg-sidebar-item_hover focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2",
-    current: "bg-sidebar-item_current hover:bg-sidebar-item_current",
+    root: "group/item relative flex w-full cursor-pointer items-center justify-center gap-1 rounded-md outline-focus-ring transition duration-100 ease-linear select-none hover:bg-alpha-black/4 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2",
+    current: "bg-alpha-black/8 hover:bg-alpha-black/8",
 };
 
 export const NavButton = ({ current, label, name, href, icon: Icon, className, tooltipPlacement = "right", onPress, children }: NavButtonProps) => {

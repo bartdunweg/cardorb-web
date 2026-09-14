@@ -125,7 +125,7 @@ export function AppSidebar({
                             {/* An item like the others: the same padding, icon size and type, at the list's end. */}
                             <li className="py-px">
                                 <FolderDialog mode="create">
-                                    <AriaButton className="group relative flex max-h-9 w-full cursor-pointer items-center rounded-md p-2 outline-focus-ring transition duration-100 ease-linear select-none hover:bg-sidebar-item_hover focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2">
+                                    <AriaButton className="group relative flex max-h-9 w-full cursor-pointer items-center rounded-md p-2 outline-focus-ring transition duration-100 ease-linear select-none hover:bg-alpha-black/4 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2">
                                         <Plus
                                             aria-hidden="true"
                                             className="mr-2 size-5 shrink-0 text-fg-quaternary transition-inherit-all group-hover:text-fg-quaternary_hover"
