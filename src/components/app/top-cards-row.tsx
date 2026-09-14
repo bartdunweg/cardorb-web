@@ -13,7 +13,7 @@ import { formatPrice } from "@/lib/format";
 const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-slideout").then((m) => m.CardDetailSlideout), { ssr: false });
 
 /**
- * The dearest cards as a row that scrolls sideways inside its tile. Each is the picture small at the
+ * The dearest cards as a row that scrolls sideways inside its tile, each with its rank (1, 2, 3). Each is the picture small at the
  * left with its name, set code and price beside it, and a hairline between one and the next (Bart,
  * 2026-09-15): the price is the point of the row, so it reads beside the card rather than under a
  * picture it had to share a narrow column with. The whole item opens the card's sheet, and the
@@ -31,8 +31,12 @@ export function TopCardsRow({ cards }: { cards: Card[] }) {
                         <AriaButton
                             onPress={() => setAt(i)}
                             aria-label={`${card.name}, ${cardLabel(card, "md")}, ${formatPrice(card.price)}`}
-                            className="flex w-52 pressable cursor-pointer items-center gap-3 rounded-lg p-1.5 text-left outline-focus-ring transition-colors hover:bg-alpha-black/4 data-focus-visible:outline-2"
+                            className="flex w-60 pressable cursor-pointer items-center gap-3 rounded-lg p-1.5 text-left outline-focus-ring transition-colors hover:bg-alpha-black/4 data-focus-visible:outline-2"
                         >
+                            {/* The rank, for the eye: the list is an ordered one, so a screen reader already says which place. */}
+                            <span aria-hidden="true" className="w-5 shrink-0 text-center text-sm font-semibold text-tertiary tabular-nums">
+                                {i + 1}
+                            </span>
                             <div className="relative aspect-card w-12 shrink-0 overflow-hidden rounded-sm bg-quaternary">
                                 {card.image_url ? <CardImage src={card.image_url} alt="" width={96} className="object-cover" /> : null}
                             </div>
