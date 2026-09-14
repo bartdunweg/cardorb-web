@@ -1,3 +1,5 @@
+import { isReverseFinish } from "@/lib/api-shapes";
+
 /**
  * Which holographic treatment a card gets in its sheet.
  *
@@ -153,8 +155,8 @@ export function holoVariant(
 ): HoloVariant {
     const key = (rarity ?? "").trim().toLowerCase();
     let family = FAMILY[key] ?? "common";
-    // A Poké Ball or Master Ball copy is a reverse holo with a pattern: the reverse effect, for now without the pattern.
-    if ((finish === "reverse-holo" || finish === "poke-ball" || finish === "master-ball") && REVERSIBLE.has(family)) family = `${family} reverse holo`;
+    // A Poké Ball, Master Ball or Energy Symbol copy is a reverse holo with a pattern: the reverse effect, for now without the pattern.
+    if (isReverseFinish(finish) && REVERSIBLE.has(family)) family = `${family} reverse holo`;
     else if (finish === "holo" && PLAIN.has(family)) family = "rare holo";
     // The sheen is Sword & Shield's; every holo before it was the starry cosmos foil. That is a
     // guess from the era, and it is only a guess: modern sets print cosmos cards too. A copy that
