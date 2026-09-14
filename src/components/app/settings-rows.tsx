@@ -32,7 +32,7 @@ export function SettingsGroup({ title, children }: { title: string; children: Re
     return (
         <section className="flex flex-col gap-2">
             <h2 className="px-1 text-sm font-medium text-tertiary">{title}</h2>
-            <div className="flex flex-col overflow-hidden rounded-xl bg-primary shadow-lift-xs ring-1 ring-primary ring-inset">{children}</div>
+            <div className="flex flex-col overflow-hidden rounded-xl bg-page shadow-lift-xs ring-1 ring-primary ring-inset">{children}</div>
         </section>
     );
 }

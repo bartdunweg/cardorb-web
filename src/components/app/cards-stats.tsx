@@ -40,7 +40,8 @@ export const StatCard = ({
             </div>
         </div>
     );
-    const surface = cx("block arrive rounded-xl bg-primary shadow-lift-xs ring-1 ring-primary ring-inset", className);
+    // The page's own ground, not a lighter surface on it: the ring and the lift mark the tile.
+    const surface = cx("block arrive rounded-xl bg-page shadow-lift-xs ring-1 ring-primary ring-inset", className);
     const style = { "--arrive-delay": `${delay ?? 0}ms` } as React.CSSProperties;
     return href ? (
         <Link href={href} className={cx(surface, "pressable outline-focus-ring hover:bg-primary_hover focus-visible:outline-2")} style={style}>

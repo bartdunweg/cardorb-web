@@ -144,7 +144,7 @@ export function CopyCard({
     return (
         <section
             aria-label={copyLabel(row, folderName)}
-            className={cx("flex flex-col gap-5 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary ring-inset", arrive && "arrive")}
+            className={cx("flex flex-col gap-5 rounded-xl bg-page p-4 shadow-lift-xs ring-1 ring-primary ring-inset", arrive && "arrive")}
         >
             {/* What kind this is, in the words the add form uses. Not how many: the stepper under it
                 says that, and a number said twice in one card is the card arguing with itself. */}
