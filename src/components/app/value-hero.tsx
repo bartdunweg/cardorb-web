@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { ChevronDown } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
-import { ChartPeriods, PERIODS, type PeriodKey, isoDaysAgo } from "@/components/app/chart-periods";
+import { ChartPeriods, PERIODS, type PeriodKey, forChart, isoDaysAgo } from "@/components/app/chart-periods";
 import { ValueChart } from "@/components/app/value-chart";
 import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
@@ -104,7 +104,8 @@ export function ValueHero({
                 ) : null}
             </div>
 
-            <ValueChart snapshots={shown} label={`${list.name} value over time`}>
+            {/* The change above reads every reading; the line draws Max a week a step (forChart). */}
+            <ValueChart snapshots={forChart(shown, period)} label={`${list.name} value over time`}>
                 <ChartPeriods period={period} onPick={setPeriod} />
             </ValueChart>
         </section>

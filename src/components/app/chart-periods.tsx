@@ -35,6 +35,58 @@ export function withinPeriod<T extends { date: string }>(rows: T[], period: Peri
     return rows.filter((r) => r.date >= from);
 }
 
+const isoOf = (d: Date) => d.toISOString().slice(0, 10);
+const utc = (iso: string) => new Date(`${iso}T00:00:00Z`);
+
+/**
+ * One reading a week, the week's Saturday its date: what Max draws.
+ *
+ * The chart spaces readings evenly, one step each, so a line of nightly readings for six months and
+ * weekly ones before drew the last six months wider than the two years before them (the archive
+ * keeps days for six months, a week each before that: Bart, 2026-09-14). Grouped by Sunday to
+ * Saturday week, every step is a week, and a point sits on its Saturday whatever day the reading
+ * was, which the tooltip makes honest by naming the week ("Jun 7 - 13, 2025"). The week still
+ * running ends on its last reading, never on a Saturday still to come.
+ *
+ * The last reading of a week stands for it; cards added during the week are summed onto it, so a
+ * ring still says what joined.
+ */
+export function byWeek<T extends { date: string; added?: number; addedValue?: number }>(rows: T[]): (T & { weekFrom: string })[] {
+    const weeks = new Map<string, T & { weekFrom: string }>();
+    for (const row of rows) {
+        const day = utc(row.date);
+        const sunday = new Date(day);
+        sunday.setUTCDate(day.getUTCDate() - day.getUTCDay());
+        const saturday = new Date(sunday);
+        saturday.setUTCDate(sunday.getUTCDate() + 6);
+        const weekFrom = isoOf(sunday);
+        const kept = weeks.get(weekFrom);
+        const added = (kept?.added ?? 0) + (row.added ?? 0);
+        const addedValue = (kept?.addedValue ?? 0) + (row.addedValue ?? 0);
+        weeks.set(weekFrom, {
+            ...row,
+            ...(row.added !== undefined || kept?.added !== undefined ? { added } : {}),
+            ...(row.addedValue !== undefined || kept?.addedValue !== undefined ? { addedValue } : {}),
+            date: isoOf(saturday),
+            weekFrom,
+        });
+    }
+    const today = isoOf(new Date());
+    const out = [...weeks.values()].sort((a, b) => a.date.localeCompare(b.date));
+    const last = out[out.length - 1];
+    if (last && last.date > today) {
+        const latest = rows.reduce((max, r) => (r.date > max ? r.date : max), last.weekFrom);
+        out[out.length - 1] = { ...last, date: latest };
+    }
+    return out;
+}
+
+/** The period's readings as the chart draws them: every day up to 6M, one a week for Max. */
+export function forChart<T extends { date: string; added?: number; addedValue?: number }>(rows: T[], period: PeriodKey): T[] {
+    const within = withinPeriod(rows, period);
+    return period === "max" ? byWeek(within) : within;
+}
+
 /**
  * One pressed, the pill behind it. Tapped often, so the state changes without motion.
  *

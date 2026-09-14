@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { BarChart01 } from "@untitledui/icons";
 import type { PricePoint } from "@/app/(app)/dashboard/cards/actions";
 import { knownPriceHistory, preloadPriceHistory } from "@/components/app/card-memo";
-import { ChartPeriods, type PeriodKey, withinPeriod } from "@/components/app/chart-periods";
+import { ChartPeriods, type PeriodKey, forChart } from "@/components/app/chart-periods";
 import { CHART_HEIGHT, ValueChart } from "@/components/app/value-chart";
 import type { ValueSnapshot } from "@/lib/value-history";
 
@@ -74,7 +74,7 @@ export function CardPriceChart({
         .filter((p): p is { date: string; value: number } => p.value != null)
         .map((p) => ({ ...p, cards: 1, priced: 1, unpriced: 0 }));
 
-    const shown = withinPeriod(series, period);
+    const shown = forChart(series, period);
 
     return (
         <ValueChart snapshots={shown} label={`${name ?? "This card"}'s price over time`} countLabel={null}>
