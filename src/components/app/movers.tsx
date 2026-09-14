@@ -7,12 +7,13 @@ import { PERIODS, type PeriodKey } from "@/components/app/chart-periods";
 import { useHomePeriod } from "@/components/app/home-period";
 import { formatPrice } from "@/lib/format";
 import type { Mover } from "@/lib/movers";
+import { TILE_SURFACE } from "@/lib/tile";
 import { cx } from "@/utils/cx";
 
 type Answer = { up: Mover[]; down: Mover[] } | null;
 
-/** The counts' tile (StatCard): the page's own ground, the ring and the lift mark it. */
-const TILE = "rounded-xl bg-page p-4 shadow-lift-xs ring-1 ring-primary ring-inset sm:p-5";
+/** The counts' tile (StatCard), with room inside. */
+const TILE = `${TILE_SURFACE} p-4 sm:p-5`;
 
 /**
  * Ours: the cards whose price moved most over the period the value chart shows, under Home's counts.
