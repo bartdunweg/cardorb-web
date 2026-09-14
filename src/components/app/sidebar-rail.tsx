@@ -1,6 +1,6 @@
 "use client";
 
-import { type FC, Suspense, use, useState } from "react";
+import { type FC, Suspense, use, useEffect, useState } from "react";
 import { Folder, LayoutLeft, Plus, SearchLg, Star01 } from "@untitledui/icons";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,6 +9,7 @@ import { useCommandSearch } from "@/components/app/command-search";
 import { FolderModal } from "@/components/app/folder-dialog";
 import { NavButton } from "@/components/application/app-navigation/base-components/nav-button";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
+import { cx } from "@/utils/cx";
 
 type Account = { name: string; email: string; avatarUrl: string | null };
 type FolderLink = { id: string; name: string; kind: "manual" | "rule"; count: number };
@@ -98,14 +99,27 @@ export function SidebarRail({
     );
 }
 
+// Whether the binder rows have been on screen yet, in this tab. Folding or unfolding draws them anew,
+// the open list or the rail's, and `arrive` then played again on rows that had not gone anywhere; they
+// arrive once, when the read first lands, and stand still after.
+let bindersShown = false;
+export function useBindersArrive() {
+    const [first] = useState(() => !bindersShown);
+    useEffect(() => {
+        bindersShown = true;
+    }, []);
+    return first;
+}
+
 // The binders you made, a row each, as they arrive.
 function BinderRows({ activeUrl, collections }: { activeUrl: string; collections: Promise<FolderLink[]> }) {
+    const arrive = useBindersArrive();
     return (
         <>
             {use(collections).map((c) => {
                 const href = `/dashboard/collections/${c.id}`;
                 return (
-                    <li key={c.id} className="arrive py-px">
+                    <li key={c.id} className={cx("py-px", arrive && "arrive")}>
                         <NavButton icon={Folder} label={c.name} href={href} current={activeUrl === href} />
                     </li>
                 );

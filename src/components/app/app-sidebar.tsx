@@ -9,13 +9,14 @@ import { SidebarSearchTrigger } from "@/components/app/command-search";
 import { FolderDialog } from "@/components/app/folder-dialog";
 import { PrefetchRoutes } from "@/components/app/prefetch-routes";
 import { useRouteTarget } from "@/components/app/route-pending";
-import { type RailItem, SidebarRail } from "@/components/app/sidebar-rail";
+import { type RailItem, SidebarRail, useBindersArrive } from "@/components/app/sidebar-rail";
 import { CARDS_CHANGED } from "@/components/app/use-copy-steps";
 import { NavItemBase } from "@/components/application/app-navigation/base-components/nav-item";
 import type { NavItemDividerType, NavItemType } from "@/components/application/app-navigation/config";
 import { SidebarNavigationSectionDividers } from "@/components/application/app-navigation/sidebar-navigation/sidebar-section-dividers";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { SIDEBAR_COOKIE } from "@/lib/sidebar-cookie";
+import { cx } from "@/utils/cx";
 
 type Account = { name: string; email: string; avatarUrl: string | null };
 type FolderLink = { id: string; name: string; kind: "manual" | "rule"; count: number };
@@ -152,12 +153,13 @@ export function AppSidebar({
 function FolderRows({ collections, fresh, activeUrl }: { collections: Promise<FolderLink[]>; fresh?: FolderLink[]; activeUrl: string }) {
     // Read again after a press on a list's tiles, where there is an answer; the layout's otherwise.
     const list = fresh ?? use(collections);
+    const arrive = useBindersArrive();
     return (
         <>
             {list.map((c) => {
                 const href = `/dashboard/collections/${c.id}`;
                 return (
-                    <li key={c.id} className="arrive py-px">
+                    <li key={c.id} className={cx("py-px", arrive && "arrive")}>
                         {/*
                          * A folder, however it was filled. A rule folder used to
                          * draw a flowchart, which named the mechanism rather than
