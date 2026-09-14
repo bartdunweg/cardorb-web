@@ -257,7 +257,11 @@ export function ValueChart({
                         style={{ left: tooltipLeft, right: tooltipRight }}
                     >
                         <span className="font-medium text-secondary">{whenOf(current)}</span>
-                        <span className="text-sm font-semibold text-primary tabular-nums">{formatPrice(current.value)}</span>
+                        <span className="text-sm font-semibold text-primary tabular-nums">
+                            {formatPrice(current.value)}
+                            {/* A week in Max is the average of its days (byWeek), and the reading says so. */}
+                            {current.weekFrom ? <span className="font-normal text-tertiary"> average</span> : null}
+                        </span>
                         {countLabel ? (
                             <span className="text-tertiary tabular-nums">
                                 {formatCount(current.cards)} {countLabel}
