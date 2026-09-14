@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CardFacts } from "@/app/(app)/dashboard/cards/actions";
-import { defaultFinishOf, editionOptions, finishOptions, patternOptions, soleOption } from "./copy-fields";
+import { defaultFinishOf, editionOptions, effectivePatternOf, finishOptions, patternOptions, soleOption } from "./copy-fields";
 
 /** Only the fields these read; the rest of the facts is not this question. */
 const facts = (of: Partial<CardFacts>): CardFacts => ({ firstEdition: null, printings: [], editions: null, languages: ["en"], ...of }) as unknown as CardFacts;
@@ -83,12 +83,12 @@ describe("patternOptions", () => {
         expect(patternOptions(card, "reverse-holo", null)).toEqual([]);
     });
 
-    it("offers every pattern for a card whose printings are known and whose foils are not named", () => {
-        // TCGdex names a foil on a fraction of the cards it knows the printings of. Reading that
-        // silence as "no pattern" would take the question away from somebody holding a cracked
-        // ice reverse and looking at it.
-        const card = facts({ printings: [{ finish: "reverse-holo", foilPattern: null }] });
-        expect(values(patternOptions(card, "reverse-holo", null))).toEqual(["", "cosmos", "cracked-ice", "starlight", "confetti", "vertical-line"]);
+    // Bart, 2026-09-14: a holo whose pattern nothing names is Standard, and nobody is asked.
+    it("asks nothing where no source names a pattern for the card", () => {
+        const card = facts({ printings: [{ finish: "holo", foilPattern: null }], patternPrints: { standard: true, prints: [] } });
+        expect(patternOptions(card, "holo", null)).toEqual([]);
+        expect(patternOptions(facts({ patternPrints: null }), "holo", null)).toEqual([]);
+        expect(patternOptions(null, "holo", null)).toEqual([]);
     });
 
     it("asks the catalogue about a plain reverse for a ball reverse", () => {
@@ -116,6 +116,80 @@ describe("patternOptions, where a finish is printed with and without a named foi
         const offered = patternOptions(machamp151, "holo", null);
         expect(offered.map((o) => o.label)).toEqual(["Standard", "Cosmos"]);
         expect(soleOption(offered)).toBeNull();
+    });
+});
+
+describe("patternOptions, from the pattern prints TCGplayer sells", () => {
+    const print = (finish: "holo" | "reverse-holo", foilPattern: "cosmos" | "cracked-ice", tcgplayerId: number) => ({
+        finish,
+        foilPattern,
+        tcgplayerId,
+        price: null,
+    });
+
+    // 151 Machamp: TCGdex lists a plain holo, TCGplayer sells the collection box cosmos holo.
+    it("offers Standard, selected, and the pattern that exists", () => {
+        const card = facts({
+            printings: [
+                { finish: "holo", foilPattern: null },
+                { finish: "reverse-holo", foilPattern: null },
+            ],
+            patternPrints: { standard: true, prints: [print("holo", "cosmos", 662070)] },
+        });
+        const offered = patternOptions(card, "holo", null);
+        expect(offered).toEqual([
+            { label: "Standard", value: "" },
+            { label: "Cosmos", value: "cosmos" },
+        ]);
+        expect(effectivePatternOf(offered, "")).toBe("");
+        expect(patternOptions(card, "reverse-holo", null)).toEqual([]);
+    });
+
+    // Rowlet of Sun & Moon (sm1-9): a normal and a reverse in its set, a cosmos holo in a blister.
+    it("offers the holo a pattern print is, and states the pattern of that holo", () => {
+        const card = facts({
+            printings: [
+                { finish: "normal", foilPattern: null },
+                { finish: "reverse-holo", foilPattern: null },
+            ],
+            patternPrints: { standard: true, prints: [print("holo", "cosmos", 133824)] },
+        });
+        expect(values(finishOptions(card, null))).toEqual(["normal", "reverse-holo", "holo"]);
+        const offered = patternOptions(card, "holo", null);
+        expect(soleOption(offered)?.value).toBe("cosmos");
+        expect(effectivePatternOf(offered, "")).toBe("cosmos");
+        expect(patternOptions(card, "normal", null)).toEqual([]);
+    });
+
+    it("offers only the patterns sold for the finish chosen", () => {
+        const card = facts({
+            patternPrints: { standard: true, prints: [print("holo", "cosmos", 1), print("holo", "cracked-ice", 2), print("reverse-holo", "cosmos", 3)] },
+        });
+        expect(values(patternOptions(card, "holo", null))).toEqual(["", "cosmos", "cracked-ice"]);
+        expect(values(patternOptions(card, "reverse-holo", null))).toEqual(["", "cosmos"]);
+    });
+
+    // The Tinkatink promo (svp-025) was only ever the cosmos holo.
+    it("states the pattern of a card never sold without it", () => {
+        const card = facts({ patternPrints: { standard: false, prints: [print("holo", "cosmos", 499996)] } });
+        expect(soleOption(patternOptions(card, "holo", null))?.label).toBe("Cosmos");
+    });
+
+    it("keeps a pattern already recorded that no source names", () => {
+        const card = facts({ printings: [{ finish: "holo", foilPattern: null }], patternPrints: { standard: true, prints: [] } });
+        expect(values(patternOptions(card, "holo", "cracked-ice"))).toEqual(["", "cracked-ice"]);
+    });
+
+    it("drops a chosen pattern the new finish does not have", () => {
+        const card = facts({
+            printings: [
+                { finish: "holo", foilPattern: null },
+                { finish: "normal", foilPattern: null },
+            ],
+            patternPrints: { standard: true, prints: [print("holo", "cosmos", 1)] },
+        });
+        expect(effectivePatternOf(patternOptions(card, "normal", null), "cosmos")).toBe("");
+        expect(effectivePatternOf(patternOptions(card, "holo", null), "cosmos")).toBe("cosmos");
     });
 });
 

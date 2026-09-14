@@ -9,7 +9,7 @@ import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { AcquiredDatePicker } from "@/components/app/acquired-date-picker";
 import { CardImage } from "@/components/app/card-image";
 import { CONDITIONS } from "@/components/app/condition-badge";
-import { defaultFinishOf, editionOptions, finishOptions, patternOptions, soleOption } from "@/components/app/copy-fields";
+import { defaultFinishOf, editionOptions, effectivePatternOf, finishOptions, patternOptions, soleOption } from "@/components/app/copy-fields";
 import { FormError } from "@/components/app/form-error";
 import { GRADERS, GRADES, gradeLabel, gradeUnder, gradesFor, splitGrade } from "@/components/app/graded";
 import { LanguageSelect } from "@/components/app/language-select";
@@ -113,7 +113,7 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
     // The pattern list follows the finish: cosmos on a holo is not cosmos on a normal.
     const patterns = patternOptions(facts, effectiveFinish, card.foil_pattern ?? null);
     const solePattern = soleOption(patterns);
-    const effectivePattern = pattern || solePattern?.value || "";
+    const effectivePattern = effectivePatternOf(patterns, pattern);
     /* Which run, asked here too. The card's own sheet and the add form have asked it since #313
        and this dialog did not, so a 1st Edition Base Set card taken off the wishlist had to be
        opened again to say so. Asked only of a card that had more than one run
@@ -263,7 +263,7 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
                         aria-label="Foil pattern"
                         size="sm"
                         className="w-full"
-                        value={pattern}
+                        value={effectivePattern}
                         onChange={(e) => setPattern(e.target.value)}
                         options={patterns}
                     />

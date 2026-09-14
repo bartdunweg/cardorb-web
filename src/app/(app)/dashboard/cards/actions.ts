@@ -5,6 +5,7 @@ import { ApiError, api } from "@/lib/api";
 import {
     type Edition,
     type Finish,
+    type PatternPrints,
     type PokemonCard,
     type RemovedCard,
     cardFactsAnswer,
@@ -524,6 +525,12 @@ export type CardFacts = {
      * set's one foil, so there is nothing to ask. Null is no answer, and the printings decide.
      */
     foilPatterns: string[] | null;
+    /**
+     * The foil patterns TCGplayer sells this card in, each a product of its own with its finish
+     * and price, and whether a print without a pattern exists (cardorb-api#452). A form offers
+     * these and the patterns `printings` names, and nothing else. Null where the API had no answer.
+     */
+    patternPrints: PatternPrints | null;
     /** TCGplayer's market figure for the printing, converted. */
     price: { market: number | null } | null;
 };
@@ -546,6 +553,7 @@ export async function cardFacts(tcgId: string): Promise<CardFacts | null> {
             printings: Array.isArray(c.printings) ? c.printings : [],
             editions: Array.isArray(c.editions) ? c.editions : null,
             foilPatterns: Array.isArray(c.foilPatterns) ? c.foilPatterns : null,
+            patternPrints: c.patternPrints ?? null,
             firstEdition: c.firstEdition ?? null,
             price: c.price ? { market: c.price.market } : null,
         };

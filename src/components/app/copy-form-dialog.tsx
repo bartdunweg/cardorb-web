@@ -9,7 +9,7 @@ import type { CardFacts } from "@/app/(app)/dashboard/cards/actions";
 import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { AcquiredDatePicker } from "@/components/app/acquired-date-picker";
 import { CONDITIONS } from "@/components/app/condition-badge";
-import { defaultFinishOf, editionOptions, finishOptions, patternOptions, soleOption } from "@/components/app/copy-fields";
+import { defaultFinishOf, editionOptions, effectivePatternOf, finishOptions, patternOptions, soleOption } from "@/components/app/copy-fields";
 import { FormError } from "@/components/app/form-error";
 import { GRADERS, GRADES, gradeLabel, gradeUnder, gradesFor, splitGrade } from "@/components/app/graded";
 import { LanguageSelect } from "@/components/app/language-select";
@@ -78,7 +78,7 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
     // The pattern list follows the finish: cosmos on a holo is not cosmos on a normal.
     const patterns = patternOptions(facts, effectiveFinish, from.foil_pattern ?? null);
     const solePattern = soleOption(patterns);
-    const effectivePattern = pattern || solePattern?.value || "";
+    const effectivePattern = effectivePatternOf(patterns, pattern);
     // Asked only of a card the catalogue says had a stamped run, or says nothing about.
     const editions = editionOptions(facts, from.edition ?? null, language);
     // A card printed in one run only states it, and the save records it, as the finish does.
@@ -302,7 +302,7 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
                         aria-label="Foil pattern"
                         size="sm"
                         className="w-full"
-                        value={pattern}
+                        value={effectivePattern}
                         onChange={(e) => setPattern(e.target.value)}
                         options={patterns}
                     />
