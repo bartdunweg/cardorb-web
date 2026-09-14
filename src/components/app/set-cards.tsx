@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SearchLg, SwitchVertical01 } from "@untitledui/icons";
 import dynamic from "next/dynamic";
 import { listRows } from "@/app/(app)/dashboard/cards/actions";
@@ -9,6 +9,7 @@ import { type FilterAnswer, type FilterValues, FiltersSheet } from "@/components
 import { RowButton } from "@/components/app/row-button";
 import { LIST_ROW, RowSearch } from "@/components/app/row-search";
 import { SetCardTile } from "@/components/app/set-card-tile";
+import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Input } from "@/components/base/input/input";
 import { Dot } from "@/components/foundations/dot-icon";
@@ -64,6 +65,17 @@ const HOLDINGS: { value: Holding; label: string; dot: string }[] = [
     { value: "wishlist", label: "On the wishlist", dot: "text-fg-warning-secondary" },
 ];
 
+/**
+ * Cards drawn per batch: eight rows of the widest grid, twenty-four on a phone's two columns.
+ *
+ * A set page drew every card at once: 259 tiles for Scarlet & Violet, 1.5 MB of their markup and
+ * some 10,000 elements in the page (measured 2026-09-14, at 5.8 KB a tile), for a phone that shows
+ * six. The card data came over anyway and is a tenth of that; the tiles are drawn a batch at a time,
+ * a screen ahead of the sentinel, as the Browse shelf (sets-shelf.tsx) and the Pokédex draw theirs.
+ * Search, filters and sort still read every card: only the drawing is in batches.
+ */
+const CARD_BATCH = 48;
+
 export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetCard[]; language?: string; firstRow?: number }) {
     const [q, setQ] = useState("");
     const [holding, setHolding] = useState<Holding | undefined>();
@@ -107,6 +119,28 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
         return [...kept].sort((a, b) => (sort === "name" ? a.name.localeCompare(b.name) : sort === "price-desc" ? price(b) - price(a) : price(a) - price(b)));
     }, [matching, holding, rarity, art, sort]);
     const narrowed = Boolean(q.trim() || holding || rarity.length || art);
+    /* How many of `shown` are drawn. Kept with the view it was counted for, so a new search, filter
+       or sort starts again at one batch without an effect to reset it. */
+    const view = `${q}\u0000${holding ?? ""}\u0000${rarity.join(",")}\u0000${art}\u0000${sort}`;
+    const [drawn, setDrawn] = useState({ view, count: CARD_BATCH });
+    const limit = drawn.view === view ? drawn.count : CARD_BATCH;
+    const drawUpTo = useCallback((count: number) => setDrawn({ view, count }), [view]);
+    const more = limit < shown.length;
+    const sentinel = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        const el = sentinel.current;
+        if (!el || !more || typeof IntersectionObserver === "undefined") return;
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (!entry?.isIntersecting) return;
+                observer.disconnect();
+                drawUpTo(limit + CARD_BATCH);
+            },
+            { rootMargin: "100% 0px" },
+        );
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [more, limit, drawUpTo]);
     /* What each choice would leave, worked out here from the set in hand: a group's numbers with every
        other filter as chosen and its own left off, the way the API counts a binder's. */
     const countDraft = useCallback(
@@ -144,7 +178,10 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
        whose whole point is going through a set in order. */
     const [at, setAt] = useState(-1);
     const open = async (card: SetCard) => {
-        setAt(shown.findIndex((c) => c.id === card.id));
+        const index = shown.findIndex((c) => c.id === card.id);
+        setAt(index);
+        // The sheet's arrows can go past the cards drawn; draw them, so closing it lands on a tile.
+        if (index >= limit) drawUpTo(index + CARD_BATCH);
         /* The card you hold opens on its row; the catalogue's own is shown while that is read, so
            the sheet is never blank waiting for it. No guard against a second tap: opening the same
            card twice costs one read and lands on the same card, and the ref that used to prevent
@@ -239,13 +276,22 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
                 /* The same grid as every other overview, at the same size: a set was denser than any
                    list in the app, which is what made it read as a checklist rather than a shelf. */
                 <ul className={`grid gap-4 ${GRID_COLUMNS.md}`}>
-                    {shown.map((card, i) => (
+                    {shown.slice(0, limit).map((card, i) => (
                         <li key={card.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i, 16) * 20}ms` } as React.CSSProperties}>
                             <SetCardTile card={card} language={language} priority={i < firstRow} onOpen={open} />
                         </li>
                     ))}
                 </ul>
             )}
+            {more && shown.length > 0 ? (
+                <div ref={sentinel} className="flex justify-center py-2">
+                    {/* The way on when the sentinel is never seen: a keyboard, or an observer the
+                        browser does not have. The kit's quietest button, as the shelf has it. */}
+                    <Button color="link-gray" size="sm" onClick={() => drawUpTo(limit + CARD_BATCH)}>
+                        Show more
+                    </Button>
+                </div>
+            ) : null}
             {/* A card you hold opens on its row and can be changed. One you do not opens on the
                 printing, with the two ways to take it; the sheet is where you looked for them. */}
             <CardDetailSlideout
