@@ -1,20 +1,17 @@
-import { StatCard } from "@/components/app/cards-stats";
+import type { CSSProperties } from "react";
 import { formatCount, formatValue } from "@/lib/format";
 import { type SetStats as Stats, secretCount } from "@/lib/set-stats";
 
 /**
  * Ours: the numbers of a set, under its name on its wash.
  *
- * Six tiles, two rows of three from `sm`: first the set's own (the day it came out, how many cards
- * it has with the secret rares past the printed number), then the owner's. They are the
- * dashboard's StatCard on a see-through ground, so the logo's colours still reach them: they belong
- * to the band at the top of the page, not to the grid of cards under it. Not a meter: two numbers
- * side by side say the progress.
+ * The day it came out as a small line under the title, then two data points on the wash itself, no
+ * tile around them: the cards (held out of the set's total, with the secret rares past the printed
+ * number) and the value (what the copies held are worth, with what the rest would cost). A label
+ * over each number, the way a spec sheet reads. Not a meter: the two counts side by side say the
+ * progress. The wishlist is not among them: the set's cards below show which ones are wanted.
  */
-// See-through, so the wash shows through the tiles the way it shows through the page behind them.
-const onWash = "bg-primary/70 backdrop-blur-md";
-
-export function SetStatTiles({
+export function SetStats({
     stats,
     printedTotal,
     released,
@@ -27,23 +24,32 @@ export function SetStatTiles({
     gallery?: { name: string; total: number } | null;
 }) {
     const secret = secretCount(stats.total, printedTotal, gallery?.total ?? 0);
-    const detail = [secret ? `${formatCount(secret)} secret` : null, gallery ? `${formatCount(gallery.total)} ${gallery.name}` : null]
+    const cardsDetail = [secret ? `${formatCount(secret)} secret` : null, gallery ? `${formatCount(gallery.total)} ${gallery.name}` : null]
         .filter(Boolean)
         .join(" · ");
+    const complete = stats.owned >= stats.total;
+    const valueDetail = complete
+        ? "Complete"
+        : [`${formatValue(stats.toComplete)} to complete`, stats.unpriced > 0 ? `+ ${formatCount(stats.unpriced)} unpriced` : null].filter(Boolean).join(" ");
     return (
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
-            <StatCard label="Released" value={released ?? "Unknown"} className={onWash} delay={0} />
-            <StatCard label="Cards in set" value={formatCount(stats.total)} detail={detail || undefined} className={onWash} delay={40} />
-            <StatCard label="Your cards" value={formatCount(stats.owned)} className={onWash} delay={80} />
-            <StatCard label="Value" value={formatValue(stats.value)} className={onWash} delay={120} />
-            <StatCard
-                label="To complete"
-                value={stats.owned >= stats.total ? "Done" : formatValue(stats.toComplete)}
-                detail={stats.unpriced > 0 && stats.owned < stats.total ? `+ ${formatCount(stats.unpriced)} unpriced` : undefined}
-                className={onWash}
-                delay={160}
-            />
-            <StatCard label="Wishlist" value={formatCount(stats.wishlist)} className={onWash} delay={200} />
+        <>
+            {released ? <p className="text-sm text-tertiary">Released {released}</p> : null}
+            <dl className="mt-4 flex flex-wrap gap-x-10 gap-y-4">
+                <DataPoint label="Cards" value={`${formatCount(stats.owned)} of ${formatCount(stats.total)}`} detail={cardsDetail || undefined} delay={0} />
+                <DataPoint label="Value" value={formatValue(stats.value)} detail={valueDetail} delay={40} />
+            </dl>
+        </>
+    );
+}
+
+function DataPoint({ label, value, detail, delay }: { label: string; value: string; detail?: string; delay: number }) {
+    return (
+        <div className="flex arrive flex-col gap-1" style={{ "--arrive-delay": `${delay}ms` } as CSSProperties}>
+            <dt className="text-sm font-semibold text-tertiary">{label}</dt>
+            <dd className="text-display-xs font-semibold text-primary tabular-nums">
+                {value}
+                {detail ? <span className="ml-1.5 text-sm font-normal text-tertiary">{detail}</span> : null}
+            </dd>
         </div>
     );
 }

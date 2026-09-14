@@ -5,7 +5,7 @@ import { AppEmptyState } from "@/components/app/app-empty-state";
 import { PageHeader } from "@/components/app/page-header";
 import { SetCards } from "@/components/app/set-cards";
 import { SetHero } from "@/components/app/set-hero";
-import { SetStatTiles } from "@/components/app/set-stats";
+import { SetStats } from "@/components/app/set-stats";
 import { SetSkeleton } from "@/components/app/skeletons";
 import { formatCount } from "@/lib/format";
 import { isBrowseLanguage } from "@/lib/languages";
@@ -39,7 +39,7 @@ export async function generateMetadata({
     return { title: "Set" };
 }
 
-/** "2024/01/26" as the catalogue writes it, read out as "26 Jan 2024": a tile is two phone columns wide. */
+/** "2024/01/26" as the catalogue writes it, read out as "26 Jan 2024": short, under the title. */
 function releaseLabel(date: string | null): string | null {
     if (!date) return null;
     const [y, m, d] = date.split("/").map(Number);
@@ -94,10 +94,10 @@ async function Set({ params, searchParams }: { params: Promise<{ id: string }>; 
                 back={{ href: language === "en" ? "/dashboard/sets" : `/dashboard/sets?language=${language}`, label: "Browse" }}
                 // The set's logo on its own colour, edge to edge over the name. Decoration: the h1 says
                 // which set. No progress bar under the title: the owner's call is that the page
-                // shows the cards, not a meter, so the tiles under the title say the count in words.
+                // shows the cards, not a meter, so the numbers under the title say the count in words.
                 hero={<SetHero name={set.name} logoUrl={set.logoUrl} colors={colors} />}
             >
-                {set.cards.length > 0 ? <SetStatTiles stats={stats} printedTotal={set.printedTotal} released={released} gallery={set.gallery} /> : null}
+                {set.cards.length > 0 ? <SetStats stats={stats} printedTotal={set.printedTotal} released={released} gallery={set.gallery} /> : null}
             </PageHeader>
 
             {set.cards.length === 0 ? (
