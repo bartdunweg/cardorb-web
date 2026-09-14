@@ -276,13 +276,19 @@ export const shownPrice = (p: ApiPrice | null | undefined): number | null => p?.
  * stamped run's figure for a 1st Edition copy, then the card's own. The API's rule, copyPriceOf()
  * in its price-basis.mjs, which chooses the printing and sends that figure as `printingPrice`.
  * A copy of a card TCGplayer does not price has no price.
+ *
+ * A reverse (plain or patterned) has its own printing's figure or none: the card's own figure and
+ * the stamped run's are the plain card's, and a missing price shows as unknown, never as another
+ * printing's (Bart, 2026-09-14; the API's copyPriceOf() since the same day).
  */
 export function priceForCopy({
     edition,
+    finish,
     price,
     priceFirstEd,
     printingPrice,
-}: Pick<CardItem, "price"> & Partial<Pick<CardItem, "edition" | "priceFirstEd" | "printingPrice">>): number | null {
+}: Pick<CardItem, "price"> & Partial<Pick<CardItem, "edition" | "finish" | "priceFirstEd" | "printingPrice">>): number | null {
+    if (isReverseFinish(finish)) return shownPrice(printingPrice);
     return shownPrice(printingPrice ?? (edition === "1st-edition" ? priceFirstEd : null) ?? price);
 }
 
