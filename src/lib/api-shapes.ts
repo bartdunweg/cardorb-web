@@ -941,6 +941,8 @@ const moverSchema = z.object({
     name: z.string(),
     number: z.string(),
     set: z.string(),
+    /** The code printed on the card; absent from an API before cardorb-api#471. */
+    setAbbr: nullable(z.string()).optional(),
     image: nullable(z.string()),
     copies: z.number(),
     was: z.number(),

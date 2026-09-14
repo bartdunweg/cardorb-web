@@ -77,12 +77,13 @@ async function HomeBody({ searchParams }: { searchParams: Promise<{ value?: stri
                             </Suspense>
                         }
                     />
-                    {/* What moved the value, over the chart's period, under the counts. The collection's alone: the
-                        movers are read over every card held, so under a binder's line they would answer another question. */}
-                    {selected === "all" ? <Movers /> : null}
+                    {/* The dearest cards first, then what moved the value (Bart, 2026-09-15). */}
                     <Suspense fallback={null}>
                         <TopCards />
                     </Suspense>
+                    {/* Over the chart's period. The collection's alone: the movers are read over every card held,
+                        so under a binder's line they would answer another question. */}
+                    {selected === "all" ? <Movers /> : null}
                 </HomePeriodProvider>
             )}
         </>

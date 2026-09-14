@@ -9,6 +9,7 @@ import { listRows } from "@/app/(app)/dashboard/cards/actions";
 import { CardImage } from "@/components/app/card-image";
 import { PERIODS, type PeriodKey } from "@/components/app/chart-periods";
 import { useHomePeriod } from "@/components/app/home-period";
+import { cardLabel } from "@/lib/card-label";
 import type { Card } from "@/lib/cards";
 import { formatPrice } from "@/lib/format";
 import type { Mover } from "@/lib/movers";
@@ -159,7 +160,8 @@ function MoverList({
                                 <div className="flex min-w-0 flex-1 flex-col">
                                     <span className="truncate text-sm font-medium text-primary">{m.name}</span>
                                     <span className="truncate text-xs text-tertiary">
-                                        {m.set}
+                                        {/* The code and number printed on the card, as the lists show them (card-label.ts). */}
+                                        {cardLabel({ set_name: m.set, set_abbr: m.setAbbr ?? null, number: m.number }, "md")}
                                         {m.copies > 1 ? ` · ×${m.copies}` : ""}
                                     </span>
                                 </div>
