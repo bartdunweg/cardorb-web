@@ -70,7 +70,7 @@ async function HomeBody({ searchParams }: { searchParams: Promise<{ value?: stri
                     <CardsStats
                         stats={stats}
                         fourth={
-                            <Suspense fallback={<StatCard label="Pokémon collected" value=" " href="/dashboard/pokedex" delay={120} />}>
+                            <Suspense fallback={<StatCard label="Pokémon collected" value=" " href="/dashboard/cards?sort=dex" delay={120} />}>
                                 <DexStat />
                             </Suspense>
                         }
