@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { areaPath, linePath, nearestIndex, niceTicks, pointsFor } from "./value-chart-math";
+import { areaPath, linePath, nearestIndex, niceTicks, pointsFor, splitAtGaps } from "./value-chart-math";
 
 const frame = { width: 100, height: 60, top: 10, right: 0, bottom: 10, left: 0 };
 
@@ -54,5 +54,33 @@ describe("nearestIndex", () => {
         // The peak is a reading: the tangent there is flat, so the control points sit at its height.
         expect(d).toContain("66.7 10.0 100.0 10.0");
         expect(d).toContain("C133.3 10.0");
+    });
+});
+
+describe("readings placed by time", () => {
+    it("spaces readings by the days between them when the days are given", () => {
+        const points = pointsFor([1, 2, 3], frame, 0, 3, ["2026-01-01", "2026-01-02", "2026-01-11"]);
+        expect(points.map((p) => p.x)).toEqual([0, 10, 100]);
+    });
+});
+
+describe("splitAtGaps", () => {
+    // Bart, 2026-09-14: a stretch with no readings shows as a dotted line to the next reading.
+    it("splits the line where more than a week has no reading", () => {
+        const days = ["2025-06-07", "2025-06-14", "2025-06-21", "2025-07-19", "2025-07-26"];
+        const points = pointsFor([1, 2, 3, 4, 5], frame, 0, 5, days);
+        const { runs, gaps } = splitAtGaps(points, days);
+        expect(runs.map((r) => r.map((p) => p.index))).toEqual([
+            [0, 1, 2],
+            [3, 4],
+        ]);
+        expect(gaps.map(([a, b]) => [a.index, b.index])).toEqual([[2, 3]]);
+    });
+
+    it("keeps a week apart, and a day apart, as one line", () => {
+        const days = ["2026-09-05", "2026-09-12", "2026-09-13"];
+        const { runs, gaps } = splitAtGaps(pointsFor([1, 2, 3], frame, 0, 3, days), days);
+        expect(runs).toHaveLength(1);
+        expect(gaps).toHaveLength(0);
     });
 });

@@ -3,7 +3,7 @@
 import { type ReactNode, useCallback, useId, useRef, useState } from "react";
 import { BarChart01 } from "@untitledui/icons";
 import { formatCount, formatPrice } from "@/lib/format";
-import { type Frame, areaPath, linePath, nearestIndex, niceTicks, pointsFor } from "@/lib/value-chart-math";
+import { type Frame, GAP_DAYS, areaPath, linePath, nearestIndex, niceTicks, pointsFor, splitAtGaps } from "@/lib/value-chart-math";
 import type { ValueSnapshot } from "@/lib/value-history";
 import { cx } from "@/utils/cx";
 
@@ -93,7 +93,9 @@ export function ValueChart({
     const ticks = niceTicks(Math.min(...values), Math.max(...values));
     const yMin = ticks[0];
     const yMax = ticks[ticks.length - 1];
-    const points = width > 0 ? pointsFor(values, frame, yMin, yMax) : [];
+    const days = snapshots.map((s) => s.date);
+    const points = width > 0 ? pointsFor(values, frame, yMin, yMax, days) : [];
+    const { runs, gaps } = splitAtGaps(points, days);
     const baseline = frame.height - frame.bottom;
     const first = snapshots[0];
     const last = snapshots[snapshots.length - 1];
@@ -109,7 +111,11 @@ export function ValueChart({
     const addedDays = addedAt.filter(Boolean).length;
     const summary = `${formatPrice(first.value)} on ${whenOf(first)} to ${formatPrice(last.value)} on ${whenOf(last)}, ${
         change === 0 ? "unchanged" : `${change > 0 ? "up" : "down"} ${formatPrice(Math.abs(change))}`
-    }.${addedDays ? ` Cards were added on ${formatCount(addedDays)} ${addedDays === 1 ? "reading" : "readings"}, worth ${formatPrice(addedValue)} then.` : ""}`;
+    }.${addedDays ? ` Cards were added on ${formatCount(addedDays)} ${addedDays === 1 ? "reading" : "readings"}, worth ${formatPrice(addedValue)} then.` : ""}${
+        gaps.length
+            ? ` No readings for ${formatCount(gaps.length)} ${gaps.length === 1 ? "stretch" : "stretches"} of more than ${GAP_DAYS} days, drawn dotted.`
+            : ""
+    }`;
 
     // Three date labels: first, middle, last. More would collide on a phone.
     const labelled = new Set([0, Math.floor((snapshots.length - 1) / 2), snapshots.length - 1]);
@@ -200,7 +206,32 @@ export function ValueChart({
                             revealed, not the path's dash, so the ground under the line follows the pen. */}
                         <g key={`${first.date}/${last.date}`} className="chart-draw">
                             <path d={areaPath(points, baseline)} fill={`url(#${fadeId})`} className="text-fg-primary" />
-                            <path d={linePath(points)} className={strokeTone} strokeWidth={2} fill="none" strokeLinejoin="round" strokeLinecap="round" />
+                            {runs.map((run) => (
+                                <path
+                                    key={run[0].index}
+                                    d={run.length === 1 ? `M${run[0].x.toFixed(1)} ${run[0].y.toFixed(1)} h0.01` : linePath(run)}
+                                    className={strokeTone}
+                                    strokeWidth={2}
+                                    fill="none"
+                                    strokeLinejoin="round"
+                                    strokeLinecap="round"
+                                />
+                            ))}
+                            {/* Where nothing was read for more than a week: a straight dotted line to the next
+                                reading, so a missing stretch is never drawn as a price that moved. */}
+                            {gaps.map(([a, b]) => (
+                                <line
+                                    key={`gap-${a.index}`}
+                                    x1={a.x}
+                                    y1={a.y}
+                                    x2={b.x}
+                                    y2={b.y}
+                                    className={strokeTone}
+                                    strokeWidth={2}
+                                    strokeDasharray="1 5"
+                                    strokeLinecap="round"
+                                />
+                            ))}
                             {/* A ring where cards were added: a shape on the line, not a colour, hollow so
                                 it reads apart from the filled marker of the reading being looked at. */}
                             {points.map((p, i) =>
