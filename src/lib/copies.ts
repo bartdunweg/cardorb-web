@@ -3,7 +3,7 @@ import { type Card, EDITION_LABELS, type Edition, FINISHES, FINISH_LABELS, FOIL_
 import { WESTERN_LANGUAGES, languageOf } from "@/lib/languages";
 
 /** One card as the sheet, a list or a search names it: set, number, name, and the set's title where known. */
-export type CardName = Pick<Card, "set" | "number" | "name"> & Partial<Pick<Card, "set_name">>;
+export type CardName = Pick<Card, "set" | "number" | "name"> & Partial<Pick<Card, "set_name" | "tcg_id">>;
 
 /**
  * The names a card's set goes by: the API stores a set under one name and titles it under
@@ -21,8 +21,22 @@ const setNames = (c: CardName): string[] => [c.set, c.set_name].filter((s): s is
 export const sameCard = (a: CardName, b: CardName) => {
     const sets = setNames(b);
     const sameSet = a.set === b.set || setNames(a).some((s) => sets.includes(s));
-    return sameSet && (a.number ?? "") === (b.number ?? "") && a.name === b.name;
+    if (!sameSet || (a.number ?? "") !== (b.number ?? "")) return false;
+    // The catalogue's id where both know it; otherwise the name, read past the spelling that differs
+    // between a catalogue and a stored row. "Solgaleo & Lunala-GX" on the set page is the row stored
+    // as "Solgaleo & Lunala GX", and the exact comparison opened its sheet with no copies (2026-09-15).
+    // An id that differs is not proof of another card (an old row can carry the older id's spelling),
+    // so it falls through to the name rather than ruling the row out.
+    if (a.tcg_id && b.tcg_id && a.tcg_id === b.tcg_id) return true;
+    return nameKey(a.name) === nameKey(b.name);
 };
+
+/** A name as a comparison reads it: case, hyphens, dashes and spacing do not make another card. */
+const nameKey = (name: string | null | undefined) =>
+    (name ?? "")
+        .toLowerCase()
+        .replace(/[\s\-\u2010-\u2015]+/g, " ")
+        .trim();
 
 const rank = (c: Card) =>
     [

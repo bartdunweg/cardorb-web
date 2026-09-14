@@ -61,7 +61,7 @@ export function Movers() {
     const show = async (at: number) => {
         const m = all[at];
         if (!m) return;
-        const rows = await listRows({ set: m.set, number: m.number, name: m.name });
+        const rows = await listRows({ set: m.set, number: m.number, name: m.name, tcg_id: m.tcgId });
         const row = rows.find((r) => r.owned) ?? rows[0];
         if (row) setOpen({ card: row, at });
     };
