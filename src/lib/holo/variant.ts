@@ -155,7 +155,7 @@ export function holoVariant(
 ): HoloVariant {
     const key = (rarity ?? "").trim().toLowerCase();
     let family = FAMILY[key] ?? "common";
-    // A Poké Ball, Master Ball or Energy Symbol copy is a reverse holo with a pattern: the reverse effect, for now without the pattern.
+    // A Poké Ball, Friend Ball, Team Rocket, Energy Symbol or other patterned copy is a reverse holo with a pattern: the reverse effect, for now without the pattern.
     if (isReverseFinish(finish) && REVERSIBLE.has(family)) family = `${family} reverse holo`;
     else if (finish === "holo" && PLAIN.has(family)) family = "rare holo";
     // The sheen is Sword & Shield's; every holo before it was the starry cosmos foil. That is a

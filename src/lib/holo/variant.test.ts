@@ -87,6 +87,7 @@ describe("holoVariant", () => {
         expect(holoVariant("Common", "poke-ball", null).rarity).toBe("common reverse holo");
         expect(holoVariant("Rare", "master-ball", null).rarity).toBe("rare reverse holo");
         expect(holoVariant("Common", "energy-symbol", null).rarity).toBe("common reverse holo");
+        expect(holoVariant("Uncommon", "dusk-ball", null).rarity).toBe("uncommon reverse holo");
         expect(holoVariant("Rare Holo", "reverse-holo", null).rarity).toBe("rare holo reverse holo");
         expect(holoVariant("Holo Rare VMAX", "reverse-holo", null).rarity).toBe("rare holo vmax");
         expect(holoVariant("Rare", "holo", null).rarity).toBe("rare holo");

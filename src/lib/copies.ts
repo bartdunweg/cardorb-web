@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { type Card, EDITION_LABELS, type Edition, FINISH_LABELS, FOIL_PATTERN_LABELS, type Finish, type FoilPattern } from "@/lib/api-shapes";
+import { type Card, EDITION_LABELS, type Edition, FINISHES, FINISH_LABELS, FOIL_PATTERN_LABELS, type Finish, type FoilPattern } from "@/lib/api-shapes";
 import { WESTERN_LANGUAGES, languageOf } from "@/lib/languages";
 
 /** One card as the sheet, a list or a search names it: set, number, name, and the set's title where known. */
@@ -94,7 +94,7 @@ export const copyEdits = z
         language: z.enum(WESTERN_LANGUAGES.map((l) => l.code) as [string, ...string[]]).nullable(),
         condition: z.string().trim().max(40).nullable(),
         grade: z.string().trim().max(40).nullable(),
-        finish: z.enum(["normal", "reverse-holo", "holo", "poke-ball", "master-ball", "energy-symbol"]).nullable(),
+        finish: z.enum(FINISHES).nullable(),
         foilPattern: z.enum(["cosmos", "cracked-ice", "starlight", "confetti", "vertical-line"]).nullable(),
         edition: z.enum(["1st-edition", "shadowless", "unlimited"]).nullable(),
         collectionId: z.string().uuid().nullable(),

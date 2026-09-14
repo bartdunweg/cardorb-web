@@ -57,15 +57,18 @@ export const apiPriceSchema = z.object({
 });
 export type ApiPrice = z.infer<typeof apiPriceSchema>;
 
-export const FINISHES = ["normal", "reverse-holo", "holo", "poke-ball", "master-ball", "energy-symbol"] as const;
+/** The patterned reverses TCGplayer sells as products of their own, each a finish with its own price (cardorb-api#455). */
+export const PATTERNED_REVERSES = ["poke-ball", "master-ball", "energy-symbol", "friend-ball", "love-ball", "quick-ball", "dusk-ball", "team-rocket"] as const;
+export const FINISHES = ["normal", "reverse-holo", "holo", ...PATTERNED_REVERSES] as const;
 export type Finish = (typeof FINISHES)[number];
 /**
  * The reverse holo and the patterned reverses TCGplayer sells apart (Poké Ball and Master Ball in Prismatic
- * Evolutions, Black Bolt and White Flare; Poké Ball and Energy Symbol in Ascended Heroes): shown as a reverse, and
- * each priced from its own product (cardorb-api#454).
+ * Evolutions, Black Bolt and White Flare; Poké, Friend, Love, Quick and Dusk Ball, Team Rocket and Energy Symbol in
+ * Ascended Heroes): shown as a reverse, and each priced from its own product (cardorb-api#454, #455).
  */
-export const isReverseFinish = (f: string | null | undefined): boolean =>
-    f === "reverse-holo" || f === "poke-ball" || f === "master-ball" || f === "energy-symbol";
+export const isReverseFinish = (f: string | null | undefined): boolean => f === "reverse-holo" || isPatternedReverse(f);
+/** A Poké Ball, Friend Ball, Team Rocket, Energy Symbol or other patterned reverse. */
+export const isPatternedReverse = (f: string | null | undefined): boolean => (PATTERNED_REVERSES as readonly (string | null | undefined)[]).includes(f);
 /**
  * What the foil on a copy looks like, which is not what it is worth.
  *
@@ -110,6 +113,11 @@ export const FINISH_LABELS: Record<Finish, string> = {
     "poke-ball": "Poké Ball reverse",
     "master-ball": "Master Ball reverse",
     "energy-symbol": "Energy Symbol reverse",
+    "friend-ball": "Friend Ball reverse",
+    "love-ball": "Love Ball reverse",
+    "quick-ball": "Quick Ball reverse",
+    "dusk-ball": "Dusk Ball reverse",
+    "team-rocket": "Team Rocket reverse",
 };
 
 export const cardItemSchema = z.object({
