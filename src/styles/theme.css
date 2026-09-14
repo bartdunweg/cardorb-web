@@ -10,6 +10,9 @@
     /* FONT SIZE */
 
     /* Under xs: a native tab bar's label, so five fit with room. */
+    /* The phone's tab bar labels, a pixel under 2xs: five words under five icons (Bart, 2026-09-14). Same line height. */
+    --text-3xs: 0.625rem;
+    --text-3xs--line-height: calc(var(--spacing) * 3.5);
     --text-2xs: 0.6875rem;
     --text-2xs--line-height: calc(var(--spacing) * 3.5);
     --text-xs: calc(var(--spacing) * 3);
