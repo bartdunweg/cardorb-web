@@ -44,7 +44,7 @@ export const StatCard = ({
     const surface = cx("block arrive rounded-xl bg-page shadow-lift-xs ring-1 ring-primary ring-inset", className);
     const style = { "--arrive-delay": `${delay ?? 0}ms` } as React.CSSProperties;
     return href ? (
-        <Link href={href} className={cx(surface, "pressable outline-focus-ring hover:bg-primary_hover focus-visible:outline-2")} style={style}>
+        <Link href={href} className={cx(surface, "pressable outline-focus-ring hover:bg-alpha-black/4 focus-visible:outline-2")} style={style}>
             {body}
         </Link>
     ) : (

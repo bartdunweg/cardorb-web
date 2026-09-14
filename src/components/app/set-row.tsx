@@ -19,7 +19,7 @@ export function SetRow({ set, language }: { set: SetSummary; language: BrowseLan
         <HoverPrefetchLink
             href={`/dashboard/sets/${encodeURIComponent(set.id)}${language === "en" ? "" : `?language=${language}`}`}
             className={cx(
-                "flex pressable items-center gap-3 rounded-xl bg-page p-2 pr-3 shadow-lift-xs ring-1 ring-primary outline-focus-ring transition-[color,background-color,box-shadow] ring-inset hover:bg-secondary focus-visible:outline-2",
+                "flex pressable items-center gap-3 rounded-xl bg-page p-2 pr-3 shadow-lift-xs ring-1 ring-primary outline-focus-ring transition-[color,background-color,box-shadow] ring-inset hover:bg-alpha-black/4 focus-visible:outline-2",
                 empty && "opacity-70 hover:opacity-100",
             )}
         >
