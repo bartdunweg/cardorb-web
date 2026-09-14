@@ -1,5 +1,5 @@
 import type { CardFacts } from "@/app/(app)/dashboard/cards/actions";
-import { EDITIONS, EDITION_LABELS, FINISH_LABELS, FINISHES as FINISH_ORDER, FOIL_PATTERN_LABELS, type FoilPattern } from "@/lib/api-shapes";
+import { EDITIONS, EDITION_LABELS, FINISH_LABELS, FINISHES as FINISH_ORDER, FOIL_PATTERN_LABELS, type FoilPattern, isPatternedReverse } from "@/lib/api-shapes";
 
 /**
  * What a form may offer about one copy, given what the card actually is.
@@ -60,7 +60,7 @@ const STANDARD = { label: "Standard", value: "" };
 const FINISHES = FINISH_ORDER.map((value) => ({ value, label: FINISH_LABELS[value] }));
 
 /** The reverses ask the catalogue about a plain reverse when asking after a foil pattern. */
-const asPrinting = (finish: string): string => (finish === "poke-ball" || finish === "master-ball" || finish === "energy-symbol" ? "reverse-holo" : finish);
+const asPrinting = (finish: string): string => (isPatternedReverse(finish) ? "reverse-holo" : finish);
 
 /**
  * The finishes to offer, plus whichever one is already recorded.

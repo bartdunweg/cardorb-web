@@ -49,7 +49,19 @@ describe("finishOptions", () => {
     });
 
     it("offers every finish where the catalogue said nothing, rather than none", () => {
-        expect(values(finishOptions(facts({}), null))).toEqual(["normal", "reverse-holo", "holo", "poke-ball", "master-ball", "energy-symbol"]);
+        expect(values(finishOptions(facts({}), null))).toEqual([
+            "normal",
+            "reverse-holo",
+            "holo",
+            "poke-ball",
+            "master-ball",
+            "energy-symbol",
+            "friend-ball",
+            "love-ball",
+            "quick-ball",
+            "dusk-ball",
+            "team-rocket",
+        ]);
     });
 
     it("keeps a finish already recorded, whatever the catalogue says", () => {
