@@ -31,8 +31,25 @@ describe("finishOptions", () => {
         expect(values(finishOptions(plain, null))).toEqual(["reverse-holo"]);
     });
 
+    // Ascended Heroes Erika's Oddish as the API answers it since cardorb-api#454: TCGplayer sells a Poké Ball and an
+    // Energy Symbol reverse of it and no plain one.
+    it("offers the Energy Symbol reverse where the card has one, and no plain reverse it never had", () => {
+        const oddish = facts({
+            printings: [
+                { finish: "normal", foilPattern: null },
+                { finish: "poke-ball", foilPattern: null },
+                { finish: "energy-symbol", foilPattern: null },
+            ],
+        });
+        expect(finishOptions(oddish, null)).toEqual([
+            { value: "normal", label: "Normal" },
+            { value: "poke-ball", label: "Poké Ball reverse" },
+            { value: "energy-symbol", label: "Energy Symbol reverse" },
+        ]);
+    });
+
     it("offers every finish where the catalogue said nothing, rather than none", () => {
-        expect(values(finishOptions(facts({}), null))).toEqual(["normal", "reverse-holo", "holo", "poke-ball", "master-ball"]);
+        expect(values(finishOptions(facts({}), null))).toEqual(["normal", "reverse-holo", "holo", "poke-ball", "master-ball", "energy-symbol"]);
     });
 
     it("keeps a finish already recorded, whatever the catalogue says", () => {

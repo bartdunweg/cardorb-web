@@ -54,12 +54,13 @@ const STANDARD = { label: "Standard", value: "" };
  * about a plain reverse instead, on the grounds that TCGdex did not name them and which cards of
  * 151 and Prismatic Evolutions got one was not something to guess at. It does name them
  * (`foil: "pokeball"`), the API reads them as finishes of their own since cardorb-api#342, and a
- * card with an ordinary reverse stops offering two prints it never had.
+ * card with an ordinary reverse stops offering two prints it never had. Since cardorb-api#454 the API offers the
+ * ball and Energy Symbol reverses from TCGplayer's own products rather than from TCGdex.
  */
 const FINISHES = FINISH_ORDER.map((value) => ({ value, label: FINISH_LABELS[value] }));
 
 /** The reverses ask the catalogue about a plain reverse when asking after a foil pattern. */
-const asPrinting = (finish: string): string => (finish === "poke-ball" || finish === "master-ball" ? "reverse-holo" : finish);
+const asPrinting = (finish: string): string => (finish === "poke-ball" || finish === "master-ball" || finish === "energy-symbol" ? "reverse-holo" : finish);
 
 /**
  * The finishes to offer, plus whichever one is already recorded.

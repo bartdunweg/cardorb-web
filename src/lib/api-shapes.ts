@@ -57,10 +57,15 @@ export const apiPriceSchema = z.object({
 });
 export type ApiPrice = z.infer<typeof apiPriceSchema>;
 
-export const FINISHES = ["normal", "reverse-holo", "holo", "poke-ball", "master-ball"] as const;
+export const FINISHES = ["normal", "reverse-holo", "holo", "poke-ball", "master-ball", "energy-symbol"] as const;
 export type Finish = (typeof FINISHES)[number];
-/** The finishes that are a reverse holo with a pattern (151, Prismatic Evolutions): priced and shown as a reverse. */
-export const isReverseFinish = (f: string | null | undefined): boolean => f === "reverse-holo" || f === "poke-ball" || f === "master-ball";
+/**
+ * The reverse holo and the patterned reverses TCGplayer sells apart (Poké Ball and Master Ball in Prismatic
+ * Evolutions, Black Bolt and White Flare; Poké Ball and Energy Symbol in Ascended Heroes): shown as a reverse, and
+ * each priced from its own product (cardorb-api#454).
+ */
+export const isReverseFinish = (f: string | null | undefined): boolean =>
+    f === "reverse-holo" || f === "poke-ball" || f === "master-ball" || f === "energy-symbol";
 /**
  * What the foil on a copy looks like, which is not what it is worth.
  *
@@ -104,6 +109,7 @@ export const FINISH_LABELS: Record<Finish, string> = {
     holo: "Holo",
     "poke-ball": "Poké Ball reverse",
     "master-ball": "Master Ball reverse",
+    "energy-symbol": "Energy Symbol reverse",
 };
 
 export const cardItemSchema = z.object({

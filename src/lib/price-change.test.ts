@@ -75,4 +75,17 @@ describe("printingsOfLine", () => {
             ]).map((p) => p.label),
         ).toEqual(["Normal", "Reverse Holo", "1st Edition Holo", "Shadowless Holo"]);
     });
+
+    it("names a patterned reverse's own line after its finish, beside the plain reverse", () => {
+        expect(
+            printingsOfLine([
+                {
+                    date: "2026-09-14",
+                    market: 0.25,
+                    holo: 0.25,
+                    printings: { normal: 0.21, "reverse-holofoil": 0.25, "master-ball-reverse-holofoil": 16.13, "poke-ball-reverse-holofoil": 1.3 },
+                },
+            ]).map((p) => p.label),
+        ).toEqual(["Normal", "Reverse Holo", "Poké Ball Reverse", "Master Ball Reverse"]);
+    });
 });

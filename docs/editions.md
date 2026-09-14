@@ -6,7 +6,7 @@ he gave for the rest. Nothing here is built in this repo yet.
 
 ## What a copy already carries, and what an edition adds
 
-A copy carries a `finish` (normal, reverse-holo, holo, poke-ball, master-ball) and a
+A copy carries a `finish` (normal, reverse-holo, holo, poke-ball, master-ball, energy-symbol) and a
 `foil_pattern` (cosmos, cracked-ice, starlight, confetti, vertical-line). Those two answer
 different questions on purpose: the finish says which of Cardmarket's two price series a copy
 reads, the pattern says what the foil looks like and has no price of its own

@@ -76,6 +76,10 @@ const PRINTING_LABELS: [string, string][] = [
     ["holofoil", "Holo"],
     ["unlimited-holofoil", "Unlimited Holo"],
     ["reverse-holofoil", "Reverse Holo"],
+    // A patterned reverse's own TCGplayer product, filed under the card since cardorb-api#454.
+    ["poke-ball-reverse-holofoil", "Poké Ball Reverse"],
+    ["master-ball-reverse-holofoil", "Master Ball Reverse"],
+    ["energy-symbol-reverse-holofoil", "Energy Symbol Reverse"],
     ["1st-edition", "1st Edition"],
     ["1st-edition-holofoil", "1st Edition Holo"],
     ["shadowless", "Shadowless"],
