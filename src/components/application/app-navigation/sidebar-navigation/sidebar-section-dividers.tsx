@@ -12,6 +12,7 @@
 // what is drawn inside swaps at once, clipped by the panel's edge while it moves.
 import type { ReactNode } from "react";
 import { SearchLg } from "@untitledui/icons";
+import Image from "next/image";
 import Link from "next/link";
 import { Input } from "@/components/base/input/input";
 import { cx } from "@/utils/cx";
@@ -64,9 +65,11 @@ export const SidebarNavigationSectionDividers = ({
                     "--width": `${width}px`,
                 } as React.CSSProperties
             }
-            // The same hairline ring as an input and the search pill inside it, so the sidebar's edge and
-            // the controls on it are one line; the lift without the scale's own rim, so it is one line.
-            className="flex h-full w-full max-w-full flex-col justify-between overflow-x-hidden overflow-y-auto glass-thick pt-4 shadow-lift-lg ring-1 ring-primary transition-[width] duration-200 ease-out ring-inset motion-reduce:transition-none lg:w-(--width) lg:rounded-xl lg:pt-5"
+            // Flush against the window's left edge, as the kit's simple sidebar stands: the full height, a
+            // hairline on its right, no corners, no shadow. It used to float as a card. The material is the
+            // phone's tab bar's glass on the sidebar's own tint (glass-sidebar); the edge is the kit's border-secondary, not the tab bar's ring-primary,
+            // which drawn the window's full height read as a wall rather than an edge.
+            className="flex h-full w-full max-w-full flex-col justify-between overflow-x-hidden overflow-y-auto border-secondary glass-sidebar pt-4 transition-[width] duration-200 ease-out motion-reduce:transition-none lg:w-(--width) lg:border-r lg:pt-5"
         >
             {collapsed ? (
                 rail
@@ -74,7 +77,9 @@ export const SidebarNavigationSectionDividers = ({
                 <>
                     <div className="flex flex-col gap-5 px-4 lg:px-5">
                         <div className="flex items-center justify-between gap-2">
-                            <Link href="/" className="text-lg font-semibold text-primary transition hover:opacity-70">
+                            {/* The rail's mark before the wordmark, so folding the sidebar keeps the mark in its place. */}
+                            <Link href="/" className="flex items-center gap-3 text-lg font-semibold text-primary transition hover:opacity-70">
+                                <Image src="/mark.png" alt="" width={28} height={28} className="size-7 rounded-lg" />
                                 Cardorb
                             </Link>
                             {headerAction}
@@ -95,7 +100,9 @@ export const SidebarNavigationSectionDividers = ({
                         {afterItems}
                     </NavList>
 
-                    <div className="mt-auto flex flex-col gap-5 px-2 py-4 lg:gap-6 lg:px-4 lg:py-4">{footer ?? <NavAccountCard />}</div>
+                    {/* lg:px-1.5: the account card's avatar centred on the rail's column (34 px in), so folding
+                        leaves it where it is; the rows above sit at 16 px with 20 px icons, the avatar is 40. */}
+                    <div className="mt-auto flex flex-col gap-5 px-2 py-4 lg:gap-6 lg:px-1.5 lg:py-4">{footer ?? <NavAccountCard />}</div>
                 </>
             )}
         </div>
@@ -107,13 +114,12 @@ export const SidebarNavigationSectionDividers = ({
             {!hideMobileHeader && <MobileNavigationHeader>{content}</MobileNavigationHeader>}
 
             {/* Desktop sidebar navigation */}
-            {/* 12 px around the panel: it floats on glass with a shadow, and the kit's 4 px read as none. */}
-            <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:py-3 lg:pl-3">{content}</div>
+            <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex">{content}</div>
 
             {/* Placeholder to take up physical space because the real sidebar has `fixed` position. */}
             <div
                 style={{
-                    paddingLeft: width + 12, // The 12 px inset of the sidebar wrapper
+                    paddingLeft: width,
                 }}
                 className={cx(
                     "invisible hidden transition-[padding] duration-200 ease-out motion-reduce:transition-none lg:sticky lg:top-0 lg:bottom-0 lg:left-0 lg:block",

@@ -184,7 +184,7 @@ export function SettingsForm({
             {/* Who you are, before anything you can change about it, and the way to change it, on
                 the card that shows it. It was a row in the list below, one line under the picture of
                 the thing it edits. */}
-            <div className="flex items-center gap-4 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary ring-inset">
+            <div className="flex items-center gap-4 rounded-xl bg-page p-4 shadow-lift-xs ring-1 ring-primary ring-inset">
                 <Avatar src={avatarUrl || undefined} alt={displayName || username} size="lg" />
                 <div className="flex min-w-0 flex-col">
                     <span className="truncate text-md font-semibold text-primary">{displayName || username || "Your profile"}</span>
@@ -323,7 +323,7 @@ export function SettingsForm({
                 of a light switch. */}
             <section className="flex flex-col gap-2">
                 <h2 className="px-1 text-sm font-medium text-tertiary">Preferences</h2>
-                <div className="flex flex-col gap-3 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary ring-inset">
+                <div className="flex flex-col gap-3 rounded-xl bg-page p-4 shadow-lift-xs ring-1 ring-primary ring-inset">
                     <span className="text-md text-primary">Theme</span>
                     <ButtonGroup
                         selectionMode="single"

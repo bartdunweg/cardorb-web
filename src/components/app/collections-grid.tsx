@@ -27,7 +27,7 @@ function FolderCard({ href, icon, name, count }: { href: string; icon: FC<{ clas
                 // The row: no surface of its own, the page's, with the divider the list draws between rows.
                 "max-sm:-mx-1 max-sm:rounded-lg max-sm:px-1 max-sm:py-3 max-sm:hover:bg-secondary",
                 // The tile.
-                "sm:flex-col sm:items-start sm:rounded-xl sm:bg-primary sm:p-4 sm:shadow-lift-xs sm:ring-1 sm:ring-primary sm:ring-inset sm:hover:bg-secondary",
+                "sm:flex-col sm:items-start sm:rounded-xl sm:bg-page sm:p-4 sm:shadow-lift-xs sm:ring-1 sm:ring-primary sm:ring-inset sm:hover:bg-secondary",
             )}
         >
             <FeaturedIcon color="gray" theme="modern-neue" size="lg" icon={icon} className="shrink-0" />

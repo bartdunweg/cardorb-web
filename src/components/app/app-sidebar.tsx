@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, use, useEffect, useState } from "react";
-import { BookOpen01, ChevronLeftDouble, Folder, Heart, HomeLine, Plus, Rows01, Star01 } from "@untitledui/icons";
+import { BookOpen01, Folder, Heart, HomeLine, LayoutLeft, Plus, Rows01, Star01 } from "@untitledui/icons";
 import { Button as AriaButton } from "react-aria-components";
 import { sidebarCounts } from "@/app/(app)/sidebar-actions";
 import { AccountMenu } from "@/components/app/account-menu";
@@ -9,13 +9,14 @@ import { SidebarSearchTrigger } from "@/components/app/command-search";
 import { FolderDialog } from "@/components/app/folder-dialog";
 import { PrefetchRoutes } from "@/components/app/prefetch-routes";
 import { useRouteTarget } from "@/components/app/route-pending";
-import { type RailItem, SidebarRail } from "@/components/app/sidebar-rail";
+import { type RailItem, SidebarRail, useBindersArrive } from "@/components/app/sidebar-rail";
 import { CARDS_CHANGED } from "@/components/app/use-copy-steps";
 import { NavItemBase } from "@/components/application/app-navigation/base-components/nav-item";
 import type { NavItemDividerType, NavItemType } from "@/components/application/app-navigation/config";
 import { SidebarNavigationSectionDividers } from "@/components/application/app-navigation/sidebar-navigation/sidebar-section-dividers";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { SIDEBAR_COOKIE } from "@/lib/sidebar-cookie";
+import { cx } from "@/utils/cx";
 
 type Account = { name: string; email: string; avatarUrl: string | null };
 type FolderLink = { id: string; name: string; kind: "manual" | "rule"; count: number };
@@ -114,9 +115,7 @@ export function AppSidebar({
                     hideMobileHeader
                     collapsed={collapsed}
                     rail={<SidebarRail items={pages} activeUrl={pathname} account={account} collections={collections} onExpand={() => setFolded(false)} />}
-                    headerAction={
-                        <ButtonUtility size="sm" color="tertiary" icon={ChevronLeftDouble} tooltip="Collapse sidebar" onClick={() => setFolded(true)} />
-                    }
+                    headerAction={<ButtonUtility size="sm" color="tertiary" icon={LayoutLeft} tooltip="Collapse sidebar" onClick={() => setFolded(true)} />}
                     search={<SidebarSearchTrigger />}
                     afterItems={
                         <>
@@ -126,7 +125,7 @@ export function AppSidebar({
                             {/* An item like the others: the same padding, icon size and type, at the list's end. */}
                             <li className="py-px">
                                 <FolderDialog mode="create">
-                                    <AriaButton className="group relative flex max-h-9 w-full cursor-pointer items-center rounded-md bg-primary p-2 outline-focus-ring transition duration-100 ease-linear select-none hover:bg-primary_hover focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2">
+                                    <AriaButton className="group relative flex max-h-9 w-full cursor-pointer items-center rounded-md p-2 outline-focus-ring transition duration-100 ease-linear select-none hover:bg-alpha-black/4 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2">
                                         <Plus
                                             aria-hidden="true"
                                             className="mr-2 size-5 shrink-0 text-fg-quaternary transition-inherit-all group-hover:text-fg-quaternary_hover"
@@ -154,12 +153,13 @@ export function AppSidebar({
 function FolderRows({ collections, fresh, activeUrl }: { collections: Promise<FolderLink[]>; fresh?: FolderLink[]; activeUrl: string }) {
     // Read again after a press on a list's tiles, where there is an answer; the layout's otherwise.
     const list = fresh ?? use(collections);
+    const arrive = useBindersArrive();
     return (
         <>
             {list.map((c) => {
                 const href = `/dashboard/collections/${c.id}`;
                 return (
-                    <li key={c.id} className="arrive py-px">
+                    <li key={c.id} className={cx("py-px", arrive && "arrive")}>
                         {/*
                          * A folder, however it was filled. A rule folder used to
                          * draw a flowchart, which named the mechanism rather than

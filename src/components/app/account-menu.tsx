@@ -44,7 +44,7 @@ export function AccountMenu({ account, compact = false }: { account: Account; co
             <AriaButton
                 className={({ isPressed, isFocusVisible }) =>
                     cx(
-                        "relative w-full cursor-pointer rounded-lg p-2 text-left outline-offset-2 outline-focus-ring hover:bg-secondary",
+                        "relative w-full cursor-pointer rounded-lg p-2 text-left outline-offset-2 outline-focus-ring hover:bg-alpha-black/4",
                         (isPressed || isFocusVisible) && "outline-2",
                     )
                 }

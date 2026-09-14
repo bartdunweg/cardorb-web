@@ -32,7 +32,7 @@ export const useCommandSearch = () => useContext(CommandSearchContext);
 // A search-field-looking button that opens the command palette (used in the desktop sidebar).
 export function SidebarSearchTrigger() {
     const { open } = useCommandSearch();
-    return <SearchTrigger label="Search" shortcut="/" onPress={open} />;
+    return <SearchTrigger label="Search" onPress={open} />;
 }
 
 // The same button at the top of Home on a phone, a size up: the row Home starts with. It opens the

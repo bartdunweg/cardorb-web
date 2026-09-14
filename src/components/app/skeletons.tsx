@@ -139,7 +139,7 @@ export function HomeBodyOutline() {
             <ValueHeroOutline />
             <Outline className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4">
                 {Array.from({ length: 4 }, (_, i) => (
-                    <div key={i} className="rounded-xl bg-primary shadow-lift-xs ring-1 ring-primary ring-inset">
+                    <div key={i} className="rounded-xl bg-page shadow-lift-xs ring-1 ring-primary ring-inset">
                         <div className="flex flex-col gap-3 px-3 py-4 sm:gap-4 sm:px-4 sm:py-5 md:gap-5 md:px-5">
                             <div className="flex flex-col gap-2">
                                 <Block className="h-5 w-20" />
@@ -190,7 +190,7 @@ export function FoldersOutline() {
                 {Array.from({ length: 4 }, (_, i) => (
                     <div
                         key={i}
-                        className="flex items-center gap-3 rounded-xl bg-primary p-4 shadow-lift-xs ring-1 ring-primary ring-inset sm:flex-col sm:items-start"
+                        className="flex items-center gap-3 rounded-xl bg-page p-4 shadow-lift-xs ring-1 ring-primary ring-inset sm:flex-col sm:items-start"
                     >
                         <Block className="size-12 shrink-0 rounded-lg" />
                         <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -213,7 +213,7 @@ export function SetsOutline() {
                     <Block className="h-6 w-40" />
                     <div className={`grid gap-4 ${SETS_COLUMNS}`}>
                         {Array.from({ length: 6 }, (_, i) => (
-                            <div key={i} className="flex flex-col gap-3 rounded-xl bg-primary p-3 shadow-lift-xs ring-1 ring-primary ring-inset">
+                            <div key={i} className="flex flex-col gap-3 rounded-xl bg-page p-3 shadow-lift-xs ring-1 ring-primary ring-inset">
                                 <Block className="aspect-4/3 w-full rounded-lg" />
                                 <div className="flex flex-col gap-2.5">
                                     <Block className="h-4 w-3/4" />
