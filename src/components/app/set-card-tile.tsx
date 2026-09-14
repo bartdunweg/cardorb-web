@@ -15,7 +15,6 @@ import { useWarm } from "@/components/app/use-warm";
 import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
 import { type CardsSize, TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
 import { formatPrice } from "@/lib/format";
-import { cx } from "@/utils/cx";
 
 type Result = { ok: true } | { ok: false; error: string };
 
