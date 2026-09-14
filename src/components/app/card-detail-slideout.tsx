@@ -1230,9 +1230,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                             </h3>
                                             <dl className="flex flex-col divide-y divide-secondary">
                                                 <DetailRow label="Price" value={mine.price != null ? formatPrice(mine.price) : "No price known"} />
-                                                {known?.price?.low != null ? (
-                                                    <DetailRow label="Lowest listing" value={formatPrice(known.price.low)} late />
-                                                ) : null}
                                             </dl>
                                             {/* Where to check it: the TCGplayer page the figure came from. The kit's secondary
                                                 button, as a link, full width (Bart, 2026-09-12). eBay's sold listings sat

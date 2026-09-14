@@ -524,8 +524,8 @@ export type CardFacts = {
      * set's one foil, so there is nothing to ask. Null is no answer, and the printings decide.
      */
     foilPatterns: string[] | null;
-    /** TCGplayer's price for the printing, converted: the market figure and its lowest listing. */
-    price: { low: number | null; market: number | null } | null;
+    /** TCGplayer's market figure for the printing, converted. */
+    price: { market: number | null } | null;
 };
 
 // The card's facts for the sheet: the illustrator, HP, stage, regulation mark and what TCGplayer
@@ -547,7 +547,7 @@ export async function cardFacts(tcgId: string): Promise<CardFacts | null> {
             editions: Array.isArray(c.editions) ? c.editions : null,
             foilPatterns: Array.isArray(c.foilPatterns) ? c.foilPatterns : null,
             firstEdition: c.firstEdition ?? null,
-            price: c.price ? { low: c.price.low, market: c.price.market } : null,
+            price: c.price ? { market: c.price.market } : null,
         };
     } catch (err) {
         console.error("Card facts unavailable:", err instanceof Error ? err.message : err);
