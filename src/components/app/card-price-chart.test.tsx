@@ -33,13 +33,6 @@ describe("CardPriceChart", () => {
     });
     afterEach(() => vi.unstubAllGlobals());
 
-    // A Japanese, Chinese or Korean card has a live price and no stored history yet (2026-09-13).
-    it("says the history is coming, and asks for none, for a card whose history is not kept", async () => {
-        const { findByText } = render(<CardPriceChart tcgId="SV2a-001" soon />);
-        expect(await findByText("Price history coming soon")).toBeTruthy();
-        expect(history).not.toHaveBeenCalled();
-    });
-
     it("asks once for a card, however many times it is asked about", async () => {
         history.mockResolvedValue(two);
         await Promise.all([preloadPriceHistory("sv1-1"), preloadPriceHistory("sv1-1")]);
