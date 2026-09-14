@@ -1,32 +1,26 @@
 import type { CSSProperties } from "react";
 import { formatCount, formatValue } from "@/lib/format";
-import { type SetStats as Stats, secretCount } from "@/lib/set-stats";
+import type { SetStats as Stats } from "@/lib/set-stats";
 
 /**
  * Ours: the numbers of a set, under its name on its wash.
  *
  * The day it came out as a small line under the title, then two data points on the wash itself, no
- * tile around them: the cards (held out of the set's total, with the secret rares past the printed
- * number) and the value (what the copies held are worth, with what the rest would cost). A label
+ * tile around them: the cards (held out of the set's total, with its gallery named where it has one) and the value (what the copies held are worth, with what the rest would cost). A label
  * over each number, the way a spec sheet reads. Not a meter: the two counts side by side say the
  * progress. The wishlist is not among them: the set's cards below show which ones are wanted.
  */
 export function SetStats({
     stats,
-    printedTotal,
     released,
     gallery = null,
 }: {
     stats: Stats;
-    printedTotal: number | null;
     released: string | null;
-    /** The set's gallery, counted in `stats.total` and named apart from the secret rares. */
+    /** The set's gallery, counted in `stats.total` and named beside it. */
     gallery?: { name: string; total: number } | null;
 }) {
-    const secret = secretCount(stats.total, printedTotal, gallery?.total ?? 0);
-    const cardsDetail = [secret ? `${formatCount(secret)} secret` : null, gallery ? `${formatCount(gallery.total)} ${gallery.name}` : null]
-        .filter(Boolean)
-        .join(" · ");
+    const cardsDetail = gallery ? `${formatCount(gallery.total)} ${gallery.name}` : undefined;
     const complete = stats.owned >= stats.total;
     const valueDetail = complete
         ? "Complete"
@@ -35,7 +29,7 @@ export function SetStats({
         <>
             {released ? <p className="text-sm text-tertiary">Released {released}</p> : null}
             <dl className="mt-4 flex flex-wrap gap-x-10 gap-y-4">
-                <DataPoint label="Cards" value={`${formatCount(stats.owned)} of ${formatCount(stats.total)}`} detail={cardsDetail || undefined} delay={0} />
+                <DataPoint label="Cards" value={`${formatCount(stats.owned)} of ${formatCount(stats.total)}`} detail={cardsDetail} delay={0} />
                 <DataPoint label="Value" value={formatValue(stats.value)} detail={valueDetail} delay={40} />
             </dl>
         </>

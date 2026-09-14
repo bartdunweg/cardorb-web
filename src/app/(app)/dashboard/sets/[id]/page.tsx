@@ -97,7 +97,7 @@ async function Set({ params, searchParams }: { params: Promise<{ id: string }>; 
                 // shows the cards, not a meter, so the numbers under the title say the count in words.
                 hero={<SetHero name={set.name} logoUrl={set.logoUrl} colors={colors} />}
             >
-                {set.cards.length > 0 ? <SetStats stats={stats} printedTotal={set.printedTotal} released={released} gallery={set.gallery} /> : null}
+                {set.cards.length > 0 ? <SetStats stats={stats} released={released} gallery={set.gallery} /> : null}
             </PageHeader>
 
             {set.cards.length === 0 ? (

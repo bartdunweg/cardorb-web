@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { SetCard } from "@/lib/api-shapes";
-import { secretCount, setStats } from "@/lib/set-stats";
+import { setStats } from "@/lib/set-stats";
 
 const card = (over: Partial<SetCard>): SetCard => ({
     id: "x",
@@ -37,23 +37,5 @@ describe("setStats", () => {
             5,
         );
         expect(stats).toEqual({ owned: 2, total: 5, value: 6, toComplete: 15, unpriced: 1, wishlist: 1 });
-    });
-});
-
-describe("secretCount", () => {
-    it("names the cards past the printed number", () => {
-        expect(secretCount(207, 165)).toBe(42);
-    });
-    it("says nothing where the counts agree or one is missing", () => {
-        expect(secretCount(102, 102)).toBeNull();
-        expect(secretCount(102, null)).toBeNull();
-    });
-});
-
-describe("secretCount, with a gallery inside the set", () => {
-    // Brilliant Stars on the English shelf since 2026-09-13: 172 printed, 14 secret, 30 Trainer Gallery.
-    it("does not count the gallery as secret rares", () => {
-        expect(secretCount(216, 172, 30)).toBe(14);
-        expect(secretCount(202, 172, 30)).toBeNull();
     });
 });
