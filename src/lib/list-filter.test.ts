@@ -39,6 +39,8 @@ describe("loadMoreInput", () => {
             wishlist: false,
             sort: "name",
             order: "asc",
+            from: "2026-08-15",
+            to: "2026-09-14",
             set: "c",
             rarity: "d",
             fullArt: true,

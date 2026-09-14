@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { Button as AriaButton } from "react-aria-components";
 import { moversFor } from "@/app/(app)/dashboard/(home)/actions";
 import { listRows } from "@/app/(app)/dashboard/cards/actions";
@@ -65,11 +66,20 @@ export function Movers() {
 
     return (
         <section aria-labelledby="movers-heading" className="flex flex-col gap-4">
-            <div className="flex flex-col">
-                <h2 id="movers-heading" className="text-md font-semibold text-primary">
-                    Biggest movers
-                </h2>
-                <p className="text-sm text-tertiary">{said[0]!.toUpperCase() + said.slice(1)}</p>
+            <div className="flex items-baseline justify-between gap-4">
+                <div className="flex flex-col">
+                    <h2 id="movers-heading" className="text-md font-semibold text-primary">
+                        Biggest movers
+                    </h2>
+                    <p className="text-sm text-tertiary">{said[0]!.toUpperCase() + said.slice(1)}</p>
+                </div>
+                {/* The whole collection sorted the same way, over the same period. */}
+                <Link
+                    href={`/dashboard/cards?sort=change-desc${period === "1m" ? "" : `&period=${period}`}`}
+                    className="text-sm font-semibold text-brand-secondary outline-focus-ring focus-visible:outline-2"
+                >
+                    See all
+                </Link>
             </div>
             {!known ? (
                 <div className="grid gap-3 sm:grid-cols-2 sm:gap-4" aria-hidden="true">
@@ -124,13 +134,13 @@ function MoverList({ title, movers, empty, onOpen }: { title: string; movers: Mo
                                         {m.copies > 1 ? ` · ×${m.copies}` : ""}
                                     </span>
                                 </div>
+                                {/* The price now large, and what it did under it, small: the card's price is
+                                    what you look for, the move is why it is on the list (Bart, 2026-09-15). */}
                                 <div className="flex shrink-0 flex-col items-end">
-                                    <span className={cx("text-sm font-medium tabular-nums", m.total > 0 ? "text-success-primary" : "text-error-primary")}>
+                                    <span className="text-sm font-medium text-primary tabular-nums">{formatPrice(m.now)}</span>
+                                    <span className={cx("text-xs font-medium tabular-nums", m.total > 0 ? "text-success-primary" : "text-error-primary")}>
                                         {m.total > 0 ? "+" : "−"}
                                         {formatPrice(Math.abs(m.total))}
-                                    </span>
-                                    <span className="text-xs text-tertiary tabular-nums">
-                                        {formatPrice(m.was)} → {formatPrice(m.now)}
                                     </span>
                                 </div>
                             </AriaButton>

@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CardsFilters } from "@/components/app/cards-filters";
 import { CardsPagination } from "@/components/app/cards-pagination";
+import { CardsPeriod } from "@/components/app/cards-period";
 import { CardsSearch } from "@/components/app/cards-search";
 import { CardsSort } from "@/components/app/cards-sort";
 import { CardsView } from "@/components/app/cards-view";
@@ -98,6 +99,8 @@ export async function FolderBody(props: FolderBodyProps) {
                 />
             </Suspense>
             <CardsSort key="sort" query={query} options={sortOptions} defaultSortKey={defaultSortKey} />
+            {/* A change sort reads over a period: its menu stands beside Sort while that sort is on. */}
+            {query.sort === "change" ? <CardsPeriod key="period" query={query} defaultSortKey={defaultSortKey} /> : null}
         </>
     );
 

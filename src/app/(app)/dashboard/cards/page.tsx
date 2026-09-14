@@ -3,7 +3,7 @@ import { AddCardButton } from "@/components/app/add-card-button";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderPage } from "@/components/app/folder-page";
 import { type CardFilter, getMyCards } from "@/lib/cards";
-import { type ListSearchParams, isNarrowed, readListQuery } from "@/lib/list-query";
+import { type ListSearchParams, changeWindow, isNarrowed, readListQuery } from "@/lib/list-query";
 
 // The tab's name, which the root layout's template finishes as “… · Cardorb”: without it every
 // tab and every history entry read “Cardorb”. The word is the one the navigation uses for this page.
@@ -21,6 +21,8 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
         q,
         sort,
         order,
+        // A change sort reads over its period's days (list-query.ts changeWindow).
+        ...(sort === "change" ? changeWindow(query) : {}),
         set,
         rarity,
         fullArt,

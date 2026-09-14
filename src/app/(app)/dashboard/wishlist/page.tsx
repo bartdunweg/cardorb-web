@@ -4,7 +4,7 @@ import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderPage } from "@/components/app/folder-page";
 import { ListSettingsDialog } from "@/components/app/list-settings-dialog";
 import { type CardFilter, getMyCards } from "@/lib/cards";
-import { type ListSearchParams, isNarrowed, readListQuery } from "@/lib/list-query";
+import { type ListSearchParams, changeWindow, isNarrowed, readListQuery } from "@/lib/list-query";
 import { getMyProfile } from "@/lib/profile";
 
 // The tab's name, which the root layout's template finishes as “… · Cardorb”: without it every
@@ -21,6 +21,8 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
         q,
         sort,
         order,
+        // A change sort reads over its period's days (list-query.ts changeWindow).
+        ...(sort === "change" ? changeWindow(query) : {}),
         set,
         rarity,
         fullArt,

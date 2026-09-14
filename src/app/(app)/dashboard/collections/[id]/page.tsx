@@ -13,7 +13,7 @@ import { type CardFilter, getAllMyCards, getFacets, getMyCards } from "@/lib/car
 import { getCollection } from "@/lib/collections";
 import { type DexList, groupByDex } from "@/lib/dex-groups";
 import { ruleChips } from "@/lib/folder-rule";
-import { type ListSearchParams, isNarrowed, readListQuery } from "@/lib/list-query";
+import { type ListSearchParams, changeWindow, isNarrowed, readListQuery } from "@/lib/list-query";
 import { getDexNames } from "@/lib/pokedex";
 
 // The binder's own name in the tab. `getCollection` reads the folder list, which is cached five
@@ -47,6 +47,8 @@ async function Binder({ params, searchParams }: { params: Promise<{ id: string }
         q,
         sort,
         order,
+        // A change sort reads over its period's days (list-query.ts changeWindow).
+        ...(sort === "change" ? changeWindow(query) : {}),
         set,
         rarity,
         fullArt,

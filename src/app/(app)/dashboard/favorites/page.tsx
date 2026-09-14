@@ -4,7 +4,7 @@ import { FolderPage } from "@/components/app/folder-page";
 import { LinkButton } from "@/components/app/link-button";
 import { ListSettingsDialog } from "@/components/app/list-settings-dialog";
 import { type CardFilter, getMyCards } from "@/lib/cards";
-import { type ListSearchParams, isNarrowed, readListQuery } from "@/lib/list-query";
+import { type ListSearchParams, changeWindow, isNarrowed, readListQuery } from "@/lib/list-query";
 import { getMyProfile } from "@/lib/profile";
 
 // The tab's name, which the root layout's template finishes as “… · Cardorb”: without it every
@@ -21,6 +21,8 @@ export default async function FavoritesPage({ searchParams }: { searchParams: Pr
         q,
         sort,
         order,
+        // A change sort reads over its period's days (list-query.ts changeWindow).
+        ...(sort === "change" ? changeWindow(query) : {}),
         set,
         rarity,
         fullArt,

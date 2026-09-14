@@ -22,8 +22,16 @@ const filterShape: { [K in keyof Required<Omit<CardFilter, "facets">>]: z.ZodTyp
     collectionId: z.string().max(64).optional(),
     favoritesOnly: z.boolean().optional(),
     wishlist: z.boolean().optional(),
-    sort: z.enum(["name", "price", "added", "dex"]).optional(),
+    sort: z.enum(["name", "price", "added", "dex", "change"]).optional(),
     order: z.enum(["asc", "desc"]).optional(),
+    from: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
+        .optional(),
+    to: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
+        .optional(),
     set: choices,
     rarity: choices,
     fullArt: z.boolean().optional(),

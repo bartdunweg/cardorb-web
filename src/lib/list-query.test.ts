@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_PAGE, activeFilterCount, isNarrowed, listHref, readListQuery, readPublicListQuery } from "./list-query";
+import { MAX_PAGE, activeFilterCount, changeWindow, isNarrowed, listHref, readListQuery, readPublicListQuery } from "./list-query";
 
 describe("readListQuery", () => {
     it("reads page and sort, and falls back to set order and page one for anything else", () => {
@@ -8,6 +8,7 @@ describe("readListQuery", () => {
             sortKey: "added-desc",
             sort: "added",
             order: "desc",
+            period: "1m",
             q: "pika",
             set: [],
             rarity: [],
@@ -25,6 +26,7 @@ describe("readListQuery", () => {
             sortKey: "set",
             sort: undefined,
             order: undefined,
+            period: "1m",
             q: undefined,
             set: [],
             rarity: [],
@@ -131,5 +133,37 @@ describe("readPublicListQuery", () => {
     it("drops a sort the public route refuses back to the newest", () => {
         expect(readPublicListQuery({ sort: "price-desc" })).toMatchObject({ sortKey: "added-desc", sort: "added", order: "desc" });
         expect(readPublicListQuery({ sort: "dex" })).toMatchObject({ sortKey: "added-desc", sort: "added", order: "desc" });
+    });
+});
+
+describe("a sort by price change", () => {
+    it("reads its period, and custom days only when from is a day and to is not before it", () => {
+        expect(readListQuery({ sort: "change-asc", period: "7d" })).toMatchObject({ sort: "change", order: "asc", period: "7d" });
+        expect(readListQuery({ sort: "change-desc", period: "custom", from: "2026-06-01", to: "2026-08-01" })).toMatchObject({
+            period: "custom",
+            from: "2026-06-01",
+            to: "2026-08-01",
+        });
+        expect(readListQuery({ sort: "change-desc", period: "custom", from: "June" })).toMatchObject({ period: "1m", from: undefined });
+        expect(readListQuery({ sort: "change-desc", period: "custom", from: "2026-08-01", to: "2026-06-01" })).toMatchObject({
+            period: "custom",
+            to: undefined,
+        });
+    });
+
+    it("writes the period into the URL only for a change sort, and not at its default", () => {
+        const base = readListQuery({ sort: "change-desc" });
+        expect(listHref("/dashboard/cards", base, { period: "7d" })).toBe("/dashboard/cards?sort=change-desc&period=7d");
+        expect(listHref("/dashboard/cards", base, { period: "1m" })).toBe("/dashboard/cards?sort=change-desc");
+        expect(listHref("/dashboard/cards", base, { period: "custom", from: "2026-06-01", to: "2026-08-01" })).toBe(
+            "/dashboard/cards?sort=change-desc&period=custom&from=2026-06-01&to=2026-08-01",
+        );
+        expect(listHref("/dashboard/cards", { ...base, period: "7d" }, { sortKey: "name" })).toBe("/dashboard/cards?sort=name");
+    });
+
+    it("asks the API for the custom days as they are, and for Max from the first reading", () => {
+        expect(changeWindow({ period: "custom", from: "2026-06-01", to: "2026-08-01" })).toEqual({ from: "2026-06-01", to: "2026-08-01" });
+        expect(changeWindow({ period: "max", from: undefined, to: undefined })).toEqual({ from: "2000-01-01" });
+        expect(changeWindow({ period: "7d", from: undefined, to: undefined }).from).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     });
 });

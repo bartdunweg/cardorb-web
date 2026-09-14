@@ -9,8 +9,10 @@ import { CardTile } from "@/components/app/card-tile";
 import { FavoriteStar } from "@/components/app/favorite-star";
 import { FlagIcon } from "@/components/app/flag-icon";
 import { useListTotals } from "@/components/app/list-totals";
+import { PriceChangeLine } from "@/components/app/price-change";
 import { TileIconButton } from "@/components/app/tile-icon-button";
 import { useCopySteps } from "@/components/app/use-copy-steps";
+import type { PriceChange } from "@/lib/api-shapes";
 import { cardLabel } from "@/lib/card-label";
 import type { PublicCard } from "@/lib/cards";
 import { type CardsSize, GRID_COLUMNS, TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
@@ -28,7 +30,13 @@ const FIRST_ROW = 6;
 // width because the words under it truncate. Exported for the Pokédex, which draws the same
 // tiles so a folder reads the same whichever way it is shown.
 
-type GridCard = PublicCard & { is_favorite?: boolean | null; price?: number | null; quantity?: number | null; owned?: boolean | null };
+type GridCard = PublicCard & {
+    is_favorite?: boolean | null;
+    price?: number | null;
+    quantity?: number | null;
+    owned?: boolean | null;
+    price_change?: PriceChange | null;
+};
 
 export function CardsGrid<T extends GridCard>({
     holder = "you",
@@ -196,6 +204,8 @@ function GridCell<T extends GridCard>({
                                 </span>
                             </span>
                         ) : null}
+                        {/* On a list sorted by price change: the move over its period, under the price. */}
+                        <PriceChangeLine change={card.price_change} />
                     </div>
                 }
             />
