@@ -25,17 +25,51 @@ export function niceTicks(min: number, max: number, count = 4): number[] {
     return ticks;
 }
 
-/** Where each reading lands inside the frame; x spreads readings evenly, y is linear between the axis ends. */
-export function pointsFor(values: number[], frame: Frame, yMin: number, yMax: number): Point[] {
+/**
+ * Where each reading lands inside the frame; y is linear between the axis ends.
+ *
+ * x by time when the readings' days are given, evenly otherwise. Evenly spaced, a stretch with no
+ * readings took one step like any week, so a gap of two months drew as narrow as a week (Bart,
+ * 2026-09-14: a missing stretch has to show). By time, the gap is as wide as it lasted.
+ */
+export function pointsFor(values: number[], frame: Frame, yMin: number, yMax: number, days?: string[]): Point[] {
     const innerWidth = frame.width - frame.left - frame.right;
     const innerHeight = frame.height - frame.top - frame.bottom;
     const span = yMax - yMin;
     const n = values.length;
+    const times = days && days.length === n ? days.map((d) => Date.parse(`${d}T00:00:00Z`)) : null;
+    const t0 = times ? times[0] : 0;
+    const tSpan = times ? times[n - 1] - t0 : 0;
     return values.map((v, index) => ({
         index,
-        x: frame.left + (n === 1 ? innerWidth / 2 : (index / (n - 1)) * innerWidth),
+        x: frame.left + (n === 1 ? innerWidth / 2 : times && tSpan > 0 ? ((times[index] - t0) / tSpan) * innerWidth : (index / (n - 1)) * innerWidth),
         y: frame.top + innerHeight - (span > 0 ? ((v - yMin) / span) * innerHeight : 0),
     }));
+}
+
+/** More days than this between two readings is a stretch with none: a week, since Max shows a reading a week. */
+export const GAP_DAYS = 7;
+
+/**
+ * The line split where readings are missing: `runs` are the stretches drawn solid, each smooth on
+ * its own, and `gaps` the pairs of neighbouring readings more than GAP_DAYS apart, drawn as a
+ * straight dotted line from one to the next. A dotted line says "nothing was read here" where a
+ * solid one would say the price went straight from one figure to the other.
+ */
+export function splitAtGaps(points: Point[], days: string[]): { runs: Point[][]; gaps: [Point, Point][] } {
+    const runs: Point[][] = [];
+    const gaps: [Point, Point][] = [];
+    let run: Point[] = [];
+    points.forEach((p, i) => {
+        if (i > 0 && (Date.parse(`${days[i]}T00:00:00Z`) - Date.parse(`${days[i - 1]}T00:00:00Z`)) / 86_400_000 > GAP_DAYS) {
+            runs.push(run);
+            gaps.push([points[i - 1], p]);
+            run = [];
+        }
+        run.push(p);
+    });
+    if (run.length) runs.push(run);
+    return { runs, gaps };
 }
 
 /**
