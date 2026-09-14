@@ -20,13 +20,5 @@ export async function DexStat() {
     const [all, names] = await Promise.all([getAllMyCards({ facets: false }), getDexNames()]);
     const { caught, range } = groupByDex(all.cards, names, binder.pokedex);
     const total = range.to - range.from + 1;
-    return (
-        <StatCard
-            label="Pokémon collected"
-            value={formatCount(caught)}
-            detail={`of ${formatCount(total)}`}
-            href="/dashboard/cards?sort=dex"
-            delay={120}
-        />
-    );
+    return <StatCard label="Pokémon collected" value={formatCount(caught)} detail={`of ${formatCount(total)}`} href="/dashboard/cards?sort=dex" delay={120} />;
 }
