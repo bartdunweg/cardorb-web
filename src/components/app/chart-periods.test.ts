@@ -9,7 +9,7 @@ import { byWeek, forChart } from "./chart-periods";
 describe("byWeek", () => {
     afterEach(() => vi.useRealTimers());
 
-    it("keeps the last reading of each week, dated on its Saturday", () => {
+    it("averages each week's readings, dated on its Saturday", () => {
         vi.useFakeTimers({ now: new Date("2026-09-14T12:00:00Z"), toFake: ["Date"] });
         const weeks = byWeek([
             // Sun 8 Jun 2025 to Sat 14 Jun: a Tuesday reading and the Saturday's.
@@ -19,7 +19,7 @@ describe("byWeek", () => {
             { date: "2025-06-17", value: 3 },
         ]);
         expect(weeks).toEqual([
-            { date: "2025-06-14", value: 2, weekFrom: "2025-06-08" },
+            { date: "2025-06-14", value: 1.5, weekFrom: "2025-06-08" },
             { date: "2025-06-21", value: 3, weekFrom: "2025-06-15" },
         ]);
     });
@@ -30,7 +30,7 @@ describe("byWeek", () => {
             { date: "2026-09-13", value: 1 },
             { date: "2026-09-14", value: 2 },
         ]);
-        expect(weeks).toEqual([{ date: "2026-09-14", value: 2, weekFrom: "2026-09-13" }]);
+        expect(weeks).toEqual([{ date: "2026-09-14", value: 1.5, weekFrom: "2026-09-13" }]);
     });
 
     it("sums the cards added during a week onto the reading that stands for it", () => {
@@ -40,7 +40,14 @@ describe("byWeek", () => {
             { date: "2026-08-19", value: 12, added: 0, addedValue: 0 },
             { date: "2026-08-22", value: 20, added: 3, addedValue: 8 },
         ]);
-        expect(week).toMatchObject({ date: "2026-08-22", value: 20, added: 5, addedValue: 13 });
+        expect(week).toMatchObject({ date: "2026-08-22", value: 14, added: 5, addedValue: 13 });
+    });
+
+    // Pitch Black Grubbin's first week: presale at €0.43 and €0.26, €0.03 by the Saturday.
+    it("lets a card's first expensive days count in its first week", () => {
+        vi.useFakeTimers({ now: new Date("2026-09-14T12:00:00Z"), toFake: ["Date"] });
+        const [week] = byWeek([0.43, 0.26, 0.26, 0.26, 0.1, 0.03].map((value, i) => ({ date: `2026-07-${String(13 + i)}`, value })));
+        expect(week).toMatchObject({ date: "2026-07-18", weekFrom: "2026-07-12", value: 0.22 });
     });
 });
 
@@ -52,6 +59,6 @@ describe("forChart", () => {
         const days = ["2026-09-08", "2026-09-09", "2026-09-10", "2026-09-11", "2026-09-12"].map((date, i) => ({ date, value: i }));
         expect(forChart(days, "7d")).toHaveLength(5);
         expect(forChart(days, "6m")).toHaveLength(5);
-        expect(forChart(days, "max")).toEqual([{ date: "2026-09-12", value: 4, weekFrom: "2026-09-06" }]);
+        expect(forChart(days, "max")).toEqual([{ date: "2026-09-12", value: 2, weekFrom: "2026-09-06" }]);
     });
 });

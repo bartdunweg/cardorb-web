@@ -48,11 +48,15 @@ const utc = (iso: string) => new Date(`${iso}T00:00:00Z`);
  * was, which the tooltip makes honest by naming the week ("Jun 7 - 13, 2025"). The week still
  * running ends on its last reading, never on a Saturday still to come.
  *
- * The last reading of a week stands for it; cards added during the week are summed onto it, so a
- * ring still says what joined.
+ * A week's value is the average of its readings, and cards added during the week are summed onto
+ * it, so a ring still says what joined. It was the week's last reading until 2026-09-14, and a card
+ * in its first week read as its cheapest day: Pitch Black Grubbin sold at €0.43 to €0.26 in presale
+ * and €0.03 by the Saturday, so Max began at €0.03 while 6M began at €0.43 (Bart: the two have to
+ * feel the same). A week older than six months holds one reading, whose average is itself.
  */
-export function byWeek<T extends { date: string; added?: number; addedValue?: number }>(rows: T[]): (T & { weekFrom: string })[] {
+export function byWeek<T extends { date: string; value?: number; added?: number; addedValue?: number }>(rows: T[]): (T & { weekFrom: string })[] {
     const weeks = new Map<string, T & { weekFrom: string }>();
+    const sums = new Map<string, { total: number; count: number }>();
     for (const row of rows) {
         const day = utc(row.date);
         const sunday = new Date(day);
@@ -63,8 +67,12 @@ export function byWeek<T extends { date: string; added?: number; addedValue?: nu
         const kept = weeks.get(weekFrom);
         const added = (kept?.added ?? 0) + (row.added ?? 0);
         const addedValue = (kept?.addedValue ?? 0) + (row.addedValue ?? 0);
+        const sum = sums.get(weekFrom) ?? { total: 0, count: 0 };
+        if (typeof row.value === "number") sums.set(weekFrom, { total: sum.total + row.value, count: sum.count + 1 });
+        const averaged = sums.get(weekFrom);
         weeks.set(weekFrom, {
             ...row,
+            ...(typeof row.value === "number" && averaged ? { value: Math.round((averaged.total / averaged.count) * 100) / 100 } : {}),
             ...(row.added !== undefined || kept?.added !== undefined ? { added } : {}),
             ...(row.addedValue !== undefined || kept?.addedValue !== undefined ? { addedValue } : {}),
             date: isoOf(saturday),
