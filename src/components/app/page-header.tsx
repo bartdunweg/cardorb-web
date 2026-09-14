@@ -61,6 +61,7 @@ export function PageHeader({
     titleOnPhone?: boolean;
 }) {
     const sentinel = useRef<HTMLHeadingElement>(null);
+    const words = useRef<HTMLDivElement>(null);
     const [collapsed, setCollapsed] = useState(false);
 
     // The bar takes the title over exactly when the large one has left the screen. IntersectionObserver
@@ -85,6 +86,23 @@ export function PageHeader({
         observer.observe(el);
         return () => observer.disconnect();
     }, [tall, beside, titleOnPhone]);
+
+    /* Beside the buttons, the buttons stand in the middle of the title and the line under it, not level
+       with the title alone: the half of what the lines under the title add. Measured, because a
+       subtitle is one line on one page, two on another and none on a third. Back at the bar's own
+       place once the bar has taken the title over, where the title is one small line again. */
+    const [drop, setDrop] = useState(0);
+    useEffect(() => {
+        const block = words.current;
+        const title = sentinel.current;
+        if (!beside || !block || !title || typeof ResizeObserver === "undefined") return;
+        const measure = () => setDrop(Math.max(0, Math.round((block.offsetHeight - title.offsetHeight) / 2)));
+        measure();
+        const observer = new ResizeObserver(measure);
+        observer.observe(block);
+        return () => observer.disconnect();
+    }, [beside]);
+    const barDrop = beside && !collapsed ? drop : 0;
 
     return (
         // One element, so the page's own gap applies once, under it: the distances inside are the spacer's
@@ -125,7 +143,12 @@ export function PageHeader({
                 >
                     {title}
                 </span>
-                <div className="flex items-center justify-end gap-3">{barActions}</div>
+                <div
+                    className="flex items-center justify-end gap-3 transition-transform duration-150 ease-enter motion-reduce:transition-none"
+                    style={barDrop ? { transform: `translateY(${barDrop}px)` } : undefined}
+                >
+                    {barActions}
+                </div>
             </div>
             {/* The room the bar takes in the flow, on top of the page's own 16 px (32 from `sm`). With Back the
                 title starts at 76: under the 44 px button with 16 above and under it. Beside the buttons it
@@ -156,7 +179,7 @@ export function PageHeader({
                     )}
                 >
                     {/* The words take what the actions leave, so a long subtitle wraps rather than pushing them under the title. */}
-                    <div className="flex min-w-0 flex-1 basis-48 flex-col gap-1">
+                    <div ref={words} className="flex min-w-0 flex-1 basis-48 flex-col gap-1">
                         {eyebrow ? <p className="text-sm font-semibold text-tertiary">{eyebrow}</p> : null}
                         <h1 ref={sentinel} className="text-display-xs font-semibold text-primary">
                             {title}
