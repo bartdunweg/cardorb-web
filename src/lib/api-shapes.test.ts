@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
     type CatalogueSet,
     absoluteImage,
+    apiPriceSchema,
     browseCardSchema,
     cardFromItem,
     cardFromPokemonCard,
@@ -51,7 +52,7 @@ describe("cardFromItem", () => {
             isFavorite: true,
             acquiredAt: null,
             collectionId: "f",
-            price: { low: 1, market: 4, avg30: 5, nm: null },
+            price: { market: 4 },
         });
         expect(card).toMatchObject({
             price: 4,
@@ -102,18 +103,12 @@ describe("cardFromItem", () => {
 });
 
 describe("priceForCopy", () => {
-    const price = { low: 1, market: 4, avg30: null, nm: null };
+    const price = { market: 4 };
 
     it("shows the market figure, and nothing where there is none", () => {
         expect(priceForCopy({ price })).toBe(4);
-        expect(priceForCopy({ price: { low: 1, market: null, avg30: null, nm: null } })).toBeNull();
+        expect(priceForCopy({ price: { market: null } })).toBeNull();
         expect(priceForCopy({ price: null })).toBeNull();
-    });
-
-    // The band that used to sit on this is gone: an old answer still carrying `nm` reads its
-    // market figure, not the estimate.
-    it("never reads a Near Mint estimate, even where an answer still carries one", () => {
-        expect(priceForCopy({ price: { ...price, nm: { low: 3, mid: 6, high: 9 } } })).toBe(4);
     });
 
     it("prices a 1st Edition copy as the stamped run, and falls back where there is none", () => {
@@ -180,7 +175,6 @@ describe("pokemonCardFromBrowse", () => {
             quantity: 1,
             itemIds: ["row"],
             price: null,
-            priceHolo: null,
             tcgId: null,
         });
         expect(c).toMatchObject({ set: "Scarlet & Violet", types: null, hp: null, owned: true, price: null });
@@ -201,8 +195,7 @@ describe("pokemonCardFromBrowse", () => {
             wishlist: false,
             quantity: 0,
             itemIds: [],
-            price: { low: 1.5, market: 2.46, avg30: 2.96, nm: null },
-            priceHolo: null,
+            price: { market: 2.46 },
             tcgId: "me05-085",
         });
         expect(c).toMatchObject({ tcgId: "me05-085", price: 2.46 });
@@ -224,7 +217,6 @@ describe("pokemonCardFromBrowse", () => {
             quantity: 0,
             itemIds: [],
             price: null,
-            priceHolo: null,
             tcgId: "SV2a-006",
         };
         expect(pokemonCardFromBrowse(hit, "ja")).toMatchObject({ tcgId: "SV2a-006", language: "ja" });
@@ -334,7 +326,6 @@ describe("setCardFromBrowse", () => {
                 quantity: 2,
                 itemIds: ["row"],
                 price: null,
-                priceHolo: null,
                 tcgId: null,
             }),
         ).toEqual({
@@ -377,7 +368,6 @@ describe("setCardFromBrowse, a card off another shelf", () => {
             quantity: 0,
             itemIds: [],
             price: null,
-            priceHolo: null,
             tcgId: "SV4a-001",
         };
         expect(setCardFromBrowse({ ...base, localName: "ナゾノクサ" })).toMatchObject({ name: "Oddish", localName: "ナゾノクサ" });
@@ -418,5 +408,13 @@ describe("folderFromApi", () => {
     it("keeps a rule and its kind", () => {
         const rule = { dex: { from: 1, to: 151 } };
         expect(folderFromApi({ id: "f", name: "Kanto", createdAt: "2026-09-05", count: 3, rule })).toMatchObject({ kind: "rule", rule });
+    });
+});
+
+describe("apiPriceSchema", () => {
+    // The API sent the lowest listing, Cardmarket's average and the Near Mint band until
+    // 2026-09-14. An answer from before the API drops them still parses, and keeps only the market.
+    it("reads an answer that still carries the dropped fields", () => {
+        expect(apiPriceSchema.parse({ low: 1, market: 4, avg30: 5, nm: null })).toEqual({ market: 4 });
     });
 });

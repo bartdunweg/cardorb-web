@@ -48,15 +48,12 @@ export const absoluteImage = (image: string | null | undefined): string | null =
 // ── GET /v1/cards ─────────────────────────────────────────────────────────────────────────
 
 /**
- * One card's price, in euros. On a collection card it is TCGplayer's since cardorb-api#354; Browse
- * and search still read Cardmarket's guide until the API moves them. `nm` is always null from
- * the collection and is not read here: the estimated Near Mint band is gone.
+ * One card's price, in euros: TCGplayer's market figure, the one number the app shows. The lowest
+ * listing, Cardmarket's thirty-day average and the Near Mint band left the API (Bart, 2026-09-14);
+ * an API still sending them is read the same, because zod drops what the schema does not name.
  */
 export const apiPriceSchema = z.object({
-    low: nullable(z.number()),
     market: nullable(z.number()),
-    avg30: nullable(z.number()),
-    nm: nullable(z.object({ low: z.number(), mid: z.number(), high: z.number() })),
 });
 export type ApiPrice = z.infer<typeof apiPriceSchema>;
 
@@ -151,7 +148,7 @@ export const cardItemSchema = z.object({
     /**
      * Where this copy's figure came from: which printing of the card it was in TCGplayer's own
      * words, and their product id for it. One market since cardorb-api#354, so the source is
-     * TCGplayer or nothing; `priceHolo` and `priceShadowless`, Cardmarket's two, are no longer read.
+     * TCGplayer or nothing.
      */
     priceSource: z.enum(["tcgplayer"]).nullish(),
     pricePrinting: nullable(z.string()).optional(),
@@ -642,7 +639,6 @@ export const browseCardSchema = z.object({
     /* What the card costs, on the routes that price it, the set page. Absent from search, where
        the answer is a name to pick rather than a shelf to read. */
     price: nullable(apiPriceSchema),
-    priceHolo: nullable(apiPriceSchema),
 });
 export type BrowseCard = z.infer<typeof browseCardSchema>;
 
