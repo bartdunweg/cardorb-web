@@ -127,14 +127,11 @@ export function SetCardTile({
                 aria-label={`${card.name} #${card.number}, ${stateLabel}`}
                 onPress={() => onOpen?.(card)}
                 {...warm}
-                className={({ isPressed, isFocusVisible }) =>
-                    cx(
-                        // The shared tile's own frame: a card is its own surface, so nothing of ours
-                        // sits behind it: a card with no picture shows its back, not a grey box.
-                        "relative block aspect-card w-full cursor-pointer overflow-hidden rounded-card outline-offset-2 outline-focus-ring",
-                        (isPressed || isFocusVisible) && "outline-2",
-                    )
-                }
+                // The shared tile's own frame: a card is its own surface, so nothing of ours sits behind
+                // it: a card with no picture shows its back, not a grey box. A press gives way a little,
+                // as CardTile does on every other list; the ring is for the keyboard only. It came on
+                // with every tap too, a 2 px ring flashing round the card each time a phone touched it.
+                className="relative block aspect-card w-full pressable cursor-pointer overflow-hidden rounded-card outline-offset-2 outline-focus-ring focus-visible:outline-2"
             >
                 {card.imageUrl ? (
                     /* In full colour, whether or not it is yours. A set read as a checklist while
