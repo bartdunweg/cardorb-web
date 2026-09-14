@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type FullArtCard, fullArtIds } from "@/lib/full-art";
+import { type FullArtCard, fullArtIds, setFullArt } from "@/lib/full-art";
 
 const card = (number: string, name: string, rarity: string | null, category?: string, trainerType?: string): FullArtCard => ({
     number,
@@ -76,5 +76,28 @@ describe("fullArtIds", () => {
 
     it("is empty for a set that has none", () => {
         expect([...fullArtIds([card("1", "Pikachu", "Common"), card("2", "Raichu", "Rare")])]).toEqual([]);
+    });
+});
+
+describe("setFullArt", () => {
+    it("takes the API's flag over the rule wherever the answer carries it", () => {
+        // The API counts a card the rule misses (Jolteon V 177 in Evolving Skies) and leaves out a
+        // Secret Rare reprint the rule would take (the Decidueye GX at 150).
+        const cards = [
+            { ...card("017", "Jolteon V", "Rare Holo V"), fullArt: false },
+            { ...card("177", "Jolteon V", "Rare Holo V"), fullArt: true },
+            { ...card("012", "Decidueye GX", "Ultra Rare"), fullArt: false },
+            { ...card("150", "Decidueye GX", "Secret Rare"), fullArt: false },
+        ];
+        expect([...setFullArt(cards)]).toEqual(["177"]);
+    });
+
+    it("falls back to the rule, over the whole set, for a card the answer did not flag", () => {
+        const cards = [
+            card("012", "Decidueye GX", "Ultra Rare"),
+            card("150", "Decidueye GX", "Secret Rare"),
+            { ...card("180", "Lillie", "Ultra Rare", "Trainer", "Supporter"), fullArt: false },
+        ];
+        expect([...setFullArt(cards)]).toEqual(["150"]);
     });
 });
