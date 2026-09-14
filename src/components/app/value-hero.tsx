@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { ChevronDown } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
-import { ChartPeriods, PERIODS, type PeriodKey, forChart, isoDaysAgo } from "@/components/app/chart-periods";
-import { Movers } from "@/components/app/movers";
+import { ChartPeriods, PERIODS, forChart, isoDaysAgo } from "@/components/app/chart-periods";
+import { useHomePeriod } from "@/components/app/home-period";
 import { ValueChart } from "@/components/app/value-chart";
 import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
@@ -39,7 +39,8 @@ export function ValueHero({
 }) {
     const router = useRouter();
     const [pending, startTransition] = useTransition();
-    const [period, setPeriod] = useState<PeriodKey>("1m");
+    // Shared with the movers under the counts (home-period.tsx).
+    const { period, setPeriod } = useHomePeriod();
     const chosen = PERIODS.find((p) => p.key === period) ?? PERIODS[1];
     const shown = chosen.days === null ? snapshots : snapshots.filter((s) => s.date >= isoDaysAgo(chosen.days));
     const split = splitChange(shown, value);
@@ -98,9 +99,6 @@ export function ValueHero({
             <ValueChart snapshots={forChart(shown, period)} label={`${list.name} value over time`}>
                 <ChartPeriods period={period} onPick={setPeriod} />
             </ValueChart>
-            {/* What moved the number, over the chart's own period. The collection's alone: the movers are
-                read over every card held, so under a binder's line they would answer another question. */}
-            {selected === "all" ? <Movers period={period} said={chosen.said} /> : null}
         </section>
     );
 }
