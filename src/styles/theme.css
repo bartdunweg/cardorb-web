@@ -577,8 +577,11 @@
         --elevation-lg:
             0px 0px 0px var(--hairline) oklch(0 0 0 / 0.06), 0px 12px 16px -4px oklch(0 0 0 / 0.1), 0px 4px 6px -2px oklch(0 0 0 / 0.04),
             0px 2px 2px -1px oklch(0 0 0 / 0.04);
-        --elevation-lift-lg: 0px 12px 16px -4px oklch(0 0 0 / 0.1), 0px 4px 6px -2px oklch(0 0 0 / 0.04), 0px 2px 2px -1px oklch(0 0 0 / 0.04);
-        --elevation-lift-xs: 0px 1px 2px 0px oklch(0 0 0 / 0.05);
+        /* The lifts carry no tight layer under the edge: a 2 px shadow right under a hairline ring read as
+           the ring drawn three times as thick at the bottom as at the top (2026-09-14). One wide, soft layer
+           lifts the surface and leaves the ring one line all round. */
+        --elevation-lift-lg: 0px 12px 28px -6px oklch(0 0 0 / 0.1);
+        --elevation-lift-xs: 0px 4px 12px -4px oklch(0 0 0 / 0.06);
         --elevation-xl:
             0px 0px 0px var(--hairline) oklch(0 0 0 / 0.06), 0px 20px 24px -4px oklch(0 0 0 / 0.12), 0px 8px 8px -4px oklch(0 0 0 / 0.04),
             0px 3px 3px -1.5px oklch(0 0 0 / 0.04);
@@ -595,7 +598,7 @@
         --elevation-sm: 0px 0px 0px var(--hairline) oklch(1 0 0 / 0.08), 0px 1px 3px 0px oklch(0 0 0 / 0.3);
         --elevation-md: 0px 0px 0px var(--hairline) oklch(1 0 0 / 0.1), 0px 4px 6px -1px oklch(0 0 0 / 0.4), 0px 2px 4px -2px oklch(0 0 0 / 0.3);
         --elevation-lg: 0px 0px 0px var(--hairline) oklch(1 0 0 / 0.1), 0px 12px 16px -4px oklch(0 0 0 / 0.5), 0px 4px 6px -2px oklch(0 0 0 / 0.3);
-        --elevation-lift-lg: 0px 12px 16px -4px oklch(0 0 0 / 0.5), 0px 4px 6px -2px oklch(0 0 0 / 0.3);
+        --elevation-lift-lg: 0px 12px 28px -6px oklch(0 0 0 / 0.55);
         /* Dark's xs is its rim alone; without it there is no lift to draw. */
         --elevation-lift-xs: 0 0 #0000;
         --elevation-xl: 0px 0px 0px var(--hairline) oklch(1 0 0 / 0.12), 0px 20px 24px -4px oklch(0 0 0 / 0.6), 0px 8px 8px -4px oklch(0 0 0 / 0.3);
