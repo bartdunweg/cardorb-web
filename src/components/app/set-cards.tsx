@@ -16,7 +16,7 @@ import { Dot } from "@/components/foundations/dot-icon";
 import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
 import { GRID_COLUMNS } from "@/lib/cards-view";
-import { FULL_ART, fullArtIds } from "@/lib/full-art";
+import { FULL_ART, setFullArt } from "@/lib/full-art";
 
 // The card sheet, fetched on the tap that opens it: it is the app's largest client chunk and the
 // grid is drawn long before anyone touches a tile. `ssr: false`: the sheet is nothing until then.
@@ -82,13 +82,13 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
     const [rarity, setRarity] = useState<string[]>([]);
     const [art, setArt] = useState(false);
     const [sort, setSort] = useState<SortKey>("set");
-    /* Which of this set's cards are full art, read off the set itself: the same rarity means the
-       opposite thing in Sun & Moon and in Scarlet & Violet, so the rule needs the whole set
-       (`@/lib/full-art`). A set with none never offers the option, which is most sets before
-       Black & White. It is a filter of its own and not an entry among the rarities, because it
-       cuts across them: every special illustration rare is a full art, and listed with them it put
-       one card under two rarities. */
-    const fullArt = useMemo(() => fullArtIds(cards), [cards]);
+    /* Which of this set's cards are full art: the API's own flag where the answer carries it, which
+       is one rule in one place for the web and the iOS app, and the web's older rule read off the
+       whole set only for a card without it (`@/lib/full-art`). A set with none never offers the
+       option, which is most sets before Black & White. It is a filter of its own and not an entry
+       among the rarities, because it cuts across them: every special illustration rare is a full
+       art, and listed with them it put one card under two rarities. */
+    const fullArt = useMemo(() => setFullArt(cards), [cards]);
     const rarities = useMemo(
         () => [...new Set(cards.map((c) => c.rarity).filter((r): r is string => Boolean(r)))].sort().map((r) => ({ value: r, label: r })),
         [cards],

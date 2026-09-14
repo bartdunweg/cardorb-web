@@ -550,6 +550,8 @@ export type SetCard = {
     price: number | null;
     /** The catalogue id everything priced is keyed by; null where the two catalogues never met. */
     tcgId: string | null;
+    /** Full art as the API decides it; absent where the answer did not say (`@/lib/full-art`). */
+    fullArt?: boolean;
 };
 
 export const setCardFromBrowse = (c: BrowseCard, setAbbr: string | null = null): SetCard => ({
@@ -572,6 +574,7 @@ export const setCardFromBrowse = (c: BrowseCard, setAbbr: string | null = null):
     // The same rule the collection uses, so one card does not carry two prices across two screens.
     price: priceForCopy({ price: c.price }),
     tcgId: c.tcgId,
+    ...(c.fullArt === undefined ? {} : { fullArt: c.fullArt }),
 });
 
 /** The shape the add action takes, from a set tile. */
@@ -639,6 +642,10 @@ export const browseCardSchema = z.object({
     /* What the card costs, on the routes that price it, the set page. Absent from search, where
        the answer is a name to pick rather than a shelf to read. */
     price: nullable(apiPriceSchema),
+    /* Whether the illustration covers the whole card, as the API's catalogue copy decides it
+       (cardorb-api#450). Only on the set page, and absent for a set the API read live; the set
+       page falls back to `@/lib/full-art`'s own rule for a card without it. */
+    fullArt: z.boolean().optional(),
 });
 export type BrowseCard = z.infer<typeof browseCardSchema>;
 

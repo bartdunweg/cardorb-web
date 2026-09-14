@@ -39,6 +39,14 @@
  * and Sword & Shield (a gold Quick Ball, a gold Nest Ball): they are reprints of a Secret Rare
  * too, four to a set. Where `trainerType` is there they are left out, because at these rarities
  * a Supporter is the full art reprint and an Item, a Tool or a Stadium is the gold one.
+ *
+ * ## Where the API answers instead
+ *
+ * The Card Orb API decides full art for every card of its catalogue copy at night, with more than
+ * this rule knows (shiny V and VMAX, TCGplayer's own "Full Art" products: Jolteon V 177 in Evolving
+ * Skies), and a set page's cards carry it as `fullArt` since cardorb-api#450. That flag is the
+ * answer wherever it is sent; this rule is only the fallback for a card that came without one,
+ * which is a set the API read live because its copy does not hold it yet (`setFullArt`).
  */
 
 /** A card as this rule reads it: the fields every list already holds. */
@@ -109,6 +117,19 @@ export function fullArtIds(cards: FullArtCard[]): Set<string> {
         if ((first.get(card.name.trim().toLowerCase()) ?? Number.POSITIVE_INFINITY) < numberOf(card)) ids.add(card.number);
     }
     return ids;
+}
+
+/** A card as a set page holds it: the API's own flag where the answer carried one. */
+export type FlaggedFullArtCard = FullArtCard & { fullArt?: boolean };
+
+/**
+ * Which cards of a set are full art, by number: the API's flag for every card that carries one,
+ * and this file's rule only for a card without it. The rule still reads the whole set, because a
+ * card's place in it is what the rule is about.
+ */
+export function setFullArt(cards: FlaggedFullArtCard[]): Set<string> {
+    const ruled = cards.some((c) => c.fullArt === undefined) ? fullArtIds(cards) : null;
+    return new Set(cards.filter((c) => c.fullArt ?? ruled?.has(c.number) ?? false).map((c) => c.number));
 }
 
 /** The value the rarity menu carries for full art. Not a rarity, so it cannot collide with one. */

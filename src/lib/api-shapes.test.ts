@@ -375,6 +375,31 @@ describe("setCardFromBrowse, a card off another shelf", () => {
     });
 });
 
+describe("setCardFromBrowse, the API's full-art flag", () => {
+    it("keeps the flag where the answer sent one, and leaves it out where it did not", () => {
+        const base = {
+            id: "swsh7-177",
+            number: "177",
+            name: "Jolteon V",
+            setName: "Evolving Skies",
+            image: null,
+            imageHigh: null,
+            rarity: "Ultra Rare",
+            types: ["Lightning"],
+            series: "Sword & Shield",
+            owned: false,
+            wishlist: false,
+            quantity: 0,
+            itemIds: [],
+            price: null,
+            tcgId: "swsh7-177",
+        };
+        expect(setCardFromBrowse(browseCardSchema.parse({ ...base, fullArt: true })).fullArt).toBe(true);
+        expect(setCardFromBrowse(browseCardSchema.parse({ ...base, fullArt: false })).fullArt).toBe(false);
+        expect(setCardFromBrowse(browseCardSchema.parse(base))).not.toHaveProperty("fullArt");
+    });
+});
+
 describe("pokemonCardFromSetCard", () => {
     it("carries what the add action validates: name, set, number, rarity, types", () => {
         const card = pokemonCardFromSetCard({
