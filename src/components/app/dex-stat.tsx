@@ -18,7 +18,7 @@ export async function DexStat() {
     const binder = await getDexBinder();
     if (!binder) return null;
     const [all, names] = await Promise.all([getAllMyCards({ facets: false }), getDexNames()]);
-    const { caught, range } = groupByDex(all.cards, names, binder.pokedex);
-    const total = range.to - range.from + 1;
-    return <StatCard label="Pokémon collected" value={formatCount(caught)} detail={`of ${formatCount(total)}`} href="/dashboard/cards?sort=dex" delay={120} />;
+    // The count alone: "of 1,025" beside it went (Bart, 2026-09-15).
+    const { caught } = groupByDex(all.cards, names, binder.pokedex);
+    return <StatCard label="Pokémon collected" value={formatCount(caught)} href="/dashboard/cards?sort=dex" delay={120} />;
 }
