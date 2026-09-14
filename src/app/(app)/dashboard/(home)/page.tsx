@@ -1,11 +1,12 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { AddCardButton } from "@/components/app/add-card-button";
-import { AlmostComplete } from "@/components/app/almost-complete";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CardsStats, StatCard } from "@/components/app/cards-stats";
 import { PhoneSearchTrigger } from "@/components/app/command-search";
 import { DexStat } from "@/components/app/dex-stat";
+import { HomePeriodProvider } from "@/components/app/home-period";
+import { Movers } from "@/components/app/movers";
 import { PageHeader } from "@/components/app/page-header";
 import { HomeBodyOutline, ValueHeroOutline } from "@/components/app/skeletons";
 import { TopCards } from "@/components/app/top-cards";
@@ -64,7 +65,7 @@ async function HomeBody({ searchParams }: { searchParams: Promise<{ value?: stri
             {fresh ? (
                 <Welcome />
             ) : (
-                <>
+                <HomePeriodProvider>
                     <Suspense fallback={<ValueHeroOutline />}>
                         <ValueSection selected={selected} total={stats.value} />
                     </Suspense>
@@ -76,14 +77,13 @@ async function HomeBody({ searchParams }: { searchParams: Promise<{ value?: stri
                             </Suspense>
                         }
                     />
-                    {/* The sets a handful of cards short, before the dearest cards: what to go after next. */}
-                    <Suspense fallback={null}>
-                        <AlmostComplete />
-                    </Suspense>
+                    {/* What moved the value, over the chart's period, under the counts. The collection's alone: the
+                        movers are read over every card held, so under a binder's line they would answer another question. */}
+                    {selected === "all" ? <Movers /> : null}
                     <Suspense fallback={null}>
                         <TopCards />
                     </Suspense>
-                </>
+                </HomePeriodProvider>
             )}
         </>
     );
