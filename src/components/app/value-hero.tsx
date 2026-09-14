@@ -12,9 +12,6 @@ import { splitChange } from "@/lib/value-change";
 import type { ValueSnapshot } from "@/lib/value-history";
 import { cx } from "@/utils/cx";
 
-/** An amount with its direction spelled out, the minus a real one. */
-const signed = (n: number, format: (v: number) => string) => `${n < 0 ? "−" : "+"}${format(Math.abs(n))}`;
-
 // Home's first thing: what the collection is worth, big, with how that has moved over a period
 // and the line behind it. The name beside the label is a menu: All cards, Favorites, or one of the
 // folders; a choice goes into the URL (`?value=`) and the page reads that list's line. The period
@@ -94,14 +91,6 @@ export function ValueHero({
                           ? `Unchanged ${chosen.said}`
                           : `${change > 0 ? "+" : "−"}${formatValue(Math.abs(change))} ${chosen.said}`}
                 </p>
-                {/* Which part of that was holding more and which was prices moving. Only where cards
-                    were added in the period: otherwise the whole change is prices, and the line above
-                    says it. Plain text with signs, no colour of its own. */}
-                {split && split.added > 0 ? (
-                    <p className="text-sm text-tertiary tabular-nums">
-                        {signed(split.added, formatValue)} from cards added · {signed(split.prices, formatValue)} from prices
-                    </p>
-                ) : null}
             </div>
 
             {/* The change above reads every reading; the line draws Max a week a step (forChart). */}
