@@ -900,7 +900,11 @@ export const valueHistoryAnswer = z.object({
 });
 
 export const pricePointsAnswer = z.object({
-    points: z.array(z.object({ date: z.string(), market: nullable(z.number()), holo: nullable(z.number()) })),
+    // `printings`: every printing's figure that day (normal, holofoil, reverse-holofoil, 1st-edition-holofoil,
+    // shadowless-holofoil, ...), so the chart can draw the one a copy is. It was stripped here until 2026-09-14.
+    points: z.array(
+        z.object({ date: z.string(), market: nullable(z.number()), holo: nullable(z.number()), printings: z.record(z.string(), z.number()).optional() }),
+    ),
 });
 
 export const publicCardsAnswer = z.object({

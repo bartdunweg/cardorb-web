@@ -123,3 +123,38 @@ export function ChartPeriods({ period, onPick, className }: { period: PeriodKey;
         </fieldset>
     );
 }
+
+/**
+ * Which printing the line is, as the same pills the periods are: Normal, Reverse Holo, 1st Edition,
+ * Shadowless. `picked` null is the card's default line, and no pill is pressed then.
+ */
+export function ChartPrintings({
+    printings,
+    picked,
+    onPick,
+    className,
+}: {
+    printings: { key: string; label: string }[];
+    picked: string | null;
+    onPick: (key: string) => void;
+    className?: string;
+}) {
+    return (
+        <fieldset className={cx("flex flex-wrap justify-center gap-1", className)}>
+            <legend className="sr-only">Printing</legend>
+            {printings.map((p) => (
+                <AriaButton
+                    key={p.key}
+                    aria-pressed={p.key === picked}
+                    onPress={() => onPick(p.key)}
+                    className={cx(
+                        "pressable rounded-full px-3 py-1.5 text-sm font-semibold outline-focus-ring transition-colors duration-150 focus-visible:outline-2",
+                        p.key === picked ? "bg-alpha-black/8 text-primary" : "text-tertiary hover:text-secondary",
+                    )}
+                >
+                    {p.label}
+                </AriaButton>
+            ))}
+        </fieldset>
+    );
+}

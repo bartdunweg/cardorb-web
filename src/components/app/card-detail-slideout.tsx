@@ -334,7 +334,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     // out of its history, which is the same market. It read Cardmarket's month until the price
     // stopped being Cardmarket's.
     const points = tcgId ? (history?.tcgId === tcgId ? history.points : (knownPriceHistory(tcgId) ?? [])) : [];
-    const change = mine ? priceChange(mine.price, average30(points, new Date().toISOString().slice(0, 10), isReverseFinish(mine.finish))) : null;
+    const change = mine
+        ? priceChange(mine.price, average30(points, new Date().toISOString().slice(0, 10), isReverseFinish(mine.finish), mine.price_printing))
+        : null;
 
     /*
      * The arrow keys, which is how anybody who is already looking at a list expects to move
@@ -1210,7 +1212,14 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                     <TabPanel id="price" className="flex flex-col gap-6">
                                         {/* The line first, then the numbers around it: what one copy trades at, what all the
                                         copies come to, what was paid, and what that bought. */}
-                                        {mine.tcg_id ? <CardPriceChart tcgId={mine.tcg_id} holo={isReverseFinish(mine.finish)} name={card?.name} /> : null}
+                                        {mine.tcg_id ? (
+                                            <CardPriceChart
+                                                tcgId={mine.tcg_id}
+                                                holo={isReverseFinish(mine.finish)}
+                                                name={card?.name}
+                                                printing={mine.price_printing}
+                                            />
+                                        ) : null}
                                         {/* The market first, apart from what is yours: one figure from one market, where
                                             it is from, and where to check it. TCGplayer only since cardorb-api#354 (Bart,
                                             2026-09-12): two markets side by side read as a number and a correction, and

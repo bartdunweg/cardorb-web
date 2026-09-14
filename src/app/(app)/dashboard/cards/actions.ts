@@ -381,7 +381,7 @@ export async function setDexFace(cardId: string, previousId: string | null): Pro
 }
 
 /** One reading of a card's price, from GET /v1/cards/{tcgId}/prices. Euros; null where the market published nothing. */
-export type PricePoint = { date: string; market: number | null; holo: number | null };
+export type PricePoint = { date: string; market: number | null; holo: number | null; printings?: Record<string, number> };
 
 // A card's price day by day over the last ninety days, for the sheet. Empty, not an error, for a
 // card with no readings yet; and empty when the API cannot answer, since the sheet is open for
