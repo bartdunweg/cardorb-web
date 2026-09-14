@@ -68,7 +68,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                             {/* tabIndex -1 so focus can be sent here after a navigation without putting
                             the element itself in the tab order. */}
                             <main id={MAIN_ID} tabIndex={-1} className="flex min-w-0 flex-1 flex-col outline-none">
-                                <div className="mx-auto flex w-full max-w-container flex-1 flex-col px-4 pt-4 pb-28 sm:px-6 sm:py-8 lg:pb-8">{children}</div>
+                                {/* pb-28 is the room the tab bar takes, until lg where it is gone. sm:py-8 set the bottom to 32 px
+                                    from 640 px, so on a tablet the tab bar stood over the end of every page (2026-09-14). */}
+                                <div className="mx-auto flex w-full max-w-container flex-1 flex-col px-4 pt-4 pb-28 sm:px-6 sm:pt-8 lg:pb-8">{children}</div>
                             </main>
                         </div>
                         <MobileTabBar />

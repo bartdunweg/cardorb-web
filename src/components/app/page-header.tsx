@@ -121,7 +121,7 @@ export function PageHeader({
         // and the 16 px column, whatever the page puts between its sections.
         <div className="flex flex-col">
             {/* Where the phone's bar is, the band starts under it and its Back, after the spacer below; from
-                `lg` it goes up to the page's top, cancelling the layout's padding (sm:py-8). The wash the
+                `lg` it goes up to the page's top, cancelling the layout's padding (sm:pt-8). The wash the
                 band draws is positioned by the app frame, so it needs no room here. */}
             {/* The bar is fixed to the top of the screen, like the tab bar to its bottom, so it stays through
                 the whole page and not only while the header is in view. Collapsed, it stands on the tab bar's
