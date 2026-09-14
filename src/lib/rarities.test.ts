@@ -24,12 +24,13 @@ describe("raritiesFor", () => {
 
     it("offers a Scarlet & Violet promo its era's words and not Holo Rare", () => {
         const era = ["Common", "Double rare", "Hyper rare", "Illustration rare", "Special illustration rare", "Ultra Rare", "Uncommon"];
+        // The era may still arrive in TCGdex's sentence case; the picker offers its own title-case words.
         expect(values(era)).toEqual([
-            "Special illustration rare",
-            "Illustration rare",
+            "Special Illustration Rare",
+            "Illustration Rare",
             "Ultra Rare",
-            "Hyper rare",
-            "Double rare",
+            "Hyper Rare",
+            "Double Rare",
             "Uncommon",
             "Common",
             NOT_KNOWN,

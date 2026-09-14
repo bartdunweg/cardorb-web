@@ -26,13 +26,14 @@ export const isUnnamedRarity = (rarity: string | null | undefined): boolean => {
  */
 export const NOT_KNOWN = "__not-known__";
 
+/** Spelled as the API spells them since 2026-09-14 (cardorb-api `rarity-names.ts`): title case throughout. */
 export const RARITIES_BY_HAND: { value: string; label: string }[] = [
-    { value: "Special illustration rare", label: "Special illustration rare" },
-    { value: "Illustration rare", label: "Illustration rare" },
+    { value: "Special Illustration Rare", label: "Special Illustration Rare" },
+    { value: "Illustration Rare", label: "Illustration Rare" },
     { value: "Ultra Rare", label: "Ultra Rare (full art)" },
-    { value: "Hyper rare", label: "Hyper rare" },
+    { value: "Hyper Rare", label: "Hyper Rare" },
     { value: "Secret Rare", label: "Secret Rare" },
-    { value: "Double rare", label: "Double rare" },
+    { value: "Double Rare", label: "Double Rare" },
     { value: "Holo Rare", label: "Holo Rare" },
     { value: "Rare", label: "Rare" },
     { value: "Uncommon", label: "Uncommon" },
