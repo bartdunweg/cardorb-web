@@ -172,7 +172,9 @@ export function PageHeader({
                 {/* Actions sit beside the title when they fit (a plus on a phone) and wrap under it when they do not. */}
                 <div
                     className={cx(
-                        "flex flex-row flex-wrap items-start justify-between gap-3",
+                        // Centred on each other, whichever is taller: the buttons (40 px) against a title alone (32 px)
+                        // hung 4 px low when the row started at the top (Binders, 2026-09-14).
+                        "flex flex-row flex-wrap items-center justify-between gap-3",
                         !titleOnPhone && "max-lg:sr-only",
                         // On the bar's line, the buttons keep its right end.
                         beside && "max-lg:pr-28",
