@@ -20,7 +20,7 @@ import { elapsed, logTiming } from "@/lib/timing";
 const THIRTY_DAYS = 30 * 24 * 3600;
 const FETCH_LIMIT_MS = 5_000;
 /** Bump when the picking changes: the Data Cache outlives a deploy (see the memory of #206). */
-const VERSION = "v4";
+const VERSION = "v5";
 
 export async function logoPalette(url: string | null): Promise<string[]> {
     if (!url) return [];
@@ -69,16 +69,17 @@ async function readLogoPalette(url: string): Promise<string[]> {
 }
 
 /**
- * The set page's logo is TCGdex's `logo.webp` (cardorb-api's catalogue.ts asks for it that way, the
- * shelf for `.png`). TCGdex serves every asset in both, from the same address bar the extension,
- * so the PNG sibling is what gets read; any other address is asked for as it is.
+ * The set page's logo is a `logo.webp`: TCGdex's, or since api#394 our own copy of it at
+ * images.cardorb.com, under the same path and in WebP only. TCGdex serves every asset in both
+ * formats from the same address bar the extension, so the PNG sibling on TCGdex is what gets read
+ * for either; any other address is asked for as it is. Reading our copy as it was answered WebP,
+ * which is "no colour", and every set's wash went grey on the day the logos moved.
  */
-function pngAddress(url: string): string {
+export function pngAddress(url: string): string {
     try {
         const u = new URL(url);
-        if (u.hostname === "assets.tcgdex.net" && u.pathname.endsWith(".webp")) {
-            u.pathname = u.pathname.replace(/\.webp$/, ".png");
-            return u.toString();
+        if ((u.hostname === "assets.tcgdex.net" || u.hostname === "images.cardorb.com") && u.pathname.endsWith(".webp")) {
+            return `https://assets.tcgdex.net${u.pathname.replace(/\.webp$/, ".png")}`;
         }
     } catch {
         // Not an address: the fetch below fails and answers null.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pickPalette } from "./logo-color";
+import { pickPalette, pngAddress } from "./logo-color";
 
 /** An RGBA buffer painted from a list of [r, g, b, a, count] runs. */
 function paint(runs: [number, number, number, number, number][]): { data: Uint8Array; width: number; height: number } {
@@ -51,5 +51,17 @@ describe("pickPalette", () => {
             [128, 128, 128, 255, 500],
         ]);
         expect(pickPalette(data, width, height)).toEqual([]);
+    });
+});
+
+describe("pngAddress", () => {
+    it("reads our own copy of a logo from its PNG sibling on TCGdex, since the copy is WebP only", () => {
+        expect(pngAddress("https://images.cardorb.com/en/base/base1/logo.webp")).toBe("https://assets.tcgdex.net/en/base/base1/logo.png");
+        expect(pngAddress("https://assets.tcgdex.net/en/base/base1/logo.webp")).toBe("https://assets.tcgdex.net/en/base/base1/logo.png");
+    });
+
+    it("asks any other address as it is", () => {
+        expect(pngAddress("https://images.cardorb.com/en/xy/xy3/logo.png")).toBe("https://images.cardorb.com/en/xy/xy3/logo.png");
+        expect(pngAddress("https://images.pokemontcg.io/base1/logo.png")).toBe("https://images.pokemontcg.io/base1/logo.png");
     });
 });
