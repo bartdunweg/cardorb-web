@@ -328,7 +328,8 @@
     --color-text-tertiary: var(--color-neutral-600);
     --color-text-error-primary: var(--color-red-600);
     --color-text-warning-primary: var(--color-yellow-600);
-    --color-text-success-primary: var(--color-green-600);
+    /* green-700, not the kit's 600: 600 on white is 3.2:1, under AA for the 14 px amounts on Home (2026-09-14). */
+    --color-text-success-primary: var(--color-green-700);
     --color-text-white: var(--color-white);
     --color-text-secondary: var(--color-neutral-700);
     --color-text-secondary_hover: var(--color-neutral-800);
