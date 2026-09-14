@@ -88,19 +88,31 @@ export function PageHeader({
     }, [tall, beside, titleOnPhone]);
 
     /* Beside the buttons, the buttons stand in the middle of the title and the line under it, not level
-       with the title alone: the half of what the lines under the title add. Measured, because a
-       subtitle is one line on one page, two on another and none on a third. Back at the bar's own
-       place once the bar has taken the title over, where the title is one small line again. */
+       with the title alone. Measured from where both really are, the words on the page and the buttons
+       in the bar at rest, because a subtitle is one line on one page, two on another and none on a
+       third, and from `sm` the title starts 10 px lower while the bar does not move (Binders on a
+       tablet, 2026-09-14). Back at the bar's own place once the bar has taken the title over. */
+    const buttons = useRef<HTMLDivElement>(null);
     const [drop, setDrop] = useState(0);
     useEffect(() => {
         const block = words.current;
-        const title = sentinel.current;
-        if (!beside || !block || !title || typeof ResizeObserver === "undefined") return;
-        const measure = () => setDrop(Math.max(0, Math.round((block.offsetHeight - title.offsetHeight) / 2)));
+        const group = buttons.current;
+        if (!beside || !block || !group || typeof ResizeObserver === "undefined") return;
+        const measure = () => {
+            const box = block.getBoundingClientRect();
+            const wordsMiddle = box.top + window.scrollY + box.height / 2;
+            // offsetTop is the group's place in the fixed bar, which a transform does not move.
+            const buttonsMiddle = group.offsetTop + group.offsetHeight / 2;
+            setDrop(Math.max(0, Math.round(wordsMiddle - buttonsMiddle)));
+        };
         measure();
         const observer = new ResizeObserver(measure);
         observer.observe(block);
-        return () => observer.disconnect();
+        window.addEventListener("resize", measure);
+        return () => {
+            observer.disconnect();
+            window.removeEventListener("resize", measure);
+        };
     }, [beside]);
     const barDrop = beside && !collapsed ? drop : 0;
 
@@ -144,6 +156,7 @@ export function PageHeader({
                     {title}
                 </span>
                 <div
+                    ref={buttons}
                     className="flex items-center justify-end gap-3 transition-transform duration-150 ease-enter motion-reduce:transition-none"
                     style={barDrop ? { transform: `translateY(${barDrop}px)` } : undefined}
                 >
