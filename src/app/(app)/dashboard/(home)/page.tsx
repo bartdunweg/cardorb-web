@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { AddCardButton } from "@/components/app/add-card-button";
+import { AlmostComplete } from "@/components/app/almost-complete";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CardsStats, StatCard } from "@/components/app/cards-stats";
 import { PhoneSearchTrigger } from "@/components/app/command-search";
@@ -75,6 +76,10 @@ async function HomeBody({ searchParams }: { searchParams: Promise<{ value?: stri
                             </Suspense>
                         }
                     />
+                    {/* The sets a handful of cards short, before the dearest cards: what to go after next. */}
+                    <Suspense fallback={null}>
+                        <AlmostComplete />
+                    </Suspense>
                     <Suspense fallback={null}>
                         <TopCards />
                     </Suspense>
