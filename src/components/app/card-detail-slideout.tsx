@@ -50,7 +50,6 @@ import { type CopyGroup, groupCopies, sortCopies } from "@/lib/copies";
 import { matchesRule } from "@/lib/folder-rule";
 import { formatDate, formatPrice } from "@/lib/format";
 import { orientationNeedsPermission, requestOrientation } from "@/lib/holo/orientation";
-import { isBrowseLanguage } from "@/lib/languages";
 import { average30, priceChange } from "@/lib/price-change";
 import { tcgplayerUrl } from "@/lib/price-links";
 import { isUnnamedRarity } from "@/lib/rarities";
@@ -1211,15 +1210,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                     <TabPanel id="price" className="flex flex-col gap-6">
                                         {/* The line first, then the numbers around it: what one copy trades at, what all the
                                         copies come to, what was paid, and what that bought. */}
-                                        {mine.tcg_id ? (
-                                            <CardPriceChart
-                                                tcgId={mine.tcg_id}
-                                                holo={isReverseFinish(mine.finish)}
-                                                name={card?.name}
-                                                // A card from the Japanese, Chinese or Korean catalogue: no history is kept yet.
-                                                soon={isBrowseLanguage(mine.language) && mine.language !== "en"}
-                                            />
-                                        ) : null}
+                                        {mine.tcg_id ? <CardPriceChart tcgId={mine.tcg_id} holo={isReverseFinish(mine.finish)} name={card?.name} /> : null}
                                         {/* The market first, apart from what is yours: one figure from one market, where
                                             it is from, and where to check it. TCGplayer only since cardorb-api#354 (Bart,
                                             2026-09-12): two markets side by side read as a number and a correction, and
