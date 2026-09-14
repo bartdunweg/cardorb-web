@@ -49,6 +49,8 @@ export function Movers() {
         };
     }, [period, known]);
     const answer = answers[period];
+    /* Each tile leads to the whole collection sorted its way, over the same period (list-query.ts). */
+    const listOf = (sort: "change-desc" | "change-asc") => `/dashboard/cards?sort=${sort}${period === "1m" ? "" : `&period=${period}`}`;
 
     /* A row opens the card's sheet on your own row of it, read by set, number and name the way the set
        page opens a card, and the arrows step through Up and then Down. `at` is where in that list the
@@ -73,13 +75,6 @@ export function Movers() {
                     </h2>
                     <p className="text-sm text-tertiary">{said[0]!.toUpperCase() + said.slice(1)}</p>
                 </div>
-                {/* The whole collection sorted the same way, over the same period. */}
-                <Link
-                    href={`/dashboard/cards?sort=change-desc${period === "1m" ? "" : `&period=${period}`}`}
-                    className="text-sm font-semibold text-brand-secondary outline-focus-ring focus-visible:outline-2"
-                >
-                    See all
-                </Link>
             </div>
             {!known ? (
                 <div className="grid gap-3 sm:grid-cols-2 sm:gap-4" aria-hidden="true">
@@ -98,8 +93,22 @@ export function Movers() {
                 <p className="text-sm text-tertiary">No card moved more than ten cents in this period.</p>
             ) : (
                 <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
-                    <MoverList title="Up" movers={answer.up} empty="No card went up." onOpen={(i) => void show(i)} />
-                    <MoverList title="Down" movers={answer.down} empty="No card went down." onOpen={(i) => void show(answer.up.length + i)} />
+                    <MoverList
+                        title="Up"
+                        movers={answer.up}
+                        empty="No card went up."
+                        onOpen={(i) => void show(i)}
+                        href={listOf("change-desc")}
+                        linkLabel="See all gains"
+                    />
+                    <MoverList
+                        title="Down"
+                        movers={answer.down}
+                        empty="No card went down."
+                        onOpen={(i) => void show(answer.up.length + i)}
+                        href={listOf("change-asc")}
+                        linkLabel="See all losses"
+                    />
                 </div>
             )}
             <CardDetailSlideout card={open?.card ?? null} onClose={() => setOpen(null)} onPrev={step(-1)} onNext={step(1)} />
@@ -107,10 +116,30 @@ export function Movers() {
     );
 }
 
-function MoverList({ title, movers, empty, onOpen }: { title: string; movers: Mover[]; empty: string; onOpen: (index: number) => void }) {
+function MoverList({
+    title,
+    movers,
+    empty,
+    onOpen,
+    href,
+    linkLabel,
+}: {
+    title: string;
+    movers: Mover[];
+    empty: string;
+    onOpen: (index: number) => void;
+    href: string;
+    /** The link's words for a screen reader; on screen it says See all under its tile's heading. */
+    linkLabel: string;
+}) {
     return (
         <div className={cx(TILE, "flex flex-col gap-3")}>
-            <h3 className="text-sm font-semibold text-tertiary">{title}</h3>
+            <div className="flex items-baseline justify-between gap-4">
+                <h3 className="text-sm font-semibold text-tertiary">{title}</h3>
+                <Link href={href} aria-label={linkLabel} className="text-sm font-semibold text-brand-secondary outline-focus-ring focus-visible:outline-2">
+                    See all
+                </Link>
+            </div>
             {movers.length === 0 ? (
                 <p className="text-sm text-tertiary">{empty}</p>
             ) : (
