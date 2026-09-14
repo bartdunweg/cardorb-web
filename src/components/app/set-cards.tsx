@@ -9,13 +9,15 @@ import { type FilterAnswer, type FilterValues, FiltersSheet } from "@/components
 import { RowButton } from "@/components/app/row-button";
 import { LIST_ROW, RowSearch } from "@/components/app/row-search";
 import { SetCardTile } from "@/components/app/set-card-tile";
+import { ViewMenu } from "@/components/app/view-menu";
 import { Tab, TabList, TabPanel, Tabs } from "@/components/application/tabs/tabs";
 import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Input } from "@/components/base/input/input";
+import { useCardsView } from "@/hooks/use-cards-view";
 import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
-import { GRID_COLUMNS } from "@/lib/cards-view";
+import { type CardsSize, GRID_COLUMNS } from "@/lib/cards-view";
 import { FULL_ART, setFullArt } from "@/lib/full-art";
 
 // The card sheet, fetched on the tap that opens it: it is the app's largest client chunk and the
@@ -77,7 +79,20 @@ const HOLDINGS: { value: Holding | "all"; label: string }[] = [
  */
 const CARD_BATCH = 48;
 
-export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetCard[]; language?: string; firstRow?: number }) {
+export function SetCards({
+    cards,
+    language = "en",
+    firstRow = 6,
+    initialSize = "md",
+}: {
+    cards: SetCard[];
+    language?: string;
+    firstRow?: number;
+    /** The size the cookie holds, for the first paint; the View menu changes it (use-cards-view). */
+    initialSize?: CardsSize;
+}) {
+    /* The tile size every other list has in its View menu, and the same choice: a set has no table, so size alone. */
+    const { size } = useCardsView("grid", initialSize);
     const [q, setQ] = useState("");
     const [holding, setHolding] = useState<Holding | undefined>();
     const [rarity, setRarity] = useState<string[]>([]);
@@ -217,7 +232,7 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
             <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
                 <TabList aria-label="Cards in this set" type="underline" size="sm" className="min-w-max">
                     {HOLDINGS.map((h) => (
-                        <Tab key={h.value} id={h.value} label={h.label} badge={tabCounts[h.value]} />
+                        <Tab key={h.value} id={h.value} label={h.label} badge={String(tabCounts[h.value] ?? 0)} />
                     ))}
                 </TabList>
             </div>
@@ -270,6 +285,7 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
                         </Dropdown.Menu>
                     </Dropdown.Popover>
                 </Dropdown.Root>
+                <ViewMenu view="grid" size={size} layouts={false} />
             </div>
             {/* One panel, named after the tab chosen: the grid is the same list filtered, not four lists. */}
             <TabPanel id={holding ?? "all"} className="flex flex-col gap-6">
@@ -284,10 +300,10 @@ export function SetCards({ cards, language = "en", firstRow = 6 }: { cards: SetC
                 ) : (
                     /* The same grid as every other overview, at the same size: a set was denser than any
                    list in the app, which is what made it read as a checklist rather than a shelf. */
-                    <ul className={`grid gap-4 ${GRID_COLUMNS.md}`}>
+                    <ul className={`grid gap-4 ${GRID_COLUMNS[size]}`}>
                         {shown.slice(0, limit).map((card, i) => (
                             <li key={card.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i, 16) * 20}ms` } as React.CSSProperties}>
-                                <SetCardTile card={card} language={language} priority={i < firstRow} onOpen={open} />
+                                <SetCardTile card={card} language={language} size={size} priority={i < firstRow} onOpen={open} />
                             </li>
                         ))}
                     </ul>

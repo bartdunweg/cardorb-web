@@ -26,6 +26,7 @@ export function PageHeader({
     eyebrow,
     subtitle,
     back,
+    backOnDesktop = false,
     actions,
     above,
     hero,
@@ -40,14 +41,16 @@ export function PageHeader({
     subtitle?: ReactNode;
     /** The parent page, for the bar's Back. Left out on a page the tab bar reaches. */
     back?: { href: string; label: string };
+    /** Back from `lg` too, where the bar is gone: on the band's left edge, or over the title without one. */
+    backOnDesktop?: boolean;
     /** Whatever acts on this page, beside the title from `sm` up and under it on a narrow screen. */
     actions?: ReactNode;
     /** Above the title, under the sticky bar: Home's search on a phone. */
     above?: ReactNode;
     /**
-     * A band at the very top of the page, under the phone's bar: a set's logo on its colours. It
-     * takes the room the bar's spacer would, since it is taller than the bar, and gets more air
-     * under it than a line of text would: the title starts a page of its own under the picture.
+     * A band at the top of the page: a set's logo on its colours. Under the bar and its Back while
+     * there is a bar (below `lg`), at the very top of the page from `lg`. It gets more air under it
+     * than a line of text would: the title starts a page of its own under the picture.
      */
     hero?: ReactNode;
     /** On a phone, at the bar's right end across from Back: a page's settings as a dots button. */
@@ -87,9 +90,9 @@ export function PageHeader({
         // One element, so the page's own gap applies once, under it: the distances inside are the spacer's
         // and the 16 px column, whatever the page puts between its sections.
         <div className="flex flex-col">
-            {/* Up to the page's top, cancelling the layout's padding (pt-4, sm:py-8); the wash the band
-                draws is positioned by the app frame, so it needs no room here. */}
-            {hero ? <div className="-mt-4 mb-6 sm:-mt-8">{hero}</div> : null}
+            {/* Where the phone's bar is, the band starts under it and its Back, after the spacer below; from
+                `lg` it goes up to the page's top, cancelling the layout's padding (sm:py-8). The wash the
+                band draws is positioned by the app frame, so it needs no room here. */}
             {/* The bar is fixed to the top of the screen, like the tab bar to its bottom, so it stays through
                 the whole page and not only while the header is in view. Collapsed, it stands on the tab bar's
                 glass, running out under its bottom (the same ground as the card sheet's bar), so the buttons
@@ -127,7 +130,16 @@ export function PageHeader({
             {/* The room the bar takes in the flow, on top of the page's own 16 px (32 from `sm`). With Back the
                 title starts at 76: under the 44 px button with 16 above and under it. Beside the buttons it
                 starts at 22, its 32 px line centred on them. With nothing in the bar, at 24. */}
-            {hero ? null : <div aria-hidden="true" className={cx("lg:hidden", back ? "mb-4 h-11 sm:h-7" : beside ? "h-1.5 sm:h-0" : "h-2 sm:h-0")} />}
+            <div aria-hidden="true" className={cx("lg:hidden", back ? "mb-4 h-11 sm:h-7" : beside ? "h-1.5 sm:h-0" : "h-2 sm:h-0")} />
+            {hero ? (
+                // A grid of one cell, not `relative`: the wash inside the band is positioned by the app frame, and a positioned box here would cut it to the column.
+                <div className="mb-6 grid *:col-start-1 *:row-start-1 lg:-mt-8">
+                    {hero}
+                    {back && backOnDesktop ? <DesktopBack back={back} className="self-center justify-self-start" /> : null}
+                </div>
+            ) : back && backOnDesktop ? (
+                <DesktopBack back={back} className="mb-4 self-start" />
+            ) : null}
 
             {/* Above the title, 8 px from the top: the search on Home sits higher than a page's first content,
                 and the title 16 px under it whatever the page's own gap, as under Back. */}
@@ -156,5 +168,19 @@ export function PageHeader({
                 </div>
             </div>
         </div>
+    );
+}
+
+/** Back where the phone's bar is gone: the same button as the bar's, from `lg` only. */
+function DesktopBack({ back, className }: { back: { href: string; label: string }; className?: string }) {
+    return (
+        <Button
+            href={back.href}
+            color="secondary"
+            size="lg"
+            iconLeading={ChevronLeft}
+            aria-label={`Back to ${back.label}`}
+            className={cx("max-lg:hidden", className)}
+        />
     );
 }
