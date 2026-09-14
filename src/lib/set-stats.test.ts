@@ -25,7 +25,7 @@ const card = (over: Partial<SetCard>): SetCard => ({
 });
 
 describe("setStats", () => {
-    it("counts the copies held into the value and the cards missing into the cost", () => {
+    it("counts the value like the progress, one of each card, out of the whole set's", () => {
         const stats = setStats(
             [
                 card({ owned: true, quantity: 2, price: 3 }),
@@ -36,6 +36,6 @@ describe("setStats", () => {
             ],
             5,
         );
-        expect(stats).toEqual({ owned: 2, total: 5, value: 6, toComplete: 15, unpriced: 1, wishlist: 1 });
+        expect(stats).toEqual({ owned: 2, total: 5, value: 3, setValue: 18, unpriced: 2 });
     });
 });
