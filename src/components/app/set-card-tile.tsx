@@ -13,7 +13,7 @@ import { notify } from "@/components/app/toast";
 import { useCopySteps } from "@/components/app/use-copy-steps";
 import { useWarm } from "@/components/app/use-warm";
 import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
-import { TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
+import { type CardsSize, TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
 import { formatPrice } from "@/lib/format";
 import { cx } from "@/utils/cx";
 
@@ -40,11 +40,14 @@ type Result = { ok: true } | { ok: false; error: string };
 export function SetCardTile({
     card,
     language = "en",
+    size = "md",
     priority = false,
     onOpen,
 }: {
     card: SetCard;
     language?: string;
+    /** The grid's tile size, so the picture is asked for at the width it is drawn. */
+    size?: CardsSize;
     /** On screen at load: the first row, which holds the largest paint. */ priority?: boolean;
     /** Tapping the picture: the page opens the card, the tile only says which. */
     onOpen?: (card: SetCard) => void;
@@ -142,15 +145,15 @@ export function SetCardTile({
                         src={card.imageHighUrl ?? card.imageUrl}
                         fallbackSrc={card.imageUrl}
                         alt=""
-                        width={TILE_WIDTH.md}
-                        sizes={TILE_SIZES.md}
+                        width={TILE_WIDTH[size]}
+                        sizes={TILE_SIZES[size]}
                         priority={priority}
                         className="object-cover"
                     />
                 ) : (
                     /* Face down: a real card no catalogue has a scan of. The caption under the tile
                        still names it, as it names every card. */
-                    <CardBack width={TILE_WIDTH.md} sizes={TILE_SIZES.md} priority={priority} />
+                    <CardBack width={TILE_WIDTH[size]} sizes={TILE_SIZES[size]} priority={priority} />
                 )}
                 {/* Only a card you hold is marked on the picture. A wish is said by the pink heart under
                     it, and a second heart on the art said the same thing twice. */}

@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { PageHeader } from "@/components/app/page-header";
@@ -7,6 +8,7 @@ import { SetCards } from "@/components/app/set-cards";
 import { SetHero } from "@/components/app/set-hero";
 import { SetStats } from "@/components/app/set-stats";
 import { SetSkeleton } from "@/components/app/skeletons";
+import { CARDS_SIZE_COOKIE, parseCardsSize } from "@/lib/cards-view";
 import { formatCount } from "@/lib/format";
 import { isBrowseLanguage } from "@/lib/languages";
 import { logoPalette } from "@/lib/logo-color";
@@ -91,6 +93,7 @@ async function Set({ params, searchParams }: { params: Promise<{ id: string }>; 
                 eyebrow={set.series !== set.name ? set.series : undefined}
                 // The set's own name where the title is a translation: that is what the pack says.
                 subtitle={set.localName ?? undefined}
+                backOnDesktop
                 back={{ href: language === "en" ? "/dashboard/sets" : `/dashboard/sets?language=${language}`, label: "Browse" }}
                 // The set's logo on its own colour, edge to edge over the name. Decoration: the h1 says
                 // which set. No progress bar under the title: the owner's call is that the page
@@ -115,7 +118,7 @@ async function Set({ params, searchParams }: { params: Promise<{ id: string }>; 
                     }
                 />
             ) : (
-                <SetCards cards={set.cards} language={language} />
+                <SetCards cards={set.cards} language={language} initialSize={parseCardsSize((await cookies()).get(CARDS_SIZE_COOKIE)?.value)} />
             )}
         </div>
     );
