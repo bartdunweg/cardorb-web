@@ -91,7 +91,7 @@ export type FoilPattern = (typeof FOIL_PATTERNS)[number];
  * classics were printed more than once and a 1st Edition is worth multiples of an unlimited
  * one. Null is not unlimited; it is nobody having said.
  */
-export const EDITIONS = ["1st-edition", "shadowless", "unlimited"] as const;
+export const EDITIONS = ["1st-edition", "shadowless", "unlimited", "blue-border"] as const;
 export type Edition = (typeof EDITIONS)[number];
 
 /** What a copy's print run is called in copy. */
@@ -99,6 +99,7 @@ export const EDITION_LABELS: Record<Edition, string> = {
     "1st-edition": "1st Edition",
     shadowless: "Shadowless",
     unlimited: "Unlimited",
+    "blue-border": "Blue Border",
 };
 
 export const FOIL_PATTERN_LABELS: Record<FoilPattern, string> = {

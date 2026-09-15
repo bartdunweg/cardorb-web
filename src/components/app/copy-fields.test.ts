@@ -252,6 +252,12 @@ describe("editionOptions", () => {
         expect(values(editionOptions(base, null))).toEqual(["", "1st-edition", "shadowless", "unlimited"]);
     });
 
+    // My First Battle Pikachu: TCGplayer sells a Blue Border print beside the plain card (cardorb-api#492).
+    it("offers Blue Border where the API names it, after Unlimited", () => {
+        const pikachu = facts({ editions: ["unlimited", "blue-border"] });
+        expect(values(editionOptions(pikachu, null, "en"))).toEqual(["", "unlimited", "blue-border"]);
+    });
+
     it("offers a Jungle card its two runs, and no Shadowless one", () => {
         const jungle = facts({ editions: ["1st-edition", "unlimited"], firstEdition: true });
         expect(values(editionOptions(jungle, null))).toEqual(["", "1st-edition", "unlimited"]);

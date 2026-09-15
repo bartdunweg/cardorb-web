@@ -1,5 +1,15 @@
 import { z } from "zod";
-import { type Card, EDITION_LABELS, type Edition, FINISHES, FINISH_LABELS, FOIL_PATTERN_LABELS, type Finish, type FoilPattern } from "@/lib/api-shapes";
+import {
+    type Card,
+    EDITIONS,
+    EDITION_LABELS,
+    type Edition,
+    FINISHES,
+    FINISH_LABELS,
+    FOIL_PATTERN_LABELS,
+    type Finish,
+    type FoilPattern,
+} from "@/lib/api-shapes";
 import { sameNumber } from "@/lib/card-number";
 import { WESTERN_LANGUAGES, languageOf } from "@/lib/languages";
 
@@ -112,7 +122,7 @@ export const copyEdits = z
         grade: z.string().trim().max(40).nullable(),
         finish: z.enum(FINISHES).nullable(),
         foilPattern: z.enum(["cosmos", "cracked-ice", "starlight", "confetti", "vertical-line"]).nullable(),
-        edition: z.enum(["1st-edition", "shadowless", "unlimited"]).nullable(),
+        edition: z.enum(EDITIONS).nullable(),
         collectionId: z.string().uuid().nullable(),
         purchasePrice: z.number().min(0).nullable(),
         purchaseDate: z.string().nullable(),

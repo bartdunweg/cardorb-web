@@ -145,8 +145,9 @@ export const effectivePatternOf = (options: Options, chosen: string): string =>
  * recorded" say the same thing there and the caller drops the row, which is what a card printed
  * once has always done.
  *
- * No answer at all means all three, for the reason the finish list does it: no answer is not
- * "none exist". `firstEdition` is still read for an API older than the one that answers
+ * No answer at all means the three classic runs, for the reason the finish list does it: no answer
+ * is not "none exist". Not Blue Border: it is My First Battle's alone, and the API names every card
+ * that has one. `firstEdition` is still read for an API older than the one that answers
  * `editions`.
  */
 export function editionOptions(facts: CardFacts | null | undefined, current: string | null | undefined, language?: string | null): Options {
@@ -154,7 +155,8 @@ export function editionOptions(facts: CardFacts | null | undefined, current: str
     const all = EDITIONS.filter((e) => inLanguage(e, language) || e === current);
     if (!runs) {
         if (facts?.firstEdition === false && !current) return [];
-        return [NOT_RECORDED, ...all.map((e) => ({ label: EDITION_LABELS[e], value: e }))];
+        const classic = all.filter((e) => e !== "blue-border" || e === current);
+        return [NOT_RECORDED, ...classic.map((e) => ({ label: EDITION_LABELS[e], value: e }))];
     }
     const offered = all.filter((e) => runs.includes(e) || e === current);
     /* Unlimited alone is no question, as above. A stamped run alone is one, answered: Base Set
