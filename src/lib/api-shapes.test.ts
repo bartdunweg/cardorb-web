@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
     type CatalogueSet,
-    absoluteImage,
     apiPriceSchema,
     browseCardSchema,
     cardFactsAnswer,
     cardFromItem,
     cardFromPokemonCard,
     folderFromApi,
+    ownImage,
     pokemonCardFromBrowse,
     pokemonCardFromSetCard,
     priceForCopy,
@@ -16,11 +16,12 @@ import {
     setCardFromBrowse,
 } from "./api-shapes";
 
-describe("absoluteImage", () => {
-    it("resolves a relative picture on the API's host and leaves an absolute one alone", () => {
-        expect(absoluteImage("/api/cover?url=x")).toBe("https://api.cardorb.com/api/cover?url=x");
-        expect(absoluteImage("https://assets.tcgdex.net/a.png")).toBe("https://assets.tcgdex.net/a.png");
-        expect(absoluteImage(null)).toBeNull();
+describe("ownImage", () => {
+    it("keeps a file of our own bucket and answers null for any other address", () => {
+        expect(ownImage("https://images.cardorb.com/en/base/base1/4/low.webp")).toBe("https://images.cardorb.com/en/base/base1/4/low.webp");
+        expect(ownImage("/api/cover?url=x")).toBeNull();
+        expect(ownImage("https://assets.tcgdex.net/a.png")).toBeNull();
+        expect(ownImage(null)).toBeNull();
     });
 });
 
@@ -36,7 +37,7 @@ describe("cardFromItem", () => {
             rarity: "Common",
             gen: "Gen 1",
             type: "Lightning",
-            image: "/api/cover?url=p",
+            image: "https://images.cardorb.com/p.png",
             imageHigh: null,
             speciesId: 25,
             tcgId: "base1-58",
@@ -64,7 +65,7 @@ describe("cardFromItem", () => {
             owned: false,
             wishlist: true,
             collection_id: "f",
-            image_url: "https://api.cardorb.com/api/cover?url=p",
+            image_url: "https://images.cardorb.com/p.png",
         });
     });
 
@@ -150,7 +151,7 @@ describe("publicCardFromItem", () => {
             rarity: "Common",
             gen: null,
             type: "Lightning",
-            image: "/api/cover?url=x",
+            image: "https://images.cardorb.com/x.png",
             imageHigh: null,
             speciesId: 25,
             tcgId: "base1-58",
@@ -164,7 +165,7 @@ describe("publicCardFromItem", () => {
             finish: null,
             tcg_id: "base1-58",
         });
-        expect(card.image_url).toMatch(/^https:\/\/.*\/api\/cover\?url=x$/);
+        expect(card.image_url).toBe("https://images.cardorb.com/x.png");
     });
 });
 
@@ -312,9 +313,9 @@ describe("seriesFromSets", () => {
         expect(series[0].sets.map((s) => s.cardsRecorded)).toEqual([false, true, true]);
     });
 
-    it("resolves a relative logo on the API's host", () => {
-        const { series } = seriesFromSets([set({ logo: "/api/cover?url=l" })]);
-        expect(series[0].sets[0].logoUrl).toBe("https://api.cardorb.com/api/cover?url=l");
+    it("draws no logo for an address outside our bucket", () => {
+        const { series } = seriesFromSets([set({ logo: "https://assets.tcgdex.net/en/base/base1/logo.png" })]);
+        expect(series[0].sets[0].logoUrl).toBeNull();
     });
 });
 
@@ -326,7 +327,7 @@ describe("setCardFromBrowse", () => {
                 number: "1",
                 name: "Sprigatito",
                 setName: "Scarlet & Violet",
-                image: "/p.png",
+                image: "https://images.cardorb.com/p.png",
                 imageHigh: null,
                 rarity: "Common",
                 types: ["Grass"],
@@ -349,7 +350,7 @@ describe("setCardFromBrowse", () => {
             category: null,
             trainerType: null,
             types: ["Grass"],
-            imageUrl: "https://api.cardorb.com/p.png",
+            imageUrl: "https://images.cardorb.com/p.png",
             imageHighUrl: null,
             owned: true,
             wishlist: false,

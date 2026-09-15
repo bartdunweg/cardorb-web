@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { type PokemonCard, absoluteImage } from "@/lib/api-shapes";
+import { type PokemonCard, ownImage } from "@/lib/api-shapes";
 import { type CardGroup, type SpeciesTable, cardGroup } from "@/lib/card-group";
 import { bestBand } from "@/lib/name-rank";
 
@@ -162,9 +162,8 @@ function hitOf(index: CatalogueIndex, card: CatalogueIndex["cards"][number]): Po
     const stored = card.length > 6 ? (own ?? null) : set?.image ? `${set.image}/${number}` : null;
     /* Most cards carry a scan's folder, and the size is the reader's: `${stem}/low.webp`. A card
        TCGdex has no scan of carries a whole file instead, the second catalogue's, which the API
-       resolved while it filled the copy and of which there is one size. A path rather than a
-       whole address is the API's cover proxy, and it is a file too. */
-    const file = stored && (stored.startsWith("/") || /\.(webp|png|jpe?g)(\?|$)/i.test(stored));
+       resolved while it filled the copy and of which there is one size. */
+    const file = stored && /\.(webp|png|jpe?g)(\?|$)/i.test(stored);
     return {
         id,
         tcgId: id,
@@ -172,7 +171,7 @@ function hitOf(index: CatalogueIndex, card: CatalogueIndex["cards"][number]): Po
         set: set?.name ?? setId,
         number,
         rarity,
-        image: stored ? absoluteImage(file ? stored : `${stored}/low.webp`) : null,
+        image: stored ? ownImage(file ? stored : `${stored}/low.webp`) : null,
         supertype: null,
         subtypes: null,
         hp: null,

@@ -25,14 +25,7 @@ import { CardBack } from "@/components/app/card-back";
  * browser is sent to the original URL instead, so a slow source costs one retry, never the card.
  */
 
-const OPTIMISED_HOSTS = new Set([
-    "images.cardorb.com",
-    "assets.tcgdex.net",
-    "images.pokemontcg.io",
-    "images.scrydex.com",
-    "limitlesstcg.nyc3.cdn.digitaloceanspaces.com",
-    "api.cardorb.com",
-]);
+const OPTIMISED_HOSTS = new Set(["images.cardorb.com", "api.cardorb.com"]);
 
 function isOptimised(src: string): boolean {
     try {
