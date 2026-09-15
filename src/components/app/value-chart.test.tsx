@@ -65,14 +65,17 @@ describe("ValueChart", () => {
         expect(getByText(/Jun 8\s*–\s*14, 2025 to .* on Jun 15\s*–\s*21, 2025/)).toBeTruthy();
     });
 
-    it("draws a stretch with no readings as a dotted line, and says so", () => {
+    it("draws a stretch with no readings dotted at the last reading, and says so", () => {
         const readings = [
             { date: "2025-06-07", value: 2, cards: 1, priced: 1, unpriced: 0 },
             { date: "2025-06-14", value: 3, cards: 1, priced: 1, unpriced: 0 },
             { date: "2025-07-19", value: 4, cards: 1, priced: 1, unpriced: 0 },
         ];
         const { container, getByText } = render(<ValueChart snapshots={readings} countLabel={null} />);
-        expect(container.querySelectorAll("line[stroke-dasharray]")).toHaveLength(1);
-        expect(getByText(/No readings for 1 stretch of more than 7 days, drawn dotted/)).toBeTruthy();
+        const gaps = container.querySelectorAll("path[stroke-dasharray]");
+        expect(gaps).toHaveLength(1);
+        // Flat, then a step: H to the next reading's x, V to its figure.
+        expect(gaps[0].getAttribute("d")).toMatch(/^M[\d.]+ [\d.]+ H[\d.]+ V[\d.]+$/);
+        expect(getByText(/No readings for 1 stretch of more than 7 days, drawn dotted at the last reading/)).toBeTruthy();
     });
 });

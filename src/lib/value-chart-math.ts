@@ -52,9 +52,9 @@ export const GAP_DAYS = 7;
 
 /**
  * The line split where readings are missing: `runs` are the stretches drawn solid, each smooth on
- * its own, and `gaps` the pairs of neighbouring readings more than GAP_DAYS apart, drawn as a
- * straight dotted line from one to the next. A dotted line says "nothing was read here" where a
- * solid one would say the price went straight from one figure to the other.
+ * its own, and `gaps` the pairs of neighbouring readings more than GAP_DAYS apart, drawn dotted at
+ * the first one's figure and stepped to the next (heldGapPath). A dotted line says "nothing was read
+ * here" where a solid one would say the price went straight from one figure to the other.
  */
 export function splitAtGaps(points: Point[], days: string[]): { runs: Point[][]; gaps: [Point, Point][] } {
     const runs: Point[][] = [];
@@ -113,12 +113,30 @@ export function linePath(points: Point[]): string {
     return d;
 }
 
-/** The same line closed down to the baseline, for the fill under it. */
-export function areaPath(points: Point[], baseline: number): string {
-    if (points.length === 0) return "";
-    const first = points[0];
-    const last = points[points.length - 1];
-    return `${linePath(points)} L${last.x.toFixed(1)} ${baseline.toFixed(1)} L${first.x.toFixed(1)} ${baseline.toFixed(1)} Z`;
+/**
+ * A stretch with no readings as the last reading held flat to the next one's day, then a step to it.
+ * A slope from one reading to the next drew a jump as a climb over the missing weeks: Base Set
+ * Charizard's 1st Edition went from €3,622 to €8,480 in one step and read as a month of rising
+ * (Bart, 2026-09-15). The price line holds a figure until the next sale; the chart does the same.
+ */
+export function heldGapPath([a, b]: [Point, Point]): string {
+    return `M${a.x.toFixed(1)} ${a.y.toFixed(1)} H${b.x.toFixed(1)} V${b.y.toFixed(1)}`;
+}
+
+/** The runs and the held gaps between them as one outline closed down to the baseline, for the fill. */
+export function heldAreaPath(runs: Point[][], gaps: [Point, Point][], baseline: number): string {
+    if (!runs.length || !runs[0].length) return "";
+    let d = linePath(runs[0]);
+    for (let i = 1; i < runs.length; i++) {
+        const [, b] = gaps[i - 1];
+        // The step ends on the next run's first reading, so that run goes on from there without its own move.
+        d += ` H${b.x.toFixed(1)} V${b.y.toFixed(1)}`;
+        d += linePath(runs[i]).replace(/^M[-\d.]+ [-\d.]+/, "");
+    }
+    const first = runs[0][0];
+    const lastRun = runs[runs.length - 1];
+    const last = lastRun[lastRun.length - 1];
+    return `${d} L${last.x.toFixed(1)} ${baseline.toFixed(1)} L${first.x.toFixed(1)} ${baseline.toFixed(1)} Z`;
 }
 
 /** The reading nearest to a pointer x, for the hover layer. */

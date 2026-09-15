@@ -6,4 +6,72 @@ describe("holo family for the API's one rarity spelling", () => {
         expect(holoVariant("Holo Rare LV.X", null, null).rarity).toBe(holoVariant("Rare Holo LV.X", null, null).rarity);
         expect(holoVariant("Holo Rare LV.X", null, null).rarity).toBe("rare holo v");
     });
+
+    /** Every rarity the API stores, catalogue and collection rows alike, as read on 2026-09-15. */
+    const STORED = [
+        "Common",
+        "Uncommon",
+        "Rare",
+        "Holo Rare",
+        "Ultra Rare",
+        "Promo",
+        "Double Rare",
+        "Super Rare",
+        "Illustration Rare",
+        "Secret Rare",
+        "Shiny Rare",
+        "Art Rare",
+        "Hyper Rare",
+        "Special Illustration Rare",
+        "Special Art Rare",
+        "Holo Rare V",
+        "Galarian Gallery",
+        "Triple Rare",
+        "Holo Rare VMAX",
+        "Shiny Super Rare",
+        "ACE SPEC Rare",
+        "Holo Rare LV.X",
+        "Character Rare",
+        "Character Super Rare",
+        "Prism Rare",
+        "Radiant Rare",
+        "Trainer Rare",
+        "LEGEND",
+        "Holo Rare VSTAR",
+        "Rare PRIME",
+        "Classic Collection",
+        "Super Rare Holo",
+        "Amazing Rare",
+        "Shiny Ultra Rare",
+        "Shiny Rare V",
+        "Mega Attack Rare",
+        "Mega Hyper Rare",
+        "Mega Ultra Rare",
+        "Shiny Rare VMAX",
+        "Black White Rare",
+        "Rainbow Rare",
+        "Holo Rare ex",
+        "Holo Rare GX",
+    ];
+    const PLAIN = new Set(["Common", "Uncommon", "Rare", "Classic Collection"]);
+
+    it("gives every stored rarity above the plain ones a shine", () => {
+        for (const r of STORED) {
+            if (PLAIN.has(r)) continue;
+            expect(holoVariant(r, null, null).rarity, r).not.toMatch(/^(common|uncommon|rare)$/);
+        }
+    });
+
+    it("shines a promo like a holo unless its copy is non-holo", () => {
+        expect(holoVariant("Promo", null, null).rarity).toBe("rare holo");
+        expect(holoVariant("Promo", "holo", null).rarity).toBe("rare holo");
+        expect(holoVariant("Promo", "normal", null).rarity).toBe("common");
+        expect(holoVariant("Promo", null, null, { gen: "Base" }).rarity).toBe("rare holo cosmos");
+    });
+
+    it("shines a promo over the whole card, whatever its era's window", () => {
+        expect(holoVariant("Promo", null, null, { gen: "Scarlet & Violet" }).style["--clip"]).toBe("none");
+        expect(holoVariant("Promo", null, { stage: null, hp: null }, { gen: "Base" }).style["--clip-trainer"]).toBe("none");
+        expect(holoVariant("Holo Rare", null, null, { gen: "Base" }).style["--clip"]).not.toBe("none");
+    });
 });

@@ -3,7 +3,7 @@
 import { type ReactNode, useCallback, useId, useRef, useState } from "react";
 import { BarChart01 } from "@untitledui/icons";
 import { formatCount, formatPrice } from "@/lib/format";
-import { type Frame, GAP_DAYS, areaPath, linePath, nearestIndex, niceTicks, pointsFor, splitAtGaps } from "@/lib/value-chart-math";
+import { type Frame, GAP_DAYS, heldAreaPath, heldGapPath, linePath, nearestIndex, niceTicks, pointsFor, splitAtGaps } from "@/lib/value-chart-math";
 import type { ValueSnapshot } from "@/lib/value-history";
 import { cx } from "@/utils/cx";
 
@@ -113,7 +113,7 @@ export function ValueChart({
         change === 0 ? "unchanged" : `${change > 0 ? "up" : "down"} ${formatPrice(Math.abs(change))}`
     }.${addedDays ? ` Cards were added on ${formatCount(addedDays)} ${addedDays === 1 ? "reading" : "readings"}, worth ${formatPrice(addedValue)} then.` : ""}${
         gaps.length
-            ? ` No readings for ${formatCount(gaps.length)} ${gaps.length === 1 ? "stretch" : "stretches"} of more than ${GAP_DAYS} days, drawn dotted.`
+            ? ` No readings for ${formatCount(gaps.length)} ${gaps.length === 1 ? "stretch" : "stretches"} of more than ${GAP_DAYS} days, drawn dotted at the last reading.`
             : ""
     }`;
 
@@ -205,7 +205,7 @@ export function ValueChart({
                             a hover or a resize does not draw it again; a period change does. The group is
                             revealed, not the path's dash, so the ground under the line follows the pen. */}
                         <g key={`${first.date}/${last.date}`} className="chart-draw">
-                            <path d={areaPath(points, baseline)} fill={`url(#${fadeId})`} className="text-fg-primary" />
+                            <path d={heldAreaPath(runs, gaps, baseline)} fill={`url(#${fadeId})`} className="text-fg-primary" />
                             {runs.map((run) => (
                                 <path
                                     key={run[0].index}
@@ -217,19 +217,18 @@ export function ValueChart({
                                     strokeLinecap="round"
                                 />
                             ))}
-                            {/* Where nothing was read for more than a week: a straight dotted line to the next
-                                reading, so a missing stretch is never drawn as a price that moved. */}
-                            {gaps.map(([a, b]) => (
-                                <line
-                                    key={`gap-${a.index}`}
-                                    x1={a.x}
-                                    y1={a.y}
-                                    x2={b.x}
-                                    y2={b.y}
+                            {/* Where nothing was read for more than a week: the last reading held, dotted, to the
+                                next reading's day and a step there, so a missing stretch is never drawn as a
+                                price that moved and a jump is never drawn as a climb. */}
+                            {gaps.map((gap) => (
+                                <path
+                                    key={`gap-${gap[0].index}`}
+                                    d={heldGapPath(gap)}
                                     className={strokeTone}
                                     strokeWidth={2}
                                     strokeDasharray="1 5"
                                     strokeLinecap="round"
+                                    fill="none"
                                 />
                             ))}
                             {/* A ring where cards were added: a shape on the line, not a colour, hollow so

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { areaPath, linePath, nearestIndex, niceTicks, pointsFor, splitAtGaps } from "./value-chart-math";
+import { heldAreaPath, heldGapPath, linePath, nearestIndex, niceTicks, pointsFor, splitAtGaps } from "./value-chart-math";
 
 const frame = { width: 100, height: 60, top: 10, right: 0, bottom: 10, left: 0 };
 
@@ -31,7 +31,7 @@ describe("paths", () => {
     it("draws straight segments and closes the area to the baseline", () => {
         const points = pointsFor([0, 100], frame, 0, 100);
         expect(linePath(points)).toBe("M0.0 50.0 L100.0 10.0");
-        expect(areaPath(points, 50)).toBe("M0.0 50.0 L100.0 10.0 L100.0 50.0 L0.0 50.0 Z");
+        expect(heldAreaPath([points], [], 50)).toBe("M0.0 50.0 L100.0 10.0 L100.0 50.0 L0.0 50.0 Z");
     });
 });
 
@@ -75,6 +75,16 @@ describe("splitAtGaps", () => {
             [3, 4],
         ]);
         expect(gaps.map(([a, b]) => [a.index, b.index])).toEqual([[2, 3]]);
+    });
+
+    // Bart, 2026-09-15: a stretch with no readings holds the last price and steps at the next one,
+    // rather than a slope that draws a jump as a gradual climb.
+    it("draws a gap flat at the last reading and steps at the next", () => {
+        const days = ["2026-01-01", "2026-01-02", "2026-01-11"];
+        const points = pointsFor([0, 0, 4], frame, 0, 4, days);
+        const { runs, gaps } = splitAtGaps(points, days);
+        expect(heldGapPath(gaps[0])).toBe("M10.0 50.0 H100.0 V10.0");
+        expect(heldAreaPath(runs, gaps, 50)).toBe("M0.0 50.0 L10.0 50.0 H100.0 V10.0 L100.0 50.0 L0.0 50.0 Z");
     });
 
     it("keeps a week apart, and a day apart, as one line", () => {
