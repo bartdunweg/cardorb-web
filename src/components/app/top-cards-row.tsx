@@ -38,7 +38,7 @@ export function TopCardsRow({ cards }: { cards: Card[] }) {
                                 {i + 1}
                             </span>
                             <div className="relative aspect-card w-12 shrink-0 overflow-hidden rounded-sm bg-quaternary">
-                                {card.image_url ? <CardImage src={card.image_url} alt="" width={96} className="object-cover" /> : null}
+                                {card.image_url ? <CardImage src={card.print_image_url ?? card.image_url} alt="" width={96} className="object-cover" /> : null}
                             </div>
                             <span className="flex min-w-0 flex-1 flex-col">
                                 <span className="truncate text-sm font-medium text-primary">{card.name}</span>
