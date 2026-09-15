@@ -2,6 +2,7 @@
 
 import { type ReactNode, use, useEffect, useRef, useState, useTransition } from "react";
 import { loadMoreCards } from "@/app/(app)/dashboard/list-actions";
+import { warmCardFacts } from "@/components/app/card-memo";
 import { CardsGrid } from "@/components/app/cards-grid";
 import { CardsTable } from "@/components/app/cards-table";
 import { GotItButton } from "@/components/app/got-it-button";
@@ -78,6 +79,11 @@ export function CardsList({
         setEnd(false);
     }
     const cards = appended.length ? [...first.cards, ...appended] : first.cards;
+    /* The facts of every card on the list, a page per request as the pages arrive, so a sheet opened
+       on any of them draws its choices on its first paint (card-memo.ts). */
+    useEffect(() => {
+        warmCardFacts([...first.cards, ...appended].map((c) => c.tcg_id));
+    }, [first.cards, appended]);
     const setCards = (next: (have: Card[]) => Card[]) => setAppended((have) => next([...first.cards, ...have]).slice(first.cards.length));
     const [failed, setFailed] = useState(false);
     const [pending, startTransition] = useTransition();

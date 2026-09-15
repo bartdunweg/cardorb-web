@@ -1,4 +1,5 @@
-import { type CardFacts, type PricePoint, cardFacts, cardPriceHistory } from "@/app/(app)/dashboard/cards/actions";
+import { type CardFacts, type PricePoint, cardFacts, cardFactsMany, cardPriceHistory } from "@/app/(app)/dashboard/cards/actions";
+import { CARD_FACTS_BATCH } from "@/lib/api-shapes";
 
 /**
  * What the catalogue has said about a printing, kept for as long as the page lives.
@@ -16,6 +17,8 @@ import { type CardFacts, type PricePoint, cardFacts, cardPriceHistory } from "@/
  */
 const FACTS_SEEN = new Map<string, CardFacts | null>();
 const FACTS_ASKED = new Map<string, Promise<CardFacts | null>>();
+/** A card whose page of facts is out (warmCardFacts): its answer, or undefined where the page had none for it. */
+const FACTS_PAGED = new Map<string, Promise<CardFacts | undefined>>();
 /** A price line with the moment it was read: the facts never change, the line gains a day every night. */
 const PRICES_SEEN = new Map<string, { points: PricePoint[]; at: number }>();
 const PRICES_ASKED = new Map<string, Promise<PricePoint[]>>();
@@ -42,7 +45,42 @@ function once<T>(seen: Map<string, T>, asked: Map<string, Promise<T>>, key: stri
 }
 
 export function preloadCardFacts(tcgId: string): Promise<CardFacts | null> {
+    /* A sheet opened while its grid's page is still out joins that page, and asks the card alone
+       only where the page came back without it. */
+    const paged = FACTS_PAGED.get(tcgId);
+    if (paged) return paged.then((found) => found ?? preloadCardFacts(tcgId));
     return once(FACTS_SEEN, FACTS_ASKED, tcgId, () => cardFacts(tcgId));
+}
+
+/**
+ * Every card of a grid, asked in one request a page (cardFactsMany), so a sheet opened on any of them
+ * knows its choices on its first paint rather than drawing them in half a second later (Bart,
+ * 2026-09-15: nothing shown that cannot be chosen, and nothing loaded after the panel opens).
+ *
+ * Only what is not known or asked already. A card the page does not answer is left unknown, never
+ * null: null would be "the catalogue cannot place it" and stop its sheet asking, where the page's
+ * silence only means the API's copy could not answer in full, and the card alone still can.
+ * Nothing is awaited and nothing can fail here.
+ */
+export function warmCardFacts(tcgIds: (string | null | undefined)[]) {
+    const wanted = [...new Set(tcgIds)].filter(
+        (id): id is string => typeof id === "string" && id !== "" && !FACTS_SEEN.has(id) && !FACTS_ASKED.has(id) && !FACTS_PAGED.has(id),
+    );
+    for (let at = 0; at < wanted.length; at += CARD_FACTS_BATCH) {
+        const ids = wanted.slice(at, at + CARD_FACTS_BATCH);
+        const page = cardFactsMany(ids).catch(() => ({}) as Record<string, CardFacts>);
+        for (const id of ids) {
+            FACTS_PAGED.set(
+                id,
+                page.then((found) => {
+                    FACTS_PAGED.delete(id);
+                    const facts = found[id];
+                    if (facts && !FACTS_SEEN.has(id)) FACTS_SEEN.set(id, facts);
+                    return facts;
+                }),
+            );
+        }
+    }
 }
 
 /** What is already known, without asking: the answer, null for a card the catalogue cannot place, undefined for one not asked yet. */
@@ -94,6 +132,7 @@ export function warmCard(tcgId: string | null) {
 export function forgetCards() {
     FACTS_SEEN.clear();
     FACTS_ASKED.clear();
+    FACTS_PAGED.clear();
     PRICES_SEEN.clear();
     PRICES_ASKED.clear();
 }

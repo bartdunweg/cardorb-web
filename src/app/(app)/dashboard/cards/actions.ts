@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { ApiError, api } from "@/lib/api";
 import {
+    CARD_FACTS_BATCH,
     EDITIONS,
     type Edition,
     FINISHES,
@@ -12,6 +13,7 @@ import {
     type PokemonCard,
     type RemovedCard,
     cardFactsAnswer,
+    cardFactsBatchAnswer,
     copyAnswer,
     pokemonCardFromBrowse,
     pricePointsAnswer,
@@ -545,25 +547,51 @@ export type CardFacts = {
 // sheet is open for the row, not for these.
 export async function cardFacts(tcgId: string): Promise<CardFacts | null> {
     try {
-        const c = await api(`/cards/${encodeURIComponent(tcgId)}`, { schema: cardFactsAnswer });
-        return {
-            rarity: c.rarity ?? null,
-            illustrator: c.illustrator ?? null,
-            hp: c.hp ?? null,
-            stage: c.stage ?? null,
-            evolveFrom: c.evolveFrom ?? null,
-            regulationMark: c.regulationMark ?? null,
-            languages: Array.isArray(c.languages) && c.languages.length ? c.languages : null,
-            printings: Array.isArray(c.printings) ? c.printings : [],
-            editions: Array.isArray(c.editions) ? c.editions : null,
-            foilPatterns: Array.isArray(c.foilPatterns) ? c.foilPatterns : null,
-            patternPrints: c.patternPrints ?? null,
-            firstEdition: c.firstEdition ?? null,
-            price: c.price ? { market: c.price.market } : null,
-        };
+        return factsOf(await api(`/cards/${encodeURIComponent(tcgId)}`, { schema: cardFactsAnswer }));
     } catch (err) {
         console.error("Card facts unavailable:", err instanceof Error ? err.message : err);
         return null;
+    }
+}
+
+const factsOf = (c: z.output<typeof cardFactsAnswer>): CardFacts => ({
+    rarity: c.rarity ?? null,
+    illustrator: c.illustrator ?? null,
+    hp: c.hp ?? null,
+    stage: c.stage ?? null,
+    evolveFrom: c.evolveFrom ?? null,
+    regulationMark: c.regulationMark ?? null,
+    languages: Array.isArray(c.languages) && c.languages.length ? c.languages : null,
+    printings: Array.isArray(c.printings) ? c.printings : [],
+    editions: Array.isArray(c.editions) ? c.editions : null,
+    foilPatterns: Array.isArray(c.foilPatterns) ? c.foilPatterns : null,
+    patternPrints: c.patternPrints ?? null,
+    firstEdition: c.firstEdition ?? null,
+    price: c.price ? { market: c.price.market } : null,
+});
+
+// The facts of a page of cards in one request (cardorb-api#503), for a grid to ask before anybody
+// opens a card, so its sheet opens with its choices in place. Only the cards the API could answer
+// in full: one it answers null for, or one whose answer does not parse, is left out, and its sheet
+// asks cardFacts as it always did. No price: the batch carries none, and nothing reads it.
+export async function cardFactsMany(tcgIds: string[]): Promise<Record<string, CardFacts>> {
+    const parsed = z
+        .array(z.string().min(1).max(64))
+        .min(1)
+        .max(CARD_FACTS_BATCH)
+        .safeParse([...new Set(tcgIds)]);
+    if (!parsed.success) return {};
+    try {
+        const { cards } = await api("/cards/facts", { method: "POST", body: { ids: parsed.data }, schema: cardFactsBatchAnswer });
+        const out: Record<string, CardFacts> = {};
+        for (const [id, answer] of Object.entries(cards)) {
+            const one = answer === null ? null : cardFactsAnswer.safeParse(answer);
+            if (one?.success) out[id] = factsOf(one.data);
+        }
+        return out;
+    } catch (err) {
+        console.error("Card facts unavailable for a page:", err instanceof Error ? err.message : err);
+        return {};
     }
 }
 
