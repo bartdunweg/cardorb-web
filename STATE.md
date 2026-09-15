@@ -761,7 +761,9 @@ for the failures that leave no trace), and everything both passes found is close
   PokemonPriceTracker does, RAW and PSA, free at 100 credits a day and $9.99 a month for 20,000.
   Parked on 2026-09-12 because it is one card in this collection (the PSA 7 Charizard) and a
   third market to reconcile; the sheet says the figure is the ungraded one instead (#494).
-  Revisit at a couple of dozen graded or played copies.
+  Looked at again on 2026-09-15 and parked again: Scrydex is the candidate (graded per company
+  and grade, raw per condition, yen for Japanese cards, $29 a month covers a weekly pass).
+  The costs, the unknowns and the step-by-step plan are in `docs/prices.md`.
 - **"Buy on Cardmarket" is off** (cardorb-api#267): `cmUrl` is null until an address can be
   guaranteed to land on the card's own page. Cardmarket publishes product ids but not the
   expansion half of a product's address, and its site answers every probe from a tool with a
