@@ -1,13 +1,13 @@
 import { HoverPrefetchLink } from "@/components/app/hover-prefetch-link";
 import { SetWash } from "@/components/app/set-hero";
 import { SetLogo } from "@/components/app/set-logo";
-import { formatCount } from "@/lib/format";
+import { formatCount, formatDate } from "@/lib/format";
 import type { BrowseLanguage } from "@/lib/languages";
 import type { SetSummary } from "@/lib/sets";
 import { cx } from "@/utils/cx";
 
 /**
- * Ours: one set on the Browse shelf, its logo as the tile and its name and count under it.
+ * Ours: one set on the Browse shelf, its logo as the tile and its name, release date and count under it.
  *
  * A catalogue is led by its pictures: Spotify, TIDAL and Record Club all draw an album as its
  * cover with the title and a line of detail beneath, and a set has a logo the way an album has a
@@ -91,7 +91,12 @@ export function SetTile({
             <div className="flex min-w-0 flex-col gap-1.5">
                 <span className="flex min-w-0 flex-col">
                     <span className="truncate text-sm font-semibold text-primary">{set.name}</span>
-                    {set.localName ? <span className="truncate text-xs text-tertiary">{set.localName}</span> : null}
+                    {/* The set's own name beside a translated one, and when it came out, as the list row writes them. */}
+                    {set.localName || set.releaseDate ? (
+                        <span className="truncate text-xs text-tertiary">
+                            {[set.localName, set.releaseDate ? formatDate(set.releaseDate) : null].filter(Boolean).join(" · ")}
+                        </span>
+                    ) : null}
                 </span>
                 {/* A set the catalogue has not recorded cards for is not "0 of 60 to go": the count
                     would say the collecting is unstarted where it is the catalogue that is. The tile
