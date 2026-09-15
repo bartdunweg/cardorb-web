@@ -141,7 +141,7 @@ function GridCell<T extends GridCard>({
                 // took the whole of it and pushed them out under the next row's pictures, where a tap on
                 // one hit a picture.
                 className={buttons ? "h-auto" : undefined}
-                onWarm={() => warmCard(card.tcg_id)}
+                onWarm={() => warmCard(card.tcg_id, "language" in card ? (card.language as string | null) : null)}
                 picture={
                     /* Nothing of ours around the picture: a card carries its own printed border, and a hairline
                        or a grey box behind it read as a second one. A card with no picture shows its back. */

@@ -82,7 +82,13 @@ export function CardsList({
     /* The facts of every card on the list, a page per request as the pages arrive, so a sheet opened
        on any of them draws its choices on its first paint (card-memo.ts). */
     useEffect(() => {
-        warmCardFacts([...first.cards, ...appended].map((c) => c.tcg_id));
+        const all = [...first.cards, ...appended];
+        // Each catalogue asked apart: a Japanese card's id is only in the Japanese one.
+        warmCardFacts(all.filter((c) => c.language !== "ja").map((c) => c.tcg_id));
+        warmCardFacts(
+            all.filter((c) => c.language === "ja").map((c) => c.tcg_id),
+            "ja",
+        );
     }, [first.cards, appended]);
     const setCards = (next: (have: Card[]) => Card[]) => setAppended((have) => next([...first.cards, ...have]).slice(first.cards.length));
     const [failed, setFailed] = useState(false);

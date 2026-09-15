@@ -11,8 +11,8 @@ const facts = vi.fn();
 const many = vi.fn();
 const history = vi.fn();
 vi.mock("@/app/(app)/dashboard/cards/actions", () => ({
-    cardFacts: (id: string) => facts(id),
-    cardFactsMany: (ids: string[]) => many(ids),
+    cardFacts: (id: string, language?: string | null) => facts(id, language),
+    cardFactsMany: (ids: string[], language?: string | null) => many(ids, language),
     cardPriceHistory: (id: string) => history(id),
 }));
 vi.mock("@/components/app/card-detail-slideout", () => ({}));
@@ -31,6 +31,24 @@ describe("card memo", () => {
         await preloadCardFacts("sv1-1");
         expect(facts).toHaveBeenCalledTimes(1);
         expect(history).toHaveBeenCalledTimes(1);
+    });
+
+    it("keeps a Japanese card's facts apart from the English card under the same id", async () => {
+        facts.mockImplementation(async (id: string, language?: string | null) => ({ illustrator: `${language ?? "en"} ${id}` }));
+        await preloadCardFacts("neo4-100");
+        await preloadCardFacts("neo4-100", "ja");
+        expect(facts).toHaveBeenCalledWith("neo4-100", "ja");
+        expect(knownCardFacts("neo4-100")).toEqual({ illustrator: "en neo4-100" });
+        expect(knownCardFacts("neo4-100", "ja")).toEqual({ illustrator: "ja neo4-100" });
+    });
+
+    it("asks a Japanese grid's page of the Japanese catalogue", async () => {
+        warmCardFacts(["SV2a-001"], "ja");
+        await preloadCardFacts("SV2a-001", "ja");
+        expect(many).toHaveBeenCalledWith(["SV2a-001"], "ja");
+        expect(facts).not.toHaveBeenCalled();
+        expect(knownCardFacts("SV2a-001", "ja")).toEqual({ illustrator: "of SV2a-001" });
+        expect(knownCardFacts("SV2a-001")).toBeUndefined();
     });
 
     it("knows nothing before asking, and keeps a null answer", async () => {
@@ -81,7 +99,7 @@ describe("card memo", () => {
     it("knows a grid's cards after one request, and the sheet asks nothing more", async () => {
         warmCardFacts(["sv1-1", "sv1-2", null, "sv1-1"]);
         expect(many).toHaveBeenCalledTimes(1);
-        expect(many).toHaveBeenCalledWith(["sv1-1", "sv1-2"]);
+        expect(many).toHaveBeenCalledWith(["sv1-1", "sv1-2"], undefined);
         await preloadCardFacts("sv1-2");
         expect(knownCardFacts("sv1-1")).toEqual({ illustrator: "of sv1-1" });
         expect(await preloadCardFacts("sv1-1")).toEqual({ illustrator: "of sv1-1" });

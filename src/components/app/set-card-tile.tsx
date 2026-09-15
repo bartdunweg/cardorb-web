@@ -55,7 +55,7 @@ export function SetCardTile({
     const [pending, startTransition] = useTransition();
     const [runError, setError] = useState<string | null>(null);
     // What the sheet will ask for, asked while the pointer rests here, so the first open is complete.
-    const warm = useWarm(onOpen ? () => warmCard(card.tcgId) : undefined);
+    const warm = useWarm(onOpen ? () => warmCard(card.tcgId, language) : undefined);
 
     // No refresh after the write: it forgets the cache, which draws the page again inside the
     // action's answer. The refresh that followed was a second render of the whole page.
@@ -260,6 +260,7 @@ export function SetCardTile({
                                 foil_pattern: null,
                                 edition: null,
                                 tcg_id: card.tcgId,
+                                language,
                             }}
                         />
                     ) : null}

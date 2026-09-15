@@ -300,6 +300,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const [facts, setFacts] = useState<{ tcgId: string; facts: CardFacts | null } | null>(null);
     const [history, setHistory] = useState<{ tcgId: string; points: PricePoint[] } | null>(null);
     const tcgId = card?.tcg_id ?? null;
+    /* The catalogue the card is from: a card taken off a Japanese set page says so, and a copy of one
+       carries its language. Its facts are asked of that catalogue (card-memo.ts). */
+    const catalogue = addable?.language === "ja" || (card && "language" in card && card.language === "ja") ? "ja" : "en";
     useEffect(() => {
         if (!tcgId) return;
         // The price line too, so the price section opens on it rather than on "No readings" for the
@@ -314,15 +317,15 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     }, [tcgId]);
     useEffect(() => {
         if (!tcgId) return;
-        if (knownCardFacts(tcgId) !== undefined) return;
+        if (knownCardFacts(tcgId, catalogue) !== undefined) return;
         let live = true;
-        preloadCardFacts(tcgId).then((f) => {
+        preloadCardFacts(tcgId, catalogue).then((f) => {
             if (live) setFacts({ tcgId, facts: f });
         });
         return () => {
             live = false;
         };
-    }, [tcgId]);
+    }, [tcgId, catalogue]);
     /*
      * Read from what was fetched, or from what a previous open already learned. Derived rather
      * than copied into state, so a card whose answer is already known needs no effect and no
@@ -333,7 +336,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
      * to it. Opened a second time there is no gap, so nothing animates.
      */
     // The copy forms are told the wait apart from no answer: undefined until the catalogue answers, and they offer nothing yet (copy-fields).
-    const formFacts = tcgId ? (facts?.tcgId === tcgId ? facts.facts : knownCardFacts(tcgId)) : null;
+    const formFacts = tcgId ? (facts?.tcgId === tcgId ? facts.facts : knownCardFacts(tcgId, catalogue)) : null;
     const known = formFacts ?? null;
     // The line beside the price in the header: the price against the card's own last thirty days,
     // out of its history, which is the same market. It read Cardmarket's month until the price

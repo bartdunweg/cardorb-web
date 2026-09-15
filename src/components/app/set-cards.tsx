@@ -108,9 +108,13 @@ export function SetCards({
     const fullArt = useMemo(() => setFullArt(cards), [cards]);
     /* Every card's facts, a page of them per request, once the grid is up: a sheet opened on any card
        then draws its choices on its first paint (card-memo.ts). The whole set rather than the tiles
-       drawn, because the sheet's arrows go past those. English only, as the sheet's own ask is. */
+       drawn, because the sheet's arrows go past those. Asked of the set's own catalogue. */
     useEffect(() => {
-        if (language === "en") warmCardFacts(cards.map((c) => c.tcgId));
+        if (language === "en" || language === "ja")
+            warmCardFacts(
+                cards.map((c) => c.tcgId),
+                language,
+            );
     }, [cards, language]);
     const rarities = useMemo(
         () => [...new Set(cards.map((c) => c.rarity).filter((r): r is string => Boolean(r)))].sort().map((r) => ({ value: r, label: r })),

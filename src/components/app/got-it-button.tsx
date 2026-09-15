@@ -26,7 +26,7 @@ export function GotItButton({ card }: { card: OwnableCard }) {
 
     const load = () => {
         if (folders === null) void listCollections().then(setFolders);
-        if (facts === null && card.tcg_id) void cardFacts(card.tcg_id).then((f) => setFacts({ facts: f }));
+        if (facts === null && card.tcg_id) void cardFacts(card.tcg_id, card.language).then((f) => setFacts({ facts: f }));
     };
 
     return (
