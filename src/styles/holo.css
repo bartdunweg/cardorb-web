@@ -4,6 +4,7 @@
    that opens it, so its CSS now travels with it. Same layer as before: components, so preflight
    loses to it and our utilities on the same elements still win. */
 @import "./vendor/pokemon-cards-css/index.css" layer(components);
+@import "./holo-pattern.css" layer(components);
 
 /* The card in its sheet, wearing the vendored effect: the corner and the ratio the rest of the app
    draws a card with. A finger on the card drives the card and nothing else: with pan-y a vertical

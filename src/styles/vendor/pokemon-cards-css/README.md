@@ -5,7 +5,9 @@ The holographic card effect on the card in the detail sheet.
 - Source: https://github.com/simeydotme/pokemon-cards-css, commit `acb1197633e749a1fba4412231db2f6581586d00`
 - Author: Simon Goellner (@simeydotme). Licence: GPL-3.0, in `LICENSE` beside this file.
 - Textures under `public/holo/` come from the source's `public/img/`; the source credits
-  aschefield101 (galaxy holo, not used here) and Vecteezy (backgrounds).
+  aschefield101 (galaxy holo, not used here) and Vecteezy (backgrounds). `public/holo/patterns/`
+  is not from the source: those symbols and `src/styles/holo-pattern.css`, which draws them over a
+  patterned reverse, are Cardorb's own and leave every file here untouched.
 
 Only the CSS is taken. The interaction (pointer, gyroscope, springs) is Cardorb's own hook in
 `src/lib/holo/`. The per-card foil and mask images the source loads from its CDN are not used:

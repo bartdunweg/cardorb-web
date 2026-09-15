@@ -1,4 +1,4 @@
-import { isReverseFinish } from "@/lib/api-shapes";
+import { type PATTERNED_REVERSES, isPatternedReverse, isReverseFinish } from "@/lib/api-shapes";
 
 /**
  * Which holographic treatment a card gets in its sheet.
@@ -22,6 +22,12 @@ export type HoloVariant = {
     subtypes: string;
     /** `data-supertype`: "pokémon" or "trainer", with the accent the CSS matches. */
     supertype: "pokémon" | "trainer";
+    /**
+     * `data-pattern`: the symbol a patterned reverse's foil is drawn with (holo-pattern.css), or
+     * null. Only where the picture on show is the plain scan: a printing's own photo already
+     * carries its balls, and a drawn pattern over it would print them twice.
+     */
+    pattern: (typeof PATTERNED_REVERSES)[number] | null;
     /** Trainer Gallery printings (TG/GG numbers) get their own foils. */
     trainerGallery: boolean;
     /** The card's types as the CSS's class names; only the ones it knows. */
@@ -171,14 +177,17 @@ export function holoVariant(
     rarity: string | null | undefined,
     finish: string | null | undefined,
     facts: { stage: string | null; hp?: number | null } | null | undefined,
-    card: { number?: string | null; types?: string[] | null; gen?: string | null } = {},
+    /** `ownPhoto`: the picture on show is the printing's own photo, not the card's scan. */
+    card: { number?: string | null; types?: string[] | null; gen?: string | null; ownPhoto?: boolean } = {},
     /** What the copy itself says its foil is, where anything recorded it. */
     foilPattern?: string | null,
 ): HoloVariant {
     const key = (rarity ?? "").trim().toLowerCase();
     let family = FAMILY[key] ?? "common";
-    // A Poké Ball, Friend Ball, Team Rocket, Energy Symbol or other patterned copy is a reverse holo with a pattern: the reverse effect, for now without the pattern.
-    if (isReverseFinish(finish) && REVERSIBLE.has(family)) family = `${family} reverse holo`;
+    // A Poké Ball, Friend Ball, Team Rocket, Energy Symbol or other patterned copy is a reverse holo
+    // with a pattern: the reverse effect, and the pattern drawn over it where no photo shows one.
+    const reverse = isReverseFinish(finish) && REVERSIBLE.has(family);
+    if (reverse) family = `${family} reverse holo`;
     else if (finish === "holo" && PLAIN.has(family) && key !== "promo") family = "rare holo";
     // The sheen is Sword & Shield's; every holo before it was the starry cosmos foil. That is a
     // guess from the era, and it is only a guess: modern sets print cosmos cards too. A copy that
@@ -195,6 +204,7 @@ export function holoVariant(
     const trainer = fullArtTrainer || (facts != null && facts.hp == null && !facts.stage);
     return {
         rarity: family,
+        pattern: reverse && isPatternedReverse(finish) && !card.ownPhoto ? (finish as (typeof PATTERNED_REVERSES)[number]) : null,
         style: windowStyle(card.gen, trainer),
         subtypes: trainer ? "supporter" : stageSubtype(facts?.stage),
         supertype: trainer ? "trainer" : "pokémon",

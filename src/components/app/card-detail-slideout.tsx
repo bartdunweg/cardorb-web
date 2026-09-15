@@ -1139,6 +1139,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                             number={card.number}
                                             types={card.types}
                                             gen={card.gen}
+                                            ownPhoto={Boolean(printing?.image)}
                                             tilt={tiltGranted}
                                             className="w-full"
                                         >

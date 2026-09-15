@@ -181,3 +181,26 @@ describe("a copy that knows its own foil", () => {
         expect(holoVariant("Secret Rare", "holo", null, { gen: "Scarlet & Violet" }, "cosmos").rarity).toBe("rare secret");
     });
 });
+
+describe("a patterned reverse", () => {
+    it("draws its symbol where the picture on show is the plain scan", () => {
+        expect(holoVariant("Common", "poke-ball", null).pattern).toBe("poke-ball");
+        expect(holoVariant("Rare", "master-ball", null, { ownPhoto: false }).pattern).toBe("master-ball");
+        expect(holoVariant("Uncommon", "team-rocket", null).pattern).toBe("team-rocket");
+        expect(holoVariant("Common", "energy-symbol", null).pattern).toBe("energy-symbol");
+        expect(holoVariant("Rare Holo", "love-ball", null).pattern).toBe("love-ball");
+    });
+
+    it("leaves the pattern to a printing's own photo, which already shows it", () => {
+        const v = holoVariant("Common", "poke-ball", null, { ownPhoto: true });
+        expect(v.pattern).toBeNull();
+        expect(v.rarity).toBe("common reverse holo");
+    });
+
+    it("draws nothing on a plain reverse, a holo, or a family no reverse is printed for", () => {
+        expect(holoVariant("Common", "reverse-holo", null).pattern).toBeNull();
+        expect(holoVariant("Rare", "holo", null).pattern).toBeNull();
+        expect(holoVariant("Common", null, null).pattern).toBeNull();
+        expect(holoVariant("Ultra Rare", "poke-ball", null).pattern).toBeNull();
+    });
+});

@@ -1,0 +1,63 @@
+/* A patterned reverse's symbol, drawn in the foil where the picture on show is the plain scan
+   (holoVariant's `pattern`). Cardorb's own layer on top of the vendored reverse holo, not part of
+   it: the library has no ball pattern. The symbols are our own drawings in public/holo/patterns,
+   one tile of two staggered symbols each, their pale colours a hint of the ball and nothing more.
+
+   The tile is the background and the mask both, at the same size and origin, so a sheen can run
+   over the symbols without touching the card between them. The mask's second image is the light:
+   full under the pointer, a third of it far away, so the pattern shows faintly on a card at rest
+   and lights up where the card is tilted to. It moves only when the hook writes a new pointer,
+   so reduced motion gets a still pattern without a rule of its own. */
+.card[data-pattern] .card__pattern {
+    --pattern-size: 32% auto;
+
+    z-index: 3;
+    transform: translateZ(1.2px);
+    background-image:
+        linear-gradient(-45deg, transparent 30%, hsl(0 0% 100% / 0.85) 45%, hsl(190 100% 85% / 0.7) 50%, hsl(300 100% 88% / 0.7) 55%, transparent 70%),
+        var(--pattern);
+    background-repeat: no-repeat, repeat;
+    background-size:
+        300% 300%,
+        var(--pattern-size);
+    background-position:
+        calc(100% * var(--pointer-from-left)) calc(100% * var(--pointer-from-top)),
+        0 0;
+    mask-image: var(--pattern), radial-gradient(farthest-corner circle at var(--pointer-x) var(--pointer-y), #000 10%, rgb(0 0 0 / 0.35) 75%);
+    mask-repeat: repeat, no-repeat;
+    mask-size:
+        var(--pattern-size),
+        100% 100%;
+    mask-position:
+        0 0,
+        0 0;
+    mask-composite: intersect;
+    mix-blend-mode: screen;
+    opacity: calc(0.3 + 0.5 * var(--card-opacity));
+    clip-path: var(--clip-invert);
+}
+
+.card[data-pattern="poke-ball"] {
+    --pattern: url("/holo/patterns/poke-ball.svg");
+}
+.card[data-pattern="master-ball"] {
+    --pattern: url("/holo/patterns/master-ball.svg");
+}
+.card[data-pattern="friend-ball"] {
+    --pattern: url("/holo/patterns/friend-ball.svg");
+}
+.card[data-pattern="love-ball"] {
+    --pattern: url("/holo/patterns/love-ball.svg");
+}
+.card[data-pattern="quick-ball"] {
+    --pattern: url("/holo/patterns/quick-ball.svg");
+}
+.card[data-pattern="dusk-ball"] {
+    --pattern: url("/holo/patterns/dusk-ball.svg");
+}
+.card[data-pattern="energy-symbol"] {
+    --pattern: url("/holo/patterns/energy-symbol.svg");
+}
+.card[data-pattern="team-rocket"] {
+    --pattern: url("/holo/patterns/team-rocket.svg");
+}
