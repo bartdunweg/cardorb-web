@@ -16,26 +16,6 @@ import { PublicTopBar } from "@/components/app/public-top-bar";
 export const HeroGeometricShapes04 = () => {
     return (
         <div className="relative flex min-h-dvh flex-col overflow-hidden bg-primary">
-            {/* Background dot grid. The kit's own copy of the pattern, served from /public rather than
-                fetched from untitledui.com: the pages you click here from (sign out, the logo on
-                /login) carry a script-and-image policy that names the card hosts and not that one,
-                and a click keeps the document, so the browser refused the picture without a word
-                until a refresh. 'self' covers a file of ours on every page. */}
-            <img
-                alt="Grid of dots"
-                aria-hidden="true"
-                loading="lazy"
-                src="/patterns/grid-dot-sm-desktop.svg"
-                className="pointer-events-none absolute top-0 left-1/2 z-0 hidden max-w-none -translate-x-1/2 md:block dark:brightness-[0.2]"
-            />
-            <img
-                alt="Grid of dots"
-                aria-hidden="true"
-                loading="lazy"
-                src="/patterns/grid-dot-sm-mobile.svg"
-                className="pointer-events-none absolute top-0 left-1/2 z-0 max-w-none -translate-x-1/2 md:hidden dark:brightness-[0.2]"
-            />
-
             <PublicTopBar />
 
             {/* The words first, centered, then the product under them at full width: the dashboard
