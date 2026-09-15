@@ -961,6 +961,8 @@ const moverSchema = z.object({
     setAbbr: nullable(z.string()).optional(),
     /** The number as the card prints it; absent from an API before its printedNumber. */
     printedNumber: nullable(z.string()).optional(),
+    /** The rarity of the printing held; absent from an API before it sent one. */
+    rarity: nullable(z.string()).optional(),
     image: nullable(z.string()),
     copies: z.number(),
     was: z.number(),

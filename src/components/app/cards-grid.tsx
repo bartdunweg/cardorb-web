@@ -13,7 +13,7 @@ import { PriceChangeLine } from "@/components/app/price-change";
 import { TileIconButton } from "@/components/app/tile-icon-button";
 import { useCopySteps } from "@/components/app/use-copy-steps";
 import type { PriceChange } from "@/lib/api-shapes";
-import { cardLabel } from "@/lib/card-label";
+import { cardLine } from "@/lib/card-label";
 import type { PublicCard } from "@/lib/cards";
 import { type CardsSize, GRID_COLUMNS, TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
 import { formatPrice } from "@/lib/format";
@@ -173,7 +173,7 @@ function GridCell<T extends GridCard>({
                             {/* A copy in another language wears its flag; English, which nearly every card is, stays plain. */}
                             {"language" in card && typeof card.language === "string" && card.language !== "en" ? <FlagIcon language={card.language} /> : null}
                         </span>
-                        <span className="truncate text-xs text-tertiary">{cardLabel(card)}</span>
+                        <span className="truncate text-xs text-tertiary">{cardLine(card)}</span>
                         {/* What one is worth, then how many you hold: the price on the left under the name it
                             belongs to, the count against the right edge, as a set tile has them (Bart's call,
                             2026-09-13). A card is listed once however many copies you have, so without the
