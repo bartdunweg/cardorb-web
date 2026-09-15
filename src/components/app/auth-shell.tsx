@@ -2,13 +2,14 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
-import { OrbLogo } from "./orb-logo";
+import { Orb } from "./orb";
 
 /**
  * The frame around every page you are not signed in on: sign in, sign up, forgot and reset.
  *
- * One centred column: the logo (64 px), the wordmark, a heading and a line of its own, then
- * whatever the page asks for, no marketing panel beside it. The four pages were the same thirteen
+ * One centred column: the moving orb at the size the landing page shows it on a phone (160 px),
+ * the wordmark, a heading and a line of its own, then whatever the page asks for, no marketing
+ * panel beside it. The four pages were the same thirteen
  * lines of markup four times, and a change to the frame had to be made four times or the pages
  * drifted apart.
  *
@@ -32,7 +33,7 @@ export function AuthShell({
         <div className="flex flex-1 items-center justify-center px-4 py-12 md:px-8">
             <div className="flex w-full flex-col gap-8 sm:max-w-90">
                 <div className="flex flex-col items-center gap-6 text-center">
-                    <OrbLogo size={64} className="text-primary" />
+                    <Orb size={160} className="text-primary" />
                     <Link href="/" className="text-lg font-semibold text-primary transition hover:opacity-70">
                         Cardorb
                     </Link>
