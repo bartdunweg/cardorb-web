@@ -121,3 +121,33 @@ export function priceSeriesOf(finish: Finish, edition: Edition | null, series: R
     if (edition === "unlimited") return foil ? pickFirst("unlimited-holofoil", "holofoil") : pickFirst("unlimited", "normal");
     return foil ? pickFirst("holofoil") : pickFirst("normal");
 }
+
+/**
+ * The price series and the price the sheet shows for the printing and run pressed under the card.
+ *
+ * `price` undefined is "the copy's own price" (nothing pressed away from the opening choice); null is
+ * "that printing has none". A foil pattern print reads its own product's figure where the catalogue
+ * sent one (it does not for a card you hold), and its line's latest day otherwise (cardorb-api#512:
+ * Charmander's cosmos holo read "No price for this printing" over a line ending at €2.58).
+ */
+export function pressedPrinting({
+    pressedAway,
+    finish,
+    edition,
+    foilPattern,
+    latest,
+    patternPrice,
+}: {
+    pressedAway: boolean;
+    finish: Finish;
+    edition: Edition | null;
+    foilPattern: string | null;
+    /** The card's latest day of readings, per printing. */
+    latest: Record<string, number> | undefined;
+    patternPrice: number | null | undefined;
+}): { series: string | null; price: number | null | undefined } {
+    if (!pressedAway) return { series: null, price: undefined };
+    const series = latest ? priceSeriesOf(finish, edition, new Set(Object.keys(latest)), foilPattern) : null;
+    const fromLine = series ? (latest?.[series] ?? null) : null;
+    return { series, price: foilPattern ? (patternPrice ?? fromLine) : fromLine };
+}

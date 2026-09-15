@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { editionChoices, openingChoice, priceSeriesOf, printingChoices } from "./printing-choices";
+import { editionChoices, openingChoice, pressedPrinting, priceSeriesOf, printingChoices } from "./printing-choices";
 
 const POKE = "https://images.cardorb.com/tcgplayer/566553.jpg";
 
@@ -94,5 +94,28 @@ describe("priceSeriesOf", () => {
 describe("openingChoice with a usual one", () => {
     it("opens on the usual run where there is no copy", () => {
         expect(openingChoice([{ key: "1st-edition" }, { key: "unlimited" }], null, "unlimited")).toBe("unlimited");
+    });
+});
+
+describe("pressedPrinting", () => {
+    const latest = { holofoil: 752, "reverse-holofoil": 4.1, "cosmos-holofoil": 2.58, "1st-edition-holofoil": 8657 };
+    const base = { finish: "holo" as const, edition: null, foilPattern: null, latest, patternPrice: undefined };
+
+    it("is the copy's own price while nothing is pressed away", () => {
+        expect(pressedPrinting({ ...base, pressedAway: false })).toEqual({ series: null, price: undefined });
+    });
+
+    it("reads the pressed finish or run from the latest day", () => {
+        expect(pressedPrinting({ ...base, pressedAway: true, finish: "reverse-holo" })).toEqual({ series: "reverse-holofoil", price: 4.1 });
+        expect(pressedPrinting({ ...base, pressedAway: true, edition: "1st-edition" })).toEqual({ series: "1st-edition-holofoil", price: 8657 });
+    });
+
+    it("reads a pattern print's own figure first, then its line", () => {
+        expect(pressedPrinting({ ...base, pressedAway: true, foilPattern: "cosmos", patternPrice: 2.9 })).toEqual({ series: "cosmos-holofoil", price: 2.9 });
+        expect(pressedPrinting({ ...base, pressedAway: true, foilPattern: "cosmos" })).toEqual({ series: "cosmos-holofoil", price: 2.58 });
+    });
+
+    it("has no price for a printing the history does not have", () => {
+        expect(pressedPrinting({ ...base, pressedAway: true, finish: "master-ball" })).toEqual({ series: null, price: null });
     });
 });

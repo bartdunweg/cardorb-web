@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { average30, holdRecoveredDips, priceChange, printingsOfLine, trustedStretch } from "./price-change";
+import { average30, chartLine, holdRecoveredDips, priceChange, printingsOfLine, trustedStretch } from "./price-change";
 
 describe("priceChange", () => {
     it("says how far above the 30-day average the price sits, with the sign in the words", () => {
@@ -179,5 +179,19 @@ describe("holdRecoveredDips", () => {
             ["2026-01-02", 50],
         ]);
         expect(holdRecoveredDips(open)).toEqual(open);
+    });
+});
+
+describe("chartLine", () => {
+    const points = (key: string, values: number[]) =>
+        values.map((v, i) => ({ date: `2026-01-${String(i + 1).padStart(2, "0")}`, market: null, holo: null, printings: { [key]: v } }));
+    const figures = [400, 5266, 3563, 3622, 8480, 8600];
+
+    it("starts a scarce run's line after its last doubling", () => {
+        expect(chartLine(points("1st-edition-holofoil", figures), "1st-edition-holofoil", false).map((p) => p.value)).toEqual([8480, 8600]);
+    });
+
+    it("keeps any other printing's line whole under the same figures, where only one jump is five times", () => {
+        expect(chartLine(points("holofoil", figures), "holofoil", false).map((p) => p.value)).toEqual(figures);
     });
 });

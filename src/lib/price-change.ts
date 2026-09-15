@@ -53,14 +53,34 @@ export function average30(points: PriceLinePoint[], today: string, holo: boolean
     const from = new Date(`${today}T00:00:00Z`);
     from.setUTCDate(from.getUTCDate() - 30);
     const since = from.toISOString().slice(0, 10);
-    const line = points
-        .filter((p) => p.date <= today)
-        .map((p) => ({ date: p.date, value: valueOf(p, printing, holo) }))
-        .filter((p): p is { date: string; value: number } => p.value != null);
-    const values = holdRecoveredDips(line)
+    const values = priceLine(
+        points.filter((p) => p.date <= today),
+        printing,
+        holo,
+    )
         .filter((p) => p.date >= since)
         .map((p) => p.value);
     return values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
+}
+
+/**
+ * One printing's line as every reading of it says: its figure each day it has one (valueOf), with a
+ * dip that came back held at its level (holdRecoveredDips). What the arrow beside the price averages
+ * and what the chart draws from, so the two never apply the rules apart.
+ */
+export function priceLine(points: PriceLinePoint[], printing: string | null, holo: boolean): { date: string; value: number }[] {
+    return holdRecoveredDips(
+        points.map((p) => ({ date: p.date, value: valueOf(p, printing, holo) })).filter((p): p is { date: string; value: number } => p.value != null),
+    );
+}
+
+/**
+ * The line a card's chart draws: `priceLine`, from its last jump where it contradicts itself
+ * (trustedStretch), with the lower bar for a 1st Edition or Shadowless run. A held dip is no jump
+ * to start from, so the dips are held first.
+ */
+export function chartLine(points: PriceLinePoint[], printing: string | null, holo: boolean): { date: string; value: number }[] {
+    return trustedStretch(priceLine(points, printing, holo), isScarceRun(printing) ? SCARCE_RUN_JUMP_RATIO : undefined);
 }
 
 /** One day of a card's price line as the API answers it. */
@@ -148,8 +168,8 @@ export function trustedStretch<T extends { value: number }>(line: T[], ratio = J
 }
 
 /** A scarce run's key: the 1st Edition and Shadowless printings, which draw from their last doubling. */
-export const SCARCE_RUN_JUMP_RATIO = 2;
-export const isScarceRun = (printing: string | null | undefined): boolean => !!printing && /^(1st-edition|shadowless)/.test(printing);
+const SCARCE_RUN_JUMP_RATIO = 2;
+const isScarceRun = (printing: string | null | undefined): boolean => !!printing && /^(1st-edition|shadowless)/.test(printing);
 
 /** How far a figure falls (or rises by the inverse) from the level before it to count as a dip. */
 const DIP = 0.6;

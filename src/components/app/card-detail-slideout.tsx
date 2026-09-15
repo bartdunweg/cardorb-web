@@ -29,7 +29,7 @@ import { CopyCard } from "@/components/app/copy-card";
 import { CopyFormDialog } from "@/components/app/copy-form-dialog";
 import { HoloCard } from "@/components/app/holo-card";
 import { MarkOwnedDialog } from "@/components/app/mark-owned-dialog";
-import { editionChoices, openingChoice, priceSeriesOf, printingChoices } from "@/components/app/printing-choices";
+import { editionChoices, openingChoice, pressedPrinting, printingChoices } from "@/components/app/printing-choices";
 import { SEGMENT_SELECTED } from "@/components/app/segment-selected";
 import { SheetActionBar } from "@/components/app/sheet-action-bar";
 import { SheetBar } from "@/components/app/sheet-bar";
@@ -638,29 +638,17 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
      * "that printing has none".
      */
     const pressedAway = (printing && printingKey !== openingPrinting) || (editionKey && editionKey !== openingEdition);
-    const latest = points.at(-1);
-    const shownSeries =
-        pressedAway && latest?.printings
-            ? priceSeriesOf(
-                  printing?.finish ?? (mine?.finish as Finish | null) ?? "normal",
-                  edition,
-                  new Set(Object.keys(latest.printings)),
-                  printing?.foilPattern ?? null,
-              )
-            : null;
     const patternPrice = printing?.foilPattern
         ? known?.patternPrints?.prints.find((p) => p.finish === printing.finish && p.foilPattern === printing.foilPattern)?.price?.market
         : undefined;
-    const shownPrice: number | null | undefined = !pressedAway
-        ? undefined
-        : printing?.foilPattern
-          ? /* The print's own product where the catalogue sent it; on a card you hold it does not, and
-               the print's line has its latest day since cardorb-api#512 (Charmander's cosmos holo read
-               "No price for this printing" over a line ending at €2.58). */
-            (patternPrice ?? (shownSeries ? (latest?.printings?.[shownSeries] ?? null) : null))
-          : shownSeries
-            ? (latest?.printings?.[shownSeries] ?? null)
-            : null;
+    const { series: shownSeries, price: shownPrice } = pressedPrinting({
+        pressedAway: !!pressedAway,
+        finish: printing?.finish ?? (mine?.finish as Finish | null) ?? "normal",
+        edition,
+        foilPattern: printing?.foilPattern ?? null,
+        latest: points.at(-1)?.printings,
+        patternPrice,
+    });
     const shownChange = pressedAway
         ? shownPrice != null && shownSeries
             ? priceChange(shownPrice, average30(points, new Date().toISOString().slice(0, 10), false, shownSeries))
