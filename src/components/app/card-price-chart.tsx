@@ -5,7 +5,7 @@ import type { PricePoint } from "@/app/(app)/dashboard/cards/actions";
 import { knownPriceHistory, preloadPriceHistory } from "@/components/app/card-memo";
 import { ChartPeriods, ChartPrintings, type PeriodKey, forChart } from "@/components/app/chart-periods";
 import { CHART_HEIGHT, ValueChart } from "@/components/app/value-chart";
-import { printingsOfLine, valueOf } from "@/lib/price-change";
+import { printingsOfLine, trustedStretch, valueOf } from "@/lib/price-change";
 import type { ValueSnapshot } from "@/lib/value-history";
 
 /**
@@ -66,10 +66,9 @@ export function CardPriceChart({
     const printings = printingsOfLine(points);
     const own = printing && printings.some((p) => p.key === printing) ? printing : null;
     const chosen = picked?.tcgId === tcgId && printings.some((p) => p.key === picked.key) ? picked.key : own;
-    const series: ValueSnapshot[] = points
-        .map((p) => ({ date: p.date, value: valueOf(p, chosen, holo) }))
-        .filter((p): p is { date: string; value: number } => p.value != null)
-        .map((p) => ({ ...p, cards: 1, priced: 1, unpriced: 0 }));
+    const series: ValueSnapshot[] = trustedStretch(
+        points.map((p) => ({ date: p.date, value: valueOf(p, chosen, holo) })).filter((p): p is { date: string; value: number } => p.value != null),
+    ).map((p) => ({ ...p, cards: 1, priced: 1, unpriced: 0 }));
 
     const shown = forChart(series, period);
     const label = printings.find((p) => p.key === chosen)?.label;
