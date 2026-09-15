@@ -77,6 +77,14 @@ describe("priceSeriesOf", () => {
         expect(priceSeriesOf("poke-ball", null, modern)).toBe("poke-ball-reverse-holofoil");
     });
 
+    // cardorb-api#512: a cosmos or cracked ice print has its own series since 2026-09-15.
+    it("reads a foil pattern print's own series, and none where the history has not got it yet", () => {
+        const patterned = new Set(["holofoil", "cosmos-holofoil", "cracked-ice-reverse-holofoil"]);
+        expect(priceSeriesOf("holo", null, patterned, "cosmos")).toBe("cosmos-holofoil");
+        expect(priceSeriesOf("reverse-holo", null, patterned, "cracked-ice")).toBe("cracked-ice-reverse-holofoil");
+        expect(priceSeriesOf("holo", null, patterned, "cracked-ice")).toBeNull();
+    });
+
     it("has no series where the history has none", () => {
         expect(priceSeriesOf("master-ball", null, modern)).toBeNull();
         expect(priceSeriesOf("holo", "1st-edition", modern)).toBeNull();

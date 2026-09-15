@@ -627,7 +627,12 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const latest = points.at(-1);
     const shownSeries =
         pressedAway && latest?.printings
-            ? priceSeriesOf(printing?.finish ?? (mine?.finish as Finish | null) ?? "normal", edition, new Set(Object.keys(latest.printings)))
+            ? priceSeriesOf(
+                  printing?.finish ?? (mine?.finish as Finish | null) ?? "normal",
+                  edition,
+                  new Set(Object.keys(latest.printings)),
+                  printing?.foilPattern ?? null,
+              )
             : null;
     const patternPrice = printing?.foilPattern
         ? known?.patternPrints?.prints.find((p) => p.finish === printing.finish && p.foilPattern === printing.foilPattern)?.price?.market

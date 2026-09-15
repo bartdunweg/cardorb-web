@@ -105,11 +105,14 @@ export function openingChoice<C extends { key: string }>(
  *
  * Bart, 2026-09-15: the price above follows the printing pressed below. TCGplayer files a run apart
  * only on the cards printed in more than one ("1st-edition-holofoil" beside "unlimited-holofoil");
- * everywhere else a finish is its own series ("reverse-holofoil", "poke-ball-reverse-holofoil").
+ * everywhere else a finish is its own series ("reverse-holofoil", "poke-ball-reverse-holofoil"), and a foil
+ * pattern print its own ("cosmos-holofoil").
  */
-export function priceSeriesOf(finish: Finish, edition: Edition | null, series: ReadonlySet<string>): string | null {
+export function priceSeriesOf(finish: Finish, edition: Edition | null, series: ReadonlySet<string>, foilPattern: string | null = null): string | null {
     const foil = finish !== "normal";
     const pickFirst = (...keys: string[]) => keys.find((k) => series.has(k)) ?? null;
+    // A cosmos or cracked ice print: its own product, stored as "cosmos-holofoil" since cardorb-api#512.
+    if (foilPattern) return pickFirst(`${foilPattern}-${finish === "holo" ? "holofoil" : finish === "reverse-holo" ? "reverse-holofoil" : "normal"}`);
     if (edition === "1st-edition") return pickFirst(foil ? "1st-edition-holofoil" : "1st-edition");
     if (edition === "shadowless") return pickFirst(foil ? "shadowless-holofoil" : "shadowless");
     if (edition === "blue-border") return pickFirst("blue-border");
