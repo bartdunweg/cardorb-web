@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { startTransition, useActionState, useEffect, useRef, useState } from "react";
 import { CheckCircle, Circle, Mail01 } from "@untitledui/icons";
 import { type AuthState, signUp } from "@/app/(auth)/actions";
 import { AuthEmailField, AuthShell } from "@/components/app/auth-shell";
@@ -61,7 +61,20 @@ export const SignupForm = () => {
             subtitle="Create your account to start managing your collection."
             footer={{ question: "Already have an account?", href: "/login", label: "Sign in" }}
         >
-            <form action={formAction} className="flex flex-col gap-6">
+            {/* Once the page runs, the submit is taken by hand: React resets a form after its action,
+                and the kit's fields listen for that reset and hand their empty start value back
+                through onChange, so an answer from the server emptied both fields, state and all.
+                `action` stays for the moment before that: without it the browser sent the form as a
+                GET, the password in the address bar. */}
+            <form
+                action={formAction}
+                className="flex flex-col gap-6"
+                onSubmit={(event) => {
+                    event.preventDefault();
+                    const data = new FormData(event.currentTarget);
+                    startTransition(() => formAction(data));
+                }}
+            >
                 <div className="flex flex-col gap-5">
                     <AuthEmailField value={email} onChange={setEmail} />
                     <TextField isRequired size="lg" name="password" value={password} onChange={setPassword} minLength={MIN_PASSWORD}>
@@ -82,6 +95,22 @@ export const SignupForm = () => {
                 </div>
 
                 {state && "error" in state && <FormError error={state.error} />}
+
+                {/* The address has an account and the password was not its own. Said outright, as
+                    DoorDash, Credit Karma and ElevenLabs do, with both ways on from here beside it. */}
+                {state && "existing" in state && (
+                    <div role="alert" className="flex flex-col gap-2">
+                        <p className="text-sm text-error-primary">You already have an account with this email.</p>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1">
+                            <Button href="/login" color="link-color" size="md">
+                                Sign in
+                            </Button>
+                            <Button href="/forgot-password" color="link-color" size="md">
+                                Forgot password?
+                            </Button>
+                        </div>
+                    </div>
+                )}
 
                 <Button type="submit" size="lg" isLoading={pending} showTextWhileLoading>
                     {pending ? "Creating account…" : "Get started"}
