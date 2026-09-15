@@ -92,6 +92,10 @@ describe("ValueChart", () => {
             ["high", "€300.00"],
             ["low", "€90.00"],
         ]);
+        // Always at the left edge, the highest over the line and the lowest under it (Bart, 2026-09-15).
+        const [hi, lo] = [...container.querySelectorAll("text[data-extreme]")];
+        expect([hi.getAttribute("x"), lo.getAttribute("x")]).toEqual(["0", "0"]);
+        expect(Number(hi.getAttribute("y"))).toBeLessThan(Number(lo.getAttribute("y")));
         expect(getByText(/Highest €300\.00 on Sep 10, 2026, lowest €90\.00 on Sep 11, 2026\./)).toBeTruthy();
     });
 

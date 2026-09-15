@@ -8,39 +8,15 @@ export type Point = { x: number; y: number; index: number };
 export type Frame = { width: number; height: number; top: number; right: number; bottom: number; left: number };
 
 /**
- * Round tick values spanning the readings: a "nice" step (1, 2, 2.5, 5 × 10ⁿ) from the last round
- * number below the lowest reading to the first above the highest. Not from zero: a collection worth
- * €880 one night and €1,000 three weeks later has moved by an eighth, and on an axis that starts
- * at zero that movement is a flat line. The axis labels say where the floor is.
+ * The range the line is drawn over: exactly its lowest reading to its highest, so a week that rose
+ * starts at the bottom and ends at the top however little it moved (Bart, 2026-09-15: Home's 7 days
+ * read as a flat line). The figures at the chart's top left and bottom left say how much that is. A
+ * flat line gets a hair either side and sits in the middle.
  */
-export function niceTicks(min: number, max: number, count = 4): number[] {
-    if (!(max > min)) return [Math.floor(min), Math.floor(min) + 1];
-    const rough = (max - min) / count;
-    const magnitude = 10 ** Math.floor(Math.log10(rough));
-    const step = [1, 2, 2.5, 5, 10].map((m) => m * magnitude).find((s) => s >= rough) ?? magnitude * 10;
-    const floor = Math.floor(min / step) * step;
-    const ticks: number[] = [];
-    for (let v = floor; v < max; v += step) ticks.push(Math.round(v * 1000) / 1000);
-    ticks.push(Math.round((ticks[ticks.length - 1] + step) * 1000) / 1000);
-    return ticks;
-}
-
-/** The least a chart's height stands for, as a share of its highest reading. */
-const CALM_SPAN = 0.1;
-
-/**
- * The range the axis is drawn over: the readings' own, or at least a tenth of the highest reading,
- * widened evenly around the middle.
- *
- * The axis starts near the lowest reading rather than at zero, so a movement shows; with nothing more
- * a 1% wobble filled the whole height the way a doubling did (Bart, 2026-09-15: Charizard's 1st Edition
- * went from €8,548 to €8,657 in a month and read as a swing). With this, that month moves a tenth of it.
- */
-export function calmRange(min: number, max: number): [number, number] {
-    const least = Math.abs(max) * CALM_SPAN;
-    if (max - min >= least) return [min, max];
-    const middle = (min + max) / 2;
-    return [middle - least / 2, middle + least / 2];
+export function fullRange(min: number, max: number): [number, number] {
+    if (max > min) return [min, max];
+    const hair = Math.abs(max) * 0.01 || 1;
+    return [min - hair, max + hair];
 }
 
 /**

@@ -3,7 +3,7 @@
 import { type ReactNode, useCallback, useId, useRef, useState } from "react";
 import { BarChart01 } from "@untitledui/icons";
 import { formatCount, formatPrice } from "@/lib/format";
-import { type Frame, areaPath, calmRange, linePath, nearestIndex, niceTicks, pointsFor, smoothLine, yAt } from "@/lib/value-chart-math";
+import { type Frame, areaPath, fullRange, linePath, nearestIndex, pointsFor, smoothLine, yAt } from "@/lib/value-chart-math";
 import type { ValueSnapshot } from "@/lib/value-history";
 import { cx } from "@/utils/cx";
 
@@ -26,9 +26,10 @@ import { cx } from "@/utils/cx";
 const HEIGHT = 200;
 /** The height the chart takes, for a placeholder to hold while the readings are on their way. */
 export const CHART_HEIGHT = HEIGHT;
-// No axis: the highest and the lowest reading are written on the line, the tooltip says any point,
-// and the description says them all. The line runs edge to edge, the three dates sit under it. Room
-// above the line for the highest figure and under it for the lowest.
+// No axis: the line fills the height from its lowest reading to its highest, and those two figures
+// stand at the top left and the bottom left, always there, as a stocks app writes its range (Bart,
+// 2026-09-15). The tooltip says any point and the description says them all. The three dates sit
+// under the lowest figure.
 const FRAME: Omit<Frame, "width"> = { height: HEIGHT, top: 26, right: 0, bottom: 44, left: 0 };
 
 const day = new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short" });
@@ -92,9 +93,7 @@ export function ValueChart({
 
     const frame: Frame = { ...FRAME, width };
     const values = snapshots.map((s) => s.value);
-    const ticks = niceTicks(...calmRange(Math.min(...values), Math.max(...values)));
-    const yMin = ticks[0];
-    const yMax = ticks[ticks.length - 1];
+    const [yMin, yMax] = fullRange(Math.min(...values), Math.max(...values));
     const days = snapshots.map((s) => s.date);
     // Where each reading is, for the hover; and the line the pen draws, smoothed between the two ends
     // (smoothLine): about one point per 8 px, between 12 and 60.
@@ -240,17 +239,18 @@ export function ValueChart({
                             <path d={linePath(drawn)} className={strokeTone} strokeWidth={2} fill="none" strokeLinejoin="round" strokeLinecap="round" />
                         </g>
 
-                        {/* The figures sit clear of the edges: anchored to the side they are near. Hidden from a
-                            screen reader, which has them in the description. */}
+                        {/* The highest figure over the line's top, the lowest under its foot, both at the left edge:
+                            the same place on every chart, so the scale reads at a glance. Hidden from a screen
+                            reader, which has them in the description. */}
                         {points.length
                             ? extremes.map(({ i, kind }) => (
                                   <text
                                       key={kind}
                                       data-extreme={kind}
                                       aria-hidden="true"
-                                      x={points[i].x}
-                                      y={kind === "high" ? yAt(drawn, points[i].x) - 8 : yAt(drawn, points[i].x) + 16}
-                                      textAnchor={points[i].x < 48 ? "start" : points[i].x > width - 48 ? "end" : "middle"}
+                                      x={0}
+                                      y={kind === "high" ? frame.top - 10 : baseline + 16}
+                                      textAnchor="start"
                                       className="fill-text-secondary text-xs font-medium tabular-nums"
                                   >
                                       {formatPrice(snapshots[i].value)}
