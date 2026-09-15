@@ -1,35 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { areaPath, calmRange, linePath, nearestIndex, niceTicks, pointsFor, smoothLine, yAt } from "./value-chart-math";
+import { areaPath, fullRange, linePath, nearestIndex, pointsFor, smoothLine, yAt } from "./value-chart-math";
 
 const frame = { width: 100, height: 60, top: 10, right: 0, bottom: 10, left: 0 };
 
-describe("niceTicks", () => {
-    it("steps in round numbers from below the lowest reading to above the highest", () => {
-        expect(niceTicks(880, 1003)).toEqual([850, 900, 950, 1000, 1050]);
-        expect(niceTicks(0, 937)).toEqual([0, 250, 500, 750, 1000]);
-        expect(niceTicks(12, 40)).toEqual([10, 20, 30, 40]);
-    });
-
-    it("still draws an axis when every reading is the same", () => {
-        expect(niceTicks(500, 500)).toEqual([500, 501]);
-    });
-});
-
-describe("calmRange", () => {
-    // Bart, 2026-09-15: Charizard's 1st Edition moved 1% in a month (€8,548 to €8,657) and filled the
-    // whole chart, so a small wobble looked like a swing.
-    it("widens a range narrower than a tenth of its top, around its middle", () => {
-        const [min, max] = calmRange(8548, 8657);
-        expect(max - min).toBeCloseTo(865.7);
-        expect((min + max) / 2).toBeCloseTo((8548 + 8657) / 2);
-    });
-
-    it("leaves a range that already moves that much as it is", () => {
-        expect(calmRange(418, 772)).toEqual([418, 772]);
+describe("fullRange", () => {
+    // Bart, 2026-09-15: a week that rose starts low and ends high, however little it moved.
+    it("spans exactly the lowest to the highest reading", () => {
+        expect(fullRange(40100, 40180)).toEqual([40100, 40180]);
     });
 
     it("centres a flat line", () => {
-        expect(calmRange(500, 500)).toEqual([475, 525]);
+        expect(fullRange(500, 500)).toEqual([495, 505]);
+        expect(fullRange(0, 0)).toEqual([-1, 1]);
     });
 });
 
