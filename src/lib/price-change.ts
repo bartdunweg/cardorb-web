@@ -113,17 +113,72 @@ const JUMP_RATIO = 5;
  * and the API cannot tell which half is true (cardorb-api#493). Bart, 2026-09-15: hide the old part.
  * One jump alone stays drawn: a corrected link or a real move, and nothing after it says otherwise.
  * On 2026-09-15 this cut 6 of the 1,980 lines of the cards with a 1st Edition or Shadowless run.
+ *
+ * `ratio` is lower for a scarce run (SCARCE_RUN_JUMP_RATIO): the 1st Edition and Shadowless prints are
+ * where the old weekly readings disagree most, and Charizard's 1st Edition still opened at €3,600
+ * before its €8,480 in April (Bart, 2026-09-15: "begint laag"). At twice, 33 of those 1,041 lines start
+ * later; for every card it would have cut 561 lines in three months, so the bar stays at five there.
  */
-export function trustedStretch<T extends { value: number }>(line: T[]): T[] {
+export function trustedStretch<T extends { value: number }>(line: T[], ratio = JUMP_RATIO): T[] {
     let jumps = 0;
     let last = 0;
     for (let i = 1; i < line.length; i++) {
         const a = line[i - 1].value;
         const b = line[i].value;
-        if (Math.min(a, b) > 0 && Math.max(a, b) >= Math.min(a, b) * JUMP_RATIO) {
+        if (Math.min(a, b) > 0 && Math.max(a, b) >= Math.min(a, b) * ratio) {
             jumps++;
             last = i;
         }
     }
     return jumps >= 2 ? line.slice(last) : line;
+}
+
+/** A scarce run's key: the 1st Edition and Shadowless printings, which draw from their last doubling. */
+export const SCARCE_RUN_JUMP_RATIO = 2;
+export const isScarceRun = (printing: string | null | undefined): boolean => !!printing && /^(1st-edition|shadowless)/.test(printing);
+
+/** How far a figure falls (or rises by the inverse) from the level before it to count as a dip. */
+const DIP = 0.6;
+/** How near the level the figure after the dip must come back, either way. */
+const RECOVERED = 0.8;
+/** How long a dip may last, from its first figure to the figure that comes back. */
+const DIP_DAYS = 21;
+
+/**
+ * A price line with a dip that comes back held flat over it.
+ *
+ * A figure 40% or more under the level before it (or 1⅔ times over it), for as long as the figures
+ * stay that far off, and followed within three weeks by one back within 20% of that level, is one
+ * cheap copy sold or one hopeful sale: the price did not go there. Base Set Charizard's Shadowless run
+ * read €1,869, then €1,000 to €1,099 for eleven days from 31 August 2026 while copies in poor shape
+ * were listed, then €1,948, and the chart showed a collapse nobody could place (Bart, 2026-09-15).
+ * The level is held over it, the same way the line holds a figure until the next sale.
+ *
+ * A dip at the end of the line has nothing after it to come back to and stays drawn: it may be the
+ * new price. On English cards from June to September 2026 this held 2,457 figures in 507 of 35,832
+ * lines.
+ */
+export function holdRecoveredDips<T extends { date: string; value: number }>(line: T[]): T[] {
+    const time = (p: T) => Date.parse(`${p.date}T00:00:00Z`);
+    let out: T[] | null = null;
+    for (let i = 1; i < line.length; i++) {
+        const level = (out ?? line)[i - 1].value;
+        const off = (v: number) => v < level * DIP || v * DIP > level;
+        if (!(level > 0) || !off(line[i].value)) continue;
+        let j = i;
+        while (j + 1 < line.length && off(line[j + 1].value)) j++;
+        const back = line[j + 1];
+        if (!back || time(back) - time(line[i]) > DIP_DAYS * 86_400_000) {
+            i = j;
+            continue;
+        }
+        if (back.value < level * RECOVERED || back.value * RECOVERED > level) {
+            i = j;
+            continue;
+        }
+        out ??= [...line];
+        for (let k = i; k <= j; k++) out[k] = { ...line[k], value: level };
+        i = j;
+    }
+    return out ?? line;
 }
