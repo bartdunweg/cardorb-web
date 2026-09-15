@@ -37,12 +37,10 @@ describe("SetTile", () => {
         expect(screen.queryByRole("progressbar")).toBeNull();
     });
 
-    it("writes the release date under the name, after the set's own name where it has one", () => {
-        const { unmount } = render(<SetTile set={base} language="en" />);
-        expect(screen.getByText("Nov 8, 2024")).toBeInTheDocument();
-        unmount();
+    it("writes the release date under the name, and not the set's own Japanese name", () => {
         render(<SetTile set={{ ...base, localName: "超電ブレイカー" }} language="ja" />);
-        expect(screen.getByText("超電ブレイカー · Nov 8, 2024")).toBeInTheDocument();
+        expect(screen.getByText("Nov 8, 2024")).toBeInTheDocument();
+        expect(screen.queryByText(/超電ブレイカー/)).toBeNull();
     });
 
     it("draws the name's first word where there is no logo, and not the symbol", () => {
