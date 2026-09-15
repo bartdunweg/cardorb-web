@@ -7,7 +7,7 @@ vi.mock("@/lib/api", () => ({ ApiError: class extends Error {}, api }));
 vi.mock("@/lib/user-cache", () => ({ forgetMine: vi.fn(async () => undefined) }));
 vi.mock("next/cache", () => ({ unstable_cache: (fn: () => unknown) => fn, updateTag: vi.fn(), revalidatePath: vi.fn() }));
 
-const { addCard, rereadMine, searchPokemon, setCopies } = await import("./actions");
+const { addCard, listSetRows, rereadMine, searchPokemon, setCopies } = await import("./actions");
 const { forgetMine } = await import("@/lib/user-cache");
 
 const tile = {
@@ -146,5 +146,25 @@ describe("setCopies", () => {
         expect(forgetMine).not.toHaveBeenCalled();
         await rereadMine();
         expect(forgetMine).toHaveBeenCalledTimes(1);
+    });
+});
+
+/* A set page's rows for its sheets: the set whole, held and wished for, in one answer each. */
+describe("listSetRows", () => {
+    it("asks the collection and the wishlist for the whole set", async () => {
+        api.mockImplementation(async () => ({ cards: [], total: 0 }));
+        expect(await listSetRows("Base Set")).toEqual([]);
+        const asked = (api.mock.calls as unknown as [string, { params: Record<string, unknown> }][]).map(([path, o]) => [path, o.params]);
+        expect(asked).toEqual([
+            ["/cards", expect.objectContaining({ set: "Base Set", owned: true, limit: 1000, facets: 0 })],
+            ["/cards", expect.objectContaining({ set: "Base Set", owned: false, limit: 1000, facets: 0 })],
+        ]);
+    });
+
+    it("answers null, not an empty set, where the API does not answer", async () => {
+        vi.spyOn(console, "error").mockImplementation(() => undefined);
+        api.mockReset().mockRejectedValueOnce(new Error("down")).mockResolvedValue({ cards: [], total: 0 });
+        expect(await listSetRows("Base Set")).toBeNull();
+        expect(await listSetRows("")).toBeNull();
     });
 });

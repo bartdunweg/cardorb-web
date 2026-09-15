@@ -1,5 +1,7 @@
-import { type CardFacts, type PricePoint, cardFacts, cardFactsMany, cardPriceHistory } from "@/app/(app)/dashboard/cards/actions";
+import { type CardFacts, type PricePoint, cardFacts, cardFactsMany, cardPriceHistory, listSetRows } from "@/app/(app)/dashboard/cards/actions";
 import { CARD_FACTS_BATCH } from "@/lib/api-shapes";
+import type { Card } from "@/lib/cards";
+import { type CardName, sameCard } from "@/lib/copies";
 
 /**
  * What the catalogue has said about a printing, kept for as long as the page lives.
@@ -138,8 +140,75 @@ export function warmCard(tcgId: string | null, language?: string | null) {
     void preloadPriceHistory(tcgId);
 }
 
+/*
+ * Your rows in a set, held and wished for: what a set page's sheet opens on and lists under Your
+ * copies. Unlike facts they are somebody's and change with every write, so they are kept for one
+ * drawing of the page only: the page warms them again each time it is drawn (a refresh after a
+ * write included), and a new warm forgets the old rows before its answer is in, so a sheet never
+ * opens on rows a write has made untrue. Keyed by the set's name as the set page has it.
+ */
+const ROWS_SEEN = new Map<string, Card[]>();
+const ROWS_ASKED = new Map<string, Promise<Card[] | null>>();
+/** The drawing of the page each set's rows were last asked for: the same drawing asks once. */
+const ROWS_DRAWING = new Map<string, object>();
+
+/**
+ * Every row of one set, in one request, once the page is drawn (listSetRows). A sheet opened on a
+ * card of it then has the card's row and its copies on its first paint, instead of reading them
+ * after the tap (1.3 s measured on Base Set, 2026-09-15). Nothing is awaited and nothing can fail.
+ */
+export function warmSetRows(set: string, drawing: object) {
+    if (!set || ROWS_DRAWING.get(set) === drawing) return;
+    ROWS_DRAWING.set(set, drawing);
+    ROWS_SEEN.delete(set);
+    const p = listSetRows(set)
+        .catch(() => null)
+        .then((rows) => {
+            // Only the latest warm writes: an older answer that lands after it is from before a write.
+            if (ROWS_ASKED.get(set) !== p) return rows;
+            ROWS_ASKED.delete(set);
+            if (rows) ROWS_SEEN.set(set, rows);
+            return rows;
+        });
+    ROWS_ASKED.set(set, p);
+}
+
+const rowsOf = (rows: Card[], card: CardName) => rows.filter((r) => sameCard(r, card));
+const setKeys = (card: CardName) => [card.set_name, card.set].filter((s): s is string => Boolean(s));
+
+/** A card's rows, held and wished, without asking: undefined where its set's rows are not in. */
+export function knownRows(card: CardName): Card[] | undefined {
+    for (const key of setKeys(card)) {
+        const rows = ROWS_SEEN.get(key);
+        if (rows) return rowsOf(rows, card);
+    }
+    return undefined;
+}
+
+/** A card's rows once its set's warm answers; undefined where none is out or it could not answer. */
+export function awaitRows(card: CardName): Promise<Card[] | undefined> | undefined {
+    for (const key of setKeys(card)) {
+        const asked = ROWS_ASKED.get(key);
+        if (asked) return asked.then((rows) => (rows ? rowsOf(rows, card) : undefined));
+    }
+    return undefined;
+}
+
+/** The copies a sheet has just read for a card, put in place of the ones kept, so the next open shows them. */
+export function rememberCopies(card: CardName, copies: Card[]) {
+    for (const key of setKeys(card)) {
+        const rows = ROWS_SEEN.get(key);
+        if (!rows) continue;
+        ROWS_SEEN.set(key, [...rows.filter((r) => !(r.owned && sameCard(r, card))), ...copies]);
+        return;
+    }
+}
+
 /** For tests: forget everything learned so far. */
 export function forgetCards() {
+    ROWS_SEEN.clear();
+    ROWS_ASKED.clear();
+    ROWS_DRAWING.clear();
     FACTS_SEEN.clear();
     FACTS_ASKED.clear();
     FACTS_PAGED.clear();

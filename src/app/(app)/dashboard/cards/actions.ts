@@ -457,6 +457,31 @@ export async function listRows(card: CardName): Promise<Card[]> {
     }
 }
 
+/** More rows than one set of yours holds in practice, and under the API's ceiling for an owner (2,000). */
+const SET_ROWS_LIMIT = 1000;
+
+/**
+ * Every row you hold or wish for in one set: the rows a set page's sheets open on, read once for the
+ * whole page (card-memo.ts `warmSetRows`) instead of `listRows` per card on each tap, which put the
+ * copies on screen over a second after the sheet (Bart, 2026-09-15). The same two reads `listRows`
+ * makes, with the number left off. Null where the answer is not the whole of it: a card missing
+ * from a partial answer would read as not held.
+ */
+export async function listSetRows(set: string): Promise<Card[] | null> {
+    const parsed = z.string().min(1).max(200).safeParse(set);
+    if (!parsed.success) return null;
+    try {
+        const ask = { set: parsed.data, facets: false, limit: SET_ROWS_LIMIT } as const;
+        const [held, wished] = await Promise.all([getMyCards(ask), getMyCards({ ...ask, wishlist: true })]);
+        // A full page is a page that may have more behind it. Not `total`: the API folds rows on its own, so it can count more than it sends.
+        if (held.cards.length >= SET_ROWS_LIMIT || wished.cards.length >= SET_ROWS_LIMIT) return null;
+        return [...held.cards, ...wished.cards];
+    } catch (err) {
+        console.error("Set rows unavailable:", err instanceof Error ? err.message : err);
+        return null;
+    }
+}
+
 const copyBody = z.object({ cardId: z.string().uuid(), count: z.number().int().min(1).max(999), edits: copyEdits });
 
 // One more copy of a row, as a row of its own, with these differences (none is one more of the same).
