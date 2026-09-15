@@ -161,7 +161,7 @@ function MoverList({
                                     <span className="truncate text-sm font-medium text-primary">{m.name}</span>
                                     <span className="truncate text-xs text-tertiary">
                                         {/* The code and number printed on the card, as the lists show them (card-label.ts). */}
-                                        {cardLabel({ set_name: m.set, set_abbr: m.setAbbr ?? null, number: m.number }, "md")}
+                                        {cardLabel({ set_name: m.set, set_abbr: m.setAbbr ?? null, number: m.number, printed_number: m.printedNumber ?? null })}
                                         {m.copies > 1 ? ` · ×${m.copies}` : ""}
                                     </span>
                                 </div>

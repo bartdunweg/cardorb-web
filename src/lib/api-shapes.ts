@@ -131,6 +131,8 @@ export const cardItemSchema = z.object({
     set: z.string(),
     setTitle: z.string(),
     setAbbr: nullable(z.string()),
+    /** The number as the card prints it ("XY124", "085"); absent from an API before its printedNumber. */
+    printedNumber: nullable(z.string()).optional(),
     rarity: nullable(z.string()),
     gen: nullable(z.string()),
     type: nullable(z.string()),
@@ -230,6 +232,8 @@ export type Card = {
     /** The set as the API addresses it, for asking after this card's other rows. */
     set: string | null;
     number: string | null;
+    /** The number as the card prints it ("XY124", "085"); a row's `number` can be stripped ("124"). Absent where nothing said. */
+    printed_number?: string | null;
     rarity: string | null;
     gen: string | null;
     types: string[] | null;
@@ -348,6 +352,7 @@ export const cardFromItem = (item: CardItem): Card => ({
     local_name: item.localName ?? null,
     set_name: item.setTitle || item.set || null,
     set_abbr: item.setAbbr ?? null,
+    printed_number: item.printedNumber ?? null,
     set: item.set || null,
     number: item.number || null,
     rarity: item.rarity,
@@ -943,6 +948,8 @@ const moverSchema = z.object({
     set: z.string(),
     /** The code printed on the card; absent from an API before cardorb-api#471. */
     setAbbr: nullable(z.string()).optional(),
+    /** The number as the card prints it; absent from an API before its printedNumber. */
+    printedNumber: nullable(z.string()).optional(),
     image: nullable(z.string()),
     copies: z.number(),
     was: z.number(),
