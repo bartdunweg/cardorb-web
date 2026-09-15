@@ -44,15 +44,22 @@ export function priceChange(price: number | null | undefined, avg30: number | nu
  * TCGplayer price. The series is the copy's own printing where it is known, so the arrow compares
  * the price above it with the same printing's month: ex8-15's holo at €22.51 read "+648%" against
  * a stray plain series at €3 (pricing audit, 2026-09-14). Null without a single point in the window.
+ *
+ * With a dip that came back held at its level first (holdRecoveredDips), over the whole line so the
+ * dip has the level before it: the chart draws the month that way, and the arrow beside Charizard's
+ * Shadowless price read "+25%" against a month that still had eleven days at €1,000 (Bart, 2026-09-15).
  */
 export function average30(points: PriceLinePoint[], today: string, holo: boolean, printing: string | null = null): number | null {
     const from = new Date(`${today}T00:00:00Z`);
     from.setUTCDate(from.getUTCDate() - 30);
     const since = from.toISOString().slice(0, 10);
-    const values = points
-        .filter((p) => p.date >= since && p.date <= today)
-        .map((p) => valueOf(p, printing, holo))
-        .filter((v): v is number => v != null);
+    const line = points
+        .filter((p) => p.date <= today)
+        .map((p) => ({ date: p.date, value: valueOf(p, printing, holo) }))
+        .filter((p): p is { date: string; value: number } => p.value != null);
+    const values = holdRecoveredDips(line)
+        .filter((p) => p.date >= since)
+        .map((p) => p.value);
     return values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
 }
 

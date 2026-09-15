@@ -60,6 +60,22 @@ describe("average30", () => {
         expect(average30(lines, today, false, "reverse-holofoil")).toBeNull();
     });
 
+    // Base Set Charizard's Shadowless run: €1,869, then €1,000 for eleven days, then €1,948. The line
+    // holds that dip, and the arrow beside €1,954.71 read "+25%" against a month that still had it.
+    it("averages the month with a dip that came back held at its level, as the line draws it", () => {
+        const shadowless = [
+            ["2026-08-20", 1869],
+            ["2026-08-30", 1869],
+            ["2026-08-31", 1000],
+            ...Array.from({ length: 10 }, (_, i) => [`2026-09-${String(i + 1).padStart(2, "0")}`, 1000]),
+            ["2026-09-11", 1948],
+            ["2026-09-12", 1955],
+        ].map(([date, v]) => ({ date: date as string, market: null, holo: null, printings: { "shadowless-holofoil": v as number } }));
+        const average = average30(shadowless, today, false, "shadowless-holofoil")!;
+        expect(average).toBeGreaterThan(1850);
+        expect(priceChange(1954.71, average)?.ratio).toBeLessThan(0.06);
+    });
+
     it("is nothing without a point in the window", () => {
         expect(average30([{ date: "2026-07-01", market: 5, holo: null }], today, false)).toBeNull();
         expect(average30([], today, false)).toBeNull();
