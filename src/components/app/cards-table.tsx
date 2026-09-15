@@ -50,7 +50,8 @@ export function CardsTable({ cards, onSelect }: { cards: Card[]; onSelect: (card
                                 </div>
                             </Table.Cell>
                             <Table.Cell>{card.set_name ?? "—"}</Table.Cell>
-                            <Table.Cell>{card.number ?? "—"}</Table.Cell>
+                            {/* As the card prints it (001, SWSH179), as the grid's label reads; the row's own spelling where nothing matched. */}
+                            <Table.Cell>{card.printed_number ?? card.number ?? "—"}</Table.Cell>
                             <Table.Cell>{card.rarity ?? "—"}</Table.Cell>
                             <Table.Cell className="text-right font-medium text-primary tabular-nums">
                                 {card.price != null ? formatPrice(card.price) : <span className="text-tertiary">{"—"}</span>}
