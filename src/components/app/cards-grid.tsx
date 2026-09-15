@@ -134,13 +134,15 @@ function GridCell<T extends GridCard>({
         // The first two rows arrive one after another, 20 ms apart; everything under them comes in
         // together once that wave has passed. A batch appended on scroll sits below the fold, so
         // its wave is not seen and its delay has passed by the time it is.
-        <div className="arrive" style={{ "--arrive-delay": `${Math.min(i, 12) * 20}ms` } as React.CSSProperties}>
+        // A column that fills its grid row, so the price and the buttons sit at one height across the row
+        // whether or not a tile has the printing's line above them (Bart, 2026-09-16).
+        <div className="flex arrive flex-col" style={{ "--arrive-delay": `${Math.min(i, 12) * 20}ms` } as React.CSSProperties}>
             <CardTile
                 onSelect={onSelect}
                 // The buttons have a row of their own in the cell, so the tile must not fill the cell: h-full
                 // took the whole of it and pushed them out under the next row's pictures, where a tap on
                 // one hit a picture.
-                className={buttons ? "h-auto" : undefined}
+                className={buttons ? "h-auto flex-1" : undefined}
                 onWarm={() => warmCard(card.tcg_id, "language" in card ? (card.language as string | null) : null)}
                 picture={
                     /* Nothing of ours around the picture: a card carries its own printed border, and a hairline
@@ -166,7 +168,7 @@ function GridCell<T extends GridCard>({
                     </div>
                 }
                 words={
-                    <div className="flex flex-col">
+                    <div className="flex flex-1 flex-col">
                         <span className="flex items-center gap-1 text-sm font-medium text-primary">
                             <span className="truncate">{card.name}</span>
                             {card.is_favorite ? <FavoriteStar /> : null}
@@ -187,7 +189,7 @@ function GridCell<T extends GridCard>({
                             only sometimes is one you have to notice the absence of, and the owner would
                             rather read it down the column than work it out. */}
                         {held != null || card.price != null ? (
-                            <span className="mt-0.5 flex items-baseline gap-2 text-sm font-medium tabular-nums">
+                            <span className="mt-auto flex items-baseline gap-2 pt-0.5 text-sm font-medium tabular-nums">
                                 {card.price != null ? (
                                     <span className="text-primary">
                                         <span className="sr-only">Market price </span>
