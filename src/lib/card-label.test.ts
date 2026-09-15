@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cardLabel, cardLabelFull, cardLine } from "./card-label";
+import { cardLabel, cardLabelFull, cardLine, printingLine } from "./card-label";
 
 describe("cardLabel", () => {
     it("is the set's code and the number as printed, the same at every size", () => {
@@ -45,5 +45,23 @@ describe("cardLine", () => {
         expect(cardLine({ set_abbr: "PFL", number: "004", rarity: "Double Rare" })).toBe("PFL 004 · Double Rare");
         expect(cardLine({ set_abbr: "PFL", number: "004", rarity: null })).toBe("PFL 004");
         expect(cardLine({ set_abbr: "PFL", number: "004", rarity: " " })).toBe("PFL 004");
+    });
+});
+
+describe("printingLine", () => {
+    // Bart, 2026-09-15: a Reverse, a Cosmos or a 1st Edition copy says so on the list, under its name.
+    it("names what sets a copy apart from the plain printing", () => {
+        expect(printingLine({ finish: "reverse-holo", foil_pattern: null, edition: null })).toBe("Reverse");
+        expect(printingLine({ finish: "holo", foil_pattern: "cosmos", edition: null })).toBe("Cosmos holo");
+        expect(printingLine({ finish: "reverse-holo", foil_pattern: "cosmos", edition: null })).toBe("Cosmos reverse");
+        expect(printingLine({ finish: "poke-ball", foil_pattern: null, edition: null })).toBe("Poké Ball reverse");
+        expect(printingLine({ finish: "holo", foil_pattern: null, edition: "1st-edition" })).toBe("1st Edition");
+        expect(printingLine({ finish: "reverse-holo", foil_pattern: null, edition: "shadowless" })).toBe("Shadowless · Reverse");
+    });
+
+    it("says nothing for a plain, a holo or an unlimited copy", () => {
+        expect(printingLine({ finish: "normal", foil_pattern: null, edition: null })).toBeNull();
+        expect(printingLine({ finish: "holo", foil_pattern: null, edition: "unlimited" })).toBeNull();
+        expect(printingLine({ finish: null })).toBeNull();
     });
 });
