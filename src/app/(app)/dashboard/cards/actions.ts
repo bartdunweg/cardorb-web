@@ -3,8 +3,11 @@
 import { z } from "zod";
 import { ApiError, api } from "@/lib/api";
 import {
+    EDITIONS,
     type Edition,
+    FINISHES,
     type Finish,
+    type FoilPattern,
     type PatternPrints,
     type PokemonCard,
     type RemovedCard,
@@ -190,7 +193,16 @@ export async function addCard(
     input: PokemonCard,
     target: "collection" | "wishlist" = "collection",
     collectionId?: string,
-    { reread = true }: { reread?: boolean } = {},
+    {
+        reread = true,
+        printing,
+        edition,
+    }: {
+        reread?: boolean;
+        /** The printing pressed in the card's sheet; left out, the API picks the card's default finish. */
+        printing?: { finish: Finish; foilPattern: FoilPattern | null };
+        edition?: Edition;
+    } = {},
 ): Promise<Result & { id?: string }> {
     const parsed = cardSchema.safeParse(input);
     if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
@@ -214,6 +226,9 @@ export async function addCard(
                 ...(c.tcgId ? { tcgId: c.tcgId } : {}),
                 ...(c.language && c.language !== "en" ? { language: c.language } : {}),
                 types: c.types ?? [],
+                ...(printing && (FINISHES as readonly string[]).includes(printing.finish) ? { finish: printing.finish } : {}),
+                ...(printing?.foilPattern ? { foilPattern: printing.foilPattern } : {}),
+                ...(edition && (EDITIONS as readonly string[]).includes(edition) ? { edition } : {}),
                 collection: !wishlist,
                 // Added from a folder's own page: filed in it at once.
                 ...(collectionId && !wishlist && z.string().uuid().safeParse(collectionId).success ? { collectionId } : {}),
@@ -497,7 +512,8 @@ export type CardFacts = {
      * A form offers no finish and no pattern that is not here, and offers everything where the
      * list is empty, because empty is the catalogue having no answer rather than none existing.
      */
-    printings: { finish: Finish; foilPattern: string | null }[];
+    /** `image`: the printing's own picture where TCGplayer sells it apart (cardorb-api#501), else null or absent. */
+    printings: { finish: Finish; foilPattern: string | null; image?: string | null }[];
     /**
      * Whether a stamped first run of this card exists, as TCGdex says. Null is no answer, and a
      * form offers the runs then rather than none, the same rule `printings` follows.

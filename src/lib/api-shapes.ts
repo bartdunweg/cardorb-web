@@ -1043,6 +1043,8 @@ const patternPrintsSchema = z.object({
                 finish: z.string(),
                 tcgplayerId: z.number(),
                 price: nullable(apiPriceSchema),
+                /** The print's own picture, a file of ours; null or absent where there is none (cardorb-api#501). */
+                image: z.string().nullish(),
             }),
         )
         .transform((prints) =>
@@ -1069,7 +1071,16 @@ export const cardFactsAnswer = z.object({
      * reverses are finishes here, the way this app stores them, so a card that never had one
      * does not offer it.
      */
-    printings: z.array(z.object({ finish: z.enum(FINISHES), foilPattern: nullable(z.string()) })).nullish(),
+    printings: z
+        .array(
+            z.object({
+                finish: z.enum(FINISHES),
+                foilPattern: nullable(z.string()),
+                /** The printing's own picture where TCGplayer sells it apart (cardorb-api#501); null or absent where the card's scan stands for it. */
+                image: z.string().nullish(),
+            }),
+        )
+        .nullish(),
     /** The print runs a copy can be from. Null or absent: no answer, and all of them are offered. */
     editions: z.array(z.enum(EDITIONS)).nullish(),
     /**
