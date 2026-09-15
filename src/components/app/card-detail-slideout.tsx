@@ -1345,7 +1345,15 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                         if (typeof key === "string") runTabs.pick(key);
                                     }}
                                 >
-                                    <TabList aria-label={runTabs.label} type="underline" size="sm" className="overflow-x-auto">
+                                    {/* Edge to edge, out into the sheet's side padding, and scrolled sideways where four
+                                        tabs do not fit (Cosmos reverse and Cosmos holo on a phone): a tab running off
+                                        the sheet's edge reads as more to scroll, one cut inside the padding as broken. */}
+                                    <TabList
+                                        aria-label={runTabs.label}
+                                        type="underline"
+                                        size="sm"
+                                        className="-mx-4 scrollbar-hide scroll-px-4 overflow-x-auto px-4 md:-mx-6 md:scroll-px-6 md:px-6"
+                                    >
                                         {runTabs.items.map((item) => (
                                             <Tab key={item.key} id={item.key} label={item.label} />
                                         ))}
