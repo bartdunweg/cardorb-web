@@ -8,7 +8,6 @@ import { useCommandSearch } from "@/components/app/command-search";
 import { FolderModal } from "@/components/app/folder-dialog";
 import { OrbLogo } from "@/components/app/orb-logo";
 import { NavButton } from "@/components/application/app-navigation/base-components/nav-button";
-import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { cx } from "@/utils/cx";
 
 type Account = { name: string; email: string; avatarUrl: string | null };
@@ -90,7 +89,7 @@ export function SidebarRail({
                 above the avatar: at the head it would stand where the mark belongs. */}
             {/* pb-4.5 (18 px): the avatar's centre lands where the open card's avatar has it. */}
             <div className="mt-auto flex flex-col items-center gap-3 px-4 pt-4 pb-4.5">
-                <ButtonUtility size="sm" color="tertiary" icon={LayoutLeft} tooltip="Expand sidebar" tooltipPlacement="right" onClick={onExpand} />
+                <NavButton icon={LayoutLeft} label="Expand sidebar" onPress={onExpand} className="size-8" />
                 <Suspense fallback={null}>
                     <AccountSlot account={account} />
                 </Suspense>
