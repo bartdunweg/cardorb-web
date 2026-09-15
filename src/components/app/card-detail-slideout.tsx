@@ -37,7 +37,6 @@ import { MARK_ON } from "@/components/app/tile-icon-button";
 import { notify } from "@/components/app/toast";
 import { TypeIcon } from "@/components/app/type-icon";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
-import { Tab, TabList, TabPanel, Tabs } from "@/components/application/tabs/tabs";
 import { Badge } from "@/components/base/badges/badges";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Button, styles as buttonStyles } from "@/components/base/buttons/button";
@@ -597,11 +596,12 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
      * printing's foil over it.
      */
     const printings = printingChoices(known);
-    // The printings' own pictures fetched as soon as the sheet knows them, at the sizes the head and the
+    const editions = editionChoices(known?.editions, known?.editionPictures);
+    // The printings' and the runs' own pictures fetched as soon as the sheet knows them, at the sizes the head and the
     // frame draw, so pressing one swaps the card at once instead of after its download.
     // A cosmos print's shine is three textures (268 KB) the vendored effect only asks for once it is on
     // screen, so the first press of Cosmos waited for those too.
-    const printingImages = printings?.flatMap((p) => (p.image ? [p.image] : [])).join("|") ?? "";
+    const printingImages = [...(printings ?? []), ...(editions ?? [])].flatMap((p) => (p.image ? [p.image] : [])).join("|");
     const hasCosmos = !!printings?.some((p) => p.foilPattern === "cosmos");
     useEffect(() => {
         for (const image of printingImages ? printingImages.split("|") : []) {
@@ -611,7 +611,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         if (hasCosmos)
             for (const texture of ["cosmos-bottom.png", "cosmos-middle-trans.png", "cosmos-top-trans.png"]) new window.Image().src = `/holo/${texture}`;
     }, [printingImages, hasCosmos]);
-    const editions = editionChoices(known?.editions);
     const ownPrinting = mine?.finish ? (mine.foil_pattern ? `${mine.finish}/${mine.foil_pattern}` : mine.finish) : null;
     const [picked, setPicked] = useState<{ tcgId: string | null; printing: string | null; edition: string | null }>({
         tcgId: null,
@@ -625,7 +624,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const printingKey = pickedHere?.printing ?? openingPrinting;
     const editionKey = pickedHere?.edition ?? openingEdition;
     const printing = printings?.find((p) => p.key === printingKey) ?? null;
-    const edition = editions?.find((e) => e.key === editionKey)?.key ?? null;
+    const editionChoice = editions?.find((e) => e.key === editionKey) ?? null;
+    const edition = editionChoice?.key ?? null;
+    // A run's own picture shows as a printing's does; a card has one group or the other, never both.
+    const pressedImage = printing?.image ?? editionChoice?.image ?? null;
     const pick = (next: { printing?: string; edition?: string }) => {
         // A printing is not a step through the list: the new picture fades in where it is.
         stepDir.current = 0;
@@ -661,7 +663,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const prevScan = useRef<HTMLDivElement>(null);
     const blurFade = useRef<HTMLDivElement>(null);
     const fades = useRef<{ scan?: Animation; blur?: Animation; prev?: Animation }>({});
-    const artNow = nextArt(art, printing?.image && card ? { image_url: printing.image, image_high_url: null } : card);
+    const artNow = nextArt(art, pressedImage && card ? { image_url: pressedImage, image_high_url: null } : card);
     if (artNow !== art) {
         setArt(artNow);
         setScanLoaded(false);
@@ -1246,8 +1248,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                     way or the answer is not in yet. Buttons rather than a select: two to four
                                     short words, each a look at the card, and the one on show stays in sight.
                                     Out into the header's side padding, which is room for the card's tilt: four
-                                    buttons are 353 px and the padded box 320. More than fit scroll sideways. */}
-                                {card?.image_url && printings ? (
+                                    buttons are 353 px and the padded box 320. More than fit scroll sideways.
+                                    The print runs are the same buttons in the same place (Bart, 2026-09-15): a
+                                    card sold in more than one run is sold in one finish, so one group shows. */}
+                                {card?.image_url && (printings || editions) ? (
                                     <div className="-mx-8 mt-5 flex flex-col items-center gap-2">
                                         {printings ? (
                                             <div className="max-w-full overflow-x-auto p-1">
@@ -1264,6 +1268,26 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                     {printings.map((p) => (
                                                         <ButtonGroupItem key={p.key} id={p.key} className={SEGMENT_SELECTED}>
                                                             {p.label}
+                                                        </ButtonGroupItem>
+                                                    ))}
+                                                </ButtonGroup>
+                                            </div>
+                                        ) : null}
+                                        {editions ? (
+                                            <div className="max-w-full overflow-x-auto p-1">
+                                                <ButtonGroup
+                                                    size="sm"
+                                                    aria-label="Print run"
+                                                    selectedKeys={editionKey ? [editionKey] : []}
+                                                    disallowEmptySelection
+                                                    onSelectionChange={(keys) => {
+                                                        const [key] = [...keys];
+                                                        if (typeof key === "string") pick({ edition: key });
+                                                    }}
+                                                >
+                                                    {editions.map((e) => (
+                                                        <ButtonGroupItem key={e.key} id={e.key} className={SEGMENT_SELECTED}>
+                                                            {e.label}
                                                         </ButtonGroupItem>
                                                     ))}
                                                 </ButtonGroup>
@@ -1342,34 +1366,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                         {/*
                          * One page, not three tabs (Bart, 2026-09-15): the price first, then the card's details,
                          * then what you hold of it. Where the card was printed in more than one run, the runs are
-                         * the tab bar above all of it, and the price, the line and the Add buttons follow the run
-                         * chosen there. The line chooses its period and nothing else.
+                         * buttons under the card, as the printings are, and the price, the line and the Add buttons
+                         * follow the run pressed there. The line chooses its period and nothing else.
                          */}
-                        {card ? (
-                            editions ? (
-                                <Tabs
-                                    className="flex flex-col gap-6"
-                                    selectedKey={editionKey ?? undefined}
-                                    onSelectionChange={(key) => {
-                                        if (typeof key === "string") pick({ edition: key });
-                                    }}
-                                >
-                                    <TabList aria-label="Print run" type="underline" size="sm">
-                                        {editions.map((e) => (
-                                            <Tab key={e.key} id={e.key} label={e.label} />
-                                        ))}
-                                    </TabList>
-                                    {/* A panel per run, as react-aria asks; only the chosen one is drawn. */}
-                                    {editions.map((e) => (
-                                        <TabPanel key={e.key} id={e.key} className="flex flex-col gap-8">
-                                            {sheetBody}
-                                        </TabPanel>
-                                    ))}
-                                </Tabs>
-                            ) : (
-                                <div className="flex flex-col gap-8">{sheetBody}</div>
-                            )
-                        ) : null}
+                        {card ? <div className="flex flex-col gap-8">{sheetBody}</div> : null}
                     </SlideoutMenu.Content>
                     {/* Last in the sheet, so the keyboard reaches it after the content, and a direct
                         child of the scroll box, which is what keeps it pinned. */}

@@ -552,6 +552,8 @@ export type CardFacts = {
      * for it. Null where nothing could say, and then every run is offered.
      */
     editions: Edition[] | null;
+    /** A run's own picture, by run, where the API holds one (Base Set's Unlimited print); empty where none has. */
+    editionPictures: Record<string, string>;
     /**
      * The foil patterns a copy can be recorded with. Empty is an answer: a Wizards holo had its
      * set's one foil, so there is nothing to ask. Null is no answer, and the printings decide.
@@ -592,6 +594,7 @@ const factsOf = (c: z.output<typeof cardFactsAnswer>): CardFacts => ({
     languages: Array.isArray(c.languages) && c.languages.length ? c.languages : null,
     printings: Array.isArray(c.printings) ? c.printings : [],
     editions: Array.isArray(c.editions) ? c.editions : null,
+    editionPictures: c.editionPictures ?? {},
     foilPatterns: Array.isArray(c.foilPatterns) ? c.foilPatterns : null,
     patternPrints: c.patternPrints ?? null,
     firstEdition: c.firstEdition ?? null,

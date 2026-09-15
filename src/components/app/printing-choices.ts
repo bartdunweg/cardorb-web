@@ -6,8 +6,9 @@ import { EDITION_LABELS, type Edition, FOIL_PATTERN_LABELS, type Finish, type Fo
  * Bart, 2026-09-15: under the card, a group of buttons between the printings that exist, and only
  * those. A printing TCGplayer sells apart has its own photo (cardorb-api#501), and choosing it shows
  * that photo; one without shows the card's scan with that printing's foil drawn over it. The print
- * runs (1st Edition, Shadowless) are a second group where a card has more than one, since a run and
- * a finish are two questions: a Base Set Charizard is a holo in three runs.
+ * runs (1st Edition, Shadowless) are the same kind of button, with the same picture rule (Bart, the
+ * same day: "edities van dezelfde kaart moet je hetzelfde behandelen"). A card never has both: no
+ * card sold in two runs is sold in two finishes, so a sheet shows one group or the other.
  *
  * Pure, so the rule can be read and tested apart from the sheet.
  */
@@ -25,7 +26,12 @@ export type PrintingChoice = {
     image: string | null;
 };
 
-export type EditionChoice = { key: Edition; label: string };
+export type EditionChoice = {
+    key: Edition;
+    label: string;
+    /** The run's own picture, or null where the card's scan stands for it. */
+    image: string | null;
+};
 
 /** Short words for the buttons: a group of four has to fit beside a 176 px card. */
 const SHORT: Record<Finish, string> = {
@@ -76,8 +82,8 @@ export function printingChoices(
 }
 
 /** The print runs to choose between, or null where a card has one run or no answer. */
-export function editionChoices(editions: Edition[] | null | undefined): EditionChoice[] | null {
-    return editions && editions.length > 1 ? editions.map((key) => ({ key, label: EDITION_LABELS[key] })) : null;
+export function editionChoices(editions: Edition[] | null | undefined, pictures?: Record<string, string> | null): EditionChoice[] | null {
+    return editions && editions.length > 1 ? editions.map((key) => ({ key, label: EDITION_LABELS[key], image: pictures?.[key] ?? null })) : null;
 }
 
 /**

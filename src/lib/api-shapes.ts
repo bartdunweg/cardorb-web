@@ -1083,6 +1083,8 @@ export const cardFactsAnswer = z.object({
         .nullish(),
     /** The print runs a copy can be from. Null or absent: no answer, and all of them are offered. */
     editions: z.array(z.enum(EDITIONS)).nullish(),
+    /** A run's own picture, by run, where the store holds one: Base Set's Unlimited print (cardorb-api edition pictures). */
+    editionPictures: z.record(z.string(), z.string()).nullish(),
     /**
      * The foil patterns a copy of this card can be recorded with. An empty list is an answer, none
      * (a Wizards holo had its set's one foil, cardorb-api#375); null or absent is no answer.
