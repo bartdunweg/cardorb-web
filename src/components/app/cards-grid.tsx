@@ -179,8 +179,9 @@ function GridCell<T extends GridCard>({
                             {"language" in card && typeof card.language === "string" && card.language !== "en" ? <FlagIcon language={card.language} /> : null}
                         </span>
                         <span className="truncate text-xs text-tertiary">{cardLine(card)}</span>
-                        {/* The run and the finish where the copy is not the plain printing: "1st Edition",
-                            "Cosmos holo". Each kind of copy is a tile of its own, and two of one card looked alike. */}
+                        {/* Which printing the copy is: "Normal", "Holo", "Cosmos holo", "1st Edition · Holo" (printingLine).
+                            Each kind of copy is a tile of its own, and two of one card looked alike. A wish with no
+                            printing chosen has no line. */}
                         {printingLine(card) ? <span className="truncate text-xs text-tertiary">{printingLine(card)}</span> : null}
                         {/* What one is worth, then how many you hold: the price on the left under the name it
                             belongs to, the count against the right edge, as a set tile has them (Bart's call,
