@@ -1065,11 +1065,6 @@ export const cardFactsAnswer = z.object({
     /** The Western languages the card was printed in. Null or absent: the catalogue could not say. */
     languages: z.array(z.string()).nullish(),
     /**
-     * The rarities the card's era printed, for a card the catalogue could not name. Null or
-     * absent: no answer, and then the whole hand-set list is offered.
-     */
-    eraRarities: z.array(z.string()).nullish(),
-    /**
      * Every printing of this card that exists, as the API reads it off the catalogue. The ball
      * reverses are finishes here, the way this app stores them, so a card that never had one
      * does not offer it.

@@ -25,6 +25,17 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-15, a promo's rarity is Promo.** Bart: Pikachu with Grey Felt Hat (SVP 085) had no
+rarity and Venusaur (Wizards promo 13) said Common. A promo carries a black star where other cards
+carry a rarity symbol, so no source says more: TCGdex fills "Common" for every Wizards, Nintendo
+and DP promo, TCGplayer says "Promo". The kinds named by looking at the scans on 2026-09-12 (37
+Illustration rare, 24 Ultra Rare, 1 Special illustration rare) could not be trusted: Grey Felt Hat
+is a full art and was left empty. Bart's call: every card in a promo set answers "Promo", nobody
+sets a rarity by hand, and a Pokédex that counted rarities counts Promo too. The Rarity chooser,
+`setCardRarity`, `eraRarities` and `src/lib/rarities.ts` are gone; the sheet's Rarity row shows
+what the API says. This replaces the 2026-09-12 entries on naming a promo by hand. cardorb-api
+(promo sets, migration) and this PR.
+
 **2026-09-14, every English card picture lives in our own bucket.** Bart: Giratina VSTAR (Crown
 Zenith GG69) showed its back. The catalogue copy asked other catalogues about at most 40 cards a
 set and never asked a blank again: 213 cards (cardorb-api#392). Then the question grew: 649 cards
