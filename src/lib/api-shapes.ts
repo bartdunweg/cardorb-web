@@ -1084,3 +1084,13 @@ export const cardFactsAnswer = z.object({
     /** TCGplayer's figure for the printing, converted; null where TCGplayer prices nothing (cardorb-api#354). */
     price: nullable(apiPriceSchema),
 });
+
+/** The most cards one `POST /v1/cards/facts` may name. */
+export const CARD_FACTS_BATCH = 250;
+
+/**
+ * `POST /v1/cards/facts`: each id asked, with its facts or null. Each answer is parsed on its own
+ * (cardFactsAnswer), so one card the API describes in a way this app cannot read costs that card,
+ * not the page.
+ */
+export const cardFactsBatchAnswer = z.object({ cards: z.record(z.string(), z.unknown()) });

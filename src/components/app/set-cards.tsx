@@ -5,6 +5,7 @@ import { SearchLg, SwitchVertical01 } from "@untitledui/icons";
 import dynamic from "next/dynamic";
 import { listRows } from "@/app/(app)/dashboard/cards/actions";
 import { AppEmptyState } from "@/components/app/app-empty-state";
+import { warmCardFacts } from "@/components/app/card-memo";
 import { type FilterAnswer, type FilterValues, FiltersSheet } from "@/components/app/filters-sheet";
 import { RowButton } from "@/components/app/row-button";
 import { LIST_ROW, RowSearch } from "@/components/app/row-search";
@@ -105,6 +106,12 @@ export function SetCards({
        among the rarities, because it cuts across them: every special illustration rare is a full
        art, and listed with them it put one card under two rarities. */
     const fullArt = useMemo(() => setFullArt(cards), [cards]);
+    /* Every card's facts, a page of them per request, once the grid is up: a sheet opened on any card
+       then draws its choices on its first paint (card-memo.ts). The whole set rather than the tiles
+       drawn, because the sheet's arrows go past those. English only, as the sheet's own ask is. */
+    useEffect(() => {
+        if (language === "en") warmCardFacts(cards.map((c) => c.tcgId));
+    }, [cards, language]);
     const rarities = useMemo(
         () => [...new Set(cards.map((c) => c.rarity).filter((r): r is string => Boolean(r)))].sort().map((r) => ({ value: r, label: r })),
         [cards],
