@@ -25,6 +25,24 @@ export function niceTicks(min: number, max: number, count = 4): number[] {
     return ticks;
 }
 
+/** The least a chart's height stands for, as a share of its highest reading. */
+const CALM_SPAN = 0.1;
+
+/**
+ * The range the axis is drawn over: the readings' own, or at least a tenth of the highest reading,
+ * widened evenly around the middle.
+ *
+ * The axis starts near the lowest reading rather than at zero, so a movement shows; with nothing more
+ * a 1% wobble filled the whole height the way a doubling did (Bart, 2026-09-15: Charizard's 1st Edition
+ * went from €8,548 to €8,657 in a month and read as a swing). With this, that month moves a tenth of it.
+ */
+export function calmRange(min: number, max: number): [number, number] {
+    const least = Math.abs(max) * CALM_SPAN;
+    if (max - min >= least) return [min, max];
+    const middle = (min + max) / 2;
+    return [middle - least / 2, middle + least / 2];
+}
+
 /**
  * Where each reading lands inside the frame; y is linear between the axis ends.
  *
