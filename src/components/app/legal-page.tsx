@@ -6,10 +6,14 @@ import { SectionDivider } from "@/components/shared-assets/section-divider";
 /**
  * The shell both legal documents render into: /privacy and /terms.
  *
- * Untitled UI's legal-pages/01 template (centred header with the date, a rich-text column,
+ * Untitled UI's legal-pages/01 template (a header with the date, a rich-text column,
  * a section divider, a footer) with the shared public top bar instead of the marketing
  * header, and a footer without the newsletter form the site does not have. The API reference
  * uses the same shell with a version line where the date would be.
+ *
+ * The header sits in the text's own column and reads from the left like it, where the template
+ * centres it: a document read top to bottom keeps one left edge, on a phone most of all. The
+ * owner's call. The column is the prose wrapper itself, so the two cannot come apart in width.
  */
 export function LegalPage({
     title,
@@ -34,18 +38,20 @@ export function LegalPage({
             <main id="main-content">
                 <section className="bg-primary py-16 md:py-24">
                     <div className="mx-auto max-w-container px-4 md:px-8">
-                        <div className="mx-auto flex w-full max-w-3xl flex-col items-center text-center">
-                            <span className="text-sm font-semibold text-brand-secondary md:text-md">
-                                {updated ? (
-                                    <>
-                                        Current as of <time dateTime={updated.iso}>{updated.human}</time>
-                                    </>
-                                ) : (
-                                    eyebrow
-                                )}
-                            </span>
-                            <h1 className="mt-3 text-display-md font-semibold text-primary md:text-display-lg">{title}</h1>
-                            <p className="mt-4 text-lg text-tertiary md:mt-6 md:text-xl">{intro}</p>
+                        <div className="mx-auto prose md:prose-lg md:max-w-180">
+                            <div className="not-prose flex flex-col">
+                                <span className="text-sm font-semibold text-brand-secondary md:text-md">
+                                    {updated ? (
+                                        <>
+                                            Current as of <time dateTime={updated.iso}>{updated.human}</time>
+                                        </>
+                                    ) : (
+                                        eyebrow
+                                    )}
+                                </span>
+                                <h1 className="mt-3 text-display-md font-semibold text-primary md:text-display-lg">{title}</h1>
+                                <p className="mt-4 text-lg text-tertiary md:mt-6 md:text-xl">{intro}</p>
+                            </div>
                         </div>
                     </div>
                 </section>
