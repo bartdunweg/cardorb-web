@@ -11,10 +11,10 @@ import { PrefetchRoutes } from "@/components/app/prefetch-routes";
 import { useRouteTarget } from "@/components/app/route-pending";
 import { type RailItem, SidebarRail, useBindersArrive } from "@/components/app/sidebar-rail";
 import { CARDS_CHANGED } from "@/components/app/use-copy-steps";
+import { NavButton } from "@/components/application/app-navigation/base-components/nav-button";
 import { NavItemBase } from "@/components/application/app-navigation/base-components/nav-item";
 import type { NavItemDividerType, NavItemType } from "@/components/application/app-navigation/config";
 import { SidebarNavigationSectionDividers } from "@/components/application/app-navigation/sidebar-navigation/sidebar-section-dividers";
-import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { SIDEBAR_COOKIE } from "@/lib/sidebar-cookie";
 import { cx } from "@/utils/cx";
 
@@ -115,7 +115,10 @@ export function AppSidebar({
                     hideMobileHeader
                     collapsed={collapsed}
                     rail={<SidebarRail items={pages} activeUrl={pathname} account={account} collections={collections} onExpand={() => setFolded(false)} />}
-                    headerAction={<ButtonUtility size="sm" color="tertiary" icon={LayoutLeft} tooltip="Collapse sidebar" onClick={() => setFolded(true)} />}
+                    // The rail's own button, not a utility button: the same hover tint as every row beside it.
+                    headerAction={
+                        <NavButton icon={LayoutLeft} label="Collapse sidebar" tooltipPlacement="bottom" onPress={() => setFolded(true)} className="size-8" />
+                    }
                     search={<SidebarSearchTrigger />}
                     afterItems={
                         <>
