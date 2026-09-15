@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import Image, { getImageProps } from "next/image";
 import { CardBack } from "@/components/app/card-back";
 
 /**
@@ -33,6 +33,21 @@ function isOptimised(src: string): boolean {
     } catch {
         return false;
     }
+}
+
+/**
+ * Fetch a card picture ahead, at exactly the address a `CardImage` of this width and quality will ask
+ * for, so drawing it later is a cache hit. For pictures a press is likely to show next: pressing
+ * Cosmos reverse on a card waited about 300 ms for its two pictures before the fade could start
+ * (measured on a production build, 2026-09-15). Browser only; does nothing for a picture that goes
+ * direct.
+ */
+export function preloadCardImage(src: string, width: number, quality: 60 | 75): void {
+    if (typeof window === "undefined" || !isOptimised(src)) return;
+    const { props } = getImageProps({ src, alt: "", width, height: Math.round((width * 88) / 63), quality });
+    const img = new window.Image();
+    if (props.srcSet) img.srcset = props.srcSet;
+    img.src = props.src;
 }
 
 export function CardImage({

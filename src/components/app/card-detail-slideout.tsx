@@ -22,7 +22,7 @@ import {
 import { type FolderChoice, listCollections, loadFacets } from "@/app/(app)/dashboard/collections/actions";
 import { NO_ART, artStack, nextArt } from "@/components/app/card-art";
 import { CardBack } from "@/components/app/card-back";
-import { CardImage } from "@/components/app/card-image";
+import { CardImage, preloadCardImage } from "@/components/app/card-image";
 import { knownCardFacts, knownPriceHistory, knownRows, preloadCardFacts, preloadPriceHistory, rememberCopies } from "@/components/app/card-memo";
 import { CardPriceChart } from "@/components/app/card-price-chart";
 import { CopyCard } from "@/components/app/copy-card";
@@ -597,6 +597,20 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
      * printing's foil over it.
      */
     const printings = printingChoices(known);
+    // The printings' own pictures fetched as soon as the sheet knows them, at the sizes the head and the
+    // frame draw, so pressing one swaps the card at once instead of after its download.
+    // A cosmos print's shine is three textures (268 KB) the vendored effect only asks for once it is on
+    // screen, so the first press of Cosmos waited for those too.
+    const printingImages = printings?.flatMap((p) => (p.image ? [p.image] : [])).join("|") ?? "";
+    const hasCosmos = !!printings?.some((p) => p.foilPattern === "cosmos");
+    useEffect(() => {
+        for (const image of printingImages ? printingImages.split("|") : []) {
+            preloadCardImage(image, 176, 75);
+            preloadCardImage(image, 64, 60);
+        }
+        if (hasCosmos)
+            for (const texture of ["cosmos-bottom.png", "cosmos-middle-trans.png", "cosmos-top-trans.png"]) new window.Image().src = `/holo/${texture}`;
+    }, [printingImages, hasCosmos]);
     const editions = editionChoices(known?.editions);
     const ownPrinting = mine?.finish ? (mine.foil_pattern ? `${mine.finish}/${mine.foil_pattern}` : mine.finish) : null;
     const [picked, setPicked] = useState<{ tcgId: string | null; printing: string | null; edition: string | null }>({
