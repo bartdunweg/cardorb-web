@@ -395,7 +395,9 @@ export type PublicCard = Pick<
     | "name"
     | "local_name"
     | "set_name"
+    | "set_abbr"
     | "number"
+    | "printed_number"
     | "rarity"
     | "gen"
     | "types"
@@ -414,8 +416,11 @@ export const publicItemSchema = z.object({
     key: z.string(),
     name: z.string(),
     number: z.string(),
+    /** The number as printed and the set's code (cardorb-api#476); absent from an API before it. */
+    printedNumber: nullable(z.string()).optional(),
     set: z.string(),
     setTitle: z.string(),
+    setAbbr: nullable(z.string()).optional(),
     rarity: nullable(z.string()),
     gen: nullable(z.string()),
     type: nullable(z.string()),
@@ -440,7 +445,9 @@ export const publicCardFromItem = (item: PublicItem): PublicCard => ({
     name: item.name,
     local_name: item.localName ?? null,
     set_name: item.setTitle || item.set || null,
+    set_abbr: item.setAbbr ?? null,
     number: item.number || null,
+    printed_number: item.printedNumber ?? null,
     rarity: item.rarity,
     gen: item.gen,
     types: item.type ? [item.type] : null,
