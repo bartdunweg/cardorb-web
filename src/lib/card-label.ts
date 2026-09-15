@@ -1,3 +1,5 @@
+import { EDITION_LABELS, type Edition, FINISH_LABELS, FOIL_PATTERN_LABELS, type Finish, type FoilPattern } from "@/lib/api-shapes";
+
 type Labelled = { set_name?: string | null; set_abbr?: string | null; number?: string | null; printed_number?: string | null };
 
 /**
@@ -42,4 +44,23 @@ export function cardLabelFull(card: Labelled): string {
     if (!card.set_name) return printed;
     if (!printed) return card.set_name;
     return `${card.set_name} · ${printed}`;
+}
+
+/**
+ * What sets a copy apart from the card's plain printing, for the line under its name on a list:
+ * "1st Edition", "Shadowless · Reverse", "Cosmos holo", "Poké Ball reverse". Null for a plain, a holo
+ * or an unlimited copy, which is what a card is unless said otherwise.
+ *
+ * Bart, 2026-09-15: the run and the finish are chosen on the card's sheet, so a list of what you hold
+ * shows them; a Charizard held twice drew two tiles that looked the same. The words are the sheet's.
+ */
+export function printingLine(copy: { finish?: string | null; foil_pattern?: string | null; edition?: string | null }): string | null {
+    const parts: string[] = [];
+    if (copy.edition && copy.edition !== "unlimited" && copy.edition in EDITION_LABELS) parts.push(EDITION_LABELS[copy.edition as Edition]);
+    const finish = copy.finish as Finish | null | undefined;
+    const pattern = copy.foil_pattern && copy.foil_pattern in FOIL_PATTERN_LABELS ? FOIL_PATTERN_LABELS[copy.foil_pattern as FoilPattern] : null;
+    if (pattern) parts.push(`${pattern} ${finish === "reverse-holo" ? "reverse" : finish === "holo" ? "holo" : ""}`.trim());
+    else if (finish === "reverse-holo") parts.push("Reverse");
+    else if (finish && finish !== "normal" && finish !== "holo" && finish in FINISH_LABELS) parts.push(FINISH_LABELS[finish]);
+    return parts.length ? parts.join(" · ") : null;
 }
