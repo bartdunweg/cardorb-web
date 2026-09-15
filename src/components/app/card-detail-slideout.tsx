@@ -324,7 +324,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
      * answers at 739 ms, and the `arrive` on those rows spends the gap between drawing attention
      * to it. Opened a second time there is no gap, so nothing animates.
      */
-    const known = tcgId ? (facts?.tcgId === tcgId ? facts.facts : (knownCardFacts(tcgId) ?? null)) : null;
+    // The copy forms are told the wait apart from no answer: undefined until the catalogue answers, and they offer nothing yet (copy-fields).
+    const formFacts = tcgId ? (facts?.tcgId === tcgId ? facts.facts : knownCardFacts(tcgId)) : null;
+    const known = formFacts ?? null;
     // The line beside the price in the header: the price against the card's own last thirty days,
     // out of its history, which is the same market. It read Cardmarket's month until the price
     // stopped being Cardmarket's.
@@ -675,7 +677,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                 </Button>
             </div>
         ) : mine?.wishlist && !emptied ? (
-            <MarkOwnedDialog card={mine} folders={collections} languages={known?.languages} facts={known} onSaved={onClose}>
+            <MarkOwnedDialog card={mine} folders={collections} languages={known?.languages} facts={formFacts} onSaved={onClose}>
                 <Button size="md" className="w-full">
                     Mark as owned
                 </Button>
@@ -1127,7 +1129,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                           group={group}
                                                           folders={collections}
                                                           languages={known?.languages}
-                                                          facts={known}
+                                                          facts={formFacts}
                                                           busy={busy}
                                                           arrive={!group.rows.some((r) => r.id === mine.id)}
                                                           onMore={() => void stepUp(group)}
@@ -1172,7 +1174,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                             <CopyFormDialog
                                                 mode="add"
                                                 languages={known?.languages}
-                                                facts={known}
+                                                facts={formFacts}
                                                 from={mine}
                                                 folders={collections}
                                                 onSaved={() => void reloadCopies()}

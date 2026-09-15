@@ -302,3 +302,24 @@ describe("editionOptions, in the language the copy is", () => {
         expect(values(editionOptions(facts({}), null, "de"))).toEqual(["", "1st-edition", "unlimited"]);
     });
 });
+
+// A sheet opens before the card's facts arrive. The wait is not "no answer": a plain common must not
+// be offered every finish and every run for the half second until the catalogue says otherwise.
+describe("while the facts are still on their way", () => {
+    it("offers no choice where nothing is recorded", () => {
+        expect(finishOptions(undefined, null)).toEqual([]);
+        expect(patternOptions(undefined, "holo", null)).toEqual([]);
+        expect(editionOptions(undefined, null, "en")).toEqual([]);
+    });
+
+    it("holds only what is recorded, which is stated rather than asked", () => {
+        expect(soleOption(finishOptions(undefined, "normal"))?.value).toBe("normal");
+        expect(soleOption(patternOptions(undefined, "holo", "cosmos"))?.value).toBe("cosmos");
+        expect(soleOption(editionOptions(undefined, "1st-edition", "en"))?.value).toBe("1st-edition");
+    });
+
+    it("still reads null as the catalogue having no answer, and offers everything then", () => {
+        expect(finishOptions(null, null).length).toBeGreaterThan(1);
+        expect(values(editionOptions(null, null, "en"))).toEqual(["", "1st-edition", "shadowless", "unlimited"]);
+    });
+});
