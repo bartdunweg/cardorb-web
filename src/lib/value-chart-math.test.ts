@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { heldAreaPath, heldGapPath, linePath, nearestIndex, niceTicks, pointsFor, splitAtGaps } from "./value-chart-math";
+import { areaPath, linePath, nearestIndex, niceTicks, pointsFor, smoothLine, yAt } from "./value-chart-math";
 
 const frame = { width: 100, height: 60, top: 10, right: 0, bottom: 10, left: 0 };
 
@@ -31,7 +31,7 @@ describe("paths", () => {
     it("draws straight segments and closes the area to the baseline", () => {
         const points = pointsFor([0, 100], frame, 0, 100);
         expect(linePath(points)).toBe("M0.0 50.0 L100.0 10.0");
-        expect(heldAreaPath([points], [], 50)).toBe("M0.0 50.0 L100.0 10.0 L100.0 50.0 L0.0 50.0 Z");
+        expect(areaPath(points, 50)).toBe("M0.0 50.0 L100.0 10.0 L100.0 50.0 L0.0 50.0 Z");
     });
 });
 
@@ -64,33 +64,60 @@ describe("readings placed by time", () => {
     });
 });
 
-describe("splitAtGaps", () => {
-    // Bart, 2026-09-14: a stretch with no readings shows as a dotted line to the next reading.
-    it("splits the line where more than a week has no reading", () => {
-        const days = ["2025-06-07", "2025-06-14", "2025-06-21", "2025-07-19", "2025-07-26"];
-        const points = pointsFor([1, 2, 3, 4, 5], frame, 0, 5, days);
-        const { runs, gaps } = splitAtGaps(points, days);
-        expect(runs.map((r) => r.map((p) => p.index))).toEqual([
-            [0, 1, 2],
-            [3, 4],
+describe("smoothLine", () => {
+    const day = (d: number) => Date.UTC(2026, 0, d);
+
+    // Bart, 2026-09-15: "een mooie lijn", flowing, and the ends where the readings are.
+    it("keeps the first and the last reading exactly", () => {
+        const values = [10, 14, 9, 15, 8, 16, 12];
+        const line = smoothLine(
+            values.map((_, i) => day(i + 1)),
+            values,
+            40,
+        );
+        expect(line[0]).toEqual({ t: day(1), v: 10 });
+        expect(line.at(-1)).toEqual({ t: day(7), v: 12 });
+    });
+
+    it("softens a zigzag between the ends", () => {
+        const values = [10, 20, 10, 20, 10, 20, 10];
+        const line = smoothLine(
+            values.map((_, i) => day(i + 1)),
+            values,
+            40,
+        );
+        const inner = line.slice(1, -1).map((p) => p.v);
+        expect(Math.max(...inner) - Math.min(...inner)).toBeLessThan(10);
+    });
+
+    it("takes many readings down to about the number asked, by time", () => {
+        const values = Array.from({ length: 180 }, (_, i) => 100 + (i % 7));
+        const line = smoothLine(
+            values.map((_, i) => day(i + 1)),
+            values,
+            40,
+        );
+        expect(line.length).toBeLessThanOrEqual(42);
+        expect(line.length).toBeGreaterThan(30);
+        expect(line.every((p, i) => i === 0 || p.t > line[i - 1].t)).toBe(true);
+    });
+
+    it("draws two readings as they are", () => {
+        expect(smoothLine([day(1), day(2)], [5, 7], 40)).toEqual([
+            { t: day(1), v: 5 },
+            { t: day(2), v: 7 },
         ]);
-        expect(gaps.map(([a, b]) => [a.index, b.index])).toEqual([[2, 3]]);
     });
+});
 
-    // Bart, 2026-09-15: a stretch with no readings holds the last price and steps at the next one,
-    // rather than a slope that draws a jump as a gradual climb.
-    it("draws a gap flat at the last reading and steps at the next", () => {
-        const days = ["2026-01-01", "2026-01-02", "2026-01-11"];
-        const points = pointsFor([0, 0, 4], frame, 0, 4, days);
-        const { runs, gaps } = splitAtGaps(points, days);
-        expect(heldGapPath(gaps[0])).toBe("M10.0 50.0 H100.0 V10.0");
-        expect(heldAreaPath(runs, gaps, 50)).toBe("M0.0 50.0 L10.0 50.0 H100.0 V10.0 L100.0 50.0 L0.0 50.0 Z");
-    });
-
-    it("keeps a week apart, and a day apart, as one line", () => {
-        const days = ["2026-09-05", "2026-09-12", "2026-09-13"];
-        const { runs, gaps } = splitAtGaps(pointsFor([1, 2, 3], frame, 0, 3, days), days);
-        expect(runs).toHaveLength(1);
-        expect(gaps).toHaveLength(0);
+describe("yAt", () => {
+    it("reads the line's height between its points", () => {
+        const pts = [
+            { x: 0, y: 10, index: 0 },
+            { x: 100, y: 50, index: 1 },
+        ];
+        expect(yAt(pts, 25)).toBe(20);
+        expect(yAt(pts, -5)).toBe(10);
+        expect(yAt(pts, 200)).toBe(50);
     });
 });
