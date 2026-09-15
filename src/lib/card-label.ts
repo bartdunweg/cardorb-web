@@ -24,6 +24,15 @@ export function cardLabel(card: Labelled): string {
 }
 
 /**
+ * The line under a card's name wherever cards are listed: its label, then its rarity after a bullet,
+ * "PFL 004 · Double Rare" (Bart, 2026-09-15: on every list, not only a set's). A card with no rarity
+ * keeps the label alone.
+ */
+export function cardLine(card: Labelled & { rarity?: string | null }): string {
+    return [cardLabel(card), card.rarity?.trim()].filter(Boolean).join(" · ");
+}
+
+/**
  * The line under the title on a card's own sheet, where there is room for the set's name too:
  * the name and the card's printed label ("151 · MEW 199", "XY Black Star Promos · XY 124"). The name
  * alone was not enough for a set whose name reads like a code itself ("151").

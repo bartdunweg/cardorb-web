@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cardLabel, cardLabelFull } from "./card-label";
+import { cardLabel, cardLabelFull, cardLine } from "./card-label";
 
 describe("cardLabel", () => {
     it("is the set's code and the number as printed, the same at every size", () => {
@@ -37,5 +37,13 @@ describe("cardLabelFull", () => {
         );
         expect(cardLabelFull({ set_name: "Jumbo cards", set_abbr: null, number: "5" })).toBe("Jumbo cards · 5");
         expect(cardLabelFull({ set_name: null, set_abbr: null, number: null })).toBe("");
+    });
+});
+
+describe("cardLine", () => {
+    it("puts the rarity after the label, and leaves it off where there is none", () => {
+        expect(cardLine({ set_abbr: "PFL", number: "004", rarity: "Double Rare" })).toBe("PFL 004 · Double Rare");
+        expect(cardLine({ set_abbr: "PFL", number: "004", rarity: null })).toBe("PFL 004");
+        expect(cardLine({ set_abbr: "PFL", number: "004", rarity: " " })).toBe("PFL 004");
     });
 });

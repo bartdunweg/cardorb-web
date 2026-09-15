@@ -13,7 +13,7 @@ import { notify } from "@/components/app/toast";
 import { useCopySteps } from "@/components/app/use-copy-steps";
 import { useWarm } from "@/components/app/use-warm";
 import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
-import { cardLabel } from "@/lib/card-label";
+import { cardLine } from "@/lib/card-label";
 import { type CardsSize, TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
 import { formatPrice } from "@/lib/format";
 
@@ -173,7 +173,7 @@ export function SetCardTile({
                     The rarity follows after a bullet, "POR 121 · Rare" (Bart's call, 2026-09-15): on a set
                     page it is what tells two cards of the same Pokémon apart without opening either. */}
                 <span className="truncate text-xs text-tertiary tabular-nums">
-                    {[cardLabel({ set_name: card.setName, set_abbr: card.setAbbr, number: card.number }), card.rarity].filter(Boolean).join(" · ")}
+                    {cardLine({ set_name: card.setName, set_abbr: card.setAbbr, number: card.number, rarity: card.rarity })}
                 </span>
                 {/* The count and the price on one line, the two controls on their own line under it.
                     The controls sat in the picture's corner, over the art you came to look at, and on
