@@ -20,6 +20,8 @@ import { type FilterGroup, type FilterValues, FiltersSheet } from "./filters-she
 import { FlagIcon } from "./flag-icon";
 import { FormError } from "./form-error";
 import { LinkButton } from "./link-button";
+import { Orb } from "./orb";
+import { OrbMark } from "./orb-mark";
 import { RowButton } from "./row-button";
 import { LIST_ROW, RowSearch } from "./row-search";
 import { SearchTrigger } from "./search-trigger";
@@ -152,6 +154,28 @@ export const ourSections: SectionSpec[] = [
                         <div className="relative aspect-card w-24 overflow-hidden rounded-card">
                             <CardImage src="https://images.cardorb.com/en/base/base1/none/high.webp" alt="" width={96} className="object-cover" />
                         </div>
+                    </Cell>
+                </Group>
+            </Panel>
+        ),
+    },
+    {
+        id: "orb",
+        title: "Orb",
+        from: "components/app/orb",
+        ours: true,
+        note: "The Card Orb orb: a dotted globe turning, with a meridian of brighter dots sweeping round it, in the text colour. Orb moves (a canvas, still for reduced motion); OrbMark is the same drawing standing still as an SVG, for a logo or an app icon. Any size, dot count tuned to it. Ported from thinking-orbs, MIT.",
+        render: (
+            <Panel>
+                <Group title="Moving and still" cols="wide">
+                    <Cell label="Orb size={160}">
+                        <Orb size={160} className="text-primary" />
+                    </Cell>
+                    <Cell label="OrbMark size={64}">
+                        <OrbMark size={64} className="text-primary" />
+                    </Cell>
+                    <Cell label="OrbMark size={28}">
+                        <OrbMark size={28} className="text-primary" />
                     </Cell>
                 </Group>
             </Panel>
