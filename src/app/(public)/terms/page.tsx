@@ -7,7 +7,7 @@ import { LegalPage } from "@/components/app/legal-page";
  * loud: a price is a market observation and not advice, Cardorb is not affiliated with The Pokémon
  * Company, and a free service has to be able to change or stop.
  */
-const UPDATED = { iso: "2026-09-02", human: "2 September 2026" };
+const UPDATED = { iso: "2026-09-15", human: "15 September 2026" };
 
 export const metadata: Metadata = {
     title: "Terms of use",
@@ -42,8 +42,8 @@ export default function TermsPage() {
 
             <h2>Prices are information, not advice</h2>
             <p>
-                This is the part worth reading twice. The prices shown in the iOS app come from Cardmarket and describe what cards have been selling for. They
-                are an observation of a market, not a valuation of your cards, not an offer, and not financial or investment advice. A collection total is
+                This is the part worth reading twice. The prices shown in Cardorb come from public market data and describe what cards have been selling for.
+                They are an observation of a market, not a valuation of your cards, not an offer, and not financial or investment advice. A collection total is
                 arithmetic over those numbers, and it inherits every one of their limitations: a card&rsquo;s condition, its edition, and what someone will
                 actually pay for it on a given day are not in it.
             </p>
@@ -92,7 +92,7 @@ export default function TermsPage() {
                 owners, and are shown here to identify the cards you own, the way a catalogue identifies what is in it.
             </p>
             <p>
-                Card and set data comes from pokemontcg.io and TCGdex, and prices from Cardmarket. We depend on them, we do not control them, and we cannot
+                Card and set data, pictures and prices come from public catalogues and market sources. We depend on them, we do not control them, and we cannot
                 promise that what they say is complete or correct.
             </p>
 
