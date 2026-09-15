@@ -12,8 +12,8 @@
 // what is drawn inside swaps at once, clipped by the panel's edge while it moves.
 import type { ReactNode } from "react";
 import { SearchLg } from "@untitledui/icons";
-import Image from "next/image";
 import Link from "next/link";
+import { OrbLogo } from "@/components/app/orb-logo";
 import { Input } from "@/components/base/input/input";
 import { cx } from "@/utils/cx";
 import { MobileNavigationHeader } from "../base-components/mobile-header";
@@ -79,7 +79,7 @@ export const SidebarNavigationSectionDividers = ({
                         <div className="flex items-center justify-between gap-2">
                             {/* The rail's mark before the wordmark, so folding the sidebar keeps the mark in its place. */}
                             <Link href="/" className="flex items-center gap-3 text-lg font-semibold text-primary transition hover:opacity-70">
-                                <Image src="/mark.png" alt="" width={28} height={28} className="size-7 rounded-lg" />
+                                <OrbLogo size={28} className="text-primary" />
                                 Cardorb
                             </Link>
                             {headerAction}

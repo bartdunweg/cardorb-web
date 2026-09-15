@@ -2,11 +2,11 @@
 
 import { type FC, Suspense, use, useEffect, useState } from "react";
 import { Folder, LayoutLeft, Plus, SearchLg, Star01 } from "@untitledui/icons";
-import Image from "next/image";
 import Link from "next/link";
 import { AccountMenu } from "@/components/app/account-menu";
 import { useCommandSearch } from "@/components/app/command-search";
 import { FolderModal } from "@/components/app/folder-dialog";
+import { OrbLogo } from "@/components/app/orb-logo";
 import { NavButton } from "@/components/application/app-navigation/base-components/nav-button";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { cx } from "@/utils/cx";
@@ -51,7 +51,7 @@ export function SidebarRail({
                         aria-label="Cardorb"
                         className="rounded-md outline-focus-ring transition hover:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2"
                     >
-                        <Image src="/mark.png" alt="" width={28} height={28} className="size-7 rounded-lg" />
+                        <OrbLogo size={28} className="text-primary" />
                     </Link>
                 </div>
 

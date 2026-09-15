@@ -3,12 +3,12 @@ import { cspFor, needsNonce } from "@/lib/csp";
 import { updateSession } from "@/lib/supabase/middleware";
 
 /**
- * The prerendered paths that read no session: the crawler's files, the site's picture, the legal
+ * The prerendered paths that read no session: the crawler's files, the site's picture and icons, the legal
  * pages and the API reference. None is protected and none redirects a signed-in person, so the
  * claims `updateSession` verifies are thrown away — while a crawler pulling the sitemap still paid
  * for a signature check. They keep the frame rule every page gets; only the session lookup goes.
  */
-const SESSIONLESS_PATHS = new Set(["/robots.txt", "/sitemap.xml", "/opengraph-image", "/privacy", "/terms", "/docs/api"]);
+const SESSIONLESS_PATHS = new Set(["/robots.txt", "/sitemap.xml", "/opengraph-image", "/icon", "/apple-icon", "/privacy", "/terms", "/docs/api"]);
 
 /** Whether this path has any use for the session the proxy would refresh. */
 export function needsSession(pathname: string): boolean {

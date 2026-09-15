@@ -49,13 +49,13 @@ export const styles = sortCx({
         },
     },
 
+    // The solid buttons are flat (a change from the kit): its inner rim, a 12 % border fading down,
+    // read as an inner shadow on the black button and on the white one in dark mode.
     colors: {
         primary: {
             root: [
                 // Brand solid is near-black in light / near-white in dark, so the label flips to black in dark mode.
                 "bg-brand-solid text-white ring-1 ring-transparent ring-inset hover:bg-brand-solid_hover data-loading:bg-brand-solid_hover dark:text-black",
-                // Inner border gradient
-                "before:absolute before:inset-px before:border before:border-white/12 before:mask-b-from-0% dark:before:border-black/12",
                 // Icon styles
             ].join(" "),
         },
@@ -90,8 +90,6 @@ export const styles = sortCx({
         "primary-destructive": {
             root: [
                 "bg-error-solid text-white ring-1 ring-transparent outline-error ring-inset hover:bg-error-solid_hover data-loading:bg-error-solid_hover",
-                // Inner border gradient
-                "before:absolute before:inset-px before:border before:border-white/12 before:mask-b-from-0%",
                 // Icon styles
             ].join(" "),
         },
