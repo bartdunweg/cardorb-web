@@ -50,7 +50,7 @@ import { cardLabelFull } from "@/lib/card-label";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
 import { type CopyGroup, groupCopies, sortCopies } from "@/lib/copies";
 import { matchesRule } from "@/lib/folder-rule";
-import { formatDate, formatPrice } from "@/lib/format";
+import { formatPrice } from "@/lib/format";
 import { orientationNeedsPermission, requestOrientation } from "@/lib/holo/orientation";
 import { average30, priceChange } from "@/lib/price-change";
 import { tcgplayerUrl } from "@/lib/price-links";
@@ -754,8 +754,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                         Price
                     </h3>
 
-                    {/* The line first, then the numbers around it: what one copy trades at, what all the
-                                        copies come to, what was paid, and what that bought. */}
+                    {/* The line only: the price it ends on is under the title already (Bart, 2026-09-15). */}
                     {mine.tcg_id ? (
                         <CardPriceChart
                             tcgId={mine.tcg_id}
@@ -764,37 +763,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                             printing={shownSeries ?? mine.price_printing}
                         />
                     ) : null}
-                    {/* The market first, apart from what is yours: one figure from one market, where
-                                            it is from, and where to check it. TCGplayer only since cardorb-api#354 (Bart,
-                                            2026-09-12): two markets side by side read as a number and a correction, and
-                                            nobody could tell which to believe. */}
-                    <div className="flex flex-col gap-3">
-                        <dl className="flex flex-col divide-y divide-secondary">
-                            {/* The printing pressed under the card, as the price under the title. */}
-                            <DetailRow
-                                label="Price"
-                                value={
-                                    (shownPrice === undefined ? mine.price : shownPrice) != null ? formatPrice((shownPrice ?? mine.price)!) : "No price known"
-                                }
-                            />
-                        </dl>
-                        {/* Where to check it: the TCGplayer page the figure came from. The kit's secondary
-                                                button, as a link, full width (Bart, 2026-09-12). eBay's sold listings sat
-                                                beside it and were taken out for now. It says it opens a new tab. */}
-                        {tcgplayerUrl(mine.tcgplayer_id) ? (
-                            <Button
-                                href={tcgplayerUrl(mine.tcgplayer_id)!}
-                                target="_blank"
-                                rel="noreferrer noopener"
-                                color="secondary"
-                                size="sm"
-                                className="w-full"
-                            >
-                                TCGplayer
-                                <span className="sr-only"> (opens in a new tab)</span>
-                            </Button>
-                        ) : null}
-                    </div>
                 </section>
             ) : null}
             <section aria-labelledby="sheet-details" className="flex flex-col gap-4">
@@ -960,27 +928,15 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                             </Button>
                         </CopyFormDialog>
                     ) : null}
-
-                    {mine.owned && !emptied ? (
-                        <dl className="flex flex-col divide-y divide-secondary">
-                            <DetailRow label="Copies" value={mine.quantity ?? 1} />
-                            <DetailRow label="Holding value" value={mine.price != null ? formatPrice(mine.price * (mine.quantity ?? 1)) : null} />
-                            <DetailRow label="Purchase price" value={mine.purchase_price != null ? formatPrice(mine.purchase_price) : null} />
-                            {mine.purchase_price != null && mine.price != null ? (
-                                <DetailRow
-                                    label="Since purchase"
-                                    value={
-                                        <span className={mine.price - mine.purchase_price >= 0 ? "text-success-primary" : "text-error-primary"}>
-                                            {mine.price - mine.purchase_price >= 0 ? "+" : "−"}
-                                            {formatPrice(Math.abs(mine.price - mine.purchase_price))}
-                                        </span>
-                                    }
-                                />
-                            ) : null}
-                            <DetailRow label="Purchase date" value={mine.purchase_date ? formatDate(mine.purchase_date) : null} />
-                        </dl>
-                    ) : null}
                 </section>
+            ) : null}
+            {/* Where to check the price: the TCGplayer page the figure came from, last on the page (Bart,
+                2026-09-15). The kit's secondary button as a link, full width; it says it opens a new tab. */}
+            {mine && tcgplayerUrl(mine.tcgplayer_id) ? (
+                <Button href={tcgplayerUrl(mine.tcgplayer_id)!} target="_blank" rel="noreferrer noopener" color="secondary" size="sm" className="w-full">
+                    TCGplayer
+                    <span className="sr-only"> (opens in a new tab)</span>
+                </Button>
             ) : null}
         </>
     ) : null;
