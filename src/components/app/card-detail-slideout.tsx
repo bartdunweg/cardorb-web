@@ -29,6 +29,8 @@ import { CopyCard } from "@/components/app/copy-card";
 import { CopyFormDialog } from "@/components/app/copy-form-dialog";
 import { HoloCard } from "@/components/app/holo-card";
 import { MarkOwnedDialog } from "@/components/app/mark-owned-dialog";
+import { editionChoices, openingChoice, priceSeriesOf, printingChoices } from "@/components/app/printing-choices";
+import { SEGMENT_SELECTED } from "@/components/app/segment-selected";
 import { SheetActionBar } from "@/components/app/sheet-action-bar";
 import { SheetBar } from "@/components/app/sheet-bar";
 import { MARK_ON } from "@/components/app/tile-icon-button";
@@ -37,11 +39,12 @@ import { TypeIcon } from "@/components/app/type-icon";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Tab, TabList, TabPanel, Tabs } from "@/components/application/tabs/tabs";
 import { Badge } from "@/components/base/badges/badges";
+import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Button, styles as buttonStyles } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Tooltip } from "@/components/base/tooltip/tooltip";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
-import { type PokemonCard, type RemovedCard, isReverseFinish } from "@/lib/api-shapes";
+import { type Finish, type PokemonCard, type RemovedCard, isReverseFinish } from "@/lib/api-shapes";
 import { binderFromPath, isBinderPath } from "@/lib/binder-from-path";
 import { cardLabelFull } from "@/lib/card-label";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
@@ -199,7 +202,12 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         if (!takeable) return;
         setBusy(true);
         const into = list === "collection" ? binder : null;
-        const res = await addCard(takeable, list, into?.id);
+        /* The printing and run pressed under the card, where the sheet offers a choice (Bart,
+           2026-09-15): you add the one you are looking at. Otherwise the API's own default. */
+        const res = await addCard(takeable, list, into?.id, {
+            printing: printing ? { finish: printing.finish, foilPattern: printing.foilPattern } : undefined,
+            edition: edition ?? undefined,
+        });
         setBusy(false);
         const where = list === "wishlist" ? "your wishlist" : into ? into.name : "your collection";
         if (!res.ok) {
@@ -568,6 +576,60 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
      * the one underneath peeking out beside it. The layer underneath goes once the fade has
      * ended. Adjusted during render, the same way as the collection value above.
      */
+    /*
+     * The printing on show, under the card (printing-choices.ts): the copy's own to begin with,
+     * and whichever button was pressed after that, until the sheet moves to another card. A
+     * printing with its own photo shows that photo; any other shows the card's scan with that
+     * printing's foil over it.
+     */
+    const printings = printingChoices(known);
+    const editions = editionChoices(known?.editions);
+    const ownPrinting = mine?.finish ? (mine.foil_pattern ? `${mine.finish}/${mine.foil_pattern}` : mine.finish) : null;
+    const [picked, setPicked] = useState<{ tcgId: string | null; printing: string | null; edition: string | null }>({
+        tcgId: null,
+        printing: null,
+        edition: null,
+    });
+    const pickedHere = picked.tcgId === tcgId ? picked : null;
+    const openingPrinting = openingChoice(printings, ownPrinting);
+    // A card you do not hold opens on its unlimited run, not on the 1st Edition's price.
+    const openingEdition = openingChoice(editions, mine?.edition, "unlimited");
+    const printingKey = pickedHere?.printing ?? openingPrinting;
+    const editionKey = pickedHere?.edition ?? openingEdition;
+    const printing = printings?.find((p) => p.key === printingKey) ?? null;
+    const edition = editions?.find((e) => e.key === editionKey)?.key ?? null;
+    const pick = (next: { printing?: string; edition?: string }) => {
+        // A printing is not a step through the list: the new picture fades in where it is.
+        stepDir.current = 0;
+        setPicked({ tcgId, printing: next.printing ?? printingKey, edition: next.edition ?? editionKey });
+    };
+    /*
+     * The price above follows the buttons (Bart, 2026-09-15). On the printing the sheet opened on it
+     * is the copy's own price, as before; another one reads that printing's latest figure from the
+     * card's history, or a pattern print's own figure. `undefined` is "the copy's price", null is
+     * "that printing has none".
+     */
+    const pressedAway = (printing && printingKey !== openingPrinting) || (editionKey && editionKey !== openingEdition);
+    const latest = points.at(-1);
+    const shownSeries =
+        pressedAway && latest?.printings
+            ? priceSeriesOf(printing?.finish ?? (mine?.finish as Finish | null) ?? "normal", edition, new Set(Object.keys(latest.printings)))
+            : null;
+    const patternPrice = printing?.foilPattern
+        ? known?.patternPrints?.prints.find((p) => p.finish === printing.finish && p.foilPattern === printing.foilPattern)?.price?.market
+        : undefined;
+    const shownPrice: number | null | undefined = !pressedAway
+        ? undefined
+        : printing?.foilPattern
+          ? (patternPrice ?? null)
+          : shownSeries
+            ? (latest?.printings?.[shownSeries] ?? null)
+            : null;
+    const shownChange = pressedAway
+        ? shownPrice != null && shownSeries
+            ? priceChange(shownPrice, average30(points, new Date().toISOString().slice(0, 10), false, shownSeries))
+            : null
+        : change;
     const [art, setArt] = useState(NO_ART);
     const [scanLoaded, setScanLoaded] = useState(false);
     const [blurLoaded, setBlurLoaded] = useState(false);
@@ -575,7 +637,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const prevScan = useRef<HTMLDivElement>(null);
     const blurFade = useRef<HTMLDivElement>(null);
     const fades = useRef<{ scan?: Animation; blur?: Animation; prev?: Animation }>({});
-    const artNow = nextArt(art, card);
+    const artNow = nextArt(art, printing?.image && card ? { image_url: printing.image, image_high_url: null } : card);
     if (artNow !== art) {
         setArt(artNow);
         setScanLoaded(false);
@@ -788,7 +850,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                     <SlideoutMenu.Header onClose={close} close="none" className="px-0 pt-0 md:px-0">
                         {/* The card first, on a blurred, dimmed copy of itself: the art sets the header's colour,
                             the way a product page takes its hero's. The copy is decoration and says nothing. */}
-                        <div className="relative w-full overflow-hidden">
+                        {/* Clipped, not hidden: an overflow-hidden box can still be scrolled, and focusing a
+                            printing button scrolled the blurred, oversized backdrop 30 px up and aside. */}
+                        <div className="relative w-full overflow-clip">
                             {card?.image_url ? (
                                 /* The dimming sits on the box, not the layers, so the new copy at full
                                    opacity covers the old one entirely rather than mixing with it. */
@@ -866,10 +930,12 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                     <div className="relative mx-auto w-full max-w-44">
                                         <HoloCard
                                             rarity={card.rarity}
-                                            finish={mine?.finish ?? card.finish ?? null}
+                                            finish={printing?.finish ?? mine?.finish ?? card.finish ?? null}
                                             // A public profile is not told what somebody's copy looks
                                             // like, so there is nothing to narrow to there.
-                                            foilPattern={mine?.foil_pattern ?? ("foil_pattern" in card ? card.foil_pattern : null)}
+                                            foilPattern={
+                                                printing ? printing.foilPattern : (mine?.foil_pattern ?? ("foil_pattern" in card ? card.foil_pattern : null))
+                                            }
                                             facts={known}
                                             number={card.number}
                                             types={card.types}
@@ -934,6 +1000,57 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                         <CardBack width={176} priority />
                                     </div>
                                 )}
+                                {/* The printings that exist, and only those; nothing where the card was printed one
+                                    way or the answer is not in yet. Buttons rather than a select: two to four
+                                    short words, each a look at the card, and the one on show stays in sight.
+                                    Out into the header's side padding, which is room for the card's tilt: four
+                                    buttons are 353 px and the padded box 320. More than fit scroll sideways. */}
+                                {card?.image_url && (printings || editions) ? (
+                                    <div className="-mx-8 mt-5 flex flex-col items-center gap-2">
+                                        {printings ? (
+                                            <div className="max-w-full overflow-x-auto p-1">
+                                                <ButtonGroup
+                                                    size="sm"
+                                                    aria-label="Printing"
+                                                    selectedKeys={printingKey ? [printingKey] : []}
+                                                    disallowEmptySelection
+                                                    onSelectionChange={(keys) => {
+                                                        const [key] = [...keys];
+                                                        if (typeof key === "string") pick({ printing: key });
+                                                    }}
+                                                >
+                                                    {printings.map((p) => (
+                                                        <ButtonGroupItem key={p.key} id={p.key} className={SEGMENT_SELECTED}>
+                                                            {p.label}
+                                                        </ButtonGroupItem>
+                                                    ))}
+                                                </ButtonGroup>
+                                            </div>
+                                        ) : null}
+                                        {editions ? (
+                                            <div className="max-w-full overflow-x-auto p-1">
+                                                {/* No run has a picture of its own yet, so pressing one changes the price
+                                                    above and the run a card is added in, not the card. */}
+                                                <ButtonGroup
+                                                    size="sm"
+                                                    aria-label="Print run"
+                                                    selectedKeys={editionKey ? [editionKey] : []}
+                                                    disallowEmptySelection
+                                                    onSelectionChange={(keys) => {
+                                                        const [key] = [...keys];
+                                                        if (typeof key === "string") pick({ edition: key });
+                                                    }}
+                                                >
+                                                    {editions.map((e) => (
+                                                        <ButtonGroupItem key={e.key} id={e.key} className={SEGMENT_SELECTED}>
+                                                            {e.label}
+                                                        </ButtonGroupItem>
+                                                    ))}
+                                                </ButtonGroup>
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                ) : null}
                             </div>
                         </div>
                         <div className="flex flex-col px-4 pt-4 md:px-6">
@@ -966,10 +1083,12 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                             </AriaHeading>
                             <p className="text-sm text-tertiary">{(card && cardLabelFull(card)) || "—"}</p>
                             {/* The price sits under the title, where a product panel puts it, not among the attributes. */}
-                            {mine?.price != null ? (
+                            {shownPrice === null ? (
+                                <p className="text-sm text-tertiary">No price for this printing</p>
+                            ) : (shownPrice ?? mine?.price) != null ? (
                                 <p className="flex items-baseline gap-2 text-md font-semibold text-primary tabular-nums">
                                     <span>
-                                        {formatPrice(mine.price)}
+                                        {formatPrice((shownPrice ?? mine?.price)!)}
                                         <span className="sr-only"> market price</span>
                                     </span>
                                     {/* Beside it, which way it moved: the price against the card's own 30-day
@@ -978,15 +1097,15 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                         carrier; a screen reader gets it spelled out ("Up €0.12, 5 percent…") from a
                                         span of its own, because a bare span takes no aria-label. `arrive` because
                                         the average comes with the catalogue's answer, a beat after the sheet. */}
-                                    {change ? (
+                                    {shownChange ? (
                                         <span
                                             className={cx(
                                                 "arrive text-sm font-medium whitespace-nowrap",
-                                                change.direction === "up" ? "text-success-primary" : "text-error-primary",
+                                                shownChange.direction === "up" ? "text-success-primary" : "text-error-primary",
                                             )}
                                         >
-                                            <span aria-hidden="true">{change.text}</span>
-                                            <span className="sr-only">{change.label}</span>
+                                            <span aria-hidden="true">{shownChange.text}</span>
+                                            <span className="sr-only">{shownChange.label}</span>
                                         </span>
                                     ) : null}
                                 </p>
