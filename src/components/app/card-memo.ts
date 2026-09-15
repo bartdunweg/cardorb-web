@@ -30,6 +30,12 @@ const PRICES_ASKED = new Map<string, Promise<PricePoint[]>>();
  */
 export const PRICES_FRESH_MS = 10 * 60_000;
 
+/**
+ * Where a card's facts are kept: its id, and the catalogue before it for a Japanese card. The two
+ * catalogues share 14 ids (neo4-100 to neo4-113), and a Japanese card's facts are not the English one's.
+ */
+const factsKey = (tcgId: string, language?: string | null) => (language === "ja" ? `ja:${tcgId}` : tcgId);
+
 /** One answer per card, however many ask; a second ask while the first is out joins it. */
 function once<T>(seen: Map<string, T>, asked: Map<string, Promise<T>>, key: string, ask: () => Promise<T>): Promise<T> {
     if (seen.has(key)) return Promise.resolve(seen.get(key) as T);
@@ -44,12 +50,13 @@ function once<T>(seen: Map<string, T>, asked: Map<string, Promise<T>>, key: stri
     return p;
 }
 
-export function preloadCardFacts(tcgId: string): Promise<CardFacts | null> {
+export function preloadCardFacts(tcgId: string, language?: string | null): Promise<CardFacts | null> {
+    const key = factsKey(tcgId, language);
     /* A sheet opened while its grid's page is still out joins that page, and asks the card alone
        only where the page came back without it. */
-    const paged = FACTS_PAGED.get(tcgId);
-    if (paged) return paged.then((found) => found ?? preloadCardFacts(tcgId));
-    return once(FACTS_SEEN, FACTS_ASKED, tcgId, () => cardFacts(tcgId));
+    const paged = FACTS_PAGED.get(key);
+    if (paged) return paged.then((found) => found ?? preloadCardFacts(tcgId, language));
+    return once(FACTS_SEEN, FACTS_ASKED, key, () => cardFacts(tcgId, language));
 }
 
 /**
@@ -62,20 +69,23 @@ export function preloadCardFacts(tcgId: string): Promise<CardFacts | null> {
  * silence only means the API's copy could not answer in full, and the card alone still can.
  * Nothing is awaited and nothing can fail here.
  */
-export function warmCardFacts(tcgIds: (string | null | undefined)[]) {
-    const wanted = [...new Set(tcgIds)].filter(
-        (id): id is string => typeof id === "string" && id !== "" && !FACTS_SEEN.has(id) && !FACTS_ASKED.has(id) && !FACTS_PAGED.has(id),
-    );
+export function warmCardFacts(tcgIds: (string | null | undefined)[], language?: string | null) {
+    const wanted = [...new Set(tcgIds)].filter((id): id is string => {
+        if (typeof id !== "string" || id === "") return false;
+        const key = factsKey(id, language);
+        return !FACTS_SEEN.has(key) && !FACTS_ASKED.has(key) && !FACTS_PAGED.has(key);
+    });
     for (let at = 0; at < wanted.length; at += CARD_FACTS_BATCH) {
         const ids = wanted.slice(at, at + CARD_FACTS_BATCH);
-        const page = cardFactsMany(ids).catch(() => ({}) as Record<string, CardFacts>);
+        const page = cardFactsMany(ids, language).catch(() => ({}) as Record<string, CardFacts>);
         for (const id of ids) {
+            const key = factsKey(id, language);
             FACTS_PAGED.set(
-                id,
+                key,
                 page.then((found) => {
-                    FACTS_PAGED.delete(id);
+                    FACTS_PAGED.delete(key);
                     const facts = found[id];
-                    if (facts && !FACTS_SEEN.has(id)) FACTS_SEEN.set(id, facts);
+                    if (facts && !FACTS_SEEN.has(key)) FACTS_SEEN.set(key, facts);
                     return facts;
                 }),
             );
@@ -84,8 +94,8 @@ export function warmCardFacts(tcgIds: (string | null | undefined)[]) {
 }
 
 /** What is already known, without asking: the answer, null for a card the catalogue cannot place, undefined for one not asked yet. */
-export function knownCardFacts(tcgId: string): CardFacts | null | undefined {
-    return FACTS_SEEN.get(tcgId);
+export function knownCardFacts(tcgId: string, language?: string | null): CardFacts | null | undefined {
+    return FACTS_SEEN.get(factsKey(tcgId, language));
 }
 
 /**
@@ -121,10 +131,10 @@ export function knownPriceHistory(tcgId: string): PricePoint[] | undefined {
  * second. Nothing is awaited and nothing can fail here: each ask keeps its own answer, and one
  * that is refused is simply asked again by the sheet.
  */
-export function warmCard(tcgId: string | null) {
+export function warmCard(tcgId: string | null, language?: string | null) {
     void import("@/components/app/card-detail-slideout");
     if (!tcgId) return;
-    void preloadCardFacts(tcgId);
+    void preloadCardFacts(tcgId, language);
     void preloadPriceHistory(tcgId);
 }
 

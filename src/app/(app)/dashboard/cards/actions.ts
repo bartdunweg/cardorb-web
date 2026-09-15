@@ -545,9 +545,12 @@ export type CardFacts = {
 // The card's facts for the sheet: the illustrator, HP, stage, regulation mark and what TCGplayer
 // says the printing is worth. Null when the catalogue cannot answer; the
 // sheet is open for the row, not for these.
-export async function cardFacts(tcgId: string): Promise<CardFacts | null> {
+export async function cardFacts(tcgId: string, language?: string | null): Promise<CardFacts | null> {
     try {
-        return factsOf(await api(`/cards/${encodeURIComponent(tcgId)}`, { schema: cardFactsAnswer }));
+        /* A Japanese card is asked of the Japanese catalogue: its id is only in that one, and asked of the
+           English one it had no printings at all, so its sheet offered nothing to choose (2026-09-15). */
+        const params = language === "ja" ? { language: "ja" } : undefined;
+        return factsOf(await api(`/cards/${encodeURIComponent(tcgId)}`, { params, schema: cardFactsAnswer }));
     } catch (err) {
         console.error("Card facts unavailable:", err instanceof Error ? err.message : err);
         return null;
@@ -574,7 +577,7 @@ const factsOf = (c: z.output<typeof cardFactsAnswer>): CardFacts => ({
 // opens a card, so its sheet opens with its choices in place. Only the cards the API could answer
 // in full: one it answers null for, or one whose answer does not parse, is left out, and its sheet
 // asks cardFacts as it always did. No price: the batch carries none, and nothing reads it.
-export async function cardFactsMany(tcgIds: string[]): Promise<Record<string, CardFacts>> {
+export async function cardFactsMany(tcgIds: string[], language?: string | null): Promise<Record<string, CardFacts>> {
     const parsed = z
         .array(z.string().min(1).max(64))
         .min(1)
@@ -582,7 +585,11 @@ export async function cardFactsMany(tcgIds: string[]): Promise<Record<string, Ca
         .safeParse([...new Set(tcgIds)]);
     if (!parsed.success) return {};
     try {
-        const { cards } = await api("/cards/facts", { method: "POST", body: { ids: parsed.data }, schema: cardFactsBatchAnswer });
+        const { cards } = await api("/cards/facts", {
+            method: "POST",
+            body: { ids: parsed.data, ...(language === "ja" ? { language: "ja" } : {}) },
+            schema: cardFactsBatchAnswer,
+        });
         const out: Record<string, CardFacts> = {};
         for (const [id, answer] of Object.entries(cards)) {
             const one = answer === null ? null : cardFactsAnswer.safeParse(answer);

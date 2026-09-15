@@ -31,7 +31,7 @@ import { today } from "@/lib/format";
 export type OwnableCard = Pick<
     Card,
     "id" | "name" | "image_url" | "set_name" | "set_abbr" | "number" | "grade" | "finish" | "foil_pattern" | "edition" | "tcg_id"
->;
+> & { language?: string | null };
 
 type Props = {
     card: OwnableCard;
