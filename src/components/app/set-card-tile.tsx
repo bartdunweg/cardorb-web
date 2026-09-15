@@ -169,9 +169,11 @@ export function SetCardTile({
                 {/* The set's code and the number, "POR 121", the line every other list prints under a card
                     and what the card prints in its corner. It was the number alone, on the grounds that
                     the page's title names the set; Bart's call, 2026-09-13: one way of writing a card
-                    everywhere, as printed on the card (cardLabel): the catalogue's number is the printed one. */}
+                    everywhere, as printed on the card (cardLabel): the catalogue's number is the printed one.
+                    The rarity follows after a bullet, "POR 121 · Rare" (Bart's call, 2026-09-15): on a set
+                    page it is what tells two cards of the same Pokémon apart without opening either. */}
                 <span className="truncate text-xs text-tertiary tabular-nums">
-                    {cardLabel({ set_name: card.setName, set_abbr: card.setAbbr, number: card.number })}
+                    {[cardLabel({ set_name: card.setName, set_abbr: card.setAbbr, number: card.number }), card.rarity].filter(Boolean).join(" · ")}
                 </span>
                 {/* The count and the price on one line, the two controls on their own line under it.
                     The controls sat in the picture's corner, over the art you came to look at, and on
