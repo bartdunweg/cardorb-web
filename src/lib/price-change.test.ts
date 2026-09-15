@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { average30, priceChange, printingsOfLine } from "./price-change";
+import { average30, priceChange, printingsOfLine, trustedStretch } from "./price-change";
 
 describe("priceChange", () => {
     it("says how far above the 30-day average the price sits, with the sign in the words", () => {
@@ -93,5 +93,25 @@ describe("printingsOfLine", () => {
                 },
             ]).map((p) => p.label),
         ).toEqual(["Normal", "Reverse Holo", "Poké Ball Reverse", "Master Ball Reverse", "Team Rocket Reverse"]);
+    });
+});
+
+describe("trustedStretch", () => {
+    const line = (values: number[]) => values.map((value, i) => ({ date: `2026-01-${String(i + 1).padStart(2, "0")}`, value }));
+
+    // Base Set Charizard's 1st Edition: €400 on weekly readings, €5,000, €430 again, then €3,600 on.
+    it("starts a line that contradicts itself after its last jump of five times or more", () => {
+        const stretch = trustedStretch(line([400, 5266, 431, 261, 3563, 3524, 8480]));
+        expect(stretch.map((p) => p.value)).toEqual([3563, 3524, 8480]);
+    });
+
+    it("keeps a line with one such jump whole: a correction or a real move, not a contradiction", () => {
+        const whole = line([86, 86, 905, 909]);
+        expect(trustedStretch(whole)).toBe(whole);
+    });
+
+    it("keeps a line that never jumps that far whole", () => {
+        const whole = line([100, 300, 120, 400]);
+        expect(trustedStretch(whole)).toBe(whole);
     });
 });
