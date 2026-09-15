@@ -6,7 +6,7 @@ import { LegalPage } from "@/components/app/legal-page";
  * for a link, and the iOS app points at cardorb.com/privacy. One policy for both surfaces; where
  * the website and the app differ, the sentence says so rather than a second document drifting.
  */
-const UPDATED = { iso: "2026-09-02", human: "2 September 2026" };
+const UPDATED = { iso: "2026-09-15", human: "15 September 2026" };
 
 export const metadata: Metadata = {
     title: "Privacy",
@@ -101,10 +101,9 @@ export default function PrivacyPage() {
                     <strong>Sentry</strong> receives crash reports from the iOS app, and nothing from the website.
                 </li>
                 <li>
-                    <strong>pokemontcg.io</strong> and <strong>TCGdex</strong> supply card and set data, and <strong>Cardmarket</strong> supplies prices in the
-                    iOS app. These are asked by Cardorb&rsquo;s own servers, never by your browser or your phone, so they receive nothing identifying you: not
-                    your address, not your account, not what you searched for. Opening a &ldquo;Buy on Cardmarket&rdquo; link is an ordinary visit to their
-                    website and is governed by their policy, not this one.
+                    <strong>Public card catalogues and price sources</strong> supply card and set data, pictures and prices. Cardorb&rsquo;s own servers ask
+                    them and keep a copy, never your browser or your phone, so they receive nothing identifying you: not your address, not your account, not
+                    what you searched for. Opening a link to a shop is an ordinary visit to their website and is governed by their policy, not this one.
                 </li>
             </ul>
             <p>
