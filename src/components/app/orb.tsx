@@ -16,10 +16,10 @@ type OrbProps = {
 
 const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
 
-// The orb turning. The server sends the still OrbMark, so the page never waits on script for it;
+// The orb moving. The server sends the still OrbMark, so the page never waits on script for it;
 // once mounted a canvas takes over from that same moment, unless the visitor asked for less motion.
 // It stops drawing while scrolled out of view or while the tab is hidden, and picks up where it was.
-// It keeps turning with no pause control, the owner's call (#626): WCAG 2.2.2 asks for one on motion
+// It keeps moving with no pause control, the owner's call (#626): WCAG 2.2.2 asks for one on motion
 // past five seconds; reduced motion is the only way to stop it. Do not add a stop or a button without asking.
 export function Orb({ size, speed = 1, className, label }: OrbProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);

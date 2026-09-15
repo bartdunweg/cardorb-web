@@ -3,18 +3,18 @@ import { ORB_STILL_TIME, orbFrame, orbTuning } from "./orb";
 
 /*
  * The orb is drawn from one list of dots, by the canvas and by the SVG mark alike. At 64 px it has
- * to be the package's own 64 px globe, and at any size it has to stay inside its square and paint
+ * to be the package's own 64 px orb, and at any size it has to stay inside its square and paint
  * the far side first, or the near dots vanish behind it.
  */
 
 describe("orb", () => {
     it("tunes 64 px to the original's 64 px preset", () => {
-        expect(orbTuning(64)).toEqual({ rings: 11, equator: 29, fatten: 1.15 });
+        expect(orbTuning(64)).toEqual({ around: 44, sphere: 38, thin: 0.85 });
     });
 
     it("keeps the original's count from 300 px up", () => {
-        expect(orbTuning(300)).toEqual({ rings: 17, equator: 44, fatten: 1 });
-        expect(orbTuning(600)).toMatchObject({ rings: 17, equator: 44 });
+        expect(orbTuning(300)).toEqual({ around: 88, sphere: 150, thin: 1 });
+        expect(orbTuning(600)).toMatchObject({ around: 88, sphere: 150 });
     });
 
     it.each([32, 64, 220, 1024])("stays inside a %i px square", (size) => {

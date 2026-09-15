@@ -164,7 +164,7 @@ export const ourSections: SectionSpec[] = [
         title: "Orb",
         from: "components/app/orb",
         ours: true,
-        note: "The Card Orb orb: a dotted globe turning, with a meridian of brighter dots sweeping round it, in the text colour. Orb moves (a canvas, still for reduced motion); OrbMark is the same drawing standing still as an SVG, for a logo or an app icon. Any size, dot count tuned to it. Ported from thinking-orbs, MIT.",
+        note: "The Card Orb orb: a sash of dotted bands wrapped round a faint sphere, rippling, in the text colour. Orb moves (a canvas, still for reduced motion); OrbMark is the same drawing standing still as an SVG, for a logo or an app icon. Any size, dot count tuned to it. Ported from thinking-orbs, MIT.",
         render: (
             <Panel>
                 <Group title="Moving and still" cols="wide">
