@@ -30,8 +30,12 @@ export type HoloVariant = {
 
 const FAMILY: Record<string, string> = {
     none: "common",
+    "no rarity": "common",
     common: "common",
-    promo: "common",
+    // A promo prints a black star, not a rarity, and since cardorb-api#494 every card of a promo set
+    // answers "Promo". Most promos are holo, so the card shines like one; a copy said to be
+    // non-holo lies flat (see holoVariant).
+    promo: "rare holo",
     "classic collection": "common",
     "one diamond": "common",
     uncommon: "uncommon",
@@ -43,9 +47,19 @@ const FAMILY: Record<string, string> = {
     "rare prime": "rare holo",
     "ace spec rare": "rare holo",
     "four diamond": "rare holo",
+    "super rare holo": "rare holo",
+    "prism rare": "rare holo",
+    "character rare": "rare holo",
+    // Crown Zenith's gallery: the GG number already sets the trainer-gallery attribute.
+    "galarian gallery": "rare holo",
     "holo rare v": "rare holo v",
     "double rare": "rare holo v",
     "illustration rare": "rare holo v",
+    "art rare": "rare holo v",
+    "triple rare": "rare holo v",
+    "mega attack rare": "rare holo v",
+    "holo rare ex": "rare holo v",
+    "holo rare gx": "rare holo v",
     "rare holo lv.x": "rare holo v",
     // The API's spelling since cardorb-api's one-spelling change (2026-09-14); the word order above stays for old data.
     "holo rare lv.x": "rare holo v",
@@ -53,10 +67,16 @@ const FAMILY: Record<string, string> = {
     "holo rare vstar": "rare holo vstar",
     "ultra rare": "rare ultra",
     "special illustration rare": "rare ultra",
+    "special art rare": "rare ultra",
+    "super rare": "rare ultra",
+    "character super rare": "rare ultra",
+    "trainer rare": "rare ultra",
+    "mega ultra rare": "rare ultra",
     legend: "rare ultra",
     "one star": "rare ultra",
     "full art trainer": "rare ultra",
     "two star": "rare rainbow alt",
+    "rainbow rare": "rare rainbow",
     "secret rare": "rare secret",
     "hyper rare": "rare secret",
     "mega hyper rare": "rare secret",
@@ -69,6 +89,7 @@ const FAMILY: Record<string, string> = {
     "one shiny": "rare shiny",
     "shiny rare v": "rare shiny v",
     "shiny ultra rare": "rare shiny v",
+    "shiny super rare": "rare shiny v",
     "two shiny": "rare shiny v",
     "shiny rare vmax": "rare shiny vmax",
 };
@@ -155,6 +176,7 @@ export function holoVariant(
 ): HoloVariant {
     const key = (rarity ?? "").trim().toLowerCase();
     let family = FAMILY[key] ?? "common";
+    if (key === "promo" && finish === "normal") family = "common";
     // A Poké Ball, Friend Ball, Team Rocket, Energy Symbol or other patterned copy is a reverse holo with a pattern: the reverse effect, for now without the pattern.
     if (isReverseFinish(finish) && REVERSIBLE.has(family)) family = `${family} reverse holo`;
     else if (finish === "holo" && PLAIN.has(family)) family = "rare holo";
