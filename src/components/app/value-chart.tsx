@@ -3,7 +3,7 @@
 import { type ReactNode, useCallback, useId, useRef, useState } from "react";
 import { BarChart01 } from "@untitledui/icons";
 import { formatCount, formatPrice } from "@/lib/format";
-import { type Frame, areaPath, linePath, nearestIndex, niceTicks, pointsFor, smoothLine, yAt } from "@/lib/value-chart-math";
+import { type Frame, areaPath, calmRange, linePath, nearestIndex, niceTicks, pointsFor, smoothLine, yAt } from "@/lib/value-chart-math";
 import type { ValueSnapshot } from "@/lib/value-history";
 import { cx } from "@/utils/cx";
 
@@ -92,7 +92,7 @@ export function ValueChart({
 
     const frame: Frame = { ...FRAME, width };
     const values = snapshots.map((s) => s.value);
-    const ticks = niceTicks(Math.min(...values), Math.max(...values));
+    const ticks = niceTicks(...calmRange(Math.min(...values), Math.max(...values)));
     const yMin = ticks[0];
     const yMax = ticks[ticks.length - 1];
     const days = snapshots.map((s) => s.date);

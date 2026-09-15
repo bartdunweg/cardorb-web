@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { areaPath, linePath, nearestIndex, niceTicks, pointsFor, smoothLine, yAt } from "./value-chart-math";
+import { areaPath, calmRange, linePath, nearestIndex, niceTicks, pointsFor, smoothLine, yAt } from "./value-chart-math";
 
 const frame = { width: 100, height: 60, top: 10, right: 0, bottom: 10, left: 0 };
 
@@ -12,6 +12,24 @@ describe("niceTicks", () => {
 
     it("still draws an axis when every reading is the same", () => {
         expect(niceTicks(500, 500)).toEqual([500, 501]);
+    });
+});
+
+describe("calmRange", () => {
+    // Bart, 2026-09-15: Charizard's 1st Edition moved 1% in a month (€8,548 to €8,657) and filled the
+    // whole chart, so a small wobble looked like a swing.
+    it("widens a range narrower than a tenth of its top, around its middle", () => {
+        const [min, max] = calmRange(8548, 8657);
+        expect(max - min).toBeCloseTo(865.7);
+        expect((min + max) / 2).toBeCloseTo((8548 + 8657) / 2);
+    });
+
+    it("leaves a range that already moves that much as it is", () => {
+        expect(calmRange(418, 772)).toEqual([418, 772]);
+    });
+
+    it("centres a flat line", () => {
+        expect(calmRange(500, 500)).toEqual([475, 525]);
     });
 });
 
