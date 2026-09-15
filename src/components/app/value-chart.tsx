@@ -15,9 +15,10 @@ import { cx } from "@/utils/cx";
  *
  * The line is the brand colour at 2 px with a faint fill under it; the grid and axis text stay
  * recessive. Hovering or focusing finds the nearest reading and shows a crosshair, an 8 px marker
- * and a tooltip with the date, the value and how many copies had no price. A reading on which cards
- * were added carries a small ring on the line, and its tooltip says how many and what they were
- * worth: the step the line takes when a collection grows, which a value alone does not explain. Arrow keys walk the
+ * and a tooltip with the date, the value and how many cards had no price. A reading on which cards
+ * were added says in its tooltip how many and what they were worth: the step the line takes when a
+ * collection grows, which a value alone does not explain. No ring on the line for it any more (Bart,
+ * 2026-09-15): the line is one smooth stroke and the tooltip carries it. Arrow keys walk the
  * readings for a keyboard, and the description under the figure says first, last and the change,
  * so nothing is carried by the picture alone.
  */
@@ -39,7 +40,7 @@ const whenOf = (s: ValueSnapshot) => (s.weekFrom ? dayYear.formatRange(new Date(
 export function ValueChart({
     snapshots,
     label = "Collection value over time",
-    countLabel = "copies",
+    countLabel = "cards",
     children,
 }: {
     snapshots: ValueSnapshot[];
@@ -126,6 +127,8 @@ export function ValueChart({
     const addedAt = snapshots.map((s, i) => i > 0 && (s.added ?? 0) > 0);
     const addedValue = snapshots.reduce((sum, s, i) => sum + (addedAt[i] ? (s.addedValue ?? 0) : 0), 0);
     const addedDays = addedAt.filter(Boolean).length;
+    // "1 card", "2 cards": the tooltip's count in its number (Bart, 2026-09-15: "cards", not "copies").
+    const counted = (n: number) => (n === 1 && countLabel ? countLabel.replace(/s$/, "") : countLabel);
     /*
      * The highest and the lowest reading, written on the line (Bart, 2026-09-15): without them the
      * range was a hover away. The first of each where a figure repeats; one mark where the line is flat.
@@ -235,20 +238,6 @@ export function ValueChart({
                                 dotted stretch said nothing a flat line does not). */}
                             <path d={areaPath(drawn, baseline)} fill={`url(#${fadeId})`} className="text-fg-primary" />
                             <path d={linePath(drawn)} className={strokeTone} strokeWidth={2} fill="none" strokeLinejoin="round" strokeLinecap="round" />
-                            {/* A ring where cards were added: a shape on the line, not a colour, hollow so
-                                it reads apart from the filled marker of the reading being looked at. */}
-                            {points.map((p, i) =>
-                                addedAt[i] ? (
-                                    <circle
-                                        key={snapshots[i].date}
-                                        cx={p.x}
-                                        cy={yAt(drawn, p.x)}
-                                        r={3.5}
-                                        className="fill-bg-primary stroke-fg-primary"
-                                        strokeWidth={1.5}
-                                    />
-                                ) : null,
-                            )}
                         </g>
 
                         {/* The figures sit clear of the edges: anchored to the side they are near. Hidden from a
@@ -298,13 +287,13 @@ export function ValueChart({
                         </span>
                         {countLabel ? (
                             <span className="text-tertiary tabular-nums">
-                                {formatCount(current.cards)} {countLabel}
+                                {formatCount(current.cards)} {counted(current.cards)}
                                 {current.unpriced > 0 ? ` · ${formatCount(current.unpriced)} without a price` : ""}
                             </span>
                         ) : null}
                         {countLabel && active !== null && addedAt[active] ? (
                             <span className="text-tertiary tabular-nums">
-                                +{formatCount(current.added ?? 0)} {countLabel} added, worth {formatPrice(current.addedValue ?? 0)}
+                                +{formatCount(current.added ?? 0)} {counted(current.added ?? 0)} added, worth {formatPrice(current.addedValue ?? 0)}
                             </span>
                         ) : null}
                     </output>

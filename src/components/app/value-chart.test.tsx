@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { fireEvent, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ValueChart } from "./value-chart";
 
@@ -43,15 +43,15 @@ describe("ValueChart", () => {
     });
 
     // Bart, 2026-09-13: "ik zie het toevoegen van kaarten niet terug in de grafiek".
-    it("rings the readings on which cards were added, and says so in the description", () => {
+    // Bart, 2026-09-15: no ring on the line; the tooltip and the description say it.
+    it("puts no ring on the readings on which cards were added, and says so in the description", () => {
         const readings = [
             { date: "2026-09-09", value: 100, cards: 10, priced: 10, unpriced: 0, added: 4, addedValue: 30 },
             { date: "2026-09-10", value: 140, cards: 12, priced: 12, unpriced: 0, added: 2, addedValue: 35 },
             { date: "2026-09-11", value: 141, cards: 12, priced: 12, unpriced: 0, added: 0, addedValue: 0 },
         ];
         const { container, getByText } = render(<ValueChart snapshots={readings} />);
-        // The first reading's additions came before what is shown: one ring, not two.
-        expect(container.querySelectorAll("circle").length).toBe(1);
+        expect(container.querySelectorAll("circle").length).toBe(0);
         expect(getByText(/Cards were added on 1 reading/)).toBeTruthy();
     });
 
@@ -98,5 +98,17 @@ describe("ValueChart", () => {
     it("writes one figure where the line never moves", () => {
         const { container } = render(<ValueChart snapshots={two.map((s) => ({ ...s, value: 2 }))} countLabel={null} />);
         expect(container.querySelectorAll("text[data-extreme]")).toHaveLength(1);
+    });
+
+    // Bart, 2026-09-15: "cards", not "copies", and "+1 card added".
+    it("counts cards in the tooltip, one card in the singular", () => {
+        const readings = [
+            { date: "2026-09-09", value: 100, cards: 1, priced: 1, unpriced: 0 },
+            { date: "2026-09-10", value: 140, cards: 2, priced: 2, unpriced: 0, added: 1, addedValue: 40 },
+        ];
+        const { container } = render(<ValueChart snapshots={readings} />);
+        const svg = container.querySelector("svg[tabindex]")!;
+        fireEvent.keyDown(svg, { key: "End" });
+        expect(container.querySelector("output")?.textContent).toMatch(/2 cards\+1 card added, worth €40\.00/);
     });
 });
