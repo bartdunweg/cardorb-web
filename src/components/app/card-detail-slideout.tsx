@@ -1314,7 +1314,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                 tcgId={mine.tcg_id}
                                                 holo={isReverseFinish(mine.finish)}
                                                 name={card?.name}
-                                                printing={mine.price_printing}
+                                                printing={shownSeries ?? mine.price_printing}
                                             />
                                         ) : null}
                                         {/* The market first, apart from what is yours: one figure from one market, where
@@ -1326,7 +1326,15 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                 Market price
                                             </h3>
                                             <dl className="flex flex-col divide-y divide-secondary">
-                                                <DetailRow label="Price" value={mine.price != null ? formatPrice(mine.price) : "No price known"} />
+                                                {/* The printing pressed under the card, as the price under the title. */}
+                                                <DetailRow
+                                                    label="Price"
+                                                    value={
+                                                        (shownPrice === undefined ? mine.price : shownPrice) != null
+                                                            ? formatPrice((shownPrice ?? mine.price)!)
+                                                            : "No price known"
+                                                    }
+                                                />
                                             </dl>
                                             {/* Where to check it: the TCGplayer page the figure came from. The kit's secondary
                                                 button, as a link, full width (Bart, 2026-09-12). eBay's sold listings sat

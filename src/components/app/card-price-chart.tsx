@@ -28,11 +28,15 @@ export function CardPriceChart({
     tcgId: string;
     holo?: boolean;
     name?: string | null;
-    /** The TCGplayer printing the copy is priced as ("reverse-holofoil"), which the line opens on. */
+    /**
+     * The TCGplayer printing the sheet shows ("reverse-holofoil"), which the line opens on: the copy's
+     * own, or the one pressed under the card. A new one here wins over a pick in the chart's own switcher.
+     */
     printing?: string | null;
 }) {
-    // The printing picked in the switcher, kept with the card it was picked on.
-    const [picked, setPicked] = useState<{ tcgId: string; key: string } | null>(null);
+    // The printing picked in the switcher, kept with the card and the sheet's printing it was picked
+    // under: pressing another printing under the card sets the line to it again (Bart, 2026-09-15).
+    const [picked, setPicked] = useState<{ tcgId: string; under: string | null; key: string } | null>(null);
     // Kept with the id it was read for, so a sheet reopened on another card never shows this one's line.
     const [loaded, setLoaded] = useState<{ tcgId: string; points: PricePoint[] } | null>(null);
     const [period, setPeriod] = useState<PeriodKey>("6m");
@@ -65,7 +69,7 @@ export function CardPriceChart({
      */
     const printings = printingsOfLine(points);
     const own = printing && printings.some((p) => p.key === printing) ? printing : null;
-    const chosen = picked?.tcgId === tcgId && printings.some((p) => p.key === picked.key) ? picked.key : own;
+    const chosen = picked?.tcgId === tcgId && picked.under === printing && printings.some((p) => p.key === picked.key) ? picked.key : own;
     const series: ValueSnapshot[] = trustedStretch(
         points.map((p) => ({ date: p.date, value: valueOf(p, chosen, holo) })).filter((p): p is { date: string; value: number } => p.value != null),
     ).map((p) => ({ ...p, cards: 1, priced: 1, unpriced: 0 }));
@@ -77,7 +81,9 @@ export function CardPriceChart({
         <ValueChart snapshots={shown} label={`${name ?? "This card"}${label ? ` ${label}` : ""}'s price over time`} countLabel={null}>
             {/* Normal against reverse, 1st Edition against Unlimited and Shadowless: only where the card
                 has more than one printing with readings. */}
-            {printings.length > 1 ? <ChartPrintings printings={printings} picked={chosen} onPick={(key) => setPicked({ tcgId, key })} /> : null}
+            {printings.length > 1 ? (
+                <ChartPrintings printings={printings} picked={chosen} onPick={(key) => setPicked({ tcgId, under: printing, key })} />
+            ) : null}
             {/* Only where there is more than one period to choose between: a card with a fortnight of
                 readings has nothing to say about six months, and five buttons that all draw the same
                 line are five ways to learn nothing. */}
