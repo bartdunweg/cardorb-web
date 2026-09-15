@@ -5,8 +5,9 @@ type Labelled = { set_name?: string | null; set_abbr?: string | null; number?: s
  *
  * One form everywhere (Bart, 2026-09-15: consistent, and the same as the number on the card). The
  * set's code and the printed number: "BS 4", "SVP 085", "CEC 216", "PR 13". A number that carries
- * its own code prints alone, because the card does: "XY124", "SWSH282", "SV49" (and "XYP XY124" said
- * the code twice). A set with no code at all, official or Pokémon TCG Online's (Jumbo cards,
+ * its own code keeps that code instead of the set's ("XYP XY124" said the code twice), with the same
+ * space as every other label: "XY 124", "SWSH 282", "SV 49" (Bart, 2026-09-15: "XY124" beside "BS 4"
+ * read as two forms). A set with no code at all, official or Pokémon TCG Online's (Jumbo cards,
  * samples), reads its name before the number. No "#": it was never on a card.
  *
  * The printed number is the catalogue's (`printed_number`, cardorb-api's printedNumber); a row stores
@@ -17,14 +18,14 @@ export function cardLabel(card: Labelled): string {
     const code = card.set_abbr?.trim() || null;
     const number = (card.printed_number ?? card.number)?.trim() || null;
     if (!number) return code ?? card.set_name ?? "";
-    if (/^[A-Za-z]/.test(number)) return number;
+    if (/^[A-Za-z]/.test(number)) return number.replace(/^([A-Za-z]+)[\s-]*(?=\d)/, "$1 ");
     if (code) return `${code} ${number}`;
     return card.set_name ? `${card.set_name} ${number}` : number;
 }
 
 /**
  * The line under the title on a card's own sheet, where there is room for the set's name too:
- * the name and the card's printed label ("151 · MEW 199", "XY Black Star Promos · XY124"). The name
+ * the name and the card's printed label ("151 · MEW 199", "XY Black Star Promos · XY 124"). The name
  * alone was not enough for a set whose name reads like a code itself ("151").
  */
 export function cardLabelFull(card: Labelled): string {
