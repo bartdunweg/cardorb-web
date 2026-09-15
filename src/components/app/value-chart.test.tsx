@@ -78,4 +78,26 @@ describe("ValueChart", () => {
         expect(gaps[0].getAttribute("d")).toMatch(/^M[\d.]+ [\d.]+ H[\d.]+ V[\d.]+$/);
         expect(getByText(/No readings for 1 stretch of more than 7 days, drawn dotted at the last reading/)).toBeTruthy();
     });
+
+    // Bart, 2026-09-15: the highest and the lowest price are on the chart, not only under a hover.
+    it("writes the highest and the lowest reading on the line, and in the description", () => {
+        const readings = [
+            { date: "2026-09-09", value: 120, cards: 1, priced: 1, unpriced: 0 },
+            { date: "2026-09-10", value: 300, cards: 1, priced: 1, unpriced: 0 },
+            { date: "2026-09-11", value: 90, cards: 1, priced: 1, unpriced: 0 },
+            { date: "2026-09-12", value: 150, cards: 1, priced: 1, unpriced: 0 },
+        ];
+        const { container, getByText } = render(<ValueChart snapshots={readings} countLabel={null} />);
+        const marks = [...container.querySelectorAll("text[data-extreme]")].map((t) => [t.getAttribute("data-extreme"), t.textContent]);
+        expect(marks).toEqual([
+            ["high", "€300.00"],
+            ["low", "€90.00"],
+        ]);
+        expect(getByText(/Highest €300\.00 on Sep 10, 2026, lowest €90\.00 on Sep 11, 2026\./)).toBeTruthy();
+    });
+
+    it("writes one figure where the line never moves", () => {
+        const { container } = render(<ValueChart snapshots={two.map((s) => ({ ...s, value: 2 }))} countLabel={null} />);
+        expect(container.querySelectorAll("text[data-extreme]")).toHaveLength(1);
+    });
 });
