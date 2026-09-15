@@ -512,7 +512,8 @@ export type CardFacts = {
      * A form offers no finish and no pattern that is not here, and offers everything where the
      * list is empty, because empty is the catalogue having no answer rather than none existing.
      */
-    printings: { finish: Finish; foilPattern: string | null }[];
+    /** `image`: the printing's own picture where TCGplayer sells it apart (cardorb-api#501), else null or absent. */
+    printings: { finish: Finish; foilPattern: string | null; image?: string | null }[];
     /**
      * Whether a stamped first run of this card exists, as TCGdex says. Null is no answer, and a
      * form offers the runs then rather than none, the same rule `printings` follows.
