@@ -26,10 +26,10 @@ import { SearchTrigger } from "./search-trigger";
 import { SetWash } from "./set-hero";
 import { notify } from "./toast";
 
-/** A picture the catalogue serves, so CardImage is drawn by the path it actually uses. */
-const CHARIZARD = "https://assets.tcgdex.net/en/base/base1/4/high.png";
-const CHARIZARD_LOW = "https://assets.tcgdex.net/en/base/base1/4/low.png";
-const BASE_SET_LOGO = "https://assets.tcgdex.net/en/base/base1/logo.png";
+/** A picture from our own copy, so CardImage is drawn by the path the app actually uses. */
+const CHARIZARD = "https://images.cardorb.com/en/base/base1/4/high.webp";
+const CHARIZARD_LOW = "https://images.cardorb.com/en/base/base1/4/low.webp";
+const BASE_SET_LOGO = "https://images.cardorb.com/en/base/base1/logo.webp";
 
 const sets = [
     { value: "base1", label: "Base Set", hint: "1999" },
@@ -150,7 +150,7 @@ export const ourSections: SectionSpec[] = [
                     </Cell>
                     <Cell label="CardImage, src that will not load">
                         <div className="relative aspect-card w-24 overflow-hidden rounded-card">
-                            <CardImage src="https://assets.tcgdex.net/en/base/base1/none/high.png" alt="" width={96} className="object-cover" />
+                            <CardImage src="https://images.cardorb.com/en/base/base1/none/high.webp" alt="" width={96} className="object-cover" />
                         </div>
                     </Cell>
                 </Group>
@@ -190,7 +190,7 @@ export const ourSections: SectionSpec[] = [
                     </Cell>
                     <Cell label="src that will not load">
                         <div className="relative aspect-card w-24 overflow-hidden rounded-card bg-quaternary">
-                            <CardImage src="https://assets.tcgdex.net/en/nothing/here.png" alt="" width={96} className="object-cover" />
+                            <CardImage src="https://images.cardorb.com/en/nothing/here.webp" alt="" width={96} className="object-cover" />
                         </div>
                     </Cell>
                 </Group>
