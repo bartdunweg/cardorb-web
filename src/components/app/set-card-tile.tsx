@@ -13,6 +13,7 @@ import { notify } from "@/components/app/toast";
 import { useCopySteps } from "@/components/app/use-copy-steps";
 import { useWarm } from "@/components/app/use-warm";
 import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
+import { cardLabel } from "@/lib/card-label";
 import { type CardsSize, TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
 import { formatPrice } from "@/lib/format";
 
@@ -168,8 +169,10 @@ export function SetCardTile({
                 {/* The set's code and the number, "POR 121", the line every other list prints under a card
                     and what the card prints in its corner. It was the number alone, on the grounds that
                     the page's title names the set; Bart's call, 2026-09-13: one way of writing a card
-                    everywhere. A set the catalogue has no code for keeps "#121". */}
-                <span className="truncate text-xs text-tertiary tabular-nums">{card.setAbbr ? `${card.setAbbr} ${card.number}` : `#${card.number}`}</span>
+                    everywhere, as printed on the card (cardLabel): the catalogue's number is the printed one. */}
+                <span className="truncate text-xs text-tertiary tabular-nums">
+                    {cardLabel({ set_name: card.setName, set_abbr: card.setAbbr, number: card.number })}
+                </span>
                 {/* The count and the price on one line, the two controls on their own line under it.
                     The controls sat in the picture's corner, over the art you came to look at, and on
                     a grid of 129 that is 129 things floating on top of the cards. Then they shared the

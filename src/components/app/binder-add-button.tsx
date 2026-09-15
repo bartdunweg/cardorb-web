@@ -183,7 +183,7 @@ function OwnCardsPicker({ folder, close }: { folder: { id: string; name: string 
                                         </span>
                                         <span className="flex min-w-0 flex-col">
                                             <span className="truncate text-sm font-medium text-primary">{card.name}</span>
-                                            <span className="truncate text-xs font-normal text-tertiary">{cardLabel(card, "lg")}</span>
+                                            <span className="truncate text-xs font-normal text-tertiary">{cardLabel(card)}</span>
                                         </span>
                                     </span>
                                 }

@@ -30,7 +30,7 @@ export function TopCardsRow({ cards }: { cards: Card[] }) {
                     <li key={card.id} className="flex shrink-0 snap-start not-first:border-l not-first:border-secondary not-first:pl-3 not-last:pr-3">
                         <AriaButton
                             onPress={() => setAt(i)}
-                            aria-label={`${card.name}, ${cardLabel(card, "md")}, ${formatPrice(card.price)}`}
+                            aria-label={`${card.name}, ${cardLabel(card)}, ${formatPrice(card.price)}`}
                             className="flex w-60 pressable cursor-pointer items-center gap-3 rounded-lg p-1.5 text-left outline-focus-ring transition-colors hover:bg-alpha-black/4 data-focus-visible:outline-2"
                         >
                             {/* The rank, for the eye: the list is an ordered one, so a screen reader already says which place. */}
@@ -42,7 +42,7 @@ export function TopCardsRow({ cards }: { cards: Card[] }) {
                             </div>
                             <span className="flex min-w-0 flex-1 flex-col">
                                 <span className="truncate text-sm font-medium text-primary">{card.name}</span>
-                                <span className="truncate text-xs text-tertiary">{cardLabel(card, "md")}</span>
+                                <span className="truncate text-xs text-tertiary">{cardLabel(card)}</span>
                                 <span className="mt-0.5 text-sm font-semibold text-primary tabular-nums">{formatPrice(card.price)}</span>
                             </span>
                         </AriaButton>
