@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { PricePoint } from "@/app/(app)/dashboard/cards/actions";
 import { knownPriceHistory, preloadPriceHistory } from "@/components/app/card-memo";
-import { ChartPeriods, ChartPrintings, type PeriodKey, forChart } from "@/components/app/chart-periods";
+import { ChartPeriods, type PeriodKey, forChart } from "@/components/app/chart-periods";
 import { CHART_HEIGHT, ValueChart } from "@/components/app/value-chart";
 import { printingsOfLine, trustedStretch, valueOf } from "@/lib/price-change";
 import type { ValueSnapshot } from "@/lib/value-history";
@@ -29,14 +29,11 @@ export function CardPriceChart({
     holo?: boolean;
     name?: string | null;
     /**
-     * The TCGplayer printing the sheet shows ("reverse-holofoil"), which the line opens on: the copy's
-     * own, or the one pressed under the card. A new one here wins over a pick in the chart's own switcher.
+     * The TCGplayer printing the sheet shows ("reverse-holofoil"): the copy's own, or the print run
+     * chosen in the sheet's tabs. The chart has no switcher of its own; it chooses the period only.
      */
     printing?: string | null;
 }) {
-    // The printing picked in the switcher, kept with the card and the sheet's printing it was picked
-    // under: pressing another printing under the card sets the line to it again (Bart, 2026-09-15).
-    const [picked, setPicked] = useState<{ tcgId: string; under: string | null; key: string } | null>(null);
     // Kept with the id it was read for, so a sheet reopened on another card never shows this one's line.
     const [loaded, setLoaded] = useState<{ tcgId: string; points: PricePoint[] } | null>(null);
     const [period, setPeriod] = useState<PeriodKey>("6m");
@@ -61,29 +58,23 @@ export function CardPriceChart({
     if (points === null) return <div aria-busy="true" style={{ height: CHART_HEIGHT }} />;
 
     /*
-     * One printing's line, never two: the copy's own printing first (the price above the tabs is
-     * that printing's), or the one picked in the switcher. A card read as one line of "the price"
+     * One printing's line, never two: the one the sheet shows, whose price is the one above. A card
+     * read as one line of "the price"
      * mixed printings on days one was missing, and a reverse or a 1st Edition copy drew the plain
      * card's line under its own price (pricing audit, 2026-09-14). Without printings in the answer,
      * the plain line, or the foil for a reverse copy.
      */
     const printings = printingsOfLine(points);
     const own = printing && printings.some((p) => p.key === printing) ? printing : null;
-    const chosen = picked?.tcgId === tcgId && picked.under === printing && printings.some((p) => p.key === picked.key) ? picked.key : own;
     const series: ValueSnapshot[] = trustedStretch(
-        points.map((p) => ({ date: p.date, value: valueOf(p, chosen, holo) })).filter((p): p is { date: string; value: number } => p.value != null),
+        points.map((p) => ({ date: p.date, value: valueOf(p, own, holo) })).filter((p): p is { date: string; value: number } => p.value != null),
     ).map((p) => ({ ...p, cards: 1, priced: 1, unpriced: 0 }));
 
     const shown = forChart(series, period);
-    const label = printings.find((p) => p.key === chosen)?.label;
+    const label = printings.find((p) => p.key === own)?.label;
 
     return (
         <ValueChart snapshots={shown} label={`${name ?? "This card"}${label ? ` ${label}` : ""}'s price over time`} countLabel={null}>
-            {/* Normal against reverse, 1st Edition against Unlimited and Shadowless: only where the card
-                has more than one printing with readings. */}
-            {printings.length > 1 ? (
-                <ChartPrintings printings={printings} picked={chosen} onPick={(key) => setPicked({ tcgId, under: printing, key })} />
-            ) : null}
             {/* Only where there is more than one period to choose between: a card with a fortnight of
                 readings has nothing to say about six months, and five buttons that all draw the same
                 line are five ways to learn nothing. */}

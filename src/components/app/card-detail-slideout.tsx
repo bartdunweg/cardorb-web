@@ -302,7 +302,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const tcgId = card?.tcg_id ?? null;
     useEffect(() => {
         if (!tcgId) return;
-        // The price line too, so the Price tab opens on it rather than on "No readings" for the
+        // The price line too, so the price section opens on it rather than on "No readings" for the
         // half second the API takes. The header's arrow reads the same answer, for its average.
         let live = true;
         preloadPriceHistory(tcgId).then((points) => {
@@ -475,9 +475,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         await dropCopies([spare]);
         if (last && card) setRemoved(card.id);
     };
-    /* Every copy of this card, not just the row on screen: the tab says how many there are before
-       anybody opens it. The listed rows once they are read, the shown row's own count until then. */
-    const heldTotal = copies ? copies.reduce((n, r) => n + (r.quantity ?? 1), 0) : (mine?.quantity ?? 1);
 
     const closeSheet = async () => {
         flushRefresh();
@@ -716,8 +713,8 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const heldRows = mine ? (copies ?? [mine]) : [];
     const inBinders = collections.filter((c) => heldRows.some((r) => (c.rule ? matchesRule(r, c.rule, facets) : r.collection_id === c.id)));
 
-    /* What to do with a card you do not hold, built once: from `sm` up it sits in the Copies
-       tab under "You do not hold this card yet", and on a phone in a bar pinned to the bottom of
+    /* What to do with a card you do not hold, built once: from `sm` up it sits under Your
+       copies, under "You do not hold this card yet", and on a phone in a bar pinned to the bottom of
        the sheet, so it is reached without scrolling past every detail. One element, so the
        labels and the handlers cannot drift between the two places, and one place at a time, so
        a screen reader never hears "Add to collection" twice. The breakpoint is read before the
@@ -726,7 +723,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
        side by side made a choice out of what is really two offers, the narrower one read as the
        lesser, and a binder's name can be any length. A wish gets the one thing to do with it,
        becoming a copy; the form asks what the copy is like as it arrives. It used to sit above
-       the tabs, the only action not in the Copies tab, and read as part of the title. */
+       the tabs, the only action not with the copies, and read as part of the title. */
     const sm = useBreakpoint("sm");
     const offer =
         mine && takeable && (emptied || (!mine.owned && !mine.wishlist)) ? (
@@ -746,6 +743,247 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
             </MarkOwnedDialog>
         ) : null;
     const actionBar = !sm && offer;
+
+    /* The sheet's page under the header: price, details, your copies. Built here so the print-run tabs
+       can hold it in each panel, and a card with one run shows it without tabs. */
+    const sheetBody = card ? (
+        <>
+            {mine ? (
+                <section aria-labelledby="sheet-price" className="flex flex-col gap-4">
+                    <h3 id="sheet-price" className="text-sm font-semibold text-primary">
+                        Price
+                    </h3>
+
+                    {/* The line first, then the numbers around it: what one copy trades at, what all the
+                                        copies come to, what was paid, and what that bought. */}
+                    {mine.tcg_id ? (
+                        <CardPriceChart
+                            tcgId={mine.tcg_id}
+                            holo={isReverseFinish(mine.finish)}
+                            name={card?.name}
+                            printing={shownSeries ?? mine.price_printing}
+                        />
+                    ) : null}
+                    {/* The market first, apart from what is yours: one figure from one market, where
+                                            it is from, and where to check it. TCGplayer only since cardorb-api#354 (Bart,
+                                            2026-09-12): two markets side by side read as a number and a correction, and
+                                            nobody could tell which to believe. */}
+                    <div className="flex flex-col gap-3">
+                        <dl className="flex flex-col divide-y divide-secondary">
+                            {/* The printing pressed under the card, as the price under the title. */}
+                            <DetailRow
+                                label="Price"
+                                value={
+                                    (shownPrice === undefined ? mine.price : shownPrice) != null ? formatPrice((shownPrice ?? mine.price)!) : "No price known"
+                                }
+                            />
+                        </dl>
+                        {/* Where to check it: the TCGplayer page the figure came from. The kit's secondary
+                                                button, as a link, full width (Bart, 2026-09-12). eBay's sold listings sat
+                                                beside it and were taken out for now. It says it opens a new tab. */}
+                        {tcgplayerUrl(mine.tcgplayer_id) ? (
+                            <Button
+                                href={tcgplayerUrl(mine.tcgplayer_id)!}
+                                target="_blank"
+                                rel="noreferrer noopener"
+                                color="secondary"
+                                size="sm"
+                                className="w-full"
+                            >
+                                TCGplayer
+                                <span className="sr-only"> (opens in a new tab)</span>
+                            </Button>
+                        ) : null}
+                    </div>
+                </section>
+            ) : null}
+            <section aria-labelledby="sheet-details" className="flex flex-col gap-4">
+                <h3 id="sheet-details" className="text-sm font-semibold text-primary">
+                    Details
+                </h3>
+
+                <dl className="flex flex-col divide-y divide-secondary">
+                    <DetailRow label="Rarity" value={card.rarity} />
+                    {/* From the catalogue, once it answers: who drew it, and the card's own facts. */}
+                    {known?.illustrator ? <DetailRow label="Illustrator" value={known.illustrator} late /> : null}
+                    {known?.hp != null ? <DetailRow label="HP" value={known.hp} late /> : null}
+                    {known?.stage ? (
+                        <DetailRow label="Stage" value={known.evolveFrom ? `${known.stage} · from ${known.evolveFrom}` : known.stage} late />
+                    ) : null}
+                    {known?.regulationMark ? <DetailRow label="Regulation mark" value={known.regulationMark} late /> : null}
+                    <DetailRow
+                        label="Generation"
+                        value={
+                            card?.gen ? (
+                                <span className="flex items-center justify-end gap-2">
+                                    {/* The logo is the series' own picture; the name beside it says it for a reader. */}
+                                    {genLogo ? (
+                                        <>
+                                            <Image src={genLogo} alt="" width={96} height={24} className="h-6 w-auto max-w-28 object-contain" />
+                                            <span className="sr-only">{card.gen}</span>
+                                        </>
+                                    ) : (
+                                        card.gen
+                                    )}
+                                </span>
+                            ) : null
+                        }
+                    />
+                    <DetailRow
+                        label="Types"
+                        value={
+                            card?.types?.length ? (
+                                <span className="flex flex-wrap items-center justify-end gap-2">
+                                    {card.types.map((t) => (
+                                        <span key={t} className="flex items-center gap-1.5">
+                                            <TypeIcon type={t} />
+                                            {t}
+                                        </span>
+                                    ))}
+                                </span>
+                            ) : null
+                        }
+                    />
+                    {readOnly ? <DetailRow label="Quantity" value={card?.quantity ?? 1} /> : null}
+                    {readOnly ? <DetailRow label="Finish" value={card?.finish} /> : null}
+                </dl>
+
+                {mine?.notes ? (
+                    <div className="flex flex-col gap-1 border-t border-secondary pt-4">
+                        <p className="text-sm text-tertiary">Notes</p>
+                        <p className="text-sm text-primary">{mine.notes}</p>
+                    </div>
+                ) : null}
+            </section>
+            {mine ? (
+                <section aria-labelledby="sheet-copies" className="flex flex-col gap-4">
+                    <h3 id="sheet-copies" className="text-sm font-semibold text-primary">
+                        Your copies
+                    </h3>
+
+                    {/* None yet, and the way to change that. This section answers "what do I
+                                            have of this", and for a card you do not hold the honest answer is
+                                            nothing, followed by the offer, which is what you opened it for. */}
+                    {offer ? (
+                        /* No card around it. A card in this app holds what you have of
+                                               something, and this is the panel saying you have none; a box
+                                               drawn around that reads as a copy with nothing in it. */
+                        <div className="flex flex-col gap-3">
+                            <p className="text-sm text-tertiary">
+                                {emptied
+                                    ? "That was the last copy; it has left your collection."
+                                    : mine?.wishlist
+                                      ? "On your wishlist; you do not hold it yet."
+                                      : "You do not hold this card yet."}
+                            </p>
+                            {/* On a phone the two buttons are in the bar at the bottom of the
+                                                    sheet instead, under the thumb; see `offer`. */}
+                            {sm ? offer : null}
+                        </div>
+                    ) : null}
+                    {/* One card per kind of copy you hold (Holo · Near Mint, ×4) with every field the
+                                            add form asks, in its order and shape. Rows are one per purchase and nothing
+                                            merged them, so four identical copies are one card saying ×4, and a change to
+                                            it is made to all four. The card the sheet opened on is there at once; the
+                                            other kinds arrive. */}
+                    {/* Opened on a hand-filled binder's page with a card you hold that is not in
+                                            it yet: the offer this page is for. The chip under "In binders" and this
+                                            button trade places once it lands. */}
+                    {binder && mine?.owned && !emptied && !!copies?.length && !copies.some((r) => r.collection_id === binder.id) ? (
+                        <Button size="md" iconLeading={Plus} className="w-full" isDisabled={busy} onClick={() => void fileInBinder()}>
+                            Add to {binder.name}
+                        </Button>
+                    ) : null}
+                    {mine?.owned && !emptied
+                        ? groupCopies(copies ?? [mine]).map((group, i) => (
+                              /* Keyed on the row, not the kind: the kind's key holds the condition and
+                                                     the finish, so changing one of those in the card made it a new card to
+                                                     React, and the select you had just used lost its focus. The row stays
+                                                     the same row through a re-read. */
+                              <div key={group.shown.id} style={{ "--arrive-delay": `${Math.min(i, 8) * 20}ms` } as React.CSSProperties}>
+                                  <CopyCard
+                                      group={group}
+                                      folders={collections}
+                                      languages={known?.languages}
+                                      facts={formFacts}
+                                      busy={busy}
+                                      arrive={!group.rows.some((r) => r.id === mine.id)}
+                                      onMore={() => void stepUp(group)}
+                                      onFewer={() => void stepDown(group)}
+                                      onRemove={() => void dropCopies(group.rows)}
+                                      onSaved={() => {
+                                          scheduleRefresh();
+                                          void reloadCopies();
+                                      }}
+                                      refreshFolders={async () => {
+                                          const next = await listCollections();
+                                          setCollections(next);
+                                          return next;
+                                      }}
+                                  />
+                              </div>
+                          ))
+                        : null}
+                    {/* Where the card is: every binder any copy is filed in, every rule binder whose
+                                            rule a copy fits, and Favorites when starred. A fact about the card, so it
+                                            sits under the copies rather than inside one of them. */}
+                    {mine?.owned && !emptied ? (
+                        <div className="flex flex-col gap-1.5">
+                            <span className="text-sm font-medium text-secondary">In binders</span>
+                            <ul className="flex flex-wrap gap-1.5" aria-label="In binders">
+                                {[...(isStarred ? [{ id: "favorites", name: "Favorites" }] : []), ...inBinders].map(({ id, name }) => (
+                                    <li key={id}>
+                                        <Badge size="sm" color="gray" type="pill-color">
+                                            {name}
+                                        </Badge>
+                                    </li>
+                                ))}
+                                {!isStarred && !inBinders.length ? <li className="text-sm text-quaternary">None yet</li> : null}
+                            </ul>
+                        </div>
+                    ) : null}
+                    {/* Under the card, not in it. Adding a copy makes a new row beside the ones listed
+                                            above: it is not something you do to the copy the card happens to be showing,
+                                            and sitting in that card's foot said it was. Full width, because it is the one
+                                            thing this section is for once you have read the list. */}
+                    {mine?.owned && !emptied ? (
+                        <CopyFormDialog
+                            mode="add"
+                            languages={known?.languages}
+                            facts={formFacts}
+                            from={mine}
+                            folders={collections}
+                            onSaved={() => void reloadCopies()}
+                        >
+                            <Button size="md" color="secondary" iconLeading={Plus} className="w-full">
+                                Add a copy
+                            </Button>
+                        </CopyFormDialog>
+                    ) : null}
+
+                    {mine.owned && !emptied ? (
+                        <dl className="flex flex-col divide-y divide-secondary">
+                            <DetailRow label="Copies" value={mine.quantity ?? 1} />
+                            <DetailRow label="Holding value" value={mine.price != null ? formatPrice(mine.price * (mine.quantity ?? 1)) : null} />
+                            <DetailRow label="Purchase price" value={mine.purchase_price != null ? formatPrice(mine.purchase_price) : null} />
+                            {mine.purchase_price != null && mine.price != null ? (
+                                <DetailRow
+                                    label="Since purchase"
+                                    value={
+                                        <span className={mine.price - mine.purchase_price >= 0 ? "text-success-primary" : "text-error-primary"}>
+                                            {mine.price - mine.purchase_price >= 0 ? "+" : "−"}
+                                            {formatPrice(Math.abs(mine.price - mine.purchase_price))}
+                                        </span>
+                                    }
+                                />
+                            ) : null}
+                            <DetailRow label="Purchase date" value={mine.purchase_date ? formatDate(mine.purchase_date) : null} />
+                        </dl>
+                    ) : null}
+                </section>
+            ) : null}
+        </>
+    ) : null;
 
     return (
         <SlideoutMenu
@@ -830,7 +1068,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                             Tilt with your phone
                                                         </Dropdown.Item>
                                                     ) : null}
-                                                    {/* Copies are counted in the Copies tab, with the rest of what a copy is.
+                                                    {/* Copies are counted under Your copies, with the rest of what a copy is.
                                                         Adding and removing one here as well was a second place for the same
                                                         number, and the one that showed no other copy while it did it.
 
@@ -1007,7 +1245,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                     short words, each a look at the card, and the one on show stays in sight.
                                     Out into the header's side padding, which is room for the card's tilt: four
                                     buttons are 353 px and the padded box 320. More than fit scroll sideways. */}
-                                {card?.image_url && (printings || editions) ? (
+                                {card?.image_url && printings ? (
                                     <div className="-mx-8 mt-5 flex flex-col items-center gap-2">
                                         {printings ? (
                                             <div className="max-w-full overflow-x-auto p-1">
@@ -1024,28 +1262,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                     {printings.map((p) => (
                                                         <ButtonGroupItem key={p.key} id={p.key} className={SEGMENT_SELECTED}>
                                                             {p.label}
-                                                        </ButtonGroupItem>
-                                                    ))}
-                                                </ButtonGroup>
-                                            </div>
-                                        ) : null}
-                                        {editions ? (
-                                            <div className="max-w-full overflow-x-auto p-1">
-                                                {/* No run has a picture of its own yet, so pressing one changes the price
-                                                    above and the run a card is added in, not the card. */}
-                                                <ButtonGroup
-                                                    size="sm"
-                                                    aria-label="Print run"
-                                                    selectedKeys={editionKey ? [editionKey] : []}
-                                                    disallowEmptySelection
-                                                    onSelectionChange={(keys) => {
-                                                        const [key] = [...keys];
-                                                        if (typeof key === "string") pick({ edition: key });
-                                                    }}
-                                                >
-                                                    {editions.map((e) => (
-                                                        <ButtonGroupItem key={e.key} id={e.key} className={SEGMENT_SELECTED}>
-                                                            {e.label}
                                                         </ButtonGroupItem>
                                                     ))}
                                                 </ButtonGroup>
@@ -1121,273 +1337,36 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                         landmark inside it; react-aria names the dialog from its own heading. */}
                     {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- the rule offers <img alt="">, which this is not: the role is here only to stop the kit's default role="main". */}
                     <SlideoutMenu.Content role="presentation" className="h-auto w-full flex-none overflow-visible pt-6 pb-6">
-                        {/* Two tabs: the card's details, and its price with its line. A public view has no price, so no tabs. */}
-                        {/* The list before its panels, and only once there is a card: a panel without its tab is
-                            what react-aria warns about, and the sheet is mounted closed on every list page. A public
-                            view has Details alone; the list is drawn all the same, so the panel has its tab. */}
-                        {/* On a card you hold, what you hold comes first: you opened it to see your own copies,
-                            and the catalogue's facts about the printing answer a different question. A card you do
-                            not hold has no such tab, and then Details is the front of the sheet as before. */}
+                        {/*
+                         * One page, not three tabs (Bart, 2026-09-15): the price first, then the card's details,
+                         * then what you hold of it. Where the card was printed in more than one run, the runs are
+                         * the tab bar above all of it, and the price, the line and the Add buttons follow the run
+                         * chosen there. The line chooses its period and nothing else.
+                         */}
                         {card ? (
-                            <Tabs className="flex flex-col gap-5" defaultSelectedKey={mine ? "copies" : "details"}>
-                                {/* `hidden`, not `sr-only`: on a card you do not hold there is one tab and
-                                    nothing to choose, and sr-only leaves it in the tab order: a keyboard
-                                    user landed on a tab that was not on the screen. */}
-                                <TabList aria-label="Card" type="underline" size="sm" className={mine ? undefined : "hidden"}>
-                                    {mine ? <Tab id="copies" label="Your copies" badge={mine.owned && heldTotal > 1 ? heldTotal : undefined} /> : null}
-                                    <Tab id="details" label="Details" />
-                                    {mine ? <Tab id="price" label="Price" /> : null}
-                                </TabList>
-                                <TabPanel id="details" className="flex flex-col gap-6">
-                                    <dl className="flex flex-col divide-y divide-secondary">
-                                        <DetailRow label="Rarity" value={card.rarity} />
-                                        {/* From the catalogue, once it answers: who drew it, and the card's own facts. */}
-                                        {known?.illustrator ? <DetailRow label="Illustrator" value={known.illustrator} late /> : null}
-                                        {known?.hp != null ? <DetailRow label="HP" value={known.hp} late /> : null}
-                                        {known?.stage ? (
-                                            <DetailRow
-                                                label="Stage"
-                                                value={known.evolveFrom ? `${known.stage} · from ${known.evolveFrom}` : known.stage}
-                                                late
-                                            />
-                                        ) : null}
-                                        {known?.regulationMark ? <DetailRow label="Regulation mark" value={known.regulationMark} late /> : null}
-                                        <DetailRow
-                                            label="Generation"
-                                            value={
-                                                card?.gen ? (
-                                                    <span className="flex items-center justify-end gap-2">
-                                                        {/* The logo is the series' own picture; the name beside it says it for a reader. */}
-                                                        {genLogo ? (
-                                                            <>
-                                                                <Image
-                                                                    src={genLogo}
-                                                                    alt=""
-                                                                    width={96}
-                                                                    height={24}
-                                                                    className="h-6 w-auto max-w-28 object-contain"
-                                                                />
-                                                                <span className="sr-only">{card.gen}</span>
-                                                            </>
-                                                        ) : (
-                                                            card.gen
-                                                        )}
-                                                    </span>
-                                                ) : null
-                                            }
-                                        />
-                                        <DetailRow
-                                            label="Types"
-                                            value={
-                                                card?.types?.length ? (
-                                                    <span className="flex flex-wrap items-center justify-end gap-2">
-                                                        {card.types.map((t) => (
-                                                            <span key={t} className="flex items-center gap-1.5">
-                                                                <TypeIcon type={t} />
-                                                                {t}
-                                                            </span>
-                                                        ))}
-                                                    </span>
-                                                ) : null
-                                            }
-                                        />
-                                        {readOnly ? <DetailRow label="Quantity" value={card?.quantity ?? 1} /> : null}
-                                        {readOnly ? <DetailRow label="Finish" value={card?.finish} /> : null}
-                                    </dl>
-
-                                    {mine?.notes ? (
-                                        <div className="flex flex-col gap-1 border-t border-secondary pt-4">
-                                            <p className="text-sm text-tertiary">Notes</p>
-                                            <p className="text-sm text-primary">{mine.notes}</p>
-                                        </div>
-                                    ) : null}
-                                </TabPanel>
-                                {mine ? (
-                                    <TabPanel id="copies" className="flex flex-col gap-6">
-                                        {/* None yet, and the way to change that. This tab answers "what do I
-                                            have of this", and for a card you do not hold the honest answer is
-                                            nothing, followed by the offer, which is what you opened it for. */}
-                                        {offer ? (
-                                            /* No card around it. A card in this app holds what you have of
-                                               something, and this is the panel saying you have none; a box
-                                               drawn around that reads as a copy with nothing in it. */
-                                            <div className="flex flex-col gap-3">
-                                                <p className="text-sm text-tertiary">
-                                                    {emptied
-                                                        ? "That was the last copy; it has left your collection."
-                                                        : mine?.wishlist
-                                                          ? "On your wishlist; you do not hold it yet."
-                                                          : "You do not hold this card yet."}
-                                                </p>
-                                                {/* On a phone the two buttons are in the bar at the bottom of the
-                                                    sheet instead, under the thumb; see `offer`. */}
-                                                {sm ? offer : null}
-                                            </div>
-                                        ) : null}
-                                        {/* One card per kind of copy you hold (Holo · Near Mint, ×4) with every field the
-                                            add form asks, in its order and shape. Rows are one per purchase and nothing
-                                            merged them, so four identical copies are one card saying ×4, and a change to
-                                            it is made to all four. The card the sheet opened on is there at once; the
-                                            other kinds arrive. */}
-                                        {/* Opened on a hand-filled binder's page with a card you hold that is not in
-                                            it yet: the offer this page is for. The chip under "In binders" and this
-                                            button trade places once it lands. */}
-                                        {binder && mine?.owned && !emptied && !!copies?.length && !copies.some((r) => r.collection_id === binder.id) ? (
-                                            <Button size="md" iconLeading={Plus} className="w-full" isDisabled={busy} onClick={() => void fileInBinder()}>
-                                                Add to {binder.name}
-                                            </Button>
-                                        ) : null}
-                                        {mine?.owned && !emptied
-                                            ? groupCopies(copies ?? [mine]).map((group, i) => (
-                                                  /* Keyed on the row, not the kind: the kind's key holds the condition and
-                                                     the finish, so changing one of those in the card made it a new card to
-                                                     React, and the select you had just used lost its focus. The row stays
-                                                     the same row through a re-read. */
-                                                  <div key={group.shown.id} style={{ "--arrive-delay": `${Math.min(i, 8) * 20}ms` } as React.CSSProperties}>
-                                                      <CopyCard
-                                                          group={group}
-                                                          folders={collections}
-                                                          languages={known?.languages}
-                                                          facts={formFacts}
-                                                          busy={busy}
-                                                          arrive={!group.rows.some((r) => r.id === mine.id)}
-                                                          onMore={() => void stepUp(group)}
-                                                          onFewer={() => void stepDown(group)}
-                                                          onRemove={() => void dropCopies(group.rows)}
-                                                          onSaved={() => {
-                                                              scheduleRefresh();
-                                                              void reloadCopies();
-                                                          }}
-                                                          refreshFolders={async () => {
-                                                              const next = await listCollections();
-                                                              setCollections(next);
-                                                              return next;
-                                                          }}
-                                                      />
-                                                  </div>
-                                              ))
-                                            : null}
-                                        {/* Where the card is: every binder any copy is filed in, every rule binder whose
-                                            rule a copy fits, and Favorites when starred. A fact about the card, so it
-                                            sits under the copies rather than inside one of them. */}
-                                        {mine?.owned && !emptied ? (
-                                            <div className="flex flex-col gap-1.5">
-                                                <span className="text-sm font-medium text-secondary">In binders</span>
-                                                <ul className="flex flex-wrap gap-1.5" aria-label="In binders">
-                                                    {[...(isStarred ? [{ id: "favorites", name: "Favorites" }] : []), ...inBinders].map(({ id, name }) => (
-                                                        <li key={id}>
-                                                            <Badge size="sm" color="gray" type="pill-color">
-                                                                {name}
-                                                            </Badge>
-                                                        </li>
-                                                    ))}
-                                                    {!isStarred && !inBinders.length ? <li className="text-sm text-quaternary">None yet</li> : null}
-                                                </ul>
-                                            </div>
-                                        ) : null}
-                                        {/* Under the card, not in it. Adding a copy makes a new row beside the ones listed
-                                            above: it is not something you do to the copy the card happens to be showing,
-                                            and sitting in that card's foot said it was. Full width, because it is the one
-                                            thing this tab is for once you have read the list. */}
-                                        {mine?.owned && !emptied ? (
-                                            <CopyFormDialog
-                                                mode="add"
-                                                languages={known?.languages}
-                                                facts={formFacts}
-                                                from={mine}
-                                                folders={collections}
-                                                onSaved={() => void reloadCopies()}
-                                            >
-                                                <Button size="md" color="secondary" iconLeading={Plus} className="w-full">
-                                                    Add a copy
-                                                </Button>
-                                            </CopyFormDialog>
-                                        ) : null}
-                                    </TabPanel>
-                                ) : null}
-                                {mine ? (
-                                    <TabPanel id="price" className="flex flex-col gap-6">
-                                        {/* The line first, then the numbers around it: what one copy trades at, what all the
-                                        copies come to, what was paid, and what that bought. */}
-                                        {mine.tcg_id ? (
-                                            <CardPriceChart
-                                                tcgId={mine.tcg_id}
-                                                holo={isReverseFinish(mine.finish)}
-                                                name={card?.name}
-                                                printing={shownSeries ?? mine.price_printing}
-                                            />
-                                        ) : null}
-                                        {/* The market first, apart from what is yours: one figure from one market, where
-                                            it is from, and where to check it. TCGplayer only since cardorb-api#354 (Bart,
-                                            2026-09-12): two markets side by side read as a number and a correction, and
-                                            nobody could tell which to believe. */}
-                                        <section aria-labelledby="price-market" className="flex flex-col gap-3">
-                                            <h3 id="price-market" className="text-sm font-semibold text-primary">
-                                                Market price
-                                            </h3>
-                                            <dl className="flex flex-col divide-y divide-secondary">
-                                                {/* The printing pressed under the card, as the price under the title. */}
-                                                <DetailRow
-                                                    label="Price"
-                                                    value={
-                                                        (shownPrice === undefined ? mine.price : shownPrice) != null
-                                                            ? formatPrice((shownPrice ?? mine.price)!)
-                                                            : "No price known"
-                                                    }
-                                                />
-                                            </dl>
-                                            {/* Where to check it: the TCGplayer page the figure came from. The kit's secondary
-                                                button, as a link, full width (Bart, 2026-09-12). eBay's sold listings sat
-                                                beside it and were taken out for now. It says it opens a new tab. */}
-                                            {tcgplayerUrl(mine.tcgplayer_id) ? (
-                                                <Button
-                                                    href={tcgplayerUrl(mine.tcgplayer_id)!}
-                                                    target="_blank"
-                                                    rel="noreferrer noopener"
-                                                    color="secondary"
-                                                    size="sm"
-                                                    className="w-full"
-                                                >
-                                                    TCGplayer
-                                                    <span className="sr-only"> (opens in a new tab)</span>
-                                                </Button>
-                                            ) : null}
-                                        </section>
-                                        <section aria-labelledby="price-yours" className="flex flex-col gap-3">
-                                            <h3 id="price-yours" className="text-sm font-semibold text-primary">
-                                                Your copies
-                                            </h3>
-                                            <dl className="flex flex-col divide-y divide-secondary">
-                                                <DetailRow label="Copies" value={mine.quantity ?? 1} />
-                                                <DetailRow
-                                                    label="Holding value"
-                                                    value={mine.price != null ? formatPrice(mine.price * (mine.quantity ?? 1)) : null}
-                                                />
-                                                <DetailRow
-                                                    label="Purchase price"
-                                                    value={mine.purchase_price != null ? formatPrice(mine.purchase_price) : null}
-                                                />
-                                                {mine.purchase_price != null && mine.price != null ? (
-                                                    <DetailRow
-                                                        label="Since purchase"
-                                                        value={
-                                                            <span
-                                                                className={
-                                                                    mine.price - mine.purchase_price >= 0 ? "text-success-primary" : "text-error-primary"
-                                                                }
-                                                            >
-                                                                {mine.price - mine.purchase_price >= 0 ? "+" : "−"}
-                                                                {formatPrice(Math.abs(mine.price - mine.purchase_price))}
-                                                            </span>
-                                                        }
-                                                    />
-                                                ) : null}
-                                                <DetailRow label="Purchase date" value={mine.purchase_date ? formatDate(mine.purchase_date) : null} />
-                                            </dl>
-                                        </section>
-                                    </TabPanel>
-                                ) : null}
-                            </Tabs>
+                            editions ? (
+                                <Tabs
+                                    className="flex flex-col gap-6"
+                                    selectedKey={editionKey ?? undefined}
+                                    onSelectionChange={(key) => {
+                                        if (typeof key === "string") pick({ edition: key });
+                                    }}
+                                >
+                                    <TabList aria-label="Print run" type="underline" size="sm">
+                                        {editions.map((e) => (
+                                            <Tab key={e.key} id={e.key} label={e.label} />
+                                        ))}
+                                    </TabList>
+                                    {/* A panel per run, as react-aria asks; only the chosen one is drawn. */}
+                                    {editions.map((e) => (
+                                        <TabPanel key={e.key} id={e.key} className="flex flex-col gap-8">
+                                            {sheetBody}
+                                        </TabPanel>
+                                    ))}
+                                </Tabs>
+                            ) : (
+                                <div className="flex flex-col gap-8">{sheetBody}</div>
+                            )
                         ) : null}
                     </SlideoutMenu.Content>
                     {/* Last in the sheet, so the keyboard reaches it after the content, and a direct

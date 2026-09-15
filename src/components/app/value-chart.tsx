@@ -25,9 +25,10 @@ import { cx } from "@/utils/cx";
 const HEIGHT = 200;
 /** The height the chart takes, for a placeholder to hold while the readings are on their way. */
 export const CHART_HEIGHT = HEIGHT;
-// No axis: the number above the chart says the scale, the tooltip says any point, and the table
-// says them all. The line runs edge to edge, the three dates sit under it.
-const FRAME: Omit<Frame, "width"> = { height: HEIGHT, top: 12, right: 0, bottom: 28, left: 0 };
+// No axis: the highest and the lowest reading are written on the line, the tooltip says any point,
+// and the description says them all. The line runs edge to edge, the three dates sit under it. Room
+// above the line for the highest figure and under it for the lowest.
+const FRAME: Omit<Frame, "width"> = { height: HEIGHT, top: 26, right: 0, bottom: 44, left: 0 };
 
 const day = new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short" });
 const dayYear = new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short", year: "numeric" });
@@ -109,9 +110,22 @@ export function ValueChart({
     const addedAt = snapshots.map((s, i) => i > 0 && (s.added ?? 0) > 0);
     const addedValue = snapshots.reduce((sum, s, i) => sum + (addedAt[i] ? (s.addedValue ?? 0) : 0), 0);
     const addedDays = addedAt.filter(Boolean).length;
+    /*
+     * The highest and the lowest reading, written on the line (Bart, 2026-09-15): without them the
+     * range was a hover away. The first of each where a figure repeats; one mark where the line is flat.
+     */
+    const high = values.indexOf(Math.max(...values));
+    const low = values.indexOf(Math.min(...values));
+    const extremes =
+        snapshots[high].value === snapshots[low].value
+            ? [{ i: high, kind: "high" as const }]
+            : [
+                  { i: high, kind: "high" as const },
+                  { i: low, kind: "low" as const },
+              ];
     const summary = `${formatPrice(first.value)} on ${whenOf(first)} to ${formatPrice(last.value)} on ${whenOf(last)}, ${
         change === 0 ? "unchanged" : `${change > 0 ? "up" : "down"} ${formatPrice(Math.abs(change))}`
-    }.${addedDays ? ` Cards were added on ${formatCount(addedDays)} ${addedDays === 1 ? "reading" : "readings"}, worth ${formatPrice(addedValue)} then.` : ""}${
+    }.${extremes.length > 1 ? ` Highest ${formatPrice(snapshots[high].value)} on ${whenOf(snapshots[high])}, lowest ${formatPrice(snapshots[low].value)} on ${whenOf(snapshots[low])}.` : ""}${addedDays ? ` Cards were added on ${formatCount(addedDays)} ${addedDays === 1 ? "reading" : "readings"}, worth ${formatPrice(addedValue)} then.` : ""}${
         gaps.length
             ? ` No readings for ${formatCount(gaps.length)} ${gaps.length === 1 ? "stretch" : "stretches"} of more than ${GAP_DAYS} days, drawn dotted at the last reading.`
             : ""
@@ -239,6 +253,24 @@ export function ValueChart({
                                 ) : null,
                             )}
                         </g>
+
+                        {/* The figures sit clear of the edges: anchored to the side they are near. Hidden from a
+                            screen reader, which has them in the description. */}
+                        {points.length
+                            ? extremes.map(({ i, kind }) => (
+                                  <text
+                                      key={kind}
+                                      data-extreme={kind}
+                                      aria-hidden="true"
+                                      x={points[i].x}
+                                      y={kind === "high" ? points[i].y - 8 : points[i].y + 16}
+                                      textAnchor={points[i].x < 48 ? "start" : points[i].x > width - 48 ? "end" : "middle"}
+                                      className="fill-text-secondary text-xs font-medium tabular-nums"
+                                  >
+                                      {formatPrice(snapshots[i].value)}
+                                  </text>
+                              ))
+                            : null}
 
                         {currentPoint ? (
                             <g aria-hidden="true">

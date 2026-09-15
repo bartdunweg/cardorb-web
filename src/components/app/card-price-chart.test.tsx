@@ -58,18 +58,17 @@ describe("CardPriceChart", () => {
         expect(container.querySelector("[aria-busy]")).toBeNull();
     });
 
-    // Bart, 2026-09-15: the sheet's printing buttons moved the price above, and the line stayed on
-    // the copy's holo, so "Shadowless" showed the holo's climb.
-    it("follows the printing the sheet shows, over one picked in its own switcher before", async () => {
+    // Bart, 2026-09-15: the printing is chosen above the sheet, and the chart chooses only the period.
+    it("draws the printing the sheet shows, and offers periods but no printings", async () => {
         const runs = [
             { date: "2026-09-10", market: 750, holo: 750, printings: { holofoil: 750, "shadowless-holofoil": 1850 } },
             { date: "2026-09-11", market: 752, holo: 752, printings: { holofoil: 752, "shadowless-holofoil": 1860 } },
         ];
         history.mockResolvedValue(runs);
         await preloadPriceHistory("base1-4");
-        const { getByRole, rerender, container } = render(<CardPriceChart tcgId="base1-4" name="Charizard" printing="holofoil" />);
-        expect(container.querySelector("svg")?.getAttribute("aria-label") ?? container.textContent).toMatch(/Holo/);
-        getByRole("button", { name: "Holo" }).click();
+        const { queryByRole, rerender, container } = render(<CardPriceChart tcgId="base1-4" name="Charizard" printing="holofoil" />);
+        expect(queryByRole("button", { name: "Shadowless Holo" })).toBeNull();
+        expect(queryByRole("button", { name: "Max" })).not.toBeNull();
         rerender(<CardPriceChart tcgId="base1-4" name="Charizard" printing="shadowless-holofoil" />);
         await waitFor(() => expect(container.textContent).toMatch(/€1,850/));
     });
