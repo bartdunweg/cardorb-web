@@ -640,7 +640,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const shownPrice: number | null | undefined = !pressedAway
         ? undefined
         : printing?.foilPattern
-          ? (patternPrice ?? null)
+          ? /* The print's own product where the catalogue sent it; on a card you hold it does not, and
+               the print's line has its latest day since cardorb-api#512 (Charmander's cosmos holo read
+               "No price for this printing" over a line ending at €2.58). */
+            (patternPrice ?? (shownSeries ? (latest?.printings?.[shownSeries] ?? null) : null))
           : shownSeries
             ? (latest?.printings?.[shownSeries] ?? null)
             : null;
