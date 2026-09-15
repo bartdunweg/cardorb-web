@@ -43,6 +43,7 @@ export function ValueChart({
     label = "Collection value over time",
     countLabel = "cards",
     children,
+    drawKey,
 }: {
     snapshots: ValueSnapshot[];
     label?: string;
@@ -55,6 +56,12 @@ export function ValueChart({
     countLabel?: string | null;
     /** Under the chart, above the table: the period buttons. */
     children?: ReactNode;
+    /**
+     * What makes the line new, so it is drawn in again: by default the stretch shown. A card's price
+     * line passes its card and period, so pressing another printing swaps the line without drawing it
+     * in from the left each time (Bart, 2026-09-15: the switch felt heavy).
+     */
+    drawKey?: string;
 }) {
     const container = useRef<HTMLDivElement>(null);
     const [width, setWidth] = useState(0);
@@ -232,7 +239,7 @@ export function ValueChart({
                             period that shows another stretch of it. Keyed on the ends of what is shown, so
                             a hover or a resize does not draw it again; a period change does. The group is
                             revealed, not the path's dash, so the ground under the line follows the pen. */}
-                        <g key={`${first.date}/${last.date}`} className="chart-draw">
+                        <g key={drawKey ?? `${first.date}/${last.date}`} className="chart-draw">
                             {/* One unbroken line through every stretch, readings or none (Bart, 2026-09-15: the
                                 dotted stretch said nothing a flat line does not). */}
                             <path d={areaPath(drawn, baseline)} fill={`url(#${fadeId})`} className="text-fg-primary" />

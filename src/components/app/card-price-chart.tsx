@@ -78,7 +78,12 @@ export function CardPriceChart({
     const label = printings.find((p) => p.key === own)?.label;
 
     return (
-        <ValueChart snapshots={shown} label={`${name ?? "This card"}${label ? ` ${label}` : ""}'s price over time`} countLabel={null}>
+        <ValueChart
+            snapshots={shown}
+            label={`${name ?? "This card"}${label ? ` ${label}` : ""}'s price over time`}
+            countLabel={null}
+            drawKey={`${tcgId}/${period}`}
+        >
             {/* Only where there is more than one period to choose between: a card with a fortnight of
                 readings has nothing to say about six months, and five buttons that all draw the same
                 line are five ways to learn nothing. */}
