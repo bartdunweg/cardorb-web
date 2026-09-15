@@ -49,19 +49,25 @@ describe("cardLine", () => {
 });
 
 describe("printingLine", () => {
-    // Bart, 2026-09-15: a Reverse, a Cosmos or a 1st Edition copy says so on the list, under its name.
-    it("names what sets a copy apart from the plain printing", () => {
+    // Bart, 2026-09-16: every copy says which printing it is, the plain ones too; a tile without the
+    // line read as nothing. The run only where it is not the ordinary unlimited print.
+    it("names every copy's finish, in the sheet's words", () => {
+        expect(printingLine({ finish: "normal", foil_pattern: null, edition: null })).toBe("Normal");
+        expect(printingLine({ finish: "holo", foil_pattern: null, edition: null })).toBe("Holo");
         expect(printingLine({ finish: "reverse-holo", foil_pattern: null, edition: null })).toBe("Reverse");
+        expect(printingLine({ finish: "poke-ball", foil_pattern: null, edition: null })).toBe("Poké Ball");
+        expect(printingLine({ finish: "energy-symbol", foil_pattern: null, edition: null })).toBe("Energy Symbol");
         expect(printingLine({ finish: "holo", foil_pattern: "cosmos", edition: null })).toBe("Cosmos holo");
-        expect(printingLine({ finish: "reverse-holo", foil_pattern: "cosmos", edition: null })).toBe("Cosmos reverse");
-        expect(printingLine({ finish: "poke-ball", foil_pattern: null, edition: null })).toBe("Poké Ball reverse");
-        expect(printingLine({ finish: "holo", foil_pattern: null, edition: "1st-edition" })).toBe("1st Edition");
-        expect(printingLine({ finish: "reverse-holo", foil_pattern: null, edition: "shadowless" })).toBe("Shadowless · Reverse");
+        expect(printingLine({ finish: "reverse-holo", foil_pattern: "cracked-ice", edition: null })).toBe("Cracked ice reverse");
     });
 
-    it("says nothing for a plain, a holo or an unlimited copy", () => {
-        expect(printingLine({ finish: "normal", foil_pattern: null, edition: null })).toBeNull();
-        expect(printingLine({ finish: "holo", foil_pattern: null, edition: "unlimited" })).toBeNull();
+    it("puts a 1st Edition or Shadowless run before it, and leaves the unlimited print unsaid", () => {
+        expect(printingLine({ finish: "holo", foil_pattern: null, edition: "1st-edition" })).toBe("1st Edition · Holo");
+        expect(printingLine({ finish: "normal", foil_pattern: null, edition: "shadowless" })).toBe("Shadowless · Normal");
+        expect(printingLine({ finish: "holo", foil_pattern: null, edition: "unlimited" })).toBe("Holo");
+    });
+
+    it("says nothing where no printing was chosen, as on a wish", () => {
         expect(printingLine({ finish: null })).toBeNull();
     });
 });

@@ -1,4 +1,4 @@
-import { EDITION_LABELS, type Edition, FINISH_LABELS, FOIL_PATTERN_LABELS, type Finish, type FoilPattern } from "@/lib/api-shapes";
+import { EDITION_LABELS, type Edition, FOIL_PATTERN_LABELS, type Finish, type FoilPattern } from "@/lib/api-shapes";
 
 type Labelled = { set_name?: string | null; set_abbr?: string | null; number?: string | null; printed_number?: string | null };
 
@@ -46,21 +46,36 @@ export function cardLabelFull(card: Labelled): string {
     return `${card.set_name} · ${printed}`;
 }
 
+/** A finish in the words of the sheet's printing buttons, spelled out where those are cut short. */
+const FINISH_WORDS: Record<Finish, string> = {
+    normal: "Normal",
+    "reverse-holo": "Reverse",
+    holo: "Holo",
+    "poke-ball": "Poké Ball",
+    "master-ball": "Master Ball",
+    "energy-symbol": "Energy Symbol",
+    "friend-ball": "Friend Ball",
+    "love-ball": "Love Ball",
+    "quick-ball": "Quick Ball",
+    "dusk-ball": "Dusk Ball",
+    "team-rocket": "Team Rocket",
+};
+
 /**
- * What sets a copy apart from the card's plain printing, for the line under its name on a list:
- * "1st Edition", "Shadowless · Reverse", "Cosmos holo", "Poké Ball reverse". Null for a plain, a holo
- * or an unlimited copy, which is what a card is unless said otherwise.
+ * Which printing a copy is, for the line under its name on a list: "Normal", "Holo", "Reverse",
+ * "Poké Ball", "Cosmos holo", and a 1st Edition, Shadowless or Blue Border run before it
+ * ("1st Edition · Holo"). The unlimited print is the ordinary one and stays unsaid. Null only where no
+ * finish was chosen, as on a wish.
  *
- * Bart, 2026-09-15: the run and the finish are chosen on the card's sheet, so a list of what you hold
- * shows them; a Charizard held twice drew two tiles that looked the same. The words are the sheet's.
+ * Bart, 2026-09-15: a list of what you hold shows the run and the finish chosen on the sheet; a
+ * Charizard held twice drew two tiles that looked the same. 2026-09-16: on every copy, the plain ones
+ * too, since a tile without the line read as nothing rather than as "Normal".
  */
 export function printingLine(copy: { finish?: string | null; foil_pattern?: string | null; edition?: string | null }): string | null {
-    const parts: string[] = [];
-    if (copy.edition && copy.edition !== "unlimited" && copy.edition in EDITION_LABELS) parts.push(EDITION_LABELS[copy.edition as Edition]);
-    const finish = copy.finish as Finish | null | undefined;
+    const finish = copy.finish && copy.finish in FINISH_WORDS ? (copy.finish as Finish) : null;
+    if (!finish) return null;
     const pattern = copy.foil_pattern && copy.foil_pattern in FOIL_PATTERN_LABELS ? FOIL_PATTERN_LABELS[copy.foil_pattern as FoilPattern] : null;
-    if (pattern) parts.push(`${pattern} ${finish === "reverse-holo" ? "reverse" : finish === "holo" ? "holo" : ""}`.trim());
-    else if (finish === "reverse-holo") parts.push("Reverse");
-    else if (finish && finish !== "normal" && finish !== "holo" && finish in FINISH_LABELS) parts.push(FINISH_LABELS[finish]);
-    return parts.length ? parts.join(" · ") : null;
+    const printing = pattern ? `${pattern} ${FINISH_WORDS[finish].toLowerCase()}` : FINISH_WORDS[finish];
+    const run = copy.edition && copy.edition !== "unlimited" && copy.edition in EDITION_LABELS ? EDITION_LABELS[copy.edition as Edition] : null;
+    return run ? `${run} · ${printing}` : printing;
 }
