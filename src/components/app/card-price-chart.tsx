@@ -40,8 +40,9 @@ export function CardPriceChart({
     // no effect and no second render to show.
     const points = loaded?.tcgId === tcgId ? loaded.points : (knownPriceHistory(tcgId) ?? null);
 
+    // Asked on every open: a fresh known line answers at once, an older one is drawn while the line
+    // is read again, and the new day's point joins it when the answer lands.
     useEffect(() => {
-        if (knownPriceHistory(tcgId)) return;
         let live = true;
         preloadPriceHistory(tcgId).then((p) => {
             if (live) setLoaded({ tcgId, points: p });

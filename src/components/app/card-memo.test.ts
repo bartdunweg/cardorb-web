@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { forgetCards, knownCardFacts, preloadCardFacts, preloadPriceHistory, warmCard } from "./card-memo";
+import { PRICES_FRESH_MS, forgetCards, knownCardFacts, knownPriceHistory, preloadCardFacts, preloadPriceHistory, warmCard } from "./card-memo";
 
 /*
  * A tile warms what its sheet will ask for while the pointer rests on it, and the sheet asks
@@ -37,6 +37,40 @@ describe("card memo", () => {
         expect(knownCardFacts("sv1-2")).toBeNull();
         await preloadCardFacts("sv1-2");
         expect(facts).toHaveBeenCalledTimes(1);
+    });
+
+    it("reads a line again once it is no longer fresh, and draws the known one meanwhile", async () => {
+        vi.useFakeTimers();
+        try {
+            const sunday = [{ date: "2026-09-13", market: 1, holo: null }];
+            const monday = [...sunday, { date: "2026-09-14", market: 2, holo: null }];
+            history.mockResolvedValueOnce(sunday).mockResolvedValueOnce(monday);
+            await preloadPriceHistory("sv1-3");
+            await preloadPriceHistory("sv1-3");
+            expect(history).toHaveBeenCalledTimes(1);
+
+            vi.advanceTimersByTime(PRICES_FRESH_MS);
+            const again = preloadPriceHistory("sv1-3");
+            expect(knownPriceHistory("sv1-3")).toBe(sunday);
+            expect(await again).toBe(monday);
+            expect(history).toHaveBeenCalledTimes(2);
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it("keeps a line with readings when a later read comes back empty", async () => {
+        vi.useFakeTimers();
+        try {
+            const line = [{ date: "2026-09-14", market: 2, holo: null }];
+            history.mockResolvedValueOnce(line).mockResolvedValueOnce([]);
+            await preloadPriceHistory("sv1-4");
+            vi.advanceTimersByTime(PRICES_FRESH_MS);
+            expect(await preloadPriceHistory("sv1-4")).toBe(line);
+            expect(knownPriceHistory("sv1-4")).toBe(line);
+        } finally {
+            vi.useRealTimers();
+        }
     });
 
     it("warms nothing for a card the catalogue never placed", () => {
