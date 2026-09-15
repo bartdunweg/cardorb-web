@@ -30,15 +30,14 @@ import { CopyFormDialog } from "@/components/app/copy-form-dialog";
 import { HoloCard } from "@/components/app/holo-card";
 import { MarkOwnedDialog } from "@/components/app/mark-owned-dialog";
 import { editionChoices, openingChoice, pressedPrinting, printingChoices } from "@/components/app/printing-choices";
-import { SEGMENT_SELECTED } from "@/components/app/segment-selected";
 import { SheetActionBar } from "@/components/app/sheet-action-bar";
 import { SheetBar } from "@/components/app/sheet-bar";
 import { MARK_ON } from "@/components/app/tile-icon-button";
 import { notify } from "@/components/app/toast";
 import { TypeIcon } from "@/components/app/type-icon";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
+import { Tab, TabList, TabPanel, Tabs } from "@/components/application/tabs/tabs";
 import { Badge } from "@/components/base/badges/badges";
-import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Button, styles as buttonStyles } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Tooltip } from "@/components/base/tooltip/tooltip";
@@ -791,6 +790,23 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
 
     /* The sheet's page under the header: price, details, your copies. Built here so the print-run tabs
        can hold it in each panel, and a card with one run shows it without tabs. */
+    /* The tab bar over the page: the printings, or the runs where the card has those instead. */
+    const runTabs = printings
+        ? {
+              label: "Printing",
+              items: printings.map((p) => ({ key: p.key, label: p.label })),
+              selected: printingKey ?? printings[0]!.key,
+              pick: (key: string) => pick({ printing: key }),
+          }
+        : editions
+          ? {
+                label: "Print run",
+                items: editions.map((e) => ({ key: e.key, label: e.label })),
+                selected: editionKey ?? editions[0]!.key,
+                pick: (key: string) => pick({ edition: key }),
+            }
+          : null;
+
     const sheetBody = card ? (
         <>
             {mine ? (
@@ -1244,57 +1260,6 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                         <CardBack width={176} priority />
                                     </div>
                                 )}
-                                {/* The printings that exist, and only those; nothing where the card was printed one
-                                    way or the answer is not in yet. Buttons rather than a select: two to four
-                                    short words, each a look at the card, and the one on show stays in sight.
-                                    Out into the header's side padding, which is room for the card's tilt: four
-                                    buttons are 353 px and the padded box 320. More than fit scroll sideways.
-                                    The print runs are the same buttons in the same place (Bart, 2026-09-15): a
-                                    card sold in more than one run is sold in one finish, so one group shows. */}
-                                {card?.image_url && (printings || editions) ? (
-                                    <div className="-mx-8 mt-5 flex flex-col items-center gap-2">
-                                        {printings ? (
-                                            <div className="max-w-full overflow-x-auto p-1">
-                                                <ButtonGroup
-                                                    size="sm"
-                                                    aria-label="Printing"
-                                                    selectedKeys={printingKey ? [printingKey] : []}
-                                                    disallowEmptySelection
-                                                    onSelectionChange={(keys) => {
-                                                        const [key] = [...keys];
-                                                        if (typeof key === "string") pick({ printing: key });
-                                                    }}
-                                                >
-                                                    {printings.map((p) => (
-                                                        <ButtonGroupItem key={p.key} id={p.key} className={SEGMENT_SELECTED}>
-                                                            {p.label}
-                                                        </ButtonGroupItem>
-                                                    ))}
-                                                </ButtonGroup>
-                                            </div>
-                                        ) : null}
-                                        {editions ? (
-                                            <div className="max-w-full overflow-x-auto p-1">
-                                                <ButtonGroup
-                                                    size="sm"
-                                                    aria-label="Print run"
-                                                    selectedKeys={editionKey ? [editionKey] : []}
-                                                    disallowEmptySelection
-                                                    onSelectionChange={(keys) => {
-                                                        const [key] = [...keys];
-                                                        if (typeof key === "string") pick({ edition: key });
-                                                    }}
-                                                >
-                                                    {editions.map((e) => (
-                                                        <ButtonGroupItem key={e.key} id={e.key} className={SEGMENT_SELECTED}>
-                                                            {e.label}
-                                                        </ButtonGroupItem>
-                                                    ))}
-                                                </ButtonGroup>
-                                            </div>
-                                        ) : null}
-                                    </div>
-                                ) : null}
                             </div>
                         </div>
                         <div className="flex flex-col px-4 pt-4 md:px-6">
@@ -1365,11 +1330,37 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                     <SlideoutMenu.Content role="presentation" className="h-auto w-full flex-none overflow-visible pt-6 pb-6">
                         {/*
                          * One page, not three tabs (Bart, 2026-09-15): the price first, then the card's details,
-                         * then what you hold of it. Where the card was printed in more than one run, the runs are
-                         * buttons under the card, as the printings are, and the price, the line and the Add buttons
-                         * follow the run pressed there. The line chooses its period and nothing else.
+                         * then what you hold of it. Over it, the card's printings (Normal, Reverse, Cosmos holo) or,
+                         * for a card sold in more than one run, its runs (1st Edition, Shadowless, Unlimited), as one
+                         * tab bar in one place (Bart, 2026-09-16: "overal consistent"). A card sold in more than one
+                         * run is sold in one finish (#642), so one bar shows. The picture, the price, the line and the
+                         * Add buttons follow the tab chosen; the line chooses its period and nothing else.
                          */}
-                        {card ? <div className="flex flex-col gap-8">{sheetBody}</div> : null}
+                        {card ? (
+                            runTabs ? (
+                                <Tabs
+                                    className="flex flex-col gap-6"
+                                    selectedKey={runTabs.selected}
+                                    onSelectionChange={(key) => {
+                                        if (typeof key === "string") runTabs.pick(key);
+                                    }}
+                                >
+                                    <TabList aria-label={runTabs.label} type="underline" size="sm" className="overflow-x-auto">
+                                        {runTabs.items.map((item) => (
+                                            <Tab key={item.key} id={item.key} label={item.label} />
+                                        ))}
+                                    </TabList>
+                                    {/* One panel under whichever tab is chosen, not one per tab: the page under it is
+                                        the same page for every printing, so pressing another keeps the chart, the
+                                        details and the copies mounted rather than building them again. */}
+                                    <TabPanel id={runTabs.selected} className="flex flex-col gap-8">
+                                        {sheetBody}
+                                    </TabPanel>
+                                </Tabs>
+                            ) : (
+                                <div className="flex flex-col gap-8">{sheetBody}</div>
+                            )
+                        ) : null}
                     </SlideoutMenu.Content>
                     {/* Last in the sheet, so the keyboard reaches it after the content, and a direct
                         child of the scroll box, which is what keeps it pinned. */}
