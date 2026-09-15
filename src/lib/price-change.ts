@@ -89,6 +89,8 @@ const PRINTING_LABELS: [string, string][] = [
     ["1st-edition-holofoil", "1st Edition Holo"],
     ["shadowless", "Shadowless"],
     ["shadowless-holofoil", "Shadowless Holo"],
+    // My First Battle's Blue Border print, a TCGplayer product of its own (cardorb-api#492).
+    ["blue-border", "Blue Border"],
 ];
 
 /** The printings a card has readings for, in reading order, each with its label. */
