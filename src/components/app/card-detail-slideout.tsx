@@ -663,6 +663,16 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     if (artNow !== art) {
         setArt(artNow);
         setScanLoaded(false);
+    }
+    /*
+     * The blurred copy behind the head is the card's own picture, not the printing on show: pressing
+     * Reverse or Cosmos holo swaps the card and leaves the colour behind it where it was, so nothing
+     * but the card has to load again (Bart, 2026-09-15). It changes only with the card.
+     */
+    const [backdrop, setBackdrop] = useState(NO_ART);
+    const backdropNow = nextArt(backdrop, card);
+    if (backdropNow !== backdrop) {
+        setBackdrop(backdropNow);
         setBlurLoaded(false);
     }
     /*
@@ -716,20 +726,28 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         const running = fades.current;
         return () => {
             running.scan?.cancel();
-            running.blur?.cancel();
             running.prev?.cancel();
         };
     }, [art.shown?.scan]);
+    useEffect(() => {
+        const running = fades.current;
+        return () => running.blur?.cancel();
+    }, [backdrop.shown?.scan]);
     // Stepped back to the card still fading out: its picture never left the screen, so the browser
     // will not report it loaded again. The fade starts here instead, on the element it now is.
     const clearUnder = () => setArt((a) => (a.under ? { ...a, under: null } : a));
+    const clearBackdropUnder = () => setBackdrop((a) => (a.under ? { ...a, under: null } : a));
     const swapped = art.swapped ? art.shown?.scan : undefined;
     useEffect(() => {
         if (!swapped) return;
         landed("scan", scanFade, setScanLoaded, clearUnder)();
-        landed("blur", blurFade, setBlurLoaded)();
         // Only on the step: the handlers are rebuilt each render and carry nothing of their own.
     }, [swapped]);
+    const backdropSwapped = backdrop.swapped ? backdrop.shown?.scan : undefined;
+    useEffect(() => {
+        if (!backdropSwapped) return;
+        landed("blur", blurFade, setBlurLoaded, clearBackdropUnder)();
+    }, [backdropSwapped]);
 
     const titleRef = useRef<HTMLHeadingElement>(null);
     /* The binders any copy of this card is in: filed by hand, or fitting a rule binder's rule. */
@@ -1078,7 +1096,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                 /* The dimming sits on the box, not the layers, so the new copy at full
                                    opacity covers the old one entirely rather than mixing with it. */
                                 <div aria-hidden="true" className="absolute inset-0 opacity-60">
-                                    {artStack(art).map(({ layer, shown }) => (
+                                    {artStack(backdrop).map(({ layer, shown }) => (
                                         <div
                                             key={layer.scan}
                                             ref={shown ? blurFade : undefined}
@@ -1092,7 +1110,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                 // Eager: the header's colour at the moment the sheet opens, and lazy
                                                 // it waited for a scroll that never comes inside the sheet.
                                                 priority
-                                                onLoad={shown ? landed("blur", blurFade, setBlurLoaded) : undefined}
+                                                onLoad={shown ? landed("blur", blurFade, setBlurLoaded, clearBackdropUnder) : undefined}
                                             />
                                         </div>
                                     ))}
