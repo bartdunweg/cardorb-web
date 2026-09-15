@@ -1,5 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { PRICES_FRESH_MS, forgetCards, knownCardFacts, knownPriceHistory, preloadCardFacts, preloadPriceHistory, warmCard, warmCardFacts } from "./card-memo";
+import type { Card } from "@/lib/cards";
+import {
+    PRICES_FRESH_MS,
+    awaitRows,
+    forgetCards,
+    knownCardFacts,
+    knownPriceHistory,
+    knownRows,
+    preloadCardFacts,
+    preloadPriceHistory,
+    rememberCopies,
+    warmCard,
+    warmCardFacts,
+    warmSetRows,
+} from "./card-memo";
 
 /*
  * A tile warms what its sheet will ask for while the pointer rests on it, and the sheet asks
@@ -10,10 +24,12 @@ import { PRICES_FRESH_MS, forgetCards, knownCardFacts, knownPriceHistory, preloa
 const facts = vi.fn();
 const many = vi.fn();
 const history = vi.fn();
+const setRows = vi.fn();
 vi.mock("@/app/(app)/dashboard/cards/actions", () => ({
     cardFacts: (id: string, language?: string | null) => facts(id, language),
     cardFactsMany: (ids: string[], language?: string | null) => many(ids, language),
     cardPriceHistory: (id: string) => history(id),
+    listSetRows: (set: string) => setRows(set),
 }));
 vi.mock("@/components/app/card-detail-slideout", () => ({}));
 
@@ -133,5 +149,68 @@ describe("card memo", () => {
         warmCard(null);
         expect(facts).not.toHaveBeenCalled();
         expect(history).not.toHaveBeenCalled();
+    });
+});
+
+/*
+ * A set page's rows, asked once per drawing of the page, so the sheet of a card you hold opens on
+ * its row and its copies instead of reading them after the tap.
+ */
+describe("set rows", () => {
+    const row = (id: string, number: string, over: Partial<Card> = {}) =>
+        ({ id, name: "Charizard", set: "Base", set_name: "Base Set", number, owned: true, wishlist: false, quantity: 1, ...over }) as Card;
+    const charizard = { set: "Base Set", number: "4", name: "Charizard" };
+
+    beforeEach(() => {
+        forgetCards();
+        setRows.mockReset().mockResolvedValue([row("a", "4"), row("b", "4", { condition: "Played" }), row("c", "5", { owned: false, wishlist: true })]);
+    });
+
+    it("knows a card's rows once its set has answered, and nothing before", async () => {
+        warmSetRows("Base Set", {});
+        expect(knownRows(charizard)).toBeUndefined();
+        expect((await awaitRows(charizard))?.map((r) => r.id)).toEqual(["a", "b"]);
+        expect(knownRows(charizard)?.map((r) => r.id)).toEqual(["a", "b"]);
+        // A row as the sheet holds one, filed under another name than the title the page asked by.
+        expect(knownRows({ set: "Base", set_name: "Base Set", number: "5", name: "Charizard" })?.map((r) => r.id)).toEqual(["c"]);
+        expect(knownRows({ set: "Jungle", number: "4", name: "Charizard" })).toBeUndefined();
+    });
+
+    it("asks once per drawing of the page, and again for the next", async () => {
+        const drawing = {};
+        warmSetRows("Base Set", drawing);
+        warmSetRows("Base Set", drawing);
+        expect(setRows).toHaveBeenCalledTimes(1);
+        await awaitRows(charizard);
+        warmSetRows("Base Set", {});
+        expect(setRows).toHaveBeenCalledTimes(2);
+        // The rows of the drawing before are not shown while the new ones are on the way.
+        expect(knownRows(charizard)).toBeUndefined();
+    });
+
+    it("keeps nothing from an answer that was not the whole set", async () => {
+        setRows.mockResolvedValue(null);
+        warmSetRows("Base Set", {});
+        expect(await awaitRows(charizard)).toBeUndefined();
+        expect(knownRows(charizard)).toBeUndefined();
+    });
+
+    it("lets an older answer that lands late write nothing", async () => {
+        let first: (rows: Card[]) => void = () => undefined;
+        setRows.mockImplementationOnce(() => new Promise((resolve) => (first = resolve)));
+        warmSetRows("Base Set", {});
+        warmSetRows("Base Set", {});
+        await awaitRows(charizard);
+        first([row("old", "4")]);
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        expect(knownRows(charizard)?.map((r) => r.id)).toEqual(["a", "b"]);
+    });
+
+    it("puts the copies a sheet read in place of the ones kept", async () => {
+        warmSetRows("Base Set", {});
+        await awaitRows(charizard);
+        rememberCopies(charizard, [row("a", "4", { quantity: 3 })]);
+        expect(knownRows(charizard)?.map((r) => [r.id, r.quantity])).toEqual([["a", 3]]);
+        expect(knownRows({ set: "Base Set", number: "5", name: "Charizard" })?.map((r) => r.id)).toEqual(["c"]);
     });
 });

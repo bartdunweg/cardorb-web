@@ -23,7 +23,7 @@ import { type FolderChoice, listCollections, loadFacets } from "@/app/(app)/dash
 import { NO_ART, artStack, nextArt } from "@/components/app/card-art";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
-import { knownCardFacts, knownPriceHistory, preloadCardFacts, preloadPriceHistory } from "@/components/app/card-memo";
+import { knownCardFacts, knownPriceHistory, knownRows, preloadCardFacts, preloadPriceHistory, rememberCopies } from "@/components/app/card-memo";
 import { CardPriceChart } from "@/components/app/card-price-chart";
 import { CopyCard } from "@/components/app/copy-card";
 import { CopyFormDialog } from "@/components/app/copy-form-dialog";
@@ -88,13 +88,18 @@ type Addable = {
      * from the refresh the sheet asks for.
      */
     onTaken?: (card: PokemonCard, list: "collection" | "wishlist") => void;
+    /**
+     * The card is held or wished for and its row is still on the way (a set page tapped before its
+     * rows were in): the copies' place is held, and nothing is offered that the row would take back.
+     */
+    rowPending?: boolean;
 };
 
 type Props = ({ card: Card | null; onClose: () => void; readOnly?: false } | { card: PublicCard | null; onClose: () => void; readOnly: true }) &
     Neighbours &
     Addable;
 
-export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, onNext, addable, onTaken }: Props) {
+export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, onNext, addable, onTaken, rowPending = false }: Props) {
     const router = useRouter();
     // The owner's fields exist only on the editable view; the public view never receives them.
     // The row the sheet shows: the one it opened on, or another copy of the card tapped in the
@@ -104,7 +109,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     // Every row of this card the person holds, read when the sheet opens and after each write.
     const copiesKey = (c: Card) => `${c.set_name ?? c.set ?? ""}|${c.number ?? ""}|${c.name}`;
     const [copiesState, setCopiesState] = useState<{ of: string; rows: Card[] } | null>(null);
-    const copies = mine && copiesState?.of === copiesKey(mine) ? copiesState.rows : null;
+    /* Before this sheet has read them, the copies the page already had (a set page's rows,
+       card-memo.ts), where they include the row shown: then every kind is there on the first paint. */
+    const pageCopies = mine?.owned ? knownRows(mine)?.filter((r) => r.owned) : undefined;
+    const copies = mine && copiesState?.of === copiesKey(mine) ? copiesState.rows : pageCopies?.some((r) => r.id === mine?.id) ? sortCopies(pageCopies) : null;
     /* Counts the presses the sheet has answered on screen before the store has. A read that
        started before one of those would put the old number back over the new one, so it is
        dropped; the press that made it stale reads again once its write has landed. */
@@ -114,6 +122,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         const asOf = pressed.current;
         const rows = sortCopies(await listCopies(row));
         if (asOf !== pressed.current) return;
+        rememberCopies(row, rows);
         setCopiesState({ of: copiesKey(row), rows });
         // A row that is gone (removed, or merged away) cannot stay the one shown.
         setViewing((v) => (v && !rows.some((r) => r.id === v.row.id) ? null : v));
@@ -532,7 +541,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         let live = true;
         const asOf = pressed.current;
         listCopies(opened).then((rows) => {
-            if (live && asOf === pressed.current) setCopiesState({ of: copiesKey(opened), rows: sortCopies(rows) });
+            if (live && asOf === pressed.current) {
+                rememberCopies(opened, rows);
+                setCopiesState({ of: copiesKey(opened), rows: sortCopies(rows) });
+            }
         });
         return () => {
             live = false;
@@ -729,7 +741,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
        the tabs, the only action not with the copies, and read as part of the title. */
     const sm = useBreakpoint("sm");
     const offer =
-        mine && takeable && (emptied || (!mine.owned && !mine.wishlist)) ? (
+        mine && takeable && !rowPending && (emptied || (!mine.owned && !mine.wishlist)) ? (
             <div className="flex flex-col gap-2">
                 <Button size="md" iconLeading={Plus} className="w-full" isDisabled={busy || binderPending} onClick={() => void add("collection")}>
                     {binder ? `Add to ${binder.name}` : "Add to collection"}
@@ -835,6 +847,8 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                     {/* None yet, and the way to change that. This section answers "what do I
                                             have of this", and for a card you do not hold the honest answer is
                                             nothing, followed by the offer, which is what you opened it for. */}
+                    {/* The place of the copies while the row is on the way, as high as one copy's card. */}
+                    {rowPending ? <div aria-hidden="true" className="h-72 rounded-xl bg-skeleton motion-safe:animate-pulse" /> : null}
                     {offer ? (
                         /* No card around it. A card in this app holds what you have of
                                                something, and this is the panel saying you have none; a box
@@ -983,7 +997,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                         right={
                             <>
                                 {tiltButton}
-                                {mine ? (
+                                {mine && !rowPending ? (
                                     <>
                                         {mine.owned ? (
                                             <Tooltip title={isStarred ? "Remove from Favorites" : "Add to Favorites"}>
