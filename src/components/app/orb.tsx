@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ORB_STILL_TIME, orbFrame } from "@/lib/orb";
-import { OrbMark } from "./orb-mark";
+import { OrbStill } from "./orb-still";
 
 type OrbProps = {
     /** Width and height in px. */
@@ -16,7 +16,7 @@ type OrbProps = {
 
 const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
 
-// The orb moving. The server sends the still OrbMark, so the page never waits on script for it;
+// The orb moving. The server sends the still OrbStill, so the page never waits on script for it;
 // once mounted a canvas takes over from that same moment, unless the visitor asked for less motion.
 // It stops drawing while scrolled out of view or while the tab is hidden, and picks up where it was.
 // It keeps moving with no pause control, the owner's call (#626): WCAG 2.2.2 asks for one on motion
@@ -95,6 +95,6 @@ export function Orb({ size, speed = 1, className, label }: OrbProps) {
     return moving ? (
         <canvas ref={canvasRef} className={className} style={{ width: size, height: size }} {...a11y} />
     ) : (
-        <OrbMark size={size} className={className} label={label} />
+        <OrbStill size={size} className={className} label={label} />
     );
 }

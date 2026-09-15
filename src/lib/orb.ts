@@ -55,8 +55,11 @@ function spherePoint(index: number, total: number): [number, number, number] {
     return [across * Math.cos(angle), y, across * Math.sin(angle)];
 }
 
-/** The dots of the orb at `size` px, `time` seconds of its own clock in. */
-export function orbFrame(size: number, time: number): OrbDot[] {
+/**
+ * The dots of the orb at `size` px, `time` seconds of its own clock in. `sashTilt` is how far the
+ * sash leans back from facing you, in radians; the moving orb keeps the original's.
+ */
+export function orbFrame(size: number, time: number, sashTilt = 0.55): OrbDot[] {
     const { around, sphere, thin } = orbTuning(size);
     const centre = size / 2;
     const radius = (size / 2) * 0.78;
@@ -64,7 +67,7 @@ export function orbFrame(size: number, time: number): OrbDot[] {
 
     // The camera looks down on the orb a little; the sash is tilted further, and holds still while it ripples.
     const [sinView, cosView] = [Math.sin(0.3), Math.cos(0.3)];
-    const [sinSash, cosSash] = [Math.sin(0.55), Math.cos(0.55)];
+    const [sinSash, cosSash] = [Math.sin(sashTilt), Math.cos(sashTilt)];
     const view = (x: number, y: number, z: number) => ({
         x: centre + x,
         y: centre - (y * cosView - z * sinView),
@@ -110,4 +113,65 @@ export function orbFrame(size: number, time: number): OrbDot[] {
     }
 
     return dots.sort((a, b) => a.z - b.z).map(({ x, y, r, opacity }) => ({ x, y, r, opacity }));
+}
+
+/** The logo's circle behind its dots, in pixels of a `size` square. */
+export type OrbLogo = { circle: { cx: number; cy: number; r: number; opacity: number }; dots: OrbDot[] };
+
+/** The size the logo is drawn at before it is scaled: the landing page's orb, so the two are one drawing. */
+const LOGO_DRAWN_AT = 220;
+
+/**
+ * The orb as a logo, for the wordmark, the sidebar, the favicon and the app icon. The landing
+ * page's drawing at one moment, with three changes so it holds up small and standing still:
+ * - the sash leans back less (0.2 rather than 0.55), so its full side folds over the top edge;
+ * - a faint circle and a faint half sphere of dots fill the outline, so it reads perfectly round;
+ * - it fills more of its square, and its dots grow as it shrinks (1.8 times at 28 px, as drawn
+ *   from 110 px up), so a small logo stays a shape instead of a grey smudge.
+ * The owner's picks, compared side by side (#626).
+ */
+export function orbLogo(size: number): OrbLogo {
+    const drawn = LOGO_DRAWN_AT;
+    const centre = drawn / 2;
+    const radius = centre * 0.78;
+    const scale = (size / drawn) * 1.12;
+    const shift = (size - drawn * scale) / 2;
+    const weight = 1 + 0.8 * Math.min(1, Math.max(0, (110 - size) / 82));
+
+    const place = (dot: OrbDot): OrbDot => ({ x: dot.x * scale + shift, y: dot.y * scale + shift, r: dot.r * scale * weight, opacity: dot.opacity });
+
+    // The front half of an even sphere of dots, under the sash, fainter toward the edge.
+    const sphere: OrbDot[] = [];
+    const total = 900;
+    const [sinView, cosView] = [Math.sin(0.3), Math.cos(0.3)];
+    for (let index = 0; index < total; index++) {
+        const [x, y, z] = spherePoint(index, total);
+        const facing = y * sinView + z * cosView;
+        if (facing < 0) continue;
+        sphere.push({ x: centre + x * radius, y: centre - (y * cosView - z * sinView) * radius, r: 1, opacity: 0.2 * (0.55 + 0.45 * facing) });
+    }
+
+    return {
+        circle: { cx: size / 2, cy: size / 2, r: radius * scale, opacity: 0.05 },
+        dots: [...sphere, ...orbFrame(drawn, ORB_STILL_TIME, 0.2)].map(place),
+    };
+}
+
+/** The sizes the logo is drawn for; anything else is shown from the nearest one at or above it. */
+export const ORB_LOGO_SIZES = [16, 28, 64, 128] as const;
+
+/** The logo file drawn for showing it at `size` px. */
+export function orbLogoSizeFor(size: number): (typeof ORB_LOGO_SIZES)[number] {
+    return ORB_LOGO_SIZES.find((drawn) => drawn >= size) ?? ORB_LOGO_SIZES[ORB_LOGO_SIZES.length - 1];
+}
+
+/** The logo as an SVG document in one colour: the file the page masks with, and the icons' picture. */
+export function orbLogoSvg(size: number, color: string): string {
+    const { circle, dots } = orbLogo(size);
+    const round = (value: number) => Math.round(value * 100) / 100;
+    const circles = [
+        `<circle cx="${round(circle.cx)}" cy="${round(circle.cy)}" r="${round(circle.r)}" fill-opacity="${circle.opacity}"/>`,
+        ...dots.map((dot) => `<circle cx="${round(dot.x)}" cy="${round(dot.y)}" r="${round(dot.r)}" fill-opacity="${round(dot.opacity)}"/>`),
+    ];
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" fill="${color}">${circles.join("")}</svg>`;
 }

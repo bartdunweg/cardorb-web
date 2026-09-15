@@ -21,7 +21,8 @@ import { FlagIcon } from "./flag-icon";
 import { FormError } from "./form-error";
 import { LinkButton } from "./link-button";
 import { Orb } from "./orb";
-import { OrbMark } from "./orb-mark";
+import { OrbLogo } from "./orb-logo";
+import { OrbStill } from "./orb-still";
 import { RowButton } from "./row-button";
 import { LIST_ROW, RowSearch } from "./row-search";
 import { SearchTrigger } from "./search-trigger";
@@ -164,18 +165,26 @@ export const ourSections: SectionSpec[] = [
         title: "Orb",
         from: "components/app/orb",
         ours: true,
-        note: "The Card Orb orb: a sash of dotted bands wrapped round a faint sphere, rippling, in the text colour. Orb moves (a canvas, still for reduced motion); OrbMark is the same drawing standing still as an SVG, for a logo or an app icon. Any size, dot count tuned to it. Ported from thinking-orbs, MIT.",
+        note: "The Card Orb orb: a sash of dotted bands wrapped round a faint sphere, rippling, in the text colour. Orb moves (a canvas); OrbStill is that drawing standing still, what the server sends and reduced motion keeps. OrbLogo is the same orb at rest, round and weighted to hold up small: the wordmark, the sidebar, the favicon and the app icon. Ported from thinking-orbs, MIT.",
         render: (
             <Panel>
                 <Group title="Moving and still" cols="wide">
                     <Cell label="Orb size={160}">
                         <Orb size={160} className="text-primary" />
                     </Cell>
-                    <Cell label="OrbMark size={64}">
-                        <OrbMark size={64} className="text-primary" />
+                    <Cell label="OrbStill size={64}">
+                        <OrbStill size={64} className="text-primary" />
                     </Cell>
-                    <Cell label="OrbMark size={28}">
-                        <OrbMark size={28} className="text-primary" />
+                </Group>
+                <Group title="Logo" hint="dots weighted for the size" cols="wide">
+                    <Cell label="OrbLogo size={96}">
+                        <OrbLogo size={96} className="text-primary" />
+                    </Cell>
+                    <Cell label="OrbLogo size={28}">
+                        <OrbLogo size={28} className="text-primary" />
+                    </Cell>
+                    <Cell label="OrbLogo size={16}">
+                        <OrbLogo size={16} className="text-primary" />
                     </Cell>
                 </Group>
             </Panel>

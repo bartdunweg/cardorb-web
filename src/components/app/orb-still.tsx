@@ -1,6 +1,6 @@
 import { ORB_STILL_TIME, orbFrame } from "@/lib/orb";
 
-type OrbMarkProps = {
+type OrbStillProps = {
     /** Width and height in px; the dot count is tuned for it, so ask for the size it is shown at. */
     size: number;
     /** The moment drawn, in seconds of the orb's clock. */
@@ -10,9 +10,9 @@ type OrbMarkProps = {
     label?: string;
 };
 
-// The orb standing still, as an SVG in the text colour: the mark for a logo or an app icon, and
-// what the moving Orb shows until its canvas takes over. No hooks, so a server component can draw it.
-export function OrbMark({ size, time = ORB_STILL_TIME, className, label }: OrbMarkProps) {
+// The moving orb standing still, as an SVG in the text colour: what Orb shows until its canvas takes
+// over, and all it shows under reduced motion. The logo is its own drawing (OrbLogo).
+export function OrbStill({ size, time = ORB_STILL_TIME, className, label }: OrbStillProps) {
     const dots = orbFrame(size, time);
     const round = (value: number) => Math.round(value * 100) / 100;
 
