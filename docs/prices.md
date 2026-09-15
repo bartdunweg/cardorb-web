@@ -76,3 +76,56 @@ copy has no price in the app: TCGplayer publishes none.
 - If the owner starts selling rather than holding, the market they sell in is the one that counts.
 - If promos matter more than the gap costs, a second source for them wants its own decision, not a
   quiet fallback.
+- If graded or played copies start to matter, Scrydex is the candidate below, and the plan for it is
+  written down.
+
+## Scrydex, the candidate for graded prices (parked 2026-09-15)
+
+Looked at on 2026-09-15 because a graded copy has no price. Parked by Bart the same day; nothing is
+built and no subscription is taken.
+
+**What it offers**, read off scrydex.com's pricing page and API docs that day, not tried with a key:
+
+|                   | Scrydex                                                                                                                               |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Plans             | Starter $29 a month for 5,000 credits, Growth $99 for 50,000, overage $0.006 and $0.002 a credit                                      |
+| Cost of a request | 1 credit; up to 100 cards per page with `include=prices`; history 3 a card (pricing page; the credits doc names only Vision as extra) |
+| Raw prices        | Per variant and condition (NM, LP, MP, HP, DM), low and market, trends over 1 to 180 days                                             |
+| Graded prices     | Per company (PSA, CGC, BGS, TAG, SGC) and grade: low, mid, high, market, plus signed, error and perfect flags                         |
+| Currency          | USD for English cards, JPY for Japanese; EUR announced                                                                                |
+| History           | Daily, raw and graded, `cards/<id>/price_history`; how far back is not documented                                                     |
+| Webhooks          | Per expansion when its raw or graded prices changed                                                                                   |
+
+**Against PriceCharting**, the other source that prices grades: $49 a month (Legendary) for a daily
+CSV of every item. It gives grades 1 to 9, 9.5 and four 10s, but grade 9 and below without the
+company, only current values, and it matches cards by name and number, the risk the Cardmarket
+links showed. Scrydex matches by its own ids, which the Japanese catalogue already uses
+(`scrydex-japan-cards.mjs` in the API reads its public pages with Bart's permission). The earlier
+candidate, PokemonPriceTracker ($9.99 for 20,000 credits, RAW and PSA), was parked on 2026-09-12.
+
+**What a pass costs.** The copy holds 38,067 cards (21,159 English, 16,908 Japanese, 2026-09-15), so
+one pass over every card is about 381 credits: weekly fits Starter, daily is about 11,400 a month.
+History for every card would be about 114,000 credits; for a sample of 1,000 about 3,000.
+
+**Unknowns a key answers first:** whether a page of an expansion's cards carries graded prices (if
+not, a pass is 38,067 credits, not 381), how far history goes back, and whether the terms allow
+storing prices and showing them to other users.
+
+**The plan, when this is picked up:**
+
+1. Bart takes Starter and puts the key in `~/.cardorb-scrydex-key`; Claude does the rest.
+2. Build the real nightly Scrydex ingest in the API, not a throwaway, reading into tables of its
+   own beside the current copy. Pages keep reading our tables only (own copy first).
+3. The first run fetches every set and every card with metadata, raw and graded prices, plus
+   history for a sample, and the same script reports: agreement per field (name, number, rarity,
+   artist, variants, picture) against our copy, cards either side is missing, Scrydex raw NM
+   against TCGplayer per card, how many cards carry a PSA price, and how far history reaches.
+4. On that report Bart decides: Scrydex for graded prices only, Scrydex as the one price source
+   (Japanese cards would get yen market prices they lack today, at a monthly cost and a history
+   that may start later than ours from 2024-02-08), or cancel.
+5. Only then a small PR points the pages at it. A switch that loses the id match puts one
+   printing's price on another card and nothing on screen shows it, which is why step 3 comes
+   before step 5.
+
+Scrydex is not outage-free: a 524 on its side wiped 169 Japanese set logos on 2026-09-15, which
+cardorb-api#482 now guards against. An ingest from it needs the same rule, a held value stands.
