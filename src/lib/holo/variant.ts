@@ -34,7 +34,7 @@ const FAMILY: Record<string, string> = {
     common: "common",
     // A promo prints a black star, not a rarity, and since cardorb-api#494 every card of a promo set
     // answers "Promo". Most promos are holo, so the card shines like one; a copy said to be
-    // non-holo lies flat (see holoVariant).
+    // non-holo lies flat, and the shine covers the whole card (see holoVariant).
     promo: "rare holo",
     "classic collection": "common",
     "one diamond": "common",
@@ -141,6 +141,20 @@ function invert(inset: string): string {
     const bottom = `calc(100% - ${b})`;
     return `polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 ${t}, ${l} ${t}, ${l} ${bottom}, ${right} ${bottom}, ${right} ${t}, 0 ${t})`;
 }
+/**
+ * No window: the shine over the whole card. For a promo, whose layout nothing tells us: a framed
+ * holo and a full illustration (Miraidon SVP 013) share the one word, and a window placed on a full
+ * illustration draws a lit box in the middle of the picture, where a whole-card shine reads right
+ * on both.
+ */
+const WHOLE_CARD: Record<string, string> = {
+    "--clip": "none",
+    "--clip-invert": "none",
+    "--clip-stage": "none",
+    "--clip-stage-invert": "none",
+    "--clip-trainer": "none",
+    "--clip-trainer-invert": "none",
+};
 function windowStyle(gen: string | null | undefined, trainer: boolean): Record<string, string> {
     const era = ERA_WINDOW[(gen ?? "").trim().toLowerCase()];
     if (!era) return {};
@@ -195,7 +209,7 @@ export function holoVariant(
     const trainer = fullArtTrainer || (facts != null && facts.hp == null && !facts.stage);
     return {
         rarity: family,
-        style: windowStyle(card.gen, trainer),
+        style: key === "promo" ? WHOLE_CARD : windowStyle(card.gen, trainer),
         subtypes: trainer ? "supporter" : stageSubtype(facts?.stage),
         supertype: trainer ? "trainer" : "pokémon",
         trainerGallery: /^[tg]g\d/i.test(card.number ?? ""),

@@ -98,3 +98,32 @@ export function printingsOfLine(points: PriceLinePoint[]): { key: string; label:
     const seen = new Set(points.flatMap((p) => Object.keys(p.printings ?? {})));
     return PRINTING_LABELS.filter(([key]) => seen.has(key)).map(([key, label]) => ({ key, label }));
 }
+
+/** How far apart two neighbouring figures of one line are before the step between them is a jump. */
+const JUMP_RATIO = 5;
+
+/**
+ * The part of a price line worth drawing: all of it, or, where the line contradicts itself, what
+ * follows its last jump.
+ *
+ * A line that jumps five times or more between two neighbouring figures, and does so at least twice,
+ * is not a price that moved: it is a market that files two different figures under one printing.
+ * Base Set Charizard's 1st Edition read about €400 on TCGplayer's weekly readings through 2024, then
+ * €5,266, €431, €261 and €3,563 by the end of 2025; a first edition Charizard never sold for €400,
+ * and the API cannot tell which half is true (cardorb-api#493). Bart, 2026-09-15: hide the old part.
+ * One jump alone stays drawn: a corrected link or a real move, and nothing after it says otherwise.
+ * On 2026-09-15 this cut 6 of the 1,980 lines of the cards with a 1st Edition or Shadowless run.
+ */
+export function trustedStretch<T extends { value: number }>(line: T[]): T[] {
+    let jumps = 0;
+    let last = 0;
+    for (let i = 1; i < line.length; i++) {
+        const a = line[i - 1].value;
+        const b = line[i].value;
+        if (Math.min(a, b) > 0 && Math.max(a, b) >= Math.min(a, b) * JUMP_RATIO) {
+            jumps++;
+            last = i;
+        }
+    }
+    return jumps >= 2 ? line.slice(last) : line;
+}

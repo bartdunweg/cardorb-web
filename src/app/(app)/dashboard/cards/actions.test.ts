@@ -59,6 +59,20 @@ describe("addCard from a set page", () => {
         expect(posted()).not.toHaveProperty("tcgId");
     });
 
+    it("sends the printing and run pressed in the sheet, under the names the API's card draft reads", async () => {
+        await addCard(pokemonCardFromSetCard(tile, "en"), "collection", undefined, {
+            printing: { finish: "holo", foilPattern: "cosmos" },
+            edition: "1st-edition",
+        });
+        expect(posted()).toMatchObject({ finish: "holo", foilPattern: "cosmos", edition: "1st-edition" });
+    });
+
+    it("sends no printing where the sheet offered none, so the API picks the card's default", async () => {
+        await addCard(pokemonCardFromSetCard(tile, "en"));
+        expect(posted()).not.toHaveProperty("finish");
+        expect(posted()).not.toHaveProperty("edition");
+    });
+
     it("still refuses a card with no set", async () => {
         expect(await addCard(pokemonCardFromSetCard({ ...tile, setName: "" }, "en"))).toMatchObject({ ok: false });
         expect(api).not.toHaveBeenCalled();

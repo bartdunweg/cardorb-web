@@ -274,7 +274,7 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
                     Finish
                     <span className="text-secondary">{soleFinish.label}</span>
                 </div>
-            ) : (
+            ) : finishes.length ? (
                 <div className={row}>
                     Finish
                     <NativeSelect
@@ -286,7 +286,7 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
                         options={finishes}
                     />
                 </div>
-            )}
+            ) : null}
 
             {/* A card with no foil at all has no pattern to record, the one thing about a
                 pattern any catalogue is certain of. */}

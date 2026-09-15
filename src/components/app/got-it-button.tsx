@@ -30,7 +30,7 @@ export function GotItButton({ card }: { card: OwnableCard }) {
     };
 
     return (
-        <MarkOwnedDialog card={card} folders={folders ?? []} languages={facts?.facts?.languages} facts={facts?.facts}>
+        <MarkOwnedDialog card={card} folders={folders ?? []} languages={facts?.facts?.languages} facts={card.tcg_id ? facts?.facts : null}>
             <TileIconButton icon={Check} label={`Got it: ${card.name}`} onPress={load} />
         </MarkOwnedDialog>
     );

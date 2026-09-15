@@ -27,6 +27,13 @@ import { EDITIONS, EDITION_LABELS, FINISH_LABELS, FINISHES as FINISH_ORDER, FOIL
  * nothing. And whatever is already recorded stays offered whatever the catalogue says, because a
  * select whose value is not among its options shows blank and saving the form would quietly
  * clear it.
+ *
+ * And a third, under both: `undefined` is a question not answered yet, which is not the same as
+ * `null`, the catalogue having no answer. A sheet opens before the card's facts arrive, and a
+ * form that read the wait as "no answer" offered every finish and every run for the half second
+ * until the answer took them away again (Bart, 2026-09-15: "dat moet in één keer goed gaan").
+ * While the facts are on their way a list holds only what is recorded, which soleOption states as
+ * text, and nothing where nothing is: no choice is offered before the answer that decides it.
  */
 
 export type Options = { label: string; value: string }[];
@@ -70,6 +77,7 @@ const asPrinting = (finish: string): string => (isPatternedReverse(finish) ? "re
  * copy to the store, which is how a normal and a reverse holo of seven cards became one of two.
  */
 export function finishOptions(facts: CardFacts | null | undefined, current: string | null | undefined): Options {
+    if (facts === undefined) return FINISHES.filter((f) => f.value === current);
     /* A pattern print is a printing too: a common Rowlet of Sun & Moon is a normal and a reverse in
        its set and a cosmos holo from a blister, and recording that copy needs the holo. */
     const sold = facts?.patternPrints?.prints ?? [];
@@ -102,6 +110,7 @@ export const defaultFinishOf = (options: Options): string =>
  * was never a plain holo, so a holo copy of it is the cosmos one.
  */
 export function patternOptions(facts: CardFacts | null | undefined, finish: string | null | undefined, current: string | null | undefined): Options {
+    if (facts === undefined) return current && current in FOIL_PATTERN_LABELS ? [{ label: FOIL_PATTERN_LABELS[current as FoilPattern], value: current }] : [];
     const made = facts?.printings ?? [];
     const sold = facts?.patternPrints ?? null;
     const printing = finish ? asPrinting(finish) : null;
@@ -151,6 +160,7 @@ export const effectivePatternOf = (options: Options, chosen: string): string =>
  * `editions`.
  */
 export function editionOptions(facts: CardFacts | null | undefined, current: string | null | undefined, language?: string | null): Options {
+    if (facts === undefined) return EDITIONS.filter((e) => e === current).map((e) => ({ label: EDITION_LABELS[e], value: e }));
     const runs = facts?.editions ?? null;
     const all = EDITIONS.filter((e) => inLanguage(e, language) || e === current);
     if (!runs) {

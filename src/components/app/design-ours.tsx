@@ -309,6 +309,7 @@ export const ourSections: SectionSpec[] = [
                             <CopyCard
                                 group={{ key: "holo-nm", shown: SAMPLE_COPY, rows: [SAMPLE_COPY], quantity: 4 }}
                                 folders={[{ id: "kanto", name: "Kanto", rule: null } satisfies FolderChoice]}
+                                facts={null}
                                 busy={false}
                                 onMore={() => {}}
                                 onFewer={() => {}}
@@ -328,6 +329,7 @@ export const ourSections: SectionSpec[] = [
                                     quantity: 1,
                                 }}
                                 folders={[]}
+                                facts={null}
                                 busy={false}
                                 arrive
                                 onMore={() => {}}
