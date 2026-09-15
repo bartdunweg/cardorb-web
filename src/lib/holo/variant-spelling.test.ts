@@ -53,25 +53,19 @@ describe("holo family for the API's one rarity spelling", () => {
         "Holo Rare ex",
         "Holo Rare GX",
     ];
-    const PLAIN = new Set(["Common", "Uncommon", "Rare", "Classic Collection"]);
+    const PLAIN = new Set(["Common", "Uncommon", "Rare", "Classic Collection", "Promo"]);
 
-    it("gives every stored rarity above the plain ones a shine", () => {
+    it("gives every stored rarity above the plain ones and Promo a shine", () => {
         for (const r of STORED) {
             if (PLAIN.has(r)) continue;
             expect(holoVariant(r, null, null).rarity, r).not.toMatch(/^(common|uncommon|rare)$/);
         }
     });
 
-    it("shines a promo like a holo unless its copy is non-holo", () => {
-        expect(holoVariant("Promo", null, null).rarity).toBe("rare holo");
-        expect(holoVariant("Promo", "holo", null).rarity).toBe("rare holo");
+    it("gives a promo a Common's light, whatever its finish; a reverse copy keeps its reverse", () => {
+        expect(holoVariant("Promo", null, null).rarity).toBe("common");
+        expect(holoVariant("Promo", "holo", null, { gen: "Scarlet & Violet" }).rarity).toBe("common");
         expect(holoVariant("Promo", "normal", null).rarity).toBe("common");
-        expect(holoVariant("Promo", null, null, { gen: "Base" }).rarity).toBe("rare holo cosmos");
-    });
-
-    it("shines a promo over the whole card, whatever its era's window", () => {
-        expect(holoVariant("Promo", null, null, { gen: "Scarlet & Violet" }).style["--clip"]).toBe("none");
-        expect(holoVariant("Promo", null, { stage: null, hp: null }, { gen: "Base" }).style["--clip-trainer"]).toBe("none");
-        expect(holoVariant("Holo Rare", null, null, { gen: "Base" }).style["--clip"]).not.toBe("none");
+        expect(holoVariant("Promo", "reverse-holo", null).rarity).toBe("common reverse holo");
     });
 });

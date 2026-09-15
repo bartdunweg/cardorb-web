@@ -33,9 +33,10 @@ const FAMILY: Record<string, string> = {
     "no rarity": "common",
     common: "common",
     // A promo prints a black star, not a rarity, and since cardorb-api#494 every card of a promo set
-    // answers "Promo". Most promos are holo, so the card shines like one; a copy said to be
-    // non-holo lies flat, and the shine covers the whole card (see holoVariant).
-    promo: "rare holo",
+    // answers "Promo". Nothing says whether it is a framed holo or a full illustration (Miraidon
+    // SVP 013), and either foil drawn on the other looks wrong, so a promo gets a Common's light
+    // and nothing more, whatever its copy's finish (see holoVariant). A reverse copy keeps its reverse.
+    promo: "common",
     "classic collection": "common",
     "one diamond": "common",
     uncommon: "uncommon",
@@ -141,20 +142,6 @@ function invert(inset: string): string {
     const bottom = `calc(100% - ${b})`;
     return `polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 ${t}, ${l} ${t}, ${l} ${bottom}, ${right} ${bottom}, ${right} ${t}, 0 ${t})`;
 }
-/**
- * No window: the shine over the whole card. For a promo, whose layout nothing tells us: a framed
- * holo and a full illustration (Miraidon SVP 013) share the one word, and a window placed on a full
- * illustration draws a lit box in the middle of the picture, where a whole-card shine reads right
- * on both.
- */
-const WHOLE_CARD: Record<string, string> = {
-    "--clip": "none",
-    "--clip-invert": "none",
-    "--clip-stage": "none",
-    "--clip-stage-invert": "none",
-    "--clip-trainer": "none",
-    "--clip-trainer-invert": "none",
-};
 function windowStyle(gen: string | null | undefined, trainer: boolean): Record<string, string> {
     const era = ERA_WINDOW[(gen ?? "").trim().toLowerCase()];
     if (!era) return {};
@@ -190,10 +177,9 @@ export function holoVariant(
 ): HoloVariant {
     const key = (rarity ?? "").trim().toLowerCase();
     let family = FAMILY[key] ?? "common";
-    if (key === "promo" && finish === "normal") family = "common";
     // A Poké Ball, Friend Ball, Team Rocket, Energy Symbol or other patterned copy is a reverse holo with a pattern: the reverse effect, for now without the pattern.
     if (isReverseFinish(finish) && REVERSIBLE.has(family)) family = `${family} reverse holo`;
-    else if (finish === "holo" && PLAIN.has(family)) family = "rare holo";
+    else if (finish === "holo" && PLAIN.has(family) && key !== "promo") family = "rare holo";
     // The sheen is Sword & Shield's; every holo before it was the starry cosmos foil. That is a
     // guess from the era, and it is only a guess: modern sets print cosmos cards too. A copy that
     // was told what its foil is overrules it, the way the finish overrules the rarity above:
@@ -209,7 +195,7 @@ export function holoVariant(
     const trainer = fullArtTrainer || (facts != null && facts.hp == null && !facts.stage);
     return {
         rarity: family,
-        style: key === "promo" ? WHOLE_CARD : windowStyle(card.gen, trainer),
+        style: windowStyle(card.gen, trainer),
         subtypes: trainer ? "supporter" : stageSubtype(facts?.stage),
         supertype: trainer ? "trainer" : "pokémon",
         trainerGallery: /^[tg]g\d/i.test(card.number ?? ""),
