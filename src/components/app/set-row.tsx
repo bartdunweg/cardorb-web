@@ -10,7 +10,7 @@ const LOGO_WIDTH = 96;
 
 /**
  * Ours: one set on the Browse shelf as a row, the list layout beside the tiles (set-tile.tsx).
- * The logo small at the left, the name and its release date, and the count at the right; the
+ * The logo small at the left, the name and its release date (not the set's own Japanese name), and the count at the right; the
  * whole row is the link. Dimmed with nothing in it, like the tile.
  */
 export function SetRow({ set, language }: { set: SetSummary; language: BrowseLanguage }) {
@@ -35,9 +35,7 @@ export function SetRow({ set, language }: { set: SetSummary; language: BrowseLan
             </div>
             <span className="flex min-w-0 flex-1 flex-col">
                 <span className="truncate text-sm font-semibold text-primary">{set.name}</span>
-                <span className="truncate text-xs text-tertiary">
-                    {[set.localName, set.releaseDate ? formatDate(set.releaseDate) : null].filter(Boolean).join(" · ")}
-                </span>
+                {set.releaseDate ? <span className="truncate text-xs text-tertiary">{formatDate(set.releaseDate)}</span> : null}
             </span>
             {set.cardsRecorded ? (
                 <span className="shrink-0 text-sm text-tertiary tabular-nums">

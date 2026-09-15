@@ -91,12 +91,9 @@ export function SetTile({
             <div className="flex min-w-0 flex-col gap-1.5">
                 <span className="flex min-w-0 flex-col">
                     <span className="truncate text-sm font-semibold text-primary">{set.name}</span>
-                    {/* The set's own name beside a translated one, and when it came out, as the list row writes them. */}
-                    {set.localName || set.releaseDate ? (
-                        <span className="truncate text-xs text-tertiary">
-                            {[set.localName, set.releaseDate ? formatDate(set.releaseDate) : null].filter(Boolean).join(" · ")}
-                        </span>
-                    ) : null}
+                    {/* When it came out, as the list row writes it. Not the set's own Japanese name: the
+                        shelf reads by the English one, and the set's page still shows both (Bart, 2026-09-15). */}
+                    {set.releaseDate ? <span className="truncate text-xs text-tertiary">{formatDate(set.releaseDate)}</span> : null}
                 </span>
                 {/* A set the catalogue has not recorded cards for is not "0 of 60 to go": the count
                     would say the collecting is unstarted where it is the catalogue that is. The tile
