@@ -16,8 +16,16 @@ import { type CardFacts, type PricePoint, cardFacts, cardPriceHistory } from "@/
  */
 const FACTS_SEEN = new Map<string, CardFacts | null>();
 const FACTS_ASKED = new Map<string, Promise<CardFacts | null>>();
-const PRICES_SEEN = new Map<string, PricePoint[]>();
+/** A price line with the moment it was read: the facts never change, the line gains a day every night. */
+const PRICES_SEEN = new Map<string, { points: PricePoint[]; at: number }>();
 const PRICES_ASKED = new Map<string, Promise<PricePoint[]>>();
+
+/**
+ * How long a known line is taken as current. Past it, the next ask still answers the known line at
+ * once (knownPriceHistory) but reads the line again behind it, so a tab left open since Sunday
+ * draws Monday's point on the next open rather than never (Bart, 2026-09-15).
+ */
+export const PRICES_FRESH_MS = 10 * 60_000;
 
 /** One answer per card, however many ask; a second ask while the first is out joins it. */
 function once<T>(seen: Map<string, T>, asked: Map<string, Promise<T>>, key: string, ask: () => Promise<T>): Promise<T> {
@@ -42,12 +50,31 @@ export function knownCardFacts(tcgId: string): CardFacts | null | undefined {
     return FACTS_SEEN.get(tcgId);
 }
 
+/**
+ * The card's line: the known one while it is fresh, else read again. A second ask while one is out
+ * joins it. An empty answer never replaces a line with readings: cardPriceHistory answers an API it
+ * could not reach as empty, and a card does not lose its past, so the known line stands and the
+ * next ask tries again.
+ */
 export function preloadPriceHistory(tcgId: string): Promise<PricePoint[]> {
-    return once(PRICES_SEEN, PRICES_ASKED, tcgId, () => cardPriceHistory(tcgId));
+    const known = PRICES_SEEN.get(tcgId);
+    if (known && Date.now() - known.at < PRICES_FRESH_MS) return Promise.resolve(known.points);
+    const open = PRICES_ASKED.get(tcgId);
+    if (open) return open;
+    const p = cardPriceHistory(tcgId).then((points) => {
+        PRICES_ASKED.delete(tcgId);
+        const before = PRICES_SEEN.get(tcgId);
+        if (!points.length && before?.points.length) return before.points;
+        PRICES_SEEN.set(tcgId, { points, at: Date.now() });
+        return points;
+    });
+    PRICES_ASKED.set(tcgId, p);
+    return p;
 }
 
+/** The line already read, fresh or not, without asking: what a sheet draws while it asks again. */
 export function knownPriceHistory(tcgId: string): PricePoint[] | undefined {
-    return PRICES_SEEN.get(tcgId);
+    return PRICES_SEEN.get(tcgId)?.points;
 }
 
 /**
