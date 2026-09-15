@@ -98,6 +98,13 @@ const PRINTING_LABELS: [string, string][] = [
     ["shadowless-holofoil", "Shadowless Holo"],
     // My First Battle's Blue Border print, a TCGplayer product of its own (cardorb-api#492).
     ["blue-border", "Blue Border"],
+    // The foil pattern prints, each a TCGplayer product of its own (cardorb-api#512).
+    ["cosmos-holofoil", "Cosmos Holo"],
+    ["cosmos-reverse-holofoil", "Cosmos Reverse"],
+    ["cosmos-normal", "Cosmos"],
+    ["cracked-ice-holofoil", "Cracked Ice Holo"],
+    ["cracked-ice-reverse-holofoil", "Cracked Ice Reverse"],
+    ["cracked-ice-normal", "Cracked Ice"],
 ];
 
 /** The printings a card has readings for, in reading order, each with its label. */
