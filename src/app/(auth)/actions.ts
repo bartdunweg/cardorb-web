@@ -5,7 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { usernameFromEmail } from "@/lib/username";
 import { credentialsSchema, emailSchema, newPasswordSchema } from "@/lib/validation/auth";
 
-export type AuthState = { error: string } | { success: string } | undefined;
+/** `existing`: the address on a sign-up already has an account, and the password typed was not its own. */
+export type AuthState = { error: string } | { success: string } | { existing: true } | undefined;
 
 function parseCredentials(formData: FormData) {
     return credentialsSchema.safeParse({
@@ -40,6 +41,17 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
         options: { data: { username: usernameFromEmail(email) } },
     });
     if (error) return { error: error.message };
+
+    // An address that already has a confirmed account comes back as a user with no identities and
+    // no error: Supabase sends nothing and hides that it exists. The form then said "open the link
+    // we sent" for a link that never came. Whoever does this has usually forgotten they signed up,
+    // so the password they typed may well be the account's own: try it, and they are in. If it is
+    // not, the form says the account is there and points to signing in or a new password.
+    if (data.user && data.user.identities?.length === 0) {
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (!signInError) redirect("/dashboard");
+        return { existing: true };
+    }
 
     // Email confirmation off → a session is returned, so go straight in.
     if (data.session) redirect("/dashboard");
