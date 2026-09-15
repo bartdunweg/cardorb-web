@@ -143,6 +143,8 @@ export const cardItemSchema = z.object({
     type: nullable(z.string()),
     image: nullable(z.string()),
     imageHigh: nullable(z.string()),
+    /** The picture of the printing this copy is, where it has its own (a Poké Ball reverse, Base Set's Unlimited); absent from an API before it said. */
+    printImage: nullable(z.string()).optional(),
     speciesId: nullable(z.number()),
     /** What the card prints where `name` is the English for it; absent from an API before it said. */
     localName: nullable(z.string()).optional(),
@@ -276,6 +278,12 @@ export type Card = {
     image_url: string | null;
     /** The larger scan (600 px), for a tile a phone draws at two pixels per point; null where the catalogue has one size. */
     image_high_url: string | null;
+    /**
+     * The picture of the printing this copy is, where that printing or its run has its own
+     * (cardorb-api copy printImage). A list draws it; `image_url` stays the card's scan, which the
+     * sheet draws every other printing over.
+     */
+    print_image_url?: string | null;
     tcg_id: string | null;
     collection_id: string | null;
     wishlist: boolean | null;
@@ -385,6 +393,7 @@ export const cardFromItem = (item: CardItem): Card => ({
     price: priceForCopy(item),
     image_url: ownImage(item.image),
     image_high_url: ownImage(item.imageHigh),
+    print_image_url: ownImage(item.printImage),
     tcg_id: item.tcgId,
     collection_id: item.collectionId,
     species_id: item.speciesId,

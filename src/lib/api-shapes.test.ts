@@ -6,6 +6,7 @@ import {
     cardFactsAnswer,
     cardFromItem,
     cardFromPokemonCard,
+    cardItemSchema,
     folderFromApi,
     ownImage,
     pokemonCardFromBrowse,
@@ -67,6 +68,46 @@ describe("cardFromItem", () => {
             collection_id: "f",
             image_url: "https://images.cardorb.com/p.png",
         });
+    });
+
+    it("carries the printing's own picture beside the card's scan, and only a file of ours", () => {
+        const item = cardItemSchema.parse({
+            id: "row",
+            name: "Charizard",
+            number: "4",
+            set: "base1",
+            setTitle: "Base Set",
+            setAbbr: "BS",
+            rarity: null,
+            gen: null,
+            type: null,
+            image: "https://images.cardorb.com/en/base/base1/4/low.webp",
+            imageHigh: null,
+            printImage: "https://images.cardorb.com/tcgplayer/42382.jpg",
+            speciesId: 6,
+            tcgId: "base1-4",
+            owned: true,
+            finish: "holo",
+            foilPattern: null,
+            edition: "unlimited",
+            quantity: 1,
+            condition: null,
+            grade: null,
+            language: null,
+            purchasePrice: null,
+            purchaseDate: null,
+            notes: null,
+            isFavorite: false,
+            acquiredAt: null,
+            collectionId: null,
+            price: null,
+        });
+        expect(cardFromItem(item)).toMatchObject({
+            image_url: "https://images.cardorb.com/en/base/base1/4/low.webp",
+            print_image_url: "https://images.cardorb.com/tcgplayer/42382.jpg",
+        });
+        expect(cardFromItem({ ...item, printImage: "https://tcgplayer-cdn.tcgplayer.com/product/42382_in_1000x1000.jpg" }).print_image_url).toBeNull();
+        expect(cardFromItem({ ...item, printImage: undefined }).print_image_url).toBeNull();
     });
 
     it("reads which card leads its Pokédex slot, and says false where an older API is silent", () => {

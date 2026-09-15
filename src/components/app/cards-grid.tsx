@@ -36,6 +36,7 @@ type GridCard = PublicCard & {
     quantity?: number | null;
     owned?: boolean | null;
     price_change?: PriceChange | null;
+    print_image_url?: string | null;
 };
 
 export function CardsGrid<T extends GridCard>({
@@ -149,8 +150,10 @@ function GridCell<T extends GridCard>({
                        or a grey box behind it read as a second one. A card with no picture shows its back. */
                     <div className="relative aspect-card w-full overflow-hidden rounded-card">
                         {card.image_url ? (
+                            /* The printing the copy is, where it has a picture of its own: an Unlimited
+                               Charizard shows no 1st Edition stamp, a Poké Ball reverse its pattern. */
                             <CardImage
-                                src={card.image_high_url ?? card.image_url}
+                                src={card.print_image_url ?? card.image_high_url ?? card.image_url}
                                 fallbackSrc={card.image_url}
                                 width={TILE_WIDTH[size]}
                                 sizes={TILE_SIZES[size]}

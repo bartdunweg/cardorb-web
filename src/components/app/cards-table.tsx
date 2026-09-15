@@ -38,7 +38,7 @@ export function CardsTable({ cards, onSelect }: { cards: Card[]; onSelect: (card
                                     {/* Face down where there is no picture, as the tiles are; the name beside it says which card. */}
                                     <div className="relative h-10 w-7 shrink-0 overflow-hidden rounded ring-1 ring-image ring-inset">
                                         {card.image_url ? (
-                                            <CardImage src={card.image_url} alt="" width={64} className="object-cover" />
+                                            <CardImage src={card.print_image_url ?? card.image_url} alt="" width={64} className="object-cover" />
                                         ) : (
                                             <CardBack width={64} />
                                         )}
