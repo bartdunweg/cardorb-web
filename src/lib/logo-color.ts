@@ -1,5 +1,5 @@
 import { unstable_cache } from "next/cache";
-import { PNG } from "pngjs";
+import sharp from "sharp";
 import { elapsed, logTiming } from "@/lib/timing";
 
 /**
@@ -12,15 +12,16 @@ import { elapsed, logTiming } from "@/lib/timing";
  * five-second limit and every failure (a catalogue not answering, a file that is not a PNG) reads
  * as "no colour", which draws the band in the page's own grey.
  *
- * Only PNG is read: TCGdex serves every logo as one (beside the WebP the page draws, see
- * `pngAddress`), pokemontcg.io's are PNG too, and a pure-JS PNG decoder costs nothing to ship.
- * A logo in another format is simply a set without a colour, not a failure.
+ * The file read is the one the page draws, from our own copy (images.cardorb.com): WebP for the
+ * logos copied from TCGdex, PNG for Scrydex's, decoded by sharp, which Next already ships for its
+ * image optimizer. It used to be TCGdex's PNG sibling of our WebP, so a set's colour waited on, and
+ * went grey with, a catalogue's server we already hold the file of.
  */
 
 const THIRTY_DAYS = 30 * 24 * 3600;
 const FETCH_LIMIT_MS = 5_000;
-/** Bump when the picking changes: the Data Cache outlives a deploy (see the memory of #206). */
-const VERSION = "v5";
+/** Bump when the picking or the file read changes: the Data Cache outlives a deploy (see the memory of #206). */
+const VERSION = "v6";
 
 export async function logoPalette(url: string | null): Promise<string[]> {
     if (!url) return [];
@@ -59,32 +60,16 @@ const CONCURRENCY = 24;
 
 async function readLogoPalette(url: string): Promise<string[]> {
     try {
-        const res = await fetch(pngAddress(url), { signal: AbortSignal.timeout(FETCH_LIMIT_MS), cache: "no-store" });
-        if (!res.ok || !(res.headers.get("content-type") ?? "").includes("image/png")) return [];
-        const png = PNG.sync.read(Buffer.from(await res.arrayBuffer()));
-        return pickPalette(png.data, png.width, png.height);
+        const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_LIMIT_MS), cache: "no-store" });
+        if (!res.ok || !(res.headers.get("content-type") ?? "").startsWith("image/")) return [];
+        const { data, info } = await sharp(Buffer.from(await res.arrayBuffer()))
+            .ensureAlpha()
+            .raw()
+            .toBuffer({ resolveWithObject: true });
+        return pickPalette(data, info.width, info.height);
     } catch {
         return [];
     }
-}
-
-/**
- * The set page's logo is a `logo.webp`: TCGdex's, or since api#394 our own copy of it at
- * images.cardorb.com, under the same path and in WebP only. TCGdex serves every asset in both
- * formats from the same address bar the extension, so the PNG sibling on TCGdex is what gets read
- * for either; any other address is asked for as it is. Reading our copy as it was answered WebP,
- * which is "no colour", and every set's wash went grey on the day the logos moved.
- */
-export function pngAddress(url: string): string {
-    try {
-        const u = new URL(url);
-        if ((u.hostname === "assets.tcgdex.net" || u.hostname === "images.cardorb.com") && u.pathname.endsWith(".webp")) {
-            return `https://assets.tcgdex.net${u.pathname.replace(/\.webp$/, ".png")}`;
-        }
-    } catch {
-        // Not an address: the fetch below fails and answers null.
-    }
-    return url;
 }
 
 /** How many pixels are looked at, at most; a 2500 × 1281 original is read at every third pixel. */

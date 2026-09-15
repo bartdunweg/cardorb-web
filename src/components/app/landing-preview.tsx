@@ -41,13 +41,46 @@ const AREA = `${LINE} L${FRAME.width} ${FRAME.height} L0 ${FRAME.height} Z`;
 
 // Six real printings, dearest first, as Home's row sorts them. Prices are Cardmarket's at the
 // time of writing, rounded the way the tiles show them.
+// The pictures are our own copies (images.cardorb.com), as the app's are: the landing is the first
+// page a visitor loads and must not wait on, or break with, a catalogue's server. Deoxys GG12 is
+// held as its TCGplayer photo, one file with no smaller sibling.
 const CARDS = [
-    { id: "sv04.5-232", name: "Mew ex", price: 742.37, image: "https://assets.tcgdex.net/en/sv/sv04.5/232" },
-    { id: "sv03.5-199", name: "Charizard ex", price: 368.3, image: "https://assets.tcgdex.net/en/sv/sv03.5/199" },
-    { id: "sv06-220", name: "Perrin", price: 98.23, image: "https://assets.tcgdex.net/en/sv/sv06/220" },
-    { id: "swsh12.5gg-GG12", name: "Deoxys", price: 21.46, image: "https://assets.tcgdex.net/en/swsh/swsh12.5/GG12" },
-    { id: "sv03.5-151", name: "Mew ex", price: 7.56, image: "https://assets.tcgdex.net/en/sv/sv03.5/151" },
-    { id: "sv03-125", name: "Charizard ex", price: 3.88, image: "https://assets.tcgdex.net/en/sv/sv03/125" },
+    {
+        id: "sv04.5-232",
+        name: "Mew ex",
+        price: 742.37,
+        image: "https://images.cardorb.com/en/sv/sv04.5/232/high.webp",
+        fallback: "https://images.cardorb.com/en/sv/sv04.5/232/low.webp",
+    },
+    {
+        id: "sv03.5-199",
+        name: "Charizard ex",
+        price: 368.3,
+        image: "https://images.cardorb.com/en/sv/sv03.5/199/high.webp",
+        fallback: "https://images.cardorb.com/en/sv/sv03.5/199/low.webp",
+    },
+    {
+        id: "sv06-220",
+        name: "Perrin",
+        price: 98.23,
+        image: "https://images.cardorb.com/en/sv/sv06/220/high.webp",
+        fallback: "https://images.cardorb.com/en/sv/sv06/220/low.webp",
+    },
+    { id: "swsh12.5gg-GG12", name: "Deoxys", price: 21.46, image: "https://images.cardorb.com/tcgplayer/478029.jpg", fallback: undefined },
+    {
+        id: "sv03.5-151",
+        name: "Mew ex",
+        price: 7.56,
+        image: "https://images.cardorb.com/en/sv/sv03.5/151/high.webp",
+        fallback: "https://images.cardorb.com/en/sv/sv03.5/151/low.webp",
+    },
+    {
+        id: "sv03-125",
+        name: "Charizard ex",
+        price: 3.88,
+        image: "https://images.cardorb.com/en/sv/sv03/125/high.webp",
+        fallback: "https://images.cardorb.com/en/sv/sv03/125/low.webp",
+    },
 ];
 
 export function LandingPreview({ className }: { className?: string }) {
@@ -115,7 +148,7 @@ export function LandingPreview({ className }: { className?: string }) {
                     {CARDS.map((card) => (
                         <li key={card.id} className="flex w-24 shrink-0 flex-col gap-1.5 rounded-card sm:w-28">
                             <div className="relative aspect-card w-full overflow-hidden rounded-card bg-quaternary">
-                                <CardImage src={`${card.image}/high.webp`} fallbackSrc={`${card.image}/low.webp`} alt="" width={160} className="object-cover" />
+                                <CardImage src={card.image} fallbackSrc={card.fallback} alt="" width={160} className="object-cover" />
                             </div>
                             <span className="w-full truncate text-xs font-medium text-primary">{card.name}</span>
                             <span className="text-xs text-tertiary tabular-nums">{formatPrice(card.price)}</span>
