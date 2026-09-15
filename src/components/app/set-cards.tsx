@@ -5,7 +5,7 @@ import { SearchLg, SwitchVertical01 } from "@untitledui/icons";
 import dynamic from "next/dynamic";
 import { listRows } from "@/app/(app)/dashboard/cards/actions";
 import { AppEmptyState } from "@/components/app/app-empty-state";
-import { warmCardFacts } from "@/components/app/card-memo";
+import { awaitRows, knownRows, warmCardFacts, warmSetRows } from "@/components/app/card-memo";
 import { type FilterAnswer, type FilterValues, FiltersSheet } from "@/components/app/filters-sheet";
 import { RowButton } from "@/components/app/row-button";
 import { LIST_ROW, RowSearch } from "@/components/app/row-search";
@@ -116,6 +116,14 @@ export function SetCards({
                 language,
             );
     }, [cards, language]);
+    /* Your rows in this set, one request for the page, each time the page is drawn: a sheet opened on
+       a card you hold or wish for then opens on its row, with its copies, rather than on the
+       catalogue's card with the rows read after the tap (card-memo.ts). Only a set you have a row in;
+       the cards are the drawing, so a refresh asks again and a second run of the effect does not. */
+    const setName = cards[0]?.setName;
+    useEffect(() => {
+        if (setName && cards.some((c) => c.owned || c.wishlist)) warmSetRows(setName, cards);
+    }, [cards, setName]);
     const rarities = useMemo(
         () => [...new Set(cards.map((c) => c.rarity).filter((r): r is string => Boolean(r)))].sort().map((r) => ({ value: r, label: r })),
         [cards],
@@ -199,6 +207,9 @@ export function SetCards({
     }, [matching, rarity, art]);
 
     const [selected, setSelected] = useState<Card | null>(null);
+    /* The card you hold or wish for, open while its row is still on the way (its catalogue id): the
+       sheet holds the place of the copies rather than offering to add a card you already have. */
+    const [pendingId, setPendingId] = useState<string | null>(null);
     // The catalogue card behind an open sheet, so a card nobody holds can still be taken from it.
     const [addable, setAddable] = useState<SetCard | null>(null);
     /* Where in the set the open card is, so the sheet can offer the one either side. The set page
@@ -210,20 +221,23 @@ export function SetCards({
         setAt(index);
         // The sheet's arrows can go past the cards drawn; draw them, so closing it lands on a tile.
         if (index >= limit) drawUpTo(index + CARD_BATCH);
-        /* The card you hold opens on its row; the catalogue's own is shown while that is read, so
-           the sheet is never blank waiting for it. No guard against a second tap: opening the same
-           card twice costs one read and lands on the same card, and the ref that used to prevent
-           it could not be reached from an arrow without being touched during render. */
-        setAddable(card.owned || card.wishlist ? null : card);
-        setSelected(fromCatalogue(card));
-        if (!card.owned && !card.wishlist) return;
-        const rows = await listRows({ set: card.setName, number: card.number, name: card.name, tcg_id: card.tcgId });
-        const row = rows[0];
-        if (row) {
-            setAddable(null);
-            // The row stores one name, the English one; the printed name is the shelf's to tell.
-            setSelected({ ...row, local_name: card.localName });
-        }
+        /* The card you hold opens on its row, from the page's rows where they are in (warmSetRows):
+           then everything the sheet offers is right on its first paint. Otherwise the catalogue's own
+           is shown while the row is read, so the sheet is never blank waiting for it, and a read that
+           lands after another card was opened (an arrow pressed meanwhile) opens nothing. */
+        const name = { set: card.setName, number: card.number, name: card.name, tcg_id: card.tcgId };
+        // The row stores one name, the English one; the printed name is the shelf's to tell.
+        const onRow = (row: Card) => ({ ...row, local_name: card.localName });
+        const held = card.owned || card.wishlist;
+        const known = held ? knownRows(name)?.[0] : undefined;
+        setAddable(held ? null : card);
+        setPendingId(held && !known ? card.id : null);
+        setSelected(known ? onRow(known) : fromCatalogue(card));
+        if (!held || known) return;
+        const row = (await awaitRows(name))?.[0] ?? (await listRows(name))[0];
+        // Only onto the sheet still showing this card, not one opened or closed since.
+        setPendingId((id) => (id === card.id ? null : id));
+        if (row) setSelected((shown) => (shown?.id === card.id ? onRow(row) : shown));
     };
 
     /* Null rather than a dead button at either end: the sheet draws no arrow where there is
@@ -343,9 +357,11 @@ export function SetCards({
                 onClose={() => {
                     setSelected(null);
                     setAddable(null);
+                    setPendingId(null);
                     setAt(-1);
                 }}
                 addable={addable ? pokemonCardFromSetCard(addable, language) : null}
+                rowPending={!!selected && selected.id === pendingId}
                 onPrev={step(-1)}
                 onNext={step(1)}
             />
