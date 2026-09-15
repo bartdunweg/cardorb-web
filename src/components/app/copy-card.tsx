@@ -247,7 +247,7 @@ export function CopyCard({
                     Finish
                     <span className="text-secondary">{soleFinish.label}</span>
                 </div>
-            ) : (
+            ) : finishes.length ? (
                 <div className={field}>
                     Finish
                     <NativeSelect
@@ -266,7 +266,7 @@ export function CopyCard({
                         options={finishes}
                     />
                 </div>
-            )}
+            ) : null}
 
             {solePattern ? (
                 <div className={field}>

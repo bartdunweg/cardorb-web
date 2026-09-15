@@ -236,7 +236,7 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
                     Finish
                     <span className="text-secondary">{soleFinish.label}</span>
                 </div>
-            ) : (
+            ) : finishes.length ? (
                 <div className={row}>
                     Finish
                     <NativeSelect
@@ -248,7 +248,7 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
                         options={finishes}
                     />
                 </div>
-            )}
+            ) : null}
             {/* A card with no foil at all has no pattern to record, the one thing about a
     pattern any catalogue is certain of. */}
             {solePattern ? (
@@ -327,7 +327,8 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
                 <Button color="secondary" size="sm" onClick={close}>
                     Cancel
                 </Button>
-                <Button type="submit" size="sm" isLoading={saving}>
+                {/* Not before the catalogue has answered: the finish and the run it would save are guesses until then. */}
+                <Button type="submit" size="sm" isLoading={saving} isDisabled={facts === undefined}>
                     Add to collection
                 </Button>
             </div>
