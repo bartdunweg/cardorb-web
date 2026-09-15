@@ -3,7 +3,7 @@
 import { type ReactNode, useCallback, useId, useRef, useState } from "react";
 import { BarChart01 } from "@untitledui/icons";
 import { formatCount, formatPrice } from "@/lib/format";
-import { type Frame, GAP_DAYS, heldAreaPath, heldGapPath, linePath, nearestIndex, niceTicks, pointsFor, splitAtGaps } from "@/lib/value-chart-math";
+import { type Frame, areaPath, linePath, nearestIndex, niceTicks, pointsFor, smoothLine, yAt } from "@/lib/value-chart-math";
 import type { ValueSnapshot } from "@/lib/value-history";
 import { cx } from "@/utils/cx";
 
@@ -95,8 +95,24 @@ export function ValueChart({
     const yMin = ticks[0];
     const yMax = ticks[ticks.length - 1];
     const days = snapshots.map((s) => s.date);
+    // Where each reading is, for the hover; and the line the pen draws, smoothed between the two ends
+    // (smoothLine): about one point per 8 px, between 12 and 60.
     const points = width > 0 ? pointsFor(values, frame, yMin, yMax, days) : [];
-    const { runs, gaps } = splitAtGaps(points, days);
+    const smooth = smoothLine(
+        days.map((d) => Date.parse(`${d}T00:00:00Z`)),
+        values,
+        Math.max(12, Math.min(60, Math.round(width / 8))),
+    );
+    const drawn =
+        width > 0
+            ? pointsFor(
+                  smooth.map((p) => p.v),
+                  frame,
+                  yMin,
+                  yMax,
+                  smooth.map((p) => new Date(p.t).toISOString().slice(0, 10)),
+              )
+            : [];
     const baseline = frame.height - frame.bottom;
     const first = snapshots[0];
     const last = snapshots[snapshots.length - 1];
@@ -125,11 +141,7 @@ export function ValueChart({
               ];
     const summary = `${formatPrice(first.value)} on ${whenOf(first)} to ${formatPrice(last.value)} on ${whenOf(last)}, ${
         change === 0 ? "unchanged" : `${change > 0 ? "up" : "down"} ${formatPrice(Math.abs(change))}`
-    }.${extremes.length > 1 ? ` Highest ${formatPrice(snapshots[high].value)} on ${whenOf(snapshots[high])}, lowest ${formatPrice(snapshots[low].value)} on ${whenOf(snapshots[low])}.` : ""}${addedDays ? ` Cards were added on ${formatCount(addedDays)} ${addedDays === 1 ? "reading" : "readings"}, worth ${formatPrice(addedValue)} then.` : ""}${
-        gaps.length
-            ? ` No readings for ${formatCount(gaps.length)} ${gaps.length === 1 ? "stretch" : "stretches"} of more than ${GAP_DAYS} days, drawn dotted at the last reading.`
-            : ""
-    }`;
+    }.${extremes.length > 1 ? ` Highest ${formatPrice(snapshots[high].value)} on ${whenOf(snapshots[high])}, lowest ${formatPrice(snapshots[low].value)} on ${whenOf(snapshots[low])}.` : ""}${addedDays ? ` Cards were added on ${formatCount(addedDays)} ${addedDays === 1 ? "reading" : "readings"}, worth ${formatPrice(addedValue)} then.` : ""}`;
 
     // Three date labels: first, middle, last. More would collide on a phone.
     const labelled = new Set([0, Math.floor((snapshots.length - 1) / 2), snapshots.length - 1]);
@@ -219,37 +231,22 @@ export function ValueChart({
                             a hover or a resize does not draw it again; a period change does. The group is
                             revealed, not the path's dash, so the ground under the line follows the pen. */}
                         <g key={`${first.date}/${last.date}`} className="chart-draw">
-                            <path d={heldAreaPath(runs, gaps, baseline)} fill={`url(#${fadeId})`} className="text-fg-primary" />
-                            {runs.map((run) => (
-                                <path
-                                    key={run[0].index}
-                                    d={run.length === 1 ? `M${run[0].x.toFixed(1)} ${run[0].y.toFixed(1)} h0.01` : linePath(run)}
-                                    className={strokeTone}
-                                    strokeWidth={2}
-                                    fill="none"
-                                    strokeLinejoin="round"
-                                    strokeLinecap="round"
-                                />
-                            ))}
-                            {/* Where nothing was read for more than a week: the last reading held, dotted, to the
-                                next reading's day and a step there, so a missing stretch is never drawn as a
-                                price that moved and a jump is never drawn as a climb. */}
-                            {gaps.map((gap) => (
-                                <path
-                                    key={`gap-${gap[0].index}`}
-                                    d={heldGapPath(gap)}
-                                    className={strokeTone}
-                                    strokeWidth={2}
-                                    strokeDasharray="1 5"
-                                    strokeLinecap="round"
-                                    fill="none"
-                                />
-                            ))}
+                            {/* One unbroken line through every stretch, readings or none (Bart, 2026-09-15: the
+                                dotted stretch said nothing a flat line does not). */}
+                            <path d={areaPath(drawn, baseline)} fill={`url(#${fadeId})`} className="text-fg-primary" />
+                            <path d={linePath(drawn)} className={strokeTone} strokeWidth={2} fill="none" strokeLinejoin="round" strokeLinecap="round" />
                             {/* A ring where cards were added: a shape on the line, not a colour, hollow so
                                 it reads apart from the filled marker of the reading being looked at. */}
                             {points.map((p, i) =>
                                 addedAt[i] ? (
-                                    <circle key={snapshots[i].date} cx={p.x} cy={p.y} r={3.5} className="fill-bg-primary stroke-fg-primary" strokeWidth={1.5} />
+                                    <circle
+                                        key={snapshots[i].date}
+                                        cx={p.x}
+                                        cy={yAt(drawn, p.x)}
+                                        r={3.5}
+                                        className="fill-bg-primary stroke-fg-primary"
+                                        strokeWidth={1.5}
+                                    />
                                 ) : null,
                             )}
                         </g>
@@ -263,7 +260,7 @@ export function ValueChart({
                                       data-extreme={kind}
                                       aria-hidden="true"
                                       x={points[i].x}
-                                      y={kind === "high" ? points[i].y - 8 : points[i].y + 16}
+                                      y={kind === "high" ? yAt(drawn, points[i].x) - 8 : yAt(drawn, points[i].x) + 16}
                                       textAnchor={points[i].x < 48 ? "start" : points[i].x > width - 48 ? "end" : "middle"}
                                       className="fill-text-secondary text-xs font-medium tabular-nums"
                                   >
@@ -275,7 +272,13 @@ export function ValueChart({
                         {currentPoint ? (
                             <g aria-hidden="true">
                                 <line x1={currentPoint.x} x2={currentPoint.x} y1={frame.top} y2={baseline} className="stroke-border-primary" strokeWidth={1} />
-                                <circle cx={currentPoint.x} cy={currentPoint.y} r={5} className={cx(fillTone, "stroke-bg-primary")} strokeWidth={2} />
+                                <circle
+                                    cx={currentPoint.x}
+                                    cy={yAt(drawn, currentPoint.x)}
+                                    r={5}
+                                    className={cx(fillTone, "stroke-bg-primary")}
+                                    strokeWidth={2}
+                                />
                             </g>
                         ) : null}
                     </svg>
