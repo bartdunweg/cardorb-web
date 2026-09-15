@@ -68,4 +68,10 @@ describe("holo family for the API's one rarity spelling", () => {
         expect(holoVariant("Promo", "normal", null).rarity).toBe("common");
         expect(holoVariant("Promo", null, null, { gen: "Base" }).rarity).toBe("rare holo cosmos");
     });
+
+    it("shines a promo over the whole card, whatever its era's window", () => {
+        expect(holoVariant("Promo", null, null, { gen: "Scarlet & Violet" }).style["--clip"]).toBe("none");
+        expect(holoVariant("Promo", null, { stage: null, hp: null }, { gen: "Base" }).style["--clip-trainer"]).toBe("none");
+        expect(holoVariant("Holo Rare", null, null, { gen: "Base" }).style["--clip"]).not.toBe("none");
+    });
 });
