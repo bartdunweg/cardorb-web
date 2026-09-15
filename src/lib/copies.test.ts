@@ -102,6 +102,20 @@ describe("sameCard", () => {
         ).toBe(true);
     });
 
+    it("finds a row whichever way the number is spelt, the catalogue's 001 or the row's 1", () => {
+        const row = { name: "Grookey", set: "Sword & Shield", number: "1", tcg_id: "swsh1-1" };
+        expect(sameCard(row, { name: "Grookey", set: "Sword & Shield", number: "001", tcg_id: "swsh1-1" })).toBe(true);
+        expect(sameCard({ ...row, number: "001" }, { name: "Grookey", set: "Sword & Shield", number: "1" })).toBe(true);
+        expect(
+            sameCard(
+                { name: "Charizard V", set: "SWSH Black Star Promos", number: "260" },
+                { name: "Charizard V", set: "SWSH Black Star Promos", number: "SWSH260" },
+            ),
+        ).toBe(true);
+        expect(sameCard({ name: "Kingdra", set: "Astral Radiance", number: "TG03" }, { name: "Kingdra", set: "Astral Radiance", number: "3" })).toBe(false);
+        expect(sameCard(row, { name: "Grookey", set: "Sword & Shield", number: "010" })).toBe(false);
+    });
+
     it("still tells another set, number or name apart", () => {
         expect(sameCard(stored, { name: "Pikachu", set: "SWSH Black Star Promos", number: "027" })).toBe(false);
         expect(sameCard(stored, { name: "Pikachu", set: "SVP Black Star Promos", number: "088" })).toBe(false);

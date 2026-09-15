@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { type Card, EDITION_LABELS, type Edition, FINISHES, FINISH_LABELS, FOIL_PATTERN_LABELS, type Finish, type FoilPattern } from "@/lib/api-shapes";
+import { sameNumber } from "@/lib/card-number";
 import { WESTERN_LANGUAGES, languageOf } from "@/lib/languages";
 
 /** One card as the sheet, a list or a search names it: set, number, name, and the set's title where known. */
@@ -21,7 +22,8 @@ const setNames = (c: CardName): string[] => [c.set, c.set_name].filter((s): s is
 export const sameCard = (a: CardName, b: CardName) => {
     const sets = setNames(b);
     const sameSet = a.set === b.set || setNames(a).some((s) => sets.includes(s));
-    if (!sameSet || (a.number ?? "") !== (b.number ?? "")) return false;
+    // The number folded (sameNumber): the catalogue writes 001 where a row may hold 1, and SWSH020 where it holds 020.
+    if (!sameSet || !sameNumber(a.number, b.number)) return false;
     // The catalogue's id where both know it; otherwise the name, read past the spelling that differs
     // between a catalogue and a stored row. "Solgaleo & Lunala-GX" on the set page is the row stored
     // as "Solgaleo & Lunala GX", and the exact comparison opened its sheet with no copies (2026-09-15).
