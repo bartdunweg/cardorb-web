@@ -42,8 +42,12 @@ const vocabulary = <const T extends readonly [string, ...string[]]>(values: T) =
 
 export const API_ORIGIN = new URL(process.env.CARDORB_API_URL ?? "https://api.cardorb.com/v1").origin;
 
-/** A card picture can be relative (`/api/cover?url=…`): it resolves on the API's host, not ours. */
-export const absoluteImage = (image: string | null | undefined): string | null => (image ? (image.startsWith("/") ? `${API_ORIGIN}${image}` : image) : null);
+/**
+ * A picture as a screen may draw it: a file in our own bucket, or null, which draws the placeholder.
+ * Bart, 2026-09-15: every picture comes from our own storage; the API sends nothing else since
+ * cardorb-api#484, and this keeps an older cache entry or a preview API from slipping one through.
+ */
+export const ownImage = (image: string | null | undefined): string | null => (image?.startsWith("https://images.cardorb.com/") ? image : null);
 
 // ── GET /v1/cards ─────────────────────────────────────────────────────────────────────────
 
@@ -378,8 +382,8 @@ export const cardFromItem = (item: CardItem): Card => ({
     acquired_at: item.acquiredAt,
     notes: item.notes,
     price: priceForCopy(item),
-    image_url: absoluteImage(item.image),
-    image_high_url: absoluteImage(item.imageHigh),
+    image_url: ownImage(item.image),
+    image_high_url: ownImage(item.imageHigh),
     tcg_id: item.tcgId,
     collection_id: item.collectionId,
     species_id: item.speciesId,
@@ -453,8 +457,8 @@ export const publicCardFromItem = (item: PublicItem): PublicCard => ({
     types: item.type ? [item.type] : null,
     quantity: item.copies,
     finish: null,
-    image_url: absoluteImage(item.image),
-    image_high_url: absoluteImage(item.imageHigh ?? null),
+    image_url: ownImage(item.image),
+    image_high_url: ownImage(item.imageHigh ?? null),
     tcg_id: item.tcgId,
     is_favorite: item.favorite ?? false,
     dex_face: item.dexFace ?? false,
@@ -545,8 +549,8 @@ export function seriesFromSets(sets: CatalogueSet[]): { series: SetSeries[]; com
             localName: set.localName ?? null,
             series: set.series,
             releaseDate: set.releaseDate,
-            logoUrl: absoluteImage(set.logo),
-            symbolUrl: absoluteImage(set.symbol),
+            logoUrl: ownImage(set.logo),
+            symbolUrl: ownImage(set.symbol),
             colors: [],
             cardsRecorded: set.cardsRecorded ?? true,
             owned,
@@ -606,8 +610,8 @@ export const setCardFromBrowse = (c: BrowseCard, setAbbr: string | null = null):
     category: c.category ?? null,
     trainerType: c.trainerType ?? null,
     types: c.types,
-    imageUrl: absoluteImage(c.image),
-    imageHighUrl: absoluteImage(c.imageHigh),
+    imageUrl: ownImage(c.image),
+    imageHighUrl: ownImage(c.imageHigh),
     owned: c.owned,
     wishlist: c.wishlist,
     quantity: c.quantity,
@@ -747,7 +751,7 @@ export const pokemonCardFromBrowse = (c: BrowseCard, language?: string | null): 
     set: c.setName,
     number: c.number,
     rarity: c.rarity,
-    image: absoluteImage(c.image),
+    image: ownImage(c.image),
     supertype: null,
     subtypes: null,
     hp: null,

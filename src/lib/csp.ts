@@ -48,18 +48,7 @@ const SUPABASE_HOST = process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env
  */
 const API_HOST = process.env.CARDORB_API_URL ? new URL(process.env.CARDORB_API_URL).origin : "https://api.cardorb.com";
 
-const IMAGE_HOSTS = [
-    ...new Set([
-        SUPABASE_HOST,
-        API_HOST,
-        "https://api.cardorb.com",
-        "https://images.cardorb.com",
-        "https://assets.tcgdex.net",
-        "https://images.pokemontcg.io",
-        "https://images.scrydex.com",
-        "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com",
-    ]),
-];
+const IMAGE_HOSTS = [...new Set([SUPABASE_HOST, API_HOST, "https://api.cardorb.com", "https://images.cardorb.com"])];
 
 /**
  * `'strict-dynamic'` lets a nonced or hashed script load what it needs; `'unsafe-inline'` and `https:` are
