@@ -42,6 +42,15 @@ describe("editionChoices", () => {
         expect(editionChoices(["unlimited"])).toBeNull();
         expect(editionChoices(null)).toBeNull();
     });
+
+    it("gives a run its own picture where it has one, as a printing", () => {
+        const unlimited = "https://images.cardorb.com/tcgplayer/42382.jpg";
+        expect(editionChoices(["unlimited", "1st-edition", "shadowless"], { unlimited })).toEqual([
+            { key: "unlimited", label: "Unlimited", image: unlimited },
+            { key: "1st-edition", label: "1st Edition", image: null },
+            { key: "shadowless", label: "Shadowless", image: null },
+        ]);
+    });
 });
 
 describe("openingChoice", () => {
