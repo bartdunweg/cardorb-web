@@ -128,4 +128,8 @@ export function groupByDex(
  * through (the rows in the slots; the list read more, and those are not shown), `copies`, `value`
  * and `unpriced` the slots' own, from `DexCount`.
  */
-export type DexList = ReturnType<typeof groupByDex> & { total: number };
+export type DexList = ReturnType<typeof groupByDex> & {
+    total: number;
+    /** Every card the list read, the ones no slot takes (a trainer, a Pokémon outside the range) included. */
+    held?: number;
+};
