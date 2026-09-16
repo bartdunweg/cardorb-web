@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { removeCard, rereadMine, restoreCard, setCopies } from "@/app/(app)/dashboard/cards/actions";
 import { notify } from "@/components/app/toast";
+import { holdPage } from "@/lib/unsent-writes";
 
 type Added = { ok: true; id?: string } | { ok: false; error: string };
 
@@ -77,59 +78,68 @@ export function useCopySteps({
             if (!pressed || pressed.on !== page) stored.current = { quantity: heldOnPage, id: rowId };
         }
         let { quantity: have, id } = stored.current;
+        // A press waiting on the write before it lives only in this page: a reload now would drop it.
+        const release = holdPage();
         startTransition(async () => {
             let failure: string | null = null;
-            do {
-                while (want.current !== have) {
-                    const target = want.current;
-                    if (have === 0) {
-                        const res = add ? await add() : ({ ok: false, error: "This card cannot be added from here." } as const);
-                        if (!res.ok || !res.id) {
-                            failure = res.ok ? "The card was added, but this page could not follow. Reload to see it." : res.error;
+            try {
+                do {
+                    while (want.current !== have) {
+                        const target = want.current;
+                        if (have === 0) {
+                            const res = add ? await add() : ({ ok: false, error: "This card cannot be added from here." } as const);
+                            if (!res.ok || !res.id) {
+                                failure = res.ok ? "The card was added, but this page could not follow. Reload to see it." : res.error;
+                                break;
+                            }
+                            const added = res.id;
+                            id = added;
+                            // The press that loses nothing but may be a thumb one tile off: said, with the way back.
+                            notify.done(`${name} is in your collection now`, {
+                                undo: {
+                                    onUndo: () =>
+                                        void removeCard(added).then((r) =>
+                                            r.ok ? notify.done("Undone") : notify.failed("That did not go back", { description: r.error }),
+                                        ),
+                                },
+                            });
+                        } else if (target === 0 && id) {
+                            const res = await removeCard(id, { reread: false });
+                            if (!res.ok) {
+                                failure = res.error;
+                                break;
+                            }
+                            const removed = res.card;
+                            id = undefined;
+                            notify.removed(
+                                `${name} is out of your collection`,
+                                removed ? { undo: { label: "Put back", onUndo: () => void restoreCard(removed) } } : {},
+                            );
+                        } else if (id) {
+                            const res = await setCopies(id, target, { reread: false });
+                            if (!res.ok) {
+                                failure = res.error;
+                                break;
+                            }
+                        } else {
+                            // Held, but no row to write to: a break here left `have` behind `want`, and the
+                            // outer loop re-read the page for ever.
+                            failure = "This copy cannot be changed from here.";
                             break;
                         }
-                        const added = res.id;
-                        id = added;
-                        // The press that loses nothing but may be a thumb one tile off: said, with the way back.
-                        notify.done(`${name} is in your collection now`, {
-                            undo: {
-                                onUndo: () =>
-                                    void removeCard(added).then((r) =>
-                                        r.ok ? notify.done("Undone") : notify.failed("That did not go back", { description: r.error }),
-                                    ),
-                            },
-                        });
-                    } else if (target === 0 && id) {
-                        const res = await removeCard(id, { reread: false });
-                        if (!res.ok) {
-                            failure = res.error;
-                            break;
-                        }
-                        const removed = res.card;
-                        id = undefined;
-                        notify.removed(
-                            `${name} is out of your collection`,
-                            removed ? { undo: { label: "Put back", onUndo: () => void restoreCard(removed) } } : {},
-                        );
-                    } else if (id) {
-                        const res = await setCopies(id, target, { reread: false });
-                        if (!res.ok) {
-                            failure = res.error;
-                            break;
-                        }
-                    } else {
-                        // Held, but no row to write to: a break here left `have` behind `want`, and the
-                        // outer loop re-read the page for ever.
-                        failure = "This copy cannot be changed from here.";
-                        break;
+                        have = have === 0 ? 1 : target;
+                        stored.current = { quantity: have, id };
+                        onStored?.(have, id);
                     }
-                    have = have === 0 ? 1 : target;
-                    stored.current = { quantity: have, id };
-                    onStored?.(have, id);
-                }
-                // Once, with nothing in the air to race it; a press during the re-read goes round again.
-                await (quiet ? forgetMineQuietly() : rereadMine());
-            } while (!failure && want.current !== have);
+                    // Once, with nothing in the air to race it; a press during the re-read goes round again.
+                    await (quiet ? forgetMineQuietly() : rereadMine());
+                } while (!failure && want.current !== have);
+            } catch {
+                // An action that threw (no signal, a deploy in between) is a failure like a refused one.
+                failure = "Something went wrong. Try again.";
+            } finally {
+                release();
+            }
             flying.current = false;
             if (failure) {
                 onShown?.(want.current, have);
