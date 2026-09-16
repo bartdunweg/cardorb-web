@@ -41,6 +41,12 @@ jobs:
                   repository: bartdunweg/cardorb-api
                   ref: main
                   path: api
+
+            # api/ sits inside this checkout only long enough to move: left there, the web
+            # workspace's pnpm/tsc walk into it (its own @/* alias resolves against the wrong
+            # tsconfig). scripts/e2e-stack.sh gets the moved path.
+            - run: mv api "$RUNNER_TEMP/api"
+
             - uses: pnpm/action-setup@v4
             - uses: actions/setup-node@v4
               with:
@@ -64,7 +70,7 @@ jobs:
                       echo "0.0.0.0 $h" | sudo tee -a /etc/hosts > /dev/null
                   done
 
-            - run: ./scripts/e2e-stack.sh api
+            - run: ./scripts/e2e-stack.sh "$RUNNER_TEMP/api"
             - run: pnpm e2e
 
             - if: failure()
