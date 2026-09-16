@@ -427,7 +427,9 @@ export type PublicCard = Pick<
     | "is_favorite"
     | "dex_face"
     | "species_id"
->;
+> &
+    /** Only where the owner shows prices: a tile and the sheet draw it when it is there. */
+    Partial<Pick<Card, "price">>;
 
 /** One card on a public profile with how many copies the owner holds. Nothing private (R-API-002 there). */
 /**
@@ -468,6 +470,11 @@ export const publicItemSchema = z.object({
     /** One of the owned copies leads its Pokédex slot; absent from an API before it said so. */
     dexFace: z.boolean().nullish(),
     ...foldedCopyState,
+    /**
+     * What the copies trade at, only for an owner who shows prices (their pricesPublic): null where
+     * the copies differ or nothing prices the card, absent where prices are not shown at all.
+     */
+    price: nullable(z.number()).optional(),
 });
 export type PublicItem = z.infer<typeof publicItemSchema>;
 
@@ -496,6 +503,8 @@ export const publicCardFromItem = (item: PublicItem): PublicCard => ({
     is_favorite: item.favorite ?? false,
     dex_face: item.dexFace ?? false,
     species_id: item.speciesId,
+    // Left off, not nulled, where the owner shows no prices: the grid draws a price when the field exists.
+    ...(item.price !== undefined ? { price: item.price } : {}),
 });
 
 // ── GET /v1/pokedex ───────────────────────────────────────────────────────────────────────
@@ -508,7 +517,7 @@ export type DexCard = {
     number: string | null;
     imageUrl: string | null;
     imageHighUrl: string | null;
-    /** What one copy is worth in euros; null on a public profile, which carries no prices. */
+    /** What one copy is worth in euros; null on a public profile whose owner shows no prices. */
     price: number | null;
     /** The card the slot opens on, because its owner left it standing there. */
     isFace: boolean;
@@ -854,6 +863,8 @@ export const ownProfileSchema = z.object({
     wishlistPublic: z.boolean().nullish(),
     /** The favorites on the public profile too. Absent from an API before #187. */
     favoritesPublic: z.boolean().nullish(),
+    /** Card prices and the collection's value on the public profile too. Absent from an API before it. */
+    pricesPublic: z.boolean().nullish(),
     avatarUrl: nullable(z.string()),
     onboardedAt: nullable(z.string()),
     email: z.string(),
@@ -869,6 +880,8 @@ export type Profile = {
     wishlist_public: boolean;
     /** The favorites show on the public profile as well, while it is public. */
     favorites_public: boolean;
+    /** Card prices and the collection's value show on the public profile as well, while it is public. */
+    prices_public: boolean;
 };
 
 export const profileFromOwn = (p: OwnProfile): Profile => ({
@@ -878,6 +891,7 @@ export const profileFromOwn = (p: OwnProfile): Profile => ({
     is_public: p.isPublic,
     wishlist_public: p.wishlistPublic ?? false,
     favorites_public: p.favoritesPublic ?? false,
+    prices_public: p.pricesPublic ?? false,
 });
 
 // ── What each route answers ───────────────────────────────────────────────────────────────
@@ -1019,14 +1033,17 @@ export const pricePointsAnswer = z.object({
     ),
 });
 
+/** The list's worth, only for an owner who shows prices: euros over the whole list, and the copies it leaves out. */
+const publicWorth = { value: z.number().optional(), unpriced: z.number().optional() };
 export const publicCardsAnswer = z.object({
     cards: z.array(publicItemSchema),
     total: z.number(),
     copies: z.number().optional(),
     facets: facetsSchema.optional(),
+    ...publicWorth,
 });
 
-export const publicTotalAnswer = z.object({ total: z.number(), copies: z.number().optional() });
+export const publicTotalAnswer = z.object({ total: z.number(), copies: z.number().optional(), ...publicWorth });
 
 export const publicFoldersAnswer = z.object({
     folders: z.array(
@@ -1053,6 +1070,8 @@ export const publicProfileAnswer = z.object({
     avatarUrl: nullable(z.string()),
     wishlistPublic: z.boolean().nullish(),
     favoritesPublic: z.boolean().nullish(),
+    /** The cards route prices what it lists; the page says a value under the name. Absent from an API before it. */
+    pricesPublic: z.boolean().nullish(),
 });
 
 /**

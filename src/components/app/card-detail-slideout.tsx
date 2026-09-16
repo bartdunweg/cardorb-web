@@ -666,6 +666,8 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         patternPrice,
     });
     const shownChange = pressedAway ? (shownPrice != null && shownSeries ? periodChange(points, chosen.days, false, shownSeries, chosen.said) : null) : change;
+    // On a public page the card carries a price only where its owner shows them; that is the figure under the title then.
+    const publicPrice = readOnly && card && "price" in card ? (card.price ?? null) : null;
     const [art, setArt] = useState(NO_ART);
     const [scanLoaded, setScanLoaded] = useState(false);
     const [blurLoaded, setBlurLoaded] = useState(false);
@@ -1324,10 +1326,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                             {/* The price sits under the title, where a product panel puts it, not among the attributes. */}
                             {shownPrice === null ? (
                                 <p className="text-sm text-tertiary">No price for this printing</p>
-                            ) : (shownPrice ?? mine?.price) != null ? (
+                            ) : (shownPrice ?? mine?.price ?? publicPrice) != null ? (
                                 <p className="flex items-baseline gap-2 text-md font-semibold text-primary tabular-nums">
                                     <span>
-                                        {formatPrice((shownPrice ?? mine?.price)!)}
+                                        {formatPrice((shownPrice ?? mine?.price ?? publicPrice)!)}
                                         <span className="sr-only"> market price</span>
                                     </span>
                                     {/* Beside it, which way it moved over the period the chart below is drawing,
