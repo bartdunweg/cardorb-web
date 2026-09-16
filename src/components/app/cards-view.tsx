@@ -3,6 +3,7 @@
 import { type ReactNode, Suspense, useState } from "react";
 import dynamic from "next/dynamic";
 import { CardsList } from "@/components/app/cards-list";
+import type { PeriodKey } from "@/components/app/chart-periods";
 import { LIST_ROW } from "@/components/app/row-search";
 import { CardsSkeleton } from "@/components/app/skeletons";
 import { ViewMenu } from "@/components/app/view-menu";
@@ -32,6 +33,7 @@ export function CardsView({
     toolbar,
     noHits,
     empty,
+    period,
 }: {
     list: Promise<CardList>;
     filter: CardFilter;
@@ -54,6 +56,12 @@ export function CardsView({
     noHits: ReactNode;
     /** Drawn in the list's place when the folder holds nothing at all. */
     empty: ReactNode;
+    /**
+     * The period a list sorted by price change is read over, where it is one of the chart's: a card
+     * opened from it shows its price line and its figure over those same days. Left out for every
+     * other sort, and for two dates of your own, which the chart has no button for.
+     */
+    period?: PeriodKey;
 }) {
     const { view, size, group } = useCardsView(initialView, initialSize, initialGroup);
     /*
@@ -93,7 +101,7 @@ export function CardsView({
                 />
             </Suspense>
 
-            <CardDetailSlideout card={selected?.card ?? null} onClose={() => setSelected(null)} onPrev={step(-1)} onNext={step(1)} />
+            <CardDetailSlideout card={selected?.card ?? null} onClose={() => setSelected(null)} onPrev={step(-1)} onNext={step(1)} period={period} />
         </div>
     );
 }

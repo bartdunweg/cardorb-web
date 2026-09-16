@@ -24,6 +24,8 @@ export function CardPriceChart({
     holo = false,
     name,
     printing = null,
+    period,
+    onPeriod,
 }: {
     tcgId: string;
     holo?: boolean;
@@ -33,10 +35,15 @@ export function CardPriceChart({
      * chosen in the sheet's tabs. The chart has no switcher of its own; it chooses the period only.
      */
     printing?: string | null;
+    /**
+     * The period, where the sheet around the chart holds it: the figure beside the price reads the
+     * same window, so the two cannot say different things about one card (Bart, 2026-09-16).
+     */
+    period: PeriodKey;
+    onPeriod: (period: PeriodKey) => void;
 }) {
     // Kept with the id it was read for, so a sheet reopened on another card never shows this one's line.
     const [loaded, setLoaded] = useState<{ tcgId: string; points: PricePoint[] } | null>(null);
-    const [period, setPeriod] = useState<PeriodKey>("6m");
     // What was fetched, or what an earlier open already learned. Derived, so a known line needs
     // no effect and no second render to show.
     const points = loaded?.tcgId === tcgId ? loaded.points : (knownPriceHistory(tcgId) ?? null);
@@ -81,7 +88,7 @@ export function CardPriceChart({
             {/* Only where there is more than one period to choose between: a card with a fortnight of
                 readings has nothing to say about six months, and five buttons that all draw the same
                 line are five ways to learn nothing. */}
-            {series.length > 1 ? <ChartPeriods period={period} onPick={setPeriod} /> : null}
+            {series.length > 1 ? <ChartPeriods period={period} onPick={onPeriod} /> : null}
         </ValueChart>
     );
 }

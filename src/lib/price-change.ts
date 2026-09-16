@@ -13,17 +13,19 @@ export type PriceChange = {
 };
 
 /**
- * Where a card's price sits against its 30-day average, for the line beside the price.
+ * One price against an earlier one, as the line beside the price reads it. `said` is what the
+ * earlier figure was ("against the 30-day average", "in the last 30 days"): the reading only a
+ * screen reader gets, since the number itself is beside the control that set the window.
  *
  * Nothing under half a percent or under a cent: a card that moved by less than that has not
  * moved, and a "+€0.00 · 0%" would say it had. Nothing either without both figures, or with an
- * average of zero, which has no percent.
+ * earlier figure of zero, which has no percent.
  */
-export function priceChange(price: number | null | undefined, avg30: number | null | undefined): PriceChange | null {
-    if (price == null || avg30 == null || avg30 <= 0) return null;
-    const diff = price - avg30;
+function changeAgainst(price: number | null | undefined, before: number | null | undefined, said: string): PriceChange | null {
+    if (price == null || before == null || before <= 0) return null;
+    const diff = price - before;
     const amount = Math.abs(diff);
-    const ratio = amount / avg30;
+    const ratio = amount / before;
     if (amount < 0.01 || ratio < 0.005) return null;
     const direction = diff > 0 ? "up" : "down";
     const sign = direction === "up" ? "+" : "−";
@@ -32,41 +34,41 @@ export function priceChange(price: number | null | undefined, avg30: number | nu
         amount,
         ratio,
         text: `${sign}${formatPrice(amount)} · ${formatPercent(ratio)}`,
-        label: `${direction === "up" ? "Up" : "Down"} ${formatPrice(amount)}, ${Math.round(ratio * 100)} percent, against the 30-day average`,
+        label: `${direction === "up" ? "Up" : "Down"} ${formatPrice(amount)}, ${Math.round(ratio * 100)} percent, ${said}`,
     };
 }
 
+/** The ISO date `days` ago, for slicing a series that is already sorted by date. */
+export const isoDaysAgo = (days: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() - days);
+    return d.toISOString().slice(0, 10);
+};
+
 /**
- * The card's own average over the thirty days up to `today`, out of its price history.
+ * How far a card's price moved over the period the chart is showing: its first figure in the
+ * window against its last, which is the question Home's Biggest movers answers (`was` → `now`).
  *
- * The history, not a catalogue's figure: the line and the price are both TCGplayer's since
- * cardorb-api#355, and the average this arrow used to read was Cardmarket's month, set against a
- * TCGplayer price. The series is the copy's own printing where it is known, so the arrow compares
- * the price above it with the same printing's month: ex8-15's holo at €22.51 read "+648%" against
- * a stray plain series at €3 (pricing audit, 2026-09-14). Null without a single point in the window.
+ * The figure beside the price used to be the price against its own 30-day average, whatever
+ * period the chart under it was drawing, so a card opened from "Biggest movers, in the last 6
+ * months" showed a percent nobody could place next to the one that sent them there (Bart,
+ * 2026-09-16). It reads the drawn line (chartLine), held dips and untrusted stretch and all, so
+ * the number and the line it sits over always say the same thing; the API's own movers figure is
+ * the raw reading, so the two can differ on a line the chart distrusts.
  *
- * With a dip that came back held at its level first (holdRecoveredDips), over the whole line so the
- * dip has the level before it: the chart draws the month that way, and the arrow beside Charizard's
- * Shadowless price read "+25%" against a month that still had eleven days at €1,000 (Bart, 2026-09-15).
+ * Null under two figures in the window: one reading is a price, not a move.
  */
-export function average30(points: PriceLinePoint[], today: string, holo: boolean, printing: string | null = null): number | null {
-    const from = new Date(`${today}T00:00:00Z`);
-    from.setUTCDate(from.getUTCDate() - 30);
-    const since = from.toISOString().slice(0, 10);
-    const values = priceLine(
-        points.filter((p) => p.date <= today),
-        printing,
-        holo,
-    )
-        .filter((p) => p.date >= since)
-        .map((p) => p.value);
-    return values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
+export function periodChange(points: PriceLinePoint[], days: number | null, holo: boolean, printing: string | null, said: string): PriceChange | null {
+    const line = chartLine(points, printing, holo);
+    const within = days === null ? line : line.filter((p) => p.date >= isoDaysAgo(days));
+    if (within.length < 2) return null;
+    return changeAgainst(within[within.length - 1]!.value, within[0]!.value, said);
 }
 
 /**
  * One printing's line as every reading of it says: its figure each day it has one (valueOf), with a
- * dip that came back held at its level (holdRecoveredDips). What the arrow beside the price averages
- * and what the chart draws from, so the two never apply the rules apart.
+ * dip that came back held at its level (holdRecoveredDips). What the chart draws from, and what the
+ * figure beside the price reads, so the two never apply the rules apart.
  */
 export function priceLine(points: PriceLinePoint[], printing: string | null, holo: boolean): { date: string; value: number }[] {
     return holdRecoveredDips(

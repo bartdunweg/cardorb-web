@@ -43,7 +43,7 @@ describe("CardPriceChart", () => {
     it("holds the space, silent, until the readings are known", async () => {
         let answer: (p: typeof two) => void = () => {};
         history.mockReturnValue(new Promise((r) => (answer = r)));
-        const { container } = render(<CardPriceChart tcgId="sv1-2" />);
+        const { container } = render(<CardPriceChart tcgId="sv1-2" period="1m" onPeriod={() => {}} />);
         expect(container.textContent).toBe("");
         expect(container.querySelector("[aria-busy]")).not.toBeNull();
         answer(two);
@@ -53,7 +53,7 @@ describe("CardPriceChart", () => {
     it("draws at once for a card whose line was read before the tab opened", async () => {
         history.mockResolvedValue(two);
         await preloadPriceHistory("sv1-3");
-        const { container } = render(<CardPriceChart tcgId="sv1-3" />);
+        const { container } = render(<CardPriceChart tcgId="sv1-3" period="1m" onPeriod={() => {}} />);
         expect(container.querySelector("svg[tabindex]")).not.toBeNull();
         expect(container.querySelector("[aria-busy]")).toBeNull();
     });
@@ -66,10 +66,12 @@ describe("CardPriceChart", () => {
         ];
         history.mockResolvedValue(runs);
         await preloadPriceHistory("base1-4");
-        const { queryByRole, rerender, container } = render(<CardPriceChart tcgId="base1-4" name="Charizard" printing="holofoil" />);
+        const { queryByRole, rerender, container } = render(
+            <CardPriceChart tcgId="base1-4" name="Charizard" printing="holofoil" period="6m" onPeriod={() => {}} />,
+        );
         expect(queryByRole("button", { name: "Shadowless Holo" })).toBeNull();
         expect(queryByRole("button", { name: "Max" })).not.toBeNull();
-        rerender(<CardPriceChart tcgId="base1-4" name="Charizard" printing="shadowless-holofoil" />);
+        rerender(<CardPriceChart tcgId="base1-4" name="Charizard" printing="shadowless-holofoil" period="6m" onPeriod={() => {}} />);
         await waitFor(() => expect(container.textContent).toMatch(/€1,850/));
     });
 });

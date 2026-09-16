@@ -25,6 +25,7 @@ import { CardBack } from "@/components/app/card-back";
 import { CardImage, preloadCardImage } from "@/components/app/card-image";
 import { knownCardFacts, knownPriceHistory, knownRows, preloadCardFacts, preloadPriceHistory, rememberCopies } from "@/components/app/card-memo";
 import { CardPriceChart } from "@/components/app/card-price-chart";
+import { PERIODS, type PeriodKey } from "@/components/app/chart-periods";
 import { CopyCard } from "@/components/app/copy-card";
 import { CopyFormDialog } from "@/components/app/copy-form-dialog";
 import { HoloCard } from "@/components/app/holo-card";
@@ -50,7 +51,7 @@ import { type CopyGroup, groupCopies, sortCopies } from "@/lib/copies";
 import { matchesRule } from "@/lib/folder-rule";
 import { formatPrice } from "@/lib/format";
 import { orientationNeedsPermission, requestOrientation } from "@/lib/holo/orientation";
-import { average30, priceChange } from "@/lib/price-change";
+import { periodChange } from "@/lib/price-change";
 import { tcgplayerUrl } from "@/lib/price-links";
 import { settleLatest } from "@/lib/settle-latest";
 import { cx } from "@/utils/cx";
@@ -93,11 +94,21 @@ type Addable = {
     rowPending?: boolean;
 };
 
+/**
+ * `period`: the window the sheet opens its price line on, for a list that has one of its own.
+ *
+ * Home's Biggest movers is such a list: a card tapped in "in the last 6 months" opens on six
+ * months, so the figure beside its price is the move that put it in that list rather than another
+ * card's worth of arithmetic (Bart, 2026-09-16). A month elsewhere, as Home's chart starts.
+ */
+type Period = { period?: PeriodKey };
+
 type Props = ({ card: Card | null; onClose: () => void; readOnly?: false } | { card: PublicCard | null; onClose: () => void; readOnly: true }) &
     Neighbours &
-    Addable;
+    Addable &
+    Period;
 
-export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, onNext, addable, onTaken, rowPending = false }: Props) {
+export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, onNext, addable, onTaken, rowPending = false, period: opensOn = "1m" }: Props) {
     const router = useRouter();
     // The owner's fields exist only on the editable view; the public view never receives them.
     // The row the sheet shows: the one it opened on, or another copy of the card tapped in the
@@ -345,13 +356,17 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     // The copy forms are told the wait apart from no answer: undefined until the catalogue answers, and they offer nothing yet (copy-fields).
     const formFacts = tcgId ? (facts?.tcgId === tcgId ? facts.facts : knownCardFacts(tcgId, catalogue)) : null;
     const known = formFacts ?? null;
-    // The line beside the price in the header: the price against the card's own last thirty days,
-    // out of its history, which is the same market. It read Cardmarket's month until the price
-    // stopped being Cardmarket's.
+    // The line beside the price in the header: how far this printing moved over the period the
+    // chart under it is drawing, out of the card's own history. The period lives here rather than
+    // in the chart, so pressing 7D moves the number and the line together.
     const points = tcgId ? (history?.tcgId === tcgId ? history.points : (knownPriceHistory(tcgId) ?? [])) : [];
-    const change = mine
-        ? priceChange(mine.price, average30(points, new Date().toISOString().slice(0, 10), isReverseFinish(mine.finish), mine.price_printing))
-        : null;
+    const [periodState, setPeriodState] = useState<{ opensOn: PeriodKey; period: PeriodKey }>({ opensOn, period: opensOn });
+    // A list with a period of its own (Home's movers) opens every card it hands over on that one.
+    if (periodState.opensOn !== opensOn) setPeriodState({ opensOn, period: opensOn });
+    const period = periodState.period;
+    const setPeriod = (next: PeriodKey) => setPeriodState({ opensOn, period: next });
+    const chosen = PERIODS.find((p) => p.key === period) ?? PERIODS[1];
+    const change = mine ? periodChange(points, chosen.days, isReverseFinish(mine.finish), mine.price_printing ?? null, chosen.said) : null;
 
     /*
      * The arrow keys, which is how anybody who is already looking at a list expects to move
@@ -650,11 +665,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         latest: points.at(-1)?.printings,
         patternPrice,
     });
-    const shownChange = pressedAway
-        ? shownPrice != null && shownSeries
-            ? priceChange(shownPrice, average30(points, new Date().toISOString().slice(0, 10), false, shownSeries))
-            : null
-        : change;
+    const shownChange = pressedAway ? (shownPrice != null && shownSeries ? periodChange(points, chosen.days, false, shownSeries, chosen.said) : null) : change;
     const [art, setArt] = useState(NO_ART);
     const [scanLoaded, setScanLoaded] = useState(false);
     const [blurLoaded, setBlurLoaded] = useState(false);
@@ -822,6 +833,8 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                             holo={isReverseFinish(mine.finish)}
                             name={card?.name}
                             printing={shownSeries ?? mine.price_printing}
+                            period={period}
+                            onPeriod={setPeriod}
                         />
                     ) : null}
                 </section>
@@ -1300,12 +1313,14 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                         {formatPrice((shownPrice ?? mine?.price)!)}
                                         <span className="sr-only"> market price</span>
                                     </span>
-                                    {/* Beside it, which way it moved: the price against the card's own 30-day
-                                        average, the way an asset page puts the change next to the price so a
-                                        glance says up or down. The sign is in the text, so colour is never the only
-                                        carrier; a screen reader gets it spelled out ("Up €0.12, 5 percent…") from a
-                                        span of its own, because a bare span takes no aria-label. `arrive` because
-                                        the average comes with the catalogue's answer, a beat after the sheet. */}
+                                    {/* Beside it, which way it moved over the period the chart below is drawing,
+                                        the way an asset page puts the change next to the price so a glance says up
+                                        or down. The period is in the reading, not in the text: the buttons that set
+                                        it are on screen under this, and a "· 6M" after every figure is a word to
+                                        read every time to learn nothing new. The sign is in the text, so colour is
+                                        never the only carrier; a screen reader gets it spelled out ("Up €0.12, 5
+                                        percent, in the last 6 months") from a span of its own, because a bare span
+                                        takes no aria-label. `arrive` because the line comes a beat after the sheet. */}
                                     {shownChange ? (
                                         <span
                                             className={cx(
