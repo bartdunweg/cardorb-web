@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { SetRow } from "@/components/app/set-row";
 import { FIRST_ROW, SETS_COLUMNS, SetTile } from "@/components/app/set-tile";
 import { Button } from "@/components/base/buttons/button";
+import { useSetsView } from "@/hooks/use-sets-view";
 import type { SetSeries } from "@/lib/api-shapes";
 import type { BrowseLanguage } from "@/lib/languages";
 import type { SetsViewMode } from "@/lib/sets-view";
@@ -25,7 +26,9 @@ import type { SetsViewMode } from "@/lib/sets-view";
 /** Sets drawn per batch: six rows at the widest grid, twelve on a phone, the rest as you scroll. */
 const SHELF_BATCH = 36;
 
-export function SetsShelf({ series, language, view }: { series: SetSeries[]; language: BrowseLanguage; view: SetsViewMode }) {
+export function SetsShelf({ series, language, view: initialView }: { series: SetSeries[]; language: BrowseLanguage; view: SetsViewMode }) {
+    // Tiles or rows as the View menu has it now; the server's reading of the cookie until it is used.
+    const view = useSetsView(initialView);
     const [shown, setShown] = useState(SHELF_BATCH);
     // Where each series starts in the count over the whole shelf, and the whole: a series the
     // batch has not reached is not drawn, heading included.

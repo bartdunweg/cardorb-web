@@ -10,7 +10,7 @@ import {
     setPageAnswer,
 } from "@/lib/api-shapes";
 import type { BrowseLanguage } from "@/lib/languages";
-import { logoPalettes } from "@/lib/logo-color";
+import { logoPaletteMap } from "@/lib/logo-color";
 import { perUser } from "@/lib/user-cache";
 
 export type { SetCard, SetSeries, SetSummary } from "@/lib/api-shapes";
@@ -29,25 +29,36 @@ const catalogueDown = (err: unknown) => err instanceof ApiError && err.status ==
 // them newest first and the groups keep that order.
 // Five minutes per person (user-cache.ts): the counts on the tiles change on a write, and every
 // write drops the person's entries.
-export async function getSets(language: BrowseLanguage = "en") {
+//
+// Without the logos' colours: a tab title, the counts beside Browse's filters, the search sheet and
+// a generation's logo in the card sheet read this and draw no tile. `getSets` is the shelf with them.
+export async function getShelf(language: BrowseLanguage = "en") {
     try {
         const sets = await perUser(
             `sets:${language}`,
             async (token) => (await api("/catalog/sets", { token, params: language === "en" ? {} : { language }, schema: catalogueSetsAnswer })).sets,
         );
-        const shelf = seriesFromSets(sets);
-        // Every tile wears its logo's colours. Read once per logo and kept a month, so only the first
-        // shelf after a deploy pays for the reads; they run side by side, a bounded number at a time.
-        const all = shelf.series.flatMap((group) => group.sets);
-        const palettes = await logoPalettes(all.map((set) => set.logoUrl));
-        all.forEach((set, i) => {
-            set.colors = palettes[i] ?? [];
-        });
-        return shelf;
+        return seriesFromSets(sets);
     } catch (err) {
         if (catalogueDown(err)) throw new CatalogueUnavailable();
         throw err;
     }
+}
+
+// The shelf as Browse draws it: every tile wears its logo's colours. Read once per logo and kept a
+// month, and a whole shelf's answers kept together (logoPaletteMap), so a warm shelf costs one cache
+// read for its colours rather than one per logo. The sets are copied rather than written into: the
+// shelf under them is the request's one shared read (perUser), which `getShelf` hands out too.
+export async function getSets(language: BrowseLanguage = "en") {
+    const shelf = await getShelf(language);
+    const palettes = await logoPaletteMap(shelf.series.flatMap((group) => group.sets.map((set) => set.logoUrl)));
+    return {
+        ...shelf,
+        series: shelf.series.map((group) => ({
+            ...group,
+            sets: group.sets.map((set) => ({ ...set, colors: (set.logoUrl ? palettes[set.logoUrl] : undefined) ?? [] })),
+        })),
+    };
 }
 
 /**

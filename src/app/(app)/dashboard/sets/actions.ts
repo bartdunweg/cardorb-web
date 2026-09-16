@@ -2,14 +2,14 @@
 
 import { isBrowseProgress, shelfCounts } from "@/lib/browse-query";
 import { BROWSE_LANGUAGES, type BrowseLanguage, isBrowseLanguage } from "@/lib/languages";
-import { CatalogueUnavailable, type SetSeries, getSets } from "@/lib/sets";
+import { CatalogueUnavailable, type SetSeries, getShelf } from "@/lib/sets";
 
 // The shelf for the search sheet: every series with its sets and the person's counts, the
 // same read Browse makes (cached per person for five minutes). Empty when the catalogue is
 // not answering; the sheet then says so rather than showing nothing at all.
 export async function listSetsShelf(language: BrowseLanguage = "en"): Promise<{ series: SetSeries[]; unavailable: boolean }> {
     try {
-        const { series } = await getSets(isBrowseLanguage(language) ? language : "en");
+        const { series } = await getShelf(isBrowseLanguage(language) ? language : "en");
         return { series, unavailable: false };
     } catch (err) {
         if (err instanceof CatalogueUnavailable) return { series: [], unavailable: true };
@@ -35,7 +35,7 @@ export async function countShelf(input: { language: string; progress: string; q?
     const q = typeof input.q === "string" ? input.q.slice(0, 100) : undefined;
     const read = async (code: BrowseLanguage) => {
         try {
-            return shelfCounts((await getSets(code)).series, q, progress);
+            return shelfCounts((await getShelf(code)).series, q, progress);
         } catch {
             return null;
         }

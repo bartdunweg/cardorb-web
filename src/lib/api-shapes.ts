@@ -578,7 +578,7 @@ export type SetSummary = {
     releaseDate: string | null;
     logoUrl: string | null;
     symbolUrl: string | null;
-    /** The logo's own colours, largest first (`logo-color.ts`), filled in by `getSets`; empty until then, or where none can be read. */
+    /** The logo's own colours, largest first (`logo-color.ts`), filled in by `getSets` (`getShelf` leaves them empty); empty until then, or where none can be read. */
     colors: string[];
     owned: number;
     total: number;
