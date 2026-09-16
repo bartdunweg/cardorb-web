@@ -15,6 +15,7 @@ import { GRADERS, GRADES, gradeLabel, gradeUnder, gradesFor, splitGrade } from "
 import { LanguageSelect } from "@/components/app/language-select";
 import { SheetDialog } from "@/components/app/sheet-dialog";
 import { notify } from "@/components/app/toast";
+import { forgetMineQuietly } from "@/components/app/use-copy-steps";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
@@ -90,7 +91,11 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
             purchasePrice: price.trim() === "" ? null : Number(price),
             acquiredAt: date || today(),
         };
-        const res = await markOwnedWith(card.id, edits);
+        /* Waited for, because a refused save keeps the form and what was chosen in it; a copy
+           described field by field is not something to lose to a toast. Only the write is waited
+           for: it forgets nothing itself, so the button no longer spins through the page being
+           drawn inside the action's answer and then drawn again by the refresh. */
+        const res = await markOwnedWith(card.id, edits, { reread: false });
         setSaving(false);
         if (!res.ok) {
             setError(res.error);
@@ -101,8 +106,8 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
         // moment after the save; where it went (off the wishlist, into the Collection) is on a
         // page the user is not on.
         notify.done(`${card.name} is in your collection now`);
-        router.refresh();
         close();
+        void forgetMineQuietly().then(() => router.refresh());
     };
 
     // Label above a full-width field, at every width. Side by side was the old shape and it

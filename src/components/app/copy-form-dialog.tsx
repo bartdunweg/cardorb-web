@@ -14,6 +14,7 @@ import { FormError } from "@/components/app/form-error";
 import { GRADERS, GRADES, gradeLabel, gradeUnder, gradesFor, splitGrade } from "@/components/app/graded";
 import { LanguageSelect } from "@/components/app/language-select";
 import { SheetDialog } from "@/components/app/sheet-dialog";
+import { forgetMineQuietly } from "@/components/app/use-copy-steps";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
@@ -117,18 +118,24 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
         // Kept out of `changes`, which decides whether Save is allowed: a date is a fact about
         // getting the card, not a way this copy differs from the row, and today's date standing in
         // the field must not count as a difference by itself.
+        //
+        // The write is waited for, so a refused one keeps the form; the redraw is not. The action
+        // forgets nothing itself (the button spun through the page drawn inside its answer and then
+        // drawn again by the refresh), and the cache goes here on either answer: an add can have
+        // made its row before an answer this app could not read.
         const res =
             mode === "add"
-                ? await addCopy(from.id, { ...changes, ...(acquired ? { acquiredAt: acquired } : {}) }, count)
-                : await splitCopy(from.id, changes, count);
+                ? await addCopy(from.id, { ...changes, ...(acquired ? { acquiredAt: acquired } : {}) }, count, { reread: false })
+                : await splitCopy(from.id, changes, count, { reread: false });
         setSaving(false);
+        const forgotten = forgetMineQuietly();
         if (!res.ok) {
             setError(res.error);
             return;
         }
         onSaved?.();
-        router.refresh();
         close();
+        void forgotten.then(() => router.refresh());
     };
 
     // Label above a full-width field, at every width. Side by side was the old shape and it

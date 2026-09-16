@@ -12,6 +12,7 @@ vi.mock("@/app/(app)/dashboard/settings/actions", () => ({
     setProfilePublic: (...args: unknown[]) => setProfilePublic(...args),
 }));
 const refresh = vi.fn();
+vi.mock("@/components/app/use-copy-steps", () => ({ forgetMineQuietly: () => Promise.resolve() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 const failed = vi.fn();
 vi.mock("@/components/app/toast", () => ({ notify: { failed: (...args: unknown[]) => failed(...args) } }));
@@ -51,7 +52,7 @@ describe("PublicProfileRow", () => {
         render(<PublicProfileRow username="ash" isPublic={false} onChange={onChange} />);
         fireEvent.click(screen.getByRole("switch", { name: "Public profile" }));
         expect(onChange).toHaveBeenCalledWith(true);
-        await waitFor(() => expect(setProfilePublic).toHaveBeenCalledWith(true));
+        await waitFor(() => expect(setProfilePublic).toHaveBeenCalledWith(true, { reread: false }));
         await waitFor(() => expect(refresh).toHaveBeenCalled());
         expect(failed).not.toHaveBeenCalled();
     });

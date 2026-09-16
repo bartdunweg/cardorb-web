@@ -4,6 +4,7 @@ import { type FC, type ReactNode, useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ActionResult } from "@/app/(app)/dashboard/settings/actions";
 import { notify } from "@/components/app/toast";
+import { forgetMineQuietly } from "@/components/app/use-copy-steps";
 import { Toggle } from "@/components/base/toggle/toggle";
 import { cx } from "@/utils/cx";
 
@@ -20,6 +21,10 @@ import { cx } from "@/utils/cx";
  * While it saves the switch is read-only rather than disabled: it stays in the tab order and
  * keeps its name, and only refuses a second flip until the first has landed. A save that fails
  * puts the switch back and says so in a toast, titled by what the setting still is.
+ *
+ * Landed means the write, not the page: the write forgets nothing itself (`reread: false`), so the
+ * switch is no longer held while the settings page is drawn inside the action's answer and then
+ * drawn again by the refresh. The cache is dropped quietly and the page drawn once, behind it.
  */
 export function SettingSwitchRow({
     icon: Icon,
@@ -39,8 +44,8 @@ export function SettingSwitchRow({
     isDisabled?: boolean;
     /** The setting as the page holds it; flipped before the save, and back when it fails. */
     onChange: (next: boolean) => void;
-    /** The write. */
-    save: (next: boolean) => Promise<ActionResult>;
+    /** The write, told not to re-read: the row drops the cache itself. */
+    save: (next: boolean, options: { reread: boolean }) => Promise<ActionResult>;
     /** The failed toast's title, by the value the setting still has. */
     stillTitle: (still: boolean) => string;
 }) {
@@ -54,7 +59,7 @@ export function SettingSwitchRow({
         const before = isSelected;
         onChange(next);
         setPending(true);
-        const res = await save(next).catch(() => ({ ok: false as const, error: "Something went wrong. Try again." }));
+        const res = await save(next, { reread: false }).catch(() => ({ ok: false as const, error: "Something went wrong. Try again." }));
         setPending(false);
         if (!res.ok) {
             onChange(before);
@@ -62,7 +67,7 @@ export function SettingSwitchRow({
             return;
         }
         // Whatever else reads the profile from the server (the Manage sheet, the account menu) gets the new one.
-        router.refresh();
+        void forgetMineQuietly().then(() => router.refresh());
     };
 
     return (

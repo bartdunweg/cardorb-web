@@ -12,6 +12,7 @@ vi.mock("@/app/(app)/dashboard/settings/actions", () => ({
     setPricesPublic: (...args: unknown[]) => setPricesPublic(...args),
 }));
 const refresh = vi.fn();
+vi.mock("@/components/app/use-copy-steps", () => ({ forgetMineQuietly: () => Promise.resolve() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 const failed = vi.fn();
 vi.mock("@/components/app/toast", () => ({ notify: { failed: (...args: unknown[]) => failed(...args) } }));
@@ -44,7 +45,7 @@ describe("PricesPublicRow", () => {
         render(<PricesPublicRow isPublic pricesPublic={false} onChange={onChange} />);
         fireEvent.click(screen.getByRole("switch", { name: "Show prices" }));
         expect(onChange).toHaveBeenCalledWith(true);
-        await waitFor(() => expect(setPricesPublic).toHaveBeenCalledWith(true));
+        await waitFor(() => expect(setPricesPublic).toHaveBeenCalledWith(true, { reread: false }));
         await waitFor(() => expect(refresh).toHaveBeenCalled());
         expect(failed).not.toHaveBeenCalled();
     });
