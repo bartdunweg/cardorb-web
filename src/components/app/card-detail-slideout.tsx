@@ -133,8 +133,11 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         if (asOf !== pressed.current) return;
         rememberCopies(row, rows);
         setCopiesState({ of: copiesKey(row), rows });
-        // A row that is gone (removed, or merged away) cannot stay the one shown.
-        setViewing((v) => (v && !rows.some((r) => r.id === v.row.id) ? null : v));
+        /* A row that is gone (removed, merged away, or put back under a new id) cannot stay the one
+           shown: the sheet moves to the first row left, so the star and the copy form act on a row
+           that exists. */
+        const shownId = viewing?.of === card?.id ? viewing?.row.id : row.id;
+        if (card && !rows.some((r) => r.id === shownId)) setViewing(rows[0] ? { of: card.id, row: rows[0] } : null);
     };
     // A new copy as a row of its own, made like the row shown, pulled today; the sheet moves to
     // it so what differs can be set at once.
@@ -142,7 +145,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
        reading moves you to the first one rather than closing the card out from under you. */
     /* A line is a kind of copy, so the bin on it removes every row behind it. Removing one of four
        identical rows would leave a line still saying ×3 and nothing to show for the press. */
-    const dropCopies = async (group: Card[]) => {
+    const dropCopies = async (group: Card[]): Promise<void> => {
         if (!mine || !card || !group.length) return;
         /* Gone from the panel at once; the store follows. A failure reads the rows back. */
         const gone = new Set(group.map((r) => r.id));
@@ -164,6 +167,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
             void reloadCopies();
             return;
         }
+        /* The last kind gone, whether by its bin or by the minus: the sheet says so and offers the
+           card again, instead of an "In binders" and an "Add a copy" for a row that no longer exists. */
+        if (rows.length === 0) setRemoved(card.id);
         offerUndo(
             results.flatMap((r) => (r.ok && r.card ? [r.card] : [])),
             group.length > 1 ? `${group.length} copies removed` : "Copy removed",
@@ -496,9 +502,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         // Any row but the one the sheet opened on, so what it shows stays as long as it can.
         const spare = group.rows.find((r) => r.id !== mine?.id) ?? group.rows[0];
         if (!spare) return;
-        const last = (copies ?? [spare]).length <= 1;
         await dropCopies([spare]);
-        if (last && card) setRemoved(card.id);
     };
 
     const closeSheet = async () => {
@@ -521,7 +525,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                     void Promise.all(rows.map((row) => restoreCard(row))).then((results) => {
                         const failed = results.find((r) => !r.ok);
                         if (failed && !failed.ok) notify.failed("That did not go back", { description: failed.error });
-                        else notify.done(rows.length > 1 ? `${rows.length} copies are back` : "It is back");
+                        else {
+                            setRemoved(null);
+                            notify.done(rows.length > 1 ? `${rows.length} copies are back` : "It is back");
+                        }
                         scheduleRefresh();
                         void reloadCopies();
                     });
@@ -1014,7 +1021,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                             mode="add"
                             languages={known?.languages}
                             facts={formFacts}
-                            from={mine}
+                            from={copies?.find((r) => r.id === mine.id) ?? mine}
                             folders={collections}
                             onSaved={() => void reloadCopies()}
                         >

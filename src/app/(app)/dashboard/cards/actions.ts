@@ -324,6 +324,7 @@ export async function restoreCard(input: RemovedCard): Promise<Result> {
                 ...(c.gen ? { gen: c.gen } : {}),
                 ...(c.finish ? { finish: c.finish } : {}),
                 ...(c.foilPattern ? { foilPattern: c.foilPattern } : {}),
+                ...(c.edition ? { edition: c.edition } : {}),
                 ...(c.quantity ? { quantity: c.quantity } : {}),
                 ...(c.condition ? { condition: c.condition } : {}),
                 ...(c.grade ? { grade: c.grade } : {}),

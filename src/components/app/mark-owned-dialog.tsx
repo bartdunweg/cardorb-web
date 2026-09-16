@@ -23,6 +23,7 @@ import type { Card } from "@/lib/api-shapes";
 import { cardLabelFull } from "@/lib/card-label";
 import type { CopyEdits } from "@/lib/copies";
 import { today } from "@/lib/format";
+import { WESTERN_LANGUAGES } from "@/lib/languages";
 
 // A wish becomes a copy you hold. The moment to say what it is: language, condition (Near Mint
 // unless said), finish, folder, what you paid and the day you got it (today unless said). One
@@ -31,7 +32,7 @@ import { today } from "@/lib/format";
 export type OwnableCard = Pick<
     Card,
     "id" | "name" | "image_url" | "set_name" | "set_abbr" | "number" | "grade" | "finish" | "foil_pattern" | "edition" | "tcg_id"
-> & { language?: string | null };
+> & { language?: string | null; condition?: string | null };
 
 type Props = {
     card: OwnableCard;
@@ -53,8 +54,11 @@ export function MarkOwnedDialog({ children, ...form }: Props & { children: React
 
 function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Props & { close: () => void }) {
     const router = useRouter();
-    const [language, setLanguage] = useState("en");
-    const [condition, setCondition] = useState("Near Mint");
+    // What the wish already says: its language, and the condition it was looking for.
+    const [language, setLanguage] = useState(card.language ?? "en");
+    const [condition, setCondition] = useState(card.condition ?? "Near Mint");
+    // A Japanese wish stays Japanese: the form offers the Western languages only, so it sends none.
+    const western = WESTERN_LANGUAGES.some((l) => l.code === language);
     // The one column holds "PSA 10"; the form asks it as two questions and a switch.
     const initialGrade = splitGrade(card.grade);
     const [graded, setGraded] = useState(Boolean((card.grade ?? "").trim()));
@@ -74,7 +78,7 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
         setSaving(true);
         setError(null);
         const edits: CopyEdits = {
-            language,
+            ...(western ? { language } : {}),
             condition: graded ? null : condition || null,
             grade: graded ? gradeLabel(grader, gradeValue) : null,
             finish: (effectiveFinish || null) as CopyEdits["finish"],

@@ -175,12 +175,17 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
        hit it was read for. */
     const [viewed, setViewed] = useState<PokemonCard | null>(null);
     const [row, setRow] = useState<{ of: string; row: Card } | null>(null);
+    const viewing = useRef(0);
     const view = async (hit: PokemonCard) => {
         setViewed(hit);
+        const asked = ++viewing.current;
         // Read for every hit, marked or not: the marks arrive a beat after the hits (the lookup above),
         // and a held card pressed before they land would open as one nobody holds (measured).
         const rows = await listRows({ set: hit.set, number: hit.number, name: hit.name });
-        if (rows[0]) setRow({ of: hit.id, row: rows[0] });
+        // Only the latest hit's answer counts, and none held clears the row: a copy removed in the
+        // sheet last time must not open again as held.
+        if (asked !== viewing.current) return;
+        setRow(rows[0] ? { of: hit.id, row: rows[0] } : null);
     };
     const held = viewed && row?.of === viewed.id ? row.row : null;
     /* Closing a sheet that opened on a row re-reads the rows for that hit: the sheet may have
