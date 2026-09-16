@@ -23,19 +23,21 @@ const profileSchema = z.object({
         .toLowerCase()
         .regex(/^[a-z0-9][a-z0-9-]{1,29}$/, "Use 2 to 30 lowercase letters, numbers and hyphens, starting with a letter or number."),
     is_public: z.boolean(),
-    wishlist_public: z.boolean(),
 });
 
 // The profile goes through the API: the name and the public flag in one call, the username in its
-// own, because the API claims a username as a separate, checked step.
+// own, because the API claims a username as a separate, checked step. The username first: a name
+// refused with 409 used to arrive after the profile had already gone public, while the page's
+// switch still said private. The wishlist's flag is not sent: this form has no control for it, and
+// the value it held from its page could undo a change just made on the wishlist.
 export async function updateProfile(input: unknown): Promise<ActionResult> {
     const parsed = profileSchema.safeParse(input);
     if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
     const p = parsed.data;
     try {
-        await api("/profile", { method: "PATCH", body: { displayName: p.display_name, isPublic: p.is_public, wishlistPublic: p.wishlist_public } });
         await api("/username", { method: "POST", body: { username: p.username } });
+        await api("/profile", { method: "PATCH", body: { displayName: p.display_name, isPublic: p.is_public } });
     } catch (err) {
         return failed(err);
     } finally {

@@ -38,8 +38,10 @@ export function Movers() {
     const said = (PERIODS.find((p) => p.key === period) ?? PERIODS[1]).said;
     const [answers, setAnswers] = useState<Partial<Record<PeriodKey, Answer>>>({});
     const known = period in answers;
+    // A period whose read failed is asked again when it is chosen again, not remembered as failed.
+    const failed = answers[period] === null;
     useEffect(() => {
-        if (known) return;
+        if (known && !failed) return;
         let current = true;
         void moversFor(period).then((answer) => {
             if (current) setAnswers((a) => ({ ...a, [period]: answer }));
@@ -47,7 +49,9 @@ export function Movers() {
         return () => {
             current = false;
         };
-    }, [period, known]);
+        // Not on `failed` itself: that would ask again straight after every failure.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [period]);
     const answer = answers[period];
     /* Each tile leads to the whole collection sorted its way, over the same period (list-query.ts). */
     const listOf = (sort: "change-desc" | "change-asc") => `/dashboard/cards?sort=${sort}${period === "1m" ? "" : `&period=${period}`}`;

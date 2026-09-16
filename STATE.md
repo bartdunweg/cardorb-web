@@ -25,6 +25,19 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-17, a fourth bug hunt: Home, the card lists, Settings.** Home: a failed movers read is
+asked again when its period is chosen again, the movers start over after a write (keyed on what you
+hold), a deleted binder in `?value=` falls back to the collection with its line and movers, and a
+period's first day is the local day, not UTC's. Lists: a Pokédex swipe tracks the face it wrote
+(comparing with the page's stale flags left two faces), a slot's line under the picture follows the
+slot after a card is removed, a set heading's count waits until its set is whole, set sections are
+keyed by place, and `?duplicates=1` no longer narrows the wishlist. Settings: the username is claimed
+before the profile goes public (a 409 left the profile public under a switch saying private), the
+sheet no longer sends the wishlist flag it has no control for, a call that never answers stops the
+spinner, and the field shows the saved lowercase name. Checked and wrong: € on dollar figures (the
+API converts). Left: the chart's 3M/6M are 91/182 days, the movers' 90/180; the API accepts only
+those. Not measured live: the hidden pane stalled every streamed page.
+
 **2026-09-17, a third bug hunt: Browse, set pages, the public profile.** Three reviews, each
 finding read against the code first. Browse: the search field kept the old language's set names
 after Filters changed it (the index now resets on its key), a sort picked inside the 250 ms after
