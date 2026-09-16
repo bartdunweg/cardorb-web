@@ -112,7 +112,9 @@ export function Movers() {
                     />
                 </div>
             )}
-            <CardDetailSlideout card={open?.card ?? null} onClose={() => setOpen(null)} onPrev={step(-1)} onNext={step(1)} />
+            {/* On this list's own period, so the card's price line and the figure beside it answer the
+                question the row did: what it did over these months (Bart, 2026-09-16). */}
+            <CardDetailSlideout card={open?.card ?? null} onClose={() => setOpen(null)} onPrev={step(-1)} onNext={step(1)} period={period} />
         </section>
     );
 }

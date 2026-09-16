@@ -1,6 +1,7 @@
 "use client";
 
 import { Button as AriaButton } from "react-aria-components";
+import { isoDaysAgo } from "@/lib/price-change";
 import { cx } from "@/utils/cx";
 
 /**
@@ -19,13 +20,6 @@ export const PERIODS = [
 ] as const;
 
 export type PeriodKey = (typeof PERIODS)[number]["key"];
-
-/** The ISO date `days` ago, for slicing a series that is already sorted by date. */
-export const isoDaysAgo = (days: number) => {
-    const d = new Date();
-    d.setDate(d.getDate() - days);
-    return d.toISOString().slice(0, 10);
-};
 
 /** Everything on or after the period's first day; the whole series for Max. */
 export function withinPeriod<T extends { date: string }>(rows: T[], period: PeriodKey): T[] {

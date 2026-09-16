@@ -3,12 +3,13 @@
 import { useTransition } from "react";
 import { ChevronDown } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
-import { ChartPeriods, PERIODS, forChart, isoDaysAgo } from "@/components/app/chart-periods";
+import { ChartPeriods, PERIODS, forChart } from "@/components/app/chart-periods";
 import { useHomePeriod } from "@/components/app/home-period";
 import { ValueChart } from "@/components/app/value-chart";
 import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { formatValue } from "@/lib/format";
+import { isoDaysAgo } from "@/lib/price-change";
 import { splitChange } from "@/lib/value-change";
 import type { ValueSnapshot } from "@/lib/value-history";
 import { cx } from "@/utils/cx";

@@ -1,84 +1,73 @@
 import { describe, expect, it } from "vitest";
-import { average30, chartLine, holdRecoveredDips, priceChange, printingsOfLine, trustedStretch } from "./price-change";
+import { chartLine, holdRecoveredDips, periodChange, printingsOfLine, trustedStretch } from "./price-change";
 
-describe("priceChange", () => {
-    it("says how far above the 30-day average the price sits, with the sign in the words", () => {
-        const change = priceChange(2.52, 2.4);
-        expect(change?.direction).toBe("up");
-        expect(change?.text).toBe("+€0.12 · 5%");
-        expect(change?.label).toBe("Up €0.12, 5 percent, against the 30-day average");
-    });
-
-    it("says how far below, with a proper minus", () => {
-        const change = priceChange(2.28, 2.4);
-        expect(change?.direction).toBe("down");
-        expect(change?.text).toBe("−€0.12 · 5%");
-        expect(change?.label).toBe("Down €0.12, 5 percent, against the 30-day average");
-    });
-
-    it("shows nothing under half a percent, under a cent, or when a figure is missing", () => {
-        expect(priceChange(100.3, 100)).toBeNull(); // 0.3%
-        expect(priceChange(0.505, 0.5)).toBeNull(); // 1%, but half a cent
-        expect(priceChange(2.4, 2.4)).toBeNull();
-        expect(priceChange(null, 2.4)).toBeNull();
-        expect(priceChange(2.4, null)).toBeNull();
-        expect(priceChange(2.4, 0)).toBeNull();
-    });
-
-    it("keeps a change that just clears both thresholds", () => {
-        expect(priceChange(100.5, 100)?.text).toBe("+€0.50 · 1%");
-    });
+/** A day this many days back, since the periods are counted from today. */
+const daysAgo = (days: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() - days);
+    return d.toISOString().slice(0, 10);
+};
+/** One day of a line, one printing, as the API answers it. */
+const day = (back: number, value: number, printing = "normal") => ({
+    date: daysAgo(back),
+    market: null,
+    holo: null,
+    printings: { [printing]: value },
 });
 
-describe("average30", () => {
-    const today = "2026-09-12";
-    const points = [
-        { date: "2026-08-01", market: 100, holo: 900 },
-        { date: "2026-08-20", market: 10, holo: 30 },
-        { date: "2026-09-05", market: 12, holo: null },
-        { date: "2026-09-11", market: null, holo: 40 },
-    ];
-
-    // The card's own line, which is TCGplayer's since cardorb-api#355, rather than an average from
-    // another market: the arrow beside a TCGplayer price used to read Cardmarket's month.
-    it("averages the plain series over the last thirty days, leaving out older points and gaps", () => {
-        expect(average30(points, today, false)).toBe(11);
+describe("periodChange", () => {
+    // The question Home's Biggest movers answers, so a card opened from that list shows the move
+    // that put it there rather than its price against a month's average (Bart, 2026-09-16).
+    it("reads the first figure in the window against the last, and names the period", () => {
+        const line = [day(40, 1), day(20, 2), day(1, 2.4)];
+        const change = periodChange(line, 30, false, "normal", "in the last 30 days");
+        expect(change?.direction).toBe("up");
+        expect(change?.text).toBe("+€0.40 · 20%");
+        expect(change?.label).toBe("Up €0.40, 20 percent, in the last 30 days");
     });
 
-    // A day the foil has no figure is left out, never read at the plain price (cardorb-api#443).
-    it("reads the foil series for a reverse copy, and only the foil", () => {
-        expect(average30(points, today, true)).toBeCloseTo((30 + 40) / 2);
+    it("leaves out what is older than the window, so a shorter period reads a smaller move", () => {
+        const line = [day(40, 1), day(20, 2), day(1, 2.4)];
+        expect(periodChange(line, 182, false, "normal", "in the last 6 months")?.text).toBe("+€1.40 · 140%");
+        expect(periodChange(line, null, false, "normal", "since the first reading")?.text).toBe("+€1.40 · 140%");
+    });
+
+    it("says how far down, with a proper minus", () => {
+        const change = periodChange([day(20, 2.4), day(1, 2.28)], 30, false, "normal", "in the last 30 days");
+        expect(change?.direction).toBe("down");
+        expect(change?.text).toBe("−€0.12 · 5%");
     });
 
     // ex8-15: a holo copy at €22.51 read "+648%" against a stray plain series at €3.
-    it("reads the copy's own printing where it is known", () => {
-        const lines = [
-            { date: "2026-09-10", market: 3, holo: null, printings: { normal: 3, holofoil: 22 } },
-            { date: "2026-09-12", market: 3, holo: null, printings: { normal: 3, holofoil: 23 } },
+    it("reads the copy's own printing, and nothing in its place", () => {
+        const line = [
+            { date: daysAgo(20), market: 3, holo: null, printings: { normal: 3, holofoil: 20 } },
+            { date: daysAgo(1), market: 3, holo: null, printings: { normal: 3, holofoil: 22 } },
         ];
-        expect(average30(lines, today, false, "holofoil")).toBeCloseTo(22.5);
-        expect(average30(lines, today, false, "reverse-holofoil")).toBeNull();
+        expect(periodChange(line, 30, false, "holofoil", "in the last 30 days")?.text).toBe("+€2.00 · 10%");
+        expect(periodChange(line, 30, false, "normal", "in the last 30 days")).toBeNull();
+        expect(periodChange(line, 30, false, "reverse-holofoil", "in the last 30 days")).toBeNull();
+    });
+
+    it("shows nothing under half a percent, under a cent, or without two figures in the window", () => {
+        expect(periodChange([day(20, 100), day(1, 100.3)], 30, false, "normal", "in the last 30 days")).toBeNull();
+        expect(periodChange([day(20, 0.5), day(1, 0.505)], 30, false, "normal", "in the last 30 days")).toBeNull();
+        expect(periodChange([day(1, 2.4)], 30, false, "normal", "in the last 30 days")).toBeNull();
+        expect(periodChange([day(200, 1), day(150, 5)], 30, false, "normal", "in the last 30 days")).toBeNull();
+        expect(periodChange([], 30, false, "normal", "in the last 30 days")).toBeNull();
     });
 
     // Base Set Charizard's Shadowless run: €1,869, then €1,000 for eleven days, then €1,948. The line
-    // holds that dip, and the arrow beside €1,954.71 read "+25%" against a month that still had it.
-    it("averages the month with a dip that came back held at its level, as the line draws it", () => {
+    // holds that dip, so the figure beside the price says what the drawn line says.
+    it("reads the line the chart draws, dip held and all", () => {
         const shadowless = [
-            ["2026-08-20", 1869],
-            ["2026-08-30", 1869],
-            ["2026-08-31", 1000],
-            ...Array.from({ length: 10 }, (_, i) => [`2026-09-${String(i + 1).padStart(2, "0")}`, 1000]),
-            ["2026-09-11", 1948],
-            ["2026-09-12", 1955],
-        ].map(([date, v]) => ({ date: date as string, market: null, holo: null, printings: { "shadowless-holofoil": v as number } }));
-        const average = average30(shadowless, today, false, "shadowless-holofoil")!;
-        expect(average).toBeGreaterThan(1850);
-        expect(priceChange(1954.71, average)?.ratio).toBeLessThan(0.06);
-    });
-
-    it("is nothing without a point in the window", () => {
-        expect(average30([{ date: "2026-07-01", market: 5, holo: null }], today, false)).toBeNull();
-        expect(average30([], today, false)).toBeNull();
+            day(30, 1869, "shadowless-holofoil"),
+            day(20, 1869, "shadowless-holofoil"),
+            ...Array.from({ length: 11 }, (_, i) => day(19 - i, 1000, "shadowless-holofoil")),
+            day(2, 1948, "shadowless-holofoil"),
+            day(1, 1955, "shadowless-holofoil"),
+        ];
+        expect(periodChange(shadowless, 30, false, "shadowless-holofoil", "in the last 30 days")?.ratio).toBeLessThan(0.06);
     });
 });
 

@@ -176,6 +176,9 @@ export async function FolderBody(props: FolderBodyProps) {
                 // by number. That grouping was on screen and invisible, so the list read as unsorted
                 // and the menu as broken. The headings are the grouping, said out loud.
                 sortedBySet={query.sortKey === "set"}
+                // Sorted by price change: a card opened from the list reads its own line over the
+                // same days the list ranked it by. Custom dates have no button on the chart.
+                period={query.sort === "change" && query.period !== "custom" ? query.period : undefined}
                 initialGroup={group}
                 initialView={view}
                 initialSize={size}
