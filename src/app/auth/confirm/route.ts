@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { landingFor, linkParamsSchema } from "@/lib/auth-redirect";
+import { RECOVERY_COOKIE, RECOVERY_COOKIE_MAX_AGE, landingFor, linkParamsSchema } from "@/lib/auth-redirect";
+import { COOKIE_OPTIONS } from "@/lib/supabase/cookie-options";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -12,13 +13,14 @@ import { createClient } from "@/lib/supabase/server";
  */
 export async function GET(request: Request) {
     const url = new URL(request.url);
-    const fail = (why: string) => NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(why)}`, url));
+    // A code, not the sentence: the sign-in page holds the words (auth-redirect.ts).
+    const fail = (code: "missing" | "expired") => NextResponse.redirect(new URL(`/login?error=${code}`, url));
 
     const parsed = linkParamsSchema.safeParse({
         token_hash: url.searchParams.get("token_hash"),
         type: url.searchParams.get("type"),
     });
-    if (!parsed.success) return fail("That link is missing something.");
+    if (!parsed.success) return fail("missing");
 
     const supabase = await createClient();
     const { error } = await supabase.auth.verifyOtp(parsed.data);
@@ -26,8 +28,11 @@ export async function GET(request: Request) {
         // Not the provider's wording. "Token has expired or is invalid" is accurate and unhelpful;
         // what a person needs to know is that the link is spent and how to get another.
         console.error("Confirming an auth link failed:", error.message);
-        return fail("That link has expired. Ask for a new one.");
+        return fail("expired");
     }
 
-    return NextResponse.redirect(new URL(landingFor(parsed.data.type), url));
+    const response = NextResponse.redirect(new URL(landingFor(parsed.data.type), url));
+    // A recovery link is the one proof /reset-password accepts (auth-redirect.ts).
+    if (parsed.data.type === "recovery") response.cookies.set(RECOVERY_COOKIE, "1", { ...COOKIE_OPTIONS, path: "/", maxAge: RECOVERY_COOKIE_MAX_AGE });
+    return response;
 }

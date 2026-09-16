@@ -35,6 +35,60 @@ function StatusText({ msg }: { msg: Msg }) {
 }
 
 // `heading` replaces the Settings title: the You page puts the account there instead.
+/**
+ * The sheet's own draft of Public profile. It mounts when the sheet opens, seeded from what is
+ * saved, and goes with the sheet. The Toggle used to write the page's `isPublic` itself, so Cancel,
+ * Escape or a tap outside left the row on the page, and its address line, saying what the server
+ * never got; flipping the row back then wrote a no-op the person read as "turned it off".
+ */
+function PublicProfileDraft({
+    initial,
+    username,
+    saving,
+    msg,
+    onSave,
+    onCancel,
+}: {
+    initial: boolean;
+    username: string;
+    saving: boolean;
+    msg: Msg;
+    onSave: (publicDraft: boolean) => void;
+    onCancel: () => void;
+}) {
+    const [draft, setDraft] = useState(initial);
+    return (
+        <>
+            <Toggle
+                label="Public profile"
+                // With the toggle on, the address people can open, so it can be read and copied from here.
+                // The saved name, not the field: an address only exists once the name is claimed.
+                hint={draft && username ? `Anyone can view your collection at ${publicUrl(username)}.` : "When on, anyone can view your collection."}
+                isSelected={draft}
+                onChange={setDraft}
+                // The kit's toggle is as wide as its words; the address has to wrap on a phone.
+                className="w-full"
+            />
+            {draft && username ? (
+                <Button href={`/user/${username}`} color="secondary" size="sm" className="self-start">
+                    View your public page
+                </Button>
+            ) : null}
+            <StatusText msg={msg} />
+            {/* Cancel beside Save, because a sheet on a phone has no page
+                beside it to tap and Escape is not a thing anybody sees. */}
+            <div className="flex justify-end gap-3">
+                <Button color="secondary" onClick={onCancel} isDisabled={saving}>
+                    Cancel
+                </Button>
+                <Button onClick={() => onSave(draft)} isLoading={saving}>
+                    Save changes
+                </Button>
+            </div>
+        </>
+    );
+}
+
 export function SettingsForm({
     profile,
     email,
@@ -140,10 +194,12 @@ export function SettingsForm({
     // both until it resolves after hydration: no mount flag, no mismatch.
     const currentTheme = theme ?? "system";
 
-    const saveProfile = async () => {
+    const saveProfile = async (publicDraft: boolean) => {
         setSavingProfile(true);
         setProfileMsg(null);
-        const res = await updateProfile({ display_name: displayName, username, is_public: isPublic, wishlist_public: profile.wishlist_public });
+        const res = await updateProfile({ display_name: displayName, username, is_public: publicDraft, wishlist_public: profile.wishlist_public });
+        // The page's row follows the server, not the sheet's toggle: what was saved is public.
+        if (res.ok) setIsPublic(publicDraft);
         // The address goes to Supabase, not the API, and lands only once the mail it sends is answered.
         const newEmail = emailValue.trim().toLowerCase();
         const changed = newEmail !== (email ?? "").toLowerCase();
@@ -239,36 +295,14 @@ export function SettingsForm({
                                 autoComplete="email"
                                 hint="A new address takes effect once you confirm it from your inbox."
                             />
-                            <Toggle
-                                label="Public profile"
-                                // With the toggle on, the address people can open, so it can be read and copied from here.
-                                // The saved name, not the field: an address only exists once the name is claimed.
-                                hint={
-                                    isPublic && profile.username
-                                        ? `Anyone can view your collection at ${publicUrl(profile.username)}.`
-                                        : "When on, anyone can view your collection."
-                                }
-                                isSelected={isPublic}
-                                onChange={setIsPublic}
-                                // The kit's toggle is as wide as its words; the address has to wrap on a phone.
-                                className="w-full"
+                            <PublicProfileDraft
+                                initial={isPublic}
+                                username={profile.username}
+                                saving={savingProfile}
+                                msg={profileMsg}
+                                onSave={saveProfile}
+                                onCancel={close}
                             />
-                            {isPublic && profile.username ? (
-                                <Button href={`/user/${profile.username}`} color="secondary" size="sm" className="self-start">
-                                    View your public page
-                                </Button>
-                            ) : null}
-                            <StatusText msg={profileMsg} />
-                            {/* Cancel beside Save, because a sheet on a phone has no page
-                                beside it to tap and Escape is not a thing anybody sees. */}
-                            <div className="flex justify-end gap-3">
-                                <Button color="secondary" onClick={close} isDisabled={savingProfile}>
-                                    Cancel
-                                </Button>
-                                <Button onClick={saveProfile} isLoading={savingProfile}>
-                                    Save changes
-                                </Button>
-                            </div>
                         </div>
                     )}
                 >

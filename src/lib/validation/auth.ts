@@ -7,7 +7,8 @@ import { z } from "zod";
  */
 export const credentialsSchema = z.object({
     email: z.string().email("Enter a valid email address."),
-    password: z.string().min(10, "Use at least 10 characters."),
+    // The same ceiling as a new password: past 72 Supabase refuses in its own words.
+    password: z.string().min(10, "Use at least 10 characters.").max(72, "Use at most 72 characters."),
 });
 
 export type Credentials = z.infer<typeof credentialsSchema>;

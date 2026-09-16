@@ -41,6 +41,24 @@ run: `restoreCard` sends `edition` and the catalogue id, which `removedCardSchem
 A refused purchase price (negative) snapped back in silence and toasts now; `setDexFace` clears the
 old face before setting the new one, so a failed second write leaves none rather than two.
 
+**2026-09-16, auth and Settings read over.** A code review, then the pane. Any signed-in session
+could open /reset-password and set a new password without the old one: the page and its action
+checked for a session and nothing else, which is what Settings' own password change refuses. Now
+/auth/confirm leaves a recovery cookie (`cardorb-recovery`, httpOnly, 15 minutes) after Supabase
+verified a recovery token, the page and the action require it, and the new password clears it;
+the router's own AMR claim was not used because GoTrue's method names are not the ones auth-js
+lists. The middleware's "signed in, go to /dashboard" redirect was a fresh response and dropped the
+cookies getClaims() may just have rotated, so past the ten-second reuse interval a return after an
+hour idle signed the person out on the way in; the redirect copies them now. The Manage sheet's
+Public profile toggle wrote the page's state directly, so Cancel, Escape or a tap outside left the
+row and its address line saying what the server never got; the sheet holds its own draft, mounted
+with it, and the row follows a successful save (proven in the pane: flipped, cancelled, row
+unchanged). Smaller: `?error=` on /login was any sentence a link chose to put there, now a code
+against a table; the sign-in password has the same 72-character ceiling as a new one. Left: sign-up
+answers "you already have an account" for a known address with a wrong password, a chosen trade
+(the comment names it); a username rename can leave the old name's public page cached for up to
+five minutes when the window rolled over between the layout's read and the rename.
+
 **2026-09-16, the list memory read over.** A review of #654 and the list machinery, code only
 (the signed-in pages could not be driven: the pane was signed out on localhost). One real fault:
 `openAsLeft` redirected every request for a bare list address, the router's own fetch behind a
