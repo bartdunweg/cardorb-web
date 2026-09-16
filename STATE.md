@@ -25,6 +25,22 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-16, the card sheet's writes read over.** A code review of the sheet, its two forms
+and their actions, then the pane. Mark as owned started every wish at English and sent the
+language whatever the wish was, so a Japanese wish came out an English copy with nothing on screen
+saying so; it starts from the wish's own language now, sends a Western one only (`copyEdits`
+refuses "ja"), and starts from the wish's "Looking for" condition instead of Near Mint. The sheet's
+arrow keys stepped the card from under the kit's Select trigger (react-aria moves its selection on
+Left and Right, so one press saved the next language and changed the card) and from under an open
+Add a copy or Mark as owned form, whose Save then wrote to the next card's id; the handler now leaves
+a listbox trigger alone and does nothing while a second dialog is open (proven in the pane: form
+open, ArrowRight, the sheet stayed). "Remove this copy" on a card's last copy left the sheet on a
+row that was gone, with Add a copy and the star still writing to it; `dropCopies` marks the card
+emptied, where only the minus did. "Put back" on a 1st Edition or Shadowless copy came back with no
+run: `restoreCard` sends `edition` and the catalogue id, which `removedCardSchema` now keeps (test).
+A refused purchase price (negative) snapped back in silence and toasts now; `setDexFace` clears the
+old face before setting the new one, so a failed second write leaves none rather than two.
+
 **2026-09-16, auth and Settings read over.** A code review, then the pane. Any signed-in session
 could open /reset-password and set a new password without the old one: the page and its action
 checked for a session and nothing else, which is what Settings' own password change refuses. Now

@@ -141,7 +141,11 @@ export function CopyCard({
         if (priceDraft === null) return;
         const p = priceDraft.trim() === "" ? null : Number(priceDraft);
         setPriceDraft(null);
-        if (p !== null && (!Number.isFinite(p) || p < 0)) return;
+        if (p !== null && (!Number.isFinite(p) || p < 0)) {
+            // Every other refused save on this card says so; this one snapped back in silence.
+            notify.failed("The purchase price did not save", { description: "A price is zero or more." });
+            return;
+        }
         if (p === purchasePrice) return;
         void save({ purchasePrice: p }, "The purchase price did not save");
     };
