@@ -28,3 +28,29 @@ export function landingFor(type: LinkParams["type"]): string {
             return "/dashboard";
     }
 }
+
+/**
+ * What the sign-in page says above its form, by a code in `?error=`. A code and a table rather
+ * than the sentence itself in the address: a link could otherwise put any sentence on
+ * cardorb.com in the site's own error colour (`/login?error=Your+account+was+locked...`).
+ * A code not listed says nothing.
+ */
+const LOGIN_NOTICES: Record<string, string> = {
+    missing: "That link is missing something.",
+    expired: "That link has expired. Ask for a new one.",
+};
+
+export function loginNoticeFor(code: string | undefined): string | undefined {
+    return code ? LOGIN_NOTICES[code] : undefined;
+}
+
+/**
+ * Proof that a session came from a recovery link, for the page that sets a new password without
+ * the old one. The session alone was the proof before, and any session has one: a person at a
+ * shared machine, or a lifted cookie, could open /reset-password and take the account. Only
+ * /auth/confirm writes this, after Supabase verified a recovery token, and the new password
+ * clears it.
+ */
+export const RECOVERY_COOKIE = "cardorb-recovery";
+/** A quarter of an hour: long enough to type a password, short enough not to lie around. */
+export const RECOVERY_COOKIE_MAX_AGE = 15 * 60;

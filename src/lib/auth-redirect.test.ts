@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { landingFor, linkParamsSchema } from "./auth-redirect";
+import { landingFor, linkParamsSchema, loginNoticeFor } from "./auth-redirect";
 
 describe("auth email links", () => {
     it("lands a recovery link on the new-password page, not on Settings", () => {
@@ -16,5 +16,12 @@ describe("auth email links", () => {
         expect(linkParamsSchema.safeParse({ token_hash: "", type: "signup" }).success).toBe(false);
         expect(linkParamsSchema.safeParse({ token_hash: "abc", type: "sms" }).success).toBe(false);
         expect(linkParamsSchema.safeParse({ token_hash: "abc", type: "recovery" }).success).toBe(true);
+    });
+
+    it("shows a notice for a known code only, so a link cannot write its own sentence on the sign-in page", () => {
+        expect(loginNoticeFor("expired")).toBe("That link has expired. Ask for a new one.");
+        expect(loginNoticeFor("missing")).toBe("That link is missing something.");
+        expect(loginNoticeFor("Your account was locked, call 0800")).toBeUndefined();
+        expect(loginNoticeFor(undefined)).toBeUndefined();
     });
 });
