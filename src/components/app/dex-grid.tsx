@@ -2,7 +2,7 @@
 
 import { type ReactNode, Suspense, use, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { listCopies, setDexFace } from "@/app/(app)/dashboard/cards/actions";
+import { setDexFace } from "@/app/(app)/dashboard/cards/actions";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
@@ -17,6 +17,7 @@ import type { Card } from "@/lib/cards";
 import { type CardsSize, GRID_COLUMNS, TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
 import type { DexGeneration, DexList, NamedDexSlot } from "@/lib/dex-groups";
 import { formatCount, formatPrice } from "@/lib/format";
+import { listCopies } from "@/lib/reads";
 import { cx } from "@/utils/cx";
 
 // The card sheet, fetched on the tap that opens it: it is the app's largest client chunk and the

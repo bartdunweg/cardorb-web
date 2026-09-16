@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Button as AriaButton } from "react-aria-components";
-import { moversFor } from "@/app/(app)/dashboard/(home)/actions";
-import { listRows } from "@/app/(app)/dashboard/cards/actions";
 import { CardImage } from "@/components/app/card-image";
 import { PERIODS, type PeriodKey } from "@/components/app/chart-periods";
 import { useHomePeriod } from "@/components/app/home-period";
@@ -13,6 +11,7 @@ import { cardLine, copyLine } from "@/lib/card-label";
 import type { Card } from "@/lib/cards";
 import { formatPrice } from "@/lib/format";
 import type { Mover } from "@/lib/movers";
+import { listRows, moversFor } from "@/lib/reads";
 import { TILE_SURFACE } from "@/lib/tile";
 import { cx } from "@/utils/cx";
 
