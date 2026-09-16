@@ -41,6 +41,9 @@ describe("matchesRule", () => {
         expect(matchesRule(card, { dex: { from: 1, to: 151 } })).toBe(true);
         expect(matchesRule({ ...card, species_id: 152 }, { dex: { from: 1, to: 151 } })).toBe(false);
         expect(matchesRule({ ...card, species_id: null }, { dex: { from: 1, to: 151 } })).toBe(false);
+        // A tag team is in the range when any Pokémon on it is.
+        expect(matchesRule({ ...card, species_id: 644, species_ids: [644, 25] }, { dex: { from: 1, to: 151 } })).toBe(true);
+        expect(matchesRule({ ...card, species_id: 644, species_ids: [644, 25] }, { dex: { from: 152, to: 251 } })).toBe(false);
         expect(matchesRule(card, { sets: ["sv04"] }, facets)).toBe(true);
         expect(matchesRule(card, { sets: ["paradox rift"] })).toBe(true);
         expect(matchesRule(card, { rarities: ["illustration rare"] })).toBe(true);

@@ -108,7 +108,11 @@ export function ruleChips(rule: FolderRule, facets?: Facets): string[] {
 export const ruleSummary = (rule: FolderRule, facets?: Facets): string => ruleChips(rule, facets).join(" · ");
 
 /** What a rule reads on a card. */
-export type RuleSubject = { species_id: number | null; set_name: string | null; rarity: string | null; owned: boolean | null };
+export type RuleSubject = { species_id: number | null; species_ids?: number[]; set_name: string | null; rarity: string | null; owned: boolean | null };
+
+/** Every Pokémon a card is of: a tag team's two or three, else its one number, else none. */
+export const speciesOfCard = (card: { species_id: number | null; species_ids?: number[] }): number[] =>
+    card.species_ids?.length ? card.species_ids : card.species_id === null ? [] : [card.species_id];
 
 /**
  * Whether a card is in a rule folder, with the API's semantics (cardorb-api, folders.ts
@@ -117,7 +121,9 @@ export type RuleSubject = { species_id: number | null; set_name: string | null; 
  */
 export function matchesRule(card: RuleSubject, rule: FolderRule, facets?: Facets): boolean {
     if (!card.owned) return false;
-    if (rule.dex && (card.species_id === null || card.species_id < rule.dex.from || card.species_id > rule.dex.to)) return false;
+    // A tag team is in the range when any Pokémon on it is, as the API reads it.
+    const dex = rule.dex;
+    if (dex && !speciesOfCard(card).some((id) => id >= dex.from && id <= dex.to)) return false;
     if (rule.sets) {
         const own = (card.set_name ?? "").toLowerCase();
         const names = rule.sets.map((s) => s.toLowerCase());
