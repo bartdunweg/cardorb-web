@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import type { ReactNode } from "react";
-import { cookies } from "next/headers";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CardsFilters } from "@/components/app/cards-filters";
 import { CardsPagination } from "@/components/app/cards-pagination";
@@ -11,9 +10,9 @@ import { CardsView } from "@/components/app/cards-view";
 import { DexView } from "@/components/app/dex-grid";
 import { PublicCardsView } from "@/components/app/public-cards-view";
 import type { CardFilter, CardList, PublicCard } from "@/lib/cards";
-import { CARDS_GROUP_COOKIE, CARDS_SIZE_COOKIE, CARDS_VIEW_COOKIE, parseCardsGroup, parseCardsSize, parseCardsView } from "@/lib/cards-view";
 import type { DexList } from "@/lib/dex-groups";
 import { type Facets, NO_FACETS } from "@/lib/facets";
+import { rememberedView } from "@/lib/list-memory-server";
 import { type ListQuery, SORT_OPTIONS, type SortKey, type SortOption, isNarrowed, listHref } from "@/lib/list-query";
 
 type Common = {
@@ -58,10 +57,8 @@ export async function FolderBody(props: FolderBodyProps) {
     // Your own cards, not wishes: the only lists with a second copy of anything.
     const offerDuplicates = !props.readOnly && !props.filter.wishlist;
 
-    const jar = await cookies();
-    const view = parseCardsView(jar.get(CARDS_VIEW_COOKIE)?.value);
-    const size = parseCardsSize(jar.get(CARDS_SIZE_COOKIE)?.value);
-    const group = parseCardsGroup(jar.get(CARDS_GROUP_COOKIE)?.value);
+    // The View menu as this page was left (list-memory.ts): its own, not the app's.
+    const { view, size, group } = await rememberedView(basePath);
 
     // The row: the search field, then three menu buttons, Filters, Sort and View. Search is the
     // thing you type, so it stays in the row; the set and rarity filters are a sheet.

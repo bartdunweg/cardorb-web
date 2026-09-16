@@ -3,7 +3,7 @@
 import { BookOpen01, Folder, Heart, HomeLine, Rows01 } from "@untitledui/icons";
 import Link from "next/link";
 import { useRouteTarget, useStartRoute } from "@/components/app/route-pending";
-import { useListQueries, withListQuery } from "@/hooks/use-list-memory";
+import { useListMemory, withListQuery } from "@/hooks/use-list-memory";
 import { cx } from "@/utils/cx";
 
 const tabs = [
@@ -34,7 +34,7 @@ export function MobileTabBar() {
     const pathname = useRouteTarget();
     const start = useStartRoute();
     // A tab opens its list as you left it: the filters, the sort and the search (use-list-memory.ts).
-    const queries = useListQueries();
+    const memory = useListMemory();
     // A page outside the five (Settings, You) has no pill.
     const activeIndex = tabs.findIndex((tab) => tab.match(pathname));
 
@@ -62,7 +62,7 @@ export function MobileTabBar() {
                 {tabs.map((tab) => {
                     const active = tab.match(pathname);
                     const Icon = tab.icon;
-                    const href = withListQuery(tab.href, queries);
+                    const href = withListQuery(tab.href, memory);
                     return (
                         <Link
                             key={tab.href}
