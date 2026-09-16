@@ -1,19 +1,22 @@
 "use client";
 
 import { Grid01, Rows01 } from "@untitledui/icons";
+import { usePathname } from "next/navigation";
 import { Header as AriaHeader } from "react-aria-components";
 import { RowButton } from "@/components/app/row-button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { setCardsGroup, setCardsSize, setCardsView } from "@/hooks/use-cards-view";
 import type { CardsGroup, CardsSize, CardsViewMode } from "@/lib/cards-view";
+import { memoryKey } from "@/lib/list-memory";
 
 const first = (keys: "all" | Set<React.Key>) => (keys === "all" ? undefined : [...keys][0]);
 
 // One View menu for every list: the layout (grid or list) and the tile size. `layouts` off
 // leaves the size alone, for a list that has no table (the public profile). A choice goes to
-// `use-cards-view`, which every list reads, so the next page shows it too. `group` is given only
+// `use-cards-view` as this page's own, which every list reads. `group` is given only
 // where the list is sorted by set: a heading over each set, or one list in set order.
 export function ViewMenu({ view, size, layouts = true, group }: { view: CardsViewMode; size: CardsSize; layouts?: boolean; group?: CardsGroup }) {
+    const page = memoryKey(usePathname());
     return (
         <Dropdown.Root>
             <RowButton icon={view === "grid" ? Grid01 : Rows01} label="View" menu className="ml-auto" />
@@ -28,7 +31,7 @@ export function ViewMenu({ view, size, layouts = true, group }: { view: CardsVie
                                 onSelectionChange={(keys) => {
                                     const key = first(keys);
                                     if (key === "grid" || key === "table") {
-                                        setCardsView(key);
+                                        setCardsView(page, key);
                                     }
                                 }}
                             >
@@ -50,7 +53,7 @@ export function ViewMenu({ view, size, layouts = true, group }: { view: CardsVie
                         onSelectionChange={(keys) => {
                             const key = first(keys);
                             if (key === "sm" || key === "md" || key === "lg") {
-                                setCardsSize(key);
+                                setCardsSize(page, key);
                             }
                         }}
                     >
@@ -69,7 +72,7 @@ export function ViewMenu({ view, size, layouts = true, group }: { view: CardsVie
                                 onSelectionChange={(keys) => {
                                     const key = first(keys);
                                     if (key === "sets" || key === "none") {
-                                        setCardsGroup(key);
+                                        setCardsGroup(page, key);
                                     }
                                 }}
                             >

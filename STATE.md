@@ -39,6 +39,18 @@ profile reached the API, came back 400 and showed "The card service didn't answe
 as no folder; and an empty grade string hid a copy's condition in `copyLine`. A scroll jump seen
 when a sheet opened was the browser tool's own scrollIntoView before a click, not the app.
 
+**2026-09-16, a list remembers how it was left, per page.** Bart's call: the View menu (grid or
+list, tile size, set headings) is each page's own, not one choice for the whole app, and the sort
+and filters are kept too. One cookie, `list-memory` (`src/lib/list-memory.ts`, zod-read, keyed by
+page, oldest pages forgotten past 3 KB), holds both: the server draws a page as it was left
+(`list-memory-server.ts`), and a bare address typed in redirects to the list's remembered query.
+The in-tab memory (`use-list-memory.ts`) reads and writes the same cookie, so it survives a
+reload and a new tab. A page never chosen on takes the last choice made anywhere (the three
+plain cookies still carry that); every set page is one page; the public profile keeps a size of
+its own. Measured on the dev server, signed out: the public profile at Large after a hard load,
+a per-page Medium winning over an app-wide Large, and the app-wide choice standing where the
+page has none. The dashboard redirect was not driven in the pane (it needs a session).
+
 **2026-09-16, prices on the public profile.** A "Show prices" switch under Public profile on
 Settings (`prices-public-row.tsx`, the switch row itself shared with Public profile in
 `setting-switch-row.tsx`). On, the public page prices every tile and the read-only sheet, and the

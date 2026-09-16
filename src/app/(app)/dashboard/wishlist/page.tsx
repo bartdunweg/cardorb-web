@@ -4,6 +4,7 @@ import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderPage } from "@/components/app/folder-page";
 import { ListSettingsDialog } from "@/components/app/list-settings-dialog";
 import { type CardFilter, getMyCards } from "@/lib/cards";
+import { openAsLeft } from "@/lib/list-memory-server";
 import { type ListSearchParams, changeWindow, isNarrowed, readListQuery } from "@/lib/list-query";
 import { getMyProfile } from "@/lib/profile";
 
@@ -14,7 +15,10 @@ export const metadata: Metadata = { title: "Wishlist" };
 // Cards you want but do not own. Outside the collection, so the API is asked for the wishes only.
 // The list itself is not awaited: see cards/page.tsx.
 export default async function WishlistPage({ searchParams }: { searchParams: Promise<ListSearchParams> }) {
-    const query = readListQuery(await searchParams);
+    const params = await searchParams;
+    // A bare address opens the list as it was left (list-memory-server.ts).
+    await openAsLeft("/dashboard/wishlist", params);
+    const query = readListQuery(params);
     const { q, sort, order, set, rarity, fullArt, gen, type, condition, finish, language } = query;
     const filter: CardFilter = {
         wishlist: true,

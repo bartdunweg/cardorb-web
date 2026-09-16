@@ -4,6 +4,7 @@ import { FolderPage } from "@/components/app/folder-page";
 import { LinkButton } from "@/components/app/link-button";
 import { ListSettingsDialog } from "@/components/app/list-settings-dialog";
 import { type CardFilter, getMyCards } from "@/lib/cards";
+import { openAsLeft } from "@/lib/list-memory-server";
 import { type ListSearchParams, changeWindow, isNarrowed, readListQuery } from "@/lib/list-query";
 import { getMyProfile } from "@/lib/profile";
 
@@ -14,7 +15,10 @@ export const metadata: Metadata = { title: "Favorites" };
 // Starred cards you own. A favourite is a flag on a card in the collection (CLAUDE.md), so this asks the
 // API for owned copies only; a wish cannot carry a star here. The list itself is not awaited: see cards/page.tsx.
 export default async function FavoritesPage({ searchParams }: { searchParams: Promise<ListSearchParams> }) {
-    const query = readListQuery(await searchParams);
+    const params = await searchParams;
+    // A bare address opens the list as it was left (list-memory-server.ts).
+    await openAsLeft("/dashboard/favorites", params);
+    const query = readListQuery(params);
     const { q, sort, order, set, rarity, fullArt, gen, type, condition, finish, language, duplicates } = query;
     const filter: CardFilter = {
         favoritesOnly: true,
