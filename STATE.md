@@ -25,6 +25,15 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-16, the filters looked over.** Bart asked for the filtering to be analysed and
+improved. The sheet itself stands: facets over the whole collection, a number on every option
+under the other filters as chosen, a chosen value the list no longer holds still there to take
+off. Two things were wrong. `?unpriced=1` was a filter nobody could set or clear: the button went
+in #163 ("Without a price is no filter") but the URL still read it, the four list pages applied
+it and no chip showed it. It is gone, with the API's `priced` parameter the web sent for it and
+`activeFilterCount`, which only its test called. The other, a set page that forgets its search,
+tab, rarity, full art and sort on a refresh, is its own PR.
+
 **2026-09-15, a promo's rarity is Promo.** Bart: Pikachu with Grey Felt Hat (SVP 085) had no
 rarity and Venusaur (Wizards promo 13) said Common. A promo carries a black star where other cards
 carry a rarity symbol, so no source says more: TCGdex fills "Common" for every Wizards, Nintendo
