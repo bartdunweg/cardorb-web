@@ -28,11 +28,15 @@ select json_build_object(
 ) as fixture")"
 
 # The CLI wraps the row in {boundary, rows: [{fixture: {...}}], warning}; unwrap it and drop the
-# generated "search" column from each card (inserting it fails: it is not a real column).
+# generated "search" and "number_order" columns from each card (inserting either fails: neither
+# is a real column, both are `generated always as (...) stored`).
 CARDS_ONLY="$(node -e '
 const raw = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const fixture = raw.rows[0].fixture;
-for (const c of fixture.cards ?? []) delete c.search;
+for (const c of fixture.cards ?? []) {
+    delete c.search;
+    delete c.number_order;
+}
 process.stdout.write(JSON.stringify(fixture));
 ' <<<"$CARDS_JSON")"
 
