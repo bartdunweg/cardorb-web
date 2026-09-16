@@ -259,30 +259,41 @@ export function CardDetailSlideout({
                 notify.failed(`That card was not added to ${where}`, { description: res.error });
                 return;
             }
-            if (onTaken) {
-                onTaken(taken, list, res.id);
-                void forgetMineQuietly();
-            } else router.refresh();
+            // The write forgot nothing (reread: false), so a refresh on its own drew the sidebar's
+            // counts from the cache as they were before the add.
+            const forgotten = forgetMineQuietly();
+            if (onTaken) onTaken(taken, list, res.id);
+            else void forgotten.then(() => router.refresh());
         });
     };
     /* A card you hold, into the binder this page is: the first row not yet in a binder, else the
        row shown, which then moves. A row is one kind of copy, so ×4 goes as four, as the Binder
        select on a copy does it. Only a row the store has answered with: a sheet opened from the
        palette shows the catalogue's card until its rows land, and that card's id is no row's. */
-    const fileInBinder = async () => {
+    /* Filed on the press: the row says the binder at once, so the button and the chip under "In
+       binders" trade places under the finger, and the write follows. It used to hold every button
+       in the sheet through the write and the list behind drawn inside the action's answer. A write
+       that fails puts the rows back and says so. */
+    const fileInBinder = () => {
         if (!mine || !binder || !copies?.length) return;
+        const into = binder;
+        const before = copies;
         const row = copies.find((r) => r.collection_id === null) ?? copies[0];
         pressed.current += 1;
-        setBusy(true);
-        const res = await editCopies([row.id], { collectionId: binder.id });
-        setBusy(false);
-        if (!res.ok) {
-            notify.failed(`${mine.name} was not added to ${binder.name}`, { description: res.error });
-            return;
-        }
-        notify.done(`Added to ${binder.name}`, { description: row.collection_id ? "Moved from another binder" : mine.name });
-        scheduleRefresh();
-        void reloadCopies();
+        setCopiesState({ of: copiesKey(mine), rows: copies.map((r) => (r.id === row.id ? { ...r, collection_id: into.id } : r)) });
+        notify.done(`Added to ${into.name}`, { description: row.collection_id ? "Moved from another binder" : mine.name });
+        void editCopies([row.id], { collectionId: into.id }, { reread: false }).then((res) => {
+            if (!res.ok) {
+                pressed.current += 1;
+                setCopiesState({ of: copiesKey(mine), rows: before });
+                notify.failed(`${mine.name} was not added to ${into.name}`, { description: res.error });
+                return;
+            }
+            void forgetMineQuietly().then(() => {
+                scheduleRefresh();
+                void reloadCopies();
+            });
+        });
     };
     const [facets, setFacets] = useState<Facets | undefined>(undefined);
     /*
@@ -304,12 +315,16 @@ export function CardDetailSlideout({
         const next = !isStarred;
         const tap = ++starTaps.current;
         setStarred({ id, on: next });
-        const write = starWrites.current.then(() => setFavorite(id, next));
+        // Written without the re-read (the page drawn inside each answer held the next tap's write
+        // in Next's action queue), and the cache dropped once the last tap has landed, either way:
+        // the taps before it may have written.
+        const write = starWrites.current.then(() => setFavorite(id, next, { reread: false }));
         starWrites.current = write.catch(() => undefined);
         void write.then(
             (res) => {
                 if (tap !== starTaps.current) return;
-                if (res.ok) scheduleRefresh();
+                const forgotten = forgetMineQuietly();
+                if (res.ok) void forgotten.then(scheduleRefresh);
                 else {
                     setStarred({ id, on: !next });
                     notify.failed(next ? "That card is not a Favorite" : "That card is still a Favorite", { description: res.error });
@@ -317,6 +332,7 @@ export function CardDetailSlideout({
             },
             () => {
                 if (tap !== starTaps.current) return;
+                void forgetMineQuietly();
                 setStarred({ id, on: !next });
                 notify.failed(next ? "That card is not a Favorite" : "That card is still a Favorite");
             },
@@ -577,8 +593,8 @@ export function CardDetailSlideout({
                 router.refresh();
                 return;
             }
-            if (onRemoved) void forgetMineQuietly();
-            else router.refresh();
+            const forgotten = forgetMineQuietly();
+            if (!onRemoved) void forgotten.then(() => router.refresh());
             offerUndo(res.card ? [res.card] : [], wishlist ? "Removed from your wishlist" : "Removed from your collection");
         });
     };
@@ -993,7 +1009,7 @@ export function CardDetailSlideout({
                                             it yet: the offer this page is for. The chip under "In binders" and this
                                             button trade places once it lands. */}
                     {binder && mine?.owned && !emptied && !!copies?.length && !copies.some((r) => r.collection_id === binder.id) ? (
-                        <Button size="md" iconLeading={Plus} className="w-full" isDisabled={busy} onClick={() => void fileInBinder()}>
+                        <Button size="md" iconLeading={Plus} className="w-full" isDisabled={busy} onClick={fileInBinder}>
                             Add to {binder.name}
                         </Button>
                     ) : null}

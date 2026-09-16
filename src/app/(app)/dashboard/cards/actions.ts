@@ -364,7 +364,8 @@ export async function markOwned(cardId: string): Promise<Result> {
 }
 
 // A star on a card you own. The API keeps the flag; the favorites list and the card sheet read it.
-export async function setFavorite(cardId: string, isFavorite: boolean): Promise<Result> {
+// `reread: false` as on setCopies: the sheet's star drops the cache itself, once the taps have landed.
+export async function setFavorite(cardId: string, isFavorite: boolean, { reread = true }: { reread?: boolean } = {}): Promise<Result> {
     const parsed = z.object({ cardId: z.string().uuid(), isFavorite: z.boolean() }).safeParse({ cardId, isFavorite });
     if (!parsed.success) return { ok: false, error: "Invalid card." };
 
@@ -374,7 +375,7 @@ export async function setFavorite(cardId: string, isFavorite: boolean): Promise<
         return failed(err);
     }
 
-    await forgetMine();
+    if (reread) await forgetMine();
     return { ok: true };
 }
 
@@ -490,7 +491,14 @@ export async function listSetRows(set: string): Promise<Card[] | null> {
 const copyBody = z.object({ cardId: z.string().uuid(), count: z.number().int().min(1).max(999), edits: copyEdits });
 
 // One more copy of a row, as a row of its own, with these differences (none is one more of the same).
-export async function addCopy(cardId: string, edits: CopyEdits, count = 1): Promise<Result | { ok: true; id: string }> {
+// `reread: false` on this and the three below as on setCopies: the dialog that sent it drops the
+// cache itself and refreshes once, rather than waiting for a redraw inside this answer.
+export async function addCopy(
+    cardId: string,
+    edits: CopyEdits,
+    count = 1,
+    { reread = true }: { reread?: boolean } = {},
+): Promise<Result | { ok: true; id: string }> {
     const parsed = copyBody.safeParse({ cardId, count, edits });
     if (!parsed.success) return { ok: false, error: "Invalid input." };
     let id: string | undefined;
@@ -505,14 +513,15 @@ export async function addCopy(cardId: string, edits: CopyEdits, count = 1): Prom
         return failed(err);
     } finally {
         // The row is inserted before the answer is parsed, so an answer this app cannot read
-        // (ApiShapeError) is still a copy that exists. The cache goes whatever the POST returned.
-        await forgetMine();
+        // (ApiShapeError) is still a copy that exists. The cache goes whatever the POST returned,
+        // here or, without the reread, by the caller on either answer.
+        if (reread) await forgetMine();
     }
     return id ? { ok: true, id } : { ok: true };
 }
 
 // Some of a row's copies as a row of their own: the row loses `count`, the copy keeps the row's acquired date.
-export async function splitCopy(cardId: string, edits: CopyEdits, count = 1): Promise<Result> {
+export async function splitCopy(cardId: string, edits: CopyEdits, count = 1, { reread = true }: { reread?: boolean } = {}): Promise<Result> {
     const parsed = copyBody.safeParse({ cardId, count, edits });
     if (!parsed.success || Object.keys(parsed.data.edits).length === 0) return { ok: false, error: "Invalid input." };
     try {
@@ -520,7 +529,7 @@ export async function splitCopy(cardId: string, edits: CopyEdits, count = 1): Pr
     } catch (err) {
         return failed(err);
     }
-    await forgetMine();
+    if (reread) await forgetMine();
     return { ok: true };
 }
 
@@ -642,7 +651,7 @@ export async function cardFactsMany(tcgIds: string[], language?: string | null):
 // Every row of the kind in one call: four identical copies are four rows in the store, and
 // "these are Near Mint" said row by row was four round trips through Next's one-at-a-time
 // action queue. The API takes the ids beside the fields and changes them in one statement.
-export async function editCopies(cardIds: string[], edits: CopyEdits): Promise<Result> {
+export async function editCopies(cardIds: string[], edits: CopyEdits, { reread = true }: { reread?: boolean } = {}): Promise<Result> {
     const parsed = z.object({ cardIds: z.array(z.string().uuid()).min(1).max(100), edits: copyEdits }).safeParse({ cardIds: [...new Set(cardIds)], edits });
     if (!parsed.success || Object.keys(parsed.data.edits).length === 0) return { ok: false, error: "Invalid input." };
     try {
@@ -650,13 +659,13 @@ export async function editCopies(cardIds: string[], edits: CopyEdits): Promise<R
     } catch (err) {
         return failed(err);
     }
-    await forgetMine();
+    if (reread) await forgetMine();
     return { ok: true };
 }
 
 // A wish becomes a copy you hold, with what is known about it at once: language, condition or
 // grade, finish, folder, purchase price and the day you got it (today unless said). One PATCH.
-export async function markOwnedWith(cardId: string, edits: CopyEdits): Promise<Result> {
+export async function markOwnedWith(cardId: string, edits: CopyEdits, { reread = true }: { reread?: boolean } = {}): Promise<Result> {
     const parsed = z.object({ cardId: z.string().uuid(), edits: copyEdits }).safeParse({ cardId, edits });
     if (!parsed.success) return { ok: false, error: "Invalid input." };
     try {
@@ -667,6 +676,6 @@ export async function markOwnedWith(cardId: string, edits: CopyEdits): Promise<R
     } catch (err) {
         return failed(err);
     }
-    await forgetMine();
+    if (reread) await forgetMine();
     return { ok: true };
 }

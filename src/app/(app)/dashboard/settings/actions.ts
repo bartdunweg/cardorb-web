@@ -180,7 +180,9 @@ export async function updateEmail(email: string): Promise<ActionResult> {
 const listSchema = z.object({ list: z.enum(["wishlist", "favorites"]), shown: z.boolean() });
 const FLAG = { wishlist: "wishlistPublic", favorites: "favoritesPublic" } as const;
 
-export async function updateListPublic(input: unknown): Promise<ActionResult> {
+// `reread: false` on this and the two flags below: the caller drops the cache itself and refreshes
+// once, rather than waiting for the page to be drawn again inside this answer.
+export async function updateListPublic(input: unknown, { reread = true }: { reread?: boolean } = {}): Promise<ActionResult> {
     const parsed = listSchema.safeParse(input);
     if (!parsed.success) return { ok: false, error: "Something went wrong. Try again." };
     try {
@@ -188,22 +190,22 @@ export async function updateListPublic(input: unknown): Promise<ActionResult> {
     } catch (err) {
         return failed(err);
     }
-    await forgetMine();
+    if (reread) await forgetMine();
     return { ok: true };
 }
 
 // The public flag on its own, from the row on the settings page: one PATCH, nothing else touched.
 // The Manage sheet still sends it with the name and the username; this is the fast road.
-export async function setProfilePublic(isPublic: boolean): Promise<ActionResult> {
-    return setProfileFlag("isPublic", isPublic);
+export async function setProfilePublic(isPublic: boolean, options: { reread?: boolean } = {}): Promise<ActionResult> {
+    return setProfileFlag("isPublic", isPublic, options);
 }
 
 // Whether the public page prices what it shows, from the row under Public profile: the same one PATCH.
-export async function setPricesPublic(pricesPublic: boolean): Promise<ActionResult> {
-    return setProfileFlag("pricesPublic", pricesPublic);
+export async function setPricesPublic(pricesPublic: boolean, options: { reread?: boolean } = {}): Promise<ActionResult> {
+    return setProfileFlag("pricesPublic", pricesPublic, options);
 }
 
-async function setProfileFlag(flag: "isPublic" | "pricesPublic", value: boolean): Promise<ActionResult> {
+async function setProfileFlag(flag: "isPublic" | "pricesPublic", value: boolean, { reread = true }: { reread?: boolean }): Promise<ActionResult> {
     const parsed = z.boolean().safeParse(value);
     if (!parsed.success) return { ok: false, error: "Something went wrong. Try again." };
     try {
@@ -211,6 +213,6 @@ async function setProfileFlag(flag: "isPublic" | "pricesPublic", value: boolean)
     } catch (err) {
         return failed(err);
     }
-    await forgetMine();
+    if (reread) await forgetMine();
     return { ok: true };
 }
