@@ -417,6 +417,10 @@ export type PublicCard = Pick<
     | "types"
     | "quantity"
     | "finish"
+    | "foil_pattern"
+    | "edition"
+    | "condition"
+    | "grade"
     | "image_url"
     | "image_high_url"
     | "tcg_id"
@@ -426,6 +430,19 @@ export type PublicCard = Pick<
 >;
 
 /** One card on a public profile with how many copies the owner holds. Nothing private (R-API-002 there). */
+/**
+ * Which printing a card's copies are and what state they are in, folded over them by the API: the
+ * one answer every copy gives, null where they differ (cardorb-api#516 `agreedOn`). On a mover and
+ * a public card, which are cards rather than copies; absent from an API before it said.
+ */
+const foldedCopyState = {
+    finish: nullable(z.string()).optional(),
+    foilPattern: nullable(z.string()).optional(),
+    edition: nullable(z.string()).optional(),
+    condition: nullable(z.string()).optional(),
+    grade: nullable(z.string()).optional(),
+};
+
 export const publicItemSchema = z.object({
     key: z.string(),
     name: z.string(),
@@ -450,6 +467,7 @@ export const publicItemSchema = z.object({
     favorite: z.boolean().nullish(),
     /** One of the owned copies leads its Pokédex slot; absent from an API before it said so. */
     dexFace: z.boolean().nullish(),
+    ...foldedCopyState,
 });
 export type PublicItem = z.infer<typeof publicItemSchema>;
 
@@ -466,7 +484,12 @@ export const publicCardFromItem = (item: PublicItem): PublicCard => ({
     gen: item.gen,
     types: item.type ? [item.type] : null,
     quantity: item.copies,
-    finish: null,
+    // The printing and state every copy shares, for the line under the name; null where they differ.
+    finish: item.finish ?? null,
+    foil_pattern: item.foilPattern ?? null,
+    edition: item.edition ?? null,
+    condition: item.condition ?? null,
+    grade: item.grade ?? null,
     image_url: ownImage(item.image),
     image_high_url: ownImage(item.imageHigh ?? null),
     tcg_id: item.tcgId,
@@ -974,6 +997,7 @@ const moverSchema = z.object({
     /** The rarity of the printing held; absent from an API before it sent one. */
     rarity: nullable(z.string()).optional(),
     image: nullable(z.string()),
+    ...foldedCopyState,
     copies: z.number(),
     was: z.number(),
     now: z.number(),

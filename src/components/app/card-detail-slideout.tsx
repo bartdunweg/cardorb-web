@@ -44,7 +44,7 @@ import { Tooltip } from "@/components/base/tooltip/tooltip";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
 import { type Finish, type PokemonCard, type RemovedCard, isReverseFinish } from "@/lib/api-shapes";
 import { binderFromPath, isBinderPath } from "@/lib/binder-from-path";
-import { cardLabelFull } from "@/lib/card-label";
+import { cardLabelFull, copyLine } from "@/lib/card-label";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
 import { type CopyGroup, groupCopies, sortCopies } from "@/lib/copies";
 import { matchesRule } from "@/lib/folder-rule";
@@ -874,7 +874,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                         }
                     />
                     {readOnly ? <DetailRow label="Quantity" value={card?.quantity ?? 1} /> : null}
-                    {readOnly ? <DetailRow label="Finish" value={card?.finish} /> : null}
+                    {/* A visitor's sheet: the printing and state the tile's second line said, in the same words
+                        (copyLine), where every copy the owner holds agrees. It showed the raw finish key. */}
+                    {readOnly ? <DetailRow label="Printing and condition" value={card ? copyLine(card) : null} /> : null}
                 </dl>
 
                 {mine?.notes ? (
@@ -911,6 +913,21 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                     sheet instead, under the thumb; see `offer`. */}
                             {sm ? offer : null}
                         </div>
+                    ) : null}
+                    {/* On a wish, what you are looking for: the printing and the state you want it in, the
+                        same questions a copy answers and saved the same way, so the wishlist's tile reads
+                        "Holo · Near Mint" as a held one does (Bart, 2026-09-16). Marking it owned starts
+                        from these. */}
+                    {mine?.wishlist && !mine.owned && !emptied && !rowPending ? (
+                        <CopyCard
+                            wish
+                            group={groupCopies([mine])[0]!}
+                            folders={collections}
+                            facts={formFacts}
+                            busy={busy}
+                            onSaved={() => scheduleRefresh()}
+                            refreshFolders={async () => collections}
+                        />
                     ) : null}
                     {/* One card per kind of copy you hold (Holo · Near Mint, ×4) with every field the
                                             add form asks, in its order and shape. Rows are one per purchase and nothing
