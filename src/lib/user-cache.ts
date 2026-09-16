@@ -24,6 +24,18 @@ import { elapsed, logTiming } from "@/lib/timing";
 
 const FIVE_MINUTES = 300;
 
+/**
+ * Which five minutes it is, as a key part.
+ *
+ * The Data Cache does not stop at `revalidate`: an entry past its five minutes is answered as it
+ * stands and refreshed behind the reader. So the first open after a quiet spell (every morning,
+ * for a person who looks once a day) showed the numbers from before the night's prices, and a
+ * refresh showed today's; the lists read the same way (2026-09-16). An entry keyed by its window
+ * is never asked for once the window is over: the next read is a miss, and a miss is the call.
+ * The TTL stays as the entry's own life, so a window's entry is gone rather than kept for ever.
+ */
+const fiveMinuteWindow = () => String(Math.floor(Date.now() / (FIVE_MINUTES * 1000)));
+
 export const userTag = (userId: string) => `user:${userId}`;
 
 /**
@@ -71,7 +83,7 @@ async function perUserUncached<T>(name: string, load: (token: string) => Promise
                 ran = true;
                 return load(s.token);
             },
-            [name, s.userId],
+            [name, s.userId, fiveMinuteWindow()],
             { revalidate: FIVE_MINUTES, tags: [userTag(s.userId)] },
         )();
     } finally {
