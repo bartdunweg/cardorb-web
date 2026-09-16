@@ -28,16 +28,19 @@ test("two quick presses on plus make two copies, not one and not three", async (
     if (!box) throw new Error("plus button has no box");
     const x = box.x + box.width / 2;
     const y = box.y + box.height / 2;
-    await page.mouse.click(x, y);
-    await page.mouse.click(x, y);
-
-    await expect(setTile(page, c, "2 copies")).toBeVisible();
     // The tile shows the count under the finger and the store follows behind, one write at a
     // time, with a toast on the first copy only (use-copy-steps.ts): a second press that only
     // changes the quantity says nothing back. A reload right after the press can land before the
     // two chained writes (add, then the count) have reached the server, and read one copy back
-    // instead of two. Wait for the writes to go quiet before trusting a fresh read.
-    await page.waitForLoadState("networkidle");
+    // instead of two. `forgetMineQuietly` (/api/forget-mine) is awaited only once both writes have
+    // landed, so its own response is the signal a fresh read can trust. (Not networkidle: Speed
+    // Insights keeps its own traffic going, so the network here is never truly idle.)
+    const settled = page.waitForResponse((r) => r.request().method() === "POST" && r.url().includes("/api/forget-mine"));
+    await page.mouse.click(x, y);
+    await page.mouse.click(x, y);
+
+    await expect(setTile(page, c, "2 copies")).toBeVisible();
+    await settled;
     await page.reload();
     await expect(setTile(page, c, "2 copies")).toBeVisible();
 
@@ -76,7 +79,7 @@ test("the star and the Favorites list agree, on and off", async ({ page }) => {
     // landed (card-detail-slideout.tsx: "no spinner, because a favourite is a mark and not a task
     // to wait for"). A page read right after the click can only be trusted once that write's own
     // response is back, or it reads the server as it was before the press.
-    const starWrite = page.waitForResponse((r) => r.request().method() === "POST");
+    const starWrite = page.waitForResponse((r) => r.request().method() === "POST" && !r.url().includes("/_vercel/"));
     await star.click();
     await expect(star).toHaveAttribute("aria-pressed", "true");
     await starWrite;
@@ -87,7 +90,7 @@ test("the star and the Favorites list agree, on and off", async ({ page }) => {
     await collectionTile(page, c).click();
     const again = page.getByRole("dialog", { name: c.name }).getByRole("button", { name: "Favorite" });
     await expect(again).toHaveAttribute("aria-pressed", "true");
-    const unstarWrite = page.waitForResponse((r) => r.request().method() === "POST");
+    const unstarWrite = page.waitForResponse((r) => r.request().method() === "POST" && !r.url().includes("/_vercel/"));
     await again.click();
     await expect(again).toHaveAttribute("aria-pressed", "false");
     await unstarWrite;
