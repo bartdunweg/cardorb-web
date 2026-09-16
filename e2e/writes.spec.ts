@@ -32,6 +32,12 @@ test("two quick presses on plus make two copies, not one and not three", async (
     await page.mouse.click(x, y);
 
     await expect(setTile(page, c, "2 copies")).toBeVisible();
+    // The tile shows the count under the finger and the store follows behind, one write at a
+    // time, with a toast on the first copy only (use-copy-steps.ts): a second press that only
+    // changes the quantity says nothing back. A reload right after the press can land before the
+    // two chained writes (add, then the count) have reached the server, and read one copy back
+    // instead of two. Wait for the writes to go quiet before trusting a fresh read.
+    await page.waitForLoadState("networkidle");
     await page.reload();
     await expect(setTile(page, c, "2 copies")).toBeVisible();
 
