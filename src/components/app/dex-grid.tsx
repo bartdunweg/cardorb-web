@@ -135,7 +135,13 @@ function DexTile({ slot, onSelect, remembers }: { slot: NamedDexSlot; onSelect?:
     const held = slot.cards.length;
     // The card in view. It starts on the slot's first card, which is the one its owner chose
     // (groupByDex hands the face back first), and follows the slider from there.
-    const [shown, setShown] = useState<DexCard | null>(slot.cards[0] ?? null);
+    /* By id, looked up in the slot as it is now: a card removed in the sheet redraws the slot, and a
+       card kept whole in state still named the removed one's set and price under the next picture. */
+    const [shownId, setShownId] = useState<string | null>(slot.cards[0]?.id ?? null);
+    const shown = slot.cards.find((c) => c.id === shownId) ?? slot.cards[0] ?? null;
+    /* The face as this tile last wrote it. The slot's isFace flags are the page's reading, which a
+       swipe never refreshes: comparing with those left two faces after a second swipe. */
+    const face = useRef<string | null>(slot.cards.find((c) => c.isFace)?.id ?? null);
 
     // Above the picture: the Pokémon. Its name, then its number and how many cards of it you hold.
     // Two lines rather than one: at seven columns a tile is ninety pixels wide, and a name sharing a
@@ -204,14 +210,16 @@ function DexTile({ slot, onSelect, remembers }: { slot: NamedDexSlot; onSelect?:
                     <DexSlider
                         cards={slot.cards}
                         onSelect={onSelect}
-                        onShow={setShown}
+                        onShow={(card) => setShownId(card.id)}
                         // Where a swipe stops is the slot's card. Nothing is written for the card that is
                         // already the face, and nothing at all on somebody else's profile.
                         onSettle={
                             remembers
                                 ? (card) => {
-                                      if (card.isFace) return;
-                                      void setDexFace(card.id, slot.cards.find((c) => c.isFace)?.id ?? null);
+                                      if (face.current === card.id) return;
+                                      const previous = face.current;
+                                      face.current = card.id;
+                                      void setDexFace(card.id, previous);
                                   }
                                 : undefined
                         }

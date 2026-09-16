@@ -36,7 +36,8 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
         finish,
         language,
     };
-    const narrowed = isNarrowed(query);
+    // Duplicates is not a wishlist filter: an address carrying it narrows nothing here.
+    const narrowed = isNarrowed({ ...query, duplicates: false });
     const list = getMyCards(filter);
     const datapoints = list.then((r) => ({ total: r.total, copies: r.copies ?? undefined, narrowed, value: r.value, unpriced: r.unpriced }));
     const { profile } = await getMyProfile();

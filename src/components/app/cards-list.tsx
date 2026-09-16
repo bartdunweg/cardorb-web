@@ -189,18 +189,22 @@ export function CardsList({
                 <>
                     {view === "grid" ? (
                         <div className="flex flex-col gap-8">
-                            {setGroups(cards, groupedBySet).map((group) => (
-                                <section key={group.name} aria-labelledby={group.name ? headingId(group.name) : undefined}>
+                            {setGroups(cards, groupedBySet).map((group, i, groups) => (
+                                /* By place, not name: two sets can share a name (an English and a Japanese one) and
+                                   come apart in the list, which gave two sections one key and one heading id. */
+                                <section key={i} aria-labelledby={group.name ? headingId(group.name, i) : undefined}>
                                     {group.name ? (
                                         /* Sticky, so the set a tile belongs to is still readable halfway down a
                                            long one. `top-0` against the page's own scroll: this list has no
                                            scroller of its own, and `bg-page` because the band passes over the
                                            page's ground, which is the neutral tint and not white. */
-                                        <h2 id={headingId(group.name)} className="sticky top-0 z-10 mb-3 bg-page py-2 text-sm font-semibold text-primary">
-                                            {group.name}{" "}
-                                            <span className="font-normal text-tertiary">
-                                                {group.cards.length} {group.cards.length === 1 ? "card" : "cards"}
-                                            </span>
+                                        <h2 id={headingId(group.name, i)} className="sticky top-0 z-10 mb-3 bg-page py-2 text-sm font-semibold text-primary">
+                                            {group.name} {/* The last set drawn may go on in the next batch: its count waits until it is whole. */}
+                                            {more && i === groups.length - 1 ? null : (
+                                                <span className="font-normal text-tertiary">
+                                                    {group.cards.length} {group.cards.length === 1 ? "card" : "cards"}
+                                                </span>
+                                            )}
                                         </h2>
                                     ) : null}
                                     <CardsGrid
@@ -275,4 +279,4 @@ export function setGroups(cards: Card[], grouped: boolean): { name: string | nul
 }
 
 /** A heading's id, for the section that names it: one per set name, stable across renders. */
-const headingId = (setName: string): string => `set-${setName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+const headingId = (setName: string, at: number): string => `set-${at}-${setName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;

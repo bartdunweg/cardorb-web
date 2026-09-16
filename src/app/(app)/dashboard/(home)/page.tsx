@@ -53,8 +53,10 @@ export default function DashboardPage({ searchParams }: { searchParams: Promise<
 // Everything on Home that needs a number: the value with its line, the counts, and the top cards.
 async function HomeBody({ searchParams }: { searchParams: Promise<{ value?: string }> }) {
     const { value } = await searchParams;
-    const selected = value === "favorites" || value === "wishlist" || (value && UUID.test(value)) ? value : "all";
-    const stats = await getCardStats();
+    const asked = value === "favorites" || value === "wishlist" || (value && UUID.test(value)) ? value : "all";
+    const [stats, folders] = await Promise.all([getCardStats(), asked !== "all" && UUID.test(asked) ? getMyFolders() : null]);
+    // A binder deleted since the address was kept is the collection, movers and line included.
+    const selected = folders && !folders.some((f) => f.id === asked) ? "all" : asked;
     // Nothing held: the first visits after signing up. A value of €0 with an empty chart and four
     // zeros said the account was empty and not what to do about it, and one wished-for card is
     // still that: the value, the chart and the tiles all count owned cards only.
@@ -83,7 +85,8 @@ async function HomeBody({ searchParams }: { searchParams: Promise<{ value?: stri
                     </Suspense>
                     {/* Over the chart's period. The collection's alone: the movers are read over every card held,
                         so under a binder's line they would answer another question. */}
-                    {selected === "all" ? <Movers /> : null}
+                    {/* Keyed on what you hold: a write redraws Home, and the answers kept per period were read before it. */}
+                    {selected === "all" ? <Movers key={`${stats.owned}:${stats.value}`} /> : null}
                 </HomePeriodProvider>
             )}
         </>

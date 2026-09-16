@@ -160,7 +160,8 @@ export function SettingsForm({
             return;
         }
 
-        const res = await uploadAvatar(image);
+        // A call that never answers (no signal, a deploy in between) must not leave the button spinning.
+        const res = await uploadAvatar(image).catch(() => ({ ok: false as const, error: "Something went wrong. Try again." }));
         setUploading(false);
         if (res.ok) {
             setAvatarUrl(res.avatarUrl ?? "");
@@ -173,7 +174,7 @@ export function SettingsForm({
     const onRemoveAvatar = async () => {
         setUploading(true);
         setProfileMsg(null);
-        const res = await removeAvatar();
+        const res = await removeAvatar().catch(() => ({ ok: false as const, error: "Something went wrong. Try again." }));
         setUploading(false);
         if (res.ok) {
             setAvatarUrl("");
@@ -197,13 +198,20 @@ export function SettingsForm({
     const saveProfile = async (publicDraft: boolean) => {
         setSavingProfile(true);
         setProfileMsg(null);
-        const res = await updateProfile({ display_name: displayName, username, is_public: publicDraft, wishlist_public: profile.wishlist_public });
+        const res = await updateProfile({ display_name: displayName, username, is_public: publicDraft }).catch(() => ({
+            ok: false as const,
+            error: "Something went wrong. Try again.",
+        }));
         // The page's row follows the server, not the sheet's toggle: what was saved is public.
-        if (res.ok) setIsPublic(publicDraft);
+        if (res.ok) {
+            setIsPublic(publicDraft);
+            // The name as it was saved: the API keeps it lowercase.
+            setUsername(username.trim().toLowerCase());
+        }
         // The address goes to Supabase, not the API, and lands only once the mail it sends is answered.
         const newEmail = emailValue.trim().toLowerCase();
         const changed = newEmail !== (email ?? "").toLowerCase();
-        const mail = res.ok && changed ? await updateEmail(newEmail) : null;
+        const mail = res.ok && changed ? await updateEmail(newEmail).catch(() => ({ ok: false as const, error: "Something went wrong. Try again." })) : null;
         setSavingProfile(false);
         if (!res.ok) setProfileMsg({ type: "err", text: res.error });
         else if (mail && !mail.ok) setProfileMsg({ type: "err", text: mail.error });
