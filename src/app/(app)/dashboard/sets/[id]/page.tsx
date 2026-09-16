@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { PageHeader } from "@/components/app/page-header";
@@ -8,9 +7,9 @@ import { SetCards } from "@/components/app/set-cards";
 import { SetHero } from "@/components/app/set-hero";
 import { SetStats } from "@/components/app/set-stats";
 import { SetSkeleton } from "@/components/app/skeletons";
-import { CARDS_SIZE_COOKIE, parseCardsSize } from "@/lib/cards-view";
 import { formatCount } from "@/lib/format";
 import { isBrowseLanguage } from "@/lib/languages";
+import { rememberedView } from "@/lib/list-memory-server";
 import { logoPalette } from "@/lib/logo-color";
 import { setStats } from "@/lib/set-stats";
 import { CatalogueUnavailable, getSet, getSets } from "@/lib/sets";
@@ -118,7 +117,8 @@ async function Set({ params, searchParams }: { params: Promise<{ id: string }>; 
                     }
                 />
             ) : (
-                <SetCards cards={set.cards} language={language} initialSize={parseCardsSize((await cookies()).get(CARDS_SIZE_COOKIE)?.value)} />
+                /* The size as the set pages were left: one memory for all of them (list-memory.ts). */
+                <SetCards cards={set.cards} language={language} initialSize={(await rememberedView(`/dashboard/sets/${id}`)).size} />
             )}
         </div>
     );

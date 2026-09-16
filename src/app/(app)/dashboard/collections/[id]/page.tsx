@@ -13,6 +13,7 @@ import { type CardFilter, getAllMyCards, getFacets, getMyCards } from "@/lib/car
 import { getCollection } from "@/lib/collections";
 import { type DexList, groupByDex } from "@/lib/dex-groups";
 import { ruleChips } from "@/lib/folder-rule";
+import { openAsLeft } from "@/lib/list-memory-server";
 import { type ListSearchParams, changeWindow, isNarrowed, readListQuery } from "@/lib/list-query";
 import { getDexNames } from "@/lib/pokedex";
 
@@ -40,7 +41,10 @@ async function Binder({ params, searchParams }: { params: Promise<{ id: string }
     const [collection, facets] = await Promise.all([getCollection(id), getFacets()]);
     if (!collection) notFound();
 
-    const query = readListQuery(await searchParams);
+    const asked = await searchParams;
+    // A bare address opens the binder as it was left (list-memory-server.ts).
+    await openAsLeft(`/dashboard/collections/${id}`, asked);
+    const query = readListQuery(asked);
     const { q, sort, order, set, rarity, fullArt, gen, type, condition, finish, language, duplicates } = query;
     const filter: CardFilter = {
         collectionId: id,

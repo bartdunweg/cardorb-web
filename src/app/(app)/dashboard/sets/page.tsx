@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/app/page-header";
 import { SetsShelf } from "@/components/app/sets-shelf";
 import { SetsOutline } from "@/components/app/skeletons";
 import { type BrowseQuery, type BrowseSearchParams, progressShelf, readBrowseQuery, searchShelf, sortShelf } from "@/lib/browse-query";
+import { openAsLeft } from "@/lib/list-memory-server";
 import { CatalogueUnavailable, getSets } from "@/lib/sets";
 import { SETS_VIEW_COOKIE, type SetsViewMode, parseSetsView } from "@/lib/sets-view";
 
@@ -16,7 +17,10 @@ export const metadata: Metadata = { title: "Browse" };
 
 export default async function SetsPage({ searchParams }: { searchParams: Promise<BrowseSearchParams> }) {
     // Which catalogue and in what order, from the URL; tiles or rows, from the cookie the View menu writes.
-    const query = readBrowseQuery(await searchParams);
+    const params = await searchParams;
+    // A bare address opens the shelf as it was left (list-memory-server.ts).
+    await openAsLeft("/dashboard/sets", params);
+    const query = readBrowseQuery(params);
     const view = parseSetsView((await cookies()).get(SETS_VIEW_COOKIE)?.value);
     return (
         <div className="flex flex-1 flex-col gap-6">

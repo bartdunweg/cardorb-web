@@ -3,6 +3,7 @@ import { AddCardButton } from "@/components/app/add-card-button";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { FolderPage } from "@/components/app/folder-page";
 import { type CardFilter, getMyCards } from "@/lib/cards";
+import { openAsLeft } from "@/lib/list-memory-server";
 import { type ListSearchParams, changeWindow, isNarrowed, readListQuery } from "@/lib/list-query";
 
 // The tab's name, which the root layout's template finishes as “… · Cardorb”: without it every
@@ -15,7 +16,10 @@ export const metadata: Metadata = { title: "Collection" };
 // the first batch of cards, with the count and value under the title, follows when the API
 // answers. The facets for the Filters menu are a cached read, five minutes per person.
 export default async function CardsPage({ searchParams }: { searchParams: Promise<ListSearchParams> }) {
-    const query = readListQuery(await searchParams);
+    const params = await searchParams;
+    // A bare address opens the list as it was left (list-memory-server.ts).
+    await openAsLeft("/dashboard/cards", params);
+    const query = readListQuery(params);
     const { q, sort, order, set, rarity, fullArt, gen, type, condition, finish, language, duplicates } = query;
     const filter: CardFilter = {
         q,
