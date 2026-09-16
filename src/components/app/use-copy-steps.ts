@@ -33,6 +33,7 @@ export function useCopySteps({
     add,
     quiet = false,
     onShown,
+    onStored,
 }: {
     /** The card's name, for the toasts. */
     name: string;
@@ -44,6 +45,8 @@ export function useCopySteps({
     quiet?: boolean;
     /** Every change to the count this tile shows, from and to: a list's line under its title follows it. */
     onShown?: (from: number, to: number) => void;
+    /** What the store holds after each write: the count and its row. A set page keeps it for a tile drawn again. */
+    onStored?: (quantity: number, id: string | undefined) => void;
 }) {
     const [pending, startTransition] = useTransition();
     const [error, setError] = useState<string | null>(null);
@@ -122,6 +125,7 @@ export function useCopySteps({
                     }
                     have = have === 0 ? 1 : target;
                     stored.current = { quantity: have, id };
+                    onStored?.(have, id);
                 }
                 // Once, with nothing in the air to race it; a press during the re-read goes round again.
                 await (quiet ? forgetMineQuietly() : rereadMine());
