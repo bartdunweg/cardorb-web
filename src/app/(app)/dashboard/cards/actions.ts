@@ -324,6 +324,9 @@ export async function restoreCard(input: RemovedCard): Promise<Result> {
                 ...(c.gen ? { gen: c.gen } : {}),
                 ...(c.finish ? { finish: c.finish } : {}),
                 ...(c.foilPattern ? { foilPattern: c.foilPattern } : {}),
+                // The run too: "Put back" on a 1st Edition copy came back with no run and no run price.
+                ...(c.edition ? { edition: c.edition } : {}),
+                ...(c.tcgId ? { tcgId: c.tcgId } : {}),
                 ...(c.quantity ? { quantity: c.quantity } : {}),
                 ...(c.condition ? { condition: c.condition } : {}),
                 ...(c.grade ? { grade: c.grade } : {}),
@@ -387,10 +390,12 @@ export async function setDexFace(cardId: string, previousId: string | null): Pro
     if (!parsed.success) return { ok: false, error: "Invalid card." };
 
     try {
-        await api(`/collection/items/${parsed.data.cardId}`, { method: "PATCH", body: { dexFace: true } });
+        // The old face first: two writes, and a failure on the second used to leave two faces.
+        // This way round a failure leaves at most none, which the next press repairs.
         if (parsed.data.previousId && parsed.data.previousId !== parsed.data.cardId) {
             await api(`/collection/items/${parsed.data.previousId}`, { method: "PATCH", body: { dexFace: false } });
         }
+        await api(`/collection/items/${parsed.data.cardId}`, { method: "PATCH", body: { dexFace: true } });
     } catch (err) {
         return failed(err);
     }

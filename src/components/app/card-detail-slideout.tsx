@@ -140,6 +140,11 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     // it so what differs can be set at once.
     /* One copy of several. The sheet stays open on whatever is left, so removing the row you were
        reading moves you to the first one rather than closing the card out from under you. */
+    /* A card the sheet has just emptied stays on screen as a card you could take again, so the
+       last minus is not a door slamming. The set page hands one of these in; everywhere else the
+       card on screen is enough to build it. */
+    const [removed, setRemoved] = useState<string | null>(null);
+    const emptied = !!card && removed === card.id;
     /* A line is a kind of copy, so the bin on it removes every row behind it. Removing one of four
        identical rows would leave a line still saying ×3 and nothing to show for the press. */
     const dropCopies = async (group: Card[]) => {
@@ -168,13 +173,11 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
             results.flatMap((r) => (r.ok && r.card ? [r.card] : [])),
             group.length > 1 ? `${group.length} copies removed` : "Copy removed",
         );
+        // Nothing left: the sheet says so, rather than staying on a row that is gone with "Add a
+        // copy" and the star still writing to it. Only the minus's own path said it before.
+        if (!rows.length && card) setRemoved(card.id);
         scheduleRefresh();
     };
-    /* A card the sheet has just emptied stays on screen as a card you could take again, so the
-       last minus is not a door slamming. The set page hands one of these in; everywhere else the
-       card on screen is enough to build it. */
-    const [removed, setRemoved] = useState<string | null>(null);
-    const emptied = !!card && removed === card.id;
     /* Read-only sheets never take a card, so the public shape is not asked to answer for one. */
     const own = readOnly ? null : (card as Card | null);
     const takeable: PokemonCard | null =
@@ -398,10 +401,16 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                right arrow threw you onto another card instead of reading the next price. */
             if (
                 el?.closest(
-                    "input, textarea, select, [contenteditable='true'], [role='tab'], [role='tablist'], [role='menu'], [role='menuitem'], [role='listbox'], [role='option'], [role='slider'], [tabindex]:not([tabindex='-1']) svg, figure",
+                    // The kit's Select is a button with a listbox behind it, and react-aria moves its
+                    // selection with these keys: one ArrowRight on a copy's Language saved the next
+                    // language to every row of that kind and stepped to the next card in one press.
+                    "input, textarea, select, [aria-haspopup='listbox'], [contenteditable='true'], [role='tab'], [role='tablist'], [role='menu'], [role='menuitem'], [role='listbox'], [role='option'], [role='slider'], [tabindex]:not([tabindex='-1']) svg, figure",
                 )
             )
                 return;
+            // A second dialog over the sheet (Add a copy, Mark as owned, the palette) owns the keys:
+            // stepping the card under an open form wrote the form's values to the next card's id.
+            if (document.querySelectorAll("[role='dialog']").length > 1) return;
             if (e.key === "ArrowLeft") step(-1);
             if (e.key === "ArrowRight") step(1);
         };
@@ -496,9 +505,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         // Any row but the one the sheet opened on, so what it shows stays as long as it can.
         const spare = group.rows.find((r) => r.id !== mine?.id) ?? group.rows[0];
         if (!spare) return;
-        const last = (copies ?? [spare]).length <= 1;
         await dropCopies([spare]);
-        if (last && card) setRemoved(card.id);
     };
 
     const closeSheet = async () => {

@@ -214,6 +214,8 @@ export const removedCardSchema = z.object({
     condition: nullable(z.string()).optional(),
     grade: nullable(z.string()).optional(),
     language: nullable(z.string()).optional(),
+    /** The catalogue id the row was filed under; a Japanese-shelf row goes back by it, not by set name alone. */
+    tcgId: nullable(z.string()).optional(),
     purchasePrice: nullable(z.number()).optional(),
     purchaseDate: nullable(z.string()).optional(),
     notes: nullable(z.string()).optional(),
