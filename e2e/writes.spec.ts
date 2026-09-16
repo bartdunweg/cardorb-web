@@ -48,6 +48,28 @@ test("two quick presses on plus make two copies, not one and not three", async (
     await expect(collectionTile(page, c)).toHaveCount(1);
 });
 
+// set-card-tile.tsx's plus calls addCard with `{ reread: false }` (line 79); use-copy-steps.ts
+// then chains straight into setCopies and only forgets the per-user cache
+// (`forgetMineQuietly`, /api/forget-mine) once both writes have answered, with nothing that
+// blocks a navigation started in between. A reload right after the two presses, with no wait,
+// is a real thing a person does (the double-press itself is not the edge case, the brief's own
+// "two quick presses" test above is for that); this test is for pressing plus twice and reloading
+// at once, the way the fast tap and a slow phone browser's own reload gesture can land.
+test("a reload right after two presses keeps both copies", async ({ page }) => {
+    const c = card(5);
+    await page.goto(setPage);
+    const box = await addButton(page, c).boundingBox();
+    if (!box) throw new Error("plus button has no box");
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height / 2;
+    await page.mouse.click(x, y);
+    await page.mouse.click(x, y);
+
+    await expect(setTile(page, c, "2 copies")).toBeVisible();
+    await page.reload();
+    await expect(setTile(page, c, "2 copies")).toBeVisible();
+});
+
 test("removing a card and putting it back leaves it in the collection everywhere", async ({ page }) => {
     const c = card(2);
     await page.goto(setPage);
@@ -78,8 +100,25 @@ test("the star and the Favorites list agree, on and off", async ({ page }) => {
     // The star answers under the finger and writes behind it, with no toast to say the write has
     // landed (card-detail-slideout.tsx: "no spinner, because a favourite is a mark and not a task
     // to wait for"). A page read right after the click can only be trusted once that write's own
-    // response is back, or it reads the server as it was before the press.
-    const starWrite = page.waitForResponse((r) => r.request().method() === "POST" && !r.url().includes("/_vercel/"));
+    // response is back, or it reads the server as it was before the press. Sheet open also fires
+    // its own reads (listCopies, listCollections, loadFacets), so waiting for "any POST" can
+    // resolve on one of those instead of the star's own write. setFavorite(cardId, isFavorite) is
+    // called with exactly a string and a boolean and nothing else; every other export in
+    // src/app/(app)/dashboard/cards/actions.ts and collections/actions.ts either takes more
+    // arguments or different types (checked 2026-09-17), so a Server Action body that parses as a
+    // two-element array of [string, boolean] can only be this write. Server Actions send their
+    // arguments as a plain JSON array in the request body, with no field names, so matching on the
+    // literal text "isFavorite" would never fire.
+    const isFavoriteWrite = (body: string | null) => {
+        if (!body) return false;
+        try {
+            const args: unknown = JSON.parse(body);
+            return Array.isArray(args) && args.length === 2 && typeof args[0] === "string" && typeof args[1] === "boolean";
+        } catch {
+            return false;
+        }
+    };
+    const starWrite = page.waitForResponse((r) => r.request().method() === "POST" && isFavoriteWrite(r.request().postData()));
     await star.click();
     await expect(star).toHaveAttribute("aria-pressed", "true");
     await starWrite;
@@ -90,7 +129,7 @@ test("the star and the Favorites list agree, on and off", async ({ page }) => {
     await collectionTile(page, c).click();
     const again = page.getByRole("dialog", { name: c.name }).getByRole("button", { name: "Favorite" });
     await expect(again).toHaveAttribute("aria-pressed", "true");
-    const unstarWrite = page.waitForResponse((r) => r.request().method() === "POST" && !r.url().includes("/_vercel/"));
+    const unstarWrite = page.waitForResponse((r) => r.request().method() === "POST" && isFavoriteWrite(r.request().postData()));
     await again.click();
     await expect(again).toHaveAttribute("aria-pressed", "false");
     await unstarWrite;
