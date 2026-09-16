@@ -13,7 +13,7 @@ import { PriceChangeLine } from "@/components/app/price-change";
 import { TileIconButton } from "@/components/app/tile-icon-button";
 import { useCopySteps } from "@/components/app/use-copy-steps";
 import type { PriceChange } from "@/lib/api-shapes";
-import { cardLine, printingLine } from "@/lib/card-label";
+import { cardLine, copyLine } from "@/lib/card-label";
 import type { PublicCard } from "@/lib/cards";
 import { type CardsSize, GRID_COLUMNS, TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
 import { formatPrice } from "@/lib/format";
@@ -37,6 +37,9 @@ type GridCard = PublicCard & {
     owned?: boolean | null;
     price_change?: PriceChange | null;
     print_image_url?: string | null;
+    /** What state the copy is in, for the line under its name. A public profile carries neither. */
+    condition?: string | null;
+    grade?: string | null;
 };
 
 export function CardsGrid<T extends GridCard>({
@@ -179,10 +182,10 @@ function GridCell<T extends GridCard>({
                             {"language" in card && typeof card.language === "string" && card.language !== "en" ? <FlagIcon language={card.language} /> : null}
                         </span>
                         <span className="truncate text-xs text-tertiary">{cardLine(card)}</span>
-                        {/* Which printing the copy is: "Normal", "Holo", "Cosmos holo", "1st Edition · Holo" (printingLine).
-                            Each kind of copy is a tile of its own, and two of one card looked alike. A wish with no
-                            printing chosen has no line. */}
-                        {printingLine(card) ? <span className="truncate text-xs text-tertiary">{printingLine(card)}</span> : null}
+                        {/* Which printing the copy is and what state it is in: "Holo · Near Mint",
+                            "1st Edition · Holo · PSA 10" (copyLine). Each kind of copy is a tile of its own, and two
+                            of one card looked alike. A wish, with no printing chosen, has no line. */}
+                        {copyLine(card) ? <span className="truncate text-xs text-tertiary">{copyLine(card)}</span> : null}
                         {/* What one is worth, then how many you hold: the price on the left under the name it
                             belongs to, the count against the right edge, as a set tile has them (Bart's call,
                             2026-09-13). A card is listed once however many copies you have, so without the

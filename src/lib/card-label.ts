@@ -79,3 +79,20 @@ export function printingLine(copy: { finish?: string | null; foil_pattern?: stri
     const run = copy.edition && copy.edition !== "unlimited" && copy.edition in EDITION_LABELS ? EDITION_LABELS[copy.edition as Edition] : null;
     return run ? `${run} · ${printing}` : printing;
 }
+
+/**
+ * The line under a copy's name on a list: which printing it is and what state it is in,
+ * "Holo · Near Mint", "1st Edition · Holo · PSA 10".
+ *
+ * A copy is raw or it is graded and never both (see `graded.ts`), so it is the grade where there is
+ * one and the condition otherwise, in the words they were recorded in. The grade is one string as a
+ * collector writes it ("PSA 10"), which is how it is stored. Neither recorded leaves the printing
+ * alone, and a wish, which has no printing either, has no line at all.
+ *
+ * Bart, 2026-09-16: the printing alone did not say whether the Holo you are looking at is a Near Mint
+ * one or a slab.
+ */
+export function copyLine(copy: Parameters<typeof printingLine>[0] & { condition?: string | null; grade?: string | null }): string | null {
+    const state = (copy.grade ?? copy.condition)?.trim() || null;
+    return [printingLine(copy), state].filter(Boolean).join(" · ") || null;
+}

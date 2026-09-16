@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cardLabel, cardLabelFull, cardLine, printingLine } from "./card-label";
+import { cardLabel, cardLabelFull, cardLine, copyLine, printingLine } from "./card-label";
 
 describe("cardLabel", () => {
     it("is the set's code and the number as printed, the same at every size", () => {
@@ -69,5 +69,26 @@ describe("printingLine", () => {
 
     it("says nothing where no printing was chosen, as on a wish", () => {
         expect(printingLine({ finish: null })).toBeNull();
+    });
+});
+
+describe("copyLine", () => {
+    // Bart, 2026-09-16: beside the printing a tile says what state the copy is in.
+    it("puts the condition after the printing", () => {
+        expect(copyLine({ finish: "holo", condition: "Near Mint" })).toBe("Holo · Near Mint");
+        expect(copyLine({ finish: "normal", condition: "Mint" })).toBe("Normal · Mint");
+        expect(copyLine({ finish: "holo", edition: "1st-edition", condition: "Excellent" })).toBe("1st Edition · Holo · Excellent");
+    });
+
+    it("says the grade instead on a slab, as it is written on it", () => {
+        expect(copyLine({ finish: "holo", grade: "PSA 10", condition: null })).toBe("Holo · PSA 10");
+        // A raw condition left on a row that was later graded is not shown beside the grade.
+        expect(copyLine({ finish: "holo", grade: "BGS 9.5", condition: "Near Mint" })).toBe("Holo · BGS 9.5");
+    });
+
+    it("leaves the printing alone where neither was recorded, and a wish with no line", () => {
+        expect(copyLine({ finish: "holo", condition: null, grade: null })).toBe("Holo");
+        expect(copyLine({ finish: "holo", condition: " " })).toBe("Holo");
+        expect(copyLine({ finish: null, condition: null })).toBeNull();
     });
 });
