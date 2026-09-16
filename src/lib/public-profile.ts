@@ -27,10 +27,12 @@ export type PublicProfile = {
     avatar_url: string | null;
     wishlist_public: boolean;
     favorites_public: boolean;
+    /** The owner shows prices: the cards carry one and the lists say their worth. */
+    prices_public: boolean;
 };
 
 // The public face of a profile, or null when there is none by that name or it is not public.
-// Unkeyed: the API's three public routes serve exactly this page and carry no prices.
+// Unkeyed: the API's public routes serve exactly this page, and carry a price only where the owner shows them.
 export async function getPublicProfile(username: string): Promise<PublicProfile | null> {
     try {
         const p = await api(`/public/${encodeURIComponent(username)}/profile`, { auth: false, tags: [publicTag(username)], schema: publicProfileAnswer });
@@ -40,6 +42,7 @@ export async function getPublicProfile(username: string): Promise<PublicProfile 
             avatar_url: p.avatarUrl,
             wishlist_public: p.wishlistPublic ?? false,
             favorites_public: p.favoritesPublic ?? false,
+            prices_public: p.pricesPublic ?? false,
         };
     } catch (err) {
         if (err instanceof ApiError && err.status === 404) return null;
@@ -49,14 +52,15 @@ export async function getPublicProfile(username: string): Promise<PublicProfile 
 
 export const PUBLIC_PAGE_SIZE = 100;
 
-export type PublicCardsPage = { cards: PublicCard[]; total: number; copies?: number; facets: Facets };
+/** `value` and `unpriced` only where the owner shows prices: euros over the whole list, and the copies without one. */
+export type PublicCardsPage = { cards: PublicCard[]; total: number; copies?: number; facets: Facets; value?: number; unpriced?: number };
 
 // One page of the owned cards behind a public profile, narrowed and sorted as the URL says, with
 // the totals and the facets over the whole collection behind it. The paged route rather than the
 // whole collection: a hundred tiles need thirty kilobytes, not nine hundred. The API publishes
 // nothing personal on it (R-API-002 there), so nothing here has to be hidden.
 export async function getPublicCards(username: string, { page, q, set, rarity, sort, order, folder, list }: ListQuery): Promise<PublicCardsPage> {
-    const { cards, total, copies, facets } = await api(`/public/${encodeURIComponent(username)}/cards`, {
+    const { cards, total, copies, facets, value, unpriced } = await api(`/public/${encodeURIComponent(username)}/cards`, {
         auth: false,
         tags: [publicTag(username)],
         params: { q, set, rarity, sort, order, collection: folder, list, limit: PUBLIC_PAGE_SIZE, offset: (page - 1) * PUBLIC_PAGE_SIZE },
@@ -67,6 +71,8 @@ export async function getPublicCards(username: string, { page, q, set, rarity, s
         total,
         copies,
         facets: facetsFrom(facets),
+        value,
+        unpriced,
     };
 }
 
@@ -75,7 +81,7 @@ const ALL_PAGE_SIZE = 500;
 
 // Every owned card behind a public profile, for the page that draws them as a Pokédex: the slots
 // need all of them, not a page. The first page says how many there are; the rest come at once.
-export async function getAllPublicCards(username: string, query: ListQuery): Promise<{ cards: PublicCard[]; total: number; copies?: number; facets: Facets }> {
+export async function getAllPublicCards(username: string, query: ListQuery): Promise<PublicCardsPage> {
     const read = async (offset: number) =>
         api(`/public/${encodeURIComponent(username)}/cards`, {
             auth: false,
@@ -92,6 +98,8 @@ export async function getAllPublicCards(username: string, query: ListQuery): Pro
         total: first.total,
         copies: first.copies,
         facets: facetsFrom(first.facets),
+        value: first.value,
+        unpriced: first.unpriced,
     };
 }
 
@@ -121,15 +129,16 @@ export async function getPublicFolders(username: string): Promise<PublicFolder[]
     }
 }
 
-// How many cards a public list holds, and nothing else: one item asked for, the count read off it.
-// For the line under the name, which counts the collection and the wishlist whatever list is open.
-// Copies (the list as a person counts it) where the API says them; the rows from one before it did.
-export async function countPublicCards(username: string, list?: "wishlist" | "favorites"): Promise<number> {
-    const { total, copies } = await api(`/public/${encodeURIComponent(username)}/cards`, {
+// How many cards a public list holds and what they are worth, and nothing else: one item asked
+// for, the numbers read off it. For the line under the name, which counts the collection and the
+// wishlist whatever list is open. Copies (the list as a person counts it) where the API says them;
+// the rows from one before it did. The value only where the owner shows prices, null otherwise.
+export async function countPublicCards(username: string, list?: "wishlist" | "favorites"): Promise<{ count: number; value: number | null }> {
+    const { total, copies, value } = await api(`/public/${encodeURIComponent(username)}/cards`, {
         auth: false,
         tags: [publicTag(username)],
         params: { list, limit: 1 },
         schema: publicTotalAnswer,
     });
-    return copies ?? total;
+    return { count: copies ?? total, value: value ?? null };
 }

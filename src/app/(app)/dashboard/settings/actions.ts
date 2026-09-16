@@ -195,10 +195,19 @@ export async function updateListPublic(input: unknown): Promise<ActionResult> {
 // The public flag on its own, from the row on the settings page: one PATCH, nothing else touched.
 // The Manage sheet still sends it with the name and the username; this is the fast road.
 export async function setProfilePublic(isPublic: boolean): Promise<ActionResult> {
-    const parsed = profileSchema.shape.is_public.safeParse(isPublic);
+    return setProfileFlag("isPublic", isPublic);
+}
+
+// Whether the public page prices what it shows, from the row under Public profile: the same one PATCH.
+export async function setPricesPublic(pricesPublic: boolean): Promise<ActionResult> {
+    return setProfileFlag("pricesPublic", pricesPublic);
+}
+
+async function setProfileFlag(flag: "isPublic" | "pricesPublic", value: boolean): Promise<ActionResult> {
+    const parsed = z.boolean().safeParse(value);
     if (!parsed.success) return { ok: false, error: "Something went wrong. Try again." };
     try {
-        await api("/profile", { method: "PATCH", body: { isPublic: parsed.data } });
+        await api("/profile", { method: "PATCH", body: { [flag]: parsed.data } });
     } catch (err) {
         return failed(err);
     }

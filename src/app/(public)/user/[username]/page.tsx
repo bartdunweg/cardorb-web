@@ -52,11 +52,12 @@ export default async function PublicProfilePage({ params, searchParams }: Params
     if (list !== query.list) query.list = list;
     // The paged read for every list: its first page carries the count and the facets at once, while
     // a Pokédex binder's own read of every card streams in behind the row.
-    const [{ cards, total, facets }, folders, viewer, owned, wishes] = await Promise.all([
+    const [{ cards, total, facets, value }, folders, viewer, owned, wishes] = await Promise.all([
         getPublicCards(decodeURIComponent(username), query),
         getPublicFolders(decodeURIComponent(username)),
         getViewer(),
-        // The line under the name counts the whole collection and the wishlist, whatever list is open.
+        // The line under the name counts the whole collection and the wishlist, whatever list is open,
+        // and says what the collection is worth where its owner shows prices.
         countPublicCards(decodeURIComponent(username)),
         profile.wishlist_public ? countPublicCards(decodeURIComponent(username), "wishlist") : Promise.resolve(null),
     ]);
@@ -68,7 +69,8 @@ export default async function PublicProfilePage({ params, searchParams }: Params
     const dexSetting = folder?.pokedex ?? null;
     const dex: Promise<DexList> | null = dexSetting
         ? Promise.all([getAllPublicCards(decodeURIComponent(username), query), getDexNames()]).then(([r, names]) => {
-              // The count is the slots' own, as the owner's page says it; a public card has no price, so no value.
+              // The count is the slots' own, as the owner's page says it, and the value too where the owner
+              // shows prices: the cards carry one then, and none otherwise, which leaves the value null.
               const grouped = groupByDex(r.cards, names, dexSetting);
               return { ...grouped, total: grouped.cards };
           })
@@ -102,11 +104,15 @@ export default async function PublicProfilePage({ params, searchParams }: Params
     // With a search or a filter on, the count is what matched; otherwise the collection and the wishlist.
     // On the Pokédex what matched is what is in its slots, as the owner's page counts it: the read
     // returned every card, and a trainer or a rarity the setting leaves out is not in the binder.
+    // Beside the count, what it is worth, where the owner shows prices: the API answers a value
+    // then and none otherwise, and the line draws only what it was given.
     const counts = narrowed
         ? dex
-            ? dex.then((d) => datapointsLine({ total: d.cards, narrowed })).catch(() => "")
-            : datapointsLine({ total, narrowed })
-        : [datapointsLine({ total: owned, narrowed: false }), wishes != null ? `${formatCount(wishes)} on the wishlist` : null].filter(Boolean).join(" · ");
+            ? dex.then((d) => datapointsLine({ total: d.cards, value: d.value, narrowed })).catch(() => "")
+            : datapointsLine({ total, value, narrowed })
+        : [datapointsLine({ total: owned.count, value: owned.value, narrowed: false }), wishes != null ? `${formatCount(wishes.count)} on the wishlist` : null]
+              .filter(Boolean)
+              .join(" · ");
 
     return (
         <div className="flex min-h-dvh flex-col bg-page">

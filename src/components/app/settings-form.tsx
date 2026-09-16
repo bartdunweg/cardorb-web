@@ -8,6 +8,7 @@ import { checkUsername, removeAvatar, updateEmail, updatePassword, updateProfile
 import { signOut } from "@/app/(auth)/actions";
 import { FormError } from "@/components/app/form-error";
 import { ImportDialog } from "@/components/app/import-dialog";
+import { PricesPublicRow } from "@/components/app/prices-public-row";
 import { PublicProfileRow, publicUrl } from "@/components/app/public-profile-row";
 import { SettingsGroup, SettingsLinkRow, SettingsRow, SheetHeader } from "@/components/app/settings-rows";
 import { SheetDialog } from "@/components/app/sheet-dialog";
@@ -49,6 +50,7 @@ export function SettingsForm({
     const [username, setUsername] = useState(profile.username);
     const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url ?? "");
     const [isPublic, setIsPublic] = useState(profile.is_public);
+    const [pricesPublic, setPricesPublic] = useState(profile.prices_public);
     const [emailValue, setEmailValue] = useState(email ?? "");
     // Whether the name is free, asked a beat after the typing stops. The name it was asked for
     // rides along, so an answer that arrives after another keystroke is ignored rather than shown.
@@ -281,6 +283,8 @@ export function SettingsForm({
                     it at, on the page rather than behind Manage. It shares `isPublic` with the
                     sheet, so a flip here is what the sheet shows when it opens. */}
                 <PublicProfileRow username={profile.username || null} isPublic={isPublic} onChange={setIsPublic} />
+                {/* Under it, whether that page prices what it shows: a decision of its own. */}
+                <PricesPublicRow isPublic={isPublic} pricesPublic={pricesPublic} onChange={setPricesPublic} />
                 <SettingsRow
                     icon={Lock01}
                     label="Password"

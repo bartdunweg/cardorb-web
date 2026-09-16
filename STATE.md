@@ -25,6 +25,13 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-16, prices on the public profile.** A "Show prices" switch under Public profile on
+Settings (`prices-public-row.tsx`, the switch row itself shared with Public profile in
+`setting-switch-row.tsx`). On, the public page prices every tile and the read-only sheet, and the
+line under the name says what the collection is worth; the wishlist and a narrowed list say
+theirs. Off, the default, the API sends no price field at all (cardorb-api#520,
+`profiles.prices_public`). The Manage sheet does not carry it: the row is the one place.
+
 **2026-09-16, the filters looked over.** Bart asked for the filtering to be analysed and
 improved. The sheet itself stands: facets over the whole collection, a number on every option
 under the other filters as chosen, a chosen value the list no longer holds still there to take
