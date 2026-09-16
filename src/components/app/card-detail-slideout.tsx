@@ -179,13 +179,20 @@ export function CardDetailSlideout({
            the app to the API and on to the database in another region, so a group of four in a
            `for await` was four of those in a queue: the wait grew with the number of copies, on
            the one action where the number of copies is the whole point. They touch different rows,
-           so nothing is racing. */
-        const results = await Promise.all(group.map((row) => removeCard(row.id)));
+           so nothing is racing. None of them forgets (reread: false): each forgetting in its own
+           answer drew the page again once per copy, and those redraws queued behind one another.
+           The cache is dropped once, quietly, when they have all landed, failed ones included,
+           since the others may still have removed their rows. */
+        const results = await Promise.all(group.map((row) => removeCard(row.id, { reread: false })));
         setBusy(false);
+        const forgotten = forgetMineQuietly();
         const failed = results.find((r) => !r.ok);
         if (failed && !failed.ok) {
             notify.failed(group.length > 1 ? "Those copies were not removed" : "That copy was not removed", { description: failed.error });
-            void reloadCopies();
+            void forgotten.then(() => {
+                scheduleRefresh();
+                void reloadCopies();
+            });
             return;
         }
         offerUndo(
@@ -195,7 +202,7 @@ export function CardDetailSlideout({
         // Nothing left: the sheet says so, rather than staying on a row that is gone with "Add a
         // copy" and the star still writing to it. Only the minus's own path said it before.
         if (!rows.length && card) setRemoved(card.id);
-        scheduleRefresh();
+        void forgotten.then(scheduleRefresh);
     };
     /* Read-only sheets never take a card, so the public shape is not asked to answer for one. */
     const own = readOnly ? null : (card as Card | null);
@@ -565,13 +572,15 @@ export function CardDetailSlideout({
             undo: {
                 label: "Put back",
                 onUndo: () => {
-                    void Promise.all(rows.map((row) => restoreCard(row))).then((results) => {
+                    // Forgotten once for the lot, quietly, as the removal was (dropCopies says why).
+                    void Promise.all(rows.map((row) => restoreCard(row, { reread: false }))).then(async (results) => {
                         const failed = results.find((r) => !r.ok);
                         if (failed && !failed.ok) notify.failed("That did not go back", { description: failed.error });
                         else {
                             setRemoved(null);
                             notify.done(rows.length > 1 ? `${rows.length} copies are back` : "It is back");
                         }
+                        await forgetMineQuietly();
                         scheduleRefresh();
                         void reloadCopies();
                     });

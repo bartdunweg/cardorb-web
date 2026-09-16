@@ -13,6 +13,7 @@ import { GRADERS, GRADES, gradeLabel, gradeUnder, gradesFor, splitGrade } from "
 import { LanguageSelect } from "@/components/app/language-select";
 import { SEGMENT_SELECTED } from "@/components/app/segment-selected";
 import { notify } from "@/components/app/toast";
+import { forgetMineQuietly } from "@/components/app/use-copy-steps";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
@@ -92,9 +93,15 @@ export function CopyCard({
 
     const save = async (edits: CopyEdits, failed: string) => {
         setOver((o) => ({ id: row.id, edits: { ...(o.id === row.id ? o.edits : {}), ...edits } }));
+        /* The write forgets nothing itself (reread: false). Forgetting inside the action drew the
+           page again in its answer, so every select waited for the list behind the sheet to be
+           read and redrawn before it was done, and the next field's save queued behind that. The
+           cache is dropped here instead, quietly, and the sheet re-reads the list once for a run
+           of fields (its scheduleRefresh). */
         const res = await editCopies(
             group.rows.map((r) => r.id),
             edits,
+            { reread: false },
         );
         if (!res.ok) {
             notify.failed(failed, { description: res.error });
@@ -105,6 +112,7 @@ export function CopyCard({
             });
             return;
         }
+        await forgetMineQuietly();
         onSaved();
     };
 

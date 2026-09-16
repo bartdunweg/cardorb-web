@@ -3,7 +3,7 @@
 import { type ReactNode, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
-import { createCollection, loadFacets, updateCollection } from "@/app/(app)/dashboard/collections/actions";
+import { createCollection, updateCollection } from "@/app/(app)/dashboard/collections/actions";
 import { DexRangeFields, dexDraft, dexFromDraft } from "@/components/app/dex-range-fields";
 import { FormError } from "@/components/app/form-error";
 import { RarityPicker } from "@/components/app/rarity-picker";
@@ -18,6 +18,7 @@ import { NativeSelect } from "@/components/base/select/select-native";
 import { Toggle } from "@/components/base/toggle/toggle";
 import { type Facets, NO_FACETS } from "@/lib/facets";
 import { type FolderKind, type FolderRule, type PokedexSetting, ruleSummary } from "@/lib/folder-rule";
+import { loadFacets } from "@/lib/reads";
 
 type FolderShape = { id: string; name: string; kind: FolderKind; rule: FolderRule | null; pokedex: PokedexSetting | null; isPublic: boolean };
 type FormProps = {

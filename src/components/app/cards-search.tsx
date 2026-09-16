@@ -4,13 +4,13 @@ import type { KeyboardEvent, ReactNode } from "react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { SearchLg } from "@untitledui/icons";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { type TitleScope, collectionIndex, suggestCardTitles } from "@/app/(app)/dashboard/cards/actions";
-import { listSetsShelf } from "@/app/(app)/dashboard/sets/actions";
+import type { TitleScope } from "@/app/(app)/dashboard/cards/actions";
 import { RowSearch } from "@/components/app/row-search";
 import { InputBase } from "@/components/base/input/input";
 import { MAX_RECENT_TERMS, rememberTerm, useRecentTerms } from "@/hooks/use-recent-terms";
 import { type CardTitle, type TitleSet, matchSets, matchTitles } from "@/lib/card-titles";
 import type { BrowseLanguage } from "@/lib/languages";
+import { collectionIndex, listSetsShelf, suggestCardTitles } from "@/lib/reads";
 import { cx } from "@/utils/cx";
 
 /** What one binder's field knows about that binder, kept for as long as the tab lives. */

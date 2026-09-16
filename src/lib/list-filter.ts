@@ -54,3 +54,18 @@ export const loadMoreInput = z.object({
  * read of the API. Named, not a filter, so nothing but these three can be asked for.
  */
 export const warmListInput = z.object({ list: z.enum(["collection", "wishlist", "favorites"]) });
+
+const titleChoice = z.string().trim().min(1).max(100).optional();
+
+/**
+ * Which list a title suggestion may come from, for `collectionIndex` and `suggestCardTitles`: the
+ * binder the field sits on, with its filters still on. Here rather than beside them for the reason
+ * `loadMoreInput` is: the read route checks the same shape before it asks.
+ */
+export const titleScope = z.object({
+    collectionId: titleChoice,
+    wishlist: z.boolean().optional(),
+    favoritesOnly: z.boolean().optional(),
+    set: z.union([titleChoice, z.array(z.string().trim().min(1).max(100)).max(50)]),
+    rarity: z.union([titleChoice, z.array(z.string().trim().min(1).max(100)).max(50)]),
+});

@@ -25,6 +25,7 @@ import { type CardTitle, type TitleSet, distinctTitles, matchTitles } from "@/li
 import { type Card, getMyCards } from "@/lib/cards";
 import { type CardName, type CopyEdits, copyEdits, sameCard } from "@/lib/copies";
 import { type BrowseLanguage, isBrowseLanguage } from "@/lib/languages";
+import { titleScope } from "@/lib/list-filter";
 import { rank } from "@/lib/name-rank";
 import { getShelf } from "@/lib/sets";
 import { forgetMine } from "@/lib/user-cache";
@@ -70,14 +71,6 @@ export type { CardTitle, TitleSet } from "@/lib/card-titles";
 
 /** Rows read in one go to build the index. A collection past this asks the API per term instead. */
 const INDEX_ROWS = 2500;
-
-const titleScope = z.object({
-    collectionId: choice,
-    wishlist: z.boolean().optional(),
-    favoritesOnly: z.boolean().optional(),
-    set: z.union([choice, z.array(z.string().trim().min(1).max(100)).max(50)]),
-    rarity: z.union([choice, z.array(z.string().trim().min(1).max(100)).max(50)]),
-});
 
 /**
  * Every title in one binder, once, so the browser can answer its own typing.
@@ -304,8 +297,11 @@ export async function removeCard(cardId: string, { reread = true }: { reread?: b
  *
  * The row that comes back has a new id. Nothing outside the row refers to one, and the screen
  * that offered the undo has moved on by the time it lands.
+ *
+ * `reread: false` as on removeCard, for the card sheet, which puts several back at once and
+ * drops the cache itself when they have all landed.
  */
-export async function restoreCard(input: RemovedCard): Promise<Result> {
+export async function restoreCard(input: RemovedCard, { reread = true }: { reread?: boolean } = {}): Promise<Result> {
     const parsed = removedCardSchema.safeParse(input);
     if (!parsed.success) return { ok: false, error: "That card cannot be put back." };
 
@@ -344,7 +340,7 @@ export async function restoreCard(input: RemovedCard): Promise<Result> {
         return failed(err);
     }
 
-    await forgetMine();
+    if (reread) await forgetMine();
     return { ok: true };
 }
 
