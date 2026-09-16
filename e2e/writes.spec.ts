@@ -100,20 +100,26 @@ test("the star and the Favorites list agree, on and off", async ({ page }) => {
     // The star answers under the finger and writes behind it, with no toast to say the write has
     // landed (card-detail-slideout.tsx: "no spinner, because a favourite is a mark and not a task
     // to wait for"). A page read right after the click can only be trusted once that write's own
-    // response is back, or it reads the server as it was before the press. Sheet open also fires
-    // its own reads (listCopies, listCollections, loadFacets), so waiting for "any POST" can
-    // resolve on one of those instead of the star's own write. setFavorite(cardId, isFavorite) is
-    // called with exactly a string and a boolean and nothing else; every other export in
-    // src/app/(app)/dashboard/cards/actions.ts and collections/actions.ts either takes more
-    // arguments or different types (checked 2026-09-17), so a Server Action body that parses as a
-    // two-element array of [string, boolean] can only be this write. Server Actions send their
-    // arguments as a plain JSON array in the request body, with no field names, so matching on the
-    // literal text "isFavorite" would never fire.
+    // response is back, or it reads the server as it was before the press.
+    //
+    // "Any POST" is not specific enough to trust, so this matches the write's own shape instead.
+    // The sheet opening its own reads (facts, prices, folders, facets) turned out not to be the
+    // risk here: read from a CI trace (2026-09-17), those all go out as GET requests to
+    // /api/read/*, never a POST. What a captured trace did show is that setFavorite's own Server
+    // Action body is a JSON array whose first element is the card's id (a string) and second is
+    // the pressed value (a boolean) verbatim, in that position, for both the star-on and the
+    // star-off press; that pair is exactly what `setFavorite(cardId, isFavorite)` is called with
+    // (card-detail-slideout.tsx toggleStar) and it is the only action in
+    // src/app/(app)/dashboard/cards/actions.ts or collections/actions.ts whose declared
+    // parameters are (string, boolean) with nothing else that fits before them (checked
+    // 2026-09-17). Server Actions send their arguments as a plain JSON array with no field names,
+    // so matching on the literal text "isFavorite" would never fire; matching the argument shape
+    // is what actually picks this write out.
     const isFavoriteWrite = (body: string | null) => {
         if (!body) return false;
         try {
             const args: unknown = JSON.parse(body);
-            return Array.isArray(args) && args.length === 2 && typeof args[0] === "string" && typeof args[1] === "boolean";
+            return Array.isArray(args) && args.length >= 2 && typeof args[0] === "string" && typeof args[1] === "boolean";
         } catch {
             return false;
         }
