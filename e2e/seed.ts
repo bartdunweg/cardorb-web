@@ -11,8 +11,11 @@ const headers = { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "
 
 const call = async (path: string, init: RequestInit) => {
     const res = await fetch(`${url}${path}`, { ...init, headers: { ...headers, ...init.headers } });
-    if (!res.ok) throw new Error(`${init.method} ${path}: ${res.status} ${await res.text()}`);
-    return res.status === 204 ? null : res.json();
+    const text = await res.text();
+    if (!res.ok) throw new Error(`${init.method} ${path}: ${res.status} ${text}`);
+    // return=minimal answers 201 or 204 with an empty body, not only 204: read as text first, or
+    // an empty body's JSON.parse throws "Unexpected end of JSON input".
+    return text ? JSON.parse(text) : null;
 };
 
 const user = await call("/auth/v1/admin/users", {
