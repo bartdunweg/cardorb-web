@@ -78,7 +78,9 @@ export function CardsSearch({
         // Only what was typed: on mount the URL already says what the field shows, and a shared page 2 must stay page 2.
         if (value === initialValue) return;
         const id = setTimeout(() => {
-            const params = new URLSearchParams(searchParams.toString());
+            /* The URL as it is now, not as it was when the term changed: a sort or filter picked
+               inside these 250 ms would otherwise be written back out. */
+            const params = new URLSearchParams(window.location.search);
             if (value.trim()) params.set("q", value.trim());
             else params.delete("q");
             // A new term is a new result set; page 3 of the old one is nowhere in it.
@@ -112,6 +114,13 @@ export function CardsSearch({
         scope?.rarity ?? null,
     ]);
     /** What the recent terms belong to: the binder itself. A filter is not another search history. */
+    /* Another shelf or filter is another list of names: the one in hand is of the list before it.
+       Without this a language switch on Browse kept offering the old language's set names. */
+    const [indexFor, setIndexFor] = useState(sourceKey);
+    if (indexFor !== sourceKey) {
+        setIndexFor(sourceKey);
+        setIndex(null);
+    }
     const listKey = JSON.stringify([shelf ?? null, scope?.collectionId ?? null, scope?.wishlist ?? false, scope?.favoritesOnly ?? false]);
     /* Where the names come from: a binder reads its own cards, Browse reads the shelf it shows.
        A shelf is one read of set names, so it is always whole; a binder may be larger than one. */

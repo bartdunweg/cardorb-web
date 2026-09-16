@@ -88,6 +88,12 @@ type Addable = {
      */
     onTaken?: (card: PokemonCard, list: "collection" | "wishlist", id: string | undefined) => void;
     /**
+     * The card is being taken, told on the press, before the write answers; what it returns puts the
+     * list back if the write fails. A set page marks the tile here: a tile still showing its plus
+     * through the write took a second press as a second row.
+     */
+    onTaking?: (card: PokemonCard, list: "collection" | "wishlist") => (() => void) | void;
+    /**
      * The row shown was removed from the menu, told on the press. A list that is given this takes the
      * card off itself and the page is not drawn again; a removal that fails draws it again.
      */
@@ -121,6 +127,7 @@ export function CardDetailSlideout({
     onNext,
     addable,
     onTaken,
+    onTaking,
     onRemoved,
     rowPending = false,
     period: opensOn = "1m",
@@ -255,6 +262,7 @@ export function CardDetailSlideout({
         setRemoved(null);
         onClose();
         notify.done(`Added to ${where}`, { description: taken.name });
+        const putBack = onTaking?.(taken, list);
         /* The printing and run pressed under the card, where the sheet offers a choice (Bart,
            2026-09-15): you add the one you are looking at. Otherwise the API's own default. */
         void addCard(taken, list, into?.id, {
@@ -264,6 +272,7 @@ export function CardDetailSlideout({
         }).then((res) => {
             if (!res.ok) {
                 notify.failed(`That card was not added to ${where}`, { description: res.error });
+                putBack?.();
                 return;
             }
             // The write forgot nothing (reread: false), so a refresh on its own drew the sidebar's
@@ -690,7 +699,9 @@ export function CardDetailSlideout({
         if (hasCosmos)
             for (const texture of ["cosmos-bottom.png", "cosmos-middle-trans.png", "cosmos-top-trans.png"]) new window.Image().src = `/holo/${texture}`;
     }, [printingImages, hasCosmos]);
-    const ownPrinting = mine?.finish ? (mine.foil_pattern ? `${mine.finish}/${mine.foil_pattern}` : mine.finish) : null;
+    // On a public page the card's own printing is the one it opens on, as it is for its owner.
+    const held = mine ?? (readOnly ? card : null);
+    const ownPrinting = held?.finish ? (held.foil_pattern ? `${held.finish}/${held.foil_pattern}` : held.finish) : null;
     const [picked, setPicked] = useState<{ tcgId: string | null; printing: string | null; edition: string | null }>({
         tcgId: null,
         printing: null,
@@ -722,7 +733,10 @@ export function CardDetailSlideout({
     const patternPrice = printing?.foilPattern
         ? known?.patternPrints?.prints.find((p) => p.finish === printing.finish && p.foilPattern === printing.foilPattern)?.price?.market
         : undefined;
-    const { series: shownSeries, price: shownPrice } = pressedPrinting({
+    /* A public card with no price field is one whose owner keeps prices private: another printing
+       pressed there must not bring a market figure in through the catalogue's history. */
+    const pricesHidden = readOnly && !(card && "price" in card);
+    const { series: shownSeries, price: pressedPrice } = pressedPrinting({
         pressedAway: !!pressedAway,
         finish: printing?.finish ?? (mine?.finish as Finish | null) ?? "normal",
         edition,
@@ -730,6 +744,7 @@ export function CardDetailSlideout({
         latest: points.at(-1)?.printings,
         patternPrice,
     });
+    const shownPrice = pricesHidden ? undefined : pressedPrice;
     const shownChange = pressedAway ? (shownPrice != null && shownSeries ? periodChange(points, period, false, shownSeries, chosen.said) : null) : change;
     // On a public page the card carries a price only where its owner shows them; that is the figure under the title then.
     const publicPrice = readOnly && card && "price" in card ? (card.price ?? null) : null;
