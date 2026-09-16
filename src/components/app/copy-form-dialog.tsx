@@ -113,6 +113,8 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
     const canSplit = mode === "add" || (count >= 1 && count < total);
 
     const save = async () => {
+        // Enter in a field submits the form whatever the button shows: a second split would split twice.
+        if (saving) return;
         setSaving(true);
         setError(null);
         // Kept out of `changes`, which decides whether Save is allowed: a date is a fact about

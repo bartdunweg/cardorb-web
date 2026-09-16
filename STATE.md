@@ -25,6 +25,21 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-17, a third bug hunt: Browse, set pages, the public profile.** Three reviews, each
+finding read against the code first. Browse: the search field kept the old language's set names
+after Filters changed it (the index now resets on its key), a sort picked inside the 250 ms after
+typing was written back out (the timer reads the URL as it is), and an empty shelf the progress
+filter made said no set had that name. Set page: Add from the sheet marks the tile on the press
+(`onTaking`), so a plus in the write's round trip no longer makes a second row; a sheet opened on a
+tile whose add is in the air waits for the row instead of settling on nothing; the split form
+ignores a second Enter. Public profile: a name nobody has answers 404, not 200 (the route-level
+`loading.tsx` streamed first; the profile read now runs above the page's own Suspense), the
+canonical and chip links use the owner's spelling, and a signed-in visitor pressing another
+printing no longer sees a market price where the owner keeps prices private. Checked and wrong:
+favorite stars leaking where favorites are hidden (the API stars nothing then). Measured on the dev
+server: 404, canonical, the progress empty state; the two set-page races are timing and were not
+reproduced.
+
 **2026-09-16, the card sheet's writes read over.** A code review of the sheet, its two forms
 and their actions, then the pane. Mark as owned started every wish at English and sent the
 language whatever the wish was, so a Japanese wish came out an English copy with nothing on screen

@@ -273,9 +273,13 @@ export function SetCards({
         setSelected(known ? onRow(known) : fromCatalogue(card));
         if (!held || known) return;
         const row = (pressed ? undefined : (await awaitRows(name))?.[0]) ?? (await listRows(name))[0];
+        /* No row yet: a tile's own add is still in the air. The sheet stays pending and reads again
+           once the tile has its row (the effect below), rather than settling on a card with no copies
+           and no way to take it. */
+        if (!row) return;
         // Only onto the sheet still showing this card, not one opened or closed since.
         setPendingId((id) => (id === card.id ? null : id));
-        if (row) setSelected((shown) => (shown?.id === card.id ? onRow(row) : shown));
+        setSelected((shown) => (shown?.id === card.id ? onRow(row) : shown));
     };
 
     /* Null rather than a dead button at either end: the sheet draws no arrow where there is
@@ -376,6 +380,13 @@ export function SetCards({
                                         onChange={(patch) => {
                                             const drawnCard = drawnById.get(card.id);
                                             if (drawnCard) report(drawnCard, patch);
+                                            /* A sheet opened on this card while its add was in the air is waiting for
+                                               the row: open it again once the tile has one, or once the write failed
+                                               and the card is not held after all. */
+                                            if (drawnCard && pendingId === card.id) {
+                                                const now = { ...live(drawnCard), ...patch };
+                                                if (now.itemIds[0] || !(now.owned || now.wishlist)) void open(now);
+                                            }
                                             setTouched((t) => ({ view, ids: new Set(t.view === view ? t.ids : []).add(card.id) }));
                                         }}
                                         language={language}
@@ -414,6 +425,21 @@ export function SetCards({
                 }}
                 addable={addable ? pokemonCardFromSetCard(addable, language) : null}
                 /* The sheet writes without drawing the page again; the tile and the counts are told here. */
+                onTaking={(taken, list) => {
+                    const drawnCard = drawnById.get(taken.id);
+                    if (!drawnCard) return;
+                    const before = live(drawnCard);
+                    // Held at once, with no row yet: the tile's buttons cannot write a second row meanwhile.
+                    report(
+                        drawnCard,
+                        list === "wishlist"
+                            ? { wishlist: true, owned: false, quantity: 0, itemIds: [] }
+                            : { owned: true, quantity: 1, wishlist: false, itemIds: [] },
+                        true,
+                    );
+                    return () =>
+                        report(drawnCard, { owned: before.owned, quantity: before.quantity, wishlist: before.wishlist, itemIds: before.itemIds }, true);
+                }}
                 onTaken={(taken, list, id) => {
                     const drawnCard = drawnById.get(taken.id);
                     if (!drawnCard) return;

@@ -6,6 +6,7 @@ import { DashboardLink } from "@/components/app/dashboard-link";
 import { FolderBody } from "@/components/app/folder-body";
 import { LinkButton } from "@/components/app/link-button";
 import { PublicTopBar } from "@/components/app/public-top-bar";
+import { ListSkeleton } from "@/components/app/skeletons";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { type DexList, groupByDex } from "@/lib/dex-groups";
 import { datapointsLine } from "@/lib/folder-datapoints";
@@ -20,12 +21,14 @@ type Params = { params: Promise<{ username: string }>; searchParams: Promise<Lis
 export async function generateMetadata({ params, searchParams }: Params): Promise<Metadata> {
     const { username } = await params;
     const { page } = readPublicListQuery(await searchParams);
-    const base = `/user/${encodeURIComponent(username)}`;
+    const profile = await getPublicProfile(decodeURIComponent(username));
+    if (!profile) return { title: "Collection not found", robots: { index: false } };
+    // The name as the owner wrote it, not as it was typed: the API finds /user/BARTDUNWEG too, and
+    // every spelling claiming to be the page split one profile into many.
+    const base = `/user/${encodeURIComponent(profile.username ?? decodeURIComponent(username))}`;
     // Each page names itself: a shared or indexed second page must not collapse onto the first.
     // A search is not a page of its own: its canonical is the list it searched.
     const canonical = page > 1 ? `${base}?page=${page}` : base;
-    const profile = await getPublicProfile(decodeURIComponent(username));
-    if (!profile) return { title: "Collection not found", robots: { index: false } };
     const name = profile.display_name || profile.username || "Collection";
     const description = `${name}'s Pokémon card collection on Cardorb.`;
     return {
@@ -42,8 +45,26 @@ export async function generateMetadata({ params, searchParams }: Params): Promis
 export default async function PublicProfilePage({ params, searchParams }: Params) {
     const { username } = await params;
     const profile = await getPublicProfile(decodeURIComponent(username));
+    /* Before anything streams: a route-level loading.tsx sent its frame first, so a name nobody has
+       (or a profile gone private) answered 200 with a "not found" body. The profile read is one small
+       cached call; the slow reads wait behind the boundary below, on the same frame as before. */
     if (!profile) notFound();
+    return (
+        <Suspense fallback={<ListSkeleton tiles={12} />}>
+            <Profile username={username} profile={profile} searchParams={searchParams} />
+        </Suspense>
+    );
+}
 
+async function Profile({
+    username,
+    profile,
+    searchParams,
+}: {
+    username: string;
+    profile: NonNullable<Awaited<ReturnType<typeof getPublicProfile>>>;
+    searchParams: Params["searchParams"];
+}) {
     const query = readPublicListQuery(await searchParams);
     const narrowed = isNarrowed(query);
     // A list the owner does not show is the collection: the chips say so, and the route would 404.
@@ -75,7 +96,7 @@ export default async function PublicProfilePage({ params, searchParams }: Params
               return { ...grouped, total: grouped.cards };
           })
         : null;
-    const base = `/user/${encodeURIComponent(username)}`;
+    const base = `/user/${encodeURIComponent(profile.username ?? decodeURIComponent(username))}`;
     const name = profile.display_name || profile.username || "Collection";
     // What an empty list says, by which list it is: the words are the visitor's, not the owner's.
     const emptyState =
