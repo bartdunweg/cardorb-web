@@ -25,21 +25,34 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
-**2026-09-16, a second bug hunt: the card sheet, binders, import.** Code read by three reviewers,
-each finding checked against the code before a fix; nothing driven in the pane. Fixed: removing
-the last kind of copy by its bin left "In binders" and "Add a copy" for a row that no longer
-existed (only the minus emptied the sheet); a failed last removal still said the card had left;
+**2026-09-16, the card sheet's writes read over.** A code review of the sheet, its two forms
+and their actions, then the pane. Mark as owned started every wish at English and sent the
+language whatever the wish was, so a Japanese wish came out an English copy with nothing on screen
+saying so; it starts from the wish's own language now, sends a Western one only (`copyEdits`
+refuses "ja"), and starts from the wish's "Looking for" condition instead of Near Mint. The sheet's
+arrow keys stepped the card from under the kit's Select trigger (react-aria moves its selection on
+Left and Right, so one press saved the next language and changed the card) and from under an open
+Add a copy or Mark as owned form, whose Save then wrote to the next card's id; the handler now leaves
+a listbox trigger alone and does nothing while a second dialog is open (proven in the pane: form
+open, ArrowRight, the sheet stayed). "Remove this copy" on a card's last copy left the sheet on a
+row that was gone, with Add a copy and the star still writing to it; `dropCopies` marks the card
+emptied, where only the minus did. "Put back" on a 1st Edition or Shadowless copy came back with no
+run: `restoreCard` sends `edition` and the catalogue id, which `removedCardSchema` now keeps (test).
+A refused purchase price (negative) snapped back in silence and toasts now; `setDexFace` clears the
+old face before setting the new one, so a failed second write leaves none rather than two.
+
+**2026-09-16, a second bug hunt: binders, the palette, import.** Three code reviews beside
+the one above (#658 fixed the same Mark as owned, last-copy and edition faults first). Added here:
 Put back left the sheet emptied, so Add made a second row, and the sheet now moves to the row that
-came back under its new id; undo dropped the edition; Mark as owned started on English and Near
-Mint whatever the wish said, and turned a Japanese wish English; Add a copy compared against the
-row as the sheet opened, not as just edited; the palette reopened a hit on a copy removed last
-time, and a slow read could open one hit as another's row; a Pokédex binder whose cards are in no
-counted rarity drew a blank page. Left, in cardorb-api: an import drops the purchase price on
-insert, the export writes no grade, purchase date or favourite, a failed batch leaves earlier
-batches written under a message that says nothing happened, the web's 2 MB limit is larger than
-the API's body limit, a guessed column cannot be set to "Not in this file", and line numbers
-drift after a multi-line note. Left on the web: a tag team fills one Pokédex slot (the API sends
-one species id), and a Pokédex binder of trainers only says it has no cards.
+came back under its new id; Add a copy compared against the row as the sheet opened, not as just
+edited; the palette reopened a hit on a copy removed last time, and a slow read could open one hit
+as another's row; a Pokédex binder whose cards are in no counted rarity drew a blank page. Left, in
+cardorb-api: an import drops the purchase price on insert; the export writes no grade, purchase
+date or favourite; a failed batch leaves earlier batches written under a message that says nothing
+happened; the web's 2 MB limit is larger than the API's body limit; a guessed column cannot be set
+to "Not in this file"; line numbers drift after a multi-line note. Left on the web: a tag team
+fills one Pokédex slot (the API sends one species id), and a Pokédex binder of trainers only says
+it has no cards.
 
 **2026-09-16, auth and Settings read over.** A code review, then the pane. Any signed-in session
 could open /reset-password and set a new password without the old one: the page and its action

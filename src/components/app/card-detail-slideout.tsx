@@ -143,9 +143,14 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     // it so what differs can be set at once.
     /* One copy of several. The sheet stays open on whatever is left, so removing the row you were
        reading moves you to the first one rather than closing the card out from under you. */
+    /* A card the sheet has just emptied stays on screen as a card you could take again, so the
+       last minus is not a door slamming. The set page hands one of these in; everywhere else the
+       card on screen is enough to build it. */
+    const [removed, setRemoved] = useState<string | null>(null);
+    const emptied = !!card && removed === card.id;
     /* A line is a kind of copy, so the bin on it removes every row behind it. Removing one of four
        identical rows would leave a line still saying ×3 and nothing to show for the press. */
-    const dropCopies = async (group: Card[]): Promise<void> => {
+    const dropCopies = async (group: Card[]) => {
         if (!mine || !card || !group.length) return;
         /* Gone from the panel at once; the store follows. A failure reads the rows back. */
         const gone = new Set(group.map((r) => r.id));
@@ -167,20 +172,15 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
             void reloadCopies();
             return;
         }
-        /* The last kind gone, whether by its bin or by the minus: the sheet says so and offers the
-           card again, instead of an "In binders" and an "Add a copy" for a row that no longer exists. */
-        if (rows.length === 0) setRemoved(card.id);
         offerUndo(
             results.flatMap((r) => (r.ok && r.card ? [r.card] : [])),
             group.length > 1 ? `${group.length} copies removed` : "Copy removed",
         );
+        // Nothing left: the sheet says so, rather than staying on a row that is gone with "Add a
+        // copy" and the star still writing to it. Only the minus's own path said it before.
+        if (!rows.length && card) setRemoved(card.id);
         scheduleRefresh();
     };
-    /* A card the sheet has just emptied stays on screen as a card you could take again, so the
-       last minus is not a door slamming. The set page hands one of these in; everywhere else the
-       card on screen is enough to build it. */
-    const [removed, setRemoved] = useState<string | null>(null);
-    const emptied = !!card && removed === card.id;
     /* Read-only sheets never take a card, so the public shape is not asked to answer for one. */
     const own = readOnly ? null : (card as Card | null);
     const takeable: PokemonCard | null =
@@ -404,10 +404,16 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                right arrow threw you onto another card instead of reading the next price. */
             if (
                 el?.closest(
-                    "input, textarea, select, [contenteditable='true'], [role='tab'], [role='tablist'], [role='menu'], [role='menuitem'], [role='listbox'], [role='option'], [role='slider'], [tabindex]:not([tabindex='-1']) svg, figure",
+                    // The kit's Select is a button with a listbox behind it, and react-aria moves its
+                    // selection with these keys: one ArrowRight on a copy's Language saved the next
+                    // language to every row of that kind and stepped to the next card in one press.
+                    "input, textarea, select, [aria-haspopup='listbox'], [contenteditable='true'], [role='tab'], [role='tablist'], [role='menu'], [role='menuitem'], [role='listbox'], [role='option'], [role='slider'], [tabindex]:not([tabindex='-1']) svg, figure",
                 )
             )
                 return;
+            // A second dialog over the sheet (Add a copy, Mark as owned, the palette) owns the keys:
+            // stepping the card under an open form wrote the form's values to the next card's id.
+            if (document.querySelectorAll("[role='dialog']").length > 1) return;
             if (e.key === "ArrowLeft") step(-1);
             if (e.key === "ArrowRight") step(1);
         };

@@ -23,7 +23,7 @@ import type { Card } from "@/lib/api-shapes";
 import { cardLabelFull } from "@/lib/card-label";
 import type { CopyEdits } from "@/lib/copies";
 import { today } from "@/lib/format";
-import { WESTERN_LANGUAGES } from "@/lib/languages";
+import { WESTERN_LANGUAGES, languageOf } from "@/lib/languages";
 
 // A wish becomes a copy you hold. The moment to say what it is: language, condition (Near Mint
 // unless said), finish, folder, what you paid and the day you got it (today unless said). One
@@ -54,11 +54,11 @@ export function MarkOwnedDialog({ children, ...form }: Props & { children: React
 
 function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Props & { close: () => void }) {
     const router = useRouter();
-    // What the wish already says: its language, and the condition it was looking for.
-    const [language, setLanguage] = useState(card.language ?? "en");
-    const [condition, setCondition] = useState(card.condition ?? "Near Mint");
-    // A Japanese wish stays Japanese: the form offers the Western languages only, so it sends none.
-    const western = WESTERN_LANGUAGES.some((l) => l.code === language);
+    // The wish's own language, not English: a Japanese wish marked owned came out English, with
+    // nothing on screen saying so, and its facts and prices were then asked of the wrong catalogue.
+    const [language, setLanguage] = useState<string>(languageOf(card.language).code);
+    // And its "Looking for" condition, where one was recorded; Near Mint is the answer for none.
+    const [condition, setCondition] = useState(card.grade?.trim() ? "" : card.condition?.trim() || "Near Mint");
     // The one column holds "PSA 10"; the form asks it as two questions and a switch.
     const initialGrade = splitGrade(card.grade);
     const [graded, setGraded] = useState(Boolean((card.grade ?? "").trim()));
@@ -78,7 +78,9 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
         setSaving(true);
         setError(null);
         const edits: CopyEdits = {
-            ...(western ? { language } : {}),
+            // A Western language is a choice the row takes; the Japanese shelf's card keeps its own
+            // language on the row, and `copyEdits` refuses "ja", so it is left out rather than sent.
+            ...(WESTERN_LANGUAGES.some((l) => l.code === language) ? { language } : {}),
             condition: graded ? null : condition || null,
             grade: graded ? gradeLabel(grader, gradeValue) : null,
             finish: (effectiveFinish || null) as CopyEdits["finish"],
