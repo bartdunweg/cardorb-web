@@ -17,7 +17,6 @@ describe("loadMoreInput", () => {
             gen: "Sword & Shield",
             type: "Fire",
             number: "085",
-            priced: false,
             collectionId: "abc",
             favoritesOnly: true,
             wishlist: false,
@@ -50,7 +49,6 @@ describe("loadMoreInput", () => {
             finish: "holo",
             language: "ja",
             number: "g",
-            priced: true,
             duplicates: true,
         };
 

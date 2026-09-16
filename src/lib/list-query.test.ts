@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_PAGE, activeFilterCount, changeWindow, isNarrowed, listHref, readListQuery, readPublicListQuery } from "./list-query";
+import { MAX_PAGE, changeWindow, isNarrowed, listHref, readListQuery, readPublicListQuery } from "./list-query";
 
 describe("readListQuery", () => {
     it("reads page and sort, and falls back to set order and page one for anything else", () => {
@@ -18,7 +18,6 @@ describe("readListQuery", () => {
             finish: [],
             language: [],
             fullArt: false,
-            unpriced: false,
             duplicates: false,
         });
         expect(readListQuery({ page: "x", sort: "colour" })).toEqual({
@@ -36,7 +35,6 @@ describe("readListQuery", () => {
             finish: [],
             language: [],
             fullArt: false,
-            unpriced: false,
             duplicates: false,
         });
         expect(readListQuery({})).toMatchObject({ page: 1, sortKey: "set" });
@@ -105,7 +103,6 @@ describe("set and rarity", () => {
         expect(q.rarity).toEqual(["Rare", "Promo"]);
         expect(listHref("/dashboard/cards", q, {})).toBe("/dashboard/cards?rarity=Rare&rarity=Promo&type=Fire&type=Water");
         expect(isNarrowed(q)).toBe(true);
-        expect(activeFilterCount(q)).toBe(4);
         expect(isNarrowed(readListQuery({}))).toBe(false);
     });
 
@@ -113,7 +110,6 @@ describe("set and rarity", () => {
         const q = readListQuery({ condition: ["Near Mint", "Mint"], finish: "holo", language: "ja" });
         expect(q).toMatchObject({ condition: ["Near Mint", "Mint"], finish: ["holo"], language: ["ja"] });
         expect(listHref("/dashboard/cards", q, {})).toBe("/dashboard/cards?condition=Near+Mint&condition=Mint&finish=holo&language=ja");
-        expect(activeFilterCount(q)).toBe(4);
         expect(listHref("/dashboard/cards", q, { condition: [], finish: [], language: [] })).toBe("/dashboard/cards");
     });
 

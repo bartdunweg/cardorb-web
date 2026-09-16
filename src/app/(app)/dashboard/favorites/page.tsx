@@ -15,7 +15,7 @@ export const metadata: Metadata = { title: "Favorites" };
 // API for owned copies only; a wish cannot carry a star here. The list itself is not awaited: see cards/page.tsx.
 export default async function FavoritesPage({ searchParams }: { searchParams: Promise<ListSearchParams> }) {
     const query = readListQuery(await searchParams);
-    const { q, sort, order, set, rarity, fullArt, gen, type, condition, finish, language, unpriced, duplicates } = query;
+    const { q, sort, order, set, rarity, fullArt, gen, type, condition, finish, language, duplicates } = query;
     const filter: CardFilter = {
         favoritesOnly: true,
         q,
@@ -32,7 +32,6 @@ export default async function FavoritesPage({ searchParams }: { searchParams: Pr
         finish,
         language,
         duplicates,
-        ...(unpriced ? { priced: false } : {}),
     };
     const narrowed = isNarrowed(query);
     const list = getMyCards(filter);

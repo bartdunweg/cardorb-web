@@ -15,7 +15,7 @@ export const metadata: Metadata = { title: "Wishlist" };
 // The list itself is not awaited: see cards/page.tsx.
 export default async function WishlistPage({ searchParams }: { searchParams: Promise<ListSearchParams> }) {
     const query = readListQuery(await searchParams);
-    const { q, sort, order, set, rarity, fullArt, gen, type, condition, finish, language, unpriced } = query;
+    const { q, sort, order, set, rarity, fullArt, gen, type, condition, finish, language } = query;
     const filter: CardFilter = {
         wishlist: true,
         q,
@@ -31,7 +31,6 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
         condition,
         finish,
         language,
-        ...(unpriced ? { priced: false } : {}),
     };
     const narrowed = isNarrowed(query);
     const list = getMyCards(filter);

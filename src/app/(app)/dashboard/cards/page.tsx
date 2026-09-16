@@ -16,7 +16,7 @@ export const metadata: Metadata = { title: "Collection" };
 // answers. The facets for the Filters menu are a cached read, five minutes per person.
 export default async function CardsPage({ searchParams }: { searchParams: Promise<ListSearchParams> }) {
     const query = readListQuery(await searchParams);
-    const { q, sort, order, set, rarity, fullArt, gen, type, condition, finish, language, unpriced, duplicates } = query;
+    const { q, sort, order, set, rarity, fullArt, gen, type, condition, finish, language, duplicates } = query;
     const filter: CardFilter = {
         q,
         sort,
@@ -32,7 +32,6 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
         finish,
         language,
         duplicates,
-        ...(unpriced ? { priced: false } : {}),
     };
     const narrowed = isNarrowed(query);
     const list = getMyCards(filter);

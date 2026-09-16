@@ -85,8 +85,6 @@ export type ListQuery = {
     folder: string | undefined;
     /** A public profile's wishlist, favorites or Pokédex instead of its collection. */
     list: PublicList | undefined;
-    /** Only the copies nothing prices: what the total leaves out. */
-    unpriced: boolean;
     /** Only the printings held more than once: the copies to trade or sell. The API counts them over the whole collection. */
     duplicates: boolean;
 };
@@ -115,25 +113,12 @@ export type ListSearchParams = {
     language?: string | string[];
     folder?: string;
     list?: string;
-    unpriced?: string;
     duplicates?: string;
 };
 
 /** A search or a filter is on. */
 export const isNarrowed = (q: ListQuery): boolean =>
-    [q.q, q.fullArt, q.unpriced, q.duplicates].some(Boolean) ||
-    [q.set, q.rarity, q.gen, q.type, q.condition, q.finish, q.language].some((values) => values.length > 0);
-
-/** How many filters are on, for the badge on the Filters button: each value chosen counts, the search does not. */
-export const activeFilterCount = (q: ListQuery): number =>
-    q.set.length +
-    q.rarity.length +
-    q.gen.length +
-    q.type.length +
-    q.condition.length +
-    q.finish.length +
-    q.language.length +
-    [q.fullArt, q.duplicates].filter(Boolean).length;
+    [q.q, q.fullArt, q.duplicates].some(Boolean) || [q.set, q.rarity, q.gen, q.type, q.condition, q.finish, q.language].some((values) => values.length > 0);
 
 /** More than this per filter is not a choice anybody made by hand; the API refuses past fifty. */
 const MAX_VALUES = 50;
@@ -170,7 +155,6 @@ export function readListQuery(params: ListSearchParams): ListQuery {
         language: texts(params.language),
         folder: text(params.folder),
         list: (PUBLIC_LISTS as readonly string[]).includes(params.list ?? "") ? (params.list as PublicList) : undefined,
-        unpriced: params.unpriced === "1",
         duplicates: params.duplicates === "1",
     };
 }
@@ -223,7 +207,6 @@ export function listHref(
             | "language"
             | "folder"
             | "list"
-            | "unpriced"
             | "duplicates"
         >
     >,
@@ -241,7 +224,6 @@ export function listHref(
     const language = "language" in patch ? patch.language : current.language;
     const folder = "folder" in patch ? patch.folder : current.folder;
     const list = "list" in patch ? patch.list : current.list;
-    const unpriced = "unpriced" in patch ? patch.unpriced : current.unpriced;
     const duplicates = "duplicates" in patch ? patch.duplicates : current.duplicates;
     const sortKey = patch.sortKey ?? current.sortKey;
     const period = "period" in patch ? (patch.period ?? DEFAULT_CHANGE_PERIOD) : current.period;
@@ -269,7 +251,6 @@ export function listHref(
     for (const one of language ?? []) p.append("language", one);
     if (folder) p.set("folder", folder);
     if (list) p.set("list", list);
-    if (unpriced) p.set("unpriced", "1");
     if (duplicates) p.set("duplicates", "1");
     if (page > 1) p.set("page", String(page));
     const s = p.toString();
