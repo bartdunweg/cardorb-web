@@ -146,6 +146,8 @@ export const cardItemSchema = z.object({
     /** The picture of the printing this copy is, where it has its own (a Poké Ball reverse, Base Set's Unlimited); absent from an API before it said. */
     printImage: nullable(z.string()).optional(),
     speciesId: nullable(z.number()),
+    /** Every Pokémon on the card, two or three for a tag team; absent from an API before it said. */
+    speciesIds: z.array(z.number()).optional(),
     /** What the card prints where `name` is the English for it; absent from an API before it said. */
     localName: nullable(z.string()).optional(),
     tcgId: nullable(z.string()),
@@ -291,6 +293,8 @@ export type Card = {
     wishlist: boolean | null;
     /** The national Pokédex number the API read from the card; null for a trainer or energy. */
     species_id: number | null;
+    /** Every Pokémon on the card, `species_id` first: a tag team fills two or three Pokédex slots. */
+    species_ids?: number[];
     /** On a list sorted by price change only: the move over its window, null without two readings. */
     price_change?: PriceChange | null;
 };
@@ -399,6 +403,7 @@ export const cardFromItem = (item: CardItem): Card => ({
     tcg_id: item.tcgId,
     collection_id: item.collectionId,
     species_id: item.speciesId,
+    ...(item.speciesIds ? { species_ids: item.speciesIds } : {}),
     wishlist: !item.owned,
     ...(item.priceChange !== undefined ? { price_change: item.priceChange } : {}),
 });
@@ -429,6 +434,7 @@ export type PublicCard = Pick<
     | "is_favorite"
     | "dex_face"
     | "species_id"
+    | "species_ids"
 > &
     /** Only where the owner shows prices: a tile and the sheet draw it when it is there. */
     Partial<Pick<Card, "price">>;
@@ -463,6 +469,8 @@ export const publicItemSchema = z.object({
     /** The larger scan; absent from an API before #179. */
     imageHigh: nullable(z.string()),
     speciesId: nullable(z.number()),
+    /** Every Pokémon on the card, two or three for a tag team; absent from an API before it said. */
+    speciesIds: z.array(z.number()).optional(),
     /** What the card prints where `name` is the English for it; absent from an API before it said. */
     localName: nullable(z.string()).optional(),
     tcgId: nullable(z.string()),
@@ -505,6 +513,7 @@ export const publicCardFromItem = (item: PublicItem): PublicCard => ({
     is_favorite: item.favorite ?? false,
     dex_face: item.dexFace ?? false,
     species_id: item.speciesId,
+    ...(item.speciesIds ? { species_ids: item.speciesIds } : {}),
     // Left off, not nulled, where the owner shows no prices: the grid draws a price when the field exists.
     ...(item.price !== undefined ? { price: item.price } : {}),
 });

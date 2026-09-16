@@ -13,6 +13,18 @@ const names = new Map([
 ]);
 
 describe("groupByDex", () => {
+    it("puts a tag team in the slot of every Pokémon on it, and counts it once", () => {
+        const tagTeam = { ...card("pz", 644), species_ids: [644, 25], quantity: 1, price: 3 } as Card;
+        const out = groupByDex([tagTeam, card("b", 1)], names, { missing: false, dex: { from: 1, to: 1025 } });
+        expect(out.slots.map((s) => s.number)).toEqual([1, 25, 644]);
+        expect(out.slots.find((s) => s.number === 25)?.cards.map((c) => c.id)).toEqual(["pz"]);
+        expect(out.caught).toBe(3);
+        expect(out.cards).toBe(2);
+        expect(out.value).toBe(3);
+        // A Kanto range still takes it, for Pikachu alone.
+        const kanto = groupByDex([tagTeam], names, { missing: false, dex: { from: 1, to: 151 } });
+        expect(kanto.slots.map((s) => s.number)).toEqual([25]);
+    });
     it("fills the slots of the range, keeps the list order in a slot, and leaves the numberless out", () => {
         const out = groupByDex([card("b", 3), card("p1", 25), card("potion", null), card("p2", 25), card("far", 152)], names, {
             missing: true,
