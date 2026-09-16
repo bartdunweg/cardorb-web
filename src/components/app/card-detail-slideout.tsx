@@ -11,15 +11,13 @@ import {
     type PricePoint,
     addCard,
     editCopies,
-    listCopies,
     removeCard,
     rereadMine,
     restoreCard,
-    seriesLogo,
     setCopies,
     setFavorite,
 } from "@/app/(app)/dashboard/cards/actions";
-import { type FolderChoice, listCollections, loadFacets } from "@/app/(app)/dashboard/collections/actions";
+import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { NO_ART, artStack, nextArt } from "@/components/app/card-art";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage, preloadCardImage } from "@/components/app/card-image";
@@ -54,6 +52,7 @@ import { formatPrice } from "@/lib/format";
 import { orientationNeedsPermission, requestOrientation } from "@/lib/holo/orientation";
 import { periodChange } from "@/lib/price-change";
 import { tcgplayerUrl } from "@/lib/price-links";
+import { listCollections, listCopies, loadFacets, seriesLogo } from "@/lib/reads";
 import { settleLatest } from "@/lib/settle-latest";
 import { cx } from "@/utils/cx";
 

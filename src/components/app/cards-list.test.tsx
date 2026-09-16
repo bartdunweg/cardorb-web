@@ -15,10 +15,12 @@ import { CardsList, setGroups } from "./cards-list";
 vi.mock("@/app/(app)/dashboard/list-actions", () => ({ loadMoreCards: vi.fn() }));
 vi.mock("@/app/(app)/dashboard/cards/actions", () => ({
     markOwnedWith: vi.fn(),
+}));
+vi.mock("@/lib/reads", () => ({
     cardFacts: vi.fn().mockResolvedValue(null),
     cardFactsMany: vi.fn().mockResolvedValue({}),
+    listCollections: vi.fn().mockResolvedValue([]),
 }));
-vi.mock("@/app/(app)/dashboard/collections/actions", () => ({ listCollections: vi.fn().mockResolvedValue([]) }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 // jsdom has no matchMedia; the Got it form's date picker reads the breakpoint through it.
 vi.stubGlobal("matchMedia", () => ({ matches: true, addEventListener() {}, removeEventListener() {} }));

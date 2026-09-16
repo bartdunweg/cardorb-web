@@ -11,7 +11,7 @@ import { CardPriceChart } from "./card-price-chart";
  */
 
 const history = vi.fn();
-vi.mock("@/app/(app)/dashboard/cards/actions", () => ({ cardPriceHistory: (id: string) => history(id) }));
+vi.mock("@/lib/reads", () => ({ cardPriceHistory: (id: string) => history(id) }));
 
 class FakeResizeObserver {
     constructor(private cb: ResizeObserverCallback) {}

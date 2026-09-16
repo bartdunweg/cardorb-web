@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { Plus } from "@untitledui/icons";
-import { type CardFacts, cardFacts } from "@/app/(app)/dashboard/cards/actions";
-import { type FolderChoice, listCollections } from "@/app/(app)/dashboard/collections/actions";
+import type { CardFacts } from "@/app/(app)/dashboard/cards/actions";
+import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { MarkOwnedDialog, type OwnableCard } from "@/components/app/mark-owned-dialog";
 import { TileIconButton } from "@/components/app/tile-icon-button";
+import { cardFacts, listCollections } from "@/lib/reads";
 
 /**
  * Ours: the one thing a wishlist tile can do, on the tile. "Got it" opens the same form the card

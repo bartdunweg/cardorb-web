@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { warmList } from "@/app/(app)/dashboard/list-actions";
+import { warmList } from "@/lib/reads";
 
 /**
  * The lists the navigation leads to, read while you are reading the page you are on.
@@ -15,6 +15,9 @@ import { warmList } from "@/app/(app)/dashboard/list-actions";
  * own list, and three more reads at the same moment would be three more things in front of it.
  * Once per load, not per navigation: this sits in the app's layout, which survives every
  * navigation inside it.
+ *
+ * By GET (reads.ts), not the action it used to be: after a write each warm is a GET /cards of 143 to
+ * 339 ms, and as an action a star pressed in those seconds waited for all three.
  */
 
 const LISTS = ["collection", "wishlist", "favorites"] as const;
@@ -25,7 +28,7 @@ export function WarmLists() {
         const run = async () => {
             for (const list of LISTS) {
                 if (cancelled) return;
-                await warmList({ list });
+                await warmList(list);
             }
         };
         // Idle, so nothing of the page you are on waits behind this. Without `requestIdleCallback`
