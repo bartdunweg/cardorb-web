@@ -28,7 +28,7 @@ export default async function SetsPage({ searchParams }: { searchParams: Promise
             <PageHeader title="Browse" />
             {/* The shelf is not awaited: the title and the row go out first, the sets when the catalogue answers. */}
             <BrowseToolbar query={query} view={view} />
-            <Suspense key={`${query.language}:${query.sort}:${query.progress}:${query.q ?? ""}:${view}`} fallback={<SetsOutline />}>
+            <Suspense key={`${query.language}:${query.sort}:${query.progress}:${query.q ?? ""}`} fallback={<SetsOutline />}>
                 <Shelf query={query} view={view} />
             </Suspense>
         </div>

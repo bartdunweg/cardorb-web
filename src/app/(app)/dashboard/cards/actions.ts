@@ -26,7 +26,7 @@ import { type Card, getMyCards } from "@/lib/cards";
 import { type CardName, type CopyEdits, copyEdits, sameCard } from "@/lib/copies";
 import { type BrowseLanguage, isBrowseLanguage } from "@/lib/languages";
 import { rank } from "@/lib/name-rank";
-import { getSets } from "@/lib/sets";
+import { getShelf } from "@/lib/sets";
 import { forgetMine } from "@/lib/user-cache";
 
 export type { PokemonCard } from "@/lib/api-shapes";
@@ -423,7 +423,7 @@ export async function cardPriceHistory(tcgId: string): Promise<PricePoint[]> {
 // set, from the shelf the Browse page already reads. Null where the series is unknown.
 export async function seriesLogo(series: string): Promise<string | null> {
     try {
-        const shelf = await getSets();
+        const shelf = await getShelf();
         const found = shelf.series.find((s) => s.name === series);
         if (!found) return null;
         const sets = [...found.sets]
