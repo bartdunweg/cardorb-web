@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SearchLg, SwitchVertical01 } from "@untitledui/icons";
 import dynamic from "next/dynamic";
+import { usePathname, useSearchParams } from "next/navigation";
 import { listRows } from "@/app/(app)/dashboard/cards/actions";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { awaitRows, knownRows, warmCardFacts, warmSetRows } from "@/components/app/card-memo";
@@ -20,6 +21,7 @@ import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
 import { type CardsSize, GRID_COLUMNS } from "@/lib/cards-view";
 import { FULL_ART, setFullArt } from "@/lib/full-art";
+import { SET_SORTS, type SetHolding, type SetQuery, readSetQuery, writeSetQuery } from "@/lib/set-query";
 
 // The card sheet, fetched on the tap that opens it: it is the app's largest client chunk and the
 // grid is drawn long before anyone touches a tile. `ssr: false`: the sheet is nothing until then.
@@ -41,28 +43,21 @@ const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-sl
  * behind the first on a phone and in the row itself from lg. Two controls of different heights beside each other was the reason to follow
  * that pattern rather than invent a row for this page.
  *
- * It works on the cards the page already holds rather than on the URL, because a set is one page
- * of at most a few hundred cards and the question is "where is Charizard" or "what am I missing",
- * not a query the server should re-run. Search matches the name, the printed name and the number;
+ * It narrows the cards the page already holds, with the choices in the URL (`@/lib/set-query`) so
+ * a refresh or a shared link opens the set as it was left: a set is one page of at most a few
+ * hundred cards and the question is "where is Charizard" or "what am I missing", not a query the
+ * server should re-run. Search matches the name, the printed name and the number;
  * what you hold is the tab bar over the row, with a count on each; the sheet keeps the rarity and
  * full art; the sort is the set's own order, the name or the price. A search that finds nothing keeps the row where it is and says so under it.
  */
-type Holding = "owned" | "missing" | "wishlist";
 /** The page's filters from what the sheet chose. */
 const filtersOf = (v: FilterValues) => ({
     rarity: v.rarity ?? [],
     art: (v.only ?? []).includes(FULL_ART),
 });
-type SortKey = "set" | "name" | "price-desc" | "price-asc";
-const SORTS: { value: SortKey; label: string }[] = [
-    { value: "set", label: "Set order" },
-    { value: "name", label: "Name" },
-    { value: "price-desc", label: "Price, high to low" },
-    { value: "price-asc", label: "Price, low to high" },
-];
 /* The tabs over the row, in the owner's order. Missing is neither held nor wished for, so the three
    after All add up to it. */
-const HOLDINGS: { value: Holding | "all"; label: string }[] = [
+const HOLDINGS: { value: SetHolding | "all"; label: string }[] = [
     { value: "all", label: "All" },
     { value: "wishlist", label: "Wishlisted" },
     { value: "owned", label: "Owned" },
@@ -94,11 +89,29 @@ export function SetCards({
 }) {
     /* The tile size every other list has in its View menu, and the same choice: a set has no table, so size alone. */
     const { size } = useCardsView("grid", initialSize);
-    const [q, setQ] = useState("");
-    const [holding, setHolding] = useState<Holding | undefined>();
-    const [rarity, setRarity] = useState<string[]>([]);
-    const [art, setArt] = useState(false);
-    const [sort, setSort] = useState<SortKey>("set");
+    /* The choices live in the URL (`@/lib/set-query`), written with the history API rather than the
+       router: the cards are in hand, and a router write would run the server page again, which pages
+       through the whole set (getSet). The router still sees the write, so `useSearchParams` follows
+       it, and a refresh or a shared link opens the set as it was left, as every other list does. */
+    const pathname = usePathname();
+    const params = useSearchParams();
+    const query = useMemo(() => readSetQuery(params), [params]);
+    const { holding, rarity, fullArt: art, sort } = query;
+    const write = useCallback(
+        (patch: Partial<SetQuery>) => {
+            const next = writeSetQuery(params, { ...readSetQuery(params), ...patch }).toString();
+            window.history.replaceState(null, "", next ? `${pathname}?${next}` : pathname);
+        },
+        [params, pathname],
+    );
+    /* The field is its own state, so a keystroke lands at once; the URL follows a moment later, the
+       way a binder's search field writes it (cards-search.tsx). */
+    const [q, setQ] = useState(query.q);
+    useEffect(() => {
+        if (q.trim() === query.q.trim()) return;
+        const id = setTimeout(() => write({ q }), 250);
+        return () => clearTimeout(id);
+    }, [q, query.q, write]);
     /* Which of this set's cards are full art: the API's own flag where the answer carries it, which
        is one rule in one place for the web and the iOS app, and the web's older rule read off the
        whole set only for a card without it (`@/lib/full-art`). A set with none never offers the
@@ -130,7 +143,7 @@ export function SetCards({
     );
     /* One test for the grid and for the sheet's count, so "Show 12 cards" is the twelve it shows. */
     const matching = useCallback(
-        (f: { holding?: Holding; rarity: string[]; art: boolean }) => {
+        (f: { holding?: SetHolding; rarity: string[]; art: boolean }) => {
             const term = q.trim().toLowerCase();
             return cards.filter(
                 (c) =>
@@ -252,7 +265,7 @@ export function SetCards({
             <Tabs
                 className="flex flex-1 flex-col gap-6"
                 selectedKey={holding ?? "all"}
-                onSelectionChange={(key) => setHolding(key === "all" ? undefined : (key as Holding))}
+                onSelectionChange={(key) => write({ holding: key === "all" ? undefined : (key as SetHolding) })}
             >
                 {/* The kit's underline tabs, as the card sheet has them; scrolls sideways on a phone too narrow for four. */}
                 <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
@@ -289,8 +302,7 @@ export function SetCards({
                         count={countDraft}
                         onApply={(v) => {
                             const next = filtersOf(v);
-                            setRarity(next.rarity);
-                            setArt(next.art);
+                            write({ rarity: next.rarity, fullArt: next.art });
                         }}
                     />
                     <Dropdown.Root>
@@ -302,10 +314,10 @@ export function SetCards({
                                 selectedKeys={new Set([sort])}
                                 onSelectionChange={(keys) => {
                                     const key = keys === "all" ? undefined : [...keys][0];
-                                    setSort(SORTS.find((o) => o.value === key)?.value ?? "set");
+                                    write({ sort: SET_SORTS.find((o) => o.value === key)?.value ?? "set" });
                                 }}
                             >
-                                {SORTS.map((o) => (
+                                {SET_SORTS.map((o) => (
                                     <Dropdown.Item key={o.value} id={o.value}>
                                         {o.label}
                                     </Dropdown.Item>
