@@ -10,6 +10,22 @@ REVALIDATE_SECRET="e2e-revalidate"
 
 cd "$API_DIR"
 export RESEND_API_KEY="e2e-unused"
+
+# Migration 20260915110000 hardcodes one day's price reading for about 180 cards as a production
+# incident fix; it never populates catalogue_cards, because on the real database the nightly
+# catalogue cron already had. This checkout's database is built from nothing, so
+# 20260915161000's own guard ("card_price_months ids in no catalogue") then fails on exactly
+# those ids. A placeholder row per id, timestamped between the two, satisfies the guard without
+# touching cardorb-api: this file never leaves the CI checkout.
+cat > "$API_DIR/supabase/migrations/20260915115000_e2e_placeholder_catalogue.sql" <<'SQL'
+-- Added by cardorb-web's scripts/e2e-stack.sh, not part of cardorb-api. See its comment.
+insert into public.catalogue_cards (id, language, set_id, local_id, name, set_name)
+select distinct m.tcg_id, 'en', 'e2e-placeholder', m.tcg_id, m.tcg_id, 'e2e placeholder'
+from public.card_price_months m
+where not exists (select 1 from public.catalogue_cards k where k.id = m.tcg_id)
+on conflict do nothing;
+SQL
+
 supabase start -x studio,imgproxy,realtime,edge-runtime,logflare,vector,supavisor,mailpit,postgres-meta
 eval "$(supabase status -o env)"
 
