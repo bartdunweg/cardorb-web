@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { withListQuery } from "@/hooks/use-list-memory";
 
 // The pages a person will tap next, fetched while they read this one, so the tap draws the page
 // at once rather than its outline. The sidebar's links are react-aria links, which do not
@@ -16,7 +17,8 @@ export function PrefetchRoutes({ hrefs }: { hrefs: string[] }) {
         // next/link items prefetch their own) was fetching every one of them on a hard load, each
         // a dynamic route that re-runs the session check. 64rem is Tailwind's lg.
         if (!window.matchMedia("(min-width: 64rem)").matches) return;
-        for (const href of hrefs) router.prefetch(href);
+        // As it was left: the click goes there (`withListQuery`), and the bare address would only redirect.
+        for (const href of hrefs) router.prefetch(withListQuery(href));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
     return null;

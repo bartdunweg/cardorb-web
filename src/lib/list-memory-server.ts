@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import {
     CARDS_GROUP_COOKIE,
@@ -39,6 +39,15 @@ export async function rememberedView(pathname: string): Promise<{ view: CardsVie
  */
 export async function openAsLeft(pathname: string, params: object): Promise<void> {
     if (Object.keys(params).length > 0) return;
+    /* Only a document: the address typed in, the bookmark, the restored tab. A client navigation
+       to the bare address is a choice made in the app (the search field emptied, the last filter or
+       the sort taken off, each a `router.replace` of the bare path), and the cookie still holds what
+       was just cleared, since it is written after the navigation lands; answering that with a
+       redirect put the term back in the field. The router's own `RSC` header never reaches a page
+       (Next keeps it), but the browser's `Sec-Fetch-Dest` does: `document` for a navigation, `empty`
+       for the router's fetch. A client that sends none (curl, an old Safari) is read as a document. */
+    const dest = (await headers()).get("sec-fetch-dest");
+    if (dest && dest !== "document") return;
     const query = parseListMemory((await cookies()).get(LIST_MEMORY_COOKIE)?.value)[memoryKey(pathname)]?.query;
     if (query) redirect(`${pathname}?${query}`);
 }

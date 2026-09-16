@@ -15,7 +15,8 @@ import { forgetMineLater } from "@/lib/user-cache";
  */
 export async function POST(request: Request) {
     const origin = request.headers.get("origin");
-    if (!origin || new URL(origin).host !== new URL(request.url).host) return new Response(null, { status: 403 });
+    // Compared as strings: `Origin: null` (a sandboxed frame) is no URL, and parsing it threw a 500.
+    if (origin !== new URL(request.url).origin) return new Response(null, { status: 403 });
     const forgotten = await forgetMineLater();
     return new Response(null, { status: forgotten ? 204 : 401 });
 }
