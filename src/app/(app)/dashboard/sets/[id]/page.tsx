@@ -5,12 +5,13 @@ import { AppEmptyState } from "@/components/app/app-empty-state";
 import { PageHeader } from "@/components/app/page-header";
 import { SetCards } from "@/components/app/set-cards";
 import { SetHero } from "@/components/app/set-hero";
-import { SetStats } from "@/components/app/set-stats";
+import { LiveSetStats, SetLive } from "@/components/app/set-live";
 import { SetSkeleton } from "@/components/app/skeletons";
 import { formatCount } from "@/lib/format";
 import { isBrowseLanguage } from "@/lib/languages";
 import { rememberedView } from "@/lib/list-memory-server";
 import { logoPalette } from "@/lib/logo-color";
+import { holdingStamp } from "@/lib/set-holding";
 import { setStats } from "@/lib/set-stats";
 import { CatalogueUnavailable, getSet, getSets } from "@/lib/sets";
 
@@ -83,43 +84,47 @@ async function Set({ params, searchParams }: { params: Promise<{ id: string }>; 
     // The counts over the set's own total rather than the cards read, which is the same number on
     // every set the catalogue has recorded and the catalogue's own count on one it has not.
     const stats = { ...setStats(set.cards, set.total), owned: set.owned };
+    // What you hold of the set, as this render read it: a new one drops what the tiles held since (SetLive).
+    const stamp = holdingStamp(set.cards);
 
     return (
-        <div className="flex flex-1 flex-col gap-6">
-            <PageHeader
-                title={set.name}
-                // The era over the name, except where the set is the era's first and shares its name.
-                eyebrow={set.series !== set.name ? set.series : undefined}
-                // The set's own name where the title is a translation: that is what the pack says.
-                subtitle={set.localName ?? undefined}
-                backOnDesktop
-                back={{ href: language === "en" ? "/dashboard/sets" : `/dashboard/sets?language=${language}`, label: "Browse" }}
-                // The set's logo on its own colour, edge to edge over the name. Decoration: the h1 says
-                // which set. No progress bar under the title: the owner's call is that the page
-                // shows the cards, not a meter, so the numbers under the title say the count in words.
-                hero={<SetHero name={set.name} logoUrl={set.logoUrl} colors={colors} />}
-            >
-                {set.cards.length > 0 ? <SetStats stats={stats} released={released} gallery={set.gallery} /> : null}
-            </PageHeader>
+        <SetLive stamp={stamp}>
+            <div className="flex flex-1 flex-col gap-6">
+                <PageHeader
+                    title={set.name}
+                    // The era over the name, except where the set is the era's first and shares its name.
+                    eyebrow={set.series !== set.name ? set.series : undefined}
+                    // The set's own name where the title is a translation: that is what the pack says.
+                    subtitle={set.localName ?? undefined}
+                    backOnDesktop
+                    back={{ href: language === "en" ? "/dashboard/sets" : `/dashboard/sets?language=${language}`, label: "Browse" }}
+                    // The set's logo on its own colour, edge to edge over the name. Decoration: the h1 says
+                    // which set. No progress bar under the title: the owner's call is that the page
+                    // shows the cards, not a meter, so the numbers under the title say the count in words.
+                    hero={<SetHero name={set.name} logoUrl={set.logoUrl} colors={colors} />}
+                >
+                    {set.cards.length > 0 ? <LiveSetStats stats={stats} released={released} gallery={set.gallery} /> : null}
+                </PageHeader>
 
-            {set.cards.length === 0 ? (
-                /* TCGdex lists a set and its count long before it records the cards: 68 of the 184
+                {set.cards.length === 0 ? (
+                    /* TCGdex lists a set and its count long before it records the cards: 68 of the 184
                    Japanese sets stood like that on 2026-09-11. The page
                    opened on nothing, under a header that said "0 of 60 cards" and looked like a
                    collection with a long way to go. It is the catalogue that has the way to go. */
-                <AppEmptyState
-                    icon="book"
-                    title="No cards in the catalogue yet"
-                    description={
-                        set.total > 0
-                            ? `The card catalogue lists this set with ${formatCount(set.total)} cards but has not recorded them. They will show here when it has.`
-                            : "The card catalogue has this set on record but none of its cards. They will show here when it has them."
-                    }
-                />
-            ) : (
-                /* The size as the set pages were left: one memory for all of them (list-memory.ts). */
-                <SetCards cards={set.cards} language={language} initialSize={(await rememberedView(`/dashboard/sets/${id}`)).size} />
-            )}
-        </div>
+                    <AppEmptyState
+                        icon="book"
+                        title="No cards in the catalogue yet"
+                        description={
+                            set.total > 0
+                                ? `The card catalogue lists this set with ${formatCount(set.total)} cards but has not recorded them. They will show here when it has.`
+                                : "The card catalogue has this set on record but none of its cards. They will show here when it has them."
+                        }
+                    />
+                ) : (
+                    /* The size as the set pages were left: one memory for all of them (list-memory.ts). */
+                    <SetCards cards={set.cards} language={language} initialSize={(await rememberedView(`/dashboard/sets/${id}`)).size} />
+                )}
+            </div>
+        </SetLive>
     );
 }

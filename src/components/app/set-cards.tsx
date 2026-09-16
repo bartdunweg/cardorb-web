@@ -11,6 +11,7 @@ import { type FilterAnswer, type FilterValues, FiltersSheet } from "@/components
 import { RowButton } from "@/components/app/row-button";
 import { LIST_ROW, RowSearch } from "@/components/app/row-search";
 import { SetCardTile } from "@/components/app/set-card-tile";
+import { useSetLive } from "@/components/app/set-live";
 import { ViewMenu } from "@/components/app/view-menu";
 import { Tab, TabList, TabPanel, Tabs } from "@/components/application/tabs/tabs";
 import { Button } from "@/components/base/buttons/button";
@@ -21,6 +22,7 @@ import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
 import { type CardsSize, GRID_COLUMNS } from "@/lib/cards-view";
 import { FULL_ART, setFullArt } from "@/lib/full-art";
+import { holdingKey } from "@/lib/set-holding";
 import { SET_SORTS, type SetHolding, type SetQuery, readSetQuery, writeSetQuery } from "@/lib/set-query";
 
 // The card sheet, fetched on the tap that opens it: it is the app's largest client chunk and the
@@ -76,7 +78,7 @@ const HOLDINGS: { value: SetHolding | "all"; label: string }[] = [
 const CARD_BATCH = 48;
 
 export function SetCards({
-    cards,
+    cards: drawnCards,
     language = "en",
     firstRow = 6,
     initialSize = "md",
@@ -89,6 +91,12 @@ export function SetCards({
 }) {
     /* The tile size every other list has in its View menu, and the same choice: a set has no table, so size alone. */
     const { size } = useCardsView("grid", initialSize);
+    /* The cards as the tiles show them: what the server drew, with every press since laid over it
+       (`SetLive`). The tabs, their counts and the sheet read these, so a heart pressed a moment ago
+       is counted under Wishlisted and opens on the wish. */
+    const { live, report } = useSetLive();
+    const cards = useMemo(() => drawnCards.map(live), [drawnCards, live]);
+    const drawnById = useMemo(() => new Map(drawnCards.map((c) => [c.id, c])), [drawnCards]);
     /* The choices live in the URL (`@/lib/set-query`), written with the history API rather than the
        router: the cards are in hand, and a router write would run the server page again, which pages
        through the whole set (getSet). The router still sees the write, so `useSearchParams` follows
@@ -126,32 +134,32 @@ export function SetCards({
        option, which is most sets before Black & White. It is a filter of its own and not an entry
        among the rarities, because it cuts across them: every special illustration rare is a full
        art, and listed with them it put one card under two rarities. */
-    const fullArt = useMemo(() => setFullArt(cards), [cards]);
+    const fullArt = useMemo(() => setFullArt(drawnCards), [drawnCards]);
     /* Every card's facts, a page of them per request, once the grid is up: a sheet opened on any card
        then draws its choices on its first paint (card-memo.ts). The whole set rather than the tiles
        drawn, because the sheet's arrows go past those. Asked of the set's own catalogue. */
     useEffect(() => {
         if (language === "en" || language === "ja")
             warmCardFacts(
-                cards.map((c) => c.tcgId),
+                drawnCards.map((c) => c.tcgId),
                 language,
             );
-    }, [cards, language]);
+    }, [drawnCards, language]);
     /* Your rows in this set, one request for the page, each time the page is drawn: a sheet opened on
        a card you hold or wish for then opens on its row, with its copies, rather than on the
        catalogue's card with the rows read after the tap (card-memo.ts). Only a set you have a row in;
        the cards are the drawing, so a refresh asks again and a second run of the effect does not. */
-    const setName = cards[0]?.setName;
+    const setName = drawnCards[0]?.setName;
     useEffect(() => {
-        if (setName && cards.some((c) => c.owned || c.wishlist)) warmSetRows(setName, cards);
-    }, [cards, setName]);
+        if (setName && drawnCards.some((c) => c.owned || c.wishlist)) warmSetRows(setName, drawnCards);
+    }, [drawnCards, setName]);
     const rarities = useMemo(
-        () => [...new Set(cards.map((c) => c.rarity).filter((r): r is string => Boolean(r)))].sort().map((r) => ({ value: r, label: r })),
-        [cards],
+        () => [...new Set(drawnCards.map((c) => c.rarity).filter((r): r is string => Boolean(r)))].sort().map((r) => ({ value: r, label: r })),
+        [drawnCards],
     );
     /* One test for the grid and for the sheet's count, so "Show 12 cards" is the twelve it shows. */
     const matching = useCallback(
-        (f: { holding?: SetHolding; rarity: string[]; art: boolean }) => {
+        (f: { holding?: SetHolding; rarity: string[]; art: boolean }, keep?: ReadonlySet<string>) => {
             const term = q.trim().toLowerCase();
             return cards.filter(
                 (c) =>
@@ -159,25 +167,29 @@ export function SetCards({
                         c.name.toLowerCase().includes(term) ||
                         (c.localName ?? "").toLowerCase().includes(term) ||
                         c.number.toLowerCase().includes(term)) &&
-                    (!f.holding || (f.holding === "owned" ? c.owned : f.holding === "wishlist" ? c.wishlist : !c.owned && !c.wishlist)) &&
+                    (!f.holding || keep?.has(c.id) || (f.holding === "owned" ? c.owned : f.holding === "wishlist" ? c.wishlist : !c.owned && !c.wishlist)) &&
                     (f.rarity.length === 0 || (c.rarity !== null && c.rarity !== undefined && f.rarity.includes(c.rarity))) &&
                     (!f.art || fullArt.has(c.number)),
             );
         },
         [cards, q, fullArt],
     );
+    const view = `${q}\u0000${holding ?? ""}\u0000${rarity.join(",")}\u0000${art}\u0000${sort}`;
+    /* The cards pressed on in this view stay in it: a plus under Missing would otherwise take the
+       tile away under the thumb that is about to press it again. A new view sorts them where they go. */
+    const [touched, setTouched] = useState<{ view: string; ids: ReadonlySet<string> }>({ view, ids: new Set() });
+    const keep = touched.view === view ? touched.ids : undefined;
     const shown = useMemo(() => {
-        const kept = matching({ holding, rarity, art });
+        const kept = matching({ holding, rarity, art }, keep);
         if (sort === "set") return kept;
         /* A card without a price sorts last either way: the question is which cards are worth what, and
            an unpriced card has no answer to give. */
         const price = (c: SetCard) => c.price ?? (sort === "price-desc" ? -1 : Number.POSITIVE_INFINITY);
         return [...kept].sort((a, b) => (sort === "name" ? a.name.localeCompare(b.name) : sort === "price-desc" ? price(b) - price(a) : price(a) - price(b)));
-    }, [matching, holding, rarity, art, sort]);
+    }, [matching, holding, rarity, art, sort, keep]);
     const narrowed = Boolean(q.trim() || holding || rarity.length || art);
     /* How many of `shown` are drawn. Kept with the view it was counted for, so a new search, filter
        or sort starts again at one batch without an effect to reset it. */
-    const view = `${q}\u0000${holding ?? ""}\u0000${rarity.join(",")}\u0000${art}\u0000${sort}`;
     const [drawn, setDrawn] = useState({ view, count: CARD_BATCH });
     const limit = drawn.view === view ? drawn.count : CARD_BATCH;
     const drawUpTo = useCallback((count: number) => setDrawn({ view, count }), [view]);
@@ -250,12 +262,14 @@ export function SetCards({
         // The row stores one name, the English one; the printed name is the shelf's to tell.
         const onRow = (row: Card) => ({ ...row, local_name: card.localName });
         const held = card.owned || card.wishlist;
-        const known = held ? knownRows(name)?.[0] : undefined;
+        // The rows read with the page say nothing of a card pressed on since; that one is asked for.
+        const pressed = !drawnCards.includes(card);
+        const known = held && !pressed ? knownRows(name)?.[0] : undefined;
         setAddable(held ? null : card);
         setPendingId(held && !known ? card.id : null);
         setSelected(known ? onRow(known) : fromCatalogue(card));
         if (!held || known) return;
-        const row = (await awaitRows(name))?.[0] ?? (await listRows(name))[0];
+        const row = (pressed ? undefined : (await awaitRows(name))?.[0]) ?? (await listRows(name))[0];
         // Only onto the sheet still showing this card, not one opened or closed since.
         setPendingId((id) => (id === card.id ? null : id));
         if (row) setSelected((shown) => (shown?.id === card.id ? onRow(row) : shown));
@@ -353,7 +367,19 @@ export function SetCards({
                         <ul className={`grid gap-4 ${GRID_COLUMNS[size]}`}>
                             {shown.slice(0, limit).map((card, i) => (
                                 <li key={card.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i, 16) * 20}ms` } as React.CSSProperties}>
-                                    <SetCardTile card={card} language={language} size={size} priority={i < firstRow} onOpen={open} />
+                                    <SetCardTile
+                                        card={card}
+                                        stamp={holdingKey(drawnById.get(card.id) ?? card)}
+                                        onChange={(patch) => {
+                                            const drawnCard = drawnById.get(card.id);
+                                            if (drawnCard) report(drawnCard, patch);
+                                            setTouched((t) => ({ view, ids: new Set(t.view === view ? t.ids : []).add(card.id) }));
+                                        }}
+                                        language={language}
+                                        size={size}
+                                        priority={i < firstRow}
+                                        onOpen={open}
+                                    />
                                 </li>
                             ))}
                         </ul>

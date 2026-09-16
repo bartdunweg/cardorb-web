@@ -87,7 +87,7 @@ const draw = async (wishlist: boolean, onSelect = vi.fn()) => {
 describe("CardsList on the wishlist", () => {
     it("draws Got it on each tile, named after the card", async () => {
         await draw(true);
-        const gotIt = await screen.findByRole("button", { name: "Got it: Pikachu" });
+        const gotIt = await screen.findByRole("button", { name: "Add Pikachu to your collection" });
         expect(gotIt).toBeInTheDocument();
         // Its own control, beside the tile: not inside the tile's button, and the tile not inside it.
         expect(gotIt.closest("button")).toBe(gotIt);
@@ -103,7 +103,7 @@ describe("CardsList on the wishlist", () => {
 
     it("keeps the tile's own press out of Got it", async () => {
         const onSelect = await draw(true);
-        const gotIt = await screen.findByRole("button", { name: "Got it: Pikachu" });
+        const gotIt = await screen.findByRole("button", { name: "Add Pikachu to your collection" });
         fireEvent.click(gotIt);
         expect(onSelect).not.toHaveBeenCalled();
         // The form the sheet opens, not a second one.
@@ -112,8 +112,8 @@ describe("CardsList on the wishlist", () => {
 
     it("opens the sheet from the tile as before", async () => {
         const onSelect = await draw(true);
-        await screen.findByRole("button", { name: "Got it: Pikachu" });
-        const [tile] = screen.getAllByRole("button").filter((b) => b.getAttribute("aria-label") !== "Got it: Pikachu");
+        await screen.findByRole("button", { name: "Add Pikachu to your collection" });
+        const [tile] = screen.getAllByRole("button").filter((b) => b.getAttribute("aria-label") !== "Add Pikachu to your collection");
         fireEvent.click(tile!);
         expect(onSelect).toHaveBeenCalledTimes(1);
     });
@@ -123,7 +123,7 @@ describe("CardsList elsewhere", () => {
     it("draws no Got it on the collection", async () => {
         await draw(false);
         expect(await screen.findAllByRole("button")).toHaveLength(1);
-        expect(screen.queryByRole("button", { name: /Got it/ })).toBeNull();
+        expect(screen.queryByRole("button", { name: /to your collection/ })).toBeNull();
     });
 
     // A card you hold has the minus and the plus a set tile has, beside the tile and not in it.

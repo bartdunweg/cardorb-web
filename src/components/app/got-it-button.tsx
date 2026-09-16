@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check } from "@untitledui/icons";
+import { Plus } from "@untitledui/icons";
 import { type CardFacts, cardFacts } from "@/app/(app)/dashboard/cards/actions";
 import { type FolderChoice, listCollections } from "@/app/(app)/dashboard/collections/actions";
 import { MarkOwnedDialog, type OwnableCard } from "@/components/app/mark-owned-dialog";
@@ -10,9 +10,12 @@ import { TileIconButton } from "@/components/app/tile-icon-button";
 /**
  * Ours: the one thing a wishlist tile can do, on the tile. "Got it" opens the same form the card
  * sheet opens (language, condition, folder, price, the day), so a card that arrived in the post
- * leaves the wishlist without opening the sheet first. A round check under the price, the size and
+ * leaves the wishlist without opening the sheet first. A round plus under the price, the size and
  * the place of a set tile's plus, so the buttons under a card are one size on every list. Instacart's saved lists and Etsy's
  * favourites carry an item's one action on the item itself; this is that.
+ *
+ * A plus and not a check: the plus is "to your collection" on every other tile, and a check beside
+ * the pink heart read as "done", as if the card were already yours (Bart, 2026-09-16).
  *
  * The form's folders and the catalogue's facts are asked for on the press that opens it, not
  * when the list draws: a wishlist of forty tiles must not ask the API forty times for a form
@@ -31,7 +34,7 @@ export function GotItButton({ card }: { card: OwnableCard }) {
 
     return (
         <MarkOwnedDialog card={card} folders={folders ?? []} languages={facts?.facts?.languages} facts={card.tcg_id ? facts?.facts : null}>
-            <TileIconButton icon={Check} label={`Got it: ${card.name}`} onPress={load} />
+            <TileIconButton icon={Plus} label={`Add ${card.name} to your collection`} onPress={load} />
         </MarkOwnedDialog>
     );
 }
