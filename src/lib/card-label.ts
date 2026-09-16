@@ -93,6 +93,7 @@ export function printingLine(copy: { finish?: string | null; foil_pattern?: stri
  * one or a slab.
  */
 export function copyLine(copy: Parameters<typeof printingLine>[0] & { condition?: string | null; grade?: string | null }): string | null {
-    const state = (copy.grade ?? copy.condition)?.trim() || null;
+    // A grade left empty on a raw copy is no grade: the condition stands (the tile guards the same).
+    const state = copy.grade?.trim() || copy.condition?.trim() || null;
     return [printingLine(copy), state].filter(Boolean).join(" · ") || null;
 }

@@ -107,6 +107,14 @@ export function SetCards({
     /* The field is its own state, so a keystroke lands at once; the URL follows a moment later, the
        way a binder's search field writes it (cards-search.tsx). */
     const [q, setQ] = useState(query.q);
+    /* And the field follows the URL: Back moved the list and left the old term in the box, and the
+       effect under this wrote it back a moment later. Reset during render, the shape React asks for
+       and the one a binder's field (cards-search.tsx) already uses. */
+    const [fromUrl, setFromUrl] = useState(query.q);
+    if (fromUrl !== query.q) {
+        setFromUrl(query.q);
+        setQ(query.q);
+    }
     useEffect(() => {
         if (q.trim() === query.q.trim()) return;
         const id = setTimeout(() => write({ q }), 250);
@@ -285,6 +293,8 @@ export function SetCards({
                             placeholder="Search this set"
                             value={q}
                             onChange={setQ}
+                            // What the URL keeps (readSetQuery); longer, the two would disagree for good.
+                            maxLength={100}
                             wrapperClassName="rounded-full"
                         />
                     </RowSearch>

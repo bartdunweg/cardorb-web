@@ -129,10 +129,15 @@ const isSortKey = (v: unknown): v is SortKey => SORT_OPTIONS.some((o) => o.value
 /** A hundred cards a page, so this is a million cards in. Nobody's collection is a tenth of it. */
 export const MAX_PAGE = 10_000;
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export function readListQuery(params: ListSearchParams): ListQuery {
     const sortKey = isSortKey(params.sort) ? params.sort : "set";
     const option = SORT_OPTIONS.find((o) => o.value === sortKey)!;
     const text = (v: string | undefined) => v?.trim().slice(0, 100) || undefined;
+    // A folder is an id the API made; anything else in `?folder=` is nobody's binder and reads as none,
+    // where it used to reach the API and come back as a 400 dressed as an outage.
+    const folderId = (v: string | undefined) => (v && UUID.test(v) ? v : undefined);
     const texts = (v: string | string[] | undefined): string[] =>
         [...new Set((Array.isArray(v) ? v : v === undefined ? [] : [v]).map((one) => one.trim().slice(0, 100)).filter(Boolean))].slice(0, MAX_VALUES);
     return {
@@ -153,7 +158,7 @@ export function readListQuery(params: ListSearchParams): ListQuery {
         condition: texts(params.condition),
         finish: texts(params.finish),
         language: texts(params.language),
-        folder: text(params.folder),
+        folder: folderId(params.folder),
         list: (PUBLIC_LISTS as readonly string[]).includes(params.list ?? "") ? (params.list as PublicList) : undefined,
         duplicates: params.duplicates === "1",
     };

@@ -1,3 +1,4 @@
+import { type PeriodKey, forChart } from "@/lib/chart-periods";
 import { formatPercent, formatPrice } from "@/lib/format";
 
 export type PriceChange = {
@@ -38,13 +39,6 @@ function changeAgainst(price: number | null | undefined, before: number | null |
     };
 }
 
-/** The ISO date `days` ago, for slicing a series that is already sorted by date. */
-export const isoDaysAgo = (days: number) => {
-    const d = new Date();
-    d.setDate(d.getDate() - days);
-    return d.toISOString().slice(0, 10);
-};
-
 /**
  * How far a card's price moved over the period the chart is showing: its first figure in the
  * window against its last, which is the question Home's Biggest movers answers (`was` → `now`).
@@ -52,15 +46,15 @@ export const isoDaysAgo = (days: number) => {
  * The figure beside the price used to be the price against its own 30-day average, whatever
  * period the chart under it was drawing, so a card opened from "Biggest movers, in the last 6
  * months" showed a percent nobody could place next to the one that sent them there (Bart,
- * 2026-09-16). It reads the drawn line (chartLine), held dips and untrusted stretch and all, so
- * the number and the line it sits over always say the same thing; the API's own movers figure is
- * the raw reading, so the two can differ on a line the chart distrusts.
+ * 2026-09-16). It reads the drawn line (chartLine, then forChart: held dips, untrusted stretch,
+ * and under Max the week's average the chart draws instead of the day), so the number and the
+ * line it sits over always say the same thing; the API's own movers figure is the raw reading, so
+ * the two can differ on a line the chart distrusts.
  *
  * Null under two figures in the window: one reading is a price, not a move.
  */
-export function periodChange(points: PriceLinePoint[], days: number | null, holo: boolean, printing: string | null, said: string): PriceChange | null {
-    const line = chartLine(points, printing, holo);
-    const within = days === null ? line : line.filter((p) => p.date >= isoDaysAgo(days));
+export function periodChange(points: PriceLinePoint[], period: PeriodKey, holo: boolean, printing: string | null, said: string): PriceChange | null {
+    const within = forChart(chartLine(points, printing, holo), period);
     if (within.length < 2) return null;
     return changeAgainst(within[within.length - 1]!.value, within[0]!.value, said);
 }
