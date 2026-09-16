@@ -10,6 +10,8 @@ type Change = Holding & {
     /** The card as the page drew it when the change was made: a page drawn since is the truth again. */
     was: Holding;
     price: number | null;
+    /** Raised by a change made outside the tile (the sheet), so the tile starts again from it. */
+    outside: number;
 };
 
 const holdingOf = ({ owned, quantity, wishlist, itemIds }: Holding): Holding => ({ owned, quantity, wishlist, itemIds });
@@ -17,7 +19,10 @@ const holdingOf = ({ owned, quantity, wishlist, itemIds }: Holding): Holding => 
 type Live = {
     /** The card as its tile shows it now. */
     live: (card: SetCard) => SetCard;
-    report: (card: SetCard, patch: Partial<Holding>) => void;
+    /** `outside`: the change was made in the sheet, not by the tile's own buttons. */
+    report: (card: SetCard, patch: Partial<Holding>, outside?: boolean) => void;
+    /** How many times the sheet changed this card since the page was drawn, for the tile's stamp. */
+    outsideCount: (card: SetCard) => number;
 };
 
 const LiveContext = createContext<{ changes: Record<string, Change> } & Pick<Live, "report">>({ changes: {}, report: () => undefined });
@@ -37,13 +42,14 @@ export function SetLive({ stamp, children }: { stamp: string; children: ReactNod
     const [state, setState] = useState<{ stamp: string; changes: Record<string, Change> }>({ stamp, changes: {} });
     if (state.stamp !== stamp) setState({ stamp, changes: {} });
     const report = useCallback(
-        (card: SetCard, patch: Partial<Holding>) =>
+        (card: SetCard, patch: Partial<Holding>, outside = false) =>
             setState((s) => {
                 const prev = s.changes[card.id];
-                const base = prev && holdingKey(prev.was) === holdingKey(card) ? prev : card;
+                const valid = prev && holdingKey(prev.was) === holdingKey(card) ? prev : undefined;
+                const count = (valid?.outside ?? 0) + (outside ? 1 : 0);
                 return {
                     ...s,
-                    changes: { ...s.changes, [card.id]: { ...holdingOf(base), ...patch, was: holdingOf(card), price: card.price } },
+                    changes: { ...s.changes, [card.id]: { ...holdingOf(valid ?? card), ...patch, was: holdingOf(card), price: card.price, outside: count } },
                 };
             }),
         [],
@@ -54,6 +60,13 @@ export function SetLive({ stamp, children }: { stamp: string; children: ReactNod
 
 export function useSetLive(): Live {
     const { changes, report } = useContext(LiveContext);
+    const outsideCount = useCallback(
+        (card: SetCard) => {
+            const change = changes[card.id];
+            return change && holdingKey(change.was) === holdingKey(card) ? change.outside : 0;
+        },
+        [changes],
+    );
     const live = useCallback(
         (card: SetCard) => {
             const change = changes[card.id];
@@ -62,7 +75,7 @@ export function useSetLive(): Live {
         },
         [changes],
     );
-    return { live, report };
+    return { live, report, outsideCount };
 }
 
 /** The numbers over the set, moved by every press below them. */
