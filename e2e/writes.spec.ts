@@ -66,8 +66,14 @@ test("the star and the Favorites list agree, on and off", async ({ page }) => {
 
     const sheet = page.getByRole("dialog", { name: c.name });
     const star = sheet.getByRole("button", { name: "Favorite" });
+    // The star answers under the finger and writes behind it, with no toast to say the write has
+    // landed (card-detail-slideout.tsx: "no spinner, because a favourite is a mark and not a task
+    // to wait for"). A page read right after the click can only be trusted once that write's own
+    // response is back, or it reads the server as it was before the press.
+    const starWrite = page.waitForResponse((r) => r.request().method() === "POST");
     await star.click();
     await expect(star).toHaveAttribute("aria-pressed", "true");
+    await starWrite;
 
     await page.goto(`/dashboard/favorites?q=${encodeURIComponent(c.name)}`);
     await expect(collectionTile(page, c)).toHaveCount(1);
@@ -75,8 +81,10 @@ test("the star and the Favorites list agree, on and off", async ({ page }) => {
     await collectionTile(page, c).click();
     const again = page.getByRole("dialog", { name: c.name }).getByRole("button", { name: "Favorite" });
     await expect(again).toHaveAttribute("aria-pressed", "true");
+    const unstarWrite = page.waitForResponse((r) => r.request().method() === "POST");
     await again.click();
     await expect(again).toHaveAttribute("aria-pressed", "false");
+    await unstarWrite;
 
     await page.reload();
     await expect(collectionTile(page, c)).toHaveCount(0);
