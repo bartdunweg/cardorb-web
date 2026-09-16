@@ -114,7 +114,12 @@ export function useCopySteps({
                             failure = res.error;
                             break;
                         }
-                    } else break;
+                    } else {
+                        // Held, but no row to write to: a break here left `have` behind `want`, and the
+                        // outer loop re-read the page for ever.
+                        failure = "This copy cannot be changed from here.";
+                        break;
+                    }
                     have = have === 0 ? 1 : target;
                     stored.current = { quantity: have, id };
                 }

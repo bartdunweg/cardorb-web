@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import {
     CARDS_GROUP_COOKIE,
@@ -39,6 +39,12 @@ export async function rememberedView(pathname: string): Promise<{ view: CardsVie
  */
 export async function openAsLeft(pathname: string, params: object): Promise<void> {
     if (Object.keys(params).length > 0) return;
+    /* A client navigation to the bare address is a choice made in the app: the search field emptied,
+       the last filter or the sort taken off (each a `router.replace` of the bare path), and the
+       cookie still holds what was just cleared, since it is written after the navigation lands.
+       Answering that with a redirect put the term back in the field. The router marks its own
+       fetches with this header; a typed address, a bookmark or a restored tab carries none. */
+    if ((await headers()).get("rsc") === "1") return;
     const query = parseListMemory((await cookies()).get(LIST_MEMORY_COOKIE)?.value)[memoryKey(pathname)]?.query;
     if (query) redirect(`${pathname}?${query}`);
 }

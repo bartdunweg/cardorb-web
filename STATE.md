@@ -25,6 +25,22 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-16, the list memory read over.** A review of #654 and the list machinery, code only
+(the signed-in pages could not be driven: the pane was signed out on localhost). One real fault:
+`openAsLeft` redirected every request for a bare list address, the router's own fetch behind a
+`router.replace` included, while the cookie is written only after that navigation lands. So
+emptying the search field, taking the last filter off or going back to the default sort asked the
+server for the bare address, the cookie still said the old term, and the redirect put it straight
+back; only a page still in the router's minute of cache escaped. Now a fetch carrying `RSC: 1` is
+never redirected: a typed address, a bookmark and a restored tab carry none, which is what the
+docstring promised all along. Beside it: a held copy with no row id made `useCopySteps` re-read
+the page for ever (now a failure with a message), `Origin: null` on `/api/forget-mine` threw a 500
+where it meant 403, and the sidebar prefetches each list as it was left, where the bare address
+would only redirect. Left as noted: the cookie cap drops by insertion order, so a page used daily
+with a filter that never changes goes before a binder touched once last week; and a bare binder
+address redirects from inside its Suspense boundary after two reads, where the other lists
+redirect first.
+
 **2026-09-16, a bug hunt.** Bart asked whether bugs were left. The gate was green; the public
 pages (landing, API docs, profile, wishlist, filters sheet, sort, card sheet, phone width) showed no
 console error; the signed-in pages were not walked (the pane was signed out on localhost and Chrome
