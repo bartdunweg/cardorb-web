@@ -22,7 +22,8 @@ vi.mock("next/cache", () => ({
 }));
 /** The one API call `forgetMine` makes: the profile it reads its own username off. */
 const { readProfile } = vi.hoisted(() => ({ readProfile: vi.fn(async () => ({ username: "Bart" })) }));
-vi.mock("@/lib/api", () => ({
+vi.mock("@/lib/api", async (original) => ({
+    ...(await original<typeof import("@/lib/api")>()),
     ApiError: class extends Error {},
     api: readProfile,
     session: async () => ({ userId: "u1", token: "t" }),

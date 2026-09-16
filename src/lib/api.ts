@@ -13,6 +13,21 @@ import { timed } from "@/lib/timing";
  */
 export const API_URL = (process.env.CARDORB_API_URL ?? "https://api.cardorb.com/v1").replace(/\/$/, "");
 
+/** How long a cached read stands, in seconds: the person's own numbers (user-cache.ts) and a public page's. */
+export const CACHE_SECONDS = 300;
+
+/**
+ * Which five minutes it is, as a cache key part.
+ *
+ * The Data Cache does not stop at `revalidate`: an entry past its five minutes is answered as it
+ * stands and refreshed behind the reader. So the first open after a quiet spell showed the numbers
+ * from before the night's prices and a refresh showed today's (2026-09-16). An entry keyed by its
+ * window is never asked for once the window is over: the next read is a miss, and a miss is the
+ * call. The TTL stays as the entry's own life, so a window's entry is gone rather than kept for ever.
+ * A public read carries it as a header, which is part of the fetch cache's key and nothing to the API.
+ */
+export const cacheWindow = () => String(Math.floor(Date.now() / (CACHE_SECONDS * 1000)));
+
 /**
  * How long one call to the API may take. fetch() has no limit of its own, so an API that accepts
  * the connection and never answers would hold the page until Vercel's five-minute limit. Thirty
@@ -139,6 +154,8 @@ export async function api(path: string, init: Init = {}): Promise<unknown> {
         const token = init.token ?? (await accessToken());
         if (!token) throw new ApiError(401, "Sign in to see this.");
         headers.authorization = `Bearer ${token}`;
+    } else {
+        headers["x-cache-window"] = cacheWindow();
     }
     if (init.body !== undefined) headers["content-type"] = "application/json";
 
@@ -149,7 +166,7 @@ export async function api(path: string, init: Init = {}): Promise<unknown> {
             headers,
             body: init.body !== undefined ? JSON.stringify(init.body) : undefined,
             signal: AbortSignal.timeout(init.timeoutMs ?? API_TIMEOUT_MS),
-            ...(withAuth ? { cache: "no-store" } : { next: { revalidate: 300, tags: init.tags } }),
+            ...(withAuth ? { cache: "no-store" } : { next: { revalidate: CACHE_SECONDS, tags: init.tags } }),
         });
         const json: unknown = await res.json().catch(() => null);
         return { res, json };
