@@ -3,7 +3,6 @@
 import { useCallback, useTransition } from "react";
 import { Grid01, Rows01, SwitchVertical01 } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
-import { countShelf } from "@/app/(app)/dashboard/sets/actions";
 import { CardsSearch } from "@/components/app/cards-search";
 import { type FilterAnswer, type FilterValues, FiltersSheet } from "@/components/app/filters-sheet";
 import { FlagIcon } from "@/components/app/flag-icon";
@@ -14,6 +13,7 @@ import { Dot } from "@/components/foundations/dot-icon";
 import { setSetsView, useSetsView } from "@/hooks/use-sets-view";
 import { BROWSE_PROGRESS_OPTIONS, BROWSE_SORT_OPTIONS, type BrowseQuery, browseHref, isBrowseProgress, isBrowseSort } from "@/lib/browse-query";
 import { BROWSE_LANGUAGES, isBrowseLanguage } from "@/lib/languages";
+import { countShelf } from "@/lib/reads";
 import type { SetsViewMode } from "@/lib/sets-view";
 import { cx } from "@/utils/cx";
 

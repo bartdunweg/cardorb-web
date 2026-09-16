@@ -4,8 +4,7 @@ import type { ReactNode } from "react";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { type CatalogueFilters, type PokemonCard, addCard, searchPokemon } from "@/app/(app)/dashboard/cards/actions";
-import { listSetsShelf } from "@/app/(app)/dashboard/sets/actions";
+import { type CatalogueFilters, type PokemonCard, addCard } from "@/app/(app)/dashboard/cards/actions";
 import type { FilterOption } from "@/components/app/filter-chip";
 import { SearchTrigger } from "@/components/app/search-trigger";
 import { notify } from "@/components/app/toast";
@@ -15,7 +14,7 @@ import { type Card, cardFromPokemonCard } from "@/lib/api-shapes";
 import { loadCatalogueIndex, loadSpecies, lookupCards } from "@/lib/catalogue-client";
 import { searchIndex } from "@/lib/catalogue-index";
 import type { BrowseLanguage } from "@/lib/languages";
-import { listRows } from "@/lib/reads";
+import { listRows, listSetsShelf, searchPokemon } from "@/lib/reads";
 import { hitFromRows, takenHit } from "@/lib/search-hit";
 
 /** What one answer from the catalogue search holds at most: the API's page. A full one means there may be more. */

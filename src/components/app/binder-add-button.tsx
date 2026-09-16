@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { Plus, Rows01, SearchLg } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Button as AriaButton, Heading as AriaHeading } from "react-aria-components";
-import { type CardHit, editCopies, searchMyCards } from "@/app/(app)/dashboard/cards/actions";
+import { type CardHit, editCopies } from "@/app/(app)/dashboard/cards/actions";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { useCommandSearch } from "@/components/app/command-search";
@@ -20,6 +20,7 @@ import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Input } from "@/components/base/input/input";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import { cardLine } from "@/lib/card-label";
+import { searchMyCards } from "@/lib/reads";
 import { cx } from "@/utils/cx";
 
 /**

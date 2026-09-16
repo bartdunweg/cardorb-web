@@ -1,7 +1,6 @@
 "use client";
 
 import { type ReactNode, use, useEffect, useRef, useState, useTransition } from "react";
-import { loadMoreCards } from "@/app/(app)/dashboard/list-actions";
 import { warmCardFacts } from "@/components/app/card-memo";
 import { CardsGrid } from "@/components/app/cards-grid";
 import { CardsTable } from "@/components/app/cards-table";
@@ -10,6 +9,7 @@ import { WishHeartButton } from "@/components/app/wish-heart-button";
 import { Button } from "@/components/base/buttons/button";
 import type { Card, CardFilter, CardList } from "@/lib/cards";
 import type { CardsSize, CardsViewMode } from "@/lib/cards-view";
+import { loadMoreCards } from "@/lib/reads";
 
 /**
  * The cards of a folder, as many as the reader has scrolled to.
