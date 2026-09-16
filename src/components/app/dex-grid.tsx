@@ -298,6 +298,18 @@ function DexSlots({
     linked: boolean;
 }) {
     const d = use(dex);
+    /* Cards in the binder, none of them a Pokémon in its range (trainers, energy): the sidebar says
+       3 and "No cards in this binder" would contradict it. */
+    if (d.total === 0 && !narrowed && (d.held ?? 0) > 0)
+        return (
+            <div className="flex flex-1 flex-col">
+                <AppEmptyState
+                    icon="book"
+                    title="No Pokémon here yet"
+                    description="The cards in this binder are trainers, energy or Pokémon outside its range. A Pokédex shows Pokémon in its range only."
+                />
+            </div>
+        );
     if (d.total === 0) return <div className="flex flex-1 flex-col">{narrowed ? noHits : empty}</div>;
     /* Cards here, but none in a rarity this Pokédex counts and the missing ones hidden: nothing to
        draw, and a blank page under a count of cards reads as broken. */

@@ -50,10 +50,10 @@ as another's row; a Pokédex binder whose cards are in no counted rarity drew a 
 cardorb-api: an import drops the purchase price on insert; the export writes no grade, purchase
 date or favourite; a failed batch leaves earlier batches written under a message that says nothing
 happened; the web's 2 MB limit is larger than the API's body limit; a guessed column cannot be set
-to "Not in this file"; line numbers drift after a multi-line note. Since then: the import faults
-above are fixed (cardorb-api#522, the export's grade, date and star and the line numbers still
-open), and a tag team fills the slot of every Pokémon on it (`species_ids`, cardorb-api#523). Left
-on the web: a Pokédex binder of trainers only says it has no cards.
+to "Not in this file"; line numbers drift after a multi-line note. Since then, all fixed: the import
+faults (cardorb-api#522), the export's grade, purchase date and star, the line numbers and a quote
+mid-field (cardorb-api#524), a tag team in the slot of every Pokémon on it (`species_ids`,
+cardorb-api#523), and a Pokédex binder of trainers only, which said it had no cards.
 
 **2026-09-16, auth and Settings read over.** A code review, then the pane. Any signed-in session
 could open /reset-password and set a new password without the old one: the page and its action
