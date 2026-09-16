@@ -1,6 +1,8 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { RECOVERY_COOKIE } from "@/lib/auth-redirect";
 import { createClient } from "@/lib/supabase/server";
 import { usernameFromEmail } from "@/lib/username";
 import { credentialsSchema, emailSchema, newPasswordSchema } from "@/lib/validation/auth";
@@ -61,23 +63,27 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
 }
 
 /**
- * The new password after a recovery link. The link's session is proof enough of who this is
- * (it came from the mailbox), so unlike Settings this does not ask for the old password, which is
- * the one thing the person does not have.
+ * The new password after a recovery link. The link is the proof of who this is (it came from the
+ * mailbox), so unlike Settings this does not ask for the old password, which is the one thing the
+ * person does not have. The proof is the recovery cookie /auth/confirm wrote, not the session on
+ * its own: any session has one of those.
  */
 export async function setNewPassword(_prev: AuthState, formData: FormData): Promise<AuthState> {
     const parsed = newPasswordSchema.safeParse({ password: formData.get("password") });
     if (!parsed.success) return { error: parsed.error.issues[0].message };
 
+    const jar = await cookies();
     const supabase = await createClient();
     const {
         data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return { error: "That link has expired. Ask for a new one." };
+    if (!user || jar.get(RECOVERY_COOKIE)?.value !== "1") return { error: "That link has expired. Ask for a new one." };
 
     const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
     if (error) return { error: error.message };
 
+    // Spent: the next password change goes through Settings and asks for this one.
+    jar.delete(RECOVERY_COOKIE);
     redirect("/dashboard");
 }
 

@@ -72,7 +72,12 @@ export async function updateSession(request: NextRequest) {
         const url = request.nextUrl.clone();
         url.pathname = "/dashboard";
         url.search = "";
-        return NextResponse.redirect(url);
+        // With the cookies getClaims() may just have rotated: a bare redirect dropped them, the
+        // browser replayed the old refresh token on the next request, and past the reuse
+        // interval that signed the person out on the way in.
+        const redirected = NextResponse.redirect(url);
+        for (const cookie of supabaseResponse.cookies.getAll()) redirected.cookies.set(cookie);
+        return redirected;
     }
 
     return supabaseResponse;
