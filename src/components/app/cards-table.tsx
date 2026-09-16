@@ -5,6 +5,7 @@ import { CardImage } from "@/components/app/card-image";
 import { FavoriteStar } from "@/components/app/favorite-star";
 import { PriceChangeLine } from "@/components/app/price-change";
 import { Table, TableCard } from "@/components/application/table/table";
+import { copyLine } from "@/lib/card-label";
 import type { Card } from "@/lib/cards";
 import { formatPrice } from "@/lib/format";
 
@@ -43,9 +44,17 @@ export function CardsTable({ cards, onSelect }: { cards: Card[]; onSelect: (card
                                             <CardBack width={64} />
                                         )}
                                     </div>
-                                    <span className="flex items-center gap-1">
-                                        {card.name}
-                                        {card.is_favorite ? <FavoriteStar /> : null}
+                                    <span className="flex min-w-0 flex-col">
+                                        <span className="flex items-center gap-1">
+                                            {card.name}
+                                            {card.is_favorite ? <FavoriteStar /> : null}
+                                        </span>
+                                        {/* The same second line the tiles have: which printing this copy is and what
+                                            state it is in, "Holo · Near Mint" (copyLine). A row is one kind of copy,
+                                            and two rows of one card read alike without it. Not a column of its own:
+                                            the state belongs to the printing, and the table is already six columns
+                                            wide on a laptop. A wish, which records neither, keeps the name alone. */}
+                                        {copyLine(card) ? <span className="truncate text-xs font-normal text-tertiary">{copyLine(card)}</span> : null}
                                     </span>
                                 </div>
                             </Table.Cell>
