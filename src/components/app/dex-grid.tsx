@@ -3,6 +3,7 @@
 import { type ReactNode, Suspense, use, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { listCopies, setDexFace } from "@/app/(app)/dashboard/cards/actions";
+import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { CardTile } from "@/components/app/card-tile";
@@ -298,5 +299,21 @@ function DexSlots({
 }) {
     const d = use(dex);
     if (d.total === 0) return <div className="flex flex-1 flex-col">{narrowed ? noHits : empty}</div>;
+    /* Cards here, but none in a rarity this Pokédex counts and the missing ones hidden: nothing to
+       draw, and a blank page under a count of cards reads as broken. */
+    if (d.generations.length === 0)
+        return (
+            <div className="flex flex-1 flex-col">
+                {narrowed ? (
+                    noHits
+                ) : (
+                    <AppEmptyState
+                        icon="book"
+                        title="No Pokémon caught yet"
+                        description="None of the cards here is in a rarity this Pokédex counts. Show the missing ones, or add a rarity."
+                    />
+                )}
+            </div>
+        );
     return <DexGrid generations={d.generations} size={size} linked={linked} />;
 }

@@ -133,8 +133,11 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         if (asOf !== pressed.current) return;
         rememberCopies(row, rows);
         setCopiesState({ of: copiesKey(row), rows });
-        // A row that is gone (removed, or merged away) cannot stay the one shown.
-        setViewing((v) => (v && !rows.some((r) => r.id === v.row.id) ? null : v));
+        /* A row that is gone (removed, merged away, or put back under a new id) cannot stay the one
+           shown: the sheet moves to the first row left, so the star and the copy form act on a row
+           that exists. */
+        const shownId = viewing?.of === card?.id ? viewing?.row.id : row.id;
+        if (card && !rows.some((r) => r.id === shownId)) setViewing(rows[0] ? { of: card.id, row: rows[0] } : null);
     };
     // A new copy as a row of its own, made like the row shown, pulled today; the sheet moves to
     // it so what differs can be set at once.
@@ -528,7 +531,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                     void Promise.all(rows.map((row) => restoreCard(row))).then((results) => {
                         const failed = results.find((r) => !r.ok);
                         if (failed && !failed.ok) notify.failed("That did not go back", { description: failed.error });
-                        else notify.done(rows.length > 1 ? `${rows.length} copies are back` : "It is back");
+                        else {
+                            setRemoved(null);
+                            notify.done(rows.length > 1 ? `${rows.length} copies are back` : "It is back");
+                        }
                         scheduleRefresh();
                         void reloadCopies();
                     });
@@ -1021,7 +1027,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                             mode="add"
                             languages={known?.languages}
                             facts={formFacts}
-                            from={mine}
+                            from={copies?.find((r) => r.id === mine.id) ?? mine}
                             folders={collections}
                             onSaved={() => void reloadCopies()}
                         >

@@ -41,6 +41,19 @@ run: `restoreCard` sends `edition` and the catalogue id, which `removedCardSchem
 A refused purchase price (negative) snapped back in silence and toasts now; `setDexFace` clears the
 old face before setting the new one, so a failed second write leaves none rather than two.
 
+**2026-09-16, a second bug hunt: binders, the palette, import.** Three code reviews beside
+the one above (#658 fixed the same Mark as owned, last-copy and edition faults first). Added here:
+Put back left the sheet emptied, so Add made a second row, and the sheet now moves to the row that
+came back under its new id; Add a copy compared against the row as the sheet opened, not as just
+edited; the palette reopened a hit on a copy removed last time, and a slow read could open one hit
+as another's row; a Pokédex binder whose cards are in no counted rarity drew a blank page. Left, in
+cardorb-api: an import drops the purchase price on insert; the export writes no grade, purchase
+date or favourite; a failed batch leaves earlier batches written under a message that says nothing
+happened; the web's 2 MB limit is larger than the API's body limit; a guessed column cannot be set
+to "Not in this file"; line numbers drift after a multi-line note. Left on the web: a tag team
+fills one Pokédex slot (the API sends one species id), and a Pokédex binder of trainers only says
+it has no cards.
+
 **2026-09-16, auth and Settings read over.** A code review, then the pane. Any signed-in session
 could open /reset-password and set a new password without the old one: the page and its action
 checked for a session and nothing else, which is what Settings' own password change refuses. Now
