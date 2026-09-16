@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { BookOpen01, Folder, Heart, HomeLine, Rows01 } from "@untitledui/icons";
 import Link from "next/link";
 import { useRouteTarget, useStartRoute } from "@/components/app/route-pending";
@@ -37,6 +38,8 @@ export function MobileTabBar() {
     const memory = useListMemory();
     // A page outside the five (Settings, You) has no pill.
     const activeIndex = tabs.findIndex((tab) => tab.match(pathname));
+    // The tab a finger or the focus is on: the one link asked for in full.
+    const [intent, setIntent] = useState<string | null>(null);
 
     return (
         <>
@@ -67,8 +70,16 @@ export function MobileTabBar() {
                         <Link
                             key={tab.href}
                             href={href}
-                            // The whole page, fetched when the bar mounts, so a tap draws it at once rather than its outline.
-                            prefetch={true}
+                            // The whole page, fetched the moment a finger lands on the tab, not when the bar
+                            // mounts. On mount it was five full server renders (Home, Browse, the wishlist,
+                            // the collection, Binders) on every hard load, and again after every write,
+                            // because a refresh empties the router's prefetches and the bar asks for all
+                            // five anew. The press lands a moment before the tap, so the read starts there and
+                            // the tap joins it; the reads behind each tab are kept per person (user-cache.ts),
+                            // which keeps that read short. Focus does the same for a keyboard.
+                            prefetch={intent === tab.href ? true : null}
+                            onPointerDown={() => setIntent(tab.href)}
+                            onFocus={() => setIntent(tab.href)}
                             // Says where the bar is going the moment it is tapped, so the pill moves at once.
                             onNavigate={() => start(href)}
                             aria-current={active ? "page" : undefined}
