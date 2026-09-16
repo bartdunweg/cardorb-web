@@ -2,6 +2,12 @@ import { describe, expect, it } from "vitest";
 import { MAX_PAGE, changeWindow, isNarrowed, listHref, readListQuery, readPublicListQuery } from "./list-query";
 
 describe("readListQuery", () => {
+    it("keeps a folder only when it is an id, so a hand-typed one is the whole list and not an error page", () => {
+        expect(readListQuery({ folder: "70b334a6-3a53-4ee5-905f-fd13a0d4ed9f" }).folder).toBe("70b334a6-3a53-4ee5-905f-fd13a0d4ed9f");
+        expect(readListQuery({ folder: "not-a-uuid" }).folder).toBeUndefined();
+        expect(readListQuery({ folder: "" }).folder).toBeUndefined();
+    });
+
     it("reads page and sort, and falls back to set order and page one for anything else", () => {
         expect(readListQuery({ page: "3", sort: "added-desc", q: " pika " })).toEqual({
             page: 3,

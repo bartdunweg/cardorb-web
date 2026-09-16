@@ -89,6 +89,8 @@ describe("copyLine", () => {
     it("leaves the printing alone where neither was recorded, and a wish with no line", () => {
         expect(copyLine({ finish: "holo", condition: null, grade: null })).toBe("Holo");
         expect(copyLine({ finish: "holo", condition: " " })).toBe("Holo");
+        // A grade recorded as nothing is no slab: the condition still shows.
+        expect(copyLine({ finish: "holo", grade: "", condition: "Near Mint" })).toBe("Holo · Near Mint");
         expect(copyLine({ finish: null, condition: null })).toBeNull();
     });
 });

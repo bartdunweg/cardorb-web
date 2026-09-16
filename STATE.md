@@ -25,6 +25,20 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-16, a bug hunt.** Bart asked whether bugs were left. The gate was green; the public
+pages (landing, API docs, profile, wishlist, filters sheet, sort, card sheet, phone width) showed no
+console error; the signed-in pages were not walked (the pane was signed out on localhost and Chrome
+was not connected). Four found and fixed, each with a test: a set page's search field never
+followed the URL, so Back moved the list and the field wrote the old term back 250 ms later (the
+render-time reset a binder's field already had, and `maxLength={100}`, what `readSetQuery` keeps);
+under Max the figure beside the price read the daily line while the chart drew the weekly average,
+so `periodChange` takes the period key and reads `forChart` too, with `PERIODS`, `byWeek`,
+`forChart`, `withinPeriod` and `isoDaysAgo` moved to `src/lib/chart-periods.ts` (the component file
+re-exports them) so the lib needs no import from a component; `?folder=not-a-uuid` on a public
+profile reached the API, came back 400 and showed "The card service didn't answer", and now reads
+as no folder; and an empty grade string hid a copy's condition in `copyLine`. A scroll jump seen
+when a sheet opened was the browser tool's own scrollIntoView before a click, not the app.
+
 **2026-09-16, prices on the public profile.** A "Show prices" switch under Public profile on
 Settings (`prices-public-row.tsx`, the switch row itself shared with Public profile in
 `setting-switch-row.tsx`). On, the public page prices every tile and the read-only sheet, and the

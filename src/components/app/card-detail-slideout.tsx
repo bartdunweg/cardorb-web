@@ -366,7 +366,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const period = periodState.period;
     const setPeriod = (next: PeriodKey) => setPeriodState({ opensOn, period: next });
     const chosen = PERIODS.find((p) => p.key === period) ?? PERIODS[1];
-    const change = mine ? periodChange(points, chosen.days, isReverseFinish(mine.finish), mine.price_printing ?? null, chosen.said) : null;
+    const change = mine ? periodChange(points, period, isReverseFinish(mine.finish), mine.price_printing ?? null, chosen.said) : null;
 
     /*
      * The arrow keys, which is how anybody who is already looking at a list expects to move
@@ -665,7 +665,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         latest: points.at(-1)?.printings,
         patternPrice,
     });
-    const shownChange = pressedAway ? (shownPrice != null && shownSeries ? periodChange(points, chosen.days, false, shownSeries, chosen.said) : null) : change;
+    const shownChange = pressedAway ? (shownPrice != null && shownSeries ? periodChange(points, period, false, shownSeries, chosen.said) : null) : change;
     // On a public page the card carries a price only where its owner shows them; that is the figure under the title then.
     const publicPrice = readOnly && card && "price" in card ? (card.price ?? null) : null;
     const [art, setArt] = useState(NO_ART);
