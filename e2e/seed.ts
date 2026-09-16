@@ -45,10 +45,6 @@ const upsert = (table: string, rows: unknown[], onConflict: string) =>
           })
         : null;
 
-// scripts/e2e-stack.sh's own placeholder migration inserts a catalogue_cards row per unmatched
-// card_price_months id under set_id "e2e-placeholder" (see that script's comment); it shares no
-// (id, language) with this fixture's real rows, so merge-duplicates never has to arbitrate
-// between them.
 await upsert("catalogue_sets", fixture.sets, "id,language");
 await upsert("catalogue_cards", fixture.cards, "id,language");
 await upsert("tcgplayer_prices", fixture.prices, "product_id,printing");
