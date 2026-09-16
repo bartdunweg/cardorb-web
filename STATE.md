@@ -31,9 +31,12 @@ reachable only by typing the address (see `CLAUDE.md`).
 `router.replace` included, while the cookie is written only after that navigation lands. So
 emptying the search field, taking the last filter off or going back to the default sort asked the
 server for the bare address, the cookie still said the old term, and the redirect put it straight
-back; only a page still in the router's minute of cache escaped. Now a fetch carrying `RSC: 1` is
-never redirected: a typed address, a bookmark and a restored tab carry none, which is what the
-docstring promised all along. Beside it: a held copy with no row id made `useCopySteps` re-read
+back; only a page still in the router's minute of cache escaped. Now only a document is redirected,
+read off the browser's `Sec-Fetch-Dest` (`document` for a typed address, a bookmark or a restored
+tab; `empty` for the router's fetch), which is what the docstring promised all along. The router's
+own `RSC: 1` cannot be the test: Next keeps its headers from `headers()`, measured on the dev server
+with a probe. Proven live in the pane: emptied field stays empty, the cookie clears, and a typed bare
+address still opens on the remembered term. Beside it: a held copy with no row id made `useCopySteps` re-read
 the page for ever (now a failure with a message), `Origin: null` on `/api/forget-mine` threw a 500
 where it meant 403, and the sidebar prefetches each list as it was left, where the bare address
 would only redirect. Left as noted: the cookie cap drops by insertion order, so a page used daily
