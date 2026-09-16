@@ -36,6 +36,7 @@ import { SheetBar } from "@/components/app/sheet-bar";
 import { MARK_ON } from "@/components/app/tile-icon-button";
 import { notify } from "@/components/app/toast";
 import { TypeIcon } from "@/components/app/type-icon";
+import { forgetMineQuietly } from "@/components/app/use-copy-steps";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Tab, TabList, TabPanel, Tabs } from "@/components/application/tabs/tabs";
 import { Badge } from "@/components/base/badges/badges";
@@ -82,11 +83,16 @@ type Neighbours = { onPrev?: (() => void) | null; onNext?: (() => void) | null }
 type Addable = {
     addable?: PokemonCard | null;
     /**
-     * The card was taken, into the collection or onto the wishlist. For a list the page does not
-     * re-read (the search's hits) to mark the one it came from; every other list learns it
-     * from the refresh the sheet asks for.
+     * The card was taken, into the collection or onto the wishlist, and the store has its row: `id`.
+     * A list that is given this marks the card itself and the page is not drawn again (the search's
+     * hits, a set page); every other list learns it from the refresh the sheet asks for.
      */
-    onTaken?: (card: PokemonCard, list: "collection" | "wishlist") => void;
+    onTaken?: (card: PokemonCard, list: "collection" | "wishlist", id: string | undefined) => void;
+    /**
+     * The row shown was removed from the menu, told on the press. A list that is given this takes the
+     * card off itself and the page is not drawn again; a removal that fails draws it again.
+     */
+    onRemoved?: (row: Card) => void;
     /**
      * The card is held or wished for and its row is still on the way (a set page tapped before its
      * rows were in): the copies' place is held, and nothing is offered that the row would take back.
@@ -108,7 +114,18 @@ type Props = ({ card: Card | null; onClose: () => void; readOnly?: false } | { c
     Addable &
     Period;
 
-export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, onNext, addable, onTaken, rowPending = false, period: opensOn = "1m" }: Props) {
+export function CardDetailSlideout({
+    card,
+    onClose,
+    readOnly = false,
+    onPrev,
+    onNext,
+    addable,
+    onTaken,
+    onRemoved,
+    rowPending = false,
+    period: opensOn = "1m",
+}: Props) {
     const router = useRouter();
     // The owner's fields exist only on the editable view; the public view never receives them.
     // The row the sheet shows: the one it opened on, or another copy of the card tapped in the
@@ -220,29 +237,34 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     // On a binder's page before the binder list has answered: the press would file nowhere, so it waits a beat.
     const binderPending = !readOnly && isBinderPath(pathname) && collections.length === 0;
 
-    /* Taking a card the sheet was only showing. The list behind re-reads, and the sheet closes:
-       what it was showing is not what it is now, and the row it became has its own copies. */
-    const add = async (list: "collection" | "wishlist") => {
+    /* Taking a card the sheet was only showing. The sheet closes on the press, with the toast, and
+       the write follows: it waited for the write and then for the list behind to be drawn again, a
+       spinner on a card already chosen. What it was showing is not what it is now, and the row it
+       became has its own copies. A write that fails says so; nothing was marked, so nothing goes back. */
+    const add = (list: "collection" | "wishlist") => {
         if (!takeable) return;
-        setBusy(true);
+        const taken = takeable;
         const into = list === "collection" ? binder : null;
+        const where = list === "wishlist" ? "your wishlist" : into ? into.name : "your collection";
+        setRemoved(null);
+        onClose();
+        notify.done(`Added to ${where}`, { description: taken.name });
         /* The printing and run pressed under the card, where the sheet offers a choice (Bart,
            2026-09-15): you add the one you are looking at. Otherwise the API's own default. */
-        const res = await addCard(takeable, list, into?.id, {
+        void addCard(taken, list, into?.id, {
             printing: printing ? { finish: printing.finish, foilPattern: printing.foilPattern } : undefined,
             edition: edition ?? undefined,
+            reread: false,
+        }).then((res) => {
+            if (!res.ok) {
+                notify.failed(`That card was not added to ${where}`, { description: res.error });
+                return;
+            }
+            if (onTaken) {
+                onTaken(taken, list, res.id);
+                void forgetMineQuietly();
+            } else router.refresh();
         });
-        setBusy(false);
-        const where = list === "wishlist" ? "your wishlist" : into ? into.name : "your collection";
-        if (!res.ok) {
-            notify.failed(`That card was not added to ${where}`, { description: res.error });
-            return;
-        }
-        setRemoved(null);
-        router.refresh();
-        onTaken?.(takeable, list);
-        onClose();
-        notify.done(`Added to ${where}`, { description: takeable.name });
     };
     /* A card you hold, into the binder this page is: the first row not yet in a binder, else the
        row shown, which then moves. A row is one kind of copy, so ×4 goes as four, as the Binder
@@ -543,17 +565,23 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         });
     };
 
-    const removeAndOffer = async (id: string, wishlist: boolean) => {
-        setBusy(true);
-        const res = await removeCard(id);
-        setBusy(false);
-        if (!res.ok) {
-            notify.failed(wishlist ? "That card is still on your wishlist" : "That card is still in your collection", { description: res.error });
-            return;
-        }
+    /* Closed on the press and written after, as the add is: the sheet waited for the delete and the
+       redraw with its menu spinning. The toast comes with the answer, because its way back is the row
+       the delete hands back. */
+    const removeAndOffer = (row: Card) => {
+        const wishlist = !!row.wishlist;
         onClose();
-        router.refresh();
-        offerUndo(res.card ? [res.card] : [], wishlist ? "Removed from your wishlist" : "Removed from your collection");
+        onRemoved?.(row);
+        void removeCard(row.id, { reread: false }).then((res) => {
+            if (!res.ok) {
+                notify.failed(wishlist ? "That card is still on your wishlist" : "That card is still in your collection", { description: res.error });
+                router.refresh();
+                return;
+            }
+            if (onRemoved) void forgetMineQuietly();
+            else router.refresh();
+            offerUndo(res.card ? [res.card] : [], wishlist ? "Removed from your wishlist" : "Removed from your collection");
+        });
     };
 
     // The folders and the facets are for the sheet's own controls, so they are asked for when a
@@ -798,10 +826,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const offer =
         mine && takeable && !rowPending && (emptied || (!mine.owned && !mine.wishlist)) ? (
             <div className="flex flex-col gap-2">
-                <Button size="md" iconLeading={Plus} className="w-full" isDisabled={busy || binderPending} onClick={() => void add("collection")}>
+                <Button size="md" iconLeading={Plus} className="w-full" isDisabled={busy || binderPending} onClick={() => add("collection")}>
                     {binder ? `Add to ${binder.name}` : "Add to collection"}
                 </Button>
-                <Button size="md" color="secondary" iconLeading={Heart} className="w-full" isDisabled={busy} onClick={() => void add("wishlist")}>
+                <Button size="md" color="secondary" iconLeading={Heart} className="w-full" isDisabled={busy} onClick={() => add("wishlist")}>
                     Add to wishlist
                 </Button>
             </div>
@@ -1140,7 +1168,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                         strips the flag rather than filtering on it, and the only reader left
                                                         was the latest-pull block, which the profile no longer shows. What
                                                         does keep cards off a public profile is a folder's own switch. */}
-                                                    <Dropdown.Item icon={Trash01} onAction={() => void removeAndOffer(mine.id, !!mine.wishlist)}>
+                                                    <Dropdown.Item icon={Trash01} onAction={() => removeAndOffer(mine)}>
                                                         {mine.wishlist ? "Remove from wishlist" : "Remove from collection"}
                                                     </Dropdown.Item>
                                                 </Dropdown.Menu>

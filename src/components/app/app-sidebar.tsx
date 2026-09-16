@@ -3,7 +3,6 @@
 import { Suspense, use, useEffect, useState } from "react";
 import { BookOpen01, Folder, Heart, HomeLine, LayoutLeft, Plus, Rows01, Star01 } from "@untitledui/icons";
 import { Button as AriaButton } from "react-aria-components";
-import { sidebarCounts } from "@/app/(app)/sidebar-actions";
 import { AccountMenu } from "@/components/app/account-menu";
 import { SidebarSearchTrigger } from "@/components/app/command-search";
 import { FolderDialog } from "@/components/app/folder-dialog";
@@ -68,7 +67,14 @@ export function AppSidebar({
        the answer over the layout's until the layout reads again (a navigation that redraws it). */
     const [fresh, setFresh] = useState<{ of: Promise<FolderLink[]>; collections: FolderLink[]; favorites: number | null } | null>(null);
     useEffect(() => {
-        const reread = () => void sidebarCounts().then((r) => setFresh({ of: collections, ...r }));
+        // A fetch, not an action: an action waits its turn behind the writes (api/sidebar-counts).
+        const reread = () =>
+            void fetch("/api/sidebar-counts")
+                .then((res) => (res.ok ? (res.json() as Promise<{ collections: FolderLink[]; favorites: number | null }>) : null))
+                .then(
+                    (r) => r && setFresh({ of: collections, ...r }),
+                    () => undefined,
+                );
         window.addEventListener(CARDS_CHANGED, reread);
         return () => window.removeEventListener(CARDS_CHANGED, reread);
     }, [collections]);

@@ -29,18 +29,7 @@ function DetailRow({ label, value }: { label: string; value: ReactNode }) {
 // Beside the hits on a desktop; on a phone over them, the whole screen under the field, with Back
 // to the hits at its top: the highlighted card's scan, everything the catalogue says about it,
 // what it trades at, and the two ways to take it.
-function CardPreview({
-    card,
-    adding,
-    onAdd,
-    onView,
-}: {
-    card: PokemonCard;
-    /** Which list this card is on its way to, or null: the button that was pressed carries the spinner. */
-    adding: "collection" | "wishlist" | null;
-    onAdd: (target: "collection" | "wishlist") => void;
-    onView: () => void;
-}) {
+function CardPreview({ card, onAdd, onView }: { card: PokemonCard; onAdd: (target: "collection" | "wishlist") => void; onView: () => void }) {
     // Back, on a phone: the selection is the preview, so clearing it is the way back to the hits.
     // Focus goes to the list the preview covered, not the field: the field would raise the
     // keyboard over the hits just uncovered. Found from this box, not the pressed button: iOS
@@ -93,12 +82,10 @@ function CardPreview({
                         onAdd("collection");
                         focusField();
                     }}
-                    isDisabled={adding !== null || card.owned}
-                    isLoading={adding === "collection"}
-                    showTextWhileLoading
+                    isDisabled={card.owned}
                     className="w-full"
                 >
-                    {card.owned ? "In your collection" : adding === "collection" ? "Adding…" : "Add to collection"}
+                    {card.owned ? "In your collection" : "Add to collection"}
                 </Button>
                 <Button
                     color="secondary"
@@ -106,12 +93,10 @@ function CardPreview({
                         onAdd("wishlist");
                         focusField();
                     }}
-                    isDisabled={adding !== null || card.owned || card.wishlist}
-                    isLoading={adding === "wishlist"}
-                    showTextWhileLoading
+                    isDisabled={card.owned || card.wishlist}
                     className="w-full"
                 >
-                    {card.wishlist ? "On your wishlist" : adding === "wishlist" ? "Adding…" : "Add to wishlist"}
+                    {card.wishlist ? "On your wishlist" : "Add to wishlist"}
                 </Button>
                 {/* The card in full: the sheet over the palette, with the price line, the copies and the
                     binders the preview has no room for. */}
@@ -209,7 +194,6 @@ export function CommandSearchMenu({
     loadingMore,
     onLoadMore,
     total,
-    adding,
     onAdd,
     onView,
 }: {
@@ -232,8 +216,6 @@ export function CommandSearchMenu({
     onLoadMore: () => void;
     /** How many the whole search matched; null where the API did not say. Capped at 250 there, read as "250+". */
     total: number | null;
-    /** The hit whose add is on its way and which list it is going to, so its buttons wait; null while none is. */
-    adding: { id: string; target: "collection" | "wishlist" } | null;
     onAdd: (card: PokemonCard, target: "collection" | "wishlist") => void;
     /** View details pressed in the preview: the card's full sheet over the palette. */
     onView: (card: PokemonCard) => void;
@@ -382,14 +364,7 @@ export function CommandSearchMenu({
                     {({ selectedId }) => {
                         const card = hits.find((h) => h.id === selectedId);
                         if (!card) return null;
-                        return (
-                            <CardPreview
-                                card={card}
-                                adding={adding?.id === card.id ? adding.target : null}
-                                onAdd={(target) => onAdd(card, target)}
-                                onView={() => onView(card)}
-                            />
-                        );
+                        return <CardPreview card={card} onAdd={(target) => onAdd(card, target)} onView={() => onView(card)} />;
                     }}
                 </CommandMenu.Preview>
             </CommandMenu.Group>
