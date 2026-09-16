@@ -10,8 +10,13 @@ vi.mock("react", async (original) => ({
         return memo.get(fn);
     },
 }));
+/** The key parts every `unstable_cache` was given, in order. */
+const { cacheKeys } = vi.hoisted(() => ({ cacheKeys: [] as string[][] }));
 vi.mock("next/cache", () => ({
-    unstable_cache: (fn: () => unknown) => fn,
+    unstable_cache: (fn: () => unknown, keys: string[]) => {
+        cacheKeys.push(keys);
+        return fn;
+    },
     updateTag: vi.fn(),
     revalidatePath: vi.fn(),
 }));
@@ -46,6 +51,30 @@ describe("perUser", () => {
         await Promise.all([perUser("stats", stats), perUser("folders", folders)]);
         expect(stats).toHaveBeenCalledTimes(1);
         expect(folders).toHaveBeenCalledTimes(1);
+    });
+
+    it("asks for a fresh entry once the five minutes are up, never for the one past them", async () => {
+        vi.useFakeTimers();
+        try {
+            vi.setSystemTime(new Date("2026-09-16T04:00:00Z"));
+            await perUser("stats", async () => 1);
+            memo.clear();
+            vi.setSystemTime(new Date("2026-09-16T04:04:59Z"));
+            await perUser("stats", async () => 1);
+            memo.clear();
+            vi.setSystemTime(new Date("2026-09-16T04:05:00Z"));
+            await perUser("stats", async () => 1);
+            const [within, stillWithin, next] = cacheKeys.slice(-3);
+            // The Data Cache answers an entry past its five minutes and refreshes it behind the
+            // reader, so a key that stands for ever handed the first open of the day yesterday's
+            // numbers. A key that names the window is never asked for the entry past it.
+            expect(stillWithin).toEqual(within);
+            expect(next).not.toEqual(within);
+            expect(next).toContain("stats");
+            expect(next).toContain("u1");
+        } finally {
+            vi.useRealTimers();
+        }
     });
 
     it("reads again after a write in the same request", async () => {

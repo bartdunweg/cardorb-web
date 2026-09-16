@@ -10,5 +10,47 @@
                 "repo": "strakzat/meridian"
             }
         }
+    },
+    "permissions": {
+        "allow": [
+            "Bash(git fetch *)",
+            "Bash(git worktree add *)",
+            "Bash(./scripts/verify.sh)",
+            "Bash(./scripts/verify.sh *)",
+            "Bash(pnpm typecheck)",
+            "Bash(pnpm lint)",
+            "Bash(pnpm test)",
+            "Bash(npx vitest *)",
+            "Bash(npx tsc --noEmit *)",
+            "Bash(npx prettier --check *)",
+            "Bash(supabase db query *)",
+            "Bash(/Users/bartdunweg/.nvm/versions/node/v20.20.1/bin/supabase db query *)",
+            "Bash(vercel logs *)",
+            "Read(//Users/bartdunweg/Documents/Projects/cardorb-api/**)",
+            "Read(//private/tmp/claude-501/**)",
+            "mcp__Claude_Browser__browser_batch",
+            "mcp__Claude_Browser__computer",
+            "mcp__Claude_Browser__find",
+            "mcp__Claude_Browser__read_page",
+            "mcp__Claude_Browser__get_page_text",
+            "mcp__Claude_Browser__navigate",
+            "mcp__Claude_Browser__resize_window",
+            "mcp__Claude_Browser__preview_start",
+            "mcp__Claude_Browser__preview_stop",
+            "mcp__Claude_Browser__preview_logs",
+            "mcp__Claude_Browser__preview_list",
+            "mcp__Claude_Browser__read_console_messages",
+            "mcp__Claude_Browser__read_network_requests",
+            "mcp__Claude_Browser__tabs_context",
+            "mcp__Claude_Browser__tabs_create",
+            "mcp__Claude_Browser__tabs_close",
+            "mcp__Claude_Browser__tabs_select",
+            "mcp__Claude_Browser__javascript_tool",
+            "mcp__terminal__read_terminal",
+            "mcp__ccd_session__mark_chapter",
+            "mcp__ccd_pr__get_status",
+            "mcp__ccd_session_mgmt__search_session_transcripts",
+            "mcp__ccd_session_mgmt__list_sessions"
+        ]
     }
 }
