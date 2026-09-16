@@ -44,6 +44,7 @@ export function CopyCard({
     facts,
     busy,
     arrive = false,
+    wish = false,
     onMore,
     onFewer,
     onRemove,
@@ -59,10 +60,17 @@ export function CopyCard({
     busy: boolean;
     /** Drawn as arriving: the kinds the sheet learns about after it opened on one of them. */
     arrive?: boolean;
-    onMore: () => void;
-    onFewer: () => void;
+    /**
+     * A wish rather than a copy: only what you are looking for, the printing and the state you want
+     * it in (Bart, 2026-09-16), so a wishlist tile reads "Holo · Near Mint" as a held one does. How
+     * many, the binder, the price paid and the day got are facts about a card you hold and are not
+     * asked; the sheet's own menu removes the wish.
+     */
+    wish?: boolean;
+    onMore?: () => void;
+    onFewer?: () => void;
     /** Every copy of this kind, at once. */
-    onRemove: () => void;
+    onRemove?: () => void;
     /** After a field saved, so the sheet re-reads its rows. */
     onSaved: () => void;
     /** The binders again after one was made, so the new one can be picked. */
@@ -144,36 +152,40 @@ export function CopyCard({
 
     return (
         <section
-            aria-label={copyLabel(row, folderName)}
+            aria-label={wish ? "What you are looking for" : copyLabel(row, folderName)}
             className={cx("flex flex-col gap-5 rounded-xl bg-page p-4 shadow-lift-xs ring-1 ring-primary ring-inset", arrive && "arrive")}
         >
             {/* What kind this is, in the words the add form uses. Not how many: the stepper under it
                 says that, and a number said twice in one card is the card arguing with itself. */}
             <header className="flex items-center gap-2">
-                <FlagIcon language={row.language} />
-                <h3 className="min-w-0 flex-1 truncate text-sm font-semibold text-primary">{copyLabel(row, folderName)}</h3>
+                {wish ? null : <FlagIcon language={row.language} />}
+                <h3 className="min-w-0 flex-1 truncate text-sm font-semibold text-primary">{wish ? "What you are looking for" : copyLabel(row, folderName)}</h3>
             </header>
 
-            <div className={field}>
-                How many
-                <span className="flex items-center gap-2">
-                    <Button
-                        color="secondary"
-                        size="sm"
-                        iconLeading={Minus}
-                        aria-label={group.quantity <= 1 ? "Remove this copy" : "One copy fewer"}
-                        isDisabled={disabled}
-                        onClick={onFewer}
-                    />
-                    <span className="min-w-6 text-center text-primary tabular-nums">{group.quantity}</span>
-                    <Button color="secondary" size="sm" iconLeading={Plus} aria-label="One copy more" isDisabled={disabled} onClick={onMore} />
-                </span>
-            </div>
+            {wish ? null : (
+                <div className={field}>
+                    How many
+                    <span className="flex items-center gap-2">
+                        <Button
+                            color="secondary"
+                            size="sm"
+                            iconLeading={Minus}
+                            aria-label={group.quantity <= 1 ? "Remove this copy" : "One copy fewer"}
+                            isDisabled={disabled}
+                            onClick={onFewer}
+                        />
+                        <span className="min-w-6 text-center text-primary tabular-nums">{group.quantity}</span>
+                        <Button color="secondary" size="sm" iconLeading={Plus} aria-label="One copy more" isDisabled={disabled} onClick={onMore} />
+                    </span>
+                </div>
+            )}
 
-            <div className={field}>
-                Language
-                <LanguageSelect value={language} onChange={(code) => void save({ language: code }, "The language did not change")} printed={languages} />
-            </div>
+            {wish ? null : (
+                <div className={field}>
+                    Language
+                    <LanguageSelect value={language} onChange={(code) => void save({ language: code }, "The language did not change")} printed={languages} />
+                </div>
+            )}
 
             {/* Raw or graded, then only the question that follows: a slab has a grade and no
                 condition, a loose card the other way round. Graded starts on the form's own
@@ -234,7 +246,7 @@ export function CopyCard({
                 </div>
             ) : (
                 <div className={field}>
-                    Kept as
+                    {wish ? "Looking for" : "Kept as"}
                     <NativeSelect
                         aria-label="Condition"
                         size="sm"
@@ -242,7 +254,7 @@ export function CopyCard({
                         disabled={disabled}
                         value={condition}
                         onChange={(e) => void save({ condition: e.target.value || null }, "The condition did not change")}
-                        options={[{ label: "Not recorded", value: "" }, ...CONDITIONS.map((c) => ({ label: c, value: c }))]}
+                        options={[{ label: wish ? "Any condition" : "Not recorded", value: "" }, ...CONDITIONS.map((c) => ({ label: c, value: c }))]}
                     />
                 </div>
             )}
@@ -326,72 +338,80 @@ export function CopyCard({
 
             {/* Only a binder filled by hand takes a card; a rule binder fills itself. With none
                 yet, the way to file it is to make one, and that stays offered beside the list. */}
-            <div className={field}>
-                Binder
-                <span className="flex w-full items-center gap-2">
-                    {manual.length ? (
-                        <NativeSelect
-                            aria-label="Binder"
+            {wish ? null : (
+                <div className={field}>
+                    Binder
+                    <span className="flex w-full items-center gap-2">
+                        {manual.length ? (
+                            <NativeSelect
+                                aria-label="Binder"
+                                size="sm"
+                                className="w-full"
+                                disabled={disabled}
+                                value={folder}
+                                onChange={(e) => void save({ collectionId: e.target.value || null }, "That copy was not filed")}
+                                options={[{ label: "None", value: "" }, ...manual.map((f) => ({ label: f.name, value: f.id }))]}
+                            />
+                        ) : null}
+                        <FolderDialog
+                            mode="create"
+                            onSaved={async (id) => {
+                                const next = await refreshFolders();
+                                if (id && next.some((f) => f.id === id && !f.rule)) void save({ collectionId: id }, "That copy was not filed");
+                            }}
+                        >
+                            <Button size="sm" color="link-gray" iconLeading={Plus} className="shrink-0">
+                                New binder
+                            </Button>
+                        </FolderDialog>
+                    </span>
+                </div>
+            )}
+
+            {wish ? null : (
+                <>
+                    <div className={field}>
+                        Purchase price
+                        <Input
+                            type="number"
+                            aria-label="Purchase price"
                             size="sm"
-                            className="w-full"
-                            disabled={disabled}
-                            value={folder}
-                            onChange={(e) => void save({ collectionId: e.target.value || null }, "That copy was not filed")}
-                            options={[{ label: "None", value: "" }, ...manual.map((f) => ({ label: f.name, value: f.id }))]}
+                            className="w-28"
+                            min={0}
+                            step="0.01"
+                            placeholder="0.00"
+                            isDisabled={disabled}
+                            value={priceText}
+                            onChange={setPriceDraft}
+                            onBlur={commitPrice}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") commitPrice();
+                            }}
                         />
-                    ) : null}
-                    <FolderDialog
-                        mode="create"
-                        onSaved={async (id) => {
-                            const next = await refreshFolders();
-                            if (id && next.some((f) => f.id === id && !f.rule)) void save({ collectionId: id }, "That copy was not filed");
-                        }}
-                    >
-                        <Button size="sm" color="link-gray" iconLeading={Plus} className="shrink-0">
-                            New binder
-                        </Button>
-                    </FolderDialog>
-                </span>
-            </div>
+                    </div>
 
-            <div className={field}>
-                Purchase price
-                <Input
-                    type="number"
-                    aria-label="Purchase price"
-                    size="sm"
-                    className="w-28"
-                    min={0}
-                    step="0.01"
-                    placeholder="0.00"
-                    isDisabled={disabled}
-                    value={priceText}
-                    onChange={setPriceDraft}
-                    onBlur={commitPrice}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter") commitPrice();
-                    }}
-                />
-            </div>
-
-            <div className={field}>
-                Acquired
-                {/* Saves when Apply is pressed in the calendar, like every other field here saves
+                    <div className={field}>
+                        Acquired
+                        {/* Saves when Apply is pressed in the calendar, like every other field here saves
                     when it is left. */}
-                <AcquiredDatePicker
-                    className="w-44"
-                    isDisabled={disabled}
-                    value={acquired}
-                    onChange={(date) => void save({ acquiredAt: date }, "The acquired date did not save")}
-                />
-            </div>
+                        <AcquiredDatePicker
+                            className="w-44"
+                            isDisabled={disabled}
+                            value={acquired}
+                            onChange={(date) => void save({ acquiredAt: date }, "The acquired date did not save")}
+                        />
+                    </div>
+                </>
+            )}
 
             {/* The whole kind at once. The minus takes one; this is for four you sold together. */}
-            <div className="flex justify-end border-t border-secondary pt-3">
-                <Button size="sm" color="link-destructive" isDisabled={disabled} onClick={onRemove}>
-                    {group.quantity > 1 ? `Remove all ${group.quantity}` : "Remove this copy"}
-                </Button>
-            </div>
+            {wish ? null : (
+                <div className="flex justify-end border-t border-secondary pt-3">
+                    <Button size="sm" color="link-destructive" isDisabled={disabled} onClick={onRemove}>
+                        {group.quantity > 1 ? `Remove all ${group.quantity}` : "Remove this copy"}
+                    </Button>
+                </div>
+            )}
         </section>
     );
 }

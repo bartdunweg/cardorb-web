@@ -9,7 +9,7 @@ import { listRows } from "@/app/(app)/dashboard/cards/actions";
 import { CardImage } from "@/components/app/card-image";
 import { PERIODS, type PeriodKey } from "@/components/app/chart-periods";
 import { useHomePeriod } from "@/components/app/home-period";
-import { cardLine } from "@/lib/card-label";
+import { cardLine, copyLine } from "@/lib/card-label";
 import type { Card } from "@/lib/cards";
 import { formatPrice } from "@/lib/format";
 import type { Mover } from "@/lib/movers";
@@ -117,6 +117,9 @@ export function Movers() {
     );
 }
 
+/** A mover's printing and state in the words every list uses; null where the API said nothing. */
+const moverLine = (m: Mover) => copyLine({ finish: m.finish, foil_pattern: m.foilPattern, edition: m.edition, condition: m.condition, grade: m.grade });
+
 function MoverList({
     title,
     movers,
@@ -170,6 +173,10 @@ function MoverList({
                                         })}
                                         {m.copies > 1 ? ` · ×${m.copies}` : ""}
                                     </span>
+                                    {/* The second line every list has: the printing and the state, "Holo · Near Mint"
+                                        (copyLine). A mover is a card, so the API says it only where every copy held
+                                        answers the same (cardorb-api#516); where they differ there is no line. */}
+                                    {moverLine(m) ? <span className="truncate text-xs text-tertiary">{moverLine(m)}</span> : null}
                                 </div>
                                 {/* The price now large, and what it did under it, small: the card's price is
                                     what you look for, the move is why it is on the list (Bart, 2026-09-15). */}

@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { Button as AriaButton } from "react-aria-components";
 import { CardImage } from "@/components/app/card-image";
 import type { Card } from "@/lib/api-shapes";
-import { cardLabel, cardLine, printingLine } from "@/lib/card-label";
+import { cardLabel, cardLine, copyLine } from "@/lib/card-label";
 import { formatPrice } from "@/lib/format";
 
 // The card sheet, fetched on the tap that opens it: it is the app's largest client chunk and the
@@ -43,7 +43,7 @@ export function TopCardsRow({ cards }: { cards: Card[] }) {
                             <span className="flex min-w-0 flex-1 flex-col">
                                 <span className="truncate text-sm font-medium text-primary">{card.name}</span>
                                 <span className="truncate text-xs text-tertiary">{cardLine(card)}</span>
-                                {printingLine(card) ? <span className="truncate text-xs text-tertiary">{printingLine(card)}</span> : null}
+                                {copyLine(card) ? <span className="truncate text-xs text-tertiary">{copyLine(card)}</span> : null}
                                 <span className="mt-0.5 text-sm font-semibold text-primary tabular-nums">{formatPrice(card.price)}</span>
                             </span>
                         </AriaButton>
