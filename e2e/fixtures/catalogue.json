@@ -426,9 +426,290 @@
                     "type": "reverse"
                 }
             ]
+        },
+        {
+            "category": "Pokemon",
+            "evolve_from": null,
+            "first_edition": false,
+            "full_art": false,
+            "hp": 70,
+            "id": "sv01-013",
+            "illustrator": "Saya Tsuruta",
+            "image": "https://images.cardorb.com/en/sv/sv01/013",
+            "language": "en",
+            "languages": ["en", "de", "fr", "it", "es", "pt"],
+            "local_id": "013",
+            "local_name": null,
+            "name": "Sprigatito",
+            "rarity": "Common",
+            "regulation_mark": "G",
+            "release_date": "2023/03/31",
+            "series": "Scarlet & Violet",
+            "set_id": "sv01",
+            "set_name": "Scarlet & Violet",
+            "stage": "Basic",
+            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "tcgplayer_product_id": null,
+            "trainer_type": null,
+            "types": ["Grass"],
+            "variants": [
+                {
+                    "type": "reverse"
+                },
+                {
+                    "type": "normal"
+                }
+            ]
+        },
+        {
+            "category": "Pokemon",
+            "evolve_from": "Sprigatito",
+            "first_edition": false,
+            "full_art": false,
+            "hp": 90,
+            "id": "sv01-014",
+            "illustrator": "Kouki Saitou",
+            "image": "https://images.cardorb.com/en/sv/sv01/014",
+            "language": "en",
+            "languages": ["en", "de", "fr", "it", "es", "pt"],
+            "local_id": "014",
+            "local_name": null,
+            "name": "Floragato",
+            "rarity": "Uncommon",
+            "regulation_mark": "G",
+            "release_date": "2023/03/31",
+            "series": "Scarlet & Violet",
+            "set_id": "sv01",
+            "set_name": "Scarlet & Violet",
+            "stage": "Stage1",
+            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "tcgplayer_product_id": null,
+            "trainer_type": null,
+            "types": ["Grass"],
+            "variants": [
+                {
+                    "type": "normal"
+                },
+                {
+                    "type": "reverse"
+                }
+            ]
+        },
+        {
+            "category": "Pokemon",
+            "evolve_from": "Floragato",
+            "first_edition": false,
+            "full_art": false,
+            "hp": 160,
+            "id": "sv01-015",
+            "illustrator": "Ryota Murayama",
+            "image": "https://images.cardorb.com/en/sv/sv01/015",
+            "language": "en",
+            "languages": ["en", "de", "fr", "it", "es", "pt"],
+            "local_id": "015",
+            "local_name": null,
+            "name": "Meowscarada",
+            "rarity": "Rare",
+            "regulation_mark": "G",
+            "release_date": "2023/03/31",
+            "series": "Scarlet & Violet",
+            "set_id": "sv01",
+            "set_name": "Scarlet & Violet",
+            "stage": "Stage2",
+            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "tcgplayer_product_id": null,
+            "trainer_type": null,
+            "types": ["Grass"],
+            "variants": [
+                {
+                    "type": "holo"
+                },
+                {
+                    "type": "reverse"
+                }
+            ]
+        },
+        {
+            "category": "Pokemon",
+            "evolve_from": null,
+            "first_edition": false,
+            "full_art": false,
+            "hp": 40,
+            "id": "sv01-016",
+            "illustrator": "Tika Matsuno",
+            "image": "https://images.cardorb.com/en/sv/sv01/016",
+            "language": "en",
+            "languages": ["en", "de", "fr", "it", "es", "pt"],
+            "local_id": "016",
+            "local_name": null,
+            "name": "Tarountula",
+            "rarity": "Common",
+            "regulation_mark": "G",
+            "release_date": "2023/03/31",
+            "series": "Scarlet & Violet",
+            "set_id": "sv01",
+            "set_name": "Scarlet & Violet",
+            "stage": "Basic",
+            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "tcgplayer_product_id": null,
+            "trainer_type": null,
+            "types": ["Grass"],
+            "variants": [
+                {
+                    "type": "reverse"
+                },
+                {
+                    "type": "normal"
+                }
+            ]
+        },
+        {
+            "category": "Pokemon",
+            "evolve_from": null,
+            "first_edition": false,
+            "full_art": false,
+            "hp": 40,
+            "id": "sv01-017",
+            "illustrator": "Pani Kobayashi",
+            "image": "https://images.cardorb.com/en/sv/sv01/017",
+            "language": "en",
+            "languages": ["en", "de", "fr", "it", "es", "pt"],
+            "local_id": "017",
+            "local_name": null,
+            "name": "Tarountula",
+            "rarity": "Common",
+            "regulation_mark": "G",
+            "release_date": "2023/03/31",
+            "series": "Scarlet & Violet",
+            "set_id": "sv01",
+            "set_name": "Scarlet & Violet",
+            "stage": "Basic",
+            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "tcgplayer_product_id": null,
+            "trainer_type": null,
+            "types": ["Grass"],
+            "variants": [
+                {
+                    "type": "reverse"
+                },
+                {
+                    "type": "normal"
+                }
+            ]
+        },
+        {
+            "category": "Pokemon",
+            "evolve_from": null,
+            "first_edition": false,
+            "full_art": false,
+            "hp": 60,
+            "id": "sv01-018",
+            "illustrator": "Kouki Saitou",
+            "image": "https://images.cardorb.com/en/sv/sv01/018",
+            "language": "en",
+            "languages": ["en", "de", "fr", "it", "es", "pt"],
+            "local_id": "018",
+            "local_name": null,
+            "name": "Tarountula",
+            "rarity": "Common",
+            "regulation_mark": "G",
+            "release_date": "2023/03/31",
+            "series": "Scarlet & Violet",
+            "set_id": "sv01",
+            "set_name": "Scarlet & Violet",
+            "stage": "Basic",
+            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "tcgplayer_product_id": null,
+            "trainer_type": null,
+            "types": ["Grass"],
+            "variants": [
+                {
+                    "type": "normal"
+                },
+                {
+                    "type": "reverse"
+                }
+            ]
+        },
+        {
+            "category": "Pokemon",
+            "evolve_from": "Tarountula",
+            "first_edition": false,
+            "full_art": false,
+            "hp": 260,
+            "id": "sv01-019",
+            "illustrator": "takuyoa",
+            "image": "https://images.cardorb.com/en/sv/sv01/019",
+            "language": "en",
+            "languages": ["en", "de", "fr", "it", "es", "pt"],
+            "local_id": "019",
+            "local_name": null,
+            "name": "Spidops ex",
+            "rarity": "Double Rare",
+            "regulation_mark": "G",
+            "release_date": "2023/03/31",
+            "series": "Scarlet & Violet",
+            "set_id": "sv01",
+            "set_name": "Scarlet & Violet",
+            "stage": "Stage1",
+            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "tcgplayer_product_id": null,
+            "trainer_type": null,
+            "types": ["Grass"],
+            "variants": [
+                {
+                    "type": "holo"
+                }
+            ]
+        },
+        {
+            "category": "Pokemon",
+            "evolve_from": null,
+            "first_edition": false,
+            "full_art": false,
+            "hp": 50,
+            "id": "sv01-020",
+            "illustrator": "yuu",
+            "image": "https://images.cardorb.com/en/sv/sv01/020",
+            "language": "en",
+            "languages": ["en", "de", "fr", "it", "es", "pt"],
+            "local_id": "020",
+            "local_name": null,
+            "name": "Smoliv",
+            "rarity": "Common",
+            "regulation_mark": "G",
+            "release_date": "2023/03/31",
+            "series": "Scarlet & Violet",
+            "set_id": "sv01",
+            "set_name": "Scarlet & Violet",
+            "stage": "Basic",
+            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "tcgplayer_product_id": null,
+            "trainer_type": null,
+            "types": ["Grass"],
+            "variants": [
+                {
+                    "type": "reverse"
+                },
+                {
+                    "type": "normal"
+                }
+            ]
         }
     ],
     "prices": [
+        {
+            "market": 0.23,
+            "printing": "normal",
+            "product_id": 475417,
+            "updated_on": "2026-09-16"
+        },
+        {
+            "market": 0.32,
+            "printing": "reverse-holofoil",
+            "product_id": 475417,
+            "updated_on": "2026-09-16"
+        },
         {
             "market": 0.11,
             "printing": "normal",
@@ -571,6 +852,84 @@
             "market": 0.2,
             "printing": "reverse-holofoil",
             "product_id": 487843,
+            "updated_on": "2026-09-16"
+        },
+        {
+            "market": 0.14,
+            "printing": "normal",
+            "product_id": 487846,
+            "updated_on": "2026-09-16"
+        },
+        {
+            "market": 0.25,
+            "printing": "reverse-holofoil",
+            "product_id": 487846,
+            "updated_on": "2026-09-16"
+        },
+        {
+            "market": 0.27,
+            "printing": "holofoil",
+            "product_id": 487848,
+            "updated_on": "2026-09-16"
+        },
+        {
+            "market": 0.32,
+            "printing": "reverse-holofoil",
+            "product_id": 487848,
+            "updated_on": "2026-09-16"
+        },
+        {
+            "market": 0.15,
+            "printing": "normal",
+            "product_id": 487851,
+            "updated_on": "2026-09-16"
+        },
+        {
+            "market": 0.22,
+            "printing": "reverse-holofoil",
+            "product_id": 487851,
+            "updated_on": "2026-09-16"
+        },
+        {
+            "market": 0.08,
+            "printing": "normal",
+            "product_id": 487854,
+            "updated_on": "2026-09-16"
+        },
+        {
+            "market": 0.21,
+            "printing": "reverse-holofoil",
+            "product_id": 487854,
+            "updated_on": "2026-09-16"
+        },
+        {
+            "market": 0.11,
+            "printing": "normal",
+            "product_id": 487855,
+            "updated_on": "2026-09-16"
+        },
+        {
+            "market": 0.23,
+            "printing": "reverse-holofoil",
+            "product_id": 487855,
+            "updated_on": "2026-09-16"
+        },
+        {
+            "market": 0.77,
+            "printing": "holofoil",
+            "product_id": 487856,
+            "updated_on": "2026-09-16"
+        },
+        {
+            "market": 0.16,
+            "printing": "normal",
+            "product_id": 487857,
+            "updated_on": "2026-09-16"
+        },
+        {
+            "market": 0.21,
+            "printing": "reverse-holofoil",
+            "product_id": 487857,
             "updated_on": "2026-09-16"
         }
     ]
