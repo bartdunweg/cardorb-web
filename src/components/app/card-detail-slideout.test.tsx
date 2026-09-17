@@ -171,34 +171,19 @@ describe("CardDetailSlideout: smoke", () => {
     });
 
     /*
-     * BUG (card-detail-slideout.tsx:542 with settle-latest.ts:26): the stepper hands settleLatest
-     * the bare setCopies, not orFailed(setCopies). An action that throws (no signal, a deploy in
-     * between) rejects the settle promise instead of answering { ok: false }: `failed` is never
-     * called, so no toast, the `.then` that forgets the cache and reads the copies back never runs,
-     * the panel keeps a count the store never took, and the rejection is unhandled. Every other
-     * write in the sheet goes through orFailed.
+     * An action that throws (no signal, a deploy in between) follows the refused path through
+     * orFailed: a toast, the cache dropped and the copies read back, and no unhandled rejection.
      */
-    it.fails("says so and reads the copies back when setCopies throws instead of answering", async () => {
-        // The rejection this bug leaves unhandled is caught here, so it cannot fail the whole run.
-        const theirs = process.listeners("unhandledRejection");
-        process.removeAllListeners("unhandledRejection");
-        const unhandled: unknown[] = [];
-        process.on("unhandledRejection", (reason) => unhandled.push(reason));
-        try {
-            vi.mocked(setCopies).mockRejectedValue(new Error("offline"));
-            await open(makeCard({ id: "p1", quantity: 1 }));
+    it("says so and reads the copies back when setCopies throws instead of answering", async () => {
+        vi.mocked(setCopies).mockRejectedValue(new Error("offline"));
+        await open(makeCard({ id: "p1", quantity: 1 }));
 
-            await tap(screen.getByRole("button", { name: "One copy more" }));
-            await act(flush);
-            await act(flush);
+        await tap(screen.getByRole("button", { name: "One copy more" }));
+        await act(flush);
+        await act(flush);
 
-            expect(notifyMock.failed).toHaveBeenCalledWith("The number of copies did not change", expect.anything());
-        } finally {
-            await new Promise((resolve) => setTimeout(resolve, 10));
-            process.removeAllListeners("unhandledRejection");
-            for (const listener of theirs) process.on("unhandledRejection", listener);
-            expect(unhandled).toHaveLength(1);
-        }
+        expect(notifyMock.failed).toHaveBeenCalledWith("The number of copies did not change", expect.anything());
+        expect(forgetMine).toHaveBeenCalledWith("cards");
     });
 
     it("removes the last copy with the minus, says so, and puts it back", async () => {
@@ -376,13 +361,11 @@ describe("CardDetailSlideout: the star under rapid taps", () => {
     });
 
     /*
-     * BUG (card-detail-slideout.tsx:352 and :359): a failed last tap puts the star back to `!next`,
-     * the state the tap before it asked for, not what the store holds. When that earlier tap failed
-     * too, the store never left where it started, and the star is left showing a state that was
-     * never saved. Two taps on an unstarred card, both refused: the star shows filled, and the
-     * toast says "That card is still a Favorite" about a card that never was one.
+     * A failed last tap puts the star back to what the store last took, not to what the tap before
+     * it asked for: when that earlier tap failed too, the store never left where it started. Two
+     * taps on an unstarred card, both refused, leave it empty and say it is not a Favorite.
      */
-    it.fails("shows the store's state after every tap of a run failed", async () => {
+    it("shows the store's state after every tap of a run failed", async () => {
         const writes = favorites();
         await open(makeCard({ id: "p1", is_favorite: false }));
 
@@ -393,5 +376,7 @@ describe("CardDetailSlideout: the star under rapid taps", () => {
         await act(flush);
 
         expect(star()).toHaveAttribute("aria-pressed", "false");
+        expect(notifyMock.failed).toHaveBeenCalledTimes(1);
+        expect(notifyMock.failed).toHaveBeenCalledWith("That card is not a Favorite", { description: "No" });
     });
 });
