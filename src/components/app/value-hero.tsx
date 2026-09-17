@@ -16,7 +16,7 @@ import { cx } from "@/utils/cx";
 
 // Home's first thing: what the collection is worth, big, with how that has moved over a period
 // and the line behind it. The name beside the label is a menu: All cards, Favorites, or one of the
-// folders; a choice goes into the URL (`?value=`) and the page reads that list's line. The period
+// binders; a choice goes into the URL (`?value=`) and the page reads that list's line. The period
 // buttons under the chart cut the same line; the change above it is over the period shown.
 
 export type ValueList = { id: string; name: string };
@@ -29,7 +29,7 @@ export function ValueHero({
     value,
     snapshots,
 }: {
-    /** All cards first, then Favorites, the folders, and the wishlist last. */
+    /** All cards first, then Favorites, the binders, and the wishlist last. */
     lists: ValueList[];
     /** The id of the list shown. */
     selected: string;

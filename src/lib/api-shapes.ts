@@ -1,7 +1,7 @@
 import { z } from "zod";
+import { type BinderKind, type BinderRule, type PokedexSetting, binderRuleSchema, pokedexSettingSchema } from "@/lib/binder-rule";
 import { EDITIONS, FINISHES, FOIL_PATTERNS, FOIL_PATTERN_LABELS, isReverseFinish, ownImage } from "@/lib/card-shapes";
 import type { Finish, FoilPattern } from "@/lib/card-shapes";
-import { type FolderKind, type FolderRule, type PokedexSetting, folderRuleSchema, pokedexSettingSchema } from "@/lib/folder-rule";
 
 // The labels, the vocabularies and the mappers without zod live in card-shapes.ts; every importer of this file still finds them here.
 export {
@@ -273,34 +273,34 @@ export function priceForCopy({
 }
 
 /**
- * A folder as `GET /v1/folders` sends it. `kind` and `rule` are optional on the wire: an API from
- * before rule folders sends neither, and every folder is then one filled by hand.
+ * A binder as `GET /v1/folders` sends it. `kind` and `rule` are optional on the wire: an API from
+ * before rule binders sends neither, and every binder is then one filled by hand.
  */
-export const folderItemSchema = z.object({
+export const binderItemSchema = z.object({
     id: z.string(),
     name: z.string(),
     createdAt: z.string(),
     count: z.number(),
     kind: z.enum(["manual", "rule"]).nullish(),
-    rule: folderRuleSchema.nullish(),
+    rule: binderRuleSchema.nullish(),
     pokedex: pokedexSettingSchema.nullish(),
     /** Shown on the public profile, as a filter over the public cards. Absent from an API before #175. */
     isPublic: z.boolean().nullish(),
 });
-export type FolderItem = z.infer<typeof folderItemSchema>;
+export type BinderItem = z.infer<typeof binderItemSchema>;
 
-export type Folder = {
+export type Binder = {
     id: string;
     name: string;
     createdAt: string;
     count: number;
-    kind: FolderKind;
-    rule: FolderRule | null;
+    kind: BinderKind;
+    rule: BinderRule | null;
     pokedex: PokedexSetting | null;
     isPublic: boolean;
 };
 
-export function folderFromApi(f: FolderItem): Folder {
+export function binderFromApi(f: BinderItem): Binder {
     const rule = f.rule ?? null;
     return {
         id: f.id,
@@ -855,7 +855,7 @@ export const statsAnswer = z.object({
     }),
 });
 
-export const foldersAnswer = z.object({ folders: z.array(folderItemSchema) });
+export const bindersAnswer = z.object({ folders: z.array(binderItemSchema) });
 /**
  * Every Pokémon's name by national number, and nothing else. The route that also says how many
  * of each you own is a different one and needs a session; this is a catalogue, so a stranger
@@ -885,7 +885,7 @@ export const valueHistoryAnswer = z.object({
             cards: z.number(),
             priced: z.number(),
             unpriced: z.number(),
-            /** Copies added since the point before, and their worth that day (cardorb-api#379). Absent on a folder's line. */
+            /** Copies added since the point before, and their worth that day (cardorb-api#379). Absent on a binder's line. */
             added: z.number().optional(),
             addedValue: z.number().optional(),
         }),
@@ -939,7 +939,7 @@ export const publicCardsAnswer = z.object({
 
 export const publicTotalAnswer = z.object({ total: z.number(), copies: z.number().optional(), ...publicWorth });
 
-export const publicFoldersAnswer = z.object({
+export const publicBindersAnswer = z.object({
     folders: z.array(
         z.object({
             id: z.string(),
@@ -954,7 +954,7 @@ export const publicFoldersAnswer = z.object({
 
 export const avatarAnswer = z.object({ avatarUrl: z.string() });
 export const usernameAnswer = z.object({ available: z.boolean(), reason: z.string().optional() });
-export const createdFolderAnswer = z.object({ folder: z.object({ id: z.string() }) });
+export const createdBinderAnswer = z.object({ folder: z.object({ id: z.string() }) });
 export const copyAnswer = z.object({ card: z.object({ id: nullable(z.string()) }).optional() });
 
 /** A public profile: no email, no onboarding, nothing private (R-API-002 on the API's side). */

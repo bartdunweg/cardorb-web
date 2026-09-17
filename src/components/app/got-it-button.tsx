@@ -3,14 +3,14 @@
 import { useState } from "react";
 import { Plus } from "@untitledui/icons";
 import type { CardFacts } from "@/app/(app)/dashboard/cards/actions";
-import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
+import type { BinderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { MarkOwnedDialog, type OwnableCard } from "@/components/app/mark-owned-dialog";
 import { TileIconButton } from "@/components/app/tile-icon-button";
-import { cardFacts, listCollections } from "@/lib/reads";
+import { cardFacts, listBinders } from "@/lib/reads";
 
 /**
  * Ours: the one thing a wishlist tile can do, on the tile. "Got it" opens the same form the card
- * sheet opens (language, condition, folder, price, the day), so a card that arrived in the post
+ * sheet opens (language, condition, binder, price, the day), so a card that arrived in the post
  * leaves the wishlist without opening the sheet first. A round plus under the price, the size and
  * the place of a set tile's plus, so the buttons under a card are one size on every list. Instacart's saved lists and Etsy's
  * favourites carry an item's one action on the item itself; this is that.
@@ -18,23 +18,23 @@ import { cardFacts, listCollections } from "@/lib/reads";
  * A plus and not a check: the plus is "to your collection" on every other tile, and a check beside
  * the pink heart read as "done", as if the card were already yours (Bart, 2026-09-16).
  *
- * The form's folders and the catalogue's facts are asked for on the press that opens it, not
+ * The form's binders and the catalogue's facts are asked for on the press that opens it, not
  * when the list draws: a wishlist of forty tiles must not ask the API forty times for a form
  * nobody has opened. They arrive while the form is on screen, as they do in the sheet.
  */
 export function GotItButton({ card }: { card: OwnableCard }) {
-    const [folders, setFolders] = useState<FolderChoice[] | null>(null);
+    const [binders, setBinders] = useState<BinderChoice[] | null>(null);
     // The catalogue's answer, once asked: null is an answer too (nothing known), so the asking
     // is what is remembered.
     const [facts, setFacts] = useState<{ facts: CardFacts | null } | null>(null);
 
     const load = () => {
-        if (folders === null) void listCollections().then(setFolders);
+        if (binders === null) void listBinders().then(setBinders);
         if (facts === null && card.tcg_id) void cardFacts(card.tcg_id, card.language).then((f) => setFacts({ facts: f }));
     };
 
     return (
-        <MarkOwnedDialog card={card} folders={folders ?? []} languages={facts?.facts?.languages} facts={card.tcg_id ? facts?.facts : null}>
+        <MarkOwnedDialog card={card} binders={binders ?? []} languages={facts?.facts?.languages} facts={card.tcg_id ? facts?.facts : null}>
             <TileIconButton icon={Plus} label={`Add ${card.name} to your collection`} onPress={load} />
         </MarkOwnedDialog>
     );

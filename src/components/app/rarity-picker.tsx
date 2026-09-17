@@ -2,7 +2,7 @@
 
 import { LoadingIndicator } from "@/components/application/loading-indicator/loading-indicator";
 import { Checkbox } from "@/components/base/checkbox/checkbox";
-import { RARITY_SPLITS, SPLIT_RARITY } from "@/lib/folder-rule";
+import { RARITY_SPLITS, SPLIT_RARITY } from "@/lib/binder-rule";
 
 // A list of boxes for what fills a Pokédex: the rarities you hold a card of.
 // None ticked is every card. Boxes rather than a select: several are meant to be on at once, and

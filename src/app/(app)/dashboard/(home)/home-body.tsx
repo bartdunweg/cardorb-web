@@ -9,15 +9,15 @@ import { ValueHeroOutline } from "@/components/app/skeletons";
 import { TopCards, readTopCards } from "@/components/app/top-cards";
 import { ValueHero, type ValueList } from "@/components/app/value-hero";
 import { Button } from "@/components/base/buttons/button";
+import { getMyBinders } from "@/lib/binders";
 import { type CardList, getCardStats, getMyCards } from "@/lib/cards";
-import { getMyFolders } from "@/lib/collections";
 import { getMyProfile } from "@/lib/profile";
 import { sideRead } from "@/lib/side-read";
 import { type ValueSnapshot, getValueHistory } from "@/lib/value-history";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-type ValueReads = { folders: Awaited<ReturnType<typeof getMyFolders>>; snapshots: ValueSnapshot[]; current: CardList | null };
+type ValueReads = { binders: Awaited<ReturnType<typeof getMyBinders>>; snapshots: ValueSnapshot[]; current: CardList | null };
 
 /**
  * Every read Home makes beside the stats, started at once. None of them takes a number from the stats,
@@ -28,15 +28,15 @@ type ValueReads = { folders: Awaited<ReturnType<typeof getMyFolders>>; snapshots
  * held draws the welcome instead) cannot fail the page.
  */
 function startReads(asked: string) {
-    const folders = sideRead("folders", getMyFolders, null);
+    const binders = sideRead("binders", getMyBinders, null);
     // A binder deleted since the address was kept is the collection, movers and line included.
-    const selected = UUID.test(asked) ? folders.then((f) => (f && !f.some((folder) => folder.id === asked) ? "all" : asked)) : Promise.resolve(asked);
+    const selected = UUID.test(asked) ? binders.then((f) => (f && !f.some((binder) => binder.id === asked) ? "all" : asked)) : Promise.resolve(asked);
     /* Each of these is a side read: one that fails leaves the chart without its line, the menu
        without the binders, or the collection's own number in place of a list's, never Home as an
        error page. */
     const value: Promise<ValueReads> = selected.then((list) =>
         Promise.all([
-            folders.then((f) => f ?? []),
+            binders.then((f) => f ?? []),
             sideRead("value history", () => getValueHistory(list === "all" ? undefined : list), []),
             list === "all"
                 ? null
@@ -52,7 +52,7 @@ function startReads(asked: string) {
                           ),
                       null,
                   ),
-        ]).then(([f, snapshots, current]) => ({ folders: f, snapshots, current })),
+        ]).then(([f, snapshots, current]) => ({ binders: f, snapshots, current })),
     );
     return { selected, value, top: readTopCards(), caught: readDexCaught() };
 }
@@ -127,15 +127,15 @@ async function Welcome() {
 }
 
 // The value of the chosen list, its line, and the lists to choose from. "All cards" is the
-// collection's own number, already read for the tiles; a folder's, the favorites' or the
+// collection's own number, already read for the tiles; a binder's, the favorites' or the
 // wishlist's is one narrow list read, started with the rest of Home's reads.
 async function ValueSection({ selected, total, reads }: { selected: string; total: number; reads: Promise<ValueReads> }) {
-    const { folders, snapshots, current } = await reads;
+    const { binders, snapshots, current } = await reads;
     // The wishlist last: its number is what the cards you lack would cost, not what you hold.
     const lists: ValueList[] = [
         { id: "all", name: "Collection" },
         { id: "favorites", name: "Favorites" },
-        ...folders.map((f) => ({ id: f.id, name: f.name })),
+        ...binders.map((f) => ({ id: f.id, name: f.name })),
         { id: "wishlist", name: "Wishlist" },
     ];
     // A list whose own value could not be read is shown as the collection, whose number is in hand.

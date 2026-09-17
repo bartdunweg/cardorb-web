@@ -38,8 +38,8 @@ const dexNumber = (n: number) => `#${String(n).padStart(3, "0")}`;
 const ART_WIDTH = 128;
 const ART_SIZES = "(min-width: 1280px) 128px, 20vw";
 
-// A folder as a Pokédex: one tile per number, drawn as the same tile a list of cards uses, so
-// the Pokédex reads as one of the folders and not as a different screen. A number you hold
+// A binder as a Pokédex: one tile per number, drawn as the same tile a list of cards uses, so
+// the Pokédex reads as one of the binders and not as a different screen. A number you hold
 // shows its card (several: a slider), its name and how many you have; one you do not is the
 // same tile in grey, named, so a person knows what to find.
 //
@@ -299,7 +299,7 @@ export function DexView({
     linked?: boolean;
     /** When a search or a filter finds nothing. */
     noHits: ReactNode;
-    /** When the folder holds nothing at all. */
+    /** When the binder holds nothing at all. */
     empty: ReactNode;
 }) {
     const { size } = useCardsView("grid", initialSize);

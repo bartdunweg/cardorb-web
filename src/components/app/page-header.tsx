@@ -67,7 +67,7 @@ export function PageHeader({
     // The bar takes the title over exactly when the large one has left the screen. IntersectionObserver
     // rather than a scroll listener: it costs nothing between changes and needs no layout reads.
     const tall = Boolean(back || barActions);
-    // Without Back but with buttons in the bar (All cards, a folder, Collection) the large title starts level
+    // Without Back but with buttons in the bar (All cards, a binder, Collection) the large title starts level
     // with those buttons, on their line, rather than on a line of its own under them.
     const beside = Boolean(!back && barActions && titleOnPhone);
     useEffect(() => {

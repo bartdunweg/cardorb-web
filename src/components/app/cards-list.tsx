@@ -207,7 +207,7 @@ export function CardsList({
               : ""
           : `Showing ${cards.length} of ${total} cards`;
 
-    /* Moving it above the early return is not enough on its own. `folder-body.tsx` keys the whole
+    /* Moving it above the early return is not enough on its own. `binder-body.tsx` keys the whole
        view on the list's URL, so a search does not update this component, it replaces it, and a
        live region that arrives with its text already in it is never read out. Where the reader
        changed this list (`changed`), the region is therefore mounted empty and the sentence written a

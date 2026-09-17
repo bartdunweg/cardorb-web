@@ -37,7 +37,7 @@ type PublicBody = Common & { readOnly: true } & (
     );
 
 /**
- * Your own folder: the first batch is a promise the page handed over without waiting, so the
+ * Your own binder: the first batch is a promise the page handed over without waiting, so the
  * row is on screen while the API answers; the rest comes as you scroll, asked for with `filter`.
  * As a Pokédex, the slots stand in for the list.
  */
@@ -45,12 +45,12 @@ type OwnBody = Common & { readOnly?: false; filter: CardFilter } & (
         { list: Promise<CardList>; pokedex?: undefined } | { list?: undefined; pokedex: { dex: Promise<DexList> } }
     );
 
-export type FolderBodyProps = PublicBody | OwnBody;
+export type BinderBodyProps = PublicBody | OwnBody;
 
-// The lower half of every folder page: one row with the filters (a sheet on a phone), the sort
-// and the View menu, then the list, or an empty state. The same on All cards, a folder, the
+// The lower half of every binder page: one row with the filters (a sheet on a phone), the sort
+// and the View menu, then the list, or an empty state. The same on All cards, a binder, the
 // favorites, the wishlist and a public profile, so a person learns the row once.
-export async function FolderBody(props: FolderBodyProps) {
+export async function BinderBody(props: BinderBodyProps) {
     const { query, basePath, facets, sortOptions = SORT_OPTIONS, defaultSortKey = "set", searchLabel, searchPlaceholder, empty } = props;
     const narrowed = isNarrowed(query);
     const { q } = query;

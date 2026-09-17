@@ -68,7 +68,7 @@ export function CardsSkeleton({ count = 12, heading = false }: { count?: number;
 
 /**
  * A list page: the title, its count line as a block, Back where the page has one, then the row and
- * the cards. `title` absent (a folder, a set: the name comes with the data) leaves the title's
+ * the cards. `title` absent (a binder, a set: the name comes with the data) leaves the title's
  * line empty rather than guessing a word that would then change.
  */
 export function ListSkeleton({
@@ -183,7 +183,7 @@ export function ValueHeroOutline() {
 }
 
 /** The binder tiles under a title the page has already drawn: an icon square and two lines each. */
-export function FoldersOutline() {
+export function BindersOutline() {
     return (
         <SkeletonFrame>
             <Outline className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">

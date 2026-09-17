@@ -37,7 +37,7 @@ const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-sl
  * never with the card. Every other list in this app opens the sheet, so this one does too.
  *
  * A card you hold opens on its own row, the same way the Pokédex does it: the row carries the
- * copies, the price you paid and the folder, none of which the catalogue knows. A card you do
+ * copies, the price you paid and the binder, none of which the catalogue knows. A card you do
  * not hold has no row, so it opens on what the set page already has: the printing, read-only,
  * with its price line. Adding it is the plus and the menu beside it, which is where it was.
  *

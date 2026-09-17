@@ -17,8 +17,8 @@ import { countCards, loadMoreCards, warmList } from "@/app/(app)/dashboard/list-
 import { countShelf, listSetsShelf } from "@/app/(app)/dashboard/sets/actions";
 import { session } from "@/lib/api";
 import { CARD_FACTS_BATCH } from "@/lib/api-shapes";
+import { getBinderChoices } from "@/lib/binders";
 import { PERIODS } from "@/lib/chart-periods";
-import { getFolderChoices } from "@/lib/collections";
 import { type BrowseLanguage, isBrowseLanguage } from "@/lib/languages";
 import { loadMoreInput, titleScope } from "@/lib/list-filter";
 
@@ -102,7 +102,7 @@ const READS: Record<string, (q: URLSearchParams) => Promise<unknown> | null> = {
         const p = z.object({ set: text }).safeParse(params(q));
         return p.success ? listSetRows(p.data.set) : null;
     },
-    folders: () => getFolderChoices(),
+    folders: () => getBinderChoices(),
     facets: () => loadFacets(),
     "warm-list": (q) => warmList(params(q)).then(() => null),
     movers: (q) => {

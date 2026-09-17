@@ -20,7 +20,7 @@ export const getFacets = (): Promise<Facets> =>
         return facetsFrom(facets);
     });
 
-/** Which cards a list asks for: the folder, the search, the sort and the filters. Plain data, so a page can hand it to the client for the next batch. */
+/** Which cards a list asks for: the binder, the search, the sort and the filters. Plain data, so a page can hand it to the client for the next batch. */
 export type CardFilter = {
     /** False from a caller that will not read the facets (a further batch on scroll): the API skips that pass. */
     facets?: boolean;
@@ -191,7 +191,7 @@ export async function getCardStats(): Promise<CardStats> {
 }
 
 /**
- * The whole of a list, for a folder shown as a Pokédex: the slots need every card, not a page.
+ * The whole of a list, for a binder shown as a Pokédex: the slots need every card, not a page.
  * One request of up to 2,000 (the API's ceiling for an owner); should a collection outgrow it,
  * the rest follows in pages of the same size.
  */

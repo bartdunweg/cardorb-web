@@ -172,8 +172,8 @@
     }
 }
 
-/* Arrive: what streams in after the page is standing — a batch of cards, the count under a title,
-   the sidebar's folder rows — fades up 4 px into place rather than popping. 200 ms on the enter
+/* Arrive: what streams in after the page is standing (a batch of cards, the count under a title,
+   the sidebar's binder rows) fades up 4 px into place rather than popping. 200 ms on the enter
    curve, from @starting-style, so it runs once, on the element's first frame, with no JS. A
    --arrive-delay staggers a row; the rest arrive together. Reduced motion keeps the fade and
    drops the movement. */

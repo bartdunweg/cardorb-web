@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cardItemSchema, cardsAnswer, catalogueSetsAnswer, folderItemSchema, statsAnswer } from "./api-shapes";
+import { binderItemSchema, cardItemSchema, cardsAnswer, catalogueSetsAnswer, statsAnswer } from "./api-shapes";
 
 /** A card as the API sends one, with every key it promises. */
 const wireCard = {
@@ -69,9 +69,9 @@ describe("what the schemas let through", () => {
         expect(cardItemSchema.parse(older).setAbbr).toBeNull();
     });
 
-    it("keeps a folder from before rules and before public folders", () => {
-        const folder = folderItemSchema.parse({ id: "f", name: "Kanto", createdAt: "2026-01-01", count: 12 });
-        expect(folder).toMatchObject({ id: "f", count: 12 });
+    it("keeps a binder from before rules and before public binders", () => {
+        const binder = binderItemSchema.parse({ id: "f", name: "Kanto", createdAt: "2026-01-01", count: 12 });
+        expect(binder).toMatchObject({ id: "f", count: 12 });
     });
 
     it("ignores a field the API added that this app does not read yet", () => {

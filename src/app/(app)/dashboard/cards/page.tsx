@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { AddCardButton } from "@/components/app/add-card-button";
 import { AppEmptyState } from "@/components/app/app-empty-state";
-import { FolderPage } from "@/components/app/folder-page";
+import { BinderPage } from "@/components/app/binder-page";
 import { type CardFilter, getMyCards } from "@/lib/cards";
 import { openAsLeft } from "@/lib/list-memory-server";
 import { type ListSearchParams, changeWindow, isNarrowed, readListQuery } from "@/lib/list-query";
@@ -44,7 +44,7 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
     const facets = list.then((r) => r.facets);
 
     return (
-        <FolderPage
+        <BinderPage
             title="Collection"
             datapoints={datapoints}
             add={(compact) => <AddCardButton compact={compact} />}

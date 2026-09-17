@@ -18,7 +18,7 @@ vi.mock("@/app/(app)/dashboard/cards/actions", () => ({
 vi.mock("@/lib/reads", () => ({
     cardFacts: vi.fn().mockResolvedValue(null),
     cardFactsMany: vi.fn().mockResolvedValue({}),
-    listCollections: vi.fn().mockResolvedValue([]),
+    listBinders: vi.fn().mockResolvedValue([]),
     loadMoreCards: vi.fn(),
 }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));

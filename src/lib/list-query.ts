@@ -81,7 +81,7 @@ export type ListQuery = {
     finish: string[];
     /** A copy's languages, as codes ("ja"); a copy in any of them. */
     language: string[];
-    /** A public profile's folder, by id; the owner's own lists carry the folder in the path instead. */
+    /** A public profile's binder, by id (`?folder=`); the owner's own lists carry the binder in the path instead. */
     folder: string | undefined;
     /** A public profile's wishlist, favorites or Pokédex instead of its collection. */
     list: PublicList | undefined;
@@ -135,9 +135,9 @@ export function readListQuery(params: ListSearchParams): ListQuery {
     const sortKey = isSortKey(params.sort) ? params.sort : "set";
     const option = SORT_OPTIONS.find((o) => o.value === sortKey)!;
     const text = (v: string | undefined) => v?.trim().slice(0, 100) || undefined;
-    // A folder is an id the API made; anything else in `?folder=` is nobody's binder and reads as none,
+    // A binder is an id the API made; anything else in `?folder=` is nobody's binder and reads as none,
     // where it used to reach the API and come back as a 400 dressed as an outage.
-    const folderId = (v: string | undefined) => (v && UUID.test(v) ? v : undefined);
+    const binderId = (v: string | undefined) => (v && UUID.test(v) ? v : undefined);
     const texts = (v: string | string[] | undefined): string[] =>
         [...new Set((Array.isArray(v) ? v : v === undefined ? [] : [v]).map((one) => one.trim().slice(0, 100)).filter(Boolean))].slice(0, MAX_VALUES);
     return {
@@ -158,7 +158,7 @@ export function readListQuery(params: ListSearchParams): ListQuery {
         condition: texts(params.condition),
         finish: texts(params.finish),
         language: texts(params.language),
-        folder: folderId(params.folder),
+        folder: binderId(params.folder),
         list: (PUBLIC_LISTS as readonly string[]).includes(params.list ?? "") ? (params.list as PublicList) : undefined,
         duplicates: params.duplicates === "1",
     };

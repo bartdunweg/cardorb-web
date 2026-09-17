@@ -24,7 +24,7 @@ const tabs = [
 const tabClass = "pressable relative flex flex-1 flex-col items-center gap-1 rounded-full py-1.5 text-3xs font-medium transition-colors duration-150";
 
 // Bottom tab bar for mobile: the sidebar's five pages in the sidebar's order: Home, Browse, the
-// wishlist, the collection, and Binders (Favorites, the Pokédex and the folders you made, one level
+// wishlist, the collection, and Binders (Favorites, the Pokédex and the binders you made, one level
 // down). You is the avatar in Home's bar. Browse had no tab while the search at the top of Home
 // listed every set; that search opens the palette now, as it does everywhere else, so Browse has
 // its tab (Bart's call, 2026-09-11). The bar's side inset matches the content's padding, so bar and
