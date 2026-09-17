@@ -26,7 +26,7 @@ test("adding a card shows on the tile, on Collection and on Home, before and aft
     expect(await ownedCount(page)).toBe(before + 1);
 });
 
-test.fixme("two quick presses on plus make two copies, not one and not three", async ({ page }) => {
+test("two quick presses on plus make two copies, not one and not three", async ({ page }) => {
     const c = card(1);
     await page.goto(setPage);
     // Two presses a person makes: the add button, then the "Add a copy of" button that replaces
@@ -104,7 +104,7 @@ test("two presses make exactly two copies", async ({ page }) => {
 // CI run 35195242573 (2026-09-17): both presses landed (tile showed "2 copies" before the
 // reload), but after page.reload() the tile read "not in your collection", zero copies. A real,
 // intermittent app bug, not a test bug: the two reruns of that run passed.
-test.fixme("a reload right after two presses keeps both copies", async ({ page }) => {
+test("a reload right after two presses keeps both copies", async ({ page }) => {
     const c = card(10);
     await page.goto(setPage);
     await addButton(page, c).click();
