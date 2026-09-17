@@ -137,6 +137,12 @@ test("removing a card and putting it back leaves it in the collection everywhere
     await page.goto(setPage);
     await addButton(page, c).click();
     await expect(setTile(page, c, "in your collection")).toBeVisible();
+    // The add's toast first. It comes in at the top of the window a moment after the press, and in
+    // CI run 35234584489 it came in over this tile's minus (the page stood scrolled with the tile
+    // at the top) just as the minus was pressed: the toast took the press, no removal was sent,
+    // and the tile stayed at one. With the toast already there, Playwright sees it cover the
+    // button and waits until it does not, as a person would.
+    await expect(page.getByText(`${c.name} is in your collection now`)).toBeVisible();
 
     await removeButton(page, c).click();
     await expect(page.getByText(`${c.name} is out of your collection`)).toBeVisible();
