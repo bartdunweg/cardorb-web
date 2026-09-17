@@ -16,11 +16,11 @@ export const forgetMineQuietly = (write: ForgetWrite = "all") =>
     );
 
 /**
- * The writes that move a number the sidebar shows: a card (the counts), a binder (the list and its
- * counts), and `all`, whose reach is not known. A Pokédex face or the profile changes none of them,
+ * The writes that move a number the sidebar shows: a card (the counts), a star (the Favorites
+ * count), a binder (the list and its counts), and `all`, whose reach is not known. A Pokédex face or the profile changes none of them,
  * and the sidebar asked `/api/sidebar-counts` again for every swipe through a slot's cards.
  */
-const CHANGES_COUNTS: ReadonlySet<ForgetWrite> = new Set<ForgetWrite>(["all", "cards", "binders"]);
+const CHANGES_COUNTS: ReadonlySet<ForgetWrite> = new Set<ForgetWrite>(["all", "cards", "favorite", "binders"]);
 
 /** Said on the window once a quiet write's cache is gone, for what reads its own numbers again (the sidebar). */
 export const CARDS_CHANGED = "cardorb:cards-changed";
