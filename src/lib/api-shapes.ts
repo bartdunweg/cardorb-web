@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { type BinderKind, type BinderRule, type PokedexSetting, binderRuleSchema, pokedexSettingSchema } from "@/lib/binder-rule";
+import type { BinderKind, BinderRule, PokedexSetting } from "@/lib/binder-rule";
+import { binderRuleSchema, pokedexSettingSchema } from "@/lib/binder-rule-schema";
 import { EDITIONS, FINISHES, FOIL_PATTERNS, FOIL_PATTERN_LABELS, isReverseFinish, ownImage } from "@/lib/card-shapes";
 import type { Finish, FoilPattern } from "@/lib/card-shapes";
 

@@ -23,7 +23,8 @@ import {
 } from "@/lib/api-shapes";
 import { type CardTitle, type TitleSet, distinctTitles, matchTitles } from "@/lib/card-titles";
 import { type Card, getMyCards } from "@/lib/cards";
-import { type CardName, type CopyEdits, copyEdits, sameCard } from "@/lib/copies";
+import { type CardName, sameCard } from "@/lib/copies";
+import { type CopyEdits, copyEdits } from "@/lib/copy-edits";
 import { type BrowseLanguage, isBrowseLanguage } from "@/lib/languages";
 import { titleScope } from "@/lib/list-filter";
 import { rank } from "@/lib/name-rank";

@@ -1,10 +1,10 @@
-import { z } from "zod";
 import type { Facets } from "@/lib/cards";
 
 /**
  * A rule binder fills itself: every owned card that matches, AND between the fields, OR within a
  * list. The API validates the same shape (cardorb-api, lib/core/collection/folders.ts); this is the
- * client's copy, for the dialog and the server actions.
+ * client's copy, for the dialog and the server actions. No zod here: the dialog imports this file
+ * into the browser, and the schemas the server actions parse with live in binder-rule-schema.ts.
  */
 export type DexRange = { from: number; to: number };
 export type BinderRule = { dex?: DexRange; sets?: string[]; rarities?: string[] };
@@ -71,23 +71,6 @@ export const GENERATIONS = [
     { label: "Gen 8 · Galar", from: 810, to: 905 },
     { label: "Gen 9 · Paldea", from: 906, to: 1025 },
 ] as const;
-
-const term = z.string().trim().min(1).max(100);
-const list = z.array(term).min(1).max(20);
-
-export const dexRangeSchema = z
-    .object({ from: z.number().int().min(1).max(NATIONAL_DEX_MAX), to: z.number().int().min(1).max(NATIONAL_DEX_MAX) })
-    .refine((d) => d.from <= d.to, "The range runs backwards.");
-
-export const pokedexSettingSchema = z.object({ missing: z.boolean(), dex: dexRangeSchema.optional(), rarities: list.optional() });
-
-export const binderRuleSchema = z
-    .object({
-        dex: dexRangeSchema.optional(),
-        sets: list.optional(),
-        rarities: list.optional(),
-    })
-    .refine((r) => r.dex || r.sets?.length || r.rarities?.length, "Add a Pokédex range, a set or a rarity.");
 
 const setTitle = (name: string, facets?: Facets) => facets?.sets.find((s) => s.name === name || s.title === name)?.title ?? name;
 

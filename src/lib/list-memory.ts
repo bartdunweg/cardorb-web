@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 /**
  * What each list page remembers of how you left it: the layout, the tile size, the set headings
  * and the query string (sort, filters, search). One cookie for all of them, keyed by page, so a
@@ -9,25 +7,43 @@ import { z } from "zod";
  *
  * This module has no directive: the server reads the cookie and the browser writes it, and both
  * read a plain value out of it (cards-view.ts says what a client module would hand back instead).
+ *
+ * No zod here: this file reaches every page's first load through the router provider, and zod is
+ * the largest thing it would bring. The server parses the cookie with the zod schema in
+ * `list-memory-server.ts`, the boundary R-DATA-001 names; the browser reads the cookie it wrote
+ * itself with the guard below, which answers the same as that schema (list-memory-server.test.ts).
  */
 export const LIST_MEMORY_COOKIE = "list-memory";
 
-const entry = z
-    .object({
-        view: z.enum(["table", "grid"]),
-        size: z.enum(["sm", "md", "lg"]),
-        group: z.enum(["sets", "none"]),
-        /** The page's query string without its `?`, as `use-list-memory` records it. */
-        query: z.string().max(2000),
-    })
-    .partial();
+export const LIST_VIEWS = ["table", "grid"] as const;
+export const LIST_SIZES = ["sm", "md", "lg"] as const;
+export const LIST_GROUPS = ["sets", "none"] as const;
+export const MAX_QUERY_LENGTH = 2000;
+export const MAX_KEY_LENGTH = 200;
 
-export type ListMemoryEntry = z.infer<typeof entry>;
+export type ListMemoryEntry = {
+    view?: (typeof LIST_VIEWS)[number];
+    size?: (typeof LIST_SIZES)[number];
+    group?: (typeof LIST_GROUPS)[number];
+    /** The page's query string without its `?`, as `use-list-memory` records it. */
+    query?: string;
+};
 
 /** Keyed by page; insertion order is age, the last entry the most recently touched. */
 export type ListMemory = Record<string, ListMemoryEntry>;
 
-const memory = z.record(z.string().min(1).max(200), entry);
+const oneOf = (values: readonly string[], value: unknown): boolean => value === undefined || (typeof value === "string" && values.includes(value));
+
+/** One page's entry with its unknown keys left out, or null when a known one has the wrong shape. */
+function readEntry(value: unknown): ListMemoryEntry | null {
+    if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
+    const { view, size, group, query } = value as Record<string, unknown>;
+    if (!oneOf(LIST_VIEWS, view) || !oneOf(LIST_SIZES, size) || !oneOf(LIST_GROUPS, group)) return null;
+    if (query !== undefined && (typeof query !== "string" || query.length > MAX_QUERY_LENGTH)) return null;
+    const read = { view, size, group, query } as ListMemoryEntry;
+    for (const name of Object.keys(read) as (keyof ListMemoryEntry)[]) if (read[name] === undefined) delete read[name];
+    return read;
+}
 
 /**
  * A cookie past 4 KB is dropped whole by the browser, and the request headers have a ceiling too.
@@ -49,15 +65,27 @@ const decode = (raw: string): string => {
     }
 };
 
+/** The cookie's JSON, or undefined when there is none or it is not JSON. */
+export function listMemoryJson(raw: string | undefined): unknown {
+    if (!raw) return undefined;
+    try {
+        return JSON.parse(decode(raw));
+    } catch {
+        return undefined;
+    }
+}
+
 /** The cookie's value, read forgivingly: anything but a well-formed memory is an empty one. */
 export function parseListMemory(raw: string | undefined): ListMemory {
-    if (!raw) return {};
-    try {
-        const parsed = memory.safeParse(JSON.parse(decode(raw)));
-        return parsed.success ? parsed.data : {};
-    } catch {
-        return {};
+    const json = listMemoryJson(raw);
+    if (typeof json !== "object" || json === null || Array.isArray(json)) return {};
+    const read: ListMemory = {};
+    for (const [key, value] of Object.entries(json)) {
+        const entry = readEntry(value);
+        if (key.length < 1 || key.length > MAX_KEY_LENGTH || !entry) return {};
+        read[key] = entry;
     }
+    return read;
 }
 
 /** Nothing worth a byte: a default is left out of an entry, so an empty one says nothing. */

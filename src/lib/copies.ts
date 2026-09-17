@@ -1,8 +1,7 @@
-import { z } from "zod";
 import type { Card } from "@/lib/api-shapes";
 import { sameNumber } from "@/lib/card-number";
-import { EDITIONS, EDITION_LABELS, type Edition, FINISHES, FINISH_LABELS, FOIL_PATTERN_LABELS, type Finish, type FoilPattern } from "@/lib/card-shapes";
-import { WESTERN_LANGUAGES, languageOf } from "@/lib/languages";
+import { EDITION_LABELS, type Edition, FINISH_LABELS, FOIL_PATTERN_LABELS, type Finish, type FoilPattern } from "@/lib/card-shapes";
+import { languageOf } from "@/lib/languages";
 
 /** One card as the sheet, a list or a search names it: set, number, name, and the set's title where known. */
 export type CardName = Pick<Card, "set" | "number" | "name"> & Partial<Pick<Card, "set_name" | "tcg_id">>;
@@ -104,20 +103,5 @@ export const copyLabel = (row: Card, binderName?: string | null): string =>
         .filter(Boolean)
         .join(" · ") || "Copy";
 
-/** What a copy may differ in from the row it comes from. */
-export const copyEdits = z
-    .object({
-        // Only the Western printings: every row is from the English catalogue until the others can be added.
-        language: z.enum(WESTERN_LANGUAGES.map((l) => l.code) as [string, ...string[]]).nullable(),
-        condition: z.string().trim().max(40).nullable(),
-        grade: z.string().trim().max(40).nullable(),
-        finish: z.enum(FINISHES).nullable(),
-        foilPattern: z.enum(["cosmos", "cracked-ice", "starlight", "confetti", "vertical-line"]).nullable(),
-        edition: z.enum(EDITIONS).nullable(),
-        collectionId: z.string().uuid().nullable(),
-        purchasePrice: z.number().min(0).nullable(),
-        purchaseDate: z.string().nullable(),
-        acquiredAt: z.string(),
-    })
-    .partial();
-export type CopyEdits = z.infer<typeof copyEdits>;
+/** What a copy may differ in: the type only, since its schema (copy-edits.ts) is for the server and brings zod. */
+export type { CopyEdits } from "@/lib/copy-edits";
