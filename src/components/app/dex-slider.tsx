@@ -10,6 +10,11 @@ import type { DexCard } from "@/lib/api-shapes";
 import { TILE_WIDTH } from "@/lib/cards-view";
 import { cx } from "@/utils/cx";
 
+/** How an arrow pages: a glide, or a jump for someone who asked the system for less motion. */
+export function pageBehavior(): ScrollBehavior {
+    return typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+}
+
 /** How long a card has to stay in view before it counts as the one you chose. */
 const SETTLED_MS = 400;
 
@@ -60,7 +65,7 @@ export function DexSlider({
 
     const scroll = (direction: 1 | -1) => {
         const el = ref.current;
-        if (el) el.scrollBy({ left: direction * el.clientWidth, behavior: "smooth" });
+        if (el) el.scrollBy({ left: direction * el.clientWidth, behavior: pageBehavior() });
     };
 
     return (
