@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, use, useEffect, useState } from "react";
+import { Suspense, use, useEffect, useRef, useState } from "react";
 import { BookOpen01, Folder, Heart, HomeLine, LayoutLeft, Plus, Rows01, Star01 } from "@untitledui/icons";
 import { Button as AriaButton } from "react-aria-components";
 import { AccountMenu } from "@/components/app/account-menu";
@@ -57,10 +57,21 @@ export function AppSidebar({
     const pathname = useRouteTarget();
     // Folded or open: a choice that stays, so it lives in the cookie and in state, not in the URL.
     const [collapsed, setCollapsed] = useState(initialCollapsed);
+    /* The button pressed to fold or unfold is gone once the switch is drawn (the rail and the open
+       panel are two trees), and focus fell to the page. It moves to the button that undoes it. */
+    const nav = useRef<HTMLElement>(null);
+    const refocus = useRef<string | null>(null);
     const setFolded = (folded: boolean) => {
+        refocus.current = folded ? "Expand sidebar" : "Collapse sidebar";
         setCollapsed(folded);
         storeCollapsed(folded);
     };
+    useEffect(() => {
+        const label = refocus.current;
+        if (!label) return;
+        refocus.current = null;
+        nav.current?.querySelector<HTMLElement>(`[aria-label="${label}"]`)?.focus();
+    }, [collapsed]);
 
     /* The numbers read again after a list's tiles stepped copies. Those presses do not draw the page
        again, so the layout's read stays from before them; the sidebar asks for its own, and puts
@@ -115,7 +126,7 @@ export function AppSidebar({
                 Chrome exposed the unnamed <aside> inside this <nav> as a second, nameless landmark.
                 max-lg:hidden because both children are already hidden below lg: without it an empty
                 second "Primary" would stand beside the tab bar's. */}
-            <nav aria-label="Primary" className="max-lg:hidden">
+            <nav ref={nav} aria-label="Primary" className="max-lg:hidden">
                 <SidebarNavigationSectionDividers
                     activeUrl={pathname}
                     items={navItems}

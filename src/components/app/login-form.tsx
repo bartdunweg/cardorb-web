@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { startTransition, useActionState } from "react";
 import { type AuthState, signIn } from "@/app/(auth)/actions";
 import { AuthEmailField, AuthShell } from "@/components/app/auth-shell";
 import { FormError } from "@/components/app/form-error";
@@ -21,7 +21,18 @@ export const LoginForm = ({ notice }: { notice?: string }) => {
                 failure on these forms has; as grey body text it read as a caption. */}
             <FormError error={notice} />
 
-            <form action={formAction} className="flex flex-col gap-6">
+            {/* Taken by hand once the page runs, as the sign-up form does: React resets a form after its
+                action, so an error from the server emptied what was typed. `action` stays for the moment
+                before hydration, or the browser would send the form as a GET. */}
+            <form
+                action={formAction}
+                className="flex flex-col gap-6"
+                onSubmit={(event) => {
+                    event.preventDefault();
+                    const data = new FormData(event.currentTarget);
+                    startTransition(() => formAction(data));
+                }}
+            >
                 <div className="flex flex-col gap-5">
                     <AuthEmailField />
                     <Input

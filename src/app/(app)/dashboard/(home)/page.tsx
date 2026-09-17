@@ -16,6 +16,7 @@ import { Button } from "@/components/base/buttons/button";
 import { getCardStats, getMyCards } from "@/lib/cards";
 import { getMyFolders } from "@/lib/collections";
 import { getMyProfile } from "@/lib/profile";
+import { sideRead } from "@/lib/side-read";
 import { getValueHistory } from "@/lib/value-history";
 
 // The tab's name, which the root layout's template finishes as “… · Cardorb”: without it every
@@ -54,7 +55,7 @@ export default function DashboardPage({ searchParams }: { searchParams: Promise<
 async function HomeBody({ searchParams }: { searchParams: Promise<{ value?: string }> }) {
     const { value } = await searchParams;
     const asked = value === "favorites" || value === "wishlist" || (value && UUID.test(value)) ? value : "all";
-    const [stats, folders] = await Promise.all([getCardStats(), asked !== "all" && UUID.test(asked) ? getMyFolders() : null]);
+    const [stats, folders] = await Promise.all([getCardStats(), asked !== "all" && UUID.test(asked) ? sideRead("folders", getMyFolders, null) : null]);
     // A binder deleted since the address was kept is the collection, movers and line included.
     const selected = folders && !folders.some((f) => f.id === asked) ? "all" : asked;
     // Nothing held: the first visits after signing up. A value of €0 with an empty chart and four
@@ -123,17 +124,25 @@ async function Welcome() {
 // collection's own number, already read for the tiles; a folder's, the favorites' or the
 // wishlist's is one narrow list read.
 async function ValueSection({ selected, total }: { selected: string; total: number }) {
+    /* Each of these is a side read: one that fails leaves the chart without its line, the menu
+       without the binders, or the collection's own number in place of a list's, never Home as an
+       error page. */
     const [folders, snapshots, current] = await Promise.all([
-        getMyFolders(),
-        getValueHistory(selected === "all" ? undefined : selected),
+        sideRead("folders", getMyFolders, []),
+        sideRead("value history", () => getValueHistory(selected === "all" ? undefined : selected), []),
         selected === "all"
             ? null
-            : getMyCards(
-                  selected === "favorites"
-                      ? { favoritesOnly: true, limit: 1, facets: false }
-                      : selected === "wishlist"
-                        ? { wishlist: true, limit: 1, facets: false }
-                        : { collectionId: selected, limit: 1, facets: false },
+            : sideRead(
+                  "list value",
+                  () =>
+                      getMyCards(
+                          selected === "favorites"
+                              ? { favoritesOnly: true, limit: 1, facets: false }
+                              : selected === "wishlist"
+                                ? { wishlist: true, limit: 1, facets: false }
+                                : { collectionId: selected, limit: 1, facets: false },
+                      ),
+                  null,
               ),
     ]);
     // The wishlist last: its number is what the cards you lack would cost, not what you hold.
@@ -143,7 +152,8 @@ async function ValueSection({ selected, total }: { selected: string; total: numb
         ...folders.map((f) => ({ id: f.id, name: f.name })),
         { id: "wishlist", name: "Wishlist" },
     ];
-    const known = lists.some((l) => l.id === selected);
+    // A list whose own value could not be read is shown as the collection, whose number is in hand.
+    const known = lists.some((l) => l.id === selected) && (selected === "all" || current !== null);
     return (
         <ValueHero
             lists={lists}

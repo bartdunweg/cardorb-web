@@ -23,6 +23,7 @@ import type { Card } from "@/lib/api-shapes";
 import type { CopyEdits } from "@/lib/copies";
 import { today } from "@/lib/format";
 import { languageOf } from "@/lib/languages";
+import { parsePrice } from "@/lib/price-input";
 
 // A copy that differs from the row it comes from. `add`: one more, pulled today, in the
 // language, condition, finish, folder and at the price given. `split`: some of this row's
@@ -100,7 +101,7 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
         const ed = (effectiveEdition || null) as CopyEdits["edition"];
         if (ed !== (from.edition ?? null)) out.edition = ed;
         if ((folder || null) !== (from.collection_id ?? null)) out.collectionId = folder || null;
-        const p = price.trim() === "" ? null : Number(price);
+        const p = parsePrice(price);
         if (p !== null && !Number.isFinite(p)) return out;
         if (p !== (from.purchase_price ?? null)) out.purchasePrice = p;
         return out;
@@ -355,12 +356,12 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
             <div className={row}>
                 Purchase price
                 <Input
-                    type="number"
+                    // Text with a decimal keypad, not a number field: that emptied "12,50" in most browsers.
+                    type="text"
+                    inputMode="decimal"
                     aria-label="Purchase price"
                     size="sm"
                     className="w-28"
-                    min={0}
-                    step="0.01"
                     placeholder="0.00"
                     value={price}
                     onChange={setPrice}

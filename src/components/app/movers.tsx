@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Button as AriaButton } from "react-aria-components";
 import { CardImage } from "@/components/app/card-image";
 import { PERIODS, type PeriodKey } from "@/components/app/chart-periods";
 import { useHomePeriod } from "@/components/app/home-period";
+import { notify } from "@/components/app/toast";
 import { cardLine, copyLine } from "@/lib/card-label";
 import type { Card } from "@/lib/cards";
 import { formatPrice } from "@/lib/format";
@@ -58,17 +59,39 @@ export function Movers() {
 
     /* A row opens the card's sheet on your own row of it, read by set, number and name the way the set
        page opens a card, and the arrows step through Up and then Down. `at` is where in that list the
-       open card is; a tap that finds no row (sold since the reading) leaves the sheet closed. */
+       open card is; a tap that finds no row (sold since the reading, or a read that failed) leaves the
+       sheet as it was and says so. */
     const all = answer ? [...answer.up, ...answer.down] : [];
     const [open, setOpen] = useState<{ card: Card; at: number } | null>(null);
+    /* Only the last tap or arrow counts: an earlier read that answers late does not open its card over
+       the one asked for after it. `heading` is where that last ask was going, so a second arrow pressed
+       before the first one's row is in steps on from there rather than from the card still shown. */
+    const asked = useRef(0);
+    const heading = useRef<number | null>(null);
     const show = async (at: number) => {
         const m = all[at];
         if (!m) return;
+        const ask = ++asked.current;
+        heading.current = at;
         const rows = await listRows({ set: m.set, number: m.number, name: m.name, tcg_id: m.tcgId });
+        if (ask !== asked.current) return;
+        heading.current = null;
         const row = rows.find((r) => r.owned) ?? rows[0];
         if (row) setOpen({ card: row, at });
+        else notify.failed(`${m.name} could not be opened`, { description: "Its row could not be read. Try again in a moment." });
     };
-    const step = (by: number) => (open && all[open.at + by] ? () => void show(open.at + by) : null);
+    const stepBy = (by: number) => {
+        const from = heading.current ?? open?.at;
+        if (from !== undefined && all[from + by]) void show(from + by);
+    };
+    const hasPrev = Boolean(open && all[open.at - 1]);
+    const hasNext = Boolean(open && all[open.at + 1]);
+    const close = () => {
+        // A read still out for the sheet just closed must not open it again.
+        asked.current++;
+        heading.current = null;
+        setOpen(null);
+    };
 
     return (
         <section aria-labelledby="movers-heading" className="flex flex-col gap-4">
@@ -117,7 +140,13 @@ export function Movers() {
             )}
             {/* On this list's own period, so the card's price line and the figure beside it answer the
                 question the row did: what it did over these months (Bart, 2026-09-16). */}
-            <CardDetailSlideout card={open?.card ?? null} onClose={() => setOpen(null)} onPrev={step(-1)} onNext={step(1)} period={period} />
+            <CardDetailSlideout
+                card={open?.card ?? null}
+                onClose={close}
+                onPrev={hasPrev ? () => stepBy(-1) : null}
+                onNext={hasNext ? () => stepBy(1) : null}
+                period={period}
+            />
         </section>
     );
 }

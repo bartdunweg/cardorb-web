@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { startTransition, useActionState } from "react";
 import { type AuthState, requestPasswordReset } from "@/app/(auth)/actions";
 import { AuthEmailField, AuthShell } from "@/components/app/auth-shell";
 import { FormError } from "@/components/app/form-error";
@@ -21,7 +21,16 @@ export const ForgotPasswordForm = () => {
             {sent ? (
                 <output className="text-center text-sm text-tertiary">{sent}</output>
             ) : (
-                <form action={formAction} className="flex flex-col gap-6">
+                <form
+                    action={formAction}
+                    className="flex flex-col gap-6"
+                    // By hand, as the sign-up form does: React resets a form after its action, and an error emptied the address.
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        const data = new FormData(event.currentTarget);
+                        startTransition(() => formAction(data));
+                    }}
+                >
                     <AuthEmailField />
 
                     {state && "error" in state && <FormError error={state.error} />}

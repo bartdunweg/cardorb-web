@@ -121,13 +121,15 @@ function OwnCardsPicker({ folder, close }: { folder: { id: string; name: string 
         close();
         notify.done(`${cards(ids.length)} added to ${folder.name}`);
         // One call for all of them: the API takes the ids beside the field (see editCopies).
-        void editCopies(ids, { collectionId: folder.id }, { reread: false }).then((res) => {
-            if (!res.ok) {
-                notify.failed(`Those cards were not added to ${folder.name}`, { description: res.error });
-                return;
-            }
-            void forgetMineQuietly().then(() => router.refresh());
-        });
+        void editCopies(ids, { collectionId: folder.id }, { reread: false })
+            .then((res) => {
+                if (!res.ok) {
+                    notify.failed(`Those cards were not added to ${folder.name}`, { description: res.error });
+                    return;
+                }
+                void forgetMineQuietly().then(() => router.refresh());
+            })
+            .catch(() => notify.failed(`Those cards were not added to ${folder.name}`));
     };
 
     return (

@@ -60,6 +60,11 @@ export function AcquiredDatePicker({
         if (picked && picked !== value) onChange(picked);
     };
     const cancel = () => setDraft(null);
+    /* Escape or a press outside closes without Cancel: the day picked then is dropped too, or the
+       field would show it while the form still holds the day before. Apply clears it first. */
+    const openChange = (open: boolean) => {
+        if (!open) setDraft(null);
+    };
 
     if (sm) {
         return (
@@ -73,6 +78,7 @@ export function AcquiredDatePicker({
                 onChange={pick}
                 onApply={apply}
                 onCancel={cancel}
+                onOpenChange={openChange}
             />
         );
     }
@@ -86,6 +92,7 @@ export function AcquiredDatePicker({
             onChange={pick}
             onApply={apply}
             onCancel={cancel}
+            onOpenChange={openChange}
         />
     );
 }
@@ -100,6 +107,7 @@ function AcquiredDateSheet({
     onChange,
     onApply,
     onCancel,
+    onOpenChange,
     isDisabled,
     className,
     "aria-label": ariaLabel,
@@ -108,6 +116,7 @@ function AcquiredDateSheet({
     onChange: (next: CalendarDate | null) => void;
     onApply: () => void;
     onCancel: () => void;
+    onOpenChange: (open: boolean) => void;
     isDisabled?: boolean;
     className?: string;
     "aria-label": string;
@@ -123,6 +132,7 @@ function AcquiredDateSheet({
             isDisabled={isDisabled}
             maxValue={today(getLocalTimeZone())}
             shouldCloseOnSelect={false}
+            onOpenChange={onOpenChange}
             value={value}
             onChange={(next) => onChange(next ? parseDate(next.toString()) : null)}
         >
