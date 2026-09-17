@@ -64,4 +64,11 @@ describe("loadMoreInput", () => {
         expect(loadMoreInput.safeParse({ offset: 1.5 }).success).toBe(false);
         expect(loadMoreInput.safeParse({ offset: 100_001 }).success).toBe(false);
     });
+
+    it("takes a span up to the API's ceiling, and no more", () => {
+        expect(loadMoreInput.parse({ offset: 48 }).limit).toBeUndefined();
+        expect(loadMoreInput.parse({ offset: 48, limit: 2000 }).limit).toBe(2000);
+        expect(loadMoreInput.safeParse({ offset: 48, limit: 2001 }).success).toBe(false);
+        expect(loadMoreInput.safeParse({ offset: 48, limit: 0 }).success).toBe(false);
+    });
 });

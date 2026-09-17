@@ -9,6 +9,7 @@ import { WishHeartButton } from "@/components/app/wish-heart-button";
 import { Button } from "@/components/base/buttons/button";
 import type { Card, CardFilter, CardList } from "@/lib/cards";
 import type { CardsSize, CardsViewMode } from "@/lib/cards-view";
+import { MORE_CEILING } from "@/lib/list-filter";
 import { loadMoreCards } from "@/lib/reads";
 
 /**
@@ -118,6 +119,10 @@ export function CardsList({
     const [failed, setFailed] = useState(false);
     const sentinel = useRef<HTMLDivElement>(null);
     const more = !end && read < first.total;
+    /* The button spins while the span is read again too, where a press would otherwise do nothing
+       without a word. Only its spinner: the region below still says the count, since no card is being
+       added to the list while it is read again. */
+    const busy = pending || rechecking || recheck !== null;
     // Once the list has run out, what it holds is the count, whatever the first page said.
     const total = end ? cards.length : first.total;
 
@@ -133,18 +138,25 @@ export function CardsList({
         let live = true;
         const upTo = read;
         startRecheck(async () => {
+            /* One read for the whole span, not a batch of 48 after another: two thousand cards down that
+               was forty requests in a row, with scrolling and Show more waiting on all of them. Past the
+               API's ceiling the span goes in reads of that size, side by side. */
             const got: Card[] = [];
             let offset = recheck.length;
             let done = false;
             try {
-                while (offset < upTo) {
-                    const batch = await loadMoreCards({ ...filter, offset });
+                const starts: number[] = [];
+                for (let at = recheck.length; at < upTo; at += MORE_CEILING) starts.push(at);
+                const answers = await Promise.all(starts.map((at) => loadMoreCards({ ...filter, offset: at, limit: Math.min(MORE_CEILING, upTo - at) })));
+                for (const [i, batch] of answers.entries()) {
                     got.push(...batch.cards);
                     offset += batch.cards.length;
                     if (batch.cards.length === 0 || offset >= batch.total) {
                         done = true;
                         break;
                     }
+                    // A read short of what it asked for leaves the reads after it at the wrong offsets; scrolling goes on from here.
+                    if (batch.cards.length < Math.min(MORE_CEILING, upTo - starts[i]!)) break;
                 }
             } catch {
                 if (live) setRecheck(null);
@@ -166,7 +178,7 @@ export function CardsList({
     }, [recheck, pending]);
 
     const loadMore = () => {
-        if (pending || rechecking || recheck) return;
+        if (busy) return;
         setFailed(false);
         startTransition(async () => {
             try {
@@ -307,8 +319,8 @@ export function CardsList({
                                 color={failed ? "secondary" : "tertiary"}
                                 size="sm"
                                 onClick={loadMore}
-                                aria-disabled={pending || undefined}
-                                isLoading={pending}
+                                aria-disabled={busy || undefined}
+                                isLoading={busy}
                                 showTextWhileLoading
                             >
                                 {pending ? "Loading…" : failed ? "Try again" : "Show more"}

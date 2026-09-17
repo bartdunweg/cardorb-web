@@ -118,7 +118,7 @@ const READS: Record<string, (q: URLSearchParams) => Promise<unknown> | null> = {
         return filter ? loadMoreCards(filter) : null;
     },
     count: (q) => {
-        const filter = json(q, loadMoreInput.omit({ offset: true }));
+        const filter = json(q, loadMoreInput.omit({ offset: true, limit: true }));
         return filter ? countCards(filter) : null;
     },
     "my-cards": (q) => {
