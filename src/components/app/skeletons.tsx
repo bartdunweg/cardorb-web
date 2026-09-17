@@ -67,6 +67,25 @@ export function CardsSkeleton({ count = 12, heading = false }: { count?: number;
 }
 
 /**
+ * A card list as a table (cards-table.tsx), while its code loads: the kit's small table card, its
+ * header row (h-9) and a screenful of its rows (h-14) at their own heights, so the table takes the
+ * outline's place without the rows under the fold moving the page.
+ */
+export function TableSkeleton({ rows = 12 }: { rows?: number }) {
+    return (
+        <Outline className="overflow-hidden rounded-xl bg-primary shadow-xs ring-1 ring-secondary">
+            <div className="h-9 border-b border-secondary" />
+            {Array.from({ length: rows }, (_, i) => (
+                <div key={i} className="flex h-14 items-center gap-3 border-b border-secondary px-4 last:border-b-0 md:px-5">
+                    <Block className="h-10 w-7" />
+                    <Block className="h-4 w-40" />
+                </div>
+            ))}
+        </Outline>
+    );
+}
+
+/**
  * A list page: the title, its count line as a block, Back where the page has one, then the row and
  * the cards. `title` absent (a binder, a set: the name comes with the data) leaves the title's
  * line empty rather than guessing a word that would then change.
