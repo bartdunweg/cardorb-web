@@ -2,6 +2,7 @@
 
 import { type ReactNode, memo, useCallback, useLayoutEffect, useRef, useState } from "react";
 import { Minus, Plus } from "@untitledui/icons";
+import { arriveDelay } from "@/components/app/arrive-stagger";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { warmCard } from "@/components/app/card-memo";
@@ -12,6 +13,7 @@ import { useListTotals } from "@/components/app/list-totals";
 import { PriceChangeLine } from "@/components/app/price-change";
 import { TileIconButton } from "@/components/app/tile-icon-button";
 import { useCopySteps } from "@/components/app/use-copy-steps";
+import { useTileExit } from "@/components/app/use-tile-exit";
 import type { PriceChange } from "@/lib/api-shapes";
 import { cardLine, copyLine } from "@/lib/card-label";
 import type { PublicCard } from "@/lib/cards";
@@ -88,13 +90,16 @@ export function CardsGrid<T extends GridCard>({
         latest.current = { cards, onSelect };
     });
     const select = useCallback((card: T) => latest.current.onSelect(card, latest.current.cards), []);
+    /* The first page is what the grid held when it was first drawn: those tiles arrive in a wave.
+       A batch appended on scroll and a card the list read again (a new row id) arrive at once. */
+    const [firstPage] = useState(() => new Set(cards.map((c) => c.id)));
     return (
         <div className={cx("grid gap-4", GRID_COLUMNS[size])}>
             {cards.map((card, i) => (
                 <GridCell
                     key={card.id}
                     card={card}
-                    index={i}
+                    arriveDelay={arriveDelay(i, firstPage.has(card.id))}
                     priority={i < priority}
                     size={size}
                     holder={holder}
@@ -109,7 +114,8 @@ export function CardsGrid<T extends GridCard>({
 
 type GridCellProps<T extends GridCard> = {
     card: T;
-    index: number;
+    /** How long the tile waits before it arrives (`arriveDelay`). */
+    arriveDelay: string;
     priority: boolean;
     size: CardsSize;
     holder: "you" | "owner";
@@ -119,7 +125,7 @@ type GridCellProps<T extends GridCard> = {
 };
 
 // Memoised: a press, a batch appended on scroll or the sheet opening leaves every other tile as it was.
-const GridCell = memo(function GridCell<T extends GridCard>({ card, index: i, priority, size, holder, onSelect, action, steps }: GridCellProps<T>) {
+const GridCell = memo(function GridCell<T extends GridCard>({ card, arriveDelay: delay, priority, size, holder, onSelect, action, steps }: GridCellProps<T>) {
     /* Quiet: the list is not drawn again after a press, because a redrawn list starts over from its
        first batch and a card pressed two hundred tiles down took the scroll back to the top. The
        tile says its own count; the next screen you open reads fresh. */
@@ -140,19 +146,21 @@ const GridCell = memo(function GridCell<T extends GridCard>({ card, index: i, pr
     const held = steps ? stepped : card.quantity;
     // Taken off this list by one of its own buttons (a wish un-hearted), without drawing the list again.
     const [left, setLeft] = useState(false);
-    // Taken to nought: the row is gone, and the toast holds the way back.
-    if (left || (steps && held === 0)) return null;
+    /* Taken to nought: the row is gone, and the toast holds the way back. The count and the line
+       under the title have already moved; the tile fades out first and is taken out once that ends,
+       or stays if its count comes back while it is leaving. */
+    const { ref: cellRef, removed } = useTileExit(left || (steps && held === 0));
+    if (removed) return null;
     const buttons = steps || action;
 
     return (
         // The arrival is on a box of its own: the button already transitions its colours and its
         // scale, and three utilities naming transition-property on one element leave one standing.
-        // The first two rows arrive one after another, 20 ms apart; everything under them comes in
-        // together once that wave has passed. A batch appended on scroll sits below the fold, so
-        // its wave is not seen and its delay has passed by the time it is.
+        // The first page's first eight tiles arrive one after another, a --stagger-step apart;
+        // everything after them, and every batch appended on scroll, comes in at once.
         // A column that fills its grid row, so the price and the buttons sit at one height across the row
         // whether or not a tile has the printing's line above them (Bart, 2026-09-16).
-        <div className="flex arrive flex-col" style={{ "--arrive-delay": `${Math.min(i, 12) * 20}ms` } as React.CSSProperties}>
+        <div ref={cellRef} className="flex arrive flex-col" style={{ "--arrive-delay": delay } as React.CSSProperties}>
             <CardTile
                 onSelect={() => onSelect(card)}
                 // The buttons have a row of their own in the cell, so the tile must not fill the cell: h-full

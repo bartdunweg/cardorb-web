@@ -5,6 +5,7 @@ import { SearchLg, SwitchVertical01 } from "@untitledui/icons";
 import dynamic from "next/dynamic";
 import { usePathname, useSearchParams } from "next/navigation";
 import { AppEmptyState } from "@/components/app/app-empty-state";
+import { arriveDelay } from "@/components/app/arrive-stagger";
 import { awaitRows, knownRows, warmCardFacts, warmSetRows } from "@/components/app/card-memo";
 import { type FilterAnswer, type FilterValues, FiltersSheet } from "@/components/app/filters-sheet";
 import { RowButton } from "@/components/app/row-button";
@@ -374,7 +375,8 @@ export function SetCards({
                    list in the app, which is what made it read as a checklist rather than a shelf. */
                         <ul className={`grid gap-4 ${GRID_COLUMNS[size]}`}>
                             {shown.slice(0, limit).map((card, i) => (
-                                <li key={card.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i, 16) * 20}ms` } as React.CSSProperties}>
+                                // The first batch arrives in a wave; a batch drawn on scroll comes in at once.
+                                <li key={card.id} className="arrive" style={{ "--arrive-delay": arriveDelay(i, i < CARD_BATCH) } as React.CSSProperties}>
                                     <SetCardTile
                                         card={card}
                                         stamp={`${holdingKey(drawnById.get(card.id) ?? card)}#${outsideCount(drawnById.get(card.id) ?? card)}`}
