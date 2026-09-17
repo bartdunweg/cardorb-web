@@ -3,7 +3,8 @@
 import type { PeriodKey } from "@/components/app/chart-periods";
 import { type Mover, type MoversPeriod, getMovers } from "@/lib/movers";
 
-const DAYS: Record<PeriodKey, MoversPeriod> = { "7d": "7", "1m": "30", "3m": "90", "6m": "180", max: "all" };
+// The chart's own days (chart-periods.ts): three and six months are 91 and 182 there, so here too (api#526).
+const DAYS: Record<PeriodKey, MoversPeriod> = { "7d": "7", "1m": "30", "3m": "91", "6m": "182", max: "all" };
 
 /**
  * Home's movers for the period the chart shows. Null when the API cannot answer: the block says it

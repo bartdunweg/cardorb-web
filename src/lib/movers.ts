@@ -5,7 +5,7 @@ import { perUser } from "@/lib/user-cache";
 export type { Mover } from "@/lib/api-shapes";
 
 /** The periods the API answers movers for, as the value chart names its own. */
-export type MoversPeriod = "7" | "30" | "90" | "180" | "all";
+export type MoversPeriod = "7" | "30" | "91" | "182" | "all";
 
 /**
  * The collection's biggest price moves over a period, up and down (GET /v1/movers). Kept five minutes
