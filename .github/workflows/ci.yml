@@ -54,7 +54,9 @@ jobs:
                   cache: pnpm
             - uses: supabase/setup-cli@v1
               with:
-                  version: latest
+                  # Pinned to what the last green run (35205722860, 2026-09-17) installed under
+                  # "latest", so the same commit builds the same stack twice.
+                  version: 2.117.0
             - run: pnpm install --frozen-lockfile
             - run: pnpm exec playwright install --with-deps chromium
 
@@ -73,7 +75,7 @@ jobs:
             - run: ./scripts/e2e-stack.sh "$RUNNER_TEMP/api"
             - run: pnpm e2e
 
-            - if: failure()
+            - if: ${{ !success() }}
               uses: actions/upload-artifact@v4
               with:
                   name: e2e-report

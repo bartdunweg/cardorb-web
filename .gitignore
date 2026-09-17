@@ -54,3 +54,4 @@ emails-out/
 /e2e/.stack.env
 /test-results/
 /playwright-report/
+/e2e-*.log

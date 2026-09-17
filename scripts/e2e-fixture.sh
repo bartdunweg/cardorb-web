@@ -15,6 +15,7 @@ set -euo pipefail
 
 API_DIR="$(cd "$1" && pwd)"
 SET="${2:-sv01}"
+[[ "$SET" =~ ^[a-z0-9.-]+$ ]] || { echo "bad set id" >&2; exit 1; }
 WEB_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
 cd "$API_DIR"
