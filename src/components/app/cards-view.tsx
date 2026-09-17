@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, Suspense, useState } from "react";
+import { type ReactNode, Suspense, useCallback, useState } from "react";
 import dynamic from "next/dynamic";
 import { CardsList } from "@/components/app/cards-list";
 import type { PeriodKey } from "@/components/app/chart-periods";
@@ -70,6 +70,8 @@ export function CardsView({
      * picked, and a later page of results should not move somebody's Next somewhere else.
      */
     const [selected, setSelected] = useState<{ card: Card; siblings: Card[] } | null>(null);
+    // One identity for the life of the view, so the list's memoised tiles are not drawn again when the sheet opens.
+    const select = useCallback((card: Card, siblings: Card[]) => setSelected({ card, siblings }), []);
     const at = selected ? selected.siblings.findIndex((c) => c.id === selected.card.id) : -1;
     const step = (by: number) => {
         const next = at >= 0 ? selected?.siblings[at + by] : undefined;
@@ -95,7 +97,7 @@ export function CardsView({
                     view={view}
                     size={size}
                     groupedBySet={sortedBySet && group === "sets"}
-                    onSelect={(card, siblings) => setSelected({ card, siblings })}
+                    onSelect={select}
                     noHits={noHits}
                     empty={empty}
                 />

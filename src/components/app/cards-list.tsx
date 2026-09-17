@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, use, useEffect, useRef, useState, useTransition } from "react";
+import { type ReactNode, use, useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { warmCardFacts } from "@/components/app/card-memo";
 import { CardsGrid, FIRST_ROW } from "@/components/app/cards-grid";
 import { CardsTable } from "@/components/app/cards-table";
@@ -90,7 +90,10 @@ export function CardsList({
             setEnd(false);
         }
     }
-    const cards = appended.length ? [...first.cards, ...appended] : first.cards;
+    // Kept by identity while neither part changes, so the grid's memoised tiles are left alone.
+    const cards = useMemo(() => (appended.length ? [...first.cards, ...appended] : first.cards), [first.cards, appended]);
+    const groups = useMemo(() => setGroups(cards, groupedBySet), [cards, groupedBySet]);
+    const selectFromList = useCallback((card: Card) => onSelect(card, cards), [onSelect, cards]);
     /* The facts of every card on the list, a page per request as the pages arrive, so a sheet opened
        on any of them draws its choices on its first paint (card-memo.ts). */
     useEffect(() => {
@@ -243,7 +246,7 @@ export function CardsList({
                 <>
                     {view === "grid" ? (
                         <div className="flex flex-col gap-8">
-                            {setGroups(cards, groupedBySet).map((group, i, groups) => (
+                            {groups.map((group, i) => (
                                 /* By name and which run of that name it is, not by place: two sets can share a name (an
                                    English and a Japanese one) and come apart in the list, which gave two sections one key.
                                    Place alone moved every section after a set that emptied (its last card removed from the
@@ -265,20 +268,11 @@ export function CardsList({
                                     ) : null}
                                     <CardsGrid
                                         cards={group.cards}
-                                        onSelect={(card) => onSelect(card, cards)}
+                                        onSelect={selectFromList}
                                         size={size}
                                         // The wishlist's tiles carry the pink heart and "Got it", every other list a minus and a
                                         // plus: the list says which list it is, rather than the grid reading it off a card's fields.
-                                        action={
-                                            filter.wishlist
-                                                ? (card, leave) => (
-                                                      <>
-                                                          <WishHeartButton card={card} onGone={leave} />
-                                                          <GotItButton card={card} />
-                                                      </>
-                                                  )
-                                                : undefined
-                                        }
+                                        action={filter.wishlist ? wishActions : undefined}
                                         steps={!filter.wishlist}
                                         // The first row at load is the first set's; a later set's tiles, and a batch appended on scroll, load as they come in.
                                         priority={i === 0 ? Math.min(FIRST_ROW, first.cards.length) : 0}
@@ -314,6 +308,14 @@ export function CardsList({
         </>
     );
 }
+
+/** A wishlist tile's buttons: the pink heart and Got it. One function for the module, so a memoised tile is not drawn again for a new one. */
+const wishActions = (card: Card, leave: () => void) => (
+    <>
+        <WishHeartButton card={card} onGone={leave} />
+        <GotItButton card={card} />
+    </>
+);
 
 /**
  * The cards in the runs the list already arrives in, one per set, or the whole list in one

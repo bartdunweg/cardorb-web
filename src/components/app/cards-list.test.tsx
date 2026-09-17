@@ -118,6 +118,8 @@ describe("CardsList on the wishlist", () => {
         const [tile] = screen.getAllByRole("button").filter((b) => b.getAttribute("aria-label") !== "Add Pikachu to your collection");
         fireEvent.click(tile!);
         expect(onSelect).toHaveBeenCalledTimes(1);
+        // With the list it was picked from, which the tile reads at the press rather than when it was drawn.
+        expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ id: card.id }), [expect.objectContaining({ id: card.id })]);
     });
 });
 

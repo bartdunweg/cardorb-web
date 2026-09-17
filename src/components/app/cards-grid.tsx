@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useState } from "react";
+import { type ReactNode, memo, useCallback, useLayoutEffect, useRef, useState } from "react";
 import { Minus, Plus } from "@untitledui/icons";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
@@ -80,6 +80,14 @@ export function CardsGrid<T extends GridCard>({
      */
     priority?: number;
 }) {
+    /* One press handler for every tile, whatever the parent hands in on each render: a tile is
+       memoised, and a new closure per tile per render drew all of them again. It reads the list and
+       the parent's handler as they are at the press, from refs a layout effect keeps current. */
+    const latest = useRef({ cards, onSelect });
+    useLayoutEffect(() => {
+        latest.current = { cards, onSelect };
+    });
+    const select = useCallback((card: T) => latest.current.onSelect(card, latest.current.cards), []);
     return (
         <div className={cx("grid gap-4", GRID_COLUMNS[size])}>
             {cards.map((card, i) => (
@@ -90,7 +98,7 @@ export function CardsGrid<T extends GridCard>({
                     priority={i < priority}
                     size={size}
                     holder={holder}
-                    onSelect={() => onSelect(card, cards)}
+                    onSelect={select}
                     action={action}
                     steps={steps && card.owned !== false && card.quantity != null}
                 />
@@ -99,25 +107,19 @@ export function CardsGrid<T extends GridCard>({
     );
 }
 
-function GridCell<T extends GridCard>({
-    card,
-    index: i,
-    priority,
-    size,
-    holder,
-    onSelect,
-    action,
-    steps,
-}: {
+type GridCellProps<T extends GridCard> = {
     card: T;
     index: number;
     priority: boolean;
     size: CardsSize;
     holder: "you" | "owner";
-    onSelect: () => void;
+    onSelect: (card: T) => void;
     action?: (card: T, leave: () => void) => ReactNode;
     steps: boolean;
-}) {
+};
+
+// Memoised: a press, a batch appended on scroll or the sheet opening leaves every other tile as it was.
+const GridCell = memo(function GridCell<T extends GridCard>({ card, index: i, priority, size, holder, onSelect, action, steps }: GridCellProps<T>) {
     /* Quiet: the list is not drawn again after a press, because a redrawn list starts over from its
        first batch and a card pressed two hundred tiles down took the scroll back to the top. The
        tile says its own count; the next screen you open reads fresh. */
@@ -152,7 +154,7 @@ function GridCell<T extends GridCard>({
         // whether or not a tile has the printing's line above them (Bart, 2026-09-16).
         <div className="flex arrive flex-col" style={{ "--arrive-delay": `${Math.min(i, 12) * 20}ms` } as React.CSSProperties}>
             <CardTile
-                onSelect={onSelect}
+                onSelect={() => onSelect(card)}
                 // The buttons have a row of their own in the cell, so the tile must not fill the cell: h-full
                 // took the whole of it and pushed them out under the next row's pictures, where a tap on
                 // one hit a picture.
@@ -257,4 +259,4 @@ function GridCell<T extends GridCard>({
             ) : null}
         </div>
     );
-}
+}) as <T extends GridCard>(props: GridCellProps<T>) => ReactNode;
