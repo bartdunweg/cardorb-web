@@ -29,9 +29,14 @@ export async function POST(request: Request) {
     const parsed = body.safeParse(await request.json().catch(() => null));
     if (!parsed.success) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
 
-    // "max" is the profile a route handler may name; the entries these tags cover are
-    // `unstable_cache` ones, which a revalidated tag turns into a miss on the next read.
-    revalidateTag(publicTag(parsed.data.username), "max");
-    revalidateTag(userTag(parsed.data.userId), "max");
+    // Expired at once, as `forgetMineLater` does, and never "max". A tag keeps one expiry, and the
+    // last call sets it: the API calls this after every write, including the ones this app's own
+    // tiles make, so a "max" here landed a moment after /api/forget-mine had expired the tag and
+    // pushed that expiry a year out. The tag was then only stale, and the next read was handed the
+    // answer from before the write while the fresh one was fetched behind it: a set page reloaded
+    // right after a plus and a second copy said "not in your collection" (1 round in 3, e2e probe
+    // on web#676, 2026-09-17).
+    revalidateTag(publicTag(parsed.data.username), { expire: 0 });
+    revalidateTag(userTag(parsed.data.userId), { expire: 0 });
     return new Response(null, { status: 204 });
 }
