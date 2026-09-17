@@ -85,19 +85,29 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
     const [inBrowser, setInBrowser] = useState(false);
     useEffect(() => {
         if (!wanted) return;
-        void catalogueClient().then(({ loadCatalogueIndex, loadSpecies }) => {
-            loadCatalogueIndex().then((found) => setInBrowser(Boolean(found)));
-            void loadSpecies();
-        });
+        /* A chunk that does not arrive (a deploy since the page loaded, the connection gone) leaves
+           the search with the API, as before the catalogue was in hand; nothing to say about it. */
+        catalogueClient()
+            .then(({ loadCatalogueIndex, loadSpecies }) => {
+                void loadSpecies().catch(() => null);
+                return loadCatalogueIndex().then((found) => setInBrowser(Boolean(found)));
+            })
+            .catch(() => setInBrowser(false));
     }, [wanted]);
     const search = async (term: string, params: CatalogueFilters, page: number) => {
         /* Full art goes to the API whatever the browser holds: the document carries a rarity and
            not the kind of card, and which cards are full art is worked out per set and kept in
            the catalogue's copy behind the API (`@/lib/full-art` says why the rarity will not do). */
         if (!params.fullArt && (params.language ?? "en") === "en") {
-            const [{ loadCatalogueIndex, loadSpecies }, { searchIndex }] = await Promise.all([catalogueClient(), import("@/lib/catalogue-index")]);
-            const [index, species] = await Promise.all([loadCatalogueIndex(), loadSpecies()]);
-            if (index) return searchIndex(index, term, { set: params.set, type: params.type }, page, species);
+            /* The same chunks can fail to load here; the API answers the same question, so it is asked
+               instead of the search failing. */
+            const inMemory = await Promise.all([catalogueClient(), import("@/lib/catalogue-index")])
+                .then(async ([{ loadCatalogueIndex, loadSpecies }, { searchIndex }]) => {
+                    const [index, species] = await Promise.all([loadCatalogueIndex(), loadSpecies()]);
+                    return index ? searchIndex(index, term, { set: params.set, type: params.type }, page, species) : null;
+                })
+                .catch(() => null);
+            if (inMemory) return inMemory;
         }
         return searchPokemon(term, params, page);
     };

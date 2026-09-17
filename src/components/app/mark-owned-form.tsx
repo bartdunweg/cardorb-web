@@ -24,7 +24,8 @@ import type { CopyEdits } from "@/lib/copies";
 import { forgetMineThenRefresh } from "@/lib/forget-then-refresh";
 import { today } from "@/lib/format";
 import { WESTERN_LANGUAGES, languageOf } from "@/lib/languages";
-import { parsePrice } from "@/lib/price-input";
+import { parsePrice, priceError } from "@/lib/price-input";
+import { orFailed } from "@/lib/write-outcome";
 
 // A wish becomes a copy you hold. The moment to say what it is: language, condition (Near Mint
 // unless said), finish, binder, what you paid and the day you got it (today unless said). One
@@ -63,12 +64,20 @@ export function MarkOwnedForm({ card, binders, languages, facts, onSaved, close 
     const [edition, setEdition] = useState(card.edition ?? "");
     const [binder, setBinder] = useState("");
     const [price, setPrice] = useState("");
+    // Said on the field once it is left or the form is sent, not while a price is half typed.
+    const [priceChecked, setPriceChecked] = useState(false);
+    const priceProblem = priceError(price);
     const [date, setDate] = useState(today());
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const manual = binders.filter((f) => !f.rule);
 
     const save = async () => {
+        // A price that is not one is said on its field, not sent to come back as a vague refusal.
+        if (priceProblem) {
+            setPriceChecked(true);
+            return;
+        }
         setSaving(true);
         setError(null);
         const edits: CopyEdits = {
@@ -88,7 +97,7 @@ export function MarkOwnedForm({ card, binders, languages, facts, onSaved, close 
            described field by field is not something to lose to a toast. Only the write is waited
            for: it forgets nothing itself, so the button no longer spins through the page being
            drawn inside the action's answer and then drawn again by the refresh. */
-        const res = await markOwnedWith(card.id, edits, { reread: false }).catch(() => ({ ok: false as const, error: "Something went wrong. Try again." }));
+        const res = await orFailed(markOwnedWith(card.id, edits, { reread: false }));
         setSaving(false);
         if (!res.ok) {
             setError(res.error);
@@ -313,10 +322,16 @@ export function MarkOwnedForm({ card, binders, languages, facts, onSaved, close 
                     inputMode="decimal"
                     aria-label="Purchase price"
                     size="sm"
-                    className="w-28"
+                    wrapperClassName="w-28"
                     placeholder="0.00"
                     value={price}
-                    onChange={setPrice}
+                    onChange={(v) => {
+                        setPrice(v);
+                        if (!priceError(v)) setPriceChecked(false);
+                    }}
+                    onBlur={() => setPriceChecked(true)}
+                    isInvalid={priceChecked && priceProblem !== null}
+                    hint={priceChecked && priceProblem ? priceProblem : undefined}
                 />
             </div>
 

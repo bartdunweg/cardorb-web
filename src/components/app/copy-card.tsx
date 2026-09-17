@@ -21,7 +21,8 @@ import { type CopyEdits, type CopyGroup, copyLabel } from "@/lib/copies";
 import { forgetMineQuietly } from "@/lib/forget-mine";
 import { formatPrice } from "@/lib/format";
 import { languageOf } from "@/lib/languages";
-import { parsePrice } from "@/lib/price-input";
+import { parsePrice, priceError } from "@/lib/price-input";
+import { orFailed } from "@/lib/write-outcome";
 import { cx } from "@/utils/cx";
 
 /**
@@ -99,12 +100,14 @@ export function CopyCard({
            read and redrawn before it was done, and the next field's save queued behind that. The
            cache is dropped here instead, quietly, and the sheet re-reads the list once for a run
            of fields (its scheduleRefresh). */
-        const res = await editCopies(
-            group.rows.map((r) => r.id),
-            edits,
-            { reread: false },
-            // A write that never answered takes the shown value back like one that said no.
-        ).catch(() => ({ ok: false as const, error: "Something went wrong. Try again." }));
+        // A write that never answered takes the shown value back like one that said no.
+        const res = await orFailed(
+            editCopies(
+                group.rows.map((r) => r.id),
+                edits,
+                { reread: false },
+            ),
+        );
         if (!res.ok) {
             notify.failed(failed, { description: res.error });
             setOver((o) => {
@@ -147,15 +150,16 @@ export function CopyCard({
     /* The price field is typed into, so it saves when it is left, not on every keystroke. */
     const [priceDraft, setPriceDraft] = useState<string | null>(null);
     const priceText = priceDraft ?? (purchasePrice != null ? String(purchasePrice) : "");
+    /* Why the text left in the field is not a price. It stays in the field with the reason under
+       it, so it can be put right; snapping back to the saved price lost what was typed. */
+    const [priceProblem, setPriceProblem] = useState<string | null>(null);
     const commitPrice = () => {
         if (priceDraft === null) return;
+        const problem = priceError(priceDraft);
+        setPriceProblem(problem);
+        if (problem) return;
         const p = parsePrice(priceDraft);
         setPriceDraft(null);
-        if (p !== null && (!Number.isFinite(p) || p < 0)) {
-            // Every other refused save on this card says so; this one snapped back in silence.
-            notify.failed("The purchase price did not save", { description: "A price is zero or more." });
-            return;
-        }
         if (p === purchasePrice) return;
         void save({ purchasePrice: p }, "The purchase price did not save");
     };
@@ -392,11 +396,16 @@ export function CopyCard({
                             inputMode="decimal"
                             aria-label="Purchase price"
                             size="sm"
-                            className="w-28"
+                            wrapperClassName="w-28"
                             placeholder="0.00"
                             isDisabled={disabled}
                             value={priceText}
-                            onChange={setPriceDraft}
+                            onChange={(v) => {
+                                setPriceDraft(v);
+                                if (!priceError(v)) setPriceProblem(null);
+                            }}
+                            isInvalid={priceProblem !== null}
+                            hint={priceProblem ?? undefined}
                             onBlur={commitPrice}
                             onKeyDown={(e) => {
                                 if (e.key === "Enter") commitPrice();

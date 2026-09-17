@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { removeCard } from "@/app/(app)/dashboard/cards/actions";
 import { notify } from "@/components/app/toast";
 import { forgetMineQuietly } from "@/lib/forget-mine";
+import { holdPage } from "@/lib/unsent-writes";
 
 type Added = { ok: true; id?: string } | { ok: false; error: string };
 
@@ -63,41 +64,54 @@ export function useWishStep({
         onShown?.(next);
         if (flying.current) return;
         flying.current = true;
+        // A press waiting on the write before it lives only in this page: a reload now would drop it.
+        const release = holdPage();
         startTransition(async () => {
             let failure: string | null = null;
-            while (want.current !== stored.current.wished) {
-                if (want.current) {
-                    const res = await add();
-                    if (!res.ok || !res.id) {
-                        failure = res.ok ? "The card was added, but this page could not follow. Reload to see it." : res.error;
-                        break;
+            let threw = false;
+            try {
+                while (want.current !== stored.current.wished) {
+                    if (want.current) {
+                        const res = await add();
+                        if (!res.ok || !res.id) {
+                            failure = res.ok ? "The card was added, but this page could not follow. Reload to see it." : res.error;
+                            break;
+                        }
+                        stored.current = { wished: true, id: res.id };
+                        notify.done(`${name} is on your wishlist now`, { undo: { onUndo: () => latest.current(false) } });
+                    } else {
+                        const id = stored.current.id;
+                        if (!id) {
+                            failure = "This wish cannot be changed from here.";
+                            break;
+                        }
+                        const res = await removeCard(id, { reread: false });
+                        if (!res.ok) {
+                            failure = res.error;
+                            break;
+                        }
+                        stored.current = { wished: false, id: undefined };
+                        notify.removed(`${name} is off your wishlist`, { undo: { label: "Put back", onUndo: () => latest.current(true) } });
                     }
-                    stored.current = { wished: true, id: res.id };
-                    notify.done(`${name} is on your wishlist now`, { undo: { onUndo: () => latest.current(false) } });
-                } else {
-                    const id = stored.current.id;
-                    if (!id) {
-                        failure = "This wish cannot be changed from here.";
-                        break;
-                    }
-                    const res = await removeCard(id, { reread: false });
-                    if (!res.ok) {
-                        failure = res.error;
-                        break;
-                    }
-                    stored.current = { wished: false, id: undefined };
-                    notify.removed(`${name} is off your wishlist`, { undo: { label: "Put back", onUndo: () => latest.current(true) } });
+                    onStored?.(stored.current.id);
+                    if (want.current === stored.current.wished) setPressed({ ...stored.current, on: page });
                 }
-                onStored?.(stored.current.id);
-                if (want.current === stored.current.wished) setPressed({ ...stored.current, on: page });
+            } catch {
+                /* An action that threw (no signal, a deploy in between) is a failure like a refused one.
+                   Without this the heart stayed "in the air" for good and did nothing until a reload. */
+                threw = true;
+                failure = "Something went wrong. Try again.";
+            } finally {
+                flying.current = false;
+                release();
             }
-            flying.current = false;
             if (failure) {
                 want.current = stored.current.wished;
                 setPressed({ ...stored.current, on: page });
                 onShown?.(stored.current.wished);
                 onStored?.(stored.current.id);
-                setError(failure);
+                if (threw) notify.failed(want.current ? `${name} is still on your wishlist` : `${name} was not added to your wishlist`);
+                else setError(failure);
                 return;
             }
             await forgetMineQuietly("cards");

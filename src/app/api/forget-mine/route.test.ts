@@ -15,7 +15,7 @@ describe("POST /api/forget-mine", () => {
     });
 
     it("forgets what the write names", async () => {
-        for (const write of ["cards", "binders", "profile", "all"]) {
+        for (const write of ["cards", "favorite", "binders", "profile", "dexFace", "all"]) {
             expect((await post(`?write=${write}`)).status).toBe(204);
             expect(forgetMineLater).toHaveBeenLastCalledWith(write);
         }

@@ -52,6 +52,8 @@ describe("holo family for the API's one rarity spelling", () => {
         "Rainbow Rare",
         "Holo Rare ex",
         "Holo Rare GX",
+        "Pikachu Rare",
+        "Futuristic Rare",
     ];
     const PLAIN = new Set(["Common", "Uncommon", "Rare", "Classic Collection", "Promo"]);
 

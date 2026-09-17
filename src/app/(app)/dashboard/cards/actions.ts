@@ -356,7 +356,8 @@ export async function setFavorite(cardId: string, isFavorite: boolean, { reread 
         return failed(err);
     }
 
-    if (reread) await forgetMine("cards");
+    // A star forgets what a star changes (`favorite` in cache-scopes), not the set pages or the binders.
+    if (reread) await forgetMine("favorite");
     return { ok: true };
 }
 

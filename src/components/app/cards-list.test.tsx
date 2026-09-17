@@ -332,6 +332,113 @@ describe("CardsList when its first page is read again", () => {
         expect(screen.getByText("Card d")).toBeInTheDocument();
         expect(names()).toEqual(["Showing 3 of 3 cards"]);
     });
+
+    it("keeps a batch that landed while the first page was read again", async () => {
+        const { loadMoreCards } = await import("@/lib/reads");
+        const load = vi.mocked(loadMoreCards);
+        load.mockReset();
+        const all = ["a", "b", "c", "d", "e", "f"].map(of);
+        // Two cards a batch unless the list asks for a span; the rows as the API holds them.
+        const slice = (f: unknown) => {
+            const { offset, limit } = f as { offset: number; limit?: number };
+            return { cards: all.slice(offset, offset + (limit ?? 2)), total: all.length };
+        };
+        let landBatch: () => void = () => {};
+        load.mockImplementation(async (f) => {
+            const { offset } = f as { offset: number };
+            // The third batch is on its way when the refresh comes, and lands when the test says.
+            if (offset === 4 && load.mock.calls.length === 2) await new Promise<void>((resolve) => (landBatch = resolve));
+            // The re-read is slower than the batch, which is how the batch landed first.
+            else if (load.mock.calls.length > 2) await new Promise((resolve) => setTimeout(resolve, 20));
+            return slice(f);
+        });
+        vi.stubGlobal("IntersectionObserver", Seen);
+        const at = (list: Promise<CardList>) => (
+            <Suspense fallback={null}>
+                <CardsList
+                    list={list}
+                    listKey="/dashboard/cards"
+                    filter={{}}
+                    narrowed={false}
+                    view="grid"
+                    size="md"
+                    onSelect={vi.fn()}
+                    noHits={null}
+                    empty={null}
+                />
+            </Suspense>
+        );
+        const view = await act(async () => render(at(settled(all.slice(0, 2), 6))));
+        await settle();
+        expect(screen.getByText("Card d")).toBeInTheDocument();
+        expect(load).toHaveBeenCalledTimes(2);
+
+        await act(async () => view.rerender(at(settled(all.slice(0, 2), 6))));
+        await act(async () => landBatch());
+        await act(async () => new Promise((resolve) => setTimeout(resolve, 60)));
+        await settle();
+        vi.unstubAllGlobals();
+        vi.stubGlobal("matchMedia", () => ({ matches: true, addEventListener() {}, removeEventListener() {} }));
+
+        for (const id of ["a", "b", "c", "d", "e", "f"]) expect(screen.getByText(`Card ${id}`)).toBeInTheDocument();
+        expect(names()).toEqual(["Showing 6 of 6 cards"]);
+    });
+
+    it("reads the scrolled span again in one request, with Show more waiting on it", async () => {
+        const { loadMoreCards } = await import("@/lib/reads");
+        const load = vi.mocked(loadMoreCards);
+        load.mockReset();
+        const all = ["a", "b", "c", "d", "e", "f", "g", "h"].map(of);
+        load.mockImplementation(async (f) => {
+            const { offset, limit } = f as { offset: number; limit?: number };
+            return { cards: all.slice(offset, offset + (limit ?? 2)), total: all.length };
+        });
+        // No observer: the reader presses Show more, twice.
+        const at = (list: Promise<CardList>) => (
+            <Suspense fallback={null}>
+                <CardsList
+                    list={list}
+                    listKey="/dashboard/cards"
+                    filter={{}}
+                    narrowed={false}
+                    view="grid"
+                    size="md"
+                    onSelect={vi.fn()}
+                    noHits={null}
+                    empty={null}
+                />
+            </Suspense>
+        );
+        const view = await act(async () => render(at(settled(all.slice(0, 2), 8))));
+        for (let i = 0; i < 2; i++) {
+            await act(async () => fireEvent.click(screen.getByRole("button", { name: "Show more" })));
+            await settle();
+        }
+        expect(names()).toEqual(["Showing 6 of 8 cards"]);
+
+        load.mockClear();
+        let answer: () => void = () => {};
+        load.mockImplementation(async (f) => {
+            await new Promise<void>((resolve) => (answer = resolve));
+            const { offset, limit } = f as { offset: number; limit?: number };
+            return { cards: all.slice(offset, offset + (limit ?? 2)), total: all.length };
+        });
+        await act(async () => view.rerender(at(settled(all.slice(0, 2), 8))));
+        await settle();
+        // While the span is read again the button waits, and a press on it asks for nothing more.
+        const button = screen.getByRole("button", { name: "Show more" });
+        expect(button).toHaveAttribute("aria-disabled", "true");
+        await act(async () => fireEvent.click(button));
+        // The region keeps the count: no card is being added.
+        expect(names()).toEqual(["Showing 6 of 8 cards"]);
+        await act(async () => answer());
+        await settle();
+
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(load).toHaveBeenCalledWith(expect.objectContaining({ offset: 2, limit: 4 }));
+        expect(screen.getByRole("button", { name: "Show more" })).not.toHaveAttribute("aria-disabled");
+        expect(screen.getByText("Card f")).toBeInTheDocument();
+    });
 });
 
 describe("the key a set's run is drawn under", () => {
