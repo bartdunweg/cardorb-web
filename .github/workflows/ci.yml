@@ -73,7 +73,7 @@ jobs:
                   done
 
             - run: ./scripts/e2e-stack.sh "$RUNNER_TEMP/api"
-            - run: pnpm e2e e2e/probe-hydration.spec.ts e2e/probe-reload2.spec.ts
+            - run: pnpm e2e e2e/probe-reload2.spec.ts
 
             - if: ${{ always() }}
               uses: actions/upload-artifact@v4

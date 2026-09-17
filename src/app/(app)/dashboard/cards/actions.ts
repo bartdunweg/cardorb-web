@@ -253,6 +253,9 @@ export async function setCopies(cardId: string, quantity: number, { reread = tru
     if (!parsed.success) return { ok: false, error: "Invalid card." };
 
     console.log(`[probe] ${Date.now()} setCopies start ${quantity}`);
+    const writeDelay = quantity === 2 ? Number((await (await import("next/headers")).headers()).get("x-probe-write-delay") ?? 0) : 0;
+    if (writeDelay) await new Promise((r) => setTimeout(r, writeDelay));
+    console.log(`[probe] ${Date.now()} setCopies api call after delay ${writeDelay}`);
     try {
         await api(`/collection/items/${parsed.data.cardId}`, { method: "PATCH", body: { quantity: parsed.data.quantity } });
         console.log(`[probe] ${Date.now()} setCopies end ${quantity}`);

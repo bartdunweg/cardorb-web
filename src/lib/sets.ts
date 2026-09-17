@@ -85,11 +85,14 @@ export type SetDetail = {
 export async function getSet(id: string, language: BrowseLanguage = "en"): Promise<SetDetail | null> {
     try {
         const began = Date.now();
+        const readDelay = Number((await (await import("next/headers")).headers()).get("x-probe-read-delay") ?? 0);
         const got = await perUser("sets", `set:v1:${language}:${id}`, async (token) => {
             console.log(`[probe] ${Date.now()} readSet start ${id}`);
             const read = await readSet(id, language, token);
             const q = read.cards.filter((c) => c.owned).map((c) => `${c.number}x${c.quantity}`).join(",");
-            console.log(`[probe] ${Date.now()} readSet end ${id} began ${began} held=${q}`);
+            console.log(`[probe] ${Date.now()} readSet api answered ${id} began ${began} held=${q} delaying ${readDelay}`);
+            if (readDelay) await new Promise((r) => setTimeout(r, readDelay));
+            console.log(`[probe] ${Date.now()} readSet end (stored now) ${id}`);
             return read;
         });
         const q = got.cards.filter((c) => c.owned).map((c) => `${c.number}x${c.quantity}`).join(",");
