@@ -48,15 +48,12 @@ test("two quick presses on plus make two copies, not one and not three", async (
     await expect(collectionTile(page, c)).toHaveCount(1);
 });
 
-// set-card-tile.tsx's plus calls addCard with `{ reread: false }` (line 79); use-copy-steps.ts
-// then chains straight into setCopies and only forgets the per-user cache
-// (`forgetMineQuietly`, /api/forget-mine) once both writes have answered, with nothing that
-// blocks a navigation started in between. A reload right after the two presses, with no wait,
-// is a real thing a person does (the double-press itself is not the edge case, the brief's own
-// "two quick presses" test above is for that); this test is for pressing plus twice and reloading
-// at once, the way the fast tap and a slow phone browser's own reload gesture can land.
+// A reload right after two presses was suspected to lose or hide the second copy:
+// set-card-tile.tsx calls addCard with reread: false, and use-copy-steps.ts chains the count
+// write and /api/forget-mine from the browser without a pending guard. On localhost it has not
+// reproduced. The test stays as a guard.
 test("a reload right after two presses keeps both copies", async ({ page }) => {
-    const c = card(5);
+    const c = card(10);
     await page.goto(setPage);
     const box = await addButton(page, c).boundingBox();
     if (!box) throw new Error("plus button has no box");
