@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { rarityKept } from "./folder-rule";
+import { rarityKept } from "./binder-rule";
 
 describe("rarityKept", () => {
     it("keeps a plain rarity whatever the card, without case", () => {

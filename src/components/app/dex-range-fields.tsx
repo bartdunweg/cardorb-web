@@ -2,7 +2,7 @@
 
 import { Input } from "@/components/base/input/input";
 import { NativeSelect } from "@/components/base/select/select-native";
-import { type DexRange, GENERATIONS, NATIONAL_DEX_MAX } from "@/lib/folder-rule";
+import { type DexRange, GENERATIONS, NATIONAL_DEX_MAX } from "@/lib/binder-rule";
 
 export type DexDraft = { from: string; to: string };
 

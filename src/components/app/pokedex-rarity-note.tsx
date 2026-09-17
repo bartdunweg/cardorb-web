@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { updateCollection } from "@/app/(app)/dashboard/collections/actions";
+import { updateBinder } from "@/app/(app)/dashboard/collections/actions";
 import { notify } from "@/components/app/toast";
 import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
-import { type PokedexSetting, rarityLabel } from "@/lib/folder-rule";
+import { type PokedexSetting, rarityLabel } from "@/lib/binder-rule";
 import { forgetMineThenRefresh } from "@/lib/forget-then-refresh";
 
 /**
@@ -20,7 +20,7 @@ import { forgetMineThenRefresh } from "@/lib/forget-then-refresh";
  * Nothing is drawn while every rarity counts, which is the default: a line saying "everything
  * counts" is a line about nothing.
  */
-export function PokedexRarityNote({ folderId, setting }: { folderId: string; setting: PokedexSetting }) {
+export function PokedexRarityNote({ binderId, setting }: { binderId: string; setting: PokedexSetting }) {
     const router = useRouter();
     // Pressed, for the setting it was pressed on (by its contents, as a refresh hands in a new object):
     // the note goes at once, and comes back if the write fails.
@@ -39,7 +39,7 @@ export function PokedexRarityNote({ folderId, setting }: { folderId: string; set
         // word, a keyboard starts over at the top and a screen reader hears nothing at all. The
         // toast is the live region that says what happened.
         notify.done("Every rarity counts now");
-        void updateCollection(folderId, { pokedex: { missing: setting.missing, ...(setting.dex ? { dex: setting.dex } : {}) } }, { reread: false }).then(
+        void updateBinder(binderId, { pokedex: { missing: setting.missing, ...(setting.dex ? { dex: setting.dex } : {}) } }, { reread: false }).then(
             (res) => {
                 if (!res.ok) {
                     setCleared(null);

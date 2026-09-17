@@ -1,17 +1,17 @@
 import { type ReactNode, Suspense } from "react";
-import { FolderBody, type FolderBodyProps } from "@/components/app/folder-body";
+import { BinderBody, type BinderBodyProps } from "@/components/app/binder-body";
 import { ListTotalsProvider, LiveDatapoints } from "@/components/app/list-totals";
 import { PageHeader } from "@/components/app/page-header";
-import type { Datapoints } from "@/lib/folder-datapoints";
+import type { Datapoints } from "@/lib/binder-datapoints";
 
-// Every folder page, top to bottom: the title, what it holds (count and value), the folder's
-// actions where it has any, then the row and the list. One shape, so All cards, a folder of
+// Every binder page, top to bottom: the title, what it holds (count and value), the binder's
+// actions where it has any, then the row and the list. One shape, so All cards, a binder of
 // yours, the favorites and the wishlist read the same.
 //
 // The title, the actions and the row are drawn at once. The count and the value are a promise
 // the page did not wait for: they come from the same read as the first batch of cards, and
 // take their place under the title when it lands.
-export function FolderPage({
+export function BinderPage({
     title,
     subtitle,
     datapointLines = 1,
@@ -23,7 +23,7 @@ export function FolderPage({
     add,
     children,
     ...body
-}: FolderBodyProps & {
+}: BinderBodyProps & {
     title: string;
     /** A sentence under the title, above the count, where the title alone does not say what the list is. */
     subtitle?: string;
@@ -84,7 +84,7 @@ export function FolderPage({
                 >
                     {children}
                 </PageHeader>
-                <FolderBody {...body} />
+                <BinderBody {...body} />
             </div>
         </ListTotalsProvider>
     );

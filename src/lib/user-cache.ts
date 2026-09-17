@@ -8,9 +8,9 @@ import { elapsed, logTiming } from "@/lib/timing";
 /**
  * The signed-in person's slow-moving data, kept across requests.
  *
- * The app layout asks the API for the profile, the folders and the stats on every screen, one
+ * The app layout asks the API for the profile, the binders and the stats on every screen, one
  * after the other, and the API sits in another region. Those three answers change when the
- * person writes (adds a card, renames a folder, changes their name) and not otherwise, so
+ * person writes (adds a card, renames a binder, changes their name) and not otherwise, so
  * they are kept for five minutes per person, each under its scope (`cache-scopes.ts`), and a write
  * drops the scopes it changed: a plus on a tile leaves the profile standing.
  *

@@ -36,7 +36,7 @@ import { cx } from "@/utils/cx";
  *
  * A rule binder fills itself and has no plus of this kind; its page shows the plain Add card.
  */
-export function BinderAddButton({ folder, compact }: { folder: { id: string; name: string }; compact: boolean }) {
+export function BinderAddButton({ binder, compact }: { binder: { id: string; name: string }; compact: boolean }) {
     const { open } = useCommandSearch();
     const [picking, setPicking] = useState(false);
     return (
@@ -68,7 +68,7 @@ export function BinderAddButton({ folder, compact }: { folder: { id: string; nam
                 DialogTrigger, which wants a pressable child, is not in the picture. */}
             <ModalOverlay isOpen={picking} onOpenChange={setPicking}>
                 <Modal className="max-w-xl">
-                    <Dialog>{({ close }) => <OwnCardsPicker folder={folder} close={close} />}</Dialog>
+                    <Dialog>{({ close }) => <OwnCardsPicker binder={binder} close={close} />}</Dialog>
                 </Modal>
             </ModalOverlay>
         </>
@@ -83,7 +83,7 @@ const cards = (n: number) => `${n} ${n === 1 ? "card" : "cards"}`;
  * inside the dialog, so it starts clean on every open. What you ticked survives the next search,
  * so a binder can be filled from more than one query before the press.
  */
-function OwnCardsPicker({ folder, close }: { folder: { id: string; name: string }; close: () => void }) {
+function OwnCardsPicker({ binder, close }: { binder: { id: string; name: string }; close: () => void }) {
     const router = useRouter();
     const [query, setQuery] = useState("");
     const { results, loading, failed, retry } = useDebouncedSearch<CardHit>(query, searchMyCards, { minLength: 1, delay: 250 });
@@ -119,17 +119,17 @@ function OwnCardsPicker({ folder, close }: { folder: { id: string; name: string 
         if (!picked.size) return;
         const ids = [...picked.keys()];
         close();
-        notify.done(`${cards(ids.length)} added to ${folder.name}`);
+        notify.done(`${cards(ids.length)} added to ${binder.name}`);
         // One call for all of them: the API takes the ids beside the field (see editCopies).
-        void editCopies(ids, { collectionId: folder.id }, { reread: false })
+        void editCopies(ids, { collectionId: binder.id }, { reread: false })
             .then((res) => {
                 if (!res.ok) {
-                    notify.failed(`Those cards were not added to ${folder.name}`, { description: res.error });
+                    notify.failed(`Those cards were not added to ${binder.name}`, { description: res.error });
                     return;
                 }
                 void forgetMineThenRefresh("cards", router);
             })
-            .catch(() => notify.failed(`Those cards were not added to ${folder.name}`));
+            .catch(() => notify.failed(`Those cards were not added to ${binder.name}`));
     };
 
     return (
@@ -169,7 +169,7 @@ function OwnCardsPicker({ folder, close }: { folder: { id: string; name: string 
                 ) : null}
                 {!loading &&
                     results.map((card) => {
-                        const here = card.collection_id === folder.id;
+                        const here = card.collection_id === binder.id;
                         return (
                             <Checkbox
                                 key={card.id}

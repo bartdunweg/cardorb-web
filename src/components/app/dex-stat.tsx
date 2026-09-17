@@ -1,8 +1,8 @@
 import { StatCard } from "@/components/app/cards-stats";
+import type { PokedexSetting } from "@/lib/binder-rule";
+import { getDexBinder } from "@/lib/binders";
 import { getAllMyCards } from "@/lib/cards";
-import { getDexBinder } from "@/lib/collections";
 import { groupByDex } from "@/lib/dex-groups";
-import type { PokedexSetting } from "@/lib/folder-rule";
 import { formatCount } from "@/lib/format";
 import { getDexNames } from "@/lib/pokedex";
 import { sideRead } from "@/lib/side-read";

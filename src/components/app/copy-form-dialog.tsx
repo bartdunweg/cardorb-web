@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import { addCopy, splitCopy } from "@/app/(app)/dashboard/cards/actions";
 import type { CardFacts } from "@/app/(app)/dashboard/cards/actions";
-import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
+import type { BinderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { AcquiredDatePicker } from "@/components/app/acquired-date-picker";
 import { CONDITIONS } from "@/components/app/condition-badge";
 import { defaultFinishOf, editionOptions, effectivePatternOf, finishOptions, patternOptions, soleOption } from "@/components/app/copy-fields";
@@ -26,13 +26,13 @@ import { languageOf } from "@/lib/languages";
 import { parsePrice } from "@/lib/price-input";
 
 // A copy that differs from the row it comes from. `add`: one more, pulled today, in the
-// language, condition, finish, folder and at the price given. `split`: some of this row's
+// language, condition, finish, binder and at the price given. `split`: some of this row's
 // copies are like that already; they move to a row of their own and keep the acquired date.
 // Prefilled from the row, so only what differs has to be touched; Save waits until something does.
 type Props = {
     mode: "add" | "split";
     from: Card;
-    folders: FolderChoice[];
+    binders: BinderChoice[];
     onSaved?: () => void;
     /** The Western languages the card was printed in, when the API has said. */
     languages?: readonly string[] | null;
@@ -48,7 +48,7 @@ export function CopyFormDialog({ children, ...form }: Props & { children: ReactN
     );
 }
 
-function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Props & { close: () => void }) {
+function CopyForm({ mode, from, binders, languages, facts, onSaved, close }: Props & { close: () => void }) {
     const router = useRouter();
     const total = from.quantity ?? 1;
     const [count, setCount] = useState(1);
@@ -62,14 +62,14 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
     const [finish, setFinish] = useState(from.finish ?? "");
     const [pattern, setPattern] = useState(from.foil_pattern ?? "");
     const [edition, setEdition] = useState(from.edition ?? "");
-    const [folder, setFolder] = useState(from.collection_id ?? "");
+    const [binder, setBinder] = useState(from.collection_id ?? "");
     const [price, setPrice] = useState(from.purchase_price != null ? String(from.purchase_price) : "");
     /* Only asked when adding. A split keeps the row's own date (those copies were already yours,
        they are only being told apart now) and the API is left to say so. */
     const [acquired, setAcquired] = useState(today());
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const manual = folders.filter((f) => !f.rule);
+    const manual = binders.filter((f) => !f.rule);
 
     // Only what differs goes over the wire: the row's own values are the copy's by default.
     // A card the catalogue says exists in one finish only is not a question. The row states
@@ -100,7 +100,7 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
         if (pat !== (from.foil_pattern ?? null)) out.foilPattern = pat;
         const ed = (effectiveEdition || null) as CopyEdits["edition"];
         if (ed !== (from.edition ?? null)) out.edition = ed;
-        if ((folder || null) !== (from.collection_id ?? null)) out.collectionId = folder || null;
+        if ((binder || null) !== (from.collection_id ?? null)) out.collectionId = binder || null;
         const p = parsePrice(price);
         if (p !== null && !Number.isFinite(p)) return out;
         if (p !== (from.purchase_price ?? null)) out.purchasePrice = p;
@@ -342,13 +342,13 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
             ) : null}
 
             <div className={row}>
-                Folder
+                Binder
                 <NativeSelect
                     aria-label="Binder"
                     size="sm"
                     className="w-full"
-                    value={folder}
-                    onChange={(e) => setFolder(e.target.value)}
+                    value={binder}
+                    onChange={(e) => setBinder(e.target.value)}
                     options={[{ label: "None", value: "" }, ...manual.map((f) => ({ label: f.name, value: f.id }))]}
                 />
             </div>

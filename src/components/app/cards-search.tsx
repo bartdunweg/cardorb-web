@@ -63,7 +63,7 @@ export function CardsSearch({
     initialValue?: string;
     label?: string;
     placeholder?: string;
-    /** sm beside the sm menu buttons of a folder page's row. */
+    /** sm beside the sm menu buttons of a binder page's row. */
     size?: "sm" | "md";
     /** The list this field filters. Absent (Browse, a public profile) there are no titles to offer. */
     scope?: TitleScope;

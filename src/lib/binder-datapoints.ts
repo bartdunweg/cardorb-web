@@ -1,6 +1,6 @@
 import { formatCount, formatValue } from "@/lib/format";
 
-/** What a folder page says under its title: how many cards it shows and what they are worth. */
+/** What a binder page says under its title: how many cards it shows and what they are worth. */
 export type Datapoints = {
     /** Rows in the list: what a page of it walks through. */
     total: number;
@@ -11,13 +11,13 @@ export type Datapoints = {
      * 2026-09-11. Absent from an API before it, when the rows stand in.
      */
     copies?: number;
-    /** A search or a filter is on: the count is what matched, not what the folder holds. */
+    /** A search or a filter is on: the count is what matched, not what the binder holds. */
     narrowed: boolean;
     /** Euros, over the cards shown; absent until the API answers it. */
     value?: number | null;
     /** Copies without a price, among those shown. */
     unpriced?: number;
-    /** A folder shown as a Pokédex: slots filled, of the range. */
+    /** A binder shown as a Pokédex: slots filled, of the range. */
     caught?: { of: number; total: number };
 };
 

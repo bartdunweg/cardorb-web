@@ -6,9 +6,9 @@ const { api } = vi.hoisted(() => ({ api: vi.fn(async () => ({ folders: [] as unk
 vi.mock("@/lib/api", () => ({ ApiError: class extends Error {}, api }));
 vi.mock("@/lib/user-cache", () => ({ perUser: (_scope: string, _key: string, run: (token?: string) => unknown) => run("t.o.k.e.n") }));
 
-const { getDexBinder } = await import("@/lib/collections");
+const { getDexBinder } = await import("@/lib/binders");
 
-const folder = (id: string, name: string, pokedex: unknown = null) => ({
+const binder = (id: string, name: string, pokedex: unknown = null) => ({
     id,
     name,
     count: 0,
@@ -20,18 +20,18 @@ const folder = (id: string, name: string, pokedex: unknown = null) => ({
 
 describe("getDexBinder", () => {
     it("finds the binder shown as a Pokédex", async () => {
-        api.mockResolvedValue({ folders: [folder("a", "Kanto"), folder("b", "Pokédex", { missing: true })] });
+        api.mockResolvedValue({ folders: [binder("a", "Kanto"), binder("b", "Pokédex", { missing: true })] });
         expect(await getDexBinder()).toMatchObject({ id: "b", name: "Pokédex", pokedex: { missing: true } });
     });
 
     it("says none where no binder is shown as one", async () => {
-        api.mockResolvedValue({ folders: [folder("a", "Kanto")] });
+        api.mockResolvedValue({ folders: [binder("a", "Kanto")] });
         expect(await getDexBinder()).toBeNull();
     });
 
     it("takes the first, where somebody keeps two", async () => {
         api.mockResolvedValue({
-            folders: [folder("a", "Gen 1", { missing: false }), folder("b", "Everything", { missing: true })],
+            folders: [binder("a", "Gen 1", { missing: false }), binder("b", "Everything", { missing: true })],
         });
         expect(await getDexBinder()).toMatchObject({ id: "a" });
     });

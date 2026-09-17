@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
     type CatalogueSet,
     apiPriceSchema,
+    binderFromApi,
     browseCardSchema,
     cardFactsAnswer,
     cardFromItem,
     cardFromPokemonCard,
     cardItemSchema,
-    folderFromApi,
     ownImage,
     pokemonCardFromBrowse,
     pokemonCardFromSetCard,
@@ -503,13 +503,13 @@ describe("pokemonCardFromSetCard", () => {
     });
 });
 
-describe("folderFromApi", () => {
-    it("reads a folder from an API that knows no rules as one filled by hand", () => {
-        expect(folderFromApi({ id: "f", name: "Kanto", createdAt: "2026-09-05", count: 3 })).toMatchObject({ kind: "manual", rule: null });
+describe("binderFromApi", () => {
+    it("reads a binder from an API that knows no rules as one filled by hand", () => {
+        expect(binderFromApi({ id: "f", name: "Kanto", createdAt: "2026-09-05", count: 3 })).toMatchObject({ kind: "manual", rule: null });
     });
     it("keeps a rule and its kind", () => {
         const rule = { dex: { from: 1, to: 151 } };
-        expect(folderFromApi({ id: "f", name: "Kanto", createdAt: "2026-09-05", count: 3, rule })).toMatchObject({ kind: "rule", rule });
+        expect(binderFromApi({ id: "f", name: "Kanto", createdAt: "2026-09-05", count: 3, rule })).toMatchObject({ kind: "rule", rule });
     });
 });
 

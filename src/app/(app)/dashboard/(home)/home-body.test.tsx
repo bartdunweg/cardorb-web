@@ -16,8 +16,8 @@ const { calls, stats, reads } = vi.hoisted(() => {
         fail: (error: unknown) => reject(error),
     };
     const reads = {
-        getMyFolders: vi.fn(async () => {
-            calls.push("folders");
+        getMyBinders: vi.fn(async () => {
+            calls.push("binders");
             return [{ id: "11111111-1111-4111-8111-111111111111", name: "Kanto" }];
         }),
         getValueHistory: vi.fn(async () => {
@@ -47,7 +47,7 @@ vi.mock("@/lib/cards", () => ({
     }),
     getMyCards: reads.getMyCards,
 }));
-vi.mock("@/lib/collections", () => ({ getMyFolders: reads.getMyFolders }));
+vi.mock("@/lib/binders", () => ({ getMyBinders: reads.getMyBinders }));
 vi.mock("@/lib/value-history", () => ({ getValueHistory: reads.getValueHistory }));
 vi.mock("@/components/app/top-cards", () => ({ TopCards: () => null, readTopCards: reads.readTopCards }));
 vi.mock("@/components/app/dex-stat", () => ({ DexStat: () => null, readDexCaught: reads.readDexCaught }));
@@ -71,7 +71,7 @@ describe("HomeBody", () => {
         const body = HomeBody({ searchParams: Promise.resolve({}) });
         await settle();
         expect(calls).toContain("stats");
-        expect(calls).toEqual(expect.arrayContaining(["folders", "value history", "top cards", "dex caught"]));
+        expect(calls).toEqual(expect.arrayContaining(["binders", "value history", "top cards", "dex caught"]));
         expect(reads.getValueHistory).toHaveBeenCalledWith(undefined);
         stats.release({ owned: 3, value: 40 });
         await body;

@@ -28,7 +28,7 @@ export const FIRST_ROW = 6;
 // Tiles per row at each size: small packs the pictures, large shows them. On a phone four,
 // three and two: two across at medium read as large, and a card is legible at a quarter of the
 // width because the words under it truncate. Exported for the Pokédex, which draws the same
-// tiles so a folder reads the same whichever way it is shown.
+// tiles so a binder reads the same whichever way it is shown.
 
 type GridCard = PublicCard & {
     is_favorite?: boolean | null;

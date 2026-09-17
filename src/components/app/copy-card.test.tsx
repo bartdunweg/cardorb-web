@@ -11,7 +11,7 @@ import { CopyCard } from "./copy-card";
 
 const editCopies = vi.fn();
 vi.mock("@/app/(app)/dashboard/cards/actions", () => ({ editCopies: (...args: unknown[]) => editCopies(...args) }));
-vi.mock("@/app/(app)/dashboard/collections/actions", () => ({ createCollection: vi.fn(), updateCollection: vi.fn() }));
+vi.mock("@/app/(app)/dashboard/collections/actions", () => ({ createBinder: vi.fn(), updateBinder: vi.fn() }));
 vi.mock("@/lib/reads", () => ({ loadFacets: vi.fn().mockResolvedValue({ sets: [], rarities: [] }) }));
 const forget = vi.fn();
 vi.mock("@/lib/forget-mine", () => ({ forgetMineQuietly: () => (forget(), Promise.resolve()) }));
@@ -41,11 +41,11 @@ const draw = (onSaved: () => void) =>
     render(
         <CopyCard
             group={{ key: "nm", shown: row, rows: [row, other], quantity: 2 }}
-            folders={[]}
+            binders={[]}
             facts={null}
             busy={false}
             onSaved={onSaved}
-            refreshFolders={async () => []}
+            refreshBinders={async () => []}
         />,
     );
 

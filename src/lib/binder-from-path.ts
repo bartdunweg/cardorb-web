@@ -1,6 +1,6 @@
-import type { FolderRule } from "@/lib/folder-rule";
+import type { BinderRule } from "@/lib/binder-rule";
 
-type Folder = { id: string; name: string; rule: FolderRule | null };
+type Binder = { id: string; name: string; rule: BinderRule | null };
 
 const BINDER_PATH = /^\/dashboard\/collections\/([^/]+)\/?$/;
 
@@ -14,10 +14,10 @@ export const isBinderPath = (pathname: string): boolean => BINDER_PATH.test(path
  * The path is the one fact every mounted sheet shares: the palette's sheet is mounted by the
  * layout beside the page, out of reach of anything the page could provide.
  */
-export function binderFromPath(pathname: string, folders: readonly Folder[]): { id: string; name: string } | null {
+export function binderFromPath(pathname: string, binders: readonly Binder[]): { id: string; name: string } | null {
     const id = BINDER_PATH.exec(pathname)?.[1];
     if (!id) return null;
-    const folder = folders.find((f) => f.id === id);
-    if (!folder || folder.rule) return null;
-    return { id: folder.id, name: folder.name };
+    const binder = binders.find((f) => f.id === id);
+    if (!binder || binder.rule) return null;
+    return { id: binder.id, name: binder.name };
 }

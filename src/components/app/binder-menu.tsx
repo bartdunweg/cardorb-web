@@ -4,15 +4,15 @@ import { useState } from "react";
 import { Edit03, Trash01 } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
-import { deleteCollection } from "@/app/(app)/dashboard/collections/actions";
-import { FolderModal } from "@/components/app/folder-dialog";
+import { deleteBinder } from "@/app/(app)/dashboard/collections/actions";
+import { BinderModal } from "@/components/app/binder-dialog";
 import { notify } from "@/components/app/toast";
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { Button } from "@/components/base/buttons/button";
 import { styles } from "@/components/base/buttons/button-styles";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
+import type { BinderKind, BinderRule, PokedexSetting } from "@/lib/binder-rule";
 import type { Facets } from "@/lib/cards";
-import type { FolderKind, FolderRule, PokedexSetting } from "@/lib/folder-rule";
 import { cx } from "@/utils/cx";
 
 /**
@@ -21,11 +21,11 @@ import { cx } from "@/utils/cx";
  * 2026-09-11. Deleting is the one thing that cannot be undone, and the confirm dialog stands.
  */
 export function BinderMenu({
-    folder,
+    binder,
     facets,
     compact,
 }: {
-    folder: { id: string; name: string; kind: FolderKind; rule: FolderRule | null; pokedex: PokedexSetting | null; isPublic: boolean };
+    binder: { id: string; name: string; kind: BinderKind; rule: BinderRule | null; pokedex: PokedexSetting | null; isPublic: boolean };
     /** Absent until the page's read is in: the edit form then asks for them itself. */
     facets?: Facets;
     /** In the phone's bar, the size of Back beside it. */
@@ -37,13 +37,13 @@ export function BinderMenu({
     const [deleting, setDeleting] = useState(false);
     const del = async () => {
         setDeleting(true);
-        const res = await deleteCollection(folder.id);
+        const res = await deleteBinder(binder.id);
         // On success the list you land on is the answer. On failure the dialog just sits there
         // with its button ready again, saying nothing.
         if (res.ok) router.push("/dashboard/collections");
         else {
             setDeleting(false);
-            notify.failed(`${folder.name} was not deleted`, { description: res.error });
+            notify.failed(`${binder.name} was not deleted`, { description: res.error });
         }
     };
 
@@ -65,7 +65,7 @@ export function BinderMenu({
                 <Dropdown.Popover className="w-56">
                     <Dropdown.Menu>
                         <Dropdown.Item icon={Edit03} onAction={() => setEditing(true)}>
-                            {folder.kind === "rule" ? "Edit rule" : "Edit binder"}
+                            {binder.kind === "rule" ? "Edit rule" : "Edit binder"}
                         </Dropdown.Item>
                         <Dropdown.Item icon={Trash01} onAction={() => setConfirming(true)}>
                             Delete binder
@@ -75,7 +75,7 @@ export function BinderMenu({
             </Dropdown.Root>
             {/* Opened by the menu items, not by buttons of their own: the overlays are controlled, and
                 DialogTrigger, which wants a pressable child, is not in the picture. */}
-            <FolderModal mode="edit" folder={folder} facets={facets} isOpen={editing} onOpenChange={setEditing} />
+            <BinderModal mode="edit" binder={binder} facets={facets} isOpen={editing} onOpenChange={setEditing} />
             <ModalOverlay isOpen={confirming} onOpenChange={setConfirming}>
                 <Modal className="max-w-sm">
                     <Dialog>
@@ -85,7 +85,7 @@ export function BinderMenu({
                                     Delete this binder?
                                 </AriaHeading>
                                 <p className="text-sm text-tertiary">
-                                    {folder.kind === "rule"
+                                    {binder.kind === "rule"
                                         ? "Only this binder and its rule go. The cards stay where they are."
                                         : "The cards stay in your collection. Only this binder goes, and it cannot be brought back."}
                                 </p>

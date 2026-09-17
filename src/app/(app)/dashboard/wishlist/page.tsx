@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { AddCardButton } from "@/components/app/add-card-button";
 import { AppEmptyState } from "@/components/app/app-empty-state";
-import { FolderPage } from "@/components/app/folder-page";
+import { BinderPage } from "@/components/app/binder-page";
 import { ListSettingsDialog } from "@/components/app/list-settings-dialog";
 import { type CardFilter, getMyCards } from "@/lib/cards";
 import { openAsLeft } from "@/lib/list-memory-server";
@@ -44,7 +44,7 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
     const facets = list.then((r) => r.facets);
 
     return (
-        <FolderPage
+        <BinderPage
             title="Wishlist"
             datapoints={datapoints}
             settings={(compact) => <ListSettingsDialog list="wishlist" title="Wishlist" isPublic={profile?.wishlist_public ?? false} compact={compact} />}

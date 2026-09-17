@@ -11,7 +11,7 @@ import { Button } from "@/components/base/buttons/button";
 import { Toggle } from "@/components/base/toggle/toggle";
 import { forgetMineThenRefresh } from "@/lib/forget-then-refresh";
 
-// A built-in list's settings, beside its title like a folder's: today one, whether the list shows
+// A built-in list's settings, beside its title like a binder's: today one, whether the list shows
 // on the public profile. Saved on the profile, so the phone and the desktop agree. Only the icon,
 // as the plus beside it on the wishlist is.
 // `compact`: the trigger is a dots button for the phone's bar, across from Back.

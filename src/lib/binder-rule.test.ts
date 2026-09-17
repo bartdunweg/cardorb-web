@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { folderRuleSchema, matchesRule, pokedexSettingSchema, rarityLabel, ruleChips, ruleSummary } from "./folder-rule";
+import { binderRuleSchema, matchesRule, pokedexSettingSchema, rarityLabel, ruleChips, ruleSummary } from "./binder-rule";
 
 const facets = {
     sets: [{ name: "sv04", title: "Paradox Rift" }],
@@ -25,13 +25,13 @@ describe("ruleSummary", () => {
     });
 });
 
-describe("folderRuleSchema", () => {
+describe("binderRuleSchema", () => {
     it("wants at least one clause and a range the right way round", () => {
-        expect(folderRuleSchema.safeParse({}).success).toBe(false);
-        expect(folderRuleSchema.safeParse({ dex: { from: 151, to: 1 } }).success).toBe(false);
-        expect(folderRuleSchema.safeParse({ dex: { from: 1, to: 1026 } }).success).toBe(false);
-        expect(folderRuleSchema.safeParse({ sets: [] }).success).toBe(false);
-        expect(folderRuleSchema.safeParse({ dex: { from: 1, to: 151 }, rarities: ["Common"] }).success).toBe(true);
+        expect(binderRuleSchema.safeParse({}).success).toBe(false);
+        expect(binderRuleSchema.safeParse({ dex: { from: 151, to: 1 } }).success).toBe(false);
+        expect(binderRuleSchema.safeParse({ dex: { from: 1, to: 1026 } }).success).toBe(false);
+        expect(binderRuleSchema.safeParse({ sets: [] }).success).toBe(false);
+        expect(binderRuleSchema.safeParse({ dex: { from: 1, to: 151 }, rarities: ["Common"] }).success).toBe(true);
     });
 });
 

@@ -1,7 +1,7 @@
 import { ApiError, api } from "@/lib/api";
-import { type PublicCard, publicCardFromItem, publicCardsAnswer, publicFoldersAnswer, publicProfileAnswer, publicTotalAnswer } from "@/lib/api-shapes";
+import { type PublicCard, publicBindersAnswer, publicCardFromItem, publicCardsAnswer, publicProfileAnswer, publicTotalAnswer } from "@/lib/api-shapes";
+import type { PokedexSetting } from "@/lib/binder-rule";
 import { type Facets, facetsFrom } from "@/lib/facets";
-import type { PokedexSetting } from "@/lib/folder-rule";
 import type { ListQuery } from "@/lib/list-query";
 import { publicTag } from "@/lib/user-cache";
 
@@ -79,7 +79,7 @@ export async function getAllPublicCards(username: string, query: ListQuery): Pro
             auth: false,
             tags: [publicTag(username)],
             // The binder itself, not a list of its own: the Pokédex stopped being one of those when it
-            // became a binder. Its being public is the folder's own flag, which the API checks.
+            // became a binder. Its being public is the binder's own flag, which the API checks.
             params: { q: query.q, set: query.set, rarity: query.rarity, collection: query.folder, limit: ALL_PAGE_SIZE, offset },
             schema: publicCardsAnswer,
         });
@@ -95,8 +95,8 @@ export async function getAllPublicCards(username: string, query: ListQuery): Pro
     };
 }
 
-/** A folder its owner shows on the profile: a chip over the list, with how many cards it holds. */
-export type PublicFolder = {
+/** A binder its owner shows on the profile: a chip over the list, with how many cards it holds. */
+export type PublicBinder = {
     id: string;
     name: string;
     kind: "manual" | "rule";
@@ -105,16 +105,16 @@ export type PublicFolder = {
     pokedex: PokedexSetting | null;
 };
 
-// The folders a person shows, oldest first; none when they show none. Fails soft to none: a
+// The binders a person shows, oldest first; none when they show none. Fails soft to none: a
 // profile without its chips is a poorer page, and an API from before the route answers 404.
-export async function getPublicFolders(username: string): Promise<PublicFolder[]> {
+export async function getPublicBinders(username: string): Promise<PublicBinder[]> {
     try {
-        const { folders } = await api(`/public/${encodeURIComponent(username)}/folders`, {
+        const { folders: binders } = await api(`/public/${encodeURIComponent(username)}/folders`, {
             auth: false,
             tags: [publicTag(username)],
-            schema: publicFoldersAnswer,
+            schema: publicBindersAnswer,
         });
-        return folders.map((f) => ({ ...f, pokedex: f.pokedex ?? null }));
+        return binders.map((f) => ({ ...f, pokedex: f.pokedex ?? null }));
     } catch (err) {
         if (err instanceof ApiError && (err.status === 404 || err.status === 503)) return [];
         throw err;

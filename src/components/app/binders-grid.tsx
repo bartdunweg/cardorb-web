@@ -4,10 +4,10 @@ import type { FC } from "react";
 import { Folder, FolderPlus, Star01 } from "@untitledui/icons";
 import Link from "next/link";
 import { AppEmptyState } from "@/components/app/app-empty-state";
-import { FolderDialog } from "@/components/app/folder-dialog";
+import { BinderDialog } from "@/components/app/binder-dialog";
 import { Button } from "@/components/base/buttons/button";
 import { FeaturedIcon } from "@/components/foundations/featured-icon/featured-icon";
-import type { CollectionSummary } from "@/lib/collections";
+import type { BinderSummary } from "@/lib/binders";
 import { cx } from "@/utils/cx";
 
 // On a phone a row: the icon, the name, the count at the end as a number alone (the sidebar's rows
@@ -17,7 +17,7 @@ import { cx } from "@/utils/cx";
 // here: by hand or by rule, it is a binder with cards in it (Bart's call). A binder shown as a
 // Pokédex too, which is what the Pokédex is now. `count` is null only when a count could not be
 // read, and the tile goes without.
-function FolderCard({ href, icon, name, count }: { href: string; icon: FC<{ className?: string }>; name: string; count: number | null }) {
+function BinderCard({ href, icon, name, count }: { href: string; icon: FC<{ className?: string }>; name: string; count: number | null }) {
     const counted = count === null ? null : `${count} card${count === 1 ? "" : "s"}`;
     return (
         <Link
@@ -48,11 +48,11 @@ function FolderCard({ href, icon, name, count }: { href: string; icon: FC<{ clas
 
 // Beside the page title from lg, the words; `compact` is the plus alone for the phone's bar, the size
 // of Back beside it. Both open the dialog below.
-// No facets handed in: the dialog reads them itself when it opens (folder-dialog.tsx), so the page waits for nothing.
-export function NewCollectionButton({ compact }: { compact?: boolean }) {
+// No facets handed in: the dialog reads them itself when it opens (binder-dialog.tsx), so the page waits for nothing.
+export function NewBinderButton({ compact }: { compact?: boolean }) {
     return (
-        <FolderDialog mode="create">
-            {/* A folder, not a plus: Add card stands beside it with the plus, and two pluses in one bar
+        <BinderDialog mode="create">
+            {/* A binder, not a plus: Add card stands beside it with the plus, and two pluses in one bar
                 were two guesses. Secondary for the same reason: adding a card is the app's main action. */}
             {compact ? (
                 <Button iconLeading={FolderPlus} color="secondary" size="lg" aria-label="New binder" />
@@ -61,28 +61,28 @@ export function NewCollectionButton({ compact }: { compact?: boolean }) {
                     New binder
                 </Button>
             )}
-        </FolderDialog>
+        </BinderDialog>
     );
 }
 
-export function CollectionsGrid({ collections, favoritesCount }: { collections: CollectionSummary[]; favoritesCount: number }) {
-    const hasCollections = collections.length > 0;
+export function BindersGrid({ binders, favoritesCount }: { binders: BinderSummary[]; favoritesCount: number }) {
+    const hasBinders = binders.length > 0;
 
     return (
         <div className="flex flex-1 flex-col gap-6">
-            {/* One grid: Favorites, the one that is always there (not a folder in the data, one to the eye),
+            {/* One grid: Favorites, the one that is always there (not a binder in the data, one to the eye),
                 then the ones you made, the Pokédex among them. All cards is not here: it is a tab of its own,
-                beside Home. On desktop the sidebar's Collections section is this list. */}
+                beside Home. On desktop the sidebar's Binders section is this list. */}
             <div className="grid grid-cols-1 max-sm:divide-y max-sm:divide-secondary sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
                 {/* The tiles arrive as the card grids do, in a wrapper: the link owns a transition of its own. */}
                 <div className="arrive">
-                    <FolderCard href="/dashboard/favorites" icon={Star01} name="Favorites" count={favoritesCount} />
+                    <BinderCard href="/dashboard/favorites" icon={Star01} name="Favorites" count={favoritesCount} />
                 </div>
-                {collections.map((c, i) => (
+                {binders.map((c, i) => (
                     <div key={c.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i + 1, 8) * 20}ms` } as React.CSSProperties}>
-                        <FolderCard
+                        <BinderCard
                             href={`/dashboard/collections/${c.id}`}
-                            // However it was filled, it is a folder with cards in it.
+                            // However it was filled, it is a binder with cards in it.
                             icon={Folder}
                             name={c.name}
                             count={c.count}
@@ -91,14 +91,14 @@ export function CollectionsGrid({ collections, favoritesCount }: { collections: 
                 ))}
             </div>
 
-            {hasCollections ? null : (
+            {hasBinders ? null : (
                 // On a phone the hub above is the page and the plus beside the title is the way in; the
                 // empty state would only push the tab bar's worth of nothing under two tiles.
                 <div className="hidden lg:contents">
                     <AppEmptyState icon="folder" title="No binders yet" description="Group your cards into binders you can jump to from the sidebar.">
-                        <FolderDialog mode="create">
+                        <BinderDialog mode="create">
                             <Button iconLeading={FolderPlus}>New binder</Button>
-                        </FolderDialog>
+                        </BinderDialog>
                     </AppEmptyState>
                 </div>
             )}

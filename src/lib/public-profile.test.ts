@@ -6,7 +6,7 @@ const { api } = vi.hoisted(() => ({ api: vi.fn(async () => ({ cards: [], folders
 vi.mock("@/lib/api", () => ({ ApiError: class extends Error {}, api }));
 vi.mock("next/cache", () => ({ unstable_cache: (fn: () => unknown) => fn, updateTag: vi.fn(), revalidatePath: vi.fn() }));
 
-const { countPublicCards, getAllPublicCards, getPublicCards, getPublicFolders, getPublicProfile } = await import("@/lib/public-profile");
+const { countPublicCards, getAllPublicCards, getPublicCards, getPublicBinders, getPublicProfile } = await import("@/lib/public-profile");
 
 /**
  * The reads a visitor's page makes, all five. A public read is cached for five minutes with no
@@ -17,7 +17,7 @@ const reads: [string, () => Promise<unknown>][] = [
     ["profile", () => getPublicProfile("Bart")],
     ["cards", () => getPublicCards("Bart", readPublicListQuery({}))],
     ["every card", () => getAllPublicCards("Bart", readPublicListQuery({}))],
-    ["folders", () => getPublicFolders("Bart")],
+    ["folders", () => getPublicBinders("Bart")],
     ["a count", () => countPublicCards("Bart")],
 ];
 

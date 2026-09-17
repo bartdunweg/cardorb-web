@@ -9,7 +9,7 @@ import type {
     TitleScope,
     TitleSet,
 } from "@/app/(app)/dashboard/cards/actions";
-import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
+import type { BinderChoice } from "@/app/(app)/dashboard/collections/actions";
 import type { FilterCounts, Mover } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
 import type { PeriodKey } from "@/lib/chart-periods";
@@ -93,7 +93,7 @@ export const listCopies = async (card: CardName): Promise<Card[]> => (await list
 
 export const listSetRows = (set: string): Promise<Card[] | null> => read<Card[] | null>("set-rows", [["set", set]], null);
 
-export const listCollections = (): Promise<FolderChoice[]> => read("folders", [], []);
+export const listBinders = (): Promise<BinderChoice[]> => read("folders", [], []);
 
 export const loadFacets = (): Promise<Facets> => read("facets", [], NO_FACETS);
 

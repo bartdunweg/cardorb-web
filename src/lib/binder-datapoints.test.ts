@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { datapointsLine } from "./folder-datapoints";
+import { datapointsLine } from "./binder-datapoints";
 
 describe("datapointsLine", () => {
     it("counts cards, or matches when narrowed", () => {

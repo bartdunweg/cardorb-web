@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { Minus, Plus } from "@untitledui/icons";
 import { type CardFacts, editCopies } from "@/app/(app)/dashboard/cards/actions";
-import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
+import type { BinderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { AcquiredDatePicker } from "@/components/app/acquired-date-picker";
+import { BinderDialog } from "@/components/app/binder-dialog";
 import { CONDITIONS } from "@/components/app/condition-badge";
 import { defaultFinishOf, editionOptions, finishOptions, patternOptions, soleOption } from "@/components/app/copy-fields";
 import { FlagIcon } from "@/components/app/flag-icon";
-import { FolderDialog } from "@/components/app/folder-dialog";
 import { GRADERS, GRADES, gradeLabel, gradeUnder, gradesFor, splitGrade } from "@/components/app/graded";
 import { LanguageSelect } from "@/components/app/language-select";
 import { SEGMENT_SELECTED } from "@/components/app/segment-selected";
@@ -41,7 +41,7 @@ import { cx } from "@/utils/cx";
  */
 export function CopyCard({
     group,
-    folders,
+    binders,
     languages,
     facts,
     busy,
@@ -51,10 +51,10 @@ export function CopyCard({
     onFewer,
     onRemove,
     onSaved,
-    refreshFolders,
+    refreshBinders,
 }: {
     group: CopyGroup;
-    folders: FolderChoice[];
+    binders: BinderChoice[];
     /** The Western languages the card was printed in, when the API has said. */
     languages?: readonly string[] | null;
     /** What the catalogue says this card is, so no impossible printing is offered. */
@@ -76,11 +76,11 @@ export function CopyCard({
     /** After a field saved, so the sheet re-reads its rows. */
     onSaved: () => void;
     /** The binders again after one was made, so the new one can be picked. */
-    refreshFolders: () => Promise<FolderChoice[]>;
+    refreshBinders: () => Promise<BinderChoice[]>;
 }) {
     const row = group.shown;
-    const manual = folders.filter((f) => !f.rule);
-    const folderName = folders.find((f) => f.id === row.collection_id)?.name ?? null;
+    const manual = binders.filter((f) => !f.rule);
+    const binderName = binders.find((f) => f.id === row.collection_id)?.name ?? null;
 
     /* What the card shows while a save is on its way, over what the row says. A failed save
        takes the override off and the row's own value is back; a saved one is re-read into the
@@ -125,7 +125,7 @@ export function CopyCard({
     const { grader, grade: gradeValue } = splitGrade(grade);
     const finish = shown.finish !== undefined ? (shown.finish ?? "") : (row.finish ?? "");
     const pattern = shown.foilPattern !== undefined ? (shown.foilPattern ?? "") : (row.foil_pattern ?? "");
-    const folder = shown.collectionId !== undefined ? (shown.collectionId ?? "") : (row.collection_id ?? "");
+    const binder = shown.collectionId !== undefined ? (shown.collectionId ?? "") : (row.collection_id ?? "");
     const purchasePrice = shown.purchasePrice !== undefined ? shown.purchasePrice : (row.purchase_price ?? null);
     const acquired = shown.acquiredAt !== undefined ? shown.acquiredAt : row.acquired_at ? row.acquired_at.slice(0, 10) : "";
 
@@ -166,14 +166,14 @@ export function CopyCard({
 
     return (
         <section
-            aria-label={wish ? "What you are looking for" : copyLabel(row, folderName)}
+            aria-label={wish ? "What you are looking for" : copyLabel(row, binderName)}
             className={cx("flex flex-col gap-5 rounded-xl bg-page p-4 shadow-lift-xs ring-1 ring-primary ring-inset", arrive && "arrive")}
         >
             {/* What kind this is, in the words the add form uses. Not how many: the stepper under it
                 says that, and a number said twice in one card is the card arguing with itself. */}
             <header className="flex items-center gap-2">
                 {wish ? null : <FlagIcon language={row.language} />}
-                <h3 className="min-w-0 flex-1 truncate text-sm font-semibold text-primary">{wish ? "What you are looking for" : copyLabel(row, folderName)}</h3>
+                <h3 className="min-w-0 flex-1 truncate text-sm font-semibold text-primary">{wish ? "What you are looking for" : copyLabel(row, binderName)}</h3>
             </header>
 
             {wish ? null : (
@@ -362,22 +362,22 @@ export function CopyCard({
                                 size="sm"
                                 className="w-full"
                                 disabled={disabled}
-                                value={folder}
+                                value={binder}
                                 onChange={(e) => void save({ collectionId: e.target.value || null }, "That copy was not filed")}
                                 options={[{ label: "None", value: "" }, ...manual.map((f) => ({ label: f.name, value: f.id }))]}
                             />
                         ) : null}
-                        <FolderDialog
+                        <BinderDialog
                             mode="create"
                             onSaved={async (id) => {
-                                const next = await refreshFolders();
+                                const next = await refreshBinders();
                                 if (id && next.some((f) => f.id === id && !f.rule)) void save({ collectionId: id }, "That copy was not filed");
                             }}
                         >
                             <Button size="sm" color="link-gray" iconLeading={Plus} className="shrink-0">
                                 New binder
                             </Button>
-                        </FolderDialog>
+                        </BinderDialog>
                     </span>
                 </div>
             )}
