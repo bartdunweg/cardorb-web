@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, createContext, use, useState } from "react";
+import { type ReactNode, createContext, use, useCallback, useState } from "react";
 import { type Datapoints, datapointsLines } from "@/lib/folder-datapoints";
 
 /**
@@ -15,26 +15,36 @@ import { type Datapoints, datapointsLines } from "@/lib/folder-datapoints";
  * before it.
  */
 export type TotalsChange = { copies: number; value: number; rows: number };
-type Tally = { by: TotalsChange; change: (by: Partial<TotalsChange>) => void };
+type Change = (by: Partial<TotalsChange>) => void;
 
 const NONE: TotalsChange = { copies: 0, value: 0, rows: 0 };
-const TotalsContext = createContext<Tally | null>(null);
+/* Two contexts, not one `{ by, change }`: that object was new on every press, so every tile on the
+   list (each reads `change`) was drawn again for a press on one of them. `change` keeps its identity
+   for the provider's life; only the line under the title reads `by`. */
+const ChangeContext = createContext<Change | null>(null);
+const ByContext = createContext<TotalsChange | null>(null);
 
 export function ListTotalsProvider({ children }: { children: ReactNode }) {
     const [by, setBy] = useState<TotalsChange>(NONE);
-    const change = (d: Partial<TotalsChange>) =>
-        setBy((s) => ({ copies: s.copies + (d.copies ?? 0), value: s.value + (d.value ?? 0), rows: s.rows + (d.rows ?? 0) }));
-    return <TotalsContext value={{ by, change }}>{children}</TotalsContext>;
+    const change = useCallback<Change>(
+        (d) => setBy((s) => ({ copies: s.copies + (d.copies ?? 0), value: s.value + (d.value ?? 0), rows: s.rows + (d.rows ?? 0) })),
+        [],
+    );
+    return (
+        <ChangeContext value={change}>
+            <ByContext value={by}>{children}</ByContext>
+        </ChangeContext>
+    );
 }
 
 /** For a tile: where its presses are counted. Null outside a list page, where there is no line to move. */
-export function useListTotals(): Tally["change"] | null {
-    return use(TotalsContext)?.change ?? null;
+export function useListTotals(): Change | null {
+    return use(ChangeContext);
 }
 
 /** The line under a list's title: the page's numbers, with what the presses since have changed. */
 export function LiveDatapoints({ datapoints }: { datapoints: Datapoints }) {
-    const by = use(TotalsContext)?.by ?? NONE;
+    const by = use(ByContext) ?? NONE;
     // The tally as it stood when these numbers arrived. Reset during render, the shape React asks for.
     const [from, setFrom] = useState({ datapoints, by });
     if (from.datapoints !== datapoints) setFrom({ datapoints, by });
