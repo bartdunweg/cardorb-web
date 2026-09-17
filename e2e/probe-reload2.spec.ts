@@ -22,7 +22,6 @@ for (const mode of ["test", "in-flight"] as const) {
         page.on("requestfailed", (r) => {
             if (r.method() === "POST") log(`FAILED ${r.url().replace("http://localhost:3000", "")} ${r.failure()?.errorText}`);
         });
-        page.on("dialog", (d) => log(`dialog ${d.type()} (seen by a listener only in this probe)`));
 
         const rounds = mode === "test" ? 10 : 6;
         for (let round = 1; round <= rounds; round++) {
@@ -67,6 +66,7 @@ for (const mode of ["test", "in-flight"] as const) {
                 const fewer = page.getByRole("button", { name: new RegExp(`^Remove a copy of ${literal(c.name)} #\\S+$`) });
                 const last = page.getByRole("button", { name: new RegExp(`^Remove ${literal(c.name)} #\\S+ from your collection$`) });
                 const done = page.waitForResponse((r) => r.url().includes("/api/forget-mine"), { timeout: 5000 });
+                done.catch(() => undefined);
                 if (await fewer.isVisible()) {
                     await fewer.click();
                     await done;
