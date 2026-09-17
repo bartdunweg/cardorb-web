@@ -26,6 +26,35 @@ test("after a write, Back and a reload show the new state, not the cached one", 
     await expect(setTile(page, c, "in your collection")).toBeVisible();
     await page.reload();
     await expect(setTile(page, c, "in your collection")).toBeVisible();
+
+    // The remove case: the set tile's minus is the same quiet write (forgetMineQuietly(), POST
+    // /api/forget-mine) as the plus above, so it needs the same proof that Back and a reload read
+    // past the cache rather than off it. Registered before the click, the way every write in this
+    // suite waits for its own cache clear.
+    const removed = cacheCleared(page);
+    await removeButton(page, c).click();
+    await expect(page.getByText(`${c.name} is out of your collection`)).toBeVisible();
+    await removed;
+    await expect(setTile(page, c, "not in your collection")).toBeVisible();
+
+    // A heading first, not another card: this is the first write of the whole suite, so nothing
+    // else is owned yet to prove the list has drawn before the zero count below is trusted.
+    await page.goto(`/dashboard/cards?q=${encodeURIComponent(c.name)}`);
+    await expect(page.getByRole("heading", { name: "Collection" })).toBeVisible();
+    await expect(collectionTile(page, c)).toHaveCount(0);
+
+    await page.goBack();
+    await expect(setTile(page, c, "not in your collection")).toBeVisible();
+    await page.reload();
+    await expect(setTile(page, c, "not in your collection")).toBeVisible();
+
+    // Restored: the public profile test below, and every spec after this one, counts on card(5)
+    // staying owned for the rest of the suite.
+    const restored = cacheCleared(page);
+    await addButton(page, c).click();
+    await expect(page.getByText(`${c.name} is in your collection now`)).toBeVisible();
+    await restored;
+    await expect(setTile(page, c, "in your collection")).toBeVisible();
 });
 
 test("the public profile shows an added card and loses a removed one", async ({ page, browser }) => {
