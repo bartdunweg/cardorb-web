@@ -84,7 +84,17 @@ export type SetDetail = {
 // changes: an entry survives a deploy (#206).
 export async function getSet(id: string, language: BrowseLanguage = "en"): Promise<SetDetail | null> {
     try {
-        return await perUser("sets", `set:v1:${language}:${id}`, (token) => readSet(id, language, token));
+        const began = Date.now();
+        const got = await perUser("sets", `set:v1:${language}:${id}`, async (token) => {
+            console.log(`[probe] ${Date.now()} readSet start ${id}`);
+            const read = await readSet(id, language, token);
+            const q = read.cards.filter((c) => c.owned).map((c) => `${c.number}x${c.quantity}`).join(",");
+            console.log(`[probe] ${Date.now()} readSet end ${id} began ${began} held=${q}`);
+            return read;
+        });
+        const q = got.cards.filter((c) => c.owned).map((c) => `${c.number}x${c.quantity}`).join(",");
+        console.log(`[probe] ${Date.now()} getSet ${id} began ${began} held=${q}`);
+        return got;
     } catch (err) {
         if (err instanceof ApiError && err.status === 404) return null;
         if (catalogueDown(err)) throw new CatalogueUnavailable();
