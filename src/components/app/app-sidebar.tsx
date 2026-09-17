@@ -8,11 +8,12 @@ import { BinderDialog } from "@/components/app/binder-dialog";
 import { SidebarSearchTrigger } from "@/components/app/command-search";
 import { PrefetchRoutes } from "@/components/app/prefetch-routes";
 import { useRouteTarget } from "@/components/app/route-pending";
-import { type RailItem, SidebarRail, useBindersArrive } from "@/components/app/sidebar-rail";
+import { type RailItem, SidebarRail } from "@/components/app/sidebar-rail";
 import { NavButton } from "@/components/application/app-navigation/base-components/nav-button";
 import { NavItemBase } from "@/components/application/app-navigation/base-components/nav-item";
 import type { NavItemDividerType, NavItemType } from "@/components/application/app-navigation/config";
 import { SidebarNavigationSectionDividers } from "@/components/application/app-navigation/sidebar-navigation/sidebar-section-dividers";
+import { useArriveOnce } from "@/hooks/use-arrive-once";
 import { CARDS_CHANGED } from "@/lib/forget-mine";
 import { SIDEBAR_COOKIE } from "@/lib/sidebar-cookie";
 import { cx } from "@/utils/cx";
@@ -174,7 +175,8 @@ export function AppSidebar({
 function BinderRows({ binders, fresh, activeUrl }: { binders: Promise<BinderLink[]>; fresh?: BinderLink[]; activeUrl: string }) {
     // Read again after a press on a list's tiles, where there is an answer; the layout's otherwise.
     const list = fresh ?? use(binders);
-    const arrive = useBindersArrive();
+    // Once per tab, shared with the rail's rows (use-arrive-once.ts).
+    const arrive = useArriveOnce("sidebar-binders");
     return (
         <>
             {list.map((c) => {
@@ -215,8 +217,10 @@ function LateCount({ count, fresh }: { count: Promise<number | null>; fresh?: nu
 }
 
 function AccountSlot({ account }: { account: Promise<Account> }) {
+    // Once per tab, shared with the rail's avatar (use-arrive-once.ts).
+    const arrive = useArriveOnce("sidebar-account");
     return (
-        <div className="arrive">
+        <div className={cx(arrive && "arrive")}>
             <AccountMenu account={use(account)} />
         </div>
     );

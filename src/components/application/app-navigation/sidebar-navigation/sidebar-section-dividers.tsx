@@ -8,14 +8,14 @@
 // Also changed: the sidebar folds to a rail. The kit has no sidebar that folds; its slim variant
 // is a rail that is always a rail. Here `collapsed` narrows the same panel to the slim variant's
 // 68 px and draws `rail` (icons with tooltips, the app's own) in place of the header, the search,
-// the list and the footer. The panel and the placeholder that holds its space animate the width;
-// what is drawn inside swaps at once, clipped by the panel's edge while it moves.
+// the list and the footer. The fold is instant: the width and the placeholder's padding used to
+// animate for 200 ms, laying out the whole page on every frame while the contents had already
+// swapped at the first one (Card Orb motion audit, 2026-09-17).
 import type { ReactNode } from "react";
 import { SearchLg } from "@untitledui/icons";
 import Link from "next/link";
 import { OrbLogo } from "@/components/app/orb-logo";
 import { Input } from "@/components/base/input/input";
-import { cx } from "@/utils/cx";
 import { MobileNavigationHeader } from "../base-components/mobile-header";
 import { NavAccountCard } from "../base-components/nav-account-card";
 import { NavList } from "../base-components/nav-list";
@@ -69,7 +69,7 @@ export const SidebarNavigationSectionDividers = ({
             // hairline on its right, no corners, no shadow. It used to float as a card. The material is the
             // phone's tab bar's glass on the sidebar's own tint (glass-sidebar); the edge is the kit's border-secondary, not the tab bar's ring-primary,
             // which drawn the window's full height read as a wall rather than an edge.
-            className="flex h-full w-full max-w-full flex-col justify-between overflow-x-hidden overflow-y-auto border-secondary glass-sidebar pt-4 transition-[width] duration-200 ease-out motion-reduce:transition-none lg:w-(--width) lg:border-r lg:pt-5"
+            className="flex h-full w-full max-w-full flex-col justify-between overflow-x-hidden overflow-y-auto border-secondary glass-sidebar pt-4 lg:w-(--width) lg:border-r lg:pt-5"
         >
             {collapsed ? (
                 rail
@@ -121,9 +121,7 @@ export const SidebarNavigationSectionDividers = ({
                 style={{
                     paddingLeft: width,
                 }}
-                className={cx(
-                    "invisible hidden transition-[padding] duration-200 ease-out motion-reduce:transition-none lg:sticky lg:top-0 lg:bottom-0 lg:left-0 lg:block",
-                )}
+                className="invisible hidden lg:sticky lg:top-0 lg:bottom-0 lg:left-0 lg:block"
             />
         </>
     );
