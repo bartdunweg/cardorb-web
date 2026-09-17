@@ -43,7 +43,10 @@ test("a binder is made, a card goes in it, and the binder is on the card's sheet
     // The whole row is the box's label, so its accessible name starts with the card's name.
     const hit = picker.getByRole("checkbox", { name: new RegExp(`^${literal(c.name)}\\b`) });
     await expect(hit).toBeVisible();
-    await hit.click();
+    // Space on the focused box, not a click on it: the kit's Checkbox wraps its input in the label
+    // that draws the whole row, so the label takes the pointer and the input under it is never
+    // reached. A keyboard user ticks it exactly this way.
+    await hit.press("Space");
     await expect(hit).toBeChecked();
 
     // Registered before the press that writes: save() closes the dialog, says so in a toast and
