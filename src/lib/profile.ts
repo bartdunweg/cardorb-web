@@ -1,5 +1,5 @@
 import { ApiError, api, session } from "@/lib/api";
-import { type OwnProfile, type Profile, ownProfileSchema, profileFromOwn } from "@/lib/api-shapes";
+import { type Profile, ownProfileSchema, profileFromOwn } from "@/lib/api-shapes";
 import { perUser } from "@/lib/user-cache";
 
 export type { Profile } from "@/lib/api-shapes";

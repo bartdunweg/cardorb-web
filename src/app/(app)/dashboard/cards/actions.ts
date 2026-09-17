@@ -344,21 +344,6 @@ export async function restoreCard(input: RemovedCard, { reread = true }: { rerea
     return { ok: true };
 }
 
-// Moves a wishlist card into the owned collection (the person acquired it).
-export async function markOwned(cardId: string): Promise<Result> {
-    const parsed = z.string().uuid().safeParse(cardId);
-    if (!parsed.success) return { ok: false, error: "Invalid card." };
-
-    try {
-        await api(`/collection/items/${parsed.data}`, { method: "PATCH", body: { owned: true } });
-    } catch (err) {
-        return failed(err);
-    }
-
-    await forgetMine("cards");
-    return { ok: true };
-}
-
 // A star on a card you own. The API keeps the flag; the favorites list and the card sheet read it.
 // `reread: false` as on setCopies: the sheet's star drops the cache itself, once the taps have landed.
 export async function setFavorite(cardId: string, isFavorite: boolean, { reread = true }: { reread?: boolean } = {}): Promise<Result> {
@@ -430,12 +415,6 @@ export async function seriesLogo(series: string): Promise<string | null> {
     } catch {
         return null;
     }
-}
-
-// Every row of one card the person holds: the set and number name it, the name confirms it
-// (two cards of one number in one set do not happen, but the check costs nothing).
-export async function listCopies(card: CardName): Promise<Card[]> {
-    return (await listRows(card)).filter((c) => c.owned);
 }
 
 /**

@@ -10,7 +10,6 @@ export const contentType = "image/png";
 export default function Icon() {
     return new ImageResponse(
         <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#ffffff", borderRadius: 7 }}>
-            {/* eslint-disable-next-line @next/next/no-img-element -- Satori draws an img, not next/image */}
             <img src={`data:image/svg+xml;base64,${Buffer.from(orbLogoSvg(30, "#0a0a0a")).toString("base64")}`} width={30} height={30} alt="" />
         </div>,
         size,

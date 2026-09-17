@@ -1,5 +1,5 @@
 import { ApiError, api } from "@/lib/api";
-import { type Folder, type FolderItem, folderFromApi, foldersAnswer } from "@/lib/api-shapes";
+import { type Folder, folderFromApi, foldersAnswer } from "@/lib/api-shapes";
 import { getStats } from "@/lib/cards";
 import type { FolderKind, FolderRule, PokedexSetting } from "@/lib/folder-rule";
 import { perUser } from "@/lib/user-cache";

@@ -81,9 +81,3 @@ export function RememberListQuery() {
     }, [pathname, search]);
     return null;
 }
-
-/** For tests: forget what this module was told. */
-export const resetListMemory = () => {
-    memory = null;
-    for (const listener of listeners) listener();
-};

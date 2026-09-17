@@ -35,7 +35,8 @@ const wireCard = {
 
 describe("what the schemas refuse", () => {
     it("fails on a field the API renamed away", () => {
-        const { name: _gone, ...withoutName } = wireCard;
+        const withoutName: Partial<typeof wireCard> = { ...wireCard };
+        delete withoutName.name;
         const out = cardItemSchema.safeParse(withoutName);
         expect(out.success).toBe(false);
         expect(out.error?.issues[0]?.path).toEqual(["name"]);
@@ -63,7 +64,8 @@ describe("what the schemas let through", () => {
     });
 
     it("reads a key an older API never sent as null", () => {
-        const { setAbbr: _absent, ...older } = wireCard;
+        const older: Partial<typeof wireCard> = { ...wireCard };
+        delete older.setAbbr;
         expect(cardItemSchema.parse(older).setAbbr).toBeNull();
     });
 

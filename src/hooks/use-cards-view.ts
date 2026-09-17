@@ -76,6 +76,3 @@ export function useCardsView(initialView: CardsViewMode, initialSize: CardsSize,
         group: page?.group ?? anywhere.group ?? initialGroup,
     };
 }
-
-/** For tests: forget what this module was told. */
-export const resetCardsView = () => choose({ view: null, size: null, group: null });
