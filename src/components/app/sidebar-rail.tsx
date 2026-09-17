@@ -1,17 +1,18 @@
 "use client";
 
-import { type FC, Suspense, use, useEffect, useState } from "react";
+import { type FC, Suspense, use, useState } from "react";
 import { Folder, LayoutLeft, Plus, SearchLg, Star01 } from "@untitledui/icons";
 import Link from "next/link";
 import { AccountMenu } from "@/components/app/account-menu";
+import { BinderModal } from "@/components/app/binder-dialog";
 import { useCommandSearch } from "@/components/app/command-search";
-import { FolderModal } from "@/components/app/folder-dialog";
 import { OrbLogo } from "@/components/app/orb-logo";
 import { NavButton } from "@/components/application/app-navigation/base-components/nav-button";
+import { useArriveOnce } from "@/hooks/use-arrive-once";
 import { cx } from "@/utils/cx";
 
 type Account = { name: string; email: string; avatarUrl: string | null };
-type FolderLink = { id: string; name: string; kind: "manual" | "rule"; count: number };
+type BinderLink = { id: string; name: string; kind: "manual" | "rule"; count: number };
 type RailItem = { label: string; href: string; icon: FC<{ className?: string }> };
 
 /**
@@ -27,13 +28,13 @@ export function SidebarRail({
     items,
     activeUrl,
     account,
-    collections,
+    binders,
     onExpand,
 }: {
     items: RailItem[];
     activeUrl: string;
     account: Promise<Account>;
-    collections: Promise<FolderLink[]>;
+    binders: Promise<BinderLink[]>;
     onExpand: () => void;
 }) {
     const { open } = useCommandSearch();
@@ -78,7 +79,7 @@ export function SidebarRail({
                     <NavButton icon={Star01} label="Favorites" href="/dashboard/favorites" current={activeUrl === "/dashboard/favorites"} />
                 </li>
                 <Suspense fallback={null}>
-                    <BinderRows activeUrl={activeUrl} collections={collections} />
+                    <BinderRows activeUrl={activeUrl} binders={binders} />
                 </Suspense>
                 <li className="py-px">
                     <NewBinder />
@@ -98,24 +99,13 @@ export function SidebarRail({
     );
 }
 
-// Whether the binder rows have been on screen yet, in this tab. Folding or unfolding draws them anew,
-// the open list or the rail's, and `arrive` then played again on rows that had not gone anywhere; they
-// arrive once, when the read first lands, and stand still after.
-let bindersShown = false;
-export function useBindersArrive() {
-    const [first] = useState(() => !bindersShown);
-    useEffect(() => {
-        bindersShown = true;
-    }, []);
-    return first;
-}
-
 // The binders you made, a row each, as they arrive.
-function BinderRows({ activeUrl, collections }: { activeUrl: string; collections: Promise<FolderLink[]> }) {
-    const arrive = useBindersArrive();
+function BinderRows({ activeUrl, binders }: { activeUrl: string; binders: Promise<BinderLink[]> }) {
+    // Once per tab, shared with the open list's rows: a fold draws them anew but they have not moved.
+    const arrive = useArriveOnce("sidebar-binders");
     return (
         <>
-            {use(collections).map((c) => {
+            {use(binders).map((c) => {
                 const href = `/dashboard/collections/${c.id}`;
                 return (
                     <li key={c.id} className={cx("py-px", arrive && "arrive")}>
@@ -133,14 +123,16 @@ function NewBinder() {
     return (
         <>
             <NavButton icon={Plus} label="New binder" onPress={() => setCreating(true)} />
-            <FolderModal mode="create" isOpen={creating} onOpenChange={setCreating} />
+            <BinderModal mode="create" isOpen={creating} onOpenChange={setCreating} />
         </>
     );
 }
 
 function AccountSlot({ account }: { account: Promise<Account> }) {
+    // Once per tab, shared with the open card: a fold draws it anew, and it had not gone anywhere.
+    const arrive = useArriveOnce("sidebar-account");
     return (
-        <div className="arrive">
+        <div className={cx(arrive && "arrive")}>
             <AccountMenu account={use(account)} compact />
         </div>
     );

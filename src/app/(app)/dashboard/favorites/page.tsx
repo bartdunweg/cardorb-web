@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { AppEmptyState } from "@/components/app/app-empty-state";
-import { FolderPage } from "@/components/app/folder-page";
+import { BinderPage } from "@/components/app/binder-page";
 import { LinkButton } from "@/components/app/link-button";
 import { ListSettingsDialog } from "@/components/app/list-settings-dialog";
 import { type CardFilter, getMyCards } from "@/lib/cards";
@@ -44,7 +44,7 @@ export default async function FavoritesPage({ searchParams }: { searchParams: Pr
     const facets = list.then((r) => r.facets);
 
     return (
-        <FolderPage
+        <BinderPage
             title="Favorites"
             back={{ href: "/dashboard/collections", label: "Binders" }}
             datapoints={datapoints}

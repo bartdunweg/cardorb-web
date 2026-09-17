@@ -42,49 +42,40 @@ export function pointsFor(values: number[], frame: Frame, yMin: number, yMax: nu
 }
 
 /**
- * The line as it is drawn: the first and the last reading exactly, and between them the readings
- * taken down to about `target` points by time and softened once (each point a quarter of each
- * neighbour and half itself).
+ * Which readings the line is drawn through: the readings themselves, never an average of them.
  *
- * Every daily reading drawn as it came made a jagged line of a price that moved a cent a day, and a
- * gap with no readings was a dotted stretch nobody read as anything but a flat line (Bart, 2026-09-15:
- * "een mooie lijn", "het is heel hakkelig"). The hover still reads the readings themselves; only the
- * pen is smoothed. Averages stay inside the readings' range, so the axis the readings set still fits.
+ * Up to `target` readings are all drawn. Past that (a long period, a narrow phone), the stretch
+ * between the first and the last reading is cut into equal spans of time, and each span keeps its
+ * lowest and its highest reading, in the order they came. The first and the last are always kept,
+ * so a real dip or peak is never erased and the line only passes through values that were read.
+ *
+ * The line used to be softened (each point a quarter of each neighbour and half itself, after
+ * averaging per span). That drew a rise on days the value fell: 40,182 then 40,153 went up on the
+ * line while the tooltip said down (Bart, 2026-09-17). The curve itself (linePath) stays smooth and
+ * cannot overshoot, so the readings need no softening of their own.
+ *
+ * Returns the kept readings' indices, ascending.
  */
-export function smoothLine(times: number[], values: number[], target: number): { t: number; v: number }[] {
+export function thinReadings(times: number[], values: number[], target: number): number[] {
     const n = values.length;
-    if (n <= 2) return values.map((v, i) => ({ t: times[i], v }));
-    const first = { t: times[0], v: values[0] };
-    const last = { t: times[n - 1], v: values[n - 1] };
-    // The readings between the ends, averaged per equal stretch of time where there are more than asked.
-    let inner = values.slice(1, -1).map((v, i) => ({ t: times[i + 1], v }));
-    const slots = Math.max(1, target - 2);
-    if (inner.length > slots) {
-        const span = (last.t - first.t) / slots;
-        const buckets: { t: number; v: number; n: number }[] = [];
-        for (const p of inner) {
-            const k = Math.min(slots - 1, Math.floor((p.t - first.t) / span));
-            const b = (buckets[k] ??= { t: 0, v: 0, n: 0 });
-            b.t += p.t;
-            b.v += p.v;
-            b.n++;
-        }
-        inner = buckets.filter(Boolean).map((b) => ({ t: b.t / b.n, v: b.v / b.n }));
+    const all = values.map((_, i) => i);
+    if (n <= Math.max(2, target)) return all;
+    const spans = Math.max(1, Math.floor((target - 2) / 2));
+    const t0 = times[0];
+    const width = (times[n - 1] - t0) / spans;
+    const keep = new Set([0, n - 1]);
+    const low = new Array<number>(spans).fill(-1);
+    const high = new Array<number>(spans).fill(-1);
+    for (let i = 1; i < n - 1; i++) {
+        const k = width > 0 ? Math.min(spans - 1, Math.max(0, Math.floor((times[i] - t0) / width))) : Math.floor(((i - 1) / (n - 2)) * spans);
+        if (low[k] < 0 || values[i] < values[low[k]]) low[k] = i;
+        if (high[k] < 0 || values[i] > values[high[k]]) high[k] = i;
     }
-    const line = [first, ...inner, last];
-    return line.map((p, i) => (i === 0 || i === line.length - 1 ? p : { t: p.t, v: (line[i - 1].v + 2 * p.v + line[i + 1].v) / 4 }));
-}
-
-/** The drawn line's height at `x`, straight between its points: where a marker or a label sits on it. */
-export function yAt(points: Point[], x: number): number {
-    if (!points.length) return 0;
-    if (x <= points[0].x) return points[0].y;
-    for (let i = 1; i < points.length; i++) {
-        const a = points[i - 1];
-        const b = points[i];
-        if (x <= b.x) return b.x === a.x ? b.y : a.y + ((x - a.x) / (b.x - a.x)) * (b.y - a.y);
+    for (let k = 0; k < spans; k++) {
+        if (low[k] >= 0) keep.add(low[k]);
+        if (high[k] >= 0) keep.add(high[k]);
     }
-    return points[points.length - 1].y;
+    return [...keep].sort((x, y) => x - y);
 }
 
 /**

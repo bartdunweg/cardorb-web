@@ -10,7 +10,7 @@ import { cx } from "@/utils/cx";
  * It exists because two dialogs that describe a copy (the one that adds or splits one, the one
  * that takes a card off the wishlist) were drawn on nothing at all. The kit's `Modal` positions
  * and animates; it paints no surface, and every dialog in this app that looks right paints its
- * own (`folder-dialog`, and the Add dialog that has since gone, both `rounded-2xl glass-thick p-6 shadow-xl`). Those
+ * own (`binder-dialog`, and the Add dialog that has since gone, both `rounded-2xl glass-thick p-6 shadow-xl`). Those
  * two did not, so their labels floated over the page behind them, unreadable.
  *
  * Fixing it twice would have left the same trap for the third one, and the shape belongs to the
@@ -57,7 +57,7 @@ export function SheetDialog({
                     <Dialog>
                         {({ close }) => (
                             /*
-                             * The surface. `glass-thick` and the corners are what folder-dialog
+                             * The surface. `glass-thick` and the corners are what binder-dialog
                              * already draws; a sheet keeps only its top corners and
                              * clears the home indicator.
                              */

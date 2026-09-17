@@ -14,7 +14,7 @@ export type ValueSnapshot = {
     unpriced: number;
     /**
      * Copies added since the reading before, and what they were worth that night. What the line
-     * gained by holding more rather than by prices moving; absent on a folder's line, read as zero.
+     * gained by holding more rather than by prices moving; absent on a binder's line, read as zero.
      */
     added?: number;
     addedValue?: number;
@@ -26,11 +26,11 @@ export type ValueSnapshot = {
 };
 
 // Oldest first, as the API sends it. Kept five minutes per person like the other whole-collection
-// numbers; a new reading arrives once a night, so the cache never hides one for long. `folder`
+// numbers; a new reading arrives once a night, so the cache never hides one for long. `binder`
 // (an id, or "favorites") asks for that list's line instead: built from the daily card prices, so
 // it starts where those do, a few weeks back, rather than with the first nightly reading.
-export async function getValueHistory(folder?: string): Promise<ValueSnapshot[]> {
-    const path = folder ? `/value-history?folder=${encodeURIComponent(folder)}` : "/value-history";
-    const { snapshots } = await perUser("value", `value-history:${folder ?? "all"}`, (token) => api(path, { token, schema: valueHistoryAnswer }));
+export async function getValueHistory(binder?: string): Promise<ValueSnapshot[]> {
+    const path = binder ? `/value-history?folder=${encodeURIComponent(binder)}` : "/value-history";
+    const { snapshots } = await perUser("value", `value-history:${binder ?? "all"}`, (token) => api(path, { token, schema: valueHistoryAnswer }));
     return snapshots;
 }

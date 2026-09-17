@@ -92,14 +92,14 @@ export const groupCopies = (rows: Card[]): CopyGroup[] => {
  * binder it is filed in. A normal finish says nothing, since that is what a card is unless it is
  * something else; with nothing recorded at all it is a "Copy".
  */
-export const copyLabel = (row: Card, folderName?: string | null): string =>
+export const copyLabel = (row: Card, binderName?: string | null): string =>
     [
         // The run first: it is the larger fact about the card, and the one a collector reads for.
         row.edition ? (EDITION_LABELS[row.edition as Edition] ?? null) : null,
         row.finish && row.finish !== "normal" ? (FINISH_LABELS[row.finish as Finish] ?? null) : null,
         row.foil_pattern ? (FOIL_PATTERN_LABELS[row.foil_pattern as FoilPattern] ?? null) : null,
         row.grade ?? row.condition,
-        folderName,
+        binderName,
     ]
         .filter(Boolean)
         .join(" · ") || "Copy";

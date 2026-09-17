@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getDexBinder } from "@/lib/collections";
+import { getDexBinder } from "@/lib/binders";
 
 // The Pokédex stopped being a fixture: it is a binder like any other now, one you make, edit and
 // delete. The address stays for the bookmarks and the links that have it, and leads where the

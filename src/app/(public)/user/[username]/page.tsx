@@ -2,19 +2,19 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppEmptyState } from "@/components/app/app-empty-state";
+import { BinderBody } from "@/components/app/binder-body";
 import { DashboardLink } from "@/components/app/dashboard-link";
-import { FolderBody } from "@/components/app/folder-body";
 import { LinkButton } from "@/components/app/link-button";
 import { PublicTopBar } from "@/components/app/public-top-bar";
 import { ListSkeleton } from "@/components/app/skeletons";
 import { Avatar } from "@/components/base/avatar/avatar";
+import { datapointsLine } from "@/lib/binder-datapoints";
 import { type DexList, groupByDex } from "@/lib/dex-groups";
-import { datapointsLine } from "@/lib/folder-datapoints";
 import { formatCount } from "@/lib/format";
 import { type ListSearchParams, PUBLIC_DEFAULT_SORT, PUBLIC_SORT_OPTIONS, isNarrowed, listHref, readPublicListQuery } from "@/lib/list-query";
 import { getDexNames } from "@/lib/pokedex";
 import { getViewer } from "@/lib/profile";
-import { PUBLIC_PAGE_SIZE, countPublicCards, getAllPublicCards, getPublicCards, getPublicFolders, getPublicProfile } from "@/lib/public-profile";
+import { PUBLIC_PAGE_SIZE, countPublicCards, getAllPublicCards, getPublicBinders, getPublicCards, getPublicProfile } from "@/lib/public-profile";
 
 type Params = { params: Promise<{ username: string }>; searchParams: Promise<ListSearchParams> };
 
@@ -73,21 +73,21 @@ async function Profile({
     if (list !== query.list) query.list = list;
     // The paged read for every list: its first page carries the count and the facets at once, while
     // a Pokédex binder's own read of every card streams in behind the row.
-    const [{ cards, total, facets, value }, folders, viewer, owned, wishes] = await Promise.all([
+    const [{ cards, total, facets, value }, binders, viewer, owned, wishes] = await Promise.all([
         getPublicCards(decodeURIComponent(username), query),
-        getPublicFolders(decodeURIComponent(username)),
+        getPublicBinders(decodeURIComponent(username)),
         getViewer(),
         // The line under the name counts the whole collection and the wishlist, whatever list is open,
         // and says what the collection is worth where its owner shows prices.
         countPublicCards(decodeURIComponent(username)),
         profile.wishlist_public ? countPublicCards(decodeURIComponent(username), "wishlist") : Promise.resolve(null),
     ]);
-    // A folder in the URL that the owner does not show: the API answered the whole list; the chips say so too.
-    const folder = folders.find((f) => f.id === query.folder) ?? null;
+    // A binder in the URL that the owner does not show: the API answered the whole list; the chips say so too.
+    const binder = binders.find((f) => f.id === query.folder) ?? null;
     // A binder shown as a Pokédex draws as one here too, the way it does on its owner's page: the
     // Pokédex is a binder now and nothing else. Every card of it is needed, which takes longest to
     // read, so it is not awaited: the slots take their place under the row when the last page is in.
-    const dexSetting = folder?.pokedex ?? null;
+    const dexSetting = binder?.pokedex ?? null;
     const dex: Promise<DexList> | null = dexSetting
         ? Promise.all([getAllPublicCards(decodeURIComponent(username), query), getDexNames()]).then(([r, names]) => {
               // The count is the slots' own, as the owner's page says it, and the value too where the owner
@@ -111,7 +111,7 @@ async function Profile({
     const handle = profile.display_name && profile.username ? `@${profile.username}` : null;
     // The row above the list is the same whichever way the cards are drawn; only what it draws differs.
     const body = {
-        // `true` and not `boolean`: FolderBody's props are a union, and the read-only arm is picked by it.
+        // `true` and not `boolean`: BinderBody's props are a union, and the read-only arm is picked by it.
         readOnly: true as const,
         query,
         basePath: base,
@@ -160,12 +160,12 @@ async function Profile({
                     </div>
                 </div>
 
-                {folders.length > 0 || profile.wishlist_public || profile.favorites_public ? (
-                    // The folders the owner shows, as chips that narrow the list; All cards first. A chip is a link,
-                    // so a folder is a URL that can be shared, and the row keeps its place through a search.
+                {binders.length > 0 || profile.wishlist_public || profile.favorites_public ? (
+                    // The binders the owner shows, as chips that narrow the list; All cards first. A chip is a link,
+                    // so a binder is a URL that can be shared, and the row keeps its place through a search.
                     <nav aria-label="Binders" className="flex flex-wrap gap-2">
-                        {[{ id: null as string | null, name: "Collection", count: null as number | null }, ...folders].map((f) => {
-                            const current = query.list === undefined && (folder?.id ?? null) === f.id;
+                        {[{ id: null as string | null, name: "Collection", count: null as number | null }, ...binders].map((f) => {
+                            const current = query.list === undefined && (binder?.id ?? null) === f.id;
                             return (
                                 // The kit's button as a link, primary for the one in view: the same pill and colours as
                                 // every other control, in both themes.
@@ -181,7 +181,7 @@ async function Profile({
                                 </LinkButton>
                             );
                         })}
-                        {/* The two lists beside the folders, each behind the owner's own setting. The favorites are
+                        {/* The two lists beside the binders, each behind the owner's own setting. The favorites are
                             the collection seen another way; the wishlist is what they are looking for. A Pokédex is a
                             binder, so it is a chip above, with the others. */}
                         {(
@@ -205,7 +205,7 @@ async function Profile({
                     </nav>
                 ) : null}
 
-                {dex ? <FolderBody {...body} pokedex={{ dex }} /> : <FolderBody {...body} cards={cards} total={total} pageSize={PUBLIC_PAGE_SIZE} />}
+                {dex ? <BinderBody {...body} pokedex={{ dex }} /> : <BinderBody {...body} cards={cards} total={total} pageSize={PUBLIC_PAGE_SIZE} />}
             </main>
         </div>
     );

@@ -4,30 +4,31 @@ import { Suspense, use, useEffect, useRef, useState } from "react";
 import { BookOpen01, Folder, Heart, HomeLine, LayoutLeft, Plus, Rows01, Star01 } from "@untitledui/icons";
 import { Button as AriaButton } from "react-aria-components";
 import { AccountMenu } from "@/components/app/account-menu";
+import { BinderDialog } from "@/components/app/binder-dialog";
 import { SidebarSearchTrigger } from "@/components/app/command-search";
-import { FolderDialog } from "@/components/app/folder-dialog";
 import { PrefetchRoutes } from "@/components/app/prefetch-routes";
 import { useRouteTarget } from "@/components/app/route-pending";
-import { type RailItem, SidebarRail, useBindersArrive } from "@/components/app/sidebar-rail";
+import { type RailItem, SidebarRail } from "@/components/app/sidebar-rail";
 import { NavButton } from "@/components/application/app-navigation/base-components/nav-button";
 import { NavItemBase } from "@/components/application/app-navigation/base-components/nav-item";
 import type { NavItemDividerType, NavItemType } from "@/components/application/app-navigation/config";
 import { SidebarNavigationSectionDividers } from "@/components/application/app-navigation/sidebar-navigation/sidebar-section-dividers";
+import { useArriveOnce } from "@/hooks/use-arrive-once";
 import { CARDS_CHANGED } from "@/lib/forget-mine";
 import { SIDEBAR_COOKIE } from "@/lib/sidebar-cookie";
 import { cx } from "@/utils/cx";
 
 type Account = { name: string; email: string; avatarUrl: string | null };
-type FolderLink = { id: string; name: string; kind: "manual" | "rule"; count: number };
+type BinderLink = { id: string; name: string; kind: "manual" | "rule"; count: number };
 
 // Icons are component functions, so nav items are built here (client); they can't be passed
 // from a Server Component. Home, All cards, the wishlist (cards you do not have, so outside the
 // collection) and Browse (every set there has been, not your collection) at the top, the same
-// three the phone's tab bar carries plus Browse; under the Collections heading the rest, flat:
-// Favorites with its own icon, and the ones you made with a folder's, then New folder. On desktop
-// this list is the overview; the Collections page is the phone's.
+// three the phone's tab bar carries plus Browse; under the Binders heading the rest, flat:
+// Favorites with its own icon, and the ones you made with a binder's, then New binder. On desktop
+// this list is the overview; the Binders page is the phone's.
 //
-// The folders and the account arrive as promises: the layout hands them over without waiting, so
+// The binders and the account arrive as promises: the layout hands them over without waiting, so
 // the frame is on screen while the API answers, and each slot fills in on its own.
 // The pages the sidebar leads to, fetched ahead so a click draws them at once. A binder is not
 // among them, and a binder shown as a Pokédex is why: it reads every card you own, up to 2,000
@@ -41,12 +42,12 @@ function storeCollapsed(collapsed: boolean) {
 
 export function AppSidebar({
     account,
-    collections,
+    binders,
     favoritesCount,
     initialCollapsed = false,
 }: {
     account: Promise<Account>;
-    collections: Promise<FolderLink[]>;
+    binders: Promise<BinderLink[]>;
     favoritesCount: Promise<number | null>;
     /** Folded to the rail on the first paint: what the cookie said when the layout rendered. */
     initialCollapsed?: boolean;
@@ -76,21 +77,21 @@ export function AppSidebar({
     /* The numbers read again after a list's tiles stepped copies. Those presses do not draw the page
        again, so the layout's read stays from before them; the sidebar asks for its own, and puts
        the answer over the layout's until the layout reads again (a navigation that redraws it). */
-    // `collections: null` is a binders read that failed: the layout's list stays, not an empty one.
-    const [fresh, setFresh] = useState<{ of: Promise<FolderLink[]>; collections: FolderLink[] | null; favorites: number | null } | null>(null);
+    // `binders: null` is a binders read that failed: the layout's list stays, not an empty one.
+    const [fresh, setFresh] = useState<{ of: Promise<BinderLink[]>; binders: BinderLink[] | null; favorites: number | null } | null>(null);
     useEffect(() => {
         // A fetch, not an action: an action waits its turn behind the writes (api/sidebar-counts).
         const reread = () =>
             void fetch("/api/sidebar-counts")
-                .then((res) => (res.ok ? (res.json() as Promise<{ collections: FolderLink[] | null; favorites: number | null }>) : null))
+                .then((res) => (res.ok ? (res.json() as Promise<{ binders: BinderLink[] | null; favorites: number | null }>) : null))
                 .then(
-                    (r) => r && setFresh({ of: collections, ...r }),
+                    (r) => r && setFresh({ of: binders, ...r }),
                     () => undefined,
                 );
         window.addEventListener(CARDS_CHANGED, reread);
         return () => window.removeEventListener(CARDS_CHANGED, reread);
-    }, [collections]);
-    const override = fresh?.of === collections ? fresh : null;
+    }, [binders]);
+    const override = fresh?.of === binders ? fresh : null;
 
     // The four pages, on the rail as icons alone.
     const pages: RailItem[] = [
@@ -132,7 +133,7 @@ export function AppSidebar({
                     items={navItems}
                     hideMobileHeader
                     collapsed={collapsed}
-                    rail={<SidebarRail items={pages} activeUrl={pathname} account={account} collections={collections} onExpand={() => setFolded(false)} />}
+                    rail={<SidebarRail items={pages} activeUrl={pathname} account={account} binders={binders} onExpand={() => setFolded(false)} />}
                     // The rail's own button, not a utility button: the same hover tint as every row beside it.
                     headerAction={
                         <NavButton icon={LayoutLeft} label="Collapse sidebar" tooltipPlacement="bottom" onPress={() => setFolded(true)} className="size-8" />
@@ -141,11 +142,11 @@ export function AppSidebar({
                     afterItems={
                         <>
                             <Suspense fallback={null}>
-                                <FolderRows collections={collections} fresh={override?.collections ?? undefined} activeUrl={pathname} />
+                                <BinderRows binders={binders} fresh={override?.binders ?? undefined} activeUrl={pathname} />
                             </Suspense>
                             {/* An item like the others: the same padding, icon size and type, at the list's end. */}
                             <li className="py-px">
-                                <FolderDialog mode="create">
+                                <BinderDialog mode="create">
                                     <AriaButton className="group relative flex max-h-9 w-full cursor-pointer items-center rounded-md p-2 outline-focus-ring transition duration-100 ease-linear select-none hover:bg-alpha-black/4 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2">
                                         <Plus
                                             aria-hidden="true"
@@ -155,7 +156,7 @@ export function AppSidebar({
                                             New binder
                                         </span>
                                     </AriaButton>
-                                </FolderDialog>
+                                </BinderDialog>
                             </li>
                         </>
                     }
@@ -170,11 +171,12 @@ export function AppSidebar({
     );
 }
 
-// The folders you made: more items of the same list, at the same padding and row height.
-function FolderRows({ collections, fresh, activeUrl }: { collections: Promise<FolderLink[]>; fresh?: FolderLink[]; activeUrl: string }) {
+// The binders you made: more items of the same list, at the same padding and row height.
+function BinderRows({ binders, fresh, activeUrl }: { binders: Promise<BinderLink[]>; fresh?: BinderLink[]; activeUrl: string }) {
     // Read again after a press on a list's tiles, where there is an answer; the layout's otherwise.
-    const list = fresh ?? use(collections);
-    const arrive = useBindersArrive();
+    const list = fresh ?? use(binders);
+    // Once per tab, shared with the rail's rows (use-arrive-once.ts).
+    const arrive = useArriveOnce("sidebar-binders");
     return (
         <>
             {list.map((c) => {
@@ -182,10 +184,10 @@ function FolderRows({ collections, fresh, activeUrl }: { collections: Promise<Fo
                 return (
                     <li key={c.id} className={cx("py-px", arrive && "arrive")}>
                         {/*
-                         * A folder, however it was filled. A rule folder used to
+                         * A binder, however it was filled. A rule binder used to
                          * draw a flowchart, which named the mechanism rather than
-                         * the thing: from the sidebar it is a folder with cards in
-                         * it, and how they got there is the folder's own business.
+                         * the thing: from the sidebar it is a binder with cards in
+                         * it, and how they got there is the binder's own business.
                          */}
                         <NavItemBase type="link" icon={Folder} href={href} current={activeUrl === href} badge={<Count count={c.count} />}>
                             {c.name}
@@ -215,8 +217,10 @@ function LateCount({ count, fresh }: { count: Promise<number | null>; fresh?: nu
 }
 
 function AccountSlot({ account }: { account: Promise<Account> }) {
+    // Once per tab, shared with the rail's avatar (use-arrive-once.ts).
+    const arrive = useArriveOnce("sidebar-account");
     return (
-        <div className="arrive">
+        <div className={cx(arrive && "arrive")}>
             <AccountMenu account={use(account)} />
         </div>
     );

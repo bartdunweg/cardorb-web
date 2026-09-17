@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import { markOwnedWith } from "@/app/(app)/dashboard/cards/actions";
 import type { CardFacts } from "@/app/(app)/dashboard/cards/actions";
-import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
+import type { BinderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { AcquiredDatePicker } from "@/components/app/acquired-date-picker";
 import { CardImage } from "@/components/app/card-image";
 import { CONDITIONS } from "@/components/app/condition-badge";
@@ -27,7 +27,7 @@ import { WESTERN_LANGUAGES, languageOf } from "@/lib/languages";
 import { parsePrice } from "@/lib/price-input";
 
 // A wish becomes a copy you hold. The moment to say what it is: language, condition (Near Mint
-// unless said), finish, folder, what you paid and the day you got it (today unless said). One
+// unless said), finish, binder, what you paid and the day you got it (today unless said). One
 // save; the wish leaves the wishlist and the sheet closes on it.
 /** What the form reads of a card: a wishlist row, or a set tile's wish, which knows less. */
 export type OwnableCard = Pick<
@@ -37,7 +37,7 @@ export type OwnableCard = Pick<
 
 export type MarkOwnedProps = {
     card: OwnableCard;
-    folders: FolderChoice[];
+    binders: BinderChoice[];
     onSaved?: () => void;
     /** The Western languages the card was printed in, when the API has said. */
     /** What the catalogue says this card is, so no impossible printing is offered. */
@@ -46,7 +46,7 @@ export type MarkOwnedProps = {
 };
 
 /** The form inside `MarkOwnedDialog`, in a module of its own so the day picker in it loads when the dialog opens. */
-export function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: MarkOwnedProps & { close: () => void }) {
+export function MarkOwnedForm({ card, binders, languages, facts, onSaved, close }: MarkOwnedProps & { close: () => void }) {
     const router = useRouter();
     // The wish's own language, not English: a Japanese wish marked owned came out English, with
     // nothing on screen saying so, and its facts and prices were then asked of the wrong catalogue.
@@ -61,12 +61,12 @@ export function MarkOwnedForm({ card, folders, languages, facts, onSaved, close 
     const [finish, setFinish] = useState(card.finish ?? "");
     const [pattern, setPattern] = useState(card.foil_pattern ?? "");
     const [edition, setEdition] = useState(card.edition ?? "");
-    const [folder, setFolder] = useState("");
+    const [binder, setBinder] = useState("");
     const [price, setPrice] = useState("");
     const [date, setDate] = useState(today());
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const manual = folders.filter((f) => !f.rule);
+    const manual = binders.filter((f) => !f.rule);
 
     const save = async () => {
         setSaving(true);
@@ -80,7 +80,7 @@ export function MarkOwnedForm({ card, folders, languages, facts, onSaved, close 
             finish: (effectiveFinish || null) as CopyEdits["finish"],
             foilPattern: (effectivePattern || null) as CopyEdits["foilPattern"],
             edition: (effectiveEdition || null) as CopyEdits["edition"],
-            collectionId: folder || null,
+            collectionId: binder || null,
             purchasePrice: parsePrice(price),
             acquiredAt: date || today(),
         };
@@ -294,13 +294,13 @@ export function MarkOwnedForm({ card, folders, languages, facts, onSaved, close 
             ) : null}
 
             <div className={row}>
-                Folder
+                Binder
                 <NativeSelect
                     aria-label="Binder"
                     size="sm"
                     className="w-full"
-                    value={folder}
-                    onChange={(e) => setFolder(e.target.value)}
+                    value={binder}
+                    onChange={(e) => setBinder(e.target.value)}
                     options={[{ label: "None", value: "" }, ...manual.map((f) => ({ label: f.name, value: f.id }))]}
                 />
             </div>

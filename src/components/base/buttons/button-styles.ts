@@ -6,7 +6,7 @@ export const styles = sortCx({
     // An icon in a button takes the label's colour: one colour per button, no second grey for the glyph.
     common: {
         root: [
-            "group relative inline-flex h-max pressable cursor-pointer items-center justify-center whitespace-nowrap outline-brand transition-[color,background-color,box-shadow,scale] duration-100 ease-linear before:absolute focus-visible:outline-2 focus-visible:outline-offset-2",
+            "group relative inline-flex h-max pressable cursor-pointer items-center justify-center whitespace-nowrap outline-brand before:absolute focus-visible:outline-2 focus-visible:outline-offset-2",
             // When button is used within `InputGroup`
             "in-data-input-wrapper:shadow-xs in-data-input-wrapper:focus:!z-50 in-data-input-wrapper:in-data-leading:-mr-px in-data-input-wrapper:in-data-leading:rounded-r-none in-data-input-wrapper:in-data-leading:before:rounded-r-none in-data-input-wrapper:in-data-trailing:-ml-px in-data-input-wrapper:in-data-trailing:rounded-l-none in-data-input-wrapper:in-data-trailing:before:rounded-l-none",
             // Disabled styles

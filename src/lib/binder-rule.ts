@@ -2,16 +2,16 @@ import { z } from "zod";
 import type { Facets } from "@/lib/cards";
 
 /**
- * A rule folder fills itself: every owned card that matches, AND between the fields, OR within a
+ * A rule binder fills itself: every owned card that matches, AND between the fields, OR within a
  * list. The API validates the same shape (cardorb-api, lib/core/collection/folders.ts); this is the
  * client's copy, for the dialog and the server actions.
  */
 export type DexRange = { from: number; to: number };
-export type FolderRule = { dex?: DexRange; sets?: string[]; rarities?: string[] };
+export type BinderRule = { dex?: DexRange; sets?: string[]; rarities?: string[] };
 
 /**
- * A folder shown as a Pokédex: its cards in the national order, one slot per Pokémon. `missing`
- * shows the slots the folder has no card of; `dex` is the range collected, all of it when absent.
+ * A binder shown as a Pokédex: its cards in the national order, one slot per Pokémon. `missing`
+ * shows the slots the binder has no card of; `dex` is the range collected, all of it when absent.
  */
 export type PokedexSetting = { missing: boolean; dex?: DexRange; rarities?: string[] };
 
@@ -53,7 +53,7 @@ export function rarityKept(entries: string[], rarity: string | null, name: strin
     });
 }
 
-export type FolderKind = "manual" | "rule";
+export type BinderKind = "manual" | "rule";
 
 /** The last national dex number. Defined here, not read from pokedex.ts: that file reaches the
  * session and cannot be imported into a client component, and the dialog needs the number. */
@@ -81,7 +81,7 @@ export const dexRangeSchema = z
 
 export const pokedexSettingSchema = z.object({ missing: z.boolean(), dex: dexRangeSchema.optional(), rarities: list.optional() });
 
-export const folderRuleSchema = z
+export const binderRuleSchema = z
     .object({
         dex: dexRangeSchema.optional(),
         sets: list.optional(),
@@ -92,7 +92,7 @@ export const folderRuleSchema = z
 const setTitle = (name: string, facets?: Facets) => facets?.sets.find((s) => s.name === name || s.title === name)?.title ?? name;
 
 /** One clause per chip: "Dex 1–151", "Paldea Evolved", "Illustration Rare". */
-export function ruleChips(rule: FolderRule, facets?: Facets): string[] {
+export function ruleChips(rule: BinderRule, facets?: Facets): string[] {
     const chips: string[] = [];
     if (rule.dex) {
         const gen = GENERATIONS.find((g) => g.from === rule.dex!.from && g.to === rule.dex!.to);
@@ -104,7 +104,7 @@ export function ruleChips(rule: FolderRule, facets?: Facets): string[] {
 }
 
 /** The chips in one line, for a subtitle: "Dex 1–151 · Paldea Evolved · Illustration Rare". */
-export const ruleSummary = (rule: FolderRule, facets?: Facets): string => ruleChips(rule, facets).join(" · ");
+export const ruleSummary = (rule: BinderRule, facets?: Facets): string => ruleChips(rule, facets).join(" · ");
 
 /** What a rule reads on a card. */
 export type RuleSubject = { species_id: number | null; species_ids?: number[]; set_name: string | null; rarity: string | null; owned: boolean | null };
@@ -114,11 +114,11 @@ export const speciesOfCard = (card: { species_id: number | null; species_ids?: n
     card.species_ids?.length ? card.species_ids : card.species_id === null ? [] : [card.species_id];
 
 /**
- * Whether a card is in a rule folder, with the API's semantics (cardorb-api, folders.ts
+ * Whether a card is in a rule binder, with the API's semantics (cardorb-api, binders.ts
  * ruleMatcher): owned only, the dex range on the card's number, a set by its name or its title,
- * a rarity, all case-insensitive. The card sheet uses it to say which folders hold a card.
+ * a rarity, all case-insensitive. The card sheet uses it to say which binders hold a card.
  */
-export function matchesRule(card: RuleSubject, rule: FolderRule, facets?: Facets): boolean {
+export function matchesRule(card: RuleSubject, rule: BinderRule, facets?: Facets): boolean {
     if (!card.owned) return false;
     // A tag team is in the range when any Pokémon on it is, as the API reads it.
     const dex = rule.dex;

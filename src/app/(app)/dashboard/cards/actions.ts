@@ -47,7 +47,7 @@ const failed = (err: unknown): { ok: false; error: string } => ({
 const term = z.string().trim().max(100);
 const choice = z.string().trim().min(1).max(100).optional();
 
-/** The chips under a collection search: a set (as the API addresses it) and a rarity, matched whole, as on a folder page. */
+/** The chips under a collection search: a set (as the API addresses it) and a rarity, matched whole, as on a binder page. */
 export type MyCardsFilters = { set?: string; rarity?: string };
 
 // Searches the signed-in person's own collection (a binder's add-from-collection dialog). A filter
@@ -226,7 +226,7 @@ export async function addCard(
                 ...(printing?.foilPattern ? { foilPattern: printing.foilPattern } : {}),
                 ...(edition && (EDITIONS as readonly string[]).includes(edition) ? { edition } : {}),
                 collection: !wishlist,
-                // Added from a folder's own page: filed in it at once.
+                // Added from a binder's own page: filed in it at once.
                 ...(collectionId && !wishlist && z.string().uuid().safeParse(collectionId).success ? { collectionId } : {}),
             },
             schema: addedAnswer,
@@ -647,7 +647,7 @@ export async function editCopies(cardIds: string[], edits: CopyEdits, { reread =
 }
 
 // A wish becomes a copy you hold, with what is known about it at once: language, condition or
-// grade, finish, folder, purchase price and the day you got it (today unless said). One PATCH.
+// grade, finish, binder, purchase price and the day you got it (today unless said). One PATCH.
 export async function markOwnedWith(cardId: string, edits: CopyEdits, { reread = true }: { reread?: boolean } = {}): Promise<Result> {
     const parsed = z.object({ cardId: z.string().uuid(), edits: copyEdits }).safeParse({ cardId, edits });
     if (!parsed.success) return { ok: false, error: "Invalid input." };

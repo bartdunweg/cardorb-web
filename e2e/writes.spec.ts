@@ -169,7 +169,7 @@ test("the star and the Favorites list agree, on and off", async ({ page }) => {
     // response is back, or it reads the server as it was before the press.
     //
     // "Any POST" is not specific enough to trust, so this matches the write's own shape instead.
-    // The sheet opening its own reads (facts, prices, folders, facets) turned out not to be the
+    // The sheet opening its own reads (facts, prices, binders, facets) turned out not to be the
     // risk here: read from a CI trace (2026-09-17), those all go out as GET requests to
     // /api/read/*, never a POST. What a captured trace did show is that setFavorite's own Server
     // Action body is a JSON array whose first element is the card's id (a string) and second is
@@ -209,7 +209,7 @@ test("the star and the Favorites list agree, on and off", async ({ page }) => {
     await page.reload();
     // toHaveCount(0) alone would pass just as well while the list's Suspense fallback is still
     // showing, before it has drawn at all; the search that finds nothing renders its own "No cards
-    // found" heading (folder-body.tsx's noHits), which only appears once the read has actually
+    // found" heading (binder-body.tsx's noHits), which only appears once the read has actually
     // resolved, so that is checked first.
     await expect(page.getByRole("heading", { name: "No cards found" })).toBeVisible();
     await expect(collectionTile(page, c)).toHaveCount(0);

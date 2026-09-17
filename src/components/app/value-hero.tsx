@@ -16,7 +16,7 @@ import { cx } from "@/utils/cx";
 
 // Home's first thing: what the collection is worth, big, with how that has moved over a period
 // and the line behind it. The name beside the label is a menu: All cards, Favorites, or one of the
-// folders; a choice goes into the URL (`?value=`) and the page reads that list's line. The period
+// binders; a choice goes into the URL (`?value=`) and the page reads that list's line. The period
 // buttons under the chart cut the same line; the change above it is over the period shown.
 
 export type ValueList = { id: string; name: string };
@@ -29,7 +29,7 @@ export function ValueHero({
     value,
     snapshots,
 }: {
-    /** All cards first, then Favorites, the folders, and the wishlist last. */
+    /** All cards first, then Favorites, the binders, and the wishlist last. */
     lists: ValueList[];
     /** The id of the list shown. */
     selected: string;
@@ -48,8 +48,13 @@ export function ValueHero({
     const change = split ? split.change : null;
     const list = lists.find((l) => l.id === selected) ?? lists[0];
 
+    // Dims while the next answer is fetched, after 150 ms, so a quick answer never flickers; it
+    // lights up again at once.
     return (
-        <section aria-labelledby="value-heading" className={cx("flex flex-col gap-4 transition-opacity duration-150", pending && "opacity-60")}>
+        <section
+            aria-labelledby="value-heading"
+            className={cx("flex flex-col gap-4 transition-opacity duration-(--duration-fast)", pending && "opacity-60 delay-150")}
+        >
             <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between gap-x-2">
                     <h2 id="value-heading" className="text-sm font-semibold text-tertiary">

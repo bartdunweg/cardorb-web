@@ -31,7 +31,7 @@ export function ChartPeriods({ period, onPick, className }: { period: PeriodKey;
                     aria-pressed={p.key === period}
                     onPress={() => onPick(p.key)}
                     className={cx(
-                        "pressable rounded-full px-3 py-1.5 text-sm font-semibold outline-focus-ring transition-colors duration-150 focus-visible:outline-2",
+                        "pressable rounded-full px-3 py-1.5 text-sm font-semibold outline-focus-ring focus-visible:outline-2",
                         p.key === period ? "bg-alpha-black/8 text-primary" : "text-tertiary hover:text-secondary",
                     )}
                 >

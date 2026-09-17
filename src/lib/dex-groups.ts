@@ -1,6 +1,6 @@
 import type { DexSlot } from "@/lib/api-shapes";
+import { type DexRange, GENERATIONS, NATIONAL_DEX_MAX, type PokedexSetting, rarityKept, speciesOfCard } from "@/lib/binder-rule";
 import type { Card } from "@/lib/cards";
-import { type DexRange, GENERATIONS, NATIONAL_DEX_MAX, type PokedexSetting, rarityKept, speciesOfCard } from "@/lib/folder-rule";
 
 /** What the catalogue says of a species: its name, and its official picture where the API has one. */
 export type DexSpecies = Map<number, { name: string; artwork: string | null }>;
@@ -15,7 +15,7 @@ export type NamedDexSlot = DexSlot & { name: string; artwork: string | null };
 export type DexGeneration = { label: string; from: number; to: number; slots: NamedDexSlot[]; caught: number; total: number };
 
 /**
- * A list of cards as a Pokédex: one slot per number in the range, the folder's cards in it in the
+ * A list of cards as a Pokédex: one slot per number in the range, the binder's cards in it in the
  * list's own order. A card without a number (a trainer, an energy) is not in any slot. With
  * `missing` off, the empty slots go; with it on they stay, named, so a person sees what to find.
  */
@@ -124,7 +124,7 @@ export function groupByDex(
 }
 
 /**
- * A folder as a Pokédex, with the numbers the page says about it. `total` is what the page walks
+ * A binder as a Pokédex, with the numbers the page says about it. `total` is what the page walks
  * through (the rows in the slots; the list read more, and those are not shown), `copies`, `value`
  * and `unpriced` the slots' own, from `DexCount`.
  */

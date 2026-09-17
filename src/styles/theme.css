@@ -118,6 +118,25 @@
     /* Moving: something already on screen going to another place (the tab bar's pill). A strong
        ease-in-out, so it leaves and arrives with the same weight. */
     --ease-move: cubic-bezier(0.77, 0, 0.175, 1);
+    /* Pressing: the scale a finger or a click gets back (pressable). Fast out of the start, so the
+       press lands the moment it happens, and a long tail. */
+    --ease-press: cubic-bezier(0.2, 0, 0, 1);
+
+    /* Durations, one scale for the app. Use as `duration-(--duration-fast)` or in var(). */
+    /* A colour answering a hover or a press. */
+    --duration-instant: 100ms;
+    /* The press scale. */
+    --duration-press: 160ms;
+    /* A small state change: a pending dim, a chip. */
+    --duration-fast: 150ms;
+    /* Something arriving or moving on screen. */
+    --duration-base: 200ms;
+    /* A sheet or drawer. */
+    --duration-sheet: 300ms;
+    /* A chart line drawn in. */
+    --duration-draw: 400ms;
+    /* The gap between two rows of a staggered arrival. */
+    --stagger-step: 20ms;
 
     --animate-marquee: marquee 60s linear infinite;
     --animate-caret-blink: caret-blink 1s infinite;

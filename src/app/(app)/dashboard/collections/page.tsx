@@ -1,16 +1,16 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { AddCardButton } from "@/components/app/add-card-button";
-import { CollectionsGrid, NewCollectionButton } from "@/components/app/collections-grid";
+import { BindersGrid, NewBinderButton } from "@/components/app/binders-grid";
 import { PageHeader } from "@/components/app/page-header";
-import { FoldersOutline } from "@/components/app/skeletons";
-import { getMyCollections } from "@/lib/collections";
+import { BindersOutline } from "@/components/app/skeletons";
+import { getBinderOverview } from "@/lib/binders";
 
 // The tab's name, which the root layout's template finishes as “… · Cardorb”: without it every
 // tab and every history entry read “Cardorb”. The word is the one the navigation uses for this page.
 export const metadata: Metadata = { title: "Binders" };
 
-export default function CollectionsPage() {
+export default function BindersPage() {
     return (
         <div className="flex flex-1 flex-col gap-6">
             <PageHeader
@@ -21,14 +21,14 @@ export default function CollectionsPage() {
                 // added from inside one, where it has somewhere to go (Bart's call).
                 actions={
                     <div className="flex items-center gap-3 max-lg:hidden">
-                        <NewCollectionButton />
+                        <NewBinderButton />
                         <AddCardButton />
                     </div>
                 }
-                barActions={<NewCollectionButton compact />}
+                barActions={<NewBinderButton compact />}
             />
             {/* The tiles are the read; the title and both actions are not, so they do not wait for it. */}
-            <Suspense fallback={<FoldersOutline />}>
+            <Suspense fallback={<BindersOutline />}>
                 <Binders />
             </Suspense>
         </div>
@@ -36,6 +36,6 @@ export default function CollectionsPage() {
 }
 
 async function Binders() {
-    const { collections, favoritesCount } = await getMyCollections();
-    return <CollectionsGrid collections={collections} favoritesCount={favoritesCount} />;
+    const { binders, favoritesCount } = await getBinderOverview();
+    return <BindersGrid binders={binders} favoritesCount={favoritesCount} />;
 }

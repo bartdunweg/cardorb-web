@@ -7,7 +7,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
 import { type CardFacts, type PricePoint, addCard, editCopies, removeCard, restoreCard, setCopies, setFavorite } from "@/app/(app)/dashboard/cards/actions";
-import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
+import type { BinderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { NO_ART, artStack, nextArt } from "@/components/app/card-art";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage, preloadCardImage } from "@/components/app/card-image";
@@ -33,17 +33,17 @@ import { Tooltip } from "@/components/base/tooltip/tooltip";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
 import type { PokemonCard, RemovedCard } from "@/lib/api-shapes";
 import { binderFromPath, isBinderPath } from "@/lib/binder-from-path";
+import { matchesRule } from "@/lib/binder-rule";
 import { cardLabel, cardLabelFull, copyLine } from "@/lib/card-label";
 import { type Finish, isReverseFinish } from "@/lib/card-shapes";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
 import { type CopyGroup, groupCopies, sortCopies } from "@/lib/copies";
-import { matchesRule } from "@/lib/folder-rule";
 import { forgetMineQuietly } from "@/lib/forget-mine";
 import { formatPrice } from "@/lib/format";
 import { orientationNeedsPermission, requestOrientation } from "@/lib/holo/orientation";
 import { periodChange } from "@/lib/price-change";
 import { tcgplayerUrl } from "@/lib/price-links";
-import { listCollections, listCopies, loadFacets, seriesLogo } from "@/lib/reads";
+import { listBinders, listCopies, loadFacets, seriesLogo } from "@/lib/reads";
 import { settleLatest } from "@/lib/settle-latest";
 import { cx } from "@/utils/cx";
 
@@ -245,14 +245,14 @@ export function CardDetailSlideout({
               }
             : null);
 
-    const [collections, setCollections] = useState<FolderChoice[]>([]);
+    const [binders, setBinders] = useState<BinderChoice[]>([]);
     /* The hand-filled binder whose page this sheet was opened on, if any: a card taken here goes
        into it as well. Read from the path, the one fact every mounted sheet shares: the palette's
        sheet hangs from the layout, beside the page, out of reach of anything the page provides. */
     const pathname = usePathname();
-    const binder = readOnly ? null : binderFromPath(pathname, collections);
+    const binder = readOnly ? null : binderFromPath(pathname, binders);
     // On a binder's page before the binder list has answered: the press would file nowhere, so it waits a beat.
-    const binderPending = !readOnly && isBinderPath(pathname) && collections.length === 0;
+    const binderPending = !readOnly && isBinderPath(pathname) && binders.length === 0;
 
     /* Taking a card the sheet was only showing. The sheet closes on the press, with the toast, and
        the write follows: it waited for the write and then for the list behind to be drawn again, a
@@ -630,7 +630,7 @@ export function CardDetailSlideout({
             });
     };
 
-    // The folders and the facets are for the sheet's own controls, so they are asked for when a
+    // The binders and the facets are for the sheet's own controls, so they are asked for when a
     // card first opens, not when the page mounts: this sits on every list page, closed, and used
     // to cost two calls on every visit for a sheet nobody had opened.
     // The card's copies, read when a card opens; the list behind hands the sheet one row.
@@ -655,7 +655,7 @@ export function CardDetailSlideout({
     useEffect(() => {
         if (readOnly || !card || askedForChoices.current) return;
         askedForChoices.current = true;
-        listCollections().then(setCollections);
+        listBinders().then(setBinders);
         loadFacets().then(setFacets);
     }, [readOnly, card]);
 
@@ -861,7 +861,7 @@ export function CardDetailSlideout({
     const titleRef = useRef<HTMLHeadingElement>(null);
     /* The binders any copy of this card is in: filed by hand, or fitting a rule binder's rule. */
     const heldRows = mine ? (copies ?? [mine]) : [];
-    const inBinders = collections.filter((c) => heldRows.some((r) => (c.rule ? matchesRule(r, c.rule, facets) : r.collection_id === c.id)));
+    const inBinders = binders.filter((c) => heldRows.some((r) => (c.rule ? matchesRule(r, c.rule, facets) : r.collection_id === c.id)));
 
     /* What to do with a card you do not hold, built once: from `sm` up it sits under Your
        copies, under "You do not hold this card yet", and on a phone in a bar pinned to the bottom of
@@ -886,7 +886,7 @@ export function CardDetailSlideout({
                 </Button>
             </div>
         ) : mine?.wishlist && !emptied ? (
-            <MarkOwnedDialog card={mine} folders={collections} languages={known?.languages} facts={formFacts} onSaved={onClose}>
+            <MarkOwnedDialog card={mine} binders={binders} languages={known?.languages} facts={formFacts} onSaved={onClose}>
                 <Button size="md" className="w-full">
                     Mark as owned
                 </Button>
@@ -1030,11 +1030,11 @@ export function CardDetailSlideout({
                         <CopyCard
                             wish
                             group={groupCopies([mine])[0]!}
-                            folders={collections}
+                            binders={binders}
                             facts={formFacts}
                             busy={busy}
                             onSaved={() => scheduleRefresh()}
-                            refreshFolders={async () => collections}
+                            refreshBinders={async () => binders}
                         />
                     ) : null}
                     {/* One card per kind of copy you hold (Holo · Near Mint, ×4) with every field the
@@ -1059,7 +1059,7 @@ export function CardDetailSlideout({
                               <div key={group.shown.id} style={{ "--arrive-delay": `${Math.min(i, 8) * 20}ms` } as React.CSSProperties}>
                                   <CopyCard
                                       group={group}
-                                      folders={collections}
+                                      binders={binders}
                                       languages={known?.languages}
                                       facts={formFacts}
                                       busy={busy}
@@ -1071,9 +1071,9 @@ export function CardDetailSlideout({
                                           scheduleRefresh();
                                           void reloadCopies();
                                       }}
-                                      refreshFolders={async () => {
-                                          const next = await listCollections();
-                                          setCollections(next);
+                                      refreshBinders={async () => {
+                                          const next = await listBinders();
+                                          setBinders(next);
                                           return next;
                                       }}
                                   />
@@ -1108,7 +1108,7 @@ export function CardDetailSlideout({
                             languages={known?.languages}
                             facts={formFacts}
                             from={copies?.find((r) => r.id === mine.id) ?? mine}
-                            folders={collections}
+                            binders={binders}
                             onSaved={() => void reloadCopies()}
                         >
                             <Button size="md" color="secondary" iconLeading={Plus} className="w-full">
@@ -1219,7 +1219,7 @@ export function CardDetailSlideout({
                                                         "Hide from public page" is gone because it hid nothing: `forPublic()`
                                                         strips the flag rather than filtering on it, and the only reader left
                                                         was the latest-pull block, which the profile no longer shows. What
-                                                        does keep cards off a public profile is a folder's own switch. */}
+                                                        does keep cards off a public profile is a binder's own switch. */}
                                                     <Dropdown.Item icon={Trash01} onAction={() => removeAndOffer(mine)}>
                                                         {mine.wishlist ? "Remove from wishlist" : "Remove from collection"}
                                                     </Dropdown.Item>

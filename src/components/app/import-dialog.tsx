@@ -47,7 +47,7 @@ import { cx } from "@/utils/cx";
  * than none.
  *
  * The form mounts inside the dialog, so it starts clean on every open, the
- * same reason folder-dialog.tsx does it. A dialog that remembered the last
+ * same reason binder-dialog.tsx does it. A dialog that remembered the last
  * file would offer to import it again, which is exactly the mistake this
  * screen exists to prevent.
  *

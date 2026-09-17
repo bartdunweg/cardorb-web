@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { timed } from "@/lib/timing";
 
 /**
- * The one way this app reads or writes cards, folders and profiles: the Card Orb API at
+ * The one way this app reads or writes cards, binders and profiles: the Card Orb API at
  * api.cardorb.com (R-DATA-003). Supabase is touched directly for auth and the session only.
  *
  * The bearer token is the Supabase session's access token; the same project signs both, so the

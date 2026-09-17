@@ -44,6 +44,15 @@ export function RoutePendingProvider({ children }: { children: ReactNode }) {
         return () => clearTimeout(timer);
     }, [going]);
 
+    // Back or forward while a tap is still on its way: the history now decides where the app goes,
+    // so the promise of the tapped page is dropped rather than drawn for ten seconds.
+    useEffect(() => {
+        if (!going) return;
+        const drop = () => setPending(null);
+        window.addEventListener("popstate", drop);
+        return () => window.removeEventListener("popstate", drop);
+    }, [going]);
+
     const start = useCallback(
         (href: string) => {
             // The path, not the query: a page that only narrows its own list (a filter, a sort, a

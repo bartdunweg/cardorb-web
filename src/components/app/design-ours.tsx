@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Download01, FilterLines, Grid01, Plus, SearchLg, SwitchVertical01 } from "@untitledui/icons";
-import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
+import type { BinderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
@@ -341,14 +341,14 @@ export const ourSections: SectionSpec[] = [
                         <div className="w-full max-w-md">
                             <CopyCard
                                 group={{ key: "holo-nm", shown: SAMPLE_COPY, rows: [SAMPLE_COPY], quantity: 4 }}
-                                folders={[{ id: "kanto", name: "Kanto", rule: null } satisfies FolderChoice]}
+                                binders={[{ id: "kanto", name: "Kanto", rule: null } satisfies BinderChoice]}
                                 facts={null}
                                 busy={false}
                                 onMore={() => {}}
                                 onFewer={() => {}}
                                 onRemove={() => {}}
                                 onSaved={() => {}}
-                                refreshFolders={async () => []}
+                                refreshBinders={async () => []}
                             />
                         </div>
                     </Cell>
@@ -361,7 +361,7 @@ export const ourSections: SectionSpec[] = [
                                     rows: [],
                                     quantity: 1,
                                 }}
-                                folders={[]}
+                                binders={[]}
                                 facts={null}
                                 busy={false}
                                 arrive
@@ -369,7 +369,7 @@ export const ourSections: SectionSpec[] = [
                                 onFewer={() => {}}
                                 onRemove={() => {}}
                                 onSaved={() => {}}
-                                refreshFolders={async () => []}
+                                refreshBinders={async () => []}
                             />
                         </div>
                     </Cell>

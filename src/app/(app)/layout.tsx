@@ -11,7 +11,7 @@ import { Toasts } from "@/components/app/toast";
 import { WarmLists } from "@/components/app/warm-lists";
 import { RememberListQuery } from "@/hooks/use-list-memory";
 import { ApiError } from "@/lib/api";
-import { getFavoritesCount, getMyFolders } from "@/lib/collections";
+import { getFavoritesCount, getMyBinders } from "@/lib/binders";
 import { type Account, accountFrom, getMyProfile } from "@/lib/profile";
 import { SIDEBAR_COOKIE } from "@/lib/sidebar-cookie";
 import { RouteProvider } from "@/providers/router-provider";
@@ -24,21 +24,21 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     // Whether the sidebar is folded to its rail, read here so the first paint is already right:
     // decided in the browser it would open wide and snap shut after hydration on every page.
     const sidebarCollapsed = (await cookies()).get(SIDEBAR_COOKIE)?.value === "collapsed";
-    // Not awaited. The profile and the folders are reads of an API in another region, and after
+    // Not awaited. The profile and the binders are reads of an API in another region, and after
     // every write both miss the cache. Awaited here, nothing reached the browser until the slower
     // of the two answered: no frame, no skeleton, a blank tab for as long as the API took. Now the
-    // frame streams at once, the page's own Suspense fallbacks with it (no loading.tsx, R-UI-003), and the folder rows and the account
+    // frame streams at once, the page's own Suspense fallbacks with it (no loading.tsx, R-UI-003), and the binder rows and the account
     // card fill in when their read lands (each logs its own timing line).
     //
-    // The folders' counts ride along in that one answer; the favorites count is a read of the
-    // stats, and the Pokédex's a count of every card, both cached like the folders, so every
+    // The binders' counts ride along in that one answer; the favorites count is a read of the
+    // stats, and the Pokédex's a count of every card, both cached like the binders, so every
     // binder in the sidebar has its number (Bart's call).
     const me = getMyProfile();
-    const folders = getMyFolders();
+    const binderRead = getMyBinders();
     // What the client components get resolves always: a rejection there would reach the root
     // error boundary and take the frame down with it. The failure itself is judged in SessionGuard.
     const account = me.then(accountFrom, () => NO_ACCOUNT);
-    const collections = folders.catch(() => []);
+    const binders = binderRead.catch(() => []);
     const favoritesCount = getFavoritesCount().catch(() => null);
 
     return (
@@ -48,7 +48,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <RouteProvider>
                 <CommandSearchProvider>
                     <Suspense fallback={null}>
-                        <SessionGuard reads={[me, folders]} />
+                        <SessionGuard reads={[me, binderRead]} />
                     </Suspense>
                     {/* Each list's filters, for the tab or row that leads back to it (use-list-memory.ts). */}
                     <Suspense fallback={null}>
@@ -64,7 +64,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                     frame's own ground rather than under it. */}
                     <div className="relative isolate flex min-h-dvh flex-col overflow-x-clip bg-page">
                         <div className="flex flex-1 flex-col lg:flex-row">
-                            <AppSidebar account={account} collections={collections} favoritesCount={favoritesCount} initialCollapsed={sidebarCollapsed} />
+                            <AppSidebar account={account} binders={binders} favoritesCount={favoritesCount} initialCollapsed={sidebarCollapsed} />
                             {/* tabIndex -1 so focus can be sent here after a navigation without putting
                             the element itself in the tab order. */}
                             <main id={MAIN_ID} tabIndex={-1} className="flex min-w-0 flex-1 flex-col outline-none">

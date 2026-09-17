@@ -3,7 +3,7 @@
 import { type ReactNode, useCallback, useId, useRef, useState } from "react";
 import { BarChart01 } from "@untitledui/icons";
 import { formatCount, formatPrice } from "@/lib/format";
-import { type Frame, areaPath, fullRange, linePath, nearestIndex, pointsFor, smoothLine, yAt } from "@/lib/value-chart-math";
+import { type Frame, areaPath, fullRange, linePath, nearestIndex, pointsFor, thinReadings } from "@/lib/value-chart-math";
 import type { ValueSnapshot } from "@/lib/value-history";
 import { cx } from "@/utils/cx";
 
@@ -18,7 +18,7 @@ import { cx } from "@/utils/cx";
  * and a tooltip with the date, the value and how many cards had no price. A reading on which cards
  * were added says in its tooltip how many and what they were worth: the step the line takes when a
  * collection grows, which a value alone does not explain. No ring on the line for it any more (Bart,
- * 2026-09-15): the line is one smooth stroke and the tooltip carries it. Arrow keys walk the
+ * 2026-09-15): the line is one smooth stroke through the readings and the tooltip carries it. Arrow keys walk the
  * readings for a keyboard, and the description under the figure says first, last and the change,
  * so nothing is carried by the picture alone.
  */
@@ -102,24 +102,17 @@ export function ValueChart({
     const values = snapshots.map((s) => s.value);
     const [yMin, yMax] = fullRange(Math.min(...values), Math.max(...values));
     const days = snapshots.map((s) => s.date);
-    // Where each reading is, for the hover; and the line the pen draws, smoothed between the two ends
-    // (smoothLine): about one point per 8 px, between 12 and 60.
+    // Where each reading is, for the hover and the dot; the line goes through the readings themselves
+    // (thinReadings): all of them, or about one per 8 px (between 12 and 60) keeping each span's
+    // lowest and highest, so dot, line and tooltip say the same thing.
     const points = width > 0 ? pointsFor(values, frame, yMin, yMax, days) : [];
-    const smooth = smoothLine(
-        days.map((d) => Date.parse(`${d}T00:00:00Z`)),
-        values,
-        Math.max(12, Math.min(60, Math.round(width / 8))),
-    );
-    const drawn =
-        width > 0
-            ? pointsFor(
-                  smooth.map((p) => p.v),
-                  frame,
-                  yMin,
-                  yMax,
-                  smooth.map((p) => new Date(p.t).toISOString().slice(0, 10)),
-              )
-            : [];
+    const drawn = points.length
+        ? thinReadings(
+              days.map((d) => Date.parse(`${d}T00:00:00Z`)),
+              values,
+              Math.max(12, Math.min(60, Math.round(width / 8))),
+          ).map((i) => points[i])
+        : [];
     const baseline = frame.height - frame.bottom;
     const first = snapshots[0];
     const last = snapshots[snapshots.length - 1];
@@ -268,13 +261,7 @@ export function ValueChart({
                         {currentPoint ? (
                             <g aria-hidden="true">
                                 <line x1={currentPoint.x} x2={currentPoint.x} y1={frame.top} y2={baseline} className="stroke-border-primary" strokeWidth={1} />
-                                <circle
-                                    cx={currentPoint.x}
-                                    cy={yAt(drawn, currentPoint.x)}
-                                    r={5}
-                                    className={cx(fillTone, "stroke-bg-primary")}
-                                    strokeWidth={2}
-                                />
+                                <circle cx={currentPoint.x} cy={currentPoint.y} r={5} className={cx(fillTone, "stroke-bg-primary")} strokeWidth={2} />
                             </g>
                         ) : null}
                     </svg>

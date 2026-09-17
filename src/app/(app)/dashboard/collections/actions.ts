@@ -2,13 +2,13 @@
 
 import { z } from "zod";
 import { ApiError, api } from "@/lib/api";
-import { createdFolderAnswer } from "@/lib/api-shapes";
+import { createdBinderAnswer } from "@/lib/api-shapes";
+import { type BinderRule, type PokedexSetting, binderRuleSchema, pokedexSettingSchema } from "@/lib/binder-rule";
 import { getFacets } from "@/lib/cards";
 import { type Facets, NO_FACETS } from "@/lib/facets";
-import { type FolderRule, type PokedexSetting, folderRuleSchema, pokedexSettingSchema } from "@/lib/folder-rule";
 import { forgetMine } from "@/lib/user-cache";
 
-export type CollectionResult = { ok: true; id?: string } | { ok: false; error: string };
+export type BinderResult = { ok: true; id?: string } | { ok: false; error: string };
 
 const failed = (err: unknown): { ok: false; error: string } => ({
     ok: false,
@@ -17,27 +17,27 @@ const failed = (err: unknown): { ok: false; error: string } => ({
 
 const nameSchema = z.string().trim().min(1, "Enter a name.").max(60);
 
-// Folders live in the API; every call is scoped to the caller there. With a rule the folder
+// Binders live in the API; every call is scoped to the caller there. With a rule the binder
 // fills itself from the cards you own; without one you file cards in it by hand.
 //
 // `reread: false` writes and nothing more, as on the card actions: forgetMine() redraws the page
 // inside this action's answer, and a dialog that waited for that redraw span for seconds on a
 // write that had landed. Such a caller drops the cache itself and refreshes once.
-export async function createCollection(
+export async function createBinder(
     name: string,
-    rule?: FolderRule,
+    rule?: BinderRule,
     pokedex?: PokedexSetting,
     isPublic?: boolean,
     { reread = true }: { reread?: boolean } = {},
-): Promise<CollectionResult> {
+): Promise<BinderResult> {
     const parsed = z
-        .object({ name: nameSchema, rule: folderRuleSchema.optional(), pokedex: pokedexSettingSchema.optional(), isPublic: z.boolean().optional() })
+        .object({ name: nameSchema, rule: binderRuleSchema.optional(), pokedex: pokedexSettingSchema.optional(), isPublic: z.boolean().optional() })
         .safeParse({ name, rule, pokedex, isPublic });
     if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
     try {
         const { folder } = await api("/folders", {
-            schema: createdFolderAnswer,
+            schema: createdBinderAnswer,
             method: "POST",
             body: {
                 name: parsed.data.name,
@@ -53,17 +53,17 @@ export async function createCollection(
     }
 }
 
-// A folder's name or rule. The API keeps the kind: a folder filled by hand takes no rule.
-export async function updateCollection(
+// A binder's name or rule. The API keeps the kind: a binder filled by hand takes no rule.
+export async function updateBinder(
     id: string,
-    patch: { name?: string; rule?: FolderRule; pokedex?: PokedexSetting | null; isPublic?: boolean },
+    patch: { name?: string; rule?: BinderRule; pokedex?: PokedexSetting | null; isPublic?: boolean },
     { reread = true }: { reread?: boolean } = {},
-): Promise<CollectionResult> {
+): Promise<BinderResult> {
     const parsed = z
         .object({
             id: z.string().uuid(),
             name: nameSchema.optional(),
-            rule: folderRuleSchema.optional(),
+            rule: binderRuleSchema.optional(),
             pokedex: pokedexSettingSchema.nullable().optional(),
             isPublic: z.boolean().optional(),
         })
@@ -72,8 +72,8 @@ export async function updateCollection(
     if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
     try {
-        const { id: folderId, ...body } = parsed.data;
-        await api(`/folders/${folderId}`, { method: "PATCH", body });
+        const { id: binderId, ...body } = parsed.data;
+        await api(`/folders/${binderId}`, { method: "PATCH", body });
     } catch (err) {
         return failed(err);
     }
@@ -82,7 +82,7 @@ export async function updateCollection(
     return { ok: true, id: parsed.data.id };
 }
 
-export type FolderChoice = { id: string; name: string; rule: FolderRule | null };
+export type BinderChoice = { id: string; name: string; rule: BinderRule | null };
 
 // The sets and rarities you hold, for a rule's pickers and for reading a rule back. Asked when
 // a dialog or a card sheet opens, not by the frame on every screen. Fails soft: without them a
@@ -95,7 +95,7 @@ export async function loadFacets(): Promise<Facets> {
     }
 }
 
-export async function deleteCollection(id: string): Promise<CollectionResult> {
+export async function deleteBinder(id: string): Promise<BinderResult> {
     const parsed = z.string().uuid().safeParse(id);
     if (!parsed.success) return { ok: false, error: "Invalid binder." };
 

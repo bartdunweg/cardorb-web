@@ -3,7 +3,7 @@
 import { type ReactNode, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
-import { createCollection, updateCollection } from "@/app/(app)/dashboard/collections/actions";
+import { createBinder, updateBinder } from "@/app/(app)/dashboard/collections/actions";
 import { DexRangeFields, dexDraft, dexFromDraft } from "@/components/app/dex-range-fields";
 import { FormError } from "@/components/app/form-error";
 import { RarityPicker } from "@/components/app/rarity-picker";
@@ -15,33 +15,33 @@ import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { NativeSelect } from "@/components/base/select/select-native";
 import { Toggle } from "@/components/base/toggle/toggle";
+import { type BinderKind, type BinderRule, type PokedexSetting, ruleSummary } from "@/lib/binder-rule";
 import { type Facets, NO_FACETS } from "@/lib/facets";
-import { type FolderKind, type FolderRule, type PokedexSetting, ruleSummary } from "@/lib/folder-rule";
 import { forgetMineQuietly } from "@/lib/forget-mine";
 import { loadFacets } from "@/lib/reads";
 
-type FolderShape = { id: string; name: string; kind: FolderKind; rule: FolderRule | null; pokedex: PokedexSetting | null; isPublic: boolean };
+type BinderShape = { id: string; name: string; kind: BinderKind; rule: BinderRule | null; pokedex: PokedexSetting | null; isPublic: boolean };
 type FormProps = {
     mode: "create" | "edit";
-    folder?: FolderShape;
+    binder?: BinderShape;
     facets?: Facets;
-    /** Told the new folder's id, when the opener wants to use it (the card sheet files the card in it). */
+    /** Told the new binder's id, when the opener wants to use it (the card sheet files the card in it). */
     onSaved?: (id: string | undefined) => void;
 };
 
-// One dialog for a folder's name and its rule: New folder (by hand or by rule) and, on the
-// folder's page, Rename or Edit rule. A folder keeps its kind, so edit mode never shows the
+// One dialog for a binder's name and its rule: New binder (by hand or by rule) and, on the
+// binder's page, Rename or Edit rule. A binder keeps its kind, so edit mode never shows the
 // choice. The form mounts inside the dialog, so it starts clean on every open: the sidebar's
-// New folder lives for the whole session and must not remember the last folder made. The set
+// New binder lives for the whole session and must not remember the last binder made. The set
 // and rarity pickers are a select that appends chips: the kit has no multi-select, and a list of
 // chips reads what a rule says better than a scrolling box (R-UI-001). A page that has the
 // facets hands them in; the sidebar has none and the form asks for them when it opens.
-export function FolderDialog({ children, ...form }: FormProps & { children: ReactNode }) {
+export function BinderDialog({ children, ...form }: FormProps & { children: ReactNode }) {
     return (
         <DialogTrigger>
             {children}
             <ModalOverlay>
-                <FolderModalBody {...form} />
+                <BinderModalBody {...form} />
             </ModalOverlay>
         </DialogTrigger>
     );
@@ -51,35 +51,35 @@ export function FolderDialog({ children, ...form }: FormProps & { children: Reac
  * The same dialog, opened by something that is not a pressable child: a menu item on the
  * binder's page. The overlay is controlled; DialogTrigger is not in the picture.
  */
-export function FolderModal({ isOpen, onOpenChange, ...form }: FormProps & { isOpen: boolean; onOpenChange: (open: boolean) => void }) {
+export function BinderModal({ isOpen, onOpenChange, ...form }: FormProps & { isOpen: boolean; onOpenChange: (open: boolean) => void }) {
     return (
         <ModalOverlay isOpen={isOpen} onOpenChange={onOpenChange}>
-            <FolderModalBody {...form} />
+            <BinderModalBody {...form} />
         </ModalOverlay>
     );
 }
 
-function FolderModalBody(form: FormProps) {
+function BinderModalBody(form: FormProps) {
     return (
         <Modal className="max-w-md">
-            <Dialog>{({ close }) => <FolderForm {...form} close={close} />}</Dialog>
+            <Dialog>{({ close }) => <BinderForm {...form} close={close} />}</Dialog>
         </Modal>
     );
 }
 
-function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps & { close: () => void }) {
+function BinderForm({ mode, binder, facets: given, onSaved, close }: FormProps & { close: () => void }) {
     const router = useRouter();
-    const [name, setName] = useState(folder?.name ?? "");
-    const [kind, setKind] = useState<FolderKind>(folder?.kind ?? "manual");
-    const [dex, setDex] = useState(dexDraft(folder?.rule?.dex));
-    // Shown as a Pokédex: any folder may be; the setting has its own range, which may differ from a rule's.
-    const [asPokedex, setAsPokedex] = useState(!!folder?.pokedex);
-    const [missing, setMissing] = useState(folder?.pokedex?.missing ?? true);
-    const [dexShown, setDexShown] = useState(dexDraft(folder?.pokedex?.dex));
-    const [dexRarities, setDexRarities] = useState<string[]>(folder?.pokedex?.rarities ?? []);
-    const [isPublic, setIsPublic] = useState(folder?.isPublic ?? false);
-    const [sets, setSets] = useState<string[]>(folder?.rule?.sets ?? []);
-    const [rarities, setRarities] = useState<string[]>(folder?.rule?.rarities ?? []);
+    const [name, setName] = useState(binder?.name ?? "");
+    const [kind, setKind] = useState<BinderKind>(binder?.kind ?? "manual");
+    const [dex, setDex] = useState(dexDraft(binder?.rule?.dex));
+    // Shown as a Pokédex: any binder may be; the setting has its own range, which may differ from a rule's.
+    const [asPokedex, setAsPokedex] = useState(!!binder?.pokedex);
+    const [missing, setMissing] = useState(binder?.pokedex?.missing ?? true);
+    const [dexShown, setDexShown] = useState(dexDraft(binder?.pokedex?.dex));
+    const [dexRarities, setDexRarities] = useState<string[]>(binder?.pokedex?.rarities ?? []);
+    const [isPublic, setIsPublic] = useState(binder?.isPublic ?? false);
+    const [sets, setSets] = useState<string[]>(binder?.rule?.sets ?? []);
+    const [rarities, setRarities] = useState<string[]>(binder?.rule?.rarities ?? []);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [loaded, setLoaded] = useState<Facets | null>(given ?? null);
@@ -88,9 +88,9 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
     }, [given]);
     const facets = loaded ?? NO_FACETS;
 
-    const rule = (): FolderRule | undefined => {
+    const rule = (): BinderRule | undefined => {
         if (kind !== "rule") return undefined;
-        const out: FolderRule = {};
+        const out: BinderRule = {};
         const range = dexFromDraft(dex);
         if (range) out.dex = range;
         if (sets.length) out.sets = sets;
@@ -118,15 +118,13 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
         setError(null);
         const res =
             mode === "create"
-                ? await createCollection(name, rule(), pokedex() ?? undefined, isPublic, { reread: false }).catch(() => ({
+                ? await createBinder(name, rule(), pokedex() ?? undefined, isPublic, { reread: false }).catch(() => ({
                       ok: false as const,
                       error: "Something went wrong. Try again.",
                   }))
-                : await updateCollection(
-                      folder!.id,
-                      { name, ...(kind === "rule" ? { rule: rule() } : {}), pokedex: pokedex(), isPublic },
-                      { reread: false },
-                  ).catch(() => ({ ok: false as const, error: "Something went wrong. Try again." }));
+                : await updateBinder(binder!.id, { name, ...(kind === "rule" ? { rule: rule() } : {}), pokedex: pokedex(), isPublic }, { reread: false }).catch(
+                      () => ({ ok: false as const, error: "Something went wrong. Try again." }),
+                  );
         setSaving(false);
         if (!res.ok) {
             setError(res.error);
@@ -134,7 +132,7 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
         }
         close();
         const forgotten = forgetMineQuietly("binders");
-        // A new rule folder is worth seeing filled; a renamed one is where it was. An opener that
+        // A new rule binder is worth seeing filled; a renamed one is where it was. An opener that
         // asked for the id stays where it is and gets it.
         if (onSaved) {
             // No toast: the opener puts the new binder in front of you; the card sheet's select
@@ -150,7 +148,7 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
             // Nothing here moves. A new binder joins a list you are not looking at, and a rename
             // swaps one word in a header that is easy to miss.
             notify.done(
-                mode === "create" ? `${name} is in your Binders now` : folder!.name !== name ? `This binder is called ${name} now` : `${name} is saved`,
+                mode === "create" ? `${name} is in your Binders now` : binder!.name !== name ? `This binder is called ${name} now` : `${name} is saved`,
             );
             void forgotten.then(() => router.refresh());
         }
@@ -174,7 +172,7 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
                 <div className="flex flex-col gap-1.5">
                     <span className="text-sm font-medium text-secondary">Filled</span>
                     <ButtonGroup
-                        aria-label="How the folder fills"
+                        aria-label="How the binder fills"
                         selectionMode="single"
                         disallowEmptySelection
                         selectedKeys={new Set([kind])}

@@ -16,7 +16,7 @@ vi.mock("@/app/(app)/dashboard/cards/actions", () => ({
     rereadMine: vi.fn(),
     markOwnedWith: vi.fn(),
 }));
-vi.mock("@/lib/reads", () => ({ cardFacts: vi.fn().mockResolvedValue(null), listCollections: vi.fn().mockResolvedValue([]) }));
+vi.mock("@/lib/reads", () => ({ cardFacts: vi.fn().mockResolvedValue(null), listBinders: vi.fn().mockResolvedValue([]) }));
 vi.mock("@/components/app/card-memo", () => ({ warmCard: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.stubGlobal("matchMedia", () => ({ matches: true, addEventListener() {}, removeEventListener() {} }));
