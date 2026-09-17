@@ -22,7 +22,15 @@ export const ModalOverlay = (props: ModalOverlayProps) => {
             className={(state) =>
                 cx(
                     // A bottom sheet on a phone, a drawer from the right from sm up.
-                    "fixed inset-0 z-50 flex min-h-dvh w-full items-end justify-center bg-overlay/70 outline-hidden ease-linear sm:items-center sm:justify-end sm:pl-6 md:pl-10",
+                    //
+                    // No `ease-linear` here. It was the kit's default and it drives no transition of its
+                    // own, but it sets --tw-ease, and --tw-ease is what `animate-in` reads: an
+                    // unvarianted `ease-*` beside `animate-in` lands later in the sheet than the
+                    // unvarianted `[animation-timing-function:...]` below, so it won. The scrim faded at
+                    // `linear` for the whole 300 ms while the sheet beside it rose on the drawer curve,
+                    // and the two halves of one gesture pulled apart over the last third. Measured in
+                    // the browser rather than read off the class list, which is why it stood so long.
+                    "fixed inset-0 z-50 flex min-h-dvh w-full items-end justify-center bg-overlay/70 outline-hidden sm:items-center sm:justify-end sm:pl-6 md:pl-10",
                     state.isEntering && "duration-300 animate-in [animation-timing-function:var(--ease-enter)] fade-in",
                     state.isExiting && "duration-200 animate-out [animation-timing-function:var(--ease-enter)] fade-out",
                     typeof props.className === "function" ? props.className(state) : props.className,
