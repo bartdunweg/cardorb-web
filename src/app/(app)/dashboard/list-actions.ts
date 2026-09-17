@@ -2,13 +2,13 @@
 
 import type { FilterCounts } from "@/lib/api-shapes";
 import { type Card, LIST_BATCH, getMyCards } from "@/lib/cards";
-import { loadMoreInput, warmListInput } from "@/lib/list-filter";
+import { loadMoreInput, warmListInput } from "@/lib/list-filter-schema";
 
 // The next batch of a list, asked for by `CardsList` when the reader scrolls near its end. The
 // same read the page made for the first batch, with the same filter and a further offset; the
 // API says who is asking from the session, so a stranger's call answers 401 and the list stops.
 //
-// The shape lives in `@/lib/list-filter` because a "use server" file may export nothing but
+// The shape lives in `@/lib/list-filter-schema` because a "use server" file may export nothing but
 // async functions, and a schema nobody can import is a schema nobody can test.
 //
 // The count comes back with the batch. The first page's count can be minutes old (it is cached,

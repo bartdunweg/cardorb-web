@@ -10,8 +10,8 @@ const redirect = vi.fn((to: string) => {
 });
 vi.mock("next/navigation", () => ({ redirect: (to: string) => redirect(to) }));
 
-const { openAsLeft } = await import("./list-memory-server");
-const { serializeListMemory } = await import("./list-memory");
+const { openAsLeft, parseListMemoryCookie } = await import("./list-memory-server");
+const { parseListMemory, serializeListMemory } = await import("./list-memory");
 
 describe("openAsLeft", () => {
     beforeEach(() => {
@@ -41,5 +41,36 @@ describe("openAsLeft", () => {
     it("treats a client that sends no Sec-Fetch-Dest as a document", async () => {
         jar.dest = null;
         await expect(openAsLeft("/dashboard/cards", {})).rejects.toThrow("redirect:/dashboard/cards?q=pika");
+    });
+});
+
+describe("parseListMemoryCookie", () => {
+    // The browser reads the cookie with a guard, to keep zod out of every first load (list-memory.ts).
+    // The guard has to answer exactly what the server's schema answers.
+    const cases: (string | undefined)[] = [
+        undefined,
+        "",
+        "not json",
+        "%7B%22",
+        JSON.stringify(["/dashboard/cards"]),
+        JSON.stringify(null),
+        JSON.stringify("text"),
+        JSON.stringify({}),
+        JSON.stringify({ "/dashboard/cards": { size: "sm" } }),
+        JSON.stringify({ "/dashboard/cards": { view: "huge" } }),
+        JSON.stringify({ "/dashboard/cards": { view: "table", other: 1 }, "/b": { group: "none", query: "q=a" } }),
+        JSON.stringify({ "/dashboard/cards": { query: "x".repeat(2000) } }),
+        JSON.stringify({ "/dashboard/cards": { query: "x".repeat(2001) } }),
+        JSON.stringify({ "/dashboard/cards": { query: 5 } }),
+        JSON.stringify({ "/dashboard/cards": { size: null } }),
+        JSON.stringify({ "": { size: "sm" } }),
+        JSON.stringify({ ["/" + "a".repeat(200)]: { size: "sm" } }),
+        JSON.stringify({ "/a": [] }),
+        JSON.stringify({ "/a": "sm" }),
+        serializeListMemory({ "/dashboard/cards": { view: "grid", size: "lg", group: "sets", query: "sort=name" } }),
+    ];
+
+    it.each(cases.map((raw) => [raw]))("answers as the browser's guard does for %s", (raw) => {
+        expect(parseListMemory(raw)).toEqual(parseListMemoryCookie(raw));
     });
 });

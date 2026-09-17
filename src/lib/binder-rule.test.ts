@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { binderRuleSchema, matchesRule, pokedexSettingSchema, rarityLabel, ruleChips, ruleSummary } from "./binder-rule";
+import { matchesRule, rarityLabel, ruleChips, ruleSummary } from "./binder-rule";
+import { binderRuleSchema, pokedexSettingSchema } from "./binder-rule-schema";
 
 const facets = {
     sets: [{ name: "sv04", title: "Paradox Rift" }],

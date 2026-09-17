@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { api } from "@/lib/api";
 import { speciesAnswer } from "@/lib/api-shapes";
 import type { DexSpecies } from "@/lib/dex-groups";
@@ -13,9 +14,10 @@ import type { DexSpecies } from "@/lib/dex-groups";
  * cards found" as though the collection were empty. The names are nobody's data, so they have
  * their own route now (cardorb-api#249).
  *
- * One answer for everybody, so it is not kept per person either.
+ * One answer for everybody, so it is not kept per person either. Once per request through React's
+ * `cache`: `api()` gives the fetch a timeout signal, which Next's own fetch dedupe skips.
  */
-export async function getDexNames(): Promise<DexSpecies> {
+export const getDexNames = cache(async (): Promise<DexSpecies> => {
     const { entries } = await api("/public/species", { auth: false, schema: speciesAnswer });
     return new Map(entries.map((e) => [e.id, { name: e.name, artwork: e.artwork_url ?? null }]));
-}
+});

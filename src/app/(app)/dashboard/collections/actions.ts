@@ -3,7 +3,8 @@
 import { z } from "zod";
 import { ApiError, api } from "@/lib/api";
 import { createdBinderAnswer } from "@/lib/api-shapes";
-import { type BinderRule, type PokedexSetting, binderRuleSchema, pokedexSettingSchema } from "@/lib/binder-rule";
+import type { BinderRule, PokedexSetting } from "@/lib/binder-rule";
+import { binderRuleSchema, pokedexSettingSchema } from "@/lib/binder-rule-schema";
 import { getFacets } from "@/lib/cards";
 import { type Facets, NO_FACETS } from "@/lib/facets";
 import { forgetMine } from "@/lib/user-cache";
