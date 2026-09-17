@@ -376,13 +376,11 @@ describe("CardDetailSlideout: the star under rapid taps", () => {
     });
 
     /*
-     * BUG (card-detail-slideout.tsx:352 and :359): a failed last tap puts the star back to `!next`,
-     * the state the tap before it asked for, not what the store holds. When that earlier tap failed
-     * too, the store never left where it started, and the star is left showing a state that was
-     * never saved. Two taps on an unstarred card, both refused: the star shows filled, and the
-     * toast says "That card is still a Favorite" about a card that never was one.
+     * A failed last tap puts the star back to what the store last took, not to what the tap before
+     * it asked for: when that earlier tap failed too, the store never left where it started. Two
+     * taps on an unstarred card, both refused, leave it empty and say it is not a Favorite.
      */
-    it.fails("shows the store's state after every tap of a run failed", async () => {
+    it("shows the store's state after every tap of a run failed", async () => {
         const writes = favorites();
         await open(makeCard({ id: "p1", is_favorite: false }));
 
@@ -393,5 +391,7 @@ describe("CardDetailSlideout: the star under rapid taps", () => {
         await act(flush);
 
         expect(star()).toHaveAttribute("aria-pressed", "false");
+        expect(notifyMock.failed).toHaveBeenCalledTimes(1);
+        expect(notifyMock.failed).toHaveBeenCalledWith("That card is not a Favorite", { description: "No" });
     });
 });
