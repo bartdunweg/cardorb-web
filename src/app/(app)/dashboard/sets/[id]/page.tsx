@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { PageHeader } from "@/components/app/page-header";
@@ -63,6 +64,12 @@ async function Set({ params, searchParams }: { params: Promise<{ id: string }>; 
     const { id } = await params;
     const { language: raw } = await searchParams;
     const language = isBrowseLanguage(raw) ? raw : "en";
+    {
+        const h = await headers();
+        console.log(
+            `[probe] ${Date.now()} render set page action=${Boolean(h.get("next-action"))} rsc=${h.get("rsc")} dest=${h.get("sec-fetch-dest")} router-state=${Boolean(h.get("next-router-state-tree"))}`,
+        );
+    }
     let set;
     try {
         set = await getSet(id, language);

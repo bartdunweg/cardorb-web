@@ -209,6 +209,7 @@ export async function addCard(
     // answered with it since the route was written, but an add that worked is still an add
     // without it, just one with no way back.
     let id: string | undefined;
+    console.log(`[probe] ${Date.now()} addCard start ${input.name}`);
     try {
         const answer = await api("/cards", {
             method: "POST",
@@ -236,6 +237,7 @@ export async function addCard(
         return failed(err);
     }
 
+    console.log(`[probe] ${Date.now()} addCard end ${input.name}`);
     if (reread) await forgetMine("cards");
     return { ok: true, id };
 }
@@ -251,8 +253,13 @@ export async function setCopies(cardId: string, quantity: number, { reread = tru
     const parsed = z.object({ cardId: z.string().uuid(), quantity: z.number().int().min(1).max(999) }).safeParse({ cardId, quantity });
     if (!parsed.success) return { ok: false, error: "Invalid card." };
 
+    console.log(`[probe] ${Date.now()} setCopies start ${quantity}`);
+    const writeDelay = quantity === 2 ? Number((await (await import("next/headers")).headers()).get("x-probe-write-delay") ?? 0) : 0;
+    if (writeDelay) await new Promise((r) => setTimeout(r, writeDelay));
+    console.log(`[probe] ${Date.now()} setCopies api call after delay ${writeDelay}`);
     try {
         await api(`/collection/items/${parsed.data.cardId}`, { method: "PATCH", body: { quantity: parsed.data.quantity } });
+        console.log(`[probe] ${Date.now()} setCopies end ${quantity}`);
     } catch (err) {
         return failed(err);
     }
@@ -458,6 +465,7 @@ export async function listSetRows(set: string): Promise<Card[] | null> {
         const [held, wished] = await Promise.all([getMyCards(ask), getMyCards({ ...ask, wishlist: true })]);
         // A full page is a page that may have more behind it. Not `total`: the API folds rows on its own, so it can count more than it sends.
         if (held.cards.length >= SET_ROWS_LIMIT || wished.cards.length >= SET_ROWS_LIMIT) return null;
+        console.log(`[probe] ${Date.now()} listSetRows held=${held.cards.map((c) => `${c.name}x${(c as { quantity?: number }).quantity}`).join(",")}`);
         return [...held.cards, ...wished.cards];
     } catch (err) {
         console.error("Set rows unavailable:", err instanceof Error ? err.message : err);
