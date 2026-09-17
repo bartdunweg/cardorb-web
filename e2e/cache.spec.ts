@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { E2E_USER, SET_ID, addButton, card, collectionTile, removeButton, setTile } from "./support.ts";
+import { E2E_USER, SET_ID, addButton, cacheCleared, card, collectionTile, removeButton, setTile } from "./support.ts";
 
 const setPage = `/dashboard/sets/${SET_ID}`;
 
@@ -26,13 +26,6 @@ test("after a write, Back and a reload show the new state, not the cached one", 
     await expect(setTile(page, c, "in your collection")).toBeVisible();
     await page.reload();
     await expect(setTile(page, c, "in your collection")).toBeVisible();
-
-    // Leaves the account as this test found it: `stack.spec.ts`'s "a new account opens on Home"
-    // expects a fully empty account, and Playwright runs spec files in name order, which puts this
-    // file (cache.spec.ts) before stack.spec.ts. An unremoved card here would fail that test.
-    await removeButton(page, c).click();
-    await expect(page.getByText(`${c.name} is out of your collection`)).toBeVisible();
-    await expect(setTile(page, c, "not in your collection")).toBeVisible();
 });
 
 test("the public profile shows an added card and loses a removed one", async ({ page, browser }) => {
@@ -59,10 +52,8 @@ test("the public profile shows an added card and loses a removed one", async ({ 
     // finding for the same tile. A visitor briefly seeing the old state during the owner's round
     // trip is fine; reloading before that POST has answered is not, so each step below waits for
     // it by name, not just its toast.
-    const settled = () => page.waitForResponse((r) => r.request().method() === "POST" && r.url().includes("/api/forget-mine"));
-
     await page.goto(setPage);
-    const added = settled();
+    const added = cacheCleared(page);
     await addButton(page, c).click();
     await expect(page.getByText(`${c.name} is in your collection now`)).toBeVisible();
     await added;
@@ -71,13 +62,26 @@ test("the public profile shows an added card and loses a removed one", async ({ 
     await visitor.reload();
     await expect(collectionTile(visitor, c)).toHaveCount(1);
 
-    const removed = settled();
+    const removed = cacheCleared(page);
     await removeButton(page, c).click();
     await expect(page.getByText(`${c.name} is out of your collection`)).toBeVisible();
     await removed;
     await expect(setTile(page, c, "not in your collection")).toBeVisible();
 
-    await visitor.reload();
+    // toHaveCount(0) alone cannot tell "drawn and empty of this card" apart from "not drawn yet":
+    // this profile is loaded with `?q=` narrowed to card(6) alone, so there is nothing left on it
+    // to prove the list actually rendered once c is gone, only that the Suspense fallback might
+    // still be showing. card(7) (a list-state.spec.ts card that stays owned) is not owned yet at
+    // this point in run order: list-state.spec.ts runs after this file in the "app" project's
+    // alphabetical order. card(5), from the test above in this same file, is owned instead: its own
+    // cleanup was dropped once playwright.config.ts's explicit "stack" project (task 5's fix) made
+    // the account-order dependency it existed for redundant, so it stays owned for the rest of the
+    // suite. Loading the unfiltered profile and checking for it first proves the list has drawn
+    // before the filtered zero count below is trusted.
+    await visitor.goto(`/user/${E2E_USER.username}`);
+    await expect(collectionTile(visitor, card(5))).toBeVisible();
+
+    await visitor.goto(profile);
     await expect(collectionTile(visitor, c)).toHaveCount(0);
     await visitor.context().close();
 });

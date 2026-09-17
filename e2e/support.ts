@@ -40,6 +40,14 @@ export const wishButton = (page: Page, c: FixtureCard): Locator => page.getByRol
 export const collectionTile = (page: Page, c: FixtureCard): Locator =>
     page.getByRole("main").getByRole("button", { name: new RegExp(`^${literal(c.name)}\\b`) });
 
+/**
+ * The set tile's own cache clear, POST /api/forget-mine (use-copy-steps.ts's forgetMineQuietly(),
+ * fired once the quiet: true tile's writes have landed). A fresh read (a reload, a second page, a
+ * visitor's page) that trusts the tile's own toast or optimistic state instead can race the
+ * server; this is the response every such read waits for.
+ */
+export const cacheCleared = (page: Page) => page.waitForResponse((r) => r.request().method() === "POST" && r.url().includes("/api/forget-mine") && r.ok());
+
 /** Home's Owned figure: all copies. A new account shows the welcome instead, which is zero. */
 export const ownedCount = async (page: Page): Promise<number> => {
     await page.goto("/dashboard");

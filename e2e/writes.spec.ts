@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { SET_ID, addButton, addCopyButton, card, collectionTile, ownedCount, removeButton, setTile, wishButton } from "./support.ts";
+import { SET_ID, addButton, addCopyButton, cacheCleared, card, collectionTile, ownedCount, removeButton, setTile, wishButton } from "./support.ts";
 
 const setPage = `/dashboard/sets/${SET_ID}`;
 
@@ -8,9 +8,14 @@ test("adding a card shows on the tile, on Collection and on Home, before and aft
     const before = await ownedCount(page);
 
     await page.goto(setPage);
+    // Registered before the click: the set tile presses with quiet: true, so the add's own cache
+    // clear is /api/forget-mine (use-copy-steps.ts's forgetMineQuietly()), which the reload below
+    // depends on having landed, not just the toast.
+    const settled = cacheCleared(page);
     await addButton(page, c).click();
     await expect(page.getByText(`${c.name} is in your collection now`)).toBeVisible();
     await expect(setTile(page, c, "in your collection")).toBeVisible();
+    await settled;
 
     await page.reload();
     await expect(setTile(page, c, "in your collection")).toBeVisible();
@@ -41,7 +46,7 @@ test.fixme("two quick presses on plus make two copies, not one and not three", a
     // CI run 35196214137 (2026-09-17): both presses landed (tile showed "2 copies" before the
     // reload), but after page.reload() the tile read "not in your collection", zero copies. Same
     // symptom as the guard test below: a real, intermittent app bug, not a test bug.
-    const settled = page.waitForResponse((r) => r.request().method() === "POST" && r.url().includes("/api/forget-mine"));
+    const settled = cacheCleared(page);
     await addButton(page, c).click();
     await addCopyButton(page, c).click();
 
@@ -63,7 +68,7 @@ test.fixme("two quick presses on plus make two copies, not one and not three", a
 test("two presses make exactly two copies", async ({ page }) => {
     const c = card(11);
     await page.goto(setPage);
-    const settled = page.waitForResponse((r) => r.request().method() === "POST" && r.url().includes("/api/forget-mine"));
+    const settled = cacheCleared(page);
     await addButton(page, c).click();
     await addCopyButton(page, c).click();
 
@@ -71,10 +76,16 @@ test("two presses make exactly two copies", async ({ page }) => {
     await settled;
     await expect(setTile(page, c, "3 copies")).toHaveCount(0);
 
+    // use-copy-steps.ts's outer loop can send /api/forget-mine a second time if a press lands
+    // while the first call is in flight (the do/while re-checks want.current !== have after the
+    // await); `settled` above only resolves on the first such call, so a fresh page's read is
+    // retried until it settles rather than trusted on the first try.
     const other = await page.context().newPage();
-    await other.goto(`/dashboard/cards?q=${encodeURIComponent(c.name)}`);
-    await expect(collectionTile(other, c)).toHaveCount(1);
-    await expect(collectionTile(other, c)).toContainText("You hold ×2");
+    await expect(async () => {
+        await other.goto(`/dashboard/cards?q=${encodeURIComponent(c.name)}`);
+        await expect(collectionTile(other, c)).toHaveCount(1);
+        await expect(collectionTile(other, c)).toContainText("You hold ×2");
+    }).toPass({ timeout: 15000 });
     await other.close();
 });
 
@@ -114,8 +125,32 @@ test("removing a card and putting it back leaves it in the collection everywhere
     await expect(page.getByText(`${c.name} is out of your collection`)).toBeVisible();
     await expect(setTile(page, c, "not in your collection")).toBeVisible();
 
+    // "Put back" calls restoreCard(removed) with no options, so `reread` defaults to true and the
+    // action clears the cache itself (forgetMine()) before answering; there is no toast for this
+    // write and the tile's own state flips optimistically, same as every other write here. The
+    // POST is restoreCard's own Server Action call, matched by its argument shape (a single object
+    // with the removed card's fields) rather than by URL, since every write on this page posts to
+    // the same set page address with a next-action header.
+    const isRestoreWrite = (body: string | null) => {
+        if (!body) return false;
+        try {
+            const args: unknown = JSON.parse(body);
+            const first: unknown = Array.isArray(args) ? args[0] : undefined;
+            return (
+                typeof first === "object" &&
+                first !== null &&
+                "setName" in first &&
+                "owned" in first &&
+                typeof (first as { owned: unknown }).owned === "boolean"
+            );
+        } catch {
+            return false;
+        }
+    };
+    const restored = page.waitForResponse((r) => r.request().method() === "POST" && isRestoreWrite(r.request().postData()) && r.ok());
     await page.getByRole("button", { name: "Put back" }).click();
     await expect(setTile(page, c, "in your collection")).toBeVisible();
+    await restored;
 
     await page.reload();
     await expect(setTile(page, c, "in your collection")).toBeVisible();
@@ -158,7 +193,7 @@ test("the star and the Favorites list agree, on and off", async ({ page }) => {
             return false;
         }
     };
-    const starWrite = page.waitForResponse((r) => r.request().method() === "POST" && isFavoriteWrite(r.request().postData()));
+    const starWrite = page.waitForResponse((r) => r.request().method() === "POST" && isFavoriteWrite(r.request().postData()) && r.ok());
     await star.click();
     await expect(star).toHaveAttribute("aria-pressed", "true");
     await starWrite;
@@ -169,12 +204,17 @@ test("the star and the Favorites list agree, on and off", async ({ page }) => {
     await collectionTile(page, c).click();
     const again = page.getByRole("dialog", { name: c.name }).getByRole("button", { name: "Favorite" });
     await expect(again).toHaveAttribute("aria-pressed", "true");
-    const unstarWrite = page.waitForResponse((r) => r.request().method() === "POST" && isFavoriteWrite(r.request().postData()));
+    const unstarWrite = page.waitForResponse((r) => r.request().method() === "POST" && isFavoriteWrite(r.request().postData()) && r.ok());
     await again.click();
     await expect(again).toHaveAttribute("aria-pressed", "false");
     await unstarWrite;
 
     await page.reload();
+    // toHaveCount(0) alone would pass just as well while the list's Suspense fallback is still
+    // showing, before it has drawn at all; the search that finds nothing renders its own "No cards
+    // found" heading (folder-body.tsx's noHits), which only appears once the read has actually
+    // resolved, so that is checked first.
+    await expect(page.getByRole("heading", { name: "No cards found" })).toBeVisible();
     await expect(collectionTile(page, c)).toHaveCount(0);
 });
 
@@ -189,6 +229,9 @@ test("a wished card is on the wishlist and not in the collection", async ({ page
     await page.goto(`/dashboard/wishlist?q=${encodeURIComponent(c.name)}`);
     await expect(collectionTile(page, c)).toHaveCount(1);
     await page.goto(`/dashboard/cards?q=${encodeURIComponent(c.name)}`);
+    // Same reasoning as the star test above: the search-finds-nothing heading proves the list has
+    // drawn before the zero count is trusted.
+    await expect(page.getByRole("heading", { name: "No cards found" })).toBeVisible();
     await expect(collectionTile(page, c)).toHaveCount(0);
     expect(await ownedCount(page)).toBe(before);
 });

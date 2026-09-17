@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { SET_ID, addButton, card, setTile } from "./support.ts";
+import { SET_ID, addButton, cacheCleared, card, setTile } from "./support.ts";
 
 const cards = [card(7), card(8), card(9)];
 
@@ -13,7 +13,7 @@ test.beforeAll(async ({ browser }) => {
         // cache clear is POST /api/forget-mine (use-copy-steps.ts's forgetMineQuietly()), the same
         // predicate writes.spec.ts and cache.spec.ts already use for this tile. A reload or a
         // second page reading the list right after beforeAll would otherwise risk a stale cache.
-        const settled = page.waitForResponse((r) => r.request().method() === "POST" && r.url().includes("/api/forget-mine"));
+        const settled = cacheCleared(page);
         await addButton(page, c).click();
         await expect(setTile(page, c, "in your collection")).toBeVisible();
         await settled;
