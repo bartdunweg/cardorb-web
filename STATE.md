@@ -38,7 +38,7 @@ as an add, and list state now covers a rarity filter chosen and cleared in the F
 trimmed cards per person (`getDexCards`, logs its entry size) and Home starts its reads together.
 Folder and collection identifiers are Binder in code (#688; wire names, routes and cache keys kept).
 The value chart drew a smoothed line that rose on days the value fell; it draws the real readings
-now, thinned by min and max per span (#690). Motion: shared duration tokens, `pressable` owns its
+now, every one of them, so the hover dot sits on the line (#690, then unthinned). Motion: shared duration tokens, `pressable` owns its
 transition list (a `transition-colors` beside it had killed the press scale), the palette opens
 without animation on desktop, the sidebar folds instantly, tiles fade out at 0, only the first
 page staggers (#691, #692, #698). Fixes: a scroll batch during a list re-read, the re-read in one

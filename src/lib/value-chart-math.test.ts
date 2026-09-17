@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { areaPath, fullRange, linePath, nearestIndex, pointsFor, thinReadings } from "./value-chart-math";
+import { areaPath, fullRange, linePath, nearestIndex, pointsFor } from "./value-chart-math";
 
 const frame = { width: 100, height: 60, top: 10, right: 0, bottom: 10, left: 0 };
 
@@ -64,59 +64,29 @@ describe("readings placed by time", () => {
     });
 });
 
-describe("thinReadings", () => {
-    const day = (d: number) => Date.UTC(2026, 0, d);
-    const times = (n: number) => Array.from({ length: n }, (_, i) => day(i + 1));
-
+describe("the line through every reading", () => {
     // Bart, 2026-09-17: 09-13 fell 29 and the softened line rose 25 there.
-    it("draws the readings themselves, so a day that fell goes down", () => {
+    it("draws a day that fell as falling", () => {
         const values = [40172, 40182, 40153, 40302];
         const [yMin, yMax] = fullRange(Math.min(...values), Math.max(...values));
         const points = pointsFor(values, frame, yMin, yMax);
-        const drawn = thinReadings(times(4), values, 40).map((i) => points[i]);
-        expect(drawn.map((p) => p.index)).toEqual([0, 1, 2, 3]);
         // Down on the screen is a larger y.
-        expect(drawn[2].y).toBeGreaterThan(drawn[1].y);
-        expect(drawn[0].y).toBeGreaterThan(drawn[1].y);
-        expect(drawn[3].y).toBeLessThan(drawn[2].y);
-    });
-
-    it("keeps every reading while there are no more than asked", () => {
-        expect(thinReadings(times(12), Array(12).fill(1), 12)).toHaveLength(12);
-        expect(thinReadings([day(1), day(2)], [5, 7], 12)).toEqual([0, 1]);
-    });
-
-    it("thins by keeping the first, the last, and each span's lowest and highest, in time order", () => {
-        const values = Array.from({ length: 180 }, (_, i) => 100 + (i % 7));
-        values[90] = 40; // a dip one day long
-        values[140] = 400; // a peak one day long
-        const t = times(180);
-        const target = 22;
-        const kept = thinReadings(t, values, target);
-        expect(kept[0]).toBe(0);
-        expect(kept.at(-1)).toBe(179);
-        expect(kept.includes(90) && kept.includes(140)).toBe(true);
-        expect(kept.length).toBeLessThanOrEqual(target);
-        expect(kept.every((k, i) => i === 0 || k > kept[i - 1])).toBe(true);
-        // Every kept reading is a real one, and each span's lowest and highest are among them.
-        const spans = Math.floor((target - 2) / 2);
-        const width = (t[179] - t[0]) / spans;
-        for (let k = 0; k < spans; k++) {
-            const inSpan = t.map((_, i) => i).filter((i) => i > 0 && i < 179 && Math.min(spans - 1, Math.floor((t[i] - t[0]) / width)) === k);
-            const lo = Math.min(...inSpan.map((i) => values[i]));
-            const hi = Math.max(...inSpan.map((i) => values[i]));
-            const keptInSpan = kept.filter((i) => inSpan.includes(i)).map((i) => values[i]);
-            expect(keptInSpan).toContain(lo);
-            expect(keptInSpan).toContain(hi);
-        }
+        expect(points[2].y).toBeGreaterThan(points[1].y);
+        expect(points[0].y).toBeGreaterThan(points[1].y);
+        expect(points[3].y).toBeLessThan(points[2].y);
+        // The path ends each segment on the reading itself, so the dot sits on the line.
+        const ends = linePath(points)
+            .split(" C")
+            .slice(1)
+            .map((seg) => seg.split(" ").slice(-2).map(Number));
+        expect(ends).toEqual(points.slice(1).map((p) => [Number(p.x.toFixed(1)), Number(p.y.toFixed(1))]));
     });
 
     it("does not start rising before a step", () => {
         const values = [10, 10, 10, 10, 12];
         const points = pointsFor(values, frame, ...fullRange(10, 12));
-        const drawn = thinReadings(times(5), values, 40).map((i) => points[i]);
         const flat = points[0].y;
-        const d = linePath(drawn);
+        const d = linePath(points);
         // Every coordinate up to the last reading before the step sits at the flat height.
         const segments = d.split(" C").slice(1);
         for (const seg of segments.slice(0, 3)) {

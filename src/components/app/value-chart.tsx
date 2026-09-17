@@ -3,7 +3,7 @@
 import { type ReactNode, useCallback, useId, useRef, useState } from "react";
 import { BarChart01 } from "@untitledui/icons";
 import { formatCount, formatPrice } from "@/lib/format";
-import { type Frame, areaPath, fullRange, linePath, nearestIndex, pointsFor, thinReadings } from "@/lib/value-chart-math";
+import { type Frame, areaPath, fullRange, linePath, nearestIndex, pointsFor } from "@/lib/value-chart-math";
 import type { ValueSnapshot } from "@/lib/value-history";
 import { cx } from "@/utils/cx";
 
@@ -102,17 +102,11 @@ export function ValueChart({
     const values = snapshots.map((s) => s.value);
     const [yMin, yMax] = fullRange(Math.min(...values), Math.max(...values));
     const days = snapshots.map((s) => s.date);
-    // Where each reading is, for the hover and the dot; the line goes through the readings themselves
-    // (thinReadings): all of them, or about one per 8 px (between 12 and 60) keeping each span's
-    // lowest and highest, so dot, line and tooltip say the same thing.
+    // Where each reading is. The line, the hover dot and the tooltip all use these same points, every
+    // reading and never a thinned subset: a line through fewer readings let the dot float off it and
+    // could draw a day that fell as rising. The monotone curve cannot overshoot a reading, and a path
+    // through a few hundred points is cheap.
     const points = width > 0 ? pointsFor(values, frame, yMin, yMax, days) : [];
-    const drawn = points.length
-        ? thinReadings(
-              days.map((d) => Date.parse(`${d}T00:00:00Z`)),
-              values,
-              Math.max(12, Math.min(60, Math.round(width / 8))),
-          ).map((i) => points[i])
-        : [];
     const baseline = frame.height - frame.bottom;
     const first = snapshots[0];
     const last = snapshots[snapshots.length - 1];
@@ -235,8 +229,8 @@ export function ValueChart({
                         <g key={drawKey ?? `${first.date}/${last.date}`} className="chart-draw">
                             {/* One unbroken line through every stretch, readings or none (Bart, 2026-09-15: the
                                 dotted stretch said nothing a flat line does not). */}
-                            <path d={areaPath(drawn, baseline)} fill={`url(#${fadeId})`} className="text-fg-primary" />
-                            <path d={linePath(drawn)} className={strokeTone} strokeWidth={2} fill="none" strokeLinejoin="round" strokeLinecap="round" />
+                            <path d={areaPath(points, baseline)} fill={`url(#${fadeId})`} className="text-fg-primary" />
+                            <path d={linePath(points)} className={strokeTone} strokeWidth={2} fill="none" strokeLinejoin="round" strokeLinecap="round" />
                         </g>
 
                         {/* The highest figure over the line's top, the lowest under its foot, both at the left edge:
