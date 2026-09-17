@@ -316,6 +316,41 @@ describe("CardDetailSlideout: the star under rapid taps", () => {
         expect(router.refresh).toHaveBeenCalledTimes(1);
     });
 
+    /* What takes an unstarred card off the Favorites list at once: the list behind is read again
+       after a write, and until that read lands, or where it never lands (a cache that has not caught
+       up answers the refresh with the page from before the write), the card sat there still starred.
+       Said on the press, not on the answer. */
+    it("says the star changed on the press, before the write has landed", async () => {
+        const writes = favorites();
+        const onStarChanged = vi.fn();
+        await open(makeCard({ id: "p1", is_favorite: true }), { onStarChanged });
+
+        await tap(star());
+        expect(onStarChanged).toHaveBeenCalledTimes(1);
+        expect(onStarChanged).toHaveBeenCalledWith("p1", false);
+        expect(writes.calls).toHaveLength(1);
+
+        await act(async () => writes.calls[0]!.resolve({ ok: true }));
+        await act(flush);
+        expect(onStarChanged).toHaveBeenCalledTimes(1);
+    });
+
+    it("says the star is back when the write is refused, so the card returns to the list", async () => {
+        const writes = favorites();
+        const onStarChanged = vi.fn();
+        await open(makeCard({ id: "p1", is_favorite: true }), { onStarChanged });
+
+        await tap(star());
+        await act(async () => writes.calls[0]!.resolve({ ok: false, error: "No" }));
+        await act(flush);
+
+        expect(onStarChanged.mock.calls).toEqual([
+            ["p1", false],
+            ["p1", true],
+        ]);
+        expect(star()).toHaveAttribute("aria-pressed", "true");
+    });
+
     it("puts the star back when the last tap is refused", async () => {
         const writes = favorites();
         await open(makeCard({ id: "p1" }));

@@ -6,10 +6,20 @@ import { notify } from "@/components/app/toast";
 import type { Card, PublicCard } from "@/lib/cards";
 import { forgetMineQuietly } from "@/lib/forget-mine";
 
-type Params = { card: Card | PublicCard | null; mine: Card | null; scheduleRefresh: () => void };
+type Params = {
+    card: Card | PublicCard | null;
+    mine: Card | null;
+    scheduleRefresh: () => void;
+    /**
+     * The star as the sheet now shows it, said on the press and again if the save fails and it goes
+     * back. A list that stands or falls by the star (Favorites) takes the row off itself here,
+     * rather than waiting for the page to be read again.
+     */
+    onStarChanged?: (cardId: string, starred: boolean) => void;
+};
 
 /** The card sheet's star: filled on the press, its saves chained behind it. */
-export function useSheetStar({ card, mine, scheduleRefresh }: Params) {
+export function useSheetStar({ card, mine, scheduleRefresh, onStarChanged }: Params) {
     /*
      * The star, kept here so a tap answers at once: it fills or empties on the press and the save
      * runs behind it, with no spinner, because a favourite is a mark and not a task to wait for.
@@ -34,10 +44,12 @@ export function useSheetStar({ card, mine, scheduleRefresh }: Params) {
         const tap = ++starTaps.current;
         if (!starSaved.current.has(id)) starSaved.current.set(id, isStarred);
         setStarred({ id, on: next });
+        onStarChanged?.(id, next);
         const putBack = (error?: string) => {
             const saved = starSaved.current.get(id) ?? !next;
             starSaved.current.delete(id);
             setStarred({ id, on: saved });
+            onStarChanged?.(id, saved);
             const title = saved ? "That card is still a Favorite" : "That card is not a Favorite";
             if (error === undefined) notify.failed(title);
             else notify.failed(title, { description: error });
