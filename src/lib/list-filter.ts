@@ -44,9 +44,14 @@ const filterShape: { [K in keyof Required<Omit<CardFilter, "facets">>]: z.ZodTyp
     duplicates: z.boolean().optional(),
 };
 
+/** The most cards one read of a list may ask for: the API's ceiling for an owner. */
+export const MORE_CEILING = 2000;
+
 export const loadMoreInput = z.object({
     ...filterShape,
     offset: z.number().int().min(0).max(100_000),
+    /** A batch is 48; the span a list reads again after a refresh asks for more at once, up to the API's ceiling of 2,000. */
+    limit: z.number().int().min(1).max(MORE_CEILING).optional(),
 });
 
 /**

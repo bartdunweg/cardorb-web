@@ -19,9 +19,9 @@ import { loadMoreInput, warmListInput } from "@/lib/list-filter";
 export async function loadMoreCards(input: unknown): Promise<{ cards: Card[]; total: number }> {
     const parsed = loadMoreInput.safeParse(input);
     if (!parsed.success) return { cards: [], total: 0 };
-    const { offset, ...filter } = parsed.data;
+    const { offset, limit = LIST_BATCH, ...filter } = parsed.data;
     // A batch on scroll reads the cards alone; the facets came with the first page.
-    const { cards, total } = await getMyCards({ ...filter, facets: false, limit: LIST_BATCH, offset });
+    const { cards, total } = await getMyCards({ ...filter, facets: false, limit, offset });
     return { cards, total };
 }
 
@@ -60,7 +60,7 @@ export async function warmList(input: unknown): Promise<void> {
  * Null when it cannot say, and the button falls back to "Show results".
  */
 export async function countCards(input: unknown): Promise<{ total: number; counts: FilterCounts | null } | null> {
-    const parsed = loadMoreInput.omit({ offset: true }).safeParse(input);
+    const parsed = loadMoreInput.omit({ offset: true, limit: true }).safeParse(input);
     if (!parsed.success) return null;
     try {
         // The cards the list will show, as a narrowed page counts them under its title ("25 matches"),

@@ -9,6 +9,7 @@ import { WishHeartButton } from "@/components/app/wish-heart-button";
 import { Button } from "@/components/base/buttons/button";
 import type { Card, CardFilter, CardList } from "@/lib/cards";
 import type { CardsSize, CardsViewMode } from "@/lib/cards-view";
+import { MORE_CEILING } from "@/lib/list-filter";
 import { loadMoreCards } from "@/lib/reads";
 
 /**
@@ -78,20 +79,30 @@ export function CardsList({
        the grid "refreshed". What was appended stays on screen now, less anything the new first page
        already holds, and the span is read again behind it (`recheck`) so a card removed or changed
        down there follows too. */
+    const [pending, startTransition] = useTransition();
+    const [rechecking, startRecheck] = useTransition();
     const [seed, setSeed] = useState(first.cards);
     const [recheck, setRecheck] = useState<Card[] | null>(null);
     if (seed !== first.cards) {
         setSeed(first.cards);
         const onFirst = new Set(first.cards.map((c) => c.id));
         setAppended((have) => have.filter((c) => !onFirst.has(c.id)));
-        if (appended.length) setRecheck(first.cards);
+        /* A batch still on its way counts as appended: it was asked for at an offset into the old
+           page, so the span is read again once it lands rather than trusted as it comes. */
+        if (appended.length || pending) setRecheck(first.cards);
         else {
             setRead(first.cards.length);
             setEnd(false);
         }
     }
-    // Kept by identity while neither part changes, so the grid's memoised tiles are left alone.
-    const cards = useMemo(() => (appended.length ? [...first.cards, ...appended] : first.cards), [first.cards, appended]);
+    /* Kept by identity while neither part changes, so the grid's memoised tiles are left alone. A card
+       the first page holds is not drawn again from the appended span: a batch that lands between a new
+       first page and its re-read was cut against the old one, and one card twice is one key twice. */
+    const cards = useMemo(() => {
+        if (!appended.length) return first.cards;
+        const onFirst = new Set(first.cards.map((c) => c.id));
+        return [...first.cards, ...appended.filter((c) => !onFirst.has(c.id))];
+    }, [first.cards, appended]);
     const groups = useMemo(() => setGroups(cards, groupedBySet), [cards, groupedBySet]);
     const selectFromList = useCallback((card: Card) => onSelect(card, cards), [onSelect, cards]);
     /* The facts of every card on the list, a page per request as the pages arrive, so a sheet opened
@@ -105,36 +116,47 @@ export function CardsList({
             "ja",
         );
     }, [first.cards, appended]);
-    const setCards = (next: (have: Card[]) => Card[]) => setAppended((have) => next([...first.cards, ...have]).slice(first.cards.length));
     const [failed, setFailed] = useState(false);
-    const [pending, startTransition] = useTransition();
-    const [rechecking, startRecheck] = useTransition();
     const sentinel = useRef<HTMLDivElement>(null);
     const more = !end && read < first.total;
+    /* The button spins while the span is read again too, where a press would otherwise do nothing
+       without a word. Only its spinner: the region below still says the count, since no card is being
+       added to the list while it is read again. */
+    const busy = pending || rechecking || recheck !== null;
     // Once the list has run out, what it holds is the count, whatever the first page said.
     const total = end ? cards.length : first.total;
 
     /* The appended span read again after the first page was, as far as the reader had scrolled. Its
        own transition, so the button at the end does not spin and a screen reader is not told more
        cards are loading; a batch on scroll waits for it, since both write the same offsets. A read
-       that fails keeps what is on screen. */
+       that fails keeps what is on screen.
+       And it waits for a batch already on its way: `upTo` is taken once that batch has counted, so the
+       span read again covers it. Taken before, the batch landed first and the re-read, answering
+       for the shorter span, threw away the cards it had just appended. */
     useEffect(() => {
-        if (!recheck) return;
+        if (!recheck || pending) return;
         let live = true;
         const upTo = read;
         startRecheck(async () => {
+            /* One read for the whole span, not a batch of 48 after another: two thousand cards down that
+               was forty requests in a row, with scrolling and Show more waiting on all of them. Past the
+               API's ceiling the span goes in reads of that size, side by side. */
             const got: Card[] = [];
             let offset = recheck.length;
             let done = false;
             try {
-                while (offset < upTo) {
-                    const batch = await loadMoreCards({ ...filter, offset });
+                const starts: number[] = [];
+                for (let at = recheck.length; at < upTo; at += MORE_CEILING) starts.push(at);
+                const answers = await Promise.all(starts.map((at) => loadMoreCards({ ...filter, offset: at, limit: Math.min(MORE_CEILING, upTo - at) })));
+                for (const [i, batch] of answers.entries()) {
                     got.push(...batch.cards);
                     offset += batch.cards.length;
                     if (batch.cards.length === 0 || offset >= batch.total) {
                         done = true;
                         break;
                     }
+                    // A read short of what it asked for leaves the reads after it at the wrong offsets; scrolling goes on from here.
+                    if (batch.cards.length < Math.min(MORE_CEILING, upTo - starts[i]!)) break;
                 }
             } catch {
                 if (live) setRecheck(null);
@@ -151,19 +173,21 @@ export function CardsList({
         return () => {
             live = false;
         };
-        // Once per first page: `read` and `filter` are read as they are when that page arrived.
+        // Once per first page, after any batch in flight: `read` and `filter` as they are then.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [recheck]);
+    }, [recheck, pending]);
 
     const loadMore = () => {
-        if (pending || rechecking || recheck) return;
+        if (busy) return;
         setFailed(false);
         startTransition(async () => {
             try {
                 const batch = await loadMoreCards({ ...filter, offset: read });
                 // A card added while the reader scrolled shifts the batches by one; a card seen
                 // twice would be one key twice, so a repeat is dropped rather than drawn again.
-                setCards((have) => {
+                // Against the appended span as it is when the batch lands; a card on the first page is left
+                // out where the list is drawn, so a first page that changed meanwhile is not closed over here.
+                setAppended((have) => {
                     const seen = new Set(have.map((c) => c.id));
                     return [...have, ...batch.cards.filter((c) => !seen.has(c.id))];
                 });
@@ -295,8 +319,8 @@ export function CardsList({
                                 color={failed ? "secondary" : "tertiary"}
                                 size="sm"
                                 onClick={loadMore}
-                                aria-disabled={pending || undefined}
-                                isLoading={pending}
+                                aria-disabled={busy || undefined}
+                                isLoading={busy}
                                 showTextWhileLoading
                             >
                                 {pending ? "Loading…" : failed ? "Try again" : "Show more"}
