@@ -50,6 +50,21 @@ test("probe: reload right after two presses, fifteen rounds", async ({ page }) =
                     .innerText()
                     .catch(() => "?"));
             said = `WRONG: ${said}`;
+            // Where the old state lives: the server's drawing now, and the store's rows now.
+            const htmlState = async () => {
+                const html = await (await page.request.get(setPage)).text();
+                const m = html.match(new RegExp(`${literal(c.name)} #\\S+?, ([a-z0-9 ]+?)"`));
+                return m ? m[1] : "no label in html";
+            };
+            said += ` | server html now: ${await htmlState()}`;
+            const rows = await (await page.request.get(`/api/read/set-rows?set=${encodeURIComponent("Scarlet & Violet")}`)).text();
+            said += ` | set-rows now mentions ${c.name}: ${rows.includes(c.name)} (${rows.length} chars)`;
+            await page.waitForTimeout(3000);
+            said += ` | server html after 3 s: ${await htmlState()}`;
+            said += ` | tile after 3 s: ${await tile
+                .first()
+                .getAttribute("aria-label")
+                .catch(() => "?")}`;
         }
         results.push(`round ${round}: ${said}`);
         events.push(`round ${round} ${said}`);
