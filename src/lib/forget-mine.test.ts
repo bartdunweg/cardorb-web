@@ -20,8 +20,9 @@ describe("forgetMineQuietly", () => {
         return heard.mock.calls.length;
     };
 
-    it("tells the sidebar after a card, a binder or everything", async () => {
+    it("tells the sidebar after a card, a star, a binder or everything", async () => {
         expect(await said("cards")).toBe(1);
+        expect(await said("favorite")).toBe(1);
         expect(await said("binders")).toBe(1);
         expect(await said("all")).toBe(1);
     });
@@ -33,7 +34,7 @@ describe("forgetMineQuietly", () => {
 
     it("has decided for every write there is", () => {
         // A write added to cache-scopes.ts fails this, so the choice for it is made rather than defaulted.
-        expect([...FORGET_WRITES].sort()).toEqual(["all", "binders", "cards", "dexFace", "profile"]);
+        expect([...FORGET_WRITES].sort()).toEqual(["all", "binders", "cards", "dexFace", "favorite", "profile"]);
     });
 
     it("still forgets when it says nothing", async () => {
