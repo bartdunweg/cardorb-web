@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { SET_ID, addButton, card, collectionTile, ownedCount, removeButton, setTile, wishButton } from "./support.ts";
+import { SET_ID, addButton, addCopyButton, card, collectionTile, ownedCount, removeButton, setTile, wishButton } from "./support.ts";
 
 const setPage = `/dashboard/sets/${SET_ID}`;
 
@@ -24,16 +24,12 @@ test("adding a card shows on the tile, on Collection and on Home, before and aft
 test("two quick presses on plus make two copies, not one and not three", async ({ page }) => {
     const c = card(1);
     await page.goto(setPage);
-    const button = addButton(page, c);
-    await button.scrollIntoViewIfNeeded();
-    const box = await button.boundingBox();
-    if (!box) throw new Error("plus button has no box");
-    const viewport = page.viewportSize();
-    if (!viewport || box.y < 0 || box.y + box.height > viewport.height || box.x < 0 || box.x + box.width > viewport.width) {
-        throw new Error(`plus button is outside the viewport after scrollIntoViewIfNeeded: box=${JSON.stringify(box)}, viewport=${JSON.stringify(viewport)}`);
-    }
-    const x = box.x + box.width / 2;
-    const y = box.y + box.height / 2;
+    // Two presses a person makes: the add button, then the "Add a copy of" button that replaces
+    // it once the tile redraws. use-copy-steps.ts reads press(quantity) off the tile's last
+    // render, so two synthetic clicks under one frame apart both call press(1) before React
+    // redraws and count once; a person's two presses are never that close together, so clicking
+    // the button the redraw actually shows is what makes this test press the way a person does.
+    //
     // The tile shows the count under the finger and the store follows behind, one write at a
     // time, with a toast on the first copy only (use-copy-steps.ts): a second press that only
     // changes the quantity says nothing back. A reload right after the press can land before the
@@ -42,8 +38,8 @@ test("two quick presses on plus make two copies, not one and not three", async (
     // landed, so its own response is the signal a fresh read can trust. (Not networkidle: Speed
     // Insights keeps its own traffic going, so the network here is never truly idle.)
     const settled = page.waitForResponse((r) => r.request().method() === "POST" && r.url().includes("/api/forget-mine"));
-    await page.mouse.click(x, y);
-    await page.mouse.click(x, y);
+    await addButton(page, c).click();
+    await addCopyButton(page, c).click();
 
     await expect(setTile(page, c, "2 copies")).toBeVisible();
     await settled;
@@ -54,30 +50,23 @@ test("two quick presses on plus make two copies, not one and not three", async (
     await expect(collectionTile(page, c)).toHaveCount(1);
 });
 
-// A reload right after two presses is suspected to lose or hide the second copy:
-// set-card-tile.tsx calls addCard with reread: false, and use-copy-steps.ts chains the count
-// write and /api/forget-mine from the browser without a pending guard, an unguarded chain that
-// could let a reload race the second write. CI run 35193336653 (2026-09-17) failed before the
-// reload step instead: right after the two mouse clicks the tile read "not in your collection",
-// zero copies, because card 10 (Skiddo) sat below the fold of the 1280x720 viewport and
-// page.mouse.click() at a boundingBox() coordinate does not scroll, so neither click reached the
-// button. That was a test bug, not the app bug this test looks for. Now guarded with
-// scrollIntoViewIfNeeded() and a viewport check before reading the box, the test runs again.
+// This is a guard for the suspected race in set-card-tile.tsx / use-copy-steps.ts: addCard is
+// called with reread: false, and the count write and /api/forget-mine are chained from the
+// browser with no pending guard, so a reload right after two presses could in principle race
+// the second write and read one copy back instead of two.
+//
+// Two presses a person makes: the add button, then the "Add a copy of" button that replaces it
+// once the tile redraws, each click after the previous one's redraw. This is deliberate, not an
+// oversight: use-copy-steps.ts reads press(quantity) off the tile's last render, so two synthetic
+// clicks less than one frame apart both call press(1) before React redraws and count once. A
+// person's two presses are never that close together, so a sub-frame double click is not the bug
+// this test is for. There is no wait between the second click and the reload beyond the "2
+// copies" assertion already here: the reload should race whatever writes are still in flight.
 test("a reload right after two presses keeps both copies", async ({ page }) => {
     const c = card(10);
     await page.goto(setPage);
-    const button = addButton(page, c);
-    await button.scrollIntoViewIfNeeded();
-    const box = await button.boundingBox();
-    if (!box) throw new Error("plus button has no box");
-    const viewport = page.viewportSize();
-    if (!viewport || box.y < 0 || box.y + box.height > viewport.height || box.x < 0 || box.x + box.width > viewport.width) {
-        throw new Error(`plus button is outside the viewport after scrollIntoViewIfNeeded: box=${JSON.stringify(box)}, viewport=${JSON.stringify(viewport)}`);
-    }
-    const x = box.x + box.width / 2;
-    const y = box.y + box.height / 2;
-    await page.mouse.click(x, y);
-    await page.mouse.click(x, y);
+    await addButton(page, c).click();
+    await addCopyButton(page, c).click();
 
     await expect(setTile(page, c, "2 copies")).toBeVisible();
     await page.reload();
