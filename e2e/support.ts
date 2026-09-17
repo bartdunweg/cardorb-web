@@ -48,6 +48,14 @@ export const collectionTile = (page: Page, c: FixtureCard): Locator =>
  */
 export const cacheCleared = (page: Page) => page.waitForResponse((r) => r.request().method() === "POST" && r.url().includes("/api/forget-mine") && r.ok());
 
+/**
+ * Every press on the page has been written and its cache forgotten: `<html>` has lost the
+ * `data-unsent-writes` mark (unsent-writes.ts), which goes only once a tile's whole run of writes and
+ * its /api/forget-mine have answered. A reload before that races a write still in the air, which a
+ * person is asked about first ("Leave site?") and Playwright answers with Leave on its own.
+ */
+export const writesLanded = (page: Page) => expect(page.locator("html")).not.toHaveAttribute("data-unsent-writes", { timeout: 15000 });
+
 /** Home's Owned figure: all copies. A new account shows the welcome instead, which is zero. */
 export const ownedCount = async (page: Page): Promise<number> => {
     await page.goto("/dashboard");

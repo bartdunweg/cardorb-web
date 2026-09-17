@@ -1,5 +1,17 @@
 import { expect, test } from "@playwright/test";
-import { SET_ID, addButton, addCopyButton, cacheCleared, card, collectionTile, ownedCount, removeButton, setTile, wishButton } from "./support.ts";
+import {
+    SET_ID,
+    addButton,
+    addCopyButton,
+    cacheCleared,
+    card,
+    collectionTile,
+    ownedCount,
+    removeButton,
+    setTile,
+    wishButton,
+    writesLanded,
+} from "./support.ts";
 
 const setPage = `/dashboard/sets/${SET_ID}`;
 
@@ -39,19 +51,21 @@ test("two quick presses on plus make two copies, not one and not three", async (
     // time, with a toast on the first copy only (use-copy-steps.ts): a second press that only
     // changes the quantity says nothing back. A reload right after the press can land before the
     // two chained writes (add, then the count) have reached the server, and read one copy back
-    // instead of two. `forgetMineQuietly` (/api/forget-mine) is awaited only once both writes have
-    // landed, so its own response is the signal a fresh read can trust. (Not networkidle: Speed
-    // Insights keeps its own traffic going, so the network here is never truly idle.)
+    // instead of two, so the reload waits for `writesLanded`: the page's own mark that every press
+    // is written and its cache forgotten. Not the first /api/forget-mine answer: when the second
+    // press comes after the first write's run has ended, that answer belongs to the first press
+    // alone, and the second write was still in the air when the reload went (CI run 35232096294:
+    // forget-mine answered at +0 ms, the count's write left at +76 ms, the reload at +102 ms
+    // aborted it). (Not networkidle: Speed Insights keeps its own traffic going.)
     //
     // This caught a real bug (CI run 35196214137): the reload read "not in your collection" about
     // one round in three. /api/revalidate, called by the API after every write, expired the cache
     // with "max" and so undid the immediate expiry /api/forget-mine had just set; fixed in web#676.
-    const settled = cacheCleared(page);
     await addButton(page, c).click();
     await addCopyButton(page, c).click();
 
     await expect(setTile(page, c, "2 copies")).toBeVisible();
-    await settled;
+    await writesLanded(page);
     await page.reload();
     await expect(setTile(page, c, "2 copies")).toBeVisible();
 
@@ -89,18 +103,23 @@ test("two presses make exactly two copies", async ({ page }) => {
     await other.close();
 });
 
-// A reload right after two presses, racing whatever writes are still in flight. It read "not in
-// your collection" about one round in three (CI run 35195242573) until web#676: /api/revalidate's
-// "max" turned the cache's immediate expiry into stale-while-revalidate, so the reload was drawn
-// from before the writes.
+// A reload the moment two presses have landed. It read "not in your collection" about one round in
+// three (CI run 35195242573) until web#676: /api/revalidate's "max" turned the cache's immediate
+// expiry into stale-while-revalidate, so the reload was drawn from before the writes.
+//
+// The moment they have landed, not before. This reload used to race the writes still in the air:
+// in the failing runs the count's write left 20 to 30 ms before the reload, which aborted it, and
+// the reloaded page was read before that write reached the store (CI runs 35232851434 and
+// 35234584489, both one copy). That is not a promise the app makes: while a press is unsent the
+// page asks "Leave site?" (web#673), and a person who stays sees both copies after the reload,
+// which is what this checks. Playwright answers that question with Leave on its own.
 //
 // Two presses a person makes: the add button, then the "Add a copy of" button that replaces it
 // once the tile redraws, each click after the previous one's redraw. This is deliberate, not an
 // oversight: use-copy-steps.ts reads press(quantity) off the tile's last render, so two synthetic
 // clicks less than one frame apart both call press(1) before React redraws and count once. A
 // person's two presses are never that close together, so a sub-frame double click is not the bug
-// this test is for. There is no wait between the second click and the reload beyond the "2
-// copies" assertion already here: the reload should race whatever writes are still in flight.
+// this test is for.
 test("a reload right after two presses keeps both copies", async ({ page }) => {
     const c = card(10);
     await page.goto(setPage);
@@ -108,6 +127,7 @@ test("a reload right after two presses keeps both copies", async ({ page }) => {
     await addCopyButton(page, c).click();
 
     await expect(setTile(page, c, "2 copies")).toBeVisible();
+    await writesLanded(page);
     await page.reload();
     await expect(setTile(page, c, "2 copies")).toBeVisible();
 });
@@ -122,9 +142,11 @@ test("removing a card and putting it back leaves it in the collection everywhere
     await expect(page.getByText(`${c.name} is out of your collection`)).toBeVisible();
     await expect(setTile(page, c, "not in your collection")).toBeVisible();
 
-    // "Put back" calls restoreCard(removed) with no options, so `reread` defaults to true and the
-    // action clears the cache itself (forgetMine()) before answering; there is no toast for this
-    // write and the tile's own state flips optimistically, same as every other write here. The
+    // "Put back" on a set tile (quiet) calls restoreCard(removed, { reread: false }) and then
+    // /api/forget-mine and a refresh (use-copy-steps.ts putBack). The reload below needs only the
+    // restore itself: the API expires this person's cached reads through /api/revalidate before it
+    // answers the write. There is no toast for this write and the tile's own state flips
+    // optimistically, same as every other write here. The
     // POST is restoreCard's own Server Action call, matched by its argument shape (a single object
     // with the removed card's fields) rather than by URL, since every write on this page posts to
     // the same set page address with a next-action header.
@@ -231,4 +253,31 @@ test("a wished card is on the wishlist and not in the collection", async ({ page
     await expect(page.getByRole("heading", { name: "No cards found" })).toBeVisible();
     await expect(collectionTile(page, c)).toHaveCount(0);
     expect(await ownedCount(page)).toBe(before);
+});
+
+// A press that swaps the tile's buttons (the plus that adds a card, the minus that takes the last
+// copy) sends focus to the plus that replaces them. The held tile's row sits a line lower, under the
+// "×1", so on a tile at the bottom of the window the new plus is partly out of it, and a plain
+// focus() scrolled the page until the tile's buttons stood at the top of the window: right where a
+// toast comes in. In CI run 35234584489 the toast for the add arrived there as the test pressed the
+// minus, took the press, and "removing a card and putting it back" waited five seconds for a
+// removal nobody had sent (no remove request in the trace, the tile still at ×1). A person pressing
+// at the bottom of the window lost their place the same way.
+test("a press at the bottom of the window keeps the page where it is", async ({ page }) => {
+    // Tarountula #016: one of three Tarountulas, so named by its number; no other test holds it.
+    const add = page.getByRole("button", { name: "Add Tarountula #016 to your collection" });
+    const plus = page.getByRole("button", { name: "Add a copy of Tarountula #016" });
+    await page.goto(setPage);
+    await expect(add).toBeVisible();
+    // The button's bottom edge on the window's: all of it in view, so the click itself scrolls nothing.
+    await add.evaluate((button) => window.scrollBy(0, button.getBoundingClientRect().bottom - window.innerHeight));
+    await add.click();
+
+    await expect(plus).toBeFocused();
+    const box = await plus.boundingBox();
+    const height = await page.evaluate(() => window.innerHeight);
+    // Brought just far enough into view to show the focus, not carried to the top of the window.
+    expect(box && box.y + box.height).toBeGreaterThan(height * 0.75);
+    expect(box && box.y + box.height).toBeLessThanOrEqual(height);
+    await writesLanded(page);
 });
