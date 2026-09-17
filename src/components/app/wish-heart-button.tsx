@@ -7,6 +7,7 @@ import { removeCard, restoreCard } from "@/app/(app)/dashboard/cards/actions";
 import { TileIconButton } from "@/components/app/tile-icon-button";
 import { notify } from "@/components/app/toast";
 import { forgetMineQuietly } from "@/lib/forget-mine";
+import { forgetMineThenRefresh } from "@/lib/forget-then-refresh";
 
 /**
  * Ours: the heart under a wished card, filled on pink because the card is on the wishlist, and
@@ -46,7 +47,7 @@ export function WishHeartButton({ card, onGone }: { card: { id: string; name: st
                                       onUndo: () =>
                                           void restoreCard(removed, { reread: false }).then((r) => {
                                               if (!r.ok) return notify.failed("That did not go back", { description: r.error });
-                                              void forgetMineQuietly("cards").then(() => router.refresh());
+                                              void forgetMineThenRefresh("cards", router);
                                           }),
                                   },
                               }

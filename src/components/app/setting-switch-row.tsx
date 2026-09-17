@@ -6,7 +6,7 @@ import type { ActionResult } from "@/app/(app)/dashboard/settings/actions";
 import { notify } from "@/components/app/toast";
 import { Toggle } from "@/components/base/toggle/toggle";
 import type { ForgetWrite } from "@/lib/cache-scopes";
-import { forgetMineQuietly } from "@/lib/forget-mine";
+import { forgetMineThenRefresh } from "@/lib/forget-then-refresh";
 import { cx } from "@/utils/cx";
 
 /**
@@ -71,7 +71,7 @@ export function SettingSwitchRow({
             return;
         }
         // Whatever else reads the profile from the server (the Manage sheet, the account menu) gets the new one.
-        void forgetMineQuietly(forgets).then(() => router.refresh());
+        void forgetMineThenRefresh(forgets, router);
     };
 
     return (

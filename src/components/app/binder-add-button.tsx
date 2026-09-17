@@ -19,7 +19,7 @@ import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Input } from "@/components/base/input/input";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import { cardLine } from "@/lib/card-label";
-import { forgetMineQuietly } from "@/lib/forget-mine";
+import { forgetMineThenRefresh } from "@/lib/forget-then-refresh";
 import { searchMyCards } from "@/lib/reads";
 import { cx } from "@/utils/cx";
 
@@ -127,7 +127,7 @@ function OwnCardsPicker({ folder, close }: { folder: { id: string; name: string 
                     notify.failed(`Those cards were not added to ${folder.name}`, { description: res.error });
                     return;
                 }
-                void forgetMineQuietly("cards").then(() => router.refresh());
+                void forgetMineThenRefresh("cards", router);
             })
             .catch(() => notify.failed(`Those cards were not added to ${folder.name}`));
     };

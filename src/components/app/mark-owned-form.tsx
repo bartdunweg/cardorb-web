@@ -21,7 +21,7 @@ import { NativeSelect } from "@/components/base/select/select-native";
 import type { Card } from "@/lib/api-shapes";
 import { cardLabelFull } from "@/lib/card-label";
 import type { CopyEdits } from "@/lib/copies";
-import { forgetMineQuietly } from "@/lib/forget-mine";
+import { forgetMineThenRefresh } from "@/lib/forget-then-refresh";
 import { today } from "@/lib/format";
 import { WESTERN_LANGUAGES, languageOf } from "@/lib/languages";
 import { parsePrice } from "@/lib/price-input";
@@ -100,7 +100,7 @@ export function MarkOwnedForm({ card, folders, languages, facts, onSaved, close 
         // page the user is not on.
         notify.done(`${card.name} is in your collection now`);
         close();
-        void forgetMineQuietly("cards").then(() => router.refresh());
+        void forgetMineThenRefresh("cards", router);
     };
 
     // Label above a full-width field, at every width. Side by side was the old shape and it

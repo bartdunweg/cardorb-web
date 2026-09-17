@@ -9,7 +9,7 @@ import { notify } from "@/components/app/toast";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { Button } from "@/components/base/buttons/button";
 import { Toggle } from "@/components/base/toggle/toggle";
-import { forgetMineQuietly } from "@/lib/forget-mine";
+import { forgetMineThenRefresh } from "@/lib/forget-then-refresh";
 
 // A built-in list's settings, beside its title like a folder's: today one, whether the list shows
 // on the public profile. Saved on the profile, so the phone and the desktop agree. Only the icon,
@@ -53,7 +53,7 @@ export function ListSettingsDialog({
                     notify.failed(still, { description: res.error });
                     return;
                 }
-                void forgetMineQuietly("profile").then(() => router.refresh());
+                void forgetMineThenRefresh("profile", router);
             },
             () => {
                 setSaved((s) => (s === tap ? null : s));
