@@ -855,7 +855,7 @@ surface is invisible. The values are the `--elevation-*` variables in `theme.css
 tokens point at them because Tailwind inlines any shadow it can parse.
 
 Every edge is the same hairline. A control (a button, an input, a select, a search pill, a button
-group) and a tile lying on the page (a stat, a card, a set, a folder, the chart's box) take
+group) and a tile lying on the page (a stat, a card, a set, a binder, the chart's box) take
 `ring-1 ring-primary ring-inset` and no shadow: one crisp line, the same everywhere, on a page
 two shades off white (`bg-page`) that makes a white tile read as a thing lying on it. A surface
 that floats (a popover, a sheet, a dialog) takes a shadow from the scale and no ring. The kit's
