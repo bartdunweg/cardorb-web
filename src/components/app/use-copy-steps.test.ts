@@ -397,6 +397,86 @@ describe("useCopySteps: Undo and Put back during a press", () => {
     });
 });
 
+describe("useCopySteps: an Undo on the add that does not land", () => {
+    const undoAdd = () => {
+        const call = notifyMock.done.mock.calls.find(([t]) => t === "Pikachu is in your collection now");
+        return (call![1] as { undo: { onUndo: () => void } }).undo.onUndo;
+    };
+    const added = async () => {
+        const { copies, removals } = writes();
+        const adds = heldAction<[], Added>({ ok: false, error: "left over" });
+        const hook = mount({ held: 0, rowId: undefined, add: adds.fn });
+        act(() => hook.result.current.press(1));
+        await act(async () => adds.calls[0]!.resolve({ ok: true, id: "new-row" }));
+        await act(flush);
+        return { ...hook, copies, removals, adds };
+    };
+
+    it("puts the tile back on its row when the removal is refused, and the next plus writes to that row", async () => {
+        const { result, removals, copies, adds, onShown } = await added();
+
+        act(() => undoAdd()());
+        expect(result.current.held).toBe(0);
+        await act(async () => removals.calls[0]!.resolve({ ok: false, error: "No." }));
+        await act(flush);
+
+        expect(result.current.held).toBe(1);
+        expect(onShown).toHaveBeenLastCalledWith(0, 1);
+        expect(notifyMock.failed).toHaveBeenCalledWith("That did not go back", { description: "No." });
+        expect(notifyMock.done).not.toHaveBeenCalledWith("Undone");
+
+        act(() => result.current.press(2));
+        expect(adds.calls).toHaveLength(1);
+        expect(copies.calls[0]!.args.slice(0, 2)).toEqual(["new-row", 2]);
+    });
+
+    it("puts the tile back when the removal throws, and a minus removes that row", async () => {
+        const { result, removals } = await added();
+
+        act(() => undoAdd()());
+        await act(async () => removals.calls[0]!.reject(new Error("offline")));
+        await act(flush);
+
+        expect(result.current.held).toBe(1);
+        expect(notifyMock.failed).toHaveBeenCalledWith("That did not go back", { description: "Something went wrong. Try again." });
+        act(() => result.current.press(0));
+        expect(removals.calls[1]!.args[0]).toBe("new-row");
+    });
+
+    it("holds a plus pressed while the removal flies, then adds a fresh row once it has gone", async () => {
+        const { result, removals, copies, adds } = await added();
+
+        act(() => undoAdd()());
+        act(() => result.current.press(1));
+        expect(adds.calls).toHaveLength(1);
+        expect(copies.calls).toHaveLength(0);
+        await act(async () => removals.calls[0]!.resolve({ ok: true }));
+        await act(flush);
+
+        expect(adds.calls).toHaveLength(2);
+        expect(copies.calls).toHaveLength(0);
+        expect(result.current.held).toBe(1);
+    });
+
+    it("an older toast's Undo, after the row was taken off and put back, leaves the tile alone", async () => {
+        const { result, rerender, initial, removals, adds } = await added();
+
+        act(() => result.current.press(0));
+        await act(async () => removals.calls[0]!.resolve({ ok: true, card: makeRemoved() }));
+        await act(flush);
+        // Put back draws the page again with the row under a new id.
+        rerender({ ...initial, held: 1, rowId: "r-back", add: adds.fn });
+        expect(result.current.held).toBe(1);
+
+        act(() => undoAdd()());
+        await act(flush);
+
+        expect(result.current.held).toBe(1);
+        expect(removeCard).toHaveBeenCalledTimes(1);
+        expect(notifyMock.failed).toHaveBeenCalledWith("That can no longer be undone", expect.anything());
+    });
+});
+
 describe("useCopySteps: holding the page", () => {
     it("holds the page from the press until every write and the re-read have landed", async () => {
         const { copies } = writes();

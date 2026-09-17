@@ -13,6 +13,7 @@ import { styles } from "@/components/base/buttons/button-styles";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import type { BinderKind, BinderRule, PokedexSetting } from "@/lib/binder-rule";
 import type { Facets } from "@/lib/cards";
+import { orFailed } from "@/lib/write-outcome";
 import { cx } from "@/utils/cx";
 
 /**
@@ -37,9 +38,10 @@ export function BinderMenu({
     const [deleting, setDeleting] = useState(false);
     const del = async () => {
         setDeleting(true);
-        const res = await deleteBinder(binder.id);
-        // On success the list you land on is the answer. On failure the dialog just sits there
-        // with its button ready again, saying nothing.
+        // A throw (no signal, a deploy in between) reads like a refusal, or the button would spin
+        // for good. On success the list you land on is the answer; on failure the button is ready
+        // again and the toast says the binder is still there.
+        const res = await orFailed(deleteBinder(binder.id));
         if (res.ok) router.push("/dashboard/collections");
         else {
             setDeleting(false);

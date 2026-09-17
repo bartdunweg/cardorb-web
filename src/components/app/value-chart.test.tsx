@@ -99,6 +99,20 @@ describe("ValueChart", () => {
         expect(getByText(/Highest €300\.00 on Sep 10, 2026, lowest €90\.00 on Sep 11, 2026\./)).toBeTruthy();
     });
 
+    // The hover dot sits on a reading; a line through a thinned subset left it floating off the line.
+    it("draws the line through every reading, however many there are for the width", () => {
+        const readings = Array.from({ length: 300 }, (_, i) => ({
+            date: new Date(Date.UTC(2025, 0, 1 + i)).toISOString().slice(0, 10),
+            value: 100 + ((i * 37) % 23),
+            cards: 1,
+            priced: 1,
+            unpriced: 0,
+        }));
+        const { container } = render(<ValueChart snapshots={readings} countLabel={null} />);
+        const line = container.querySelector('path[fill="none"]')!;
+        expect(line.getAttribute("d")!.split(" C")).toHaveLength(300);
+    });
+
     it("writes one figure where the line never moves", () => {
         const { container } = render(<ValueChart snapshots={two.map((s) => ({ ...s, value: 2 }))} countLabel={null} />);
         expect(container.querySelectorAll("text[data-extreme]")).toHaveLength(1);

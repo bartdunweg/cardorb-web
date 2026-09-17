@@ -86,13 +86,8 @@ export function useLatestPress<V extends string | number | boolean>({
         onStored?.(held);
     };
 
-    const press = (value: V) => {
-        // A page drawn again since the last press, and not by this hook's own writes, is the truth to start from.
-        if (!flying.current && !pending && seen.current !== page) {
-            seen.current = page;
-            if (!pressed || pressed.on !== page) stored.current = { value: valueOnPage, id: idOnPage };
-        }
-        if (aim(value).flying) return;
+    /** One run: writes toward the value last pressed until the store holds it, then the settle. */
+    const run = () => {
         flying.current = true;
         // A press waiting on the write before it lives only in this page: a reload now would drop it.
         const release = holdPage();
@@ -130,5 +125,35 @@ export function useLatestPress<V extends string | number | boolean>({
         });
     };
 
-    return { value: shown.value, id: shown.id, error, press, aim, keep };
+    /** What the store holds, the value last pressed, and whether a write is in the air, as of now rather than as of a render. */
+    const current = () => ({ stored: stored.current, wanted: want.current, flying: flying.current });
+
+    /**
+     * A write made outside a run (an Undo), counted as the one in the air: a press while it flies
+     * moves the screen but sends nothing, and once `task` is done (having kept or put back what the
+     * store holds) the run goes on toward that press.
+     */
+    const aside = async (task: () => Promise<void>) => {
+        flying.current = true;
+        const release = holdPage();
+        try {
+            await task();
+        } finally {
+            flying.current = false;
+            release();
+            if (want.current !== stored.current.value) run();
+        }
+    };
+
+    const press = (value: V) => {
+        // A page drawn again since the last press, and not by this hook's own writes, is the truth to start from.
+        if (!flying.current && !pending && seen.current !== page) {
+            seen.current = page;
+            if (!pressed || pressed.on !== page) stored.current = { value: valueOnPage, id: idOnPage };
+        }
+        if (aim(value).flying) return;
+        run();
+    };
+
+    return { value: shown.value, id: shown.id, error, press, aim, keep, current, aside };
 }

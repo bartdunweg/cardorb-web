@@ -106,7 +106,7 @@ export const notifyMock = {
 export const toastMock = () => ({ notify: notifyMock, Toasts: () => null });
 
 /** The quiet cache drop, answered at once unless a test swaps the implementation. */
-export const forgetMine = vi.fn(async (_write?: string) => undefined);
+export const forgetMine = vi.fn<(write?: string) => Promise<undefined>>(async () => undefined);
 export const forgetMineMock = () => ({ forgetMineQuietly: forgetMine, CARDS_CHANGED: "cardorb:cards-changed" });
 
 /** Every export of the cards actions module, as a plain spy a test gives an implementation. */

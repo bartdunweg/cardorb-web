@@ -42,43 +42,6 @@ export function pointsFor(values: number[], frame: Frame, yMin: number, yMax: nu
 }
 
 /**
- * Which readings the line is drawn through: the readings themselves, never an average of them.
- *
- * Up to `target` readings are all drawn. Past that (a long period, a narrow phone), the stretch
- * between the first and the last reading is cut into equal spans of time, and each span keeps its
- * lowest and its highest reading, in the order they came. The first and the last are always kept,
- * so a real dip or peak is never erased and the line only passes through values that were read.
- *
- * The line used to be softened (each point a quarter of each neighbour and half itself, after
- * averaging per span). That drew a rise on days the value fell: 40,182 then 40,153 went up on the
- * line while the tooltip said down (Bart, 2026-09-17). The curve itself (linePath) stays smooth and
- * cannot overshoot, so the readings need no softening of their own.
- *
- * Returns the kept readings' indices, ascending.
- */
-export function thinReadings(times: number[], values: number[], target: number): number[] {
-    const n = values.length;
-    const all = values.map((_, i) => i);
-    if (n <= Math.max(2, target)) return all;
-    const spans = Math.max(1, Math.floor((target - 2) / 2));
-    const t0 = times[0];
-    const width = (times[n - 1] - t0) / spans;
-    const keep = new Set([0, n - 1]);
-    const low = new Array<number>(spans).fill(-1);
-    const high = new Array<number>(spans).fill(-1);
-    for (let i = 1; i < n - 1; i++) {
-        const k = width > 0 ? Math.min(spans - 1, Math.max(0, Math.floor((times[i] - t0) / width))) : Math.floor(((i - 1) / (n - 2)) * spans);
-        if (low[k] < 0 || values[i] < values[low[k]]) low[k] = i;
-        if (high[k] < 0 || values[i] > values[high[k]]) high[k] = i;
-    }
-    for (let k = 0; k < spans; k++) {
-        if (low[k] >= 0) keep.add(low[k]);
-        if (high[k] >= 0) keep.add(high[k]);
-    }
-    return [...keep].sort((x, y) => x - y);
-}
-
-/**
  * An SVG path through the points as a smooth line. Monotone cubic (Fritsch–Carlson) rather
  * than a Catmull-Rom: the curve never overshoots a reading, so a peak is the reading and not
  * a bulge past it. Two points are a straight segment.
