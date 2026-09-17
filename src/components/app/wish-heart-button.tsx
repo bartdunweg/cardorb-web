@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { removeCard, restoreCard } from "@/app/(app)/dashboard/cards/actions";
 import { TileIconButton } from "@/components/app/tile-icon-button";
 import { notify } from "@/components/app/toast";
-import { forgetMineQuietly } from "@/components/app/use-copy-steps";
+import { forgetMineQuietly } from "@/lib/forget-mine";
 
 /**
  * Ours: the heart under a wished card, filled on pink because the card is on the wishlist, and

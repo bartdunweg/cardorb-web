@@ -9,11 +9,11 @@ import { FolderDialog } from "@/components/app/folder-dialog";
 import { PrefetchRoutes } from "@/components/app/prefetch-routes";
 import { useRouteTarget } from "@/components/app/route-pending";
 import { type RailItem, SidebarRail, useBindersArrive } from "@/components/app/sidebar-rail";
-import { CARDS_CHANGED } from "@/components/app/use-copy-steps";
 import { NavButton } from "@/components/application/app-navigation/base-components/nav-button";
 import { NavItemBase } from "@/components/application/app-navigation/base-components/nav-item";
 import type { NavItemDividerType, NavItemType } from "@/components/application/app-navigation/config";
 import { SidebarNavigationSectionDividers } from "@/components/application/app-navigation/sidebar-navigation/sidebar-section-dividers";
+import { CARDS_CHANGED } from "@/lib/forget-mine";
 import { SIDEBAR_COOKIE } from "@/lib/sidebar-cookie";
 import { cx } from "@/utils/cx";
 

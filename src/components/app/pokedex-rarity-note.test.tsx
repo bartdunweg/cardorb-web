@@ -12,7 +12,7 @@ vi.mock("@/app/(app)/dashboard/collections/actions", () => ({
     updateCollection: (...args: unknown[]) => updateCollection(...args),
 }));
 const forget = vi.fn();
-vi.mock("@/components/app/use-copy-steps", () => ({ forgetMineQuietly: () => (forget(), Promise.resolve()) }));
+vi.mock("@/lib/forget-mine", () => ({ forgetMineQuietly: () => (forget(), Promise.resolve()) }));
 const refresh = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 const failed = vi.fn();

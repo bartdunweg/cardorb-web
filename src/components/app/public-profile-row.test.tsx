@@ -12,7 +12,7 @@ vi.mock("@/app/(app)/dashboard/settings/actions", () => ({
     setProfilePublic: (...args: unknown[]) => setProfilePublic(...args),
 }));
 const refresh = vi.fn();
-vi.mock("@/components/app/use-copy-steps", () => ({ forgetMineQuietly: () => Promise.resolve() }));
+vi.mock("@/lib/forget-mine", () => ({ forgetMineQuietly: () => Promise.resolve() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 const failed = vi.fn();
 vi.mock("@/components/app/toast", () => ({ notify: { failed: (...args: unknown[]) => failed(...args) } }));

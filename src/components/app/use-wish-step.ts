@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { removeCard } from "@/app/(app)/dashboard/cards/actions";
 import { notify } from "@/components/app/toast";
-import { forgetMineQuietly } from "@/components/app/use-copy-steps";
+import { forgetMineQuietly } from "@/lib/forget-mine";
 
 type Added = { ok: true; id?: string } | { ok: false; error: string };
 

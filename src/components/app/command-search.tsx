@@ -8,10 +8,10 @@ import { type CatalogueFilters, type PokemonCard, addCard } from "@/app/(app)/da
 import type { FilterOption } from "@/components/app/filter-chip";
 import { SearchTrigger } from "@/components/app/search-trigger";
 import { notify } from "@/components/app/toast";
-import { forgetMineQuietly } from "@/components/app/use-copy-steps";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import type { Card } from "@/lib/api-shapes";
 import { cardFromPokemonCard } from "@/lib/card-shapes";
+import { forgetMineQuietly } from "@/lib/forget-mine";
 import type { BrowseLanguage } from "@/lib/languages";
 import { listRows, listSetsShelf, searchPokemon } from "@/lib/reads";
 import { hitFromRows, takenHit } from "@/lib/search-hit";

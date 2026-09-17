@@ -9,7 +9,6 @@ import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { useCommandSearch } from "@/components/app/command-search";
 import { notify } from "@/components/app/toast";
-import { forgetMineQuietly } from "@/components/app/use-copy-steps";
 import { LoadingIndicator } from "@/components/application/loading-indicator/loading-indicator";
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { Button } from "@/components/base/buttons/button";
@@ -20,6 +19,7 @@ import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Input } from "@/components/base/input/input";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import { cardLine } from "@/lib/card-label";
+import { forgetMineQuietly } from "@/lib/forget-mine";
 import { searchMyCards } from "@/lib/reads";
 import { cx } from "@/utils/cx";
 

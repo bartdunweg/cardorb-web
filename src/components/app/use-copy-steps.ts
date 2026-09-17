@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { removeCard, rereadMine, restoreCard, setCopies } from "@/app/(app)/dashboard/cards/actions";
 import { notify } from "@/components/app/toast";
 import type { RemovedCard } from "@/lib/api-shapes";
-import type { ForgetWrite } from "@/lib/cache-scopes";
+import { forgetMineQuietly } from "@/lib/forget-mine";
 import { holdPage } from "@/lib/unsent-writes";
 
 type Added = { ok: true; id?: string } | { ok: false; error: string };
@@ -165,19 +165,3 @@ export function useCopySteps({
 
     return { held, press, error, buttons };
 }
-
-/**
- * The cache forgotten without the page drawn again (`/api/forget-mine`). Best effort: a list that
- * could not forget still shows the right count, and the cache holds the old one five minutes at most.
- *
- * `write` names what was written, so only what it changes goes (`cache-scopes.ts`); a caller that
- * names nothing forgets everything.
- */
-export const forgetMineQuietly = (write: ForgetWrite = "all") =>
-    fetch(`/api/forget-mine?write=${write}`, { method: "POST" }).then(
-        () => void window.dispatchEvent(new Event(CARDS_CHANGED)),
-        () => undefined,
-    );
-
-/** Said on the window once a quiet write's cache is gone, for what reads its own numbers again (the sidebar). */
-export const CARDS_CHANGED = "cardorb:cards-changed";

@@ -13,12 +13,12 @@ import { GRADERS, GRADES, gradeLabel, gradeUnder, gradesFor, splitGrade } from "
 import { LanguageSelect } from "@/components/app/language-select";
 import { SEGMENT_SELECTED } from "@/components/app/segment-selected";
 import { notify } from "@/components/app/toast";
-import { forgetMineQuietly } from "@/components/app/use-copy-steps";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { NativeSelect } from "@/components/base/select/select-native";
 import { type CopyEdits, type CopyGroup, copyLabel } from "@/lib/copies";
+import { forgetMineQuietly } from "@/lib/forget-mine";
 import { formatPrice } from "@/lib/format";
 import { languageOf } from "@/lib/languages";
 import { parsePrice } from "@/lib/price-input";

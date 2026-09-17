@@ -10,7 +10,7 @@ test.beforeAll(async ({ browser }) => {
     await page.goto(`/dashboard/sets/${SET_ID}`);
     for (const c of cards) {
         // Registered before the click: the set tile presses with quiet: true, so the write's own
-        // cache clear is POST /api/forget-mine (use-copy-steps.ts's forgetMineQuietly()), the same
+        // cache clear is POST /api/forget-mine (forget-mine.ts's forgetMineQuietly()), the same
         // predicate writes.spec.ts and cache.spec.ts already use for this tile. A reload or a
         // second page reading the list right after beforeAll would otherwise risk a stale cache.
         const settled = cacheCleared(page);

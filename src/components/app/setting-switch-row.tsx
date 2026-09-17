@@ -4,9 +4,9 @@ import { type FC, type ReactNode, useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ActionResult } from "@/app/(app)/dashboard/settings/actions";
 import { notify } from "@/components/app/toast";
-import { forgetMineQuietly } from "@/components/app/use-copy-steps";
 import { Toggle } from "@/components/base/toggle/toggle";
 import type { ForgetWrite } from "@/lib/cache-scopes";
+import { forgetMineQuietly } from "@/lib/forget-mine";
 import { cx } from "@/utils/cx";
 
 /**

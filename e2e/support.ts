@@ -41,7 +41,7 @@ export const collectionTile = (page: Page, c: FixtureCard): Locator =>
     page.getByRole("main").getByRole("button", { name: new RegExp(`^${literal(c.name)}\\b`) });
 
 /**
- * The set tile's own cache clear, POST /api/forget-mine (use-copy-steps.ts's forgetMineQuietly(),
+ * The set tile's own cache clear, POST /api/forget-mine (forget-mine.ts's forgetMineQuietly(),
  * fired once the quiet: true tile's writes have landed). A fresh read (a reload, a second page, a
  * visitor's page) that trusts the tile's own toast or optimistic state instead can race the
  * server; this is the response every such read waits for.
