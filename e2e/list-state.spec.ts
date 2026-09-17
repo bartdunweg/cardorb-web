@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { SET_ID, addButton, cacheCleared, card, setTile } from "./support.ts";
+import { SET_ID, addButton, cacheCleared, card, collectionTile, setTile } from "./support.ts";
 
 const cards = [card(7), card(8), card(9)];
 
@@ -91,6 +91,64 @@ test("a cleared search stays cleared after a reload, Back and a bare address", a
     // the list-memory cookie still remembers from before it was cleared above. Only a client
     // navigation (Sec-Fetch-Dest: empty) skips that redirect; this goto is a document load, so if
     // openAsLeft ever redirects a typed address again, this assertion fails.
+    await page.goto("/dashboard/cards");
+    await cleared();
+});
+
+// Rarities in hand once beforeAll above has run: card(5) (Cacturne, Uncommon, still owned since
+// cache.spec.ts's remove-and-restore) and card(9) (Vivillon, Uncommon) against card(7) and card(8)
+// (Scatterbug and Spewpa, both Common). Enough of a spread to prove a rarity chosen in the sheet
+// narrows the list and that the choice, not just the search field, survives a reload and Back.
+
+test("a rarity filter chosen in the Filters sheet survives a reload and Back", async ({ page }) => {
+    await page.goto("/dashboard/cards");
+    await expect(page.getByRole("heading", { name: "Collection" })).toBeVisible();
+
+    await page.getByRole("button", { name: /^Filters/ }).click();
+    const sheet = page.getByRole("dialog", { name: "Filters" });
+    await sheet.getByRole("row", { name: "Uncommon" }).click();
+    await sheet.getByRole("button", { name: /^Show/ }).click();
+    await expect(page).toHaveURL(/[?&]rarity=Uncommon/);
+
+    const holds = async () => {
+        await expect(page).toHaveURL(/[?&]rarity=Uncommon/);
+        await expect(collectionTile(page, card(9))).toBeVisible();
+        await expect(collectionTile(page, card(7))).toHaveCount(0);
+    };
+    await holds();
+
+    await page.reload();
+    await holds();
+
+    await page.goto("/dashboard");
+    await page.goBack();
+    await holds();
+});
+
+test("a filter cleared in the Filters sheet stays cleared after a reload, Back and a bare address", async ({ page }) => {
+    await page.goto("/dashboard/cards?rarity=Uncommon");
+    await expect(collectionTile(page, card(9))).toBeVisible();
+    await expect(collectionTile(page, card(7))).toHaveCount(0);
+
+    await page.getByRole("button", { name: "Clear all" }).click();
+    await expect(page).not.toHaveURL(/[?&]rarity=/);
+
+    const cleared = async () => {
+        await expect(collectionTile(page, card(7))).toBeVisible();
+        await expect(page).not.toHaveURL(/[?&]rarity=/);
+    };
+    await cleared();
+
+    await page.reload();
+    await cleared();
+
+    await page.goto("/dashboard");
+    await page.goBack();
+    await cleared();
+
+    // The #656 class, for a filter instead of a search: a document navigation to the bare address
+    // (Sec-Fetch-Dest: document) must not be redirected back to the rarity the list-memory cookie
+    // still remembers from before it was cleared above.
     await page.goto("/dashboard/cards");
     await cleared();
 });

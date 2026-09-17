@@ -23,14 +23,14 @@ Live: landing, Home, Collection, Browse, Binders, Favorites, wishlist, set pages
 command-palette search, Settings, public profile, and `/dashboard/design`, the design system,
 reachable only by typing the address (see `CLAUDE.md`).
 
-End-to-end smoke tests run on every pull request (job `e2e`), ten scenarios, fixture set from
+End-to-end smoke tests run on every pull request (job `e2e`), sixteen scenarios, fixture set from
 `scripts/e2e-fixture.sh` (the first 20 cards of sv01). The double-press tests caught a set page drawn from before a write
 (`/api/revalidate` used "max"); fixed in web#676 and both run again. The card sheet has its own six
 (`e2e/sheet.spec.ts`, cards 12 to 19 bar the three Tarountula): one copy more, a removal put back, an add
 from the sheet, a chosen printing, the previous and next arrows, and a sheet opened from Collection,
-each read in the sheet, on the tile and after a reload. Gaps left for later: scenario 6 (cache after a write) covers an add only, not a remove,
-and scenarios 8 and 10 (list state, the set page's own address) test search, sort and view state
-but never the set/rarity Filters sheet.
+each read in the sheet, on the tile and after a reload. The cache scenario now covers a remove as well
+as an add, and list state now covers a rarity filter chosen and cleared in the Filters sheet
+(reload, Back and a bare address), beside search, sort, view and the set page's own address.
 
 ## Last session
 
