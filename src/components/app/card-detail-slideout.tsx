@@ -345,7 +345,7 @@ export function CardDetailSlideout({
         void write.then(
             (res) => {
                 if (tap !== starTaps.current) return;
-                const forgotten = forgetMineQuietly("cards");
+                const forgotten = forgetMineQuietly("favorite");
                 if (res.ok) void forgotten.then(scheduleRefresh);
                 else {
                     setStarred({ id, on: !next });
@@ -354,7 +354,7 @@ export function CardDetailSlideout({
             },
             () => {
                 if (tap !== starTaps.current) return;
-                void forgetMineQuietly("cards");
+                void forgetMineQuietly("favorite");
                 setStarred({ id, on: !next });
                 notify.failed(next ? "That card is not a Favorite" : "That card is still a Favorite");
             },

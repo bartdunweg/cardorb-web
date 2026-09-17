@@ -10,7 +10,7 @@ import { forgetMineLater } from "@/lib/user-cache";
  * first batch and read every batch back in. Fetched from the tile, this answers the fetch and
  * nothing else, and the next screen you open reads fresh.
  *
- * `?write=` names what was written (`cards`, `binders`, `profile`, `all`), and only what that
+ * `?write=` names what was written (`cards`, `favorite`, `binders`, `profile`, `dexFace`, `all`), and only what that
  * changes is forgotten (`cache-scopes.ts`): a plus on a tile keeps the profile. No `write` is
  * `all`, as it was before writes were told apart; a name this route does not know is a 400.
  *
