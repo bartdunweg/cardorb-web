@@ -92,6 +92,10 @@ const FAMILY: Record<string, string> = {
     "black white rare": "rare secret",
     // 30th Celebration's Mewtwo ex 157/128 and Mew ex 158/128, a rarity symbol of their own.
     "futuristic rare": "rare secret",
+    // The R/G/B Mew of the same set, which print a red, green and blue roundel where a Holo Rare
+    // prints a star. Bulbapedia calls them secret cards, as it does the Futuristic rares
+    // (cardorb-api#553).
+    "rgb rare": "rare secret",
     crown: "rare secret",
     "three star": "rare secret",
     "radiant rare": "radiant rare",
