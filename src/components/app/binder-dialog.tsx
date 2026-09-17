@@ -25,7 +25,7 @@ export const BINDER_FORM_FRAME = "flex max-h-[85dvh] w-full max-w-md flex-col ga
  * first time a binder dialog opens: the sidebar carries New binder on every page, and few visits
  * press it. The trigger and the dialog are here from the start, so a press opens it at once with
  * its title, and focus goes in and back to the trigger on close as before. React's `lazy`, as
- * MarkOwnedDialog does it (#680), so the stand-in can carry the title. A chunk that fails to load
+ * MarkOwnedDialog does it, so the stand-in can carry the title. A chunk that fails to load
  * (a deploy since the page loaded, the network gone) says so in the dialog, with a retry.
  */
 const importForm = () => import("@/components/app/binder-form").then((m) => ({ default: m.BinderForm }));
@@ -89,7 +89,7 @@ function LoadedForm({ form, close }: { form: FormProps; close: () => void }) {
                 <div className={BINDER_FORM_FRAME}>
                     {title}
                     <p className="text-sm text-tertiary" role="alert">
-                        The form did not load.
+                        This form couldn&apos;t load. Check your connection and try again.
                     </p>
                     <div className="flex justify-end gap-2">
                         <Button color="secondary" onClick={close}>
