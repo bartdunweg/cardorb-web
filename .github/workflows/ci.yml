@@ -73,7 +73,7 @@ jobs:
                   done
 
             - run: ./scripts/e2e-stack.sh "$RUNNER_TEMP/api"
-            - run: pnpm e2e
+            - run: pnpm e2e e2e/probe-scroll.spec.ts
 
             - if: ${{ !success() }}
               uses: actions/upload-artifact@v4
