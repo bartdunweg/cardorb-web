@@ -107,8 +107,9 @@ test.beforeAll(async ({ browser }) => {
     await expect(page.getByText(`${BINDER} is in your Binders now`)).toBeVisible();
     await settled;
 
-    // The tile is a link whose accessible name starts with the binder's name and ends with its count.
-    const tile = page.getByRole("link", { name: new RegExp(`^${BINDER}\\b`) });
+    // The tile is a link whose accessible name starts with the binder's name and ends with its
+    // count. Inside main: the sidebar keeps a row per binder and carries the same name and address.
+    const tile = page.getByRole("main").getByRole("link", { name: new RegExp(`^${BINDER}\\b`) });
     await expect(tile).toBeVisible();
     binderPath = (await tile.getAttribute("href")) ?? "";
     expect(binderPath).toMatch(/^\/dashboard\/collections\/.+/);
