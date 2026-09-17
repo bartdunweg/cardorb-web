@@ -21,6 +21,7 @@ import { MarkOwnedDialog } from "@/components/app/mark-owned-dialog";
 import { editionChoices, openingChoice, pressedPrinting, printingChoices } from "@/components/app/printing-choices";
 import { SheetActionBar } from "@/components/app/sheet-action-bar";
 import { SheetBar } from "@/components/app/sheet-bar";
+import { type StepFrom, stepMotion } from "@/components/app/step-motion";
 import { MARK_ON } from "@/components/app/tile-icon-button";
 import { notify } from "@/components/app/toast";
 import { TypeIcon } from "@/components/app/type-icon";
@@ -439,16 +440,17 @@ export function CardDetailSlideout({
      * grade box, and a left arrow inside those belongs to the cursor.
      */
     /*
-     * Which way the list was stepped, kept for the art below: the next card slides in from the
-     * side its arrow sits on, the last one leaves through the other. Zero when the sheet opened
-     * on this card, so there is nothing to slide from.
+     * Which way the list was stepped and how, kept for the art below (`stepMotion`): after a chevron
+     * the next card slides in from the side its arrow sits on and the last one leaves through the
+     * other; after an arrow key it fades in place, and a held key's repeats draw it at once. Zero
+     * when the sheet opened on this card, so there is nothing to slide from.
      */
-    const stepDir = useRef<-1 | 0 | 1>(0);
+    const stepFrom = useRef<StepFrom>({ dir: 0, key: false, repeat: false });
     const step = useCallback(
-        (dir: -1 | 1) => {
+        (dir: -1 | 1, key?: { repeat: boolean }) => {
             const go = dir < 0 ? onPrev : onNext;
             if (!go) return;
-            stepDir.current = dir;
+            stepFrom.current = { dir, key: !!key, repeat: key?.repeat ?? false };
             go();
         },
         [onPrev, onNext],
@@ -473,8 +475,8 @@ export function CardDetailSlideout({
             // A second dialog over the sheet (Add a copy, Mark as owned, the palette) owns the keys:
             // stepping the card under an open form wrote the form's values to the next card's id.
             if (document.querySelectorAll("[role='dialog']").length > 1) return;
-            if (e.key === "ArrowLeft") step(-1);
-            if (e.key === "ArrowRight") step(1);
+            if (e.key === "ArrowLeft") step(-1, { repeat: e.repeat });
+            if (e.key === "ArrowRight") step(1, { repeat: e.repeat });
         };
         document.addEventListener("keydown", onKey);
         return () => document.removeEventListener("keydown", onKey);
@@ -729,7 +731,7 @@ export function CardDetailSlideout({
     const pressedImage = printing?.image ?? editionChoice?.image ?? null;
     const pick = (next: { printing?: string; edition?: string }) => {
         // A printing is not a step through the list: the new picture fades in where it is.
-        stepDir.current = 0;
+        stepFrom.current = { dir: 0, key: false, repeat: false };
         setPicked({ tcgId, printing: next.printing ?? printingKey, edition: next.edition ?? editionKey });
     };
     /*
@@ -795,10 +797,17 @@ export function CardDetailSlideout({
         fades.current.prev?.cancel();
         const el = layer.current;
         if (!el) return;
-        const easing = getComputedStyle(el).getPropertyValue("--ease-enter").trim() || "ease-out";
-        const dir = which === "scan" ? stepDir.current : 0;
-        const travel = dir !== 0 && !window.matchMedia("(prefers-reduced-motion: reduce)").matches ? dir * 12 : 0;
-        const duration = travel ? 250 : 200;
+        const from: StepFrom = which === "scan" ? stepFrom.current : { dir: 0, key: false, repeat: false };
+        const motion = stepMotion(from, window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+        // A held arrow key: the picture is simply there, and the one under it goes with it.
+        if (!motion) {
+            done?.();
+            return;
+        }
+        const tokens = getComputedStyle(el);
+        const easing = tokens.getPropertyValue("--ease-enter").trim() || "ease-out";
+        const travel = motion.travel;
+        const duration = parseFloat(tokens.getPropertyValue(`--duration-${motion.duration}`)) || (motion.duration === "instant" ? 100 : 200);
         const fade = el.animate(
             [
                 { opacity: 0, transform: `translateX(${travel}px)` },
