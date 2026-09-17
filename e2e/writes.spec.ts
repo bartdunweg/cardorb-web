@@ -24,8 +24,14 @@ test("adding a card shows on the tile, on Collection and on Home, before and aft
 test("two quick presses on plus make two copies, not one and not three", async ({ page }) => {
     const c = card(1);
     await page.goto(setPage);
-    const box = await addButton(page, c).boundingBox();
+    const button = addButton(page, c);
+    await button.scrollIntoViewIfNeeded();
+    const box = await button.boundingBox();
     if (!box) throw new Error("plus button has no box");
+    const viewport = page.viewportSize();
+    if (!viewport || box.y < 0 || box.y + box.height > viewport.height || box.x < 0 || box.x + box.width > viewport.width) {
+        throw new Error(`plus button is outside the viewport after scrollIntoViewIfNeeded: box=${JSON.stringify(box)}, viewport=${JSON.stringify(viewport)}`);
+    }
     const x = box.x + box.width / 2;
     const y = box.y + box.height / 2;
     // The tile shows the count under the finger and the store follows behind, one write at a
@@ -48,20 +54,26 @@ test("two quick presses on plus make two copies, not one and not three", async (
     await expect(collectionTile(page, c)).toHaveCount(1);
 });
 
-// A reload right after two presses was suspected to lose or hide the second copy:
+// A reload right after two presses is suspected to lose or hide the second copy:
 // set-card-tile.tsx calls addCard with reread: false, and use-copy-steps.ts chains the count
-// write and /api/forget-mine from the browser without a pending guard. On localhost it has not
-// reproduced. The test stays as a guard.
-// CI run 35193336653 (2026-09-17) failed before the reload step: right after the two mouse
-// clicks the tile read "Skiddo #011, not in your collection", zero copies registered, not the
-// second-copy-lost case this test was written for. Two clicks at a boundingBox() coordinate
-// taken once, before either click, can miss if the list reflows between them; left as fixme
-// until that is confirmed or ruled out.
-test.fixme("a reload right after two presses keeps both copies", async ({ page }) => {
+// write and /api/forget-mine from the browser without a pending guard, an unguarded chain that
+// could let a reload race the second write. CI run 35193336653 (2026-09-17) failed before the
+// reload step instead: right after the two mouse clicks the tile read "not in your collection",
+// zero copies, because card 10 (Skiddo) sat below the fold of the 1280x720 viewport and
+// page.mouse.click() at a boundingBox() coordinate does not scroll, so neither click reached the
+// button. That was a test bug, not the app bug this test looks for. Now guarded with
+// scrollIntoViewIfNeeded() and a viewport check before reading the box, the test runs again.
+test("a reload right after two presses keeps both copies", async ({ page }) => {
     const c = card(10);
     await page.goto(setPage);
-    const box = await addButton(page, c).boundingBox();
+    const button = addButton(page, c);
+    await button.scrollIntoViewIfNeeded();
+    const box = await button.boundingBox();
     if (!box) throw new Error("plus button has no box");
+    const viewport = page.viewportSize();
+    if (!viewport || box.y < 0 || box.y + box.height > viewport.height || box.x < 0 || box.x + box.width > viewport.width) {
+        throw new Error(`plus button is outside the viewport after scrollIntoViewIfNeeded: box=${JSON.stringify(box)}, viewport=${JSON.stringify(viewport)}`);
+    }
     const x = box.x + box.width / 2;
     const y = box.y + box.height / 2;
     await page.mouse.click(x, y);
