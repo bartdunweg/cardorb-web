@@ -20,7 +20,7 @@ import { CARD_FACTS_BATCH } from "@/lib/api-shapes";
 import { getBinderChoices } from "@/lib/binders";
 import { PERIODS } from "@/lib/chart-periods";
 import { type BrowseLanguage, isBrowseLanguage } from "@/lib/languages";
-import { loadMoreInput, titleScope } from "@/lib/list-filter";
+import { loadMoreInput, titleScope } from "@/lib/list-filter-schema";
 
 /**
  * The reads a screen makes after it is drawn: a card sheet's facts, price line, copies, binders and
