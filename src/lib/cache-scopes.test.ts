@@ -25,6 +25,10 @@ describe("forgetTags", () => {
         expect(forgetTags("u1", "profile")).toEqual(["user:u1:profile"]);
     });
 
+    it("forgets the lists alone when a Pokédex slot's face changes, where a Pokédex binder's cards are kept", () => {
+        expect(forgetTags("u1", "dexFace")).toEqual(["user:u1:lists"]);
+    });
+
     it("keeps one person's tags apart from another's", () => {
         expect(forgetTags("u2", "cards").every((tag) => tag.startsWith("user:u2:"))).toBe(true);
     });
@@ -37,7 +41,7 @@ describe("forgetTags", () => {
 
 describe("forgetWriteSchema", () => {
     it("takes the writes it knows and nothing else", () => {
-        for (const write of ["all", "cards", "binders", "profile"]) expect(forgetWriteSchema.safeParse(write).success).toBe(true);
+        for (const write of ["all", "cards", "binders", "profile", "dexFace"]) expect(forgetWriteSchema.safeParse(write).success).toBe(true);
         for (const write of ["", "Cards", "stats", "user:u2"]) expect(forgetWriteSchema.safeParse(write).success).toBe(false);
     });
 });

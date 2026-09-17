@@ -364,9 +364,9 @@ export async function setFavorite(cardId: string, isFavorite: boolean, { reread 
 // because the API cannot find the card this one replaces: species_id is read from the catalogue at
 // request time and is not a column. The slot has both cards in hand, so the app clears the old one.
 //
-// No forgetMine: a Pokédex reads every card, and that read is deliberately outside the list cache
-// (getAllMyCards), so the next visit is already fresh. Dropping the cache here would redraw a
-// thousand slots for a picture that is already on screen.
+// No forgetMine: dropping a tag in an action would redraw a thousand slots for a picture that is
+// already on screen. The Pokédex binder's cards are kept in the lists scope (getDexCards), so the
+// grid forgets them quietly after the write (`dexFace`, dex-grid.tsx) and the next visit is fresh.
 export async function setDexFace(cardId: string, previousId: string | null): Promise<Result> {
     const parsed = z.object({ cardId: z.string().uuid(), previousId: z.string().uuid().nullable() }).safeParse({ cardId, previousId });
     if (!parsed.success) return { ok: false, error: "Invalid card." };

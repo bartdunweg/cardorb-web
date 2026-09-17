@@ -1,5 +1,6 @@
 import { api } from "@/lib/api";
 import { type Card, type FilterCounts, cardFromItem, cardsAnswer, facetsAnswer, statsAnswer } from "@/lib/api-shapes";
+import type { DexCardLike } from "@/lib/dex-groups";
 import { type Facets, facetsFrom } from "@/lib/facets";
 import { perUser } from "@/lib/user-cache";
 
@@ -203,3 +204,50 @@ export async function getAllMyCards(filter: CardFilter, token?: string) {
     const rest = await Promise.all(Array.from({ length: pages }, (_, i) => getMyCards({ ...filter, limit: PAGE, offset: got * (i + 1), token })));
     return { ...first, cards: [...first.cards, ...rest.flatMap((p) => p.cards)] };
 }
+
+/** What a Pokédex slot reads of a card (`DexCardLike`), and nothing more. */
+const DEX_FIELDS = [
+    "id",
+    "name",
+    "number",
+    "species_id",
+    "species_ids",
+    "rarity",
+    "image_url",
+    "image_high_url",
+    "set",
+    "set_name",
+    "quantity",
+    "price",
+    "dex_face",
+] as const;
+
+export type DexCards = { cards: DexCardLike[]; facets: Facets };
+
+/** A card cut down to what `groupByDex` reads. */
+export const dexFields = (card: Card): DexCardLike => {
+    const out: Record<string, unknown> = {};
+    for (const field of DEX_FIELDS) if (field in card) out[field] = card[field];
+    return out as DexCardLike;
+};
+
+/** The key a Pokédex binder's cards are kept under: the filter the page asked with, whole. */
+export const dexCardsKey = (filter: CardFilter) => `dex-cards:v1:${JSON.stringify(filter)}`;
+
+/**
+ * Every card of a binder shown as a Pokédex, kept per person in the lists scope, which a card write
+ * and a binder write both forget (`cache-scopes.ts`), and so does a new face (`dexFace`). Each visit
+ * read up to two thousand cards from the API with no cache in front of it.
+ *
+ * Only the fields a slot reads are kept, with the facets the page takes from the same answer: a whole
+ * Card is about 900 bytes, so two thousand of them came to 1.75 MB, at the Data Cache's 2 MB ceiling,
+ * where an entry is silently not kept. Cut down it is about 370 bytes a card (730 KB for 2,000).
+ *
+ * The binder's Pokédex setting is not in the key: it is applied after the read (`groupByDex`), so
+ * the kept cards are the same whatever it says, and changing it is a binder write, which forgets them.
+ */
+export const getDexCards = (filter: CardFilter): Promise<DexCards> =>
+    perUser("lists", dexCardsKey(filter), async (token) => {
+        const all = await getAllMyCards(filter, token);
+        return { cards: all.cards.map(dexFields), facets: all.facets };
+    });
