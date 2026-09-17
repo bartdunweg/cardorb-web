@@ -27,8 +27,11 @@ test("the public profile follows the Settings switch, off and on", async ({ page
     // setting-switch-row.tsx flips the switch, waits for the write, then forgets the cache quietly
     // and refreshes. The visitor's read below is only true once that forget has answered: the
     // public page is cached under the owner's own tag (public-profile.ts).
+    // Space on the focused switch, not a click on it: the kit's Toggle wraps its input in the
+    // <label> that carries the words, so the label takes the pointer and the input under it is
+    // never reached. A keyboard user flips it exactly this way.
     const closed = cacheCleared(page);
-    await row.click();
+    await row.press("Space");
     await expect(row).not.toBeChecked();
     await closed;
 
@@ -36,7 +39,7 @@ test("the public profile follows the Settings switch, off and on", async ({ page
     expect(shut?.status()).toBe(404);
 
     const reopened = cacheCleared(page);
-    await row.click();
+    await row.press("Space");
     await expect(row).toBeChecked();
     await reopened;
 
