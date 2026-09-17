@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { revalidatePath, revalidateTag, unstable_cache, updateTag } from "next/cache";
+import { randomUUID } from "node:crypto";
 import { ApiError, CACHE_SECONDS, api, cacheWindow, session } from "@/lib/api";
 import { ownProfileSchema } from "@/lib/api-shapes";
 import { type CacheScope, type ForgetWrite, forgetTags, readTags, scopesForgotten } from "@/lib/cache-scopes";
@@ -33,6 +34,9 @@ export { userTag } from "@/lib/cache-scopes";
  * so a scoped forget would not reach it, and the Data Cache keeps entries across a deploy (#206).
  */
 const KEY_VERSION = "scoped:v2";
+
+/** The name a scope's mark goes by, in the request's reads and in its cache key (`scopeMark`). */
+const MARK = "#mark";
 
 /**
  * What the public pages of one person are filed under. Those are read without a session, so they
@@ -75,17 +79,62 @@ async function perUserUncached<T>(scope: CacheScope, name: string, load: (token:
     let ran = false;
     const start = performance.now();
     try {
+        const mark = await scopeMark(s.userId, scope);
+        if (!mark.stored) {
+            ran = true;
+            return await load(s.token);
+        }
         return await unstable_cache(
             () => {
                 ran = true;
                 return load(s.token);
             },
-            [name, s.userId, cacheWindow(), KEY_VERSION],
+            [name, s.userId, cacheWindow(), KEY_VERSION, mark.id],
             { revalidate: CACHE_SECONDS, tags: readTags(s.userId, scope) },
         )();
     } finally {
         logTiming(`cache ${name}`, elapsed(start), ran ? "miss" : "hit");
     }
+}
+
+/**
+ * The mark a scope's reads are filed under until a write forgets it, so a read that began before a
+ * write can never be handed out after it.
+ *
+ * Why: the Data Cache stamps an entry with the moment it is stored, and a tag forgotten with
+ * `expire: 0` only drops entries stamped before that moment (next's tags-manifest.external.js,
+ * `expiredAt > entry.lastModified`). A read that asked the API before a write and was stored after
+ * the write's forget was therefore fresh for its five minutes: a set page said one copy 3 s after
+ * the second copy's write, 4 rounds in 4 on the widened e2e probe (run 35237287279, 2026-09-17).
+ *
+ * How: the mark is a random id kept in the Data Cache under the scope's own tags, so every forget
+ * of the scope drops it and the next read makes a new one. Its id is in the key of every read in
+ * the scope. A read is stored only under a mark it found already stored: that mark was stamped
+ * before the read began, so a write forgotten after the read began is also after the stamp, drops
+ * the mark, and nobody asks that key again. A request that makes the mark itself reads without
+ * storing, because Next stores a miss behind the answer (unstable-cache.js, `pendingRevalidates`)
+ * and the mark may not be stamped yet when the read begins.
+ *
+ * Chosen over a write version from the API (its `cards_version`, api#360), which is as exact but
+ * costs a round trip on every request and a version for binders and the profile too. This costs one
+ * Data Cache read per scope per request, and after each write (or a mark lost from the cache) one
+ * read in each forgotten scope that is not stored, so the second screen after a write asks the API
+ * once more. It needs no process memory, so it holds across Vercel's instances as far as the tags
+ * themselves do. No window in its key: a mark only ends by a forget, and a new one every five
+ * minutes would cost that unstored read every five minutes.
+ */
+function scopeMark(userId: string, scope: CacheScope): Promise<{ id: string; stored: boolean }> {
+    const reads = inFlight();
+    const key = `${scope}|${MARK}`;
+    const started = reads.get(key);
+    if (started) return started as Promise<{ id: string; stored: boolean }>;
+    const made = randomUUID();
+    const mark = unstable_cache(async () => made, [MARK, userId, scope, KEY_VERSION], { revalidate: false, tags: readTags(userId, scope) })().then((id) => ({
+        id,
+        stored: id !== made,
+    }));
+    reads.set(key, mark);
+    return mark;
 }
 
 /**
