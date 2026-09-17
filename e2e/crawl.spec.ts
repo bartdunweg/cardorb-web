@@ -31,6 +31,17 @@ const ALLOWED: { pattern: RegExp; why: string }[] = [
         pattern: /_vercel\/speed-insights/,
         why: "Speed Insights' script is a Vercel edge route the local stack does not serve",
     },
+    {
+        // Every picture in the app is a file of ours on images.cardorb.com, drawn through the
+        // image optimizer (card-image.tsx, next.config.mjs). On the CI runner that hostname
+        // resolves to 0.0.0.0, so Next refuses to fetch it and answers /_next/image with 400:
+        // "upstream image ... hostname resolved to private IP [\"0.0.0.0\"]", once per picture, in
+        // e2e-web.log. The same addresses answer 200 from here and through the optimizer on
+        // cardorb.com (checked 2026-09-18), so this is the runner's DNS and not the app. It means
+        // no picture draws anywhere in this stack, which is why no test in the suite reads one.
+        pattern: /\/_next\/image\?/,
+        why: "images.cardorb.com resolves to 0.0.0.0 on the CI runner, so the optimizer refuses every picture",
+    },
 ];
 
 /** What a page load is allowed to leave behind: a console error, an uncaught error, a 500. */
