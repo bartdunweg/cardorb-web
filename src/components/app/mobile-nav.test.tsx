@@ -56,6 +56,26 @@ describe("MobileTabBar pill", () => {
         expect(pill(container).style.transform).toBe("translateX(300%)");
     });
 
+    it("follows Back after a tap has arrived, with no line running", () => {
+        const { container, rerender } = bar();
+        fireEvent.click(screen.getByRole("link", { name: /Wishlist/ }));
+        pathname = "/dashboard/wishlist";
+        rerender(<RoutePendingProvider>{<MobileTabBar />}</RoutePendingProvider>);
+        expect(pill(container).style.transform).toBe("translateX(200%)");
+        pathname = "/dashboard";
+        rerender(<RoutePendingProvider>{<MobileTabBar />}</RoutePendingProvider>);
+        expect(pill(container).style.transform).toBe("translateX(0%)");
+        expect(screen.getByRole("link", { name: /Home/ })).toHaveAttribute("aria-current", "page");
+    });
+
+    it("drops the tapped tab when the address lands somewhere else (a redirect)", () => {
+        const { container, rerender } = bar();
+        fireEvent.click(screen.getByRole("link", { name: /Browse/ }));
+        pathname = "/dashboard/cards";
+        rerender(<RoutePendingProvider>{<MobileTabBar />}</RoutePendingProvider>);
+        expect(pill(container).style.transform).toBe("translateX(300%)");
+    });
+
     it("goes back to the current tab when the navigation never lands", () => {
         const { container } = bar();
         fireEvent.click(screen.getByRole("link", { name: /Browse/ }));

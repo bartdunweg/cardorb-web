@@ -19,7 +19,7 @@ import { usePathname } from "next/navigation";
  * which says it for all of them at once.
  */
 
-type Pending = { path: string };
+type Pending = { path: string; from: string };
 
 const RoutePendingContext = createContext<{ target: string | null; going: boolean; start: (href: string) => void }>({
     target: null,
@@ -31,10 +31,13 @@ export function RoutePendingProvider({ children }: { children: ReactNode }) {
     const pathname = usePathname();
     const [pending, setPending] = useState<Pending | null>(null);
 
-    // Arrived when the address is the page we set out for. Read from the address rather than
-    // cleared in an effect: the router changes it the moment the new page commits, which is
-    // exactly when the line should stop and the tab should stop being a promise.
-    const going = pending !== null && pending.path !== pathname;
+    // Any address other than the one the tap left from ends the promise: the page we set out for
+    // (arrived), or another one (a server redirect, a router.push, back or forward). Cleared during
+    // render rather than in an effect, so the frame the new page commits in already draws the tab
+    // where the app is. Kept after arrival, a later Back would read the old target as still going.
+    if (pending !== null && pathname !== pending.from) setPending(null);
+
+    const going = pending !== null && pending.path !== pathname && pending.from === pathname;
 
     // A navigation that never commits (a push that failed, an address written another way than
     // the link wrote it) must not leave the line running for the rest of the session.
@@ -58,7 +61,7 @@ export function RoutePendingProvider({ children }: { children: ReactNode }) {
             // The path, not the query: a page that only narrows its own list (a filter, a sort, a
             // page number) stays where it is and answers in its own row, so it starts nothing here.
             const path = href.split(/[?#]/)[0];
-            setPending(path === pathname ? null : { path });
+            setPending(path === pathname ? null : { path, from: pathname });
         },
         [pathname],
     );
