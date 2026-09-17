@@ -294,11 +294,17 @@ export function CommandSearchMenu({
             // rounded card of its own at the top, a sheet's head over a list, where it is one surface
             // (Bart's call, 2026-09-11). From sm up it stays the centred card, the page's focus while
             // it is open.
-            overlayClassName="max-sm:items-stretch max-sm:p-0"
+            //
+            // Motion: from sm up none at all, in or out. The palette opens from "/" many times a day, and
+            // a 300 ms zoom with the scrim fading in stood between the key and the field. On a phone it
+            // stays a sheet, on the sheet's values: the kit's 300 ms in and 200 ms out (the
+            // --duration-sheet and --duration-base steps), on the drawer curve rather than ease-out and
+            // ease-in. Focus is the input's autoFocus, which no animation delays.
+            overlayClassName="max-sm:items-stretch max-sm:p-0 max-sm:[animation-timing-function:var(--ease-drawer)] sm:animate-none"
             dialogClassName={cx(
-                "max-w-[calc(100vw-2rem)]",
+                "max-w-[calc(100vw-2rem)] sm:animate-none",
                 "max-sm:h-dvh max-sm:max-h-dvh max-sm:max-w-full max-sm:rounded-none max-sm:pt-safe max-sm:pb-safe max-sm:shadow-none max-sm:backdrop-blur-none",
-                "max-sm:slide-in-from-bottom max-sm:slide-out-to-bottom max-sm:zoom-in-100 max-sm:zoom-out-100 motion-reduce:max-sm:slide-in-from-bottom-0 motion-reduce:max-sm:slide-out-to-bottom-0",
+                "max-sm:[animation-timing-function:var(--ease-drawer)] max-sm:slide-in-from-bottom max-sm:slide-out-to-bottom max-sm:zoom-in-100 max-sm:zoom-out-100 motion-reduce:max-sm:slide-in-from-bottom-0 motion-reduce:max-sm:slide-out-to-bottom-0",
             )}
         >
             <AriaHeading slot="title" className="sr-only">
