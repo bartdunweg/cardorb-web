@@ -67,6 +67,8 @@ const FAMILY: Record<string, string> = {
     "mega attack rare": "rare holo v",
     "holo rare ex": "rare holo v",
     "holo rare gx": "rare holo v",
+    // 30th Celebration's 30 Pikachu art cards, 023 to 052 (cardorb-api#535).
+    "pikachu rare": "rare holo v",
     "rare holo lv.x": "rare holo v",
     // The API's spelling since cardorb-api's one-spelling change (2026-09-14); the word order above stays for old data.
     "holo rare lv.x": "rare holo v",
@@ -88,6 +90,8 @@ const FAMILY: Record<string, string> = {
     "hyper rare": "rare secret",
     "mega hyper rare": "rare secret",
     "black white rare": "rare secret",
+    // 30th Celebration's Mewtwo ex 157/128 and Mew ex 158/128, a rarity symbol of their own.
+    "futuristic rare": "rare secret",
     crown: "rare secret",
     "three star": "rare secret",
     "radiant rare": "radiant rare",
