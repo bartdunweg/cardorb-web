@@ -99,14 +99,7 @@ export function useCopySteps({
                             const added = res.id;
                             id = added;
                             // The press that loses nothing but may be a thumb one tile off: said, with the way back.
-                            notify.done(`${name} is in your collection now`, {
-                                undo: {
-                                    onUndo: () =>
-                                        void removeCard(added).then((r) =>
-                                            r.ok ? notify.done("Undone") : notify.failed("That did not go back", { description: r.error }),
-                                        ),
-                                },
-                            });
+                            notify.done(`${name} is in your collection now`, { undo: { onUndo: () => undoAdd(added) } });
                         } else if (target === 0 && id) {
                             const res = await removeCard(id, { reread: false });
                             if (!res.ok) {
@@ -160,6 +153,28 @@ export function useCopySteps({
         void restoreCard(removed, { reread: false }).then((res) => {
             if (!res.ok) return notify.failed("That did not go back", { description: res.error });
             void forgetMineQuietly("cards").then(() => router.refresh());
+        });
+    };
+
+    /* Undo on "in your collection now". It removed the row and left the tile as it was: the tile
+       believes what it pressed until the page it sits on is a different one, and a set page drawn
+       after the undo holds what it held before the add, the same page. So the tile said "in your
+       collection" and a minus wrote to a row that was gone. The tile goes back to nought at once now,
+       and the row is removed quietly with the page read again after, as Put back does.
+       A write still in the air (a plus pressed again after the add) is left to finish the way a minus
+       to nought would, rather than the row removed twice and one of the two refused. */
+    const undoAdd = (added: string) => {
+        setError(null);
+        onShown?.(want.current, 0);
+        want.current = 0;
+        setPressed({ quantity: 0, on: page });
+        if (flying.current) return;
+        stored.current = { quantity: 0, id: undefined };
+        onStored?.(0, undefined);
+        void removeCard(added, { reread: !quiet }).then((r) => {
+            if (!r.ok) return notify.failed("That did not go back", { description: r.error });
+            notify.done("Undone");
+            if (quiet) void forgetMineQuietly("cards").then(() => router.refresh());
         });
     };
 

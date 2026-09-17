@@ -18,7 +18,9 @@ vi.mock("@/app/(app)/dashboard/cards/actions", () => ({
 }));
 vi.mock("@/lib/reads", () => ({ cardFacts: vi.fn().mockResolvedValue(null), listBinders: vi.fn().mockResolvedValue([]) }));
 vi.mock("@/components/app/card-memo", () => ({ warmCard: vi.fn() }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+const refresh = vi.fn();
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
+vi.mock("@/components/app/toast", () => ({ notify: { done: vi.fn(), removed: vi.fn(), failed: vi.fn(), dismiss: vi.fn() } }));
 vi.stubGlobal("matchMedia", () => ({ matches: true, addEventListener() {}, removeEventListener() {} }));
 vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 204 })));
 
@@ -60,5 +62,37 @@ describe("SetCardTile's heart", () => {
             await new Promise((r) => requestAnimationFrame(r));
         });
         expect(document.activeElement).toBe(screen.getByRole("button", { name: "Add Spinarak #001 to your wishlist" }));
+    });
+});
+
+/*
+ * Undo on "in your collection now" removed the row and left the tile saying the card was yours: the
+ * page drawn after the undo holds what it held before the add, so the tile kept the count it pressed,
+ * and a minus then wrote to a row that was gone.
+ */
+describe("SetCardTile's Undo after an add", () => {
+    it("takes the tile back at once, removes the row quietly and reads the page again", async () => {
+        const { removeCard } = await import("@/app/(app)/dashboard/cards/actions");
+        const { notify } = await import("@/components/app/toast");
+        vi.mocked(removeCard).mockClear();
+        vi.mocked(notify.done).mockClear();
+        refresh.mockClear();
+        render(<SetCardTile card={card} />);
+
+        await act(async () => fireEvent.click(screen.getByRole("button", { name: "Add Spinarak #001 to your collection" })));
+        await act(async () => new Promise((r) => setTimeout(r, 0)));
+        expect(screen.getByRole("button", { name: "Remove Spinarak #001 from your collection" })).toBeInTheDocument();
+        const [, options] = vi.mocked(notify.done).mock.calls.find(([title]) => title === "Spinarak is in your collection now")!;
+
+        act(() => options!.undo!.onUndo());
+        // At once, before the store answers.
+        expect(screen.getByRole("button", { name: "Add Spinarak #001 to your collection" })).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /Remove Spinarak #001 from your collection/ })).toBeNull();
+        expect(screen.getByRole("button", { name: "Spinarak #001, not in your collection" })).toBeInTheDocument();
+
+        await act(async () => new Promise((r) => setTimeout(r, 0)));
+        expect(removeCard).toHaveBeenCalledWith("4f0c1b2a-5d6e-4f70-8a9b-0c1d2e3f4a5b", { reread: false });
+        expect(notify.done).toHaveBeenCalledWith("Undone");
+        expect(refresh).toHaveBeenCalled();
     });
 });
