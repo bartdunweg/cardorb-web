@@ -529,3 +529,55 @@ describe("the tiles fetched first", () => {
         expect(eager().map((img) => img.getAttribute("src"))).toEqual([expect.stringContaining("a.png"), expect.stringContaining("b.png")]);
     });
 });
+
+/*
+ * The list is drawn as one grid per set, so a scroll batch that starts a set brings in a grid of
+ * its own. Its tiles are not the page's first and must not wave in; the first page still does.
+ */
+describe("the wave the list's tiles arrive in", () => {
+    const of = (id: string, set: string): Card => ({ ...card, id, name: `Card ${id}`, set_name: set });
+    const delays = (section: Element) => [...section.querySelectorAll<HTMLElement>(".arrive")].map((el) => el.style.getPropertyValue("--arrive-delay"));
+
+    it("staggers only the first page, not a set a scroll batch starts", async () => {
+        const { loadMoreCards } = await import("@/lib/reads");
+        const load = vi.mocked(loadMoreCards);
+        load.mockReset();
+        load.mockResolvedValueOnce({ cards: [of("c", "Fossil"), of("d", "Fossil"), of("e", "Fossil")], total: 5 });
+        class Seen {
+            constructor(private readonly callback: IntersectionObserverCallback) {}
+            observe() {
+                queueMicrotask(() => this.callback([{ isIntersecting: true } as IntersectionObserverEntry], this as unknown as IntersectionObserver));
+            }
+            disconnect() {}
+        }
+        vi.stubGlobal("IntersectionObserver", Seen);
+        await act(async () =>
+            render(
+                <Suspense fallback={null}>
+                    <CardsList
+                        list={Promise.resolve({
+                            cards: [of("a", "Jungle"), of("b", "Jungle")],
+                            total: 5,
+                            facets: { sets: [], rarities: [], gens: [], types: [] },
+                        } as unknown as CardList)}
+                        filter={{}}
+                        narrowed={false}
+                        view="grid"
+                        size="md"
+                        groupedBySet
+                        onSelect={vi.fn()}
+                        noHits={null}
+                        empty={null}
+                    />
+                </Suspense>,
+            ),
+        );
+        for (let i = 0; i < 10; i++) await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
+        vi.unstubAllGlobals();
+        vi.stubGlobal("matchMedia", () => ({ matches: true, addEventListener() {}, removeEventListener() {} }));
+        const [jungle, fossil] = document.querySelectorAll("section");
+        expect(delays(jungle!)).toEqual(["0ms", "calc(1 * var(--stagger-step))"]);
+        expect(fossil).toBeDefined();
+        expect(delays(fossil!)).toEqual(["0ms", "0ms", "0ms"]);
+    });
+});
