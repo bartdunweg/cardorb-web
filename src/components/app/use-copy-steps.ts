@@ -7,6 +7,7 @@ import { notify } from "@/components/app/toast";
 import { useLatestPress } from "@/components/app/use-latest-press";
 import type { RemovedCard } from "@/lib/api-shapes";
 import { forgetMineQuietly } from "@/lib/forget-mine";
+import { orFailed } from "@/lib/write-outcome";
 
 type Added = { ok: true; id?: string } | { ok: false; error: string };
 
@@ -100,8 +101,12 @@ export function useCopySteps({
        list under the toast was redrawn with it. The row comes back with a new id, so the list is
        read again once the cache is gone, which keeps its scrolled batches (`cards-list.tsx`). */
     const putBack = (removed: RemovedCard) => {
-        if (!quiet) return void restoreCard(removed);
-        void restoreCard(removed, { reread: false }).then((res) => {
+        if (!quiet) {
+            return void orFailed(restoreCard(removed)).then((res) => {
+                if (!res.ok) notify.failed("That did not go back", { description: res.error });
+            });
+        }
+        void orFailed(restoreCard(removed, { reread: false })).then((res) => {
             if (!res.ok) return notify.failed("That did not go back", { description: res.error });
             void forgetMineQuietly("cards").then(() => router.refresh());
         });
@@ -110,17 +115,32 @@ export function useCopySteps({
     /* Undo on "in your collection now". It removed the row and left the tile as it was: the tile
        believes what it pressed until the page it sits on is a different one, and a set page drawn
        after the undo holds what it held before the add, the same page. So the tile said "in your
-       collection" and a minus wrote to a row that was gone. The tile goes back to nought at once now,
-       and the row is removed quietly with the page read again after, as Put back does.
+       collection" and a minus wrote to a row that was gone. The tile goes to nought at once now, and
+       the row is removed quietly with the page read again after, as Put back does.
+       The row is forgotten only once the removal answers: one that fails puts the tile back on the
+       row it still has, rather than a tile saying nought whose plus adds a second row. A press made
+       while the removal flies waits for it and then goes on from what it left.
        A write still in the air (a plus pressed again after the add) is left to finish the way a minus
-       to nought would, rather than the row removed twice and one of the two refused. */
+       to nought would, rather than the row removed twice and one of the two refused.
+       An older toast's Undo, for a row the tile is no longer on (taken off and put back under a new
+       id), removes nothing and leaves the tile alone. */
     const undoAdd = (added: string) => {
-        const { wanted, flying } = steps.aim(0);
+        const { stored: before, flying } = steps.current();
+        if (before.id !== added) return void notify.failed("That can no longer be undone", { description: `${name} has changed since.` });
+        const { wanted } = steps.aim(0);
         onShown?.(wanted, 0);
         if (flying) return;
-        steps.keep({ value: 0, id: undefined });
-        void removeCard(added, { reread: !quiet }).then((r) => {
-            if (!r.ok) return notify.failed("That did not go back", { description: r.error });
+        void steps.aside(async () => {
+            const r = await orFailed(removeCard(added, { reread: !quiet }));
+            if (!r.ok) {
+                // Still on the row it had, unless a press has moved the tile on since.
+                if (steps.current().wanted === 0) {
+                    steps.aim(before.value);
+                    onShown?.(0, before.value);
+                }
+                return void notify.failed("That did not go back", { description: r.error });
+            }
+            steps.keep({ value: 0, id: undefined });
             notify.done("Undone");
             if (quiet) void forgetMineQuietly("cards").then(() => router.refresh());
         });
