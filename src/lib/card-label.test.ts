@@ -22,6 +22,18 @@ describe("cardLabel", () => {
         expect(cardLabel({ set_name: "Jumbo cards", set_abbr: null, number: "5" })).toBe("Jumbo cards 5");
     });
 
+    // Bart, 2026-09-17: "30C 001" named both 30th Classic Collection's Charizard and 30th Celebration's
+    // Exeggcute. A Classic Collection card prints its original card's number with that set's total.
+    it("reads a Classic Collection card by the number it prints, total and all, so no label names two cards", () => {
+        const charizard = { set_name: "30th Classic Collection", set_abbr: "30C", number: "001", printed_number: "4/102" };
+        const exeggcute = { set_name: "30th Celebration", set_abbr: "30C", number: "001", printed_number: "001" };
+        expect(cardLabel(charizard)).toBe("30C 4/102");
+        expect(cardLabel(exeggcute)).toBe("30C 001");
+        expect(cardLabel({ set_name: "Celebrations Classic Collection", set_abbr: "CEL", number: "CC001", printed_number: "2/102" })).toBe("CEL 2/102");
+        expect(cardLabelFull(charizard)).toBe("30th Classic Collection · 30C 4/102");
+        expect(cardLine({ ...charizard, rarity: "Classic Collection" })).toBe("30C 4/102 · Classic Collection");
+    });
+
     it("leaves out what it does not have, and never writes a #", () => {
         expect(cardLabel({ set_name: "Destined Rivals", set_abbr: "DRI", number: null })).toBe("DRI");
         expect(cardLabel({ set_name: null, set_abbr: null, number: "12" })).toBe("12");

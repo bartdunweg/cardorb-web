@@ -118,7 +118,7 @@ export function SetCardTile({
                 It used to be the menu's trigger, so a tap on a card answered with a list of things
                 to do to it and never with the card itself. The menu is a button of its own now. */}
             <AriaButton
-                aria-label={`${card.name} #${card.number}, ${stateLabel}`}
+                aria-label={`${card.name} #${card.printedNumber ?? card.number}, ${stateLabel}`}
                 onPress={() => onOpen?.(card)}
                 {...warm}
                 // The shared tile's own frame: a card is its own surface, so nothing of ours sits behind
@@ -167,7 +167,7 @@ export function SetCardTile({
                     The rarity follows after a bullet, "POR 121 · Rare" (Bart's call, 2026-09-15): on a set
                     page it is what tells two cards of the same Pokémon apart without opening either. */}
                 <span className="truncate text-xs text-tertiary tabular-nums">
-                    {cardLine({ set_name: card.setName, set_abbr: card.setAbbr, number: card.number, rarity: card.rarity })}
+                    {cardLine({ set_name: card.setName, set_abbr: card.setAbbr, number: card.number, printed_number: card.printedNumber, rarity: card.rarity })}
                 </span>
                 {/* The count and the price on one line, the two controls on their own line under it.
                     The controls sat in the picture's corner, over the art you came to look at, and on
@@ -210,14 +210,22 @@ export function SetCardTile({
                         <TileIconButton
                             icon={Heart}
                             on="wishlist"
-                            label={`Remove ${card.name} #${card.number} from your wishlist`}
+                            label={`Remove ${card.name} #${card.printedNumber ?? card.number} from your wishlist`}
                             onPress={() => pressWish(false)}
                         />
                     ) : null}
                     {state === "missing" ? (
                         <>
-                            <TileIconButton icon={Heart} label={`Add ${card.name} #${card.number} to your wishlist`} onPress={() => pressWish(true)} />
-                            <TileIconButton icon={Plus} label={`Add ${card.name} #${card.number} to your collection`} onPress={() => press(1)} />
+                            <TileIconButton
+                                icon={Heart}
+                                label={`Add ${card.name} #${card.printedNumber ?? card.number} to your wishlist`}
+                                onPress={() => pressWish(true)}
+                            />
+                            <TileIconButton
+                                icon={Plus}
+                                label={`Add ${card.name} #${card.printedNumber ?? card.number} to your collection`}
+                                onPress={() => press(1)}
+                            />
                         </>
                     ) : null}
                     {/* The wishlist's own plus, which asks what your copy is like before it joins the
@@ -233,6 +241,7 @@ export function SetCardTile({
                                 set_name: card.setName,
                                 set_abbr: card.setAbbr,
                                 number: card.number,
+                                printed_number: card.printedNumber,
                                 grade: null,
                                 finish: null,
                                 foil_pattern: null,
@@ -251,10 +260,18 @@ export function SetCardTile({
                         <>
                             <TileIconButton
                                 icon={Minus}
-                                label={held > 1 ? `Remove a copy of ${card.name} #${card.number}` : `Remove ${card.name} #${card.number} from your collection`}
+                                label={
+                                    held > 1
+                                        ? `Remove a copy of ${card.name} #${card.printedNumber ?? card.number}`
+                                        : `Remove ${card.name} #${card.printedNumber ?? card.number} from your collection`
+                                }
                                 onPress={() => press(held - 1)}
                             />
-                            <TileIconButton icon={Plus} label={`Add a copy of ${card.name} #${card.number}`} onPress={() => press(held + 1)} />
+                            <TileIconButton
+                                icon={Plus}
+                                label={`Add a copy of ${card.name} #${card.printedNumber ?? card.number}`}
+                                onPress={() => press(held + 1)}
+                            />
                         </>
                     ) : null}
                 </div>

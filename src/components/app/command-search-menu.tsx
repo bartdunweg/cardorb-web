@@ -109,7 +109,17 @@ function CardPreview({ card, onAdd, onView }: { card: PokemonCard; onAdd: (targe
                 <DetailRow label="Price" value={formatPrice(card.price)} />
                 <DetailRow label="Set" value={card.set || null} />
                 <DetailRow label="Series" value={card.series} />
-                <DetailRow label="Number" value={card.number ? `${card.number}${card.setPrintedTotal ? ` / ${card.setPrintedTotal}` : ""}` : null} />
+                {/* As the card prints it: a Classic Collection card prints its original number with its total (4/102). */}
+                <DetailRow
+                    label="Number"
+                    value={
+                        card.printedNumber?.includes("/")
+                            ? card.printedNumber
+                            : card.number
+                              ? `${card.printedNumber ?? card.number}${card.setPrintedTotal ? ` / ${card.setPrintedTotal}` : ""}`
+                              : null
+                    }
+                />
                 <DetailRow label="Rarity" value={card.rarity} />
                 <DetailRow label="Type" value={card.types?.length ? card.types.join(", ") : null} />
                 <DetailRow label="Subtypes" value={card.subtypes?.length ? card.subtypes.join(", ") : null} />

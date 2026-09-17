@@ -32,7 +32,7 @@ import { parsePrice } from "@/lib/price-input";
 /** What the form reads of a card: a wishlist row, or a set tile's wish, which knows less. */
 export type OwnableCard = Pick<
     Card,
-    "id" | "name" | "image_url" | "set_name" | "set_abbr" | "number" | "grade" | "finish" | "foil_pattern" | "edition" | "tcg_id"
+    "id" | "name" | "image_url" | "set_name" | "set_abbr" | "number" | "printed_number" | "grade" | "finish" | "foil_pattern" | "edition" | "tcg_id"
 > & { language?: string | null; condition?: string | null };
 
 export type MarkOwnedProps = {

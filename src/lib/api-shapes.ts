@@ -573,6 +573,8 @@ export function seriesFromSets(sets: CatalogueSet[]): { series: SetSeries[]; com
 export type SetCard = {
     id: string;
     number: string;
+    /** The number as the card prints it, what its label reads ("4/102" on a Classic Collection card whose `number` is 001). Absent: `number`. */
+    printedNumber?: string | null;
     /** In English on every shelf; `localName` is what a Japanese card prints, or null. */
     name: string;
     localName: string | null;
@@ -621,6 +623,7 @@ export const setCardFromBrowse = (c: BrowseCard, setAbbr: string | null = null):
     // The same rule the collection uses, so one card does not carry two prices across two screens.
     price: priceForCopy({ price: c.price }),
     tcgId: c.tcgId,
+    printedNumber: c.printedNumber ?? c.number,
     ...(c.fullArt === undefined ? {} : { fullArt: c.fullArt }),
 });
 
@@ -628,7 +631,12 @@ export const setCardFromBrowse = (c: BrowseCard, setAbbr: string | null = null):
 
 export const browseCardSchema = z.object({
     id: z.string(),
+    /* The catalogue's number, what ownership and a new row match by. */
     number: z.string(),
+    /* The number as the card prints it, for its label: `number` except on a Classic Collection card,
+       which prints its original card's number ("4/102" where `number` is 001). Absent from an API
+       before cardorb-api#532. */
+    printedNumber: z.string().optional(),
     name: z.string(),
     /* The printed name of a card whose `name` is a translation (a Japanese card); null on English
        cards, absent from an API before it named the other shelves in English. */
@@ -668,6 +676,8 @@ export type PokemonCard = {
     name: string;
     set: string;
     number: string;
+    /** The number as the card prints it, where the catalogue said; see `SetCard.printedNumber`. */
+    printedNumber?: string | null;
     rarity: string | null;
     image: string | null;
     supertype: string | null;
@@ -718,6 +728,7 @@ export const pokemonCardFromBrowse = (c: BrowseCard, language?: string | null): 
     name: c.name,
     set: c.setName,
     number: c.number,
+    printedNumber: c.printedNumber ?? c.number,
     rarity: c.rarity,
     image: ownImage(c.image),
     supertype: null,
