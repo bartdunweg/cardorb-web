@@ -1,5 +1,5 @@
 import type { CardFacts, PricePoint } from "@/app/(app)/dashboard/cards/actions";
-import { CARD_FACTS_BATCH } from "@/lib/api-shapes";
+import { CARD_FACTS_BATCH } from "@/lib/card-shapes";
 import type { Card } from "@/lib/cards";
 import { type CardName, sameCard } from "@/lib/copies";
 import { cardFacts, cardFactsMany, cardPriceHistory, listSetRows } from "@/lib/reads";

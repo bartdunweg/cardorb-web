@@ -1,5 +1,13 @@
 import type { CardFacts } from "@/app/(app)/dashboard/cards/actions";
-import { EDITIONS, EDITION_LABELS, FINISH_LABELS, FINISHES as FINISH_ORDER, FOIL_PATTERN_LABELS, type FoilPattern, isPatternedReverse } from "@/lib/api-shapes";
+import {
+    EDITIONS,
+    EDITION_LABELS,
+    FINISH_LABELS,
+    FINISHES as FINISH_ORDER,
+    FOIL_PATTERN_LABELS,
+    type FoilPattern,
+    isPatternedReverse,
+} from "@/lib/card-shapes";
 
 /**
  * What a form may offer about one copy, given what the card actually is.

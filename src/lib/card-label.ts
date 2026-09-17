@@ -1,4 +1,4 @@
-import { EDITION_LABELS, type Edition, FOIL_PATTERN_LABELS, type Finish, type FoilPattern } from "@/lib/api-shapes";
+import { EDITION_LABELS, type Edition, FOIL_PATTERN_LABELS, type Finish, type FoilPattern } from "@/lib/card-shapes";
 
 type Labelled = { set_name?: string | null; set_abbr?: string | null; number?: string | null; printed_number?: string | null };
 

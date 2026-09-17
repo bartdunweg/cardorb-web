@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { type PokemonCard, ownImage } from "@/lib/api-shapes";
+import type { PokemonCard } from "@/lib/api-shapes";
 import { type CardGroup, type SpeciesTable, cardGroup } from "@/lib/card-group";
+import { ownImage } from "@/lib/card-shapes";
 import { bestBand } from "@/lib/name-rank";
 
 /**

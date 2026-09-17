@@ -1,4 +1,4 @@
-import { type PATTERNED_REVERSES, isPatternedReverse, isReverseFinish } from "@/lib/api-shapes";
+import { type PATTERNED_REVERSES, isPatternedReverse, isReverseFinish } from "@/lib/card-shapes";
 
 /**
  * Which holographic treatment a card gets in its sheet.

@@ -32,9 +32,10 @@ import { Button, styles as buttonStyles } from "@/components/base/buttons/button
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Tooltip } from "@/components/base/tooltip/tooltip";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
-import { type Finish, type PokemonCard, type RemovedCard, isReverseFinish } from "@/lib/api-shapes";
+import type { PokemonCard, RemovedCard } from "@/lib/api-shapes";
 import { binderFromPath, isBinderPath } from "@/lib/binder-from-path";
 import { cardLabelFull, copyLine } from "@/lib/card-label";
+import { type Finish, isReverseFinish } from "@/lib/card-shapes";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
 import { type CopyGroup, groupCopies, sortCopies } from "@/lib/copies";
 import { matchesRule } from "@/lib/folder-rule";
