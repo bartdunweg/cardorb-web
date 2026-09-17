@@ -8,6 +8,10 @@ test("after a write, Back and a reload show the new state, not the cached one", 
     await page.goto(setPage);
     await expect(setTile(page, c, "not in your collection")).toBeVisible();
     await addButton(page, c).click();
+    // The tile flips at once (use-copy-steps.ts presses optimistically), but the write lands
+    // behind it; the toast is the signal the add has actually reached the server, the same wait
+    // writes.spec.ts uses before trusting a fresh read (see its "adding a card..." test).
+    await expect(page.getByText(`${c.name} is in your collection now`)).toBeVisible();
     await expect(setTile(page, c, "in your collection")).toBeVisible();
 
     await page.goto(`/dashboard/cards?q=${encodeURIComponent(c.name)}`);
@@ -30,12 +34,17 @@ test("the public profile shows an added card and loses a removed one", async ({ 
 
     await page.goto(setPage);
     await addButton(page, c).click();
+    // Same race as the test above: the tile answers under the finger, the write lands behind it.
+    // CI run 35198515180 (2026-09-17) failed here without this wait: the visitor's reload beat
+    // the add to the server and still read zero. The toast is the signal the write has landed.
+    await expect(page.getByText(`${c.name} is in your collection now`)).toBeVisible();
     await expect(setTile(page, c, "in your collection")).toBeVisible();
 
     await visitor.reload();
     await expect(collectionTile(visitor, c)).toHaveCount(1);
 
     await removeButton(page, c).click();
+    await expect(page.getByText(`${c.name} is out of your collection`)).toBeVisible();
     await expect(setTile(page, c, "not in your collection")).toBeVisible();
 
     await visitor.reload();
