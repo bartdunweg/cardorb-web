@@ -17,6 +17,10 @@ describe("forgetTags", () => {
         expect(forgetTags("u1", "cards")).toEqual(["user:u1:lists", "user:u1:stats", "user:u1:binders", "user:u1:sets", "user:u1:value"]);
     });
 
+    it("forgets the lists, the favorites count and the value lines on a star, and not the binders, the sets or the profile", () => {
+        expect(forgetTags("u1", "favorite")).toEqual(["user:u1:lists", "user:u1:stats", "user:u1:value"]);
+    });
+
     it("forgets the binders, their lists and their value lines on a binder write, and not the numbers or the profile", () => {
         expect(forgetTags("u1", "binders")).toEqual(["user:u1:binders", "user:u1:lists", "user:u1:value"]);
     });
@@ -41,7 +45,7 @@ describe("forgetTags", () => {
 
 describe("forgetWriteSchema", () => {
     it("takes the writes it knows and nothing else", () => {
-        for (const write of ["all", "cards", "binders", "profile", "dexFace"]) expect(forgetWriteSchema.safeParse(write).success).toBe(true);
+        for (const write of ["all", "cards", "favorite", "binders", "profile", "dexFace"]) expect(forgetWriteSchema.safeParse(write).success).toBe(true);
         for (const write of ["", "Cards", "stats", "user:u2"]) expect(forgetWriteSchema.safeParse(write).success).toBe(false);
     });
 });

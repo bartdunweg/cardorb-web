@@ -24,15 +24,19 @@ export type CacheScope = (typeof CACHE_SCOPES)[number];
  * The writes this app makes, by what they change. `all` is for a write whose reach is not clear
  * (an import) and for an old caller that names nothing.
  */
-export const FORGET_WRITES = ["all", "cards", "binders", "profile", "dexFace"] as const;
+export const FORGET_WRITES = ["all", "cards", "favorite", "binders", "profile", "dexFace"] as const;
 export const forgetWriteSchema = z.enum(FORGET_WRITES);
 export type ForgetWrite = z.infer<typeof forgetWriteSchema>;
 
 /**
  * What each write forgets.
  *
- * A card written (added, removed, a count, a copy edited, filed, starred, a wish) changes the lists,
- * the numbers, the binders' counts, the set marks and the value; never the profile. A binder made,
+ * A card written (added, removed, a count, a copy edited, filed, a wish) changes the lists,
+ * the numbers, the binders' counts, the set marks and the value; never the profile.
+ * A star (`favorite`) changes less: the Favorites list and the star on every list, the favorites
+ * count (it is in the stats, and the sidebar's Favorites row reads it there) and the Favorites value
+ * line Home can show. No binder holds a card by its star and no set page shows one, so the binders
+ * and the sets stay. A binder made,
  * edited or deleted changes the binder list, which cards a binder's list holds, and that binder's
  * value line; its Pokédex setting is part of the Pokémon count's key, so that count needs no forget.
  * A profile write changes the profile alone; the public pages go with every write (`publicTag`).
@@ -41,6 +45,7 @@ export type ForgetWrite = z.infer<typeof forgetWriteSchema>;
  */
 export const FORGETS: Record<Exclude<ForgetWrite, "all">, readonly CacheScope[]> = {
     cards: ["lists", "stats", "binders", "sets", "value"],
+    favorite: ["lists", "stats", "value"],
     binders: ["binders", "lists", "value"],
     profile: ["profile"],
     dexFace: ["lists"],
