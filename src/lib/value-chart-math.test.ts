@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { areaPath, fullRange, linePath, nearestIndex, pointsFor, smoothLine, yAt } from "./value-chart-math";
+import { areaPath, fullRange, linePath, nearestIndex, pointsFor, thinReadings } from "./value-chart-math";
 
 const frame = { width: 100, height: 60, top: 10, right: 0, bottom: 10, left: 0 };
 
@@ -64,60 +64,69 @@ describe("readings placed by time", () => {
     });
 });
 
-describe("smoothLine", () => {
+describe("thinReadings", () => {
     const day = (d: number) => Date.UTC(2026, 0, d);
+    const times = (n: number) => Array.from({ length: n }, (_, i) => day(i + 1));
 
-    // Bart, 2026-09-15: "een mooie lijn", flowing, and the ends where the readings are.
-    it("keeps the first and the last reading exactly", () => {
-        const values = [10, 14, 9, 15, 8, 16, 12];
-        const line = smoothLine(
-            values.map((_, i) => day(i + 1)),
-            values,
-            40,
-        );
-        expect(line[0]).toEqual({ t: day(1), v: 10 });
-        expect(line.at(-1)).toEqual({ t: day(7), v: 12 });
+    // Bart, 2026-09-17: 09-13 fell 29 and the softened line rose 25 there.
+    it("draws the readings themselves, so a day that fell goes down", () => {
+        const values = [40172, 40182, 40153, 40302];
+        const [yMin, yMax] = fullRange(Math.min(...values), Math.max(...values));
+        const points = pointsFor(values, frame, yMin, yMax);
+        const drawn = thinReadings(times(4), values, 40).map((i) => points[i]);
+        expect(drawn.map((p) => p.index)).toEqual([0, 1, 2, 3]);
+        // Down on the screen is a larger y.
+        expect(drawn[2].y).toBeGreaterThan(drawn[1].y);
+        expect(drawn[0].y).toBeGreaterThan(drawn[1].y);
+        expect(drawn[3].y).toBeLessThan(drawn[2].y);
     });
 
-    it("softens a zigzag between the ends", () => {
-        const values = [10, 20, 10, 20, 10, 20, 10];
-        const line = smoothLine(
-            values.map((_, i) => day(i + 1)),
-            values,
-            40,
-        );
-        const inner = line.slice(1, -1).map((p) => p.v);
-        expect(Math.max(...inner) - Math.min(...inner)).toBeLessThan(10);
+    it("keeps every reading while there are no more than asked", () => {
+        expect(thinReadings(times(12), Array(12).fill(1), 12)).toHaveLength(12);
+        expect(thinReadings([day(1), day(2)], [5, 7], 12)).toEqual([0, 1]);
     });
 
-    it("takes many readings down to about the number asked, by time", () => {
+    it("thins by keeping the first, the last, and each span's lowest and highest, in time order", () => {
         const values = Array.from({ length: 180 }, (_, i) => 100 + (i % 7));
-        const line = smoothLine(
-            values.map((_, i) => day(i + 1)),
-            values,
-            40,
-        );
-        expect(line.length).toBeLessThanOrEqual(42);
-        expect(line.length).toBeGreaterThan(30);
-        expect(line.every((p, i) => i === 0 || p.t > line[i - 1].t)).toBe(true);
+        values[90] = 40; // a dip one day long
+        values[140] = 400; // a peak one day long
+        const t = times(180);
+        const target = 22;
+        const kept = thinReadings(t, values, target);
+        expect(kept[0]).toBe(0);
+        expect(kept.at(-1)).toBe(179);
+        expect(kept.includes(90) && kept.includes(140)).toBe(true);
+        expect(kept.length).toBeLessThanOrEqual(target);
+        expect(kept.every((k, i) => i === 0 || k > kept[i - 1])).toBe(true);
+        // Every kept reading is a real one, and each span's lowest and highest are among them.
+        const spans = Math.floor((target - 2) / 2);
+        const width = (t[179] - t[0]) / spans;
+        for (let k = 0; k < spans; k++) {
+            const inSpan = t.map((_, i) => i).filter((i) => i > 0 && i < 179 && Math.min(spans - 1, Math.floor((t[i] - t[0]) / width)) === k);
+            const lo = Math.min(...inSpan.map((i) => values[i]));
+            const hi = Math.max(...inSpan.map((i) => values[i]));
+            const keptInSpan = kept.filter((i) => inSpan.includes(i)).map((i) => values[i]);
+            expect(keptInSpan).toContain(lo);
+            expect(keptInSpan).toContain(hi);
+        }
     });
 
-    it("draws two readings as they are", () => {
-        expect(smoothLine([day(1), day(2)], [5, 7], 40)).toEqual([
-            { t: day(1), v: 5 },
-            { t: day(2), v: 7 },
-        ]);
-    });
-});
-
-describe("yAt", () => {
-    it("reads the line's height between its points", () => {
-        const pts = [
-            { x: 0, y: 10, index: 0 },
-            { x: 100, y: 50, index: 1 },
-        ];
-        expect(yAt(pts, 25)).toBe(20);
-        expect(yAt(pts, -5)).toBe(10);
-        expect(yAt(pts, 200)).toBe(50);
+    it("does not start rising before a step", () => {
+        const values = [10, 10, 10, 10, 12];
+        const points = pointsFor(values, frame, ...fullRange(10, 12));
+        const drawn = thinReadings(times(5), values, 40).map((i) => points[i]);
+        const flat = points[0].y;
+        const d = linePath(drawn);
+        // Every coordinate up to the last reading before the step sits at the flat height.
+        const segments = d.split(" C").slice(1);
+        for (const seg of segments.slice(0, 3)) {
+            const ys = seg
+                .split(" ")
+                .filter((_, i) => i % 2 === 1)
+                .map(Number);
+            expect(ys.every((y) => y === Number(flat.toFixed(1)))).toBe(true);
+        }
+        // The segment into the step leaves the flat height flat.
+        expect(Number(segments[3].split(" ")[1])).toBe(Number(flat.toFixed(1)));
     });
 });
