@@ -24,8 +24,8 @@ command-palette search, Settings, public profile, and `/dashboard/design`, the d
 reachable only by typing the address (see `CLAUDE.md`).
 
 End-to-end smoke tests run on every pull request (job `e2e`), ten scenarios, fixture set from
-`scripts/e2e-fixture.sh`. Open: both double-press tests in `e2e/writes.spec.ts` are `test.fixme`
-until the set-page reload bug they cover is fixed. Gaps left for later: scenario 1 (adding a card)
+`scripts/e2e-fixture.sh`. The double-press tests caught a set page drawn from before a write
+(`/api/revalidate` used "max"); fixed in web#676 and both run again. Gaps left for later: scenario 1 (adding a card)
 does not check the card sheet, scenario 6 (cache after a write) covers an add only, not a remove,
 and scenarios 8 and 10 (list state, the set page's own address) test search, sort and view state
 but never the set/rarity Filters sheet.

@@ -26,8 +26,8 @@ describe("POST /api/revalidate", () => {
     it("drops the public page and the dashboard of the person named", async () => {
         const res = await post(who, "s3cret");
         expect(res.status).toBe(204);
-        expect(revalidateTag).toHaveBeenCalledWith("public:bart", "max");
-        expect(revalidateTag).toHaveBeenCalledWith(`user:${who.userId}`, "max");
+        expect(revalidateTag).toHaveBeenCalledWith("public:bart", { expire: 0 });
+        expect(revalidateTag).toHaveBeenCalledWith(`user:${who.userId}`, { expire: 0 });
     });
 
     it("refuses a missing or wrong secret, and drops nothing", async () => {

@@ -26,7 +26,7 @@ test("adding a card shows on the tile, on Collection and on Home, before and aft
     expect(await ownedCount(page)).toBe(before + 1);
 });
 
-test.fixme("two quick presses on plus make two copies, not one and not three", async ({ page }) => {
+test("two quick presses on plus make two copies, not one and not three", async ({ page }) => {
     const c = card(1);
     await page.goto(setPage);
     // Two presses a person makes: the add button, then the "Add a copy of" button that replaces
@@ -43,9 +43,9 @@ test.fixme("two quick presses on plus make two copies, not one and not three", a
     // landed, so its own response is the signal a fresh read can trust. (Not networkidle: Speed
     // Insights keeps its own traffic going, so the network here is never truly idle.)
     //
-    // CI run 35196214137 (2026-09-17): both presses landed (tile showed "2 copies" before the
-    // reload), but after page.reload() the tile read "not in your collection", zero copies. Same
-    // symptom as the guard test below: a real, intermittent app bug, not a test bug.
+    // This caught a real bug (CI run 35196214137): the reload read "not in your collection" about
+    // one round in three. /api/revalidate, called by the API after every write, expired the cache
+    // with "max" and so undid the immediate expiry /api/forget-mine had just set; fixed in web#676.
     const settled = cacheCleared(page);
     await addButton(page, c).click();
     await addCopyButton(page, c).click();
@@ -89,10 +89,10 @@ test("two presses make exactly two copies", async ({ page }) => {
     await other.close();
 });
 
-// This is a guard for the suspected race in set-card-tile.tsx / use-copy-steps.ts: addCard is
-// called with reread: false, and the count write and /api/forget-mine are chained from the
-// browser with no pending guard, so a reload right after two presses could in principle race
-// the second write and read one copy back instead of two.
+// A reload right after two presses, racing whatever writes are still in flight. It read "not in
+// your collection" about one round in three (CI run 35195242573) until web#676: /api/revalidate's
+// "max" turned the cache's immediate expiry into stale-while-revalidate, so the reload was drawn
+// from before the writes.
 //
 // Two presses a person makes: the add button, then the "Add a copy of" button that replaces it
 // once the tile redraws, each click after the previous one's redraw. This is deliberate, not an
@@ -101,10 +101,7 @@ test("two presses make exactly two copies", async ({ page }) => {
 // person's two presses are never that close together, so a sub-frame double click is not the bug
 // this test is for. There is no wait between the second click and the reload beyond the "2
 // copies" assertion already here: the reload should race whatever writes are still in flight.
-// CI run 35195242573 (2026-09-17): both presses landed (tile showed "2 copies" before the
-// reload), but after page.reload() the tile read "not in your collection", zero copies. A real,
-// intermittent app bug, not a test bug: the two reruns of that run passed.
-test.fixme("a reload right after two presses keeps both copies", async ({ page }) => {
+test("a reload right after two presses keeps both copies", async ({ page }) => {
     const c = card(10);
     await page.goto(setPage);
     await addButton(page, c).click();
