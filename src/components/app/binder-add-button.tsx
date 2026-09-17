@@ -4,11 +4,12 @@ import { useRef, useState } from "react";
 import { Plus, Rows01, SearchLg } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Button as AriaButton, Heading as AriaHeading } from "react-aria-components";
-import { type CardHit, editCopies, searchMyCards } from "@/app/(app)/dashboard/cards/actions";
+import { type CardHit, editCopies } from "@/app/(app)/dashboard/cards/actions";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { useCommandSearch } from "@/components/app/command-search";
 import { notify } from "@/components/app/toast";
+import { forgetMineQuietly } from "@/components/app/use-copy-steps";
 import { LoadingIndicator } from "@/components/application/loading-indicator/loading-indicator";
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { Button } from "@/components/base/buttons/button";
@@ -19,6 +20,7 @@ import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Input } from "@/components/base/input/input";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import { cardLine } from "@/lib/card-label";
+import { searchMyCards } from "@/lib/reads";
 import { cx } from "@/utils/cx";
 
 /**
@@ -101,7 +103,6 @@ function OwnCardsPicker({ folder, close }: { folder: { id: string; name: string 
             : "";
 
     const [picked, setPicked] = useState<Map<string, CardHit>>(new Map());
-    const [saving, setSaving] = useState(false);
     const toggle = (card: CardHit, on: boolean) =>
         setPicked((prev) => {
             const next = new Map(prev);
@@ -110,19 +111,23 @@ function OwnCardsPicker({ folder, close }: { folder: { id: string; name: string 
             return next;
         });
 
-    const save = async () => {
+    /* Closed on the press, with the toast, and written after: the ticks are the whole of the choice,
+       and the dialog spun through the write and then through the binder's page being drawn twice
+       (once inside the action's answer, once by the refresh). A write that fails says so; nothing
+       on the page had moved, so nothing goes back. Only the page's own redraw shows the cards. */
+    const save = () => {
         if (!picked.size) return;
-        setSaving(true);
-        // One call for all of them: the API takes the ids beside the field (see editCopies).
-        const res = await editCopies([...picked.keys()], { collectionId: folder.id });
-        setSaving(false);
-        if (!res.ok) {
-            notify.failed(`Those cards were not added to ${folder.name}`, { description: res.error });
-            return;
-        }
+        const ids = [...picked.keys()];
         close();
-        router.refresh();
-        notify.done(`${cards(picked.size)} added to ${folder.name}`);
+        notify.done(`${cards(ids.length)} added to ${folder.name}`);
+        // One call for all of them: the API takes the ids beside the field (see editCopies).
+        void editCopies(ids, { collectionId: folder.id }, { reread: false }).then((res) => {
+            if (!res.ok) {
+                notify.failed(`Those cards were not added to ${folder.name}`, { description: res.error });
+                return;
+            }
+            void forgetMineQuietly().then(() => router.refresh());
+        });
     };
 
     return (
@@ -169,7 +174,7 @@ function OwnCardsPicker({ folder, close }: { folder: { id: string; name: string 
                                 size="md"
                                 className="rounded-lg p-2 hover:bg-secondary"
                                 isSelected={here || picked.has(card.id)}
-                                isDisabled={here || saving}
+                                isDisabled={here}
                                 onChange={(on) => toggle(card, on)}
                                 // The whole row is the label, so the box's name is the card's.
                                 label={
@@ -196,7 +201,7 @@ function OwnCardsPicker({ folder, close }: { folder: { id: string; name: string 
                 <Button color="secondary" onClick={close}>
                     Cancel
                 </Button>
-                <Button color="primary" iconLeading={Plus} isDisabled={!picked.size} isLoading={saving} onClick={save}>
+                <Button color="primary" iconLeading={Plus} isDisabled={!picked.size} onClick={save}>
                     {picked.size ? `Add ${cards(picked.size)}` : "Add"}
                 </Button>
             </div>

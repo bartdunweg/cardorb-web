@@ -11,15 +11,13 @@ import {
     type PricePoint,
     addCard,
     editCopies,
-    listCopies,
     removeCard,
     rereadMine,
     restoreCard,
-    seriesLogo,
     setCopies,
     setFavorite,
 } from "@/app/(app)/dashboard/cards/actions";
-import { type FolderChoice, listCollections, loadFacets } from "@/app/(app)/dashboard/collections/actions";
+import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { NO_ART, artStack, nextArt } from "@/components/app/card-art";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage, preloadCardImage } from "@/components/app/card-image";
@@ -36,6 +34,7 @@ import { SheetBar } from "@/components/app/sheet-bar";
 import { MARK_ON } from "@/components/app/tile-icon-button";
 import { notify } from "@/components/app/toast";
 import { TypeIcon } from "@/components/app/type-icon";
+import { forgetMineQuietly } from "@/components/app/use-copy-steps";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Tab, TabList, TabPanel, Tabs } from "@/components/application/tabs/tabs";
 import { Badge } from "@/components/base/badges/badges";
@@ -53,6 +52,7 @@ import { formatPrice } from "@/lib/format";
 import { orientationNeedsPermission, requestOrientation } from "@/lib/holo/orientation";
 import { periodChange } from "@/lib/price-change";
 import { tcgplayerUrl } from "@/lib/price-links";
+import { listCollections, listCopies, loadFacets, seriesLogo } from "@/lib/reads";
 import { settleLatest } from "@/lib/settle-latest";
 import { cx } from "@/utils/cx";
 
@@ -82,11 +82,22 @@ type Neighbours = { onPrev?: (() => void) | null; onNext?: (() => void) | null }
 type Addable = {
     addable?: PokemonCard | null;
     /**
-     * The card was taken, into the collection or onto the wishlist. For a list the page does not
-     * re-read (the search's hits) to mark the one it came from; every other list learns it
-     * from the refresh the sheet asks for.
+     * The card was taken, into the collection or onto the wishlist, and the store has its row: `id`.
+     * A list that is given this marks the card itself and the page is not drawn again (the search's
+     * hits, a set page); every other list learns it from the refresh the sheet asks for.
      */
-    onTaken?: (card: PokemonCard, list: "collection" | "wishlist") => void;
+    onTaken?: (card: PokemonCard, list: "collection" | "wishlist", id: string | undefined) => void;
+    /**
+     * The card is being taken, told on the press, before the write answers; what it returns puts the
+     * list back if the write fails. A set page marks the tile here: a tile still showing its plus
+     * through the write took a second press as a second row.
+     */
+    onTaking?: (card: PokemonCard, list: "collection" | "wishlist") => (() => void) | void;
+    /**
+     * The row shown was removed from the menu, told on the press. A list that is given this takes the
+     * card off itself and the page is not drawn again; a removal that fails draws it again.
+     */
+    onRemoved?: (row: Card) => void;
     /**
      * The card is held or wished for and its row is still on the way (a set page tapped before its
      * rows were in): the copies' place is held, and nothing is offered that the row would take back.
@@ -108,7 +119,19 @@ type Props = ({ card: Card | null; onClose: () => void; readOnly?: false } | { c
     Addable &
     Period;
 
-export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, onNext, addable, onTaken, rowPending = false, period: opensOn = "1m" }: Props) {
+export function CardDetailSlideout({
+    card,
+    onClose,
+    readOnly = false,
+    onPrev,
+    onNext,
+    addable,
+    onTaken,
+    onTaking,
+    onRemoved,
+    rowPending = false,
+    period: opensOn = "1m",
+}: Props) {
     const router = useRouter();
     // The owner's fields exist only on the editable view; the public view never receives them.
     // The row the sheet shows: the one it opened on, or another copy of the card tapped in the
@@ -163,13 +186,20 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
            the app to the API and on to the database in another region, so a group of four in a
            `for await` was four of those in a queue: the wait grew with the number of copies, on
            the one action where the number of copies is the whole point. They touch different rows,
-           so nothing is racing. */
-        const results = await Promise.all(group.map((row) => removeCard(row.id)));
+           so nothing is racing. None of them forgets (reread: false): each forgetting in its own
+           answer drew the page again once per copy, and those redraws queued behind one another.
+           The cache is dropped once, quietly, when they have all landed, failed ones included,
+           since the others may still have removed their rows. */
+        const results = await Promise.all(group.map((row) => removeCard(row.id, { reread: false })));
         setBusy(false);
+        const forgotten = forgetMineQuietly();
         const failed = results.find((r) => !r.ok);
         if (failed && !failed.ok) {
             notify.failed(group.length > 1 ? "Those copies were not removed" : "That copy was not removed", { description: failed.error });
-            void reloadCopies();
+            void forgotten.then(() => {
+                scheduleRefresh();
+                void reloadCopies();
+            });
             return;
         }
         offerUndo(
@@ -179,7 +209,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         // Nothing left: the sheet says so, rather than staying on a row that is gone with "Add a
         // copy" and the star still writing to it. Only the minus's own path said it before.
         if (!rows.length && card) setRemoved(card.id);
-        scheduleRefresh();
+        void forgotten.then(scheduleRefresh);
     };
     /* Read-only sheets never take a card, so the public shape is not asked to answer for one. */
     const own = readOnly ? null : (card as Card | null);
@@ -220,48 +250,66 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     // On a binder's page before the binder list has answered: the press would file nowhere, so it waits a beat.
     const binderPending = !readOnly && isBinderPath(pathname) && collections.length === 0;
 
-    /* Taking a card the sheet was only showing. The list behind re-reads, and the sheet closes:
-       what it was showing is not what it is now, and the row it became has its own copies. */
-    const add = async (list: "collection" | "wishlist") => {
+    /* Taking a card the sheet was only showing. The sheet closes on the press, with the toast, and
+       the write follows: it waited for the write and then for the list behind to be drawn again, a
+       spinner on a card already chosen. What it was showing is not what it is now, and the row it
+       became has its own copies. A write that fails says so; nothing was marked, so nothing goes back. */
+    const add = (list: "collection" | "wishlist") => {
         if (!takeable) return;
-        setBusy(true);
+        const taken = takeable;
         const into = list === "collection" ? binder : null;
+        const where = list === "wishlist" ? "your wishlist" : into ? into.name : "your collection";
+        setRemoved(null);
+        onClose();
+        notify.done(`Added to ${where}`, { description: taken.name });
+        const putBack = onTaking?.(taken, list);
         /* The printing and run pressed under the card, where the sheet offers a choice (Bart,
            2026-09-15): you add the one you are looking at. Otherwise the API's own default. */
-        const res = await addCard(takeable, list, into?.id, {
+        void addCard(taken, list, into?.id, {
             printing: printing ? { finish: printing.finish, foilPattern: printing.foilPattern } : undefined,
             edition: edition ?? undefined,
+            reread: false,
+        }).then((res) => {
+            if (!res.ok) {
+                notify.failed(`That card was not added to ${where}`, { description: res.error });
+                putBack?.();
+                return;
+            }
+            // The write forgot nothing (reread: false), so a refresh on its own drew the sidebar's
+            // counts from the cache as they were before the add.
+            const forgotten = forgetMineQuietly();
+            if (onTaken) onTaken(taken, list, res.id);
+            else void forgotten.then(() => router.refresh());
         });
-        setBusy(false);
-        const where = list === "wishlist" ? "your wishlist" : into ? into.name : "your collection";
-        if (!res.ok) {
-            notify.failed(`That card was not added to ${where}`, { description: res.error });
-            return;
-        }
-        setRemoved(null);
-        router.refresh();
-        onTaken?.(takeable, list);
-        onClose();
-        notify.done(`Added to ${where}`, { description: takeable.name });
     };
     /* A card you hold, into the binder this page is: the first row not yet in a binder, else the
        row shown, which then moves. A row is one kind of copy, so ×4 goes as four, as the Binder
        select on a copy does it. Only a row the store has answered with: a sheet opened from the
        palette shows the catalogue's card until its rows land, and that card's id is no row's. */
-    const fileInBinder = async () => {
+    /* Filed on the press: the row says the binder at once, so the button and the chip under "In
+       binders" trade places under the finger, and the write follows. It used to hold every button
+       in the sheet through the write and the list behind drawn inside the action's answer. A write
+       that fails puts the rows back and says so. */
+    const fileInBinder = () => {
         if (!mine || !binder || !copies?.length) return;
+        const into = binder;
+        const before = copies;
         const row = copies.find((r) => r.collection_id === null) ?? copies[0];
         pressed.current += 1;
-        setBusy(true);
-        const res = await editCopies([row.id], { collectionId: binder.id });
-        setBusy(false);
-        if (!res.ok) {
-            notify.failed(`${mine.name} was not added to ${binder.name}`, { description: res.error });
-            return;
-        }
-        notify.done(`Added to ${binder.name}`, { description: row.collection_id ? "Moved from another binder" : mine.name });
-        scheduleRefresh();
-        void reloadCopies();
+        setCopiesState({ of: copiesKey(mine), rows: copies.map((r) => (r.id === row.id ? { ...r, collection_id: into.id } : r)) });
+        notify.done(`Added to ${into.name}`, { description: row.collection_id ? "Moved from another binder" : mine.name });
+        void editCopies([row.id], { collectionId: into.id }, { reread: false }).then((res) => {
+            if (!res.ok) {
+                pressed.current += 1;
+                setCopiesState({ of: copiesKey(mine), rows: before });
+                notify.failed(`${mine.name} was not added to ${into.name}`, { description: res.error });
+                return;
+            }
+            void forgetMineQuietly().then(() => {
+                scheduleRefresh();
+                void reloadCopies();
+            });
+        });
     };
     const [facets, setFacets] = useState<Facets | undefined>(undefined);
     /*
@@ -283,12 +331,16 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         const next = !isStarred;
         const tap = ++starTaps.current;
         setStarred({ id, on: next });
-        const write = starWrites.current.then(() => setFavorite(id, next));
+        // Written without the re-read (the page drawn inside each answer held the next tap's write
+        // in Next's action queue), and the cache dropped once the last tap has landed, either way:
+        // the taps before it may have written.
+        const write = starWrites.current.then(() => setFavorite(id, next, { reread: false }));
         starWrites.current = write.catch(() => undefined);
         void write.then(
             (res) => {
                 if (tap !== starTaps.current) return;
-                if (res.ok) scheduleRefresh();
+                const forgotten = forgetMineQuietly();
+                if (res.ok) void forgotten.then(scheduleRefresh);
                 else {
                     setStarred({ id, on: !next });
                     notify.failed(next ? "That card is not a Favorite" : "That card is still a Favorite", { description: res.error });
@@ -296,6 +348,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
             },
             () => {
                 if (tap !== starTaps.current) return;
+                void forgetMineQuietly();
                 setStarred({ id, on: !next });
                 notify.failed(next ? "That card is not a Favorite" : "That card is still a Favorite");
             },
@@ -528,13 +581,15 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
             undo: {
                 label: "Put back",
                 onUndo: () => {
-                    void Promise.all(rows.map((row) => restoreCard(row))).then((results) => {
+                    // Forgotten once for the lot, quietly, as the removal was (dropCopies says why).
+                    void Promise.all(rows.map((row) => restoreCard(row, { reread: false }))).then(async (results) => {
                         const failed = results.find((r) => !r.ok);
                         if (failed && !failed.ok) notify.failed("That did not go back", { description: failed.error });
                         else {
                             setRemoved(null);
                             notify.done(rows.length > 1 ? `${rows.length} copies are back` : "It is back");
                         }
+                        await forgetMineQuietly();
                         scheduleRefresh();
                         void reloadCopies();
                     });
@@ -543,17 +598,23 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         });
     };
 
-    const removeAndOffer = async (id: string, wishlist: boolean) => {
-        setBusy(true);
-        const res = await removeCard(id);
-        setBusy(false);
-        if (!res.ok) {
-            notify.failed(wishlist ? "That card is still on your wishlist" : "That card is still in your collection", { description: res.error });
-            return;
-        }
+    /* Closed on the press and written after, as the add is: the sheet waited for the delete and the
+       redraw with its menu spinning. The toast comes with the answer, because its way back is the row
+       the delete hands back. */
+    const removeAndOffer = (row: Card) => {
+        const wishlist = !!row.wishlist;
         onClose();
-        router.refresh();
-        offerUndo(res.card ? [res.card] : [], wishlist ? "Removed from your wishlist" : "Removed from your collection");
+        onRemoved?.(row);
+        void removeCard(row.id, { reread: false }).then((res) => {
+            if (!res.ok) {
+                notify.failed(wishlist ? "That card is still on your wishlist" : "That card is still in your collection", { description: res.error });
+                router.refresh();
+                return;
+            }
+            const forgotten = forgetMineQuietly();
+            if (!onRemoved) void forgotten.then(() => router.refresh());
+            offerUndo(res.card ? [res.card] : [], wishlist ? "Removed from your wishlist" : "Removed from your collection");
+        });
     };
 
     // The folders and the facets are for the sheet's own controls, so they are asked for when a
@@ -638,7 +699,9 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         if (hasCosmos)
             for (const texture of ["cosmos-bottom.png", "cosmos-middle-trans.png", "cosmos-top-trans.png"]) new window.Image().src = `/holo/${texture}`;
     }, [printingImages, hasCosmos]);
-    const ownPrinting = mine?.finish ? (mine.foil_pattern ? `${mine.finish}/${mine.foil_pattern}` : mine.finish) : null;
+    // On a public page the card's own printing is the one it opens on, as it is for its owner.
+    const held = mine ?? (readOnly ? card : null);
+    const ownPrinting = held?.finish ? (held.foil_pattern ? `${held.finish}/${held.foil_pattern}` : held.finish) : null;
     const [picked, setPicked] = useState<{ tcgId: string | null; printing: string | null; edition: string | null }>({
         tcgId: null,
         printing: null,
@@ -670,7 +733,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const patternPrice = printing?.foilPattern
         ? known?.patternPrints?.prints.find((p) => p.finish === printing.finish && p.foilPattern === printing.foilPattern)?.price?.market
         : undefined;
-    const { series: shownSeries, price: shownPrice } = pressedPrinting({
+    /* A public card with no price field is one whose owner keeps prices private: another printing
+       pressed there must not bring a market figure in through the catalogue's history. */
+    const pricesHidden = readOnly && !(card && "price" in card);
+    const { series: shownSeries, price: pressedPrice } = pressedPrinting({
         pressedAway: !!pressedAway,
         finish: printing?.finish ?? (mine?.finish as Finish | null) ?? "normal",
         edition,
@@ -678,6 +744,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
         latest: points.at(-1)?.printings,
         patternPrice,
     });
+    const shownPrice = pricesHidden ? undefined : pressedPrice;
     const shownChange = pressedAway ? (shownPrice != null && shownSeries ? periodChange(points, period, false, shownSeries, chosen.said) : null) : change;
     // On a public page the card carries a price only where its owner shows them; that is the figure under the title then.
     const publicPrice = readOnly && card && "price" in card ? (card.price ?? null) : null;
@@ -798,10 +865,10 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
     const offer =
         mine && takeable && !rowPending && (emptied || (!mine.owned && !mine.wishlist)) ? (
             <div className="flex flex-col gap-2">
-                <Button size="md" iconLeading={Plus} className="w-full" isDisabled={busy || binderPending} onClick={() => void add("collection")}>
+                <Button size="md" iconLeading={Plus} className="w-full" isDisabled={busy || binderPending} onClick={() => add("collection")}>
                     {binder ? `Add to ${binder.name}` : "Add to collection"}
                 </Button>
-                <Button size="md" color="secondary" iconLeading={Heart} className="w-full" isDisabled={busy} onClick={() => void add("wishlist")}>
+                <Button size="md" color="secondary" iconLeading={Heart} className="w-full" isDisabled={busy} onClick={() => add("wishlist")}>
                     Add to wishlist
                 </Button>
             </div>
@@ -966,7 +1033,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                             it yet: the offer this page is for. The chip under "In binders" and this
                                             button trade places once it lands. */}
                     {binder && mine?.owned && !emptied && !!copies?.length && !copies.some((r) => r.collection_id === binder.id) ? (
-                        <Button size="md" iconLeading={Plus} className="w-full" isDisabled={busy} onClick={() => void fileInBinder()}>
+                        <Button size="md" iconLeading={Plus} className="w-full" isDisabled={busy} onClick={fileInBinder}>
                             Add to {binder.name}
                         </Button>
                     ) : null}
@@ -1140,7 +1207,7 @@ export function CardDetailSlideout({ card, onClose, readOnly = false, onPrev, on
                                                         strips the flag rather than filtering on it, and the only reader left
                                                         was the latest-pull block, which the profile no longer shows. What
                                                         does keep cards off a public profile is a folder's own switch. */}
-                                                    <Dropdown.Item icon={Trash01} onAction={() => void removeAndOffer(mine.id, !!mine.wishlist)}>
+                                                    <Dropdown.Item icon={Trash01} onAction={() => removeAndOffer(mine)}>
                                                         {mine.wishlist ? "Remove from wishlist" : "Remove from collection"}
                                                     </Dropdown.Item>
                                                 </Dropdown.Menu>

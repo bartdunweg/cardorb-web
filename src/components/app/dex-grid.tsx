@@ -2,7 +2,7 @@
 
 import { type ReactNode, Suspense, use, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { listCopies, setDexFace } from "@/app/(app)/dashboard/cards/actions";
+import { setDexFace } from "@/app/(app)/dashboard/cards/actions";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
@@ -17,6 +17,7 @@ import type { Card } from "@/lib/cards";
 import { type CardsSize, GRID_COLUMNS, TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
 import type { DexGeneration, DexList, NamedDexSlot } from "@/lib/dex-groups";
 import { formatCount, formatPrice } from "@/lib/format";
+import { listCopies } from "@/lib/reads";
 import { cx } from "@/utils/cx";
 
 // The card sheet, fetched on the tap that opens it: it is the app's largest client chunk and the
@@ -134,7 +135,13 @@ function DexTile({ slot, onSelect, remembers }: { slot: NamedDexSlot; onSelect?:
     const held = slot.cards.length;
     // The card in view. It starts on the slot's first card, which is the one its owner chose
     // (groupByDex hands the face back first), and follows the slider from there.
-    const [shown, setShown] = useState<DexCard | null>(slot.cards[0] ?? null);
+    /* By id, looked up in the slot as it is now: a card removed in the sheet redraws the slot, and a
+       card kept whole in state still named the removed one's set and price under the next picture. */
+    const [shownId, setShownId] = useState<string | null>(slot.cards[0]?.id ?? null);
+    const shown = slot.cards.find((c) => c.id === shownId) ?? slot.cards[0] ?? null;
+    /* The face as this tile last wrote it. The slot's isFace flags are the page's reading, which a
+       swipe never refreshes: comparing with those left two faces after a second swipe. */
+    const face = useRef<string | null>(slot.cards.find((c) => c.isFace)?.id ?? null);
 
     // Above the picture: the Pokémon. Its name, then its number and how many cards of it you hold.
     // Two lines rather than one: at seven columns a tile is ninety pixels wide, and a name sharing a
@@ -203,14 +210,16 @@ function DexTile({ slot, onSelect, remembers }: { slot: NamedDexSlot; onSelect?:
                     <DexSlider
                         cards={slot.cards}
                         onSelect={onSelect}
-                        onShow={setShown}
+                        onShow={(card) => setShownId(card.id)}
                         // Where a swipe stops is the slot's card. Nothing is written for the card that is
                         // already the face, and nothing at all on somebody else's profile.
                         onSettle={
                             remembers
                                 ? (card) => {
-                                      if (card.isFace) return;
-                                      void setDexFace(card.id, slot.cards.find((c) => c.isFace)?.id ?? null);
+                                      if (face.current === card.id) return;
+                                      const previous = face.current;
+                                      face.current = card.id;
+                                      void setDexFace(card.id, previous);
                                   }
                                 : undefined
                         }
@@ -298,6 +307,18 @@ function DexSlots({
     linked: boolean;
 }) {
     const d = use(dex);
+    /* Cards in the binder, none of them a Pokémon in its range (trainers, energy): the sidebar says
+       3 and "No cards in this binder" would contradict it. */
+    if (d.total === 0 && !narrowed && (d.held ?? 0) > 0)
+        return (
+            <div className="flex flex-1 flex-col">
+                <AppEmptyState
+                    icon="book"
+                    title="No Pokémon here yet"
+                    description="The cards in this binder are trainers, energy or Pokémon outside its range. A Pokédex shows Pokémon in its range only."
+                />
+            </div>
+        );
     if (d.total === 0) return <div className="flex flex-1 flex-col">{narrowed ? noHits : empty}</div>;
     /* Cards here, but none in a rarity this Pokédex counts and the missing ones hidden: nothing to
        draw, and a blank page under a count of cards reads as broken. */

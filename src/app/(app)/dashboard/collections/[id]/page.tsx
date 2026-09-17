@@ -111,7 +111,7 @@ async function Binder({ params, searchParams }: { params: Promise<{ id: string }
         // setting leaves out is not in the binder, whatever the read returned.
         const dex: Promise<DexList> = Promise.all([getAllMyCards(filter), getDexNames()]).then(([r, names]) => {
             const grouped = groupByDex(r.cards, names, setting);
-            return { ...grouped, total: grouped.cards };
+            return { ...grouped, total: grouped.cards, held: r.cards.length };
         });
         const datapoints = dex.then((d) => ({
             total: d.total,

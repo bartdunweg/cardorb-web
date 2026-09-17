@@ -6,7 +6,7 @@ import { withListQuery } from "@/hooks/use-list-memory";
 
 // The pages a person will tap next, fetched while they read this one, so the tap draws the page
 // at once rather than its outline. The sidebar's links are react-aria links, which do not
-// prefetch on their own; the tab bar's are next/link and prefetch themselves.
+// prefetch on their own; the tab bar's are next/link and prefetch on a press (mobile-nav.tsx).
 export function PrefetchRoutes({ hrefs }: { hrefs: string[] }) {
     const router = useRouter();
     // Once, when the shell mounts: the router object is new on every navigation, and prefetching
@@ -14,7 +14,7 @@ export function PrefetchRoutes({ hrefs }: { hrefs: string[] }) {
     useEffect(() => {
         // Only where the sidebar is. This is rendered beside the sidebar, not inside its
         // `hidden lg:flex` wrapper, so a phone (which never sees these links, and whose tab bar's
-        // next/link items prefetch their own) was fetching every one of them on a hard load, each
+        // next/link items prefetch on a press) was fetching every one of them on a hard load, each
         // a dynamic route that re-runs the session check. 64rem is Tailwind's lg.
         if (!window.matchMedia("(min-width: 64rem)").matches) return;
         // As it was left: the click goes there (`withListQuery`), and the bare address would only redirect.

@@ -1,6 +1,6 @@
 import type { DexSlot } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
-import { type DexRange, GENERATIONS, NATIONAL_DEX_MAX, type PokedexSetting, rarityKept } from "@/lib/folder-rule";
+import { type DexRange, GENERATIONS, NATIONAL_DEX_MAX, type PokedexSetting, rarityKept, speciesOfCard } from "@/lib/folder-rule";
 
 /** What the catalogue says of a species: its name, and its official picture where the API has one. */
 export type DexSpecies = Map<number, { name: string; artwork: string | null }>;
@@ -21,7 +21,7 @@ export type DexGeneration = { label: string; from: number; to: number; slots: Na
  */
 /** What a slot needs of a card: the owner's card and a public profile's both have it. */
 /** `set` is what a public card does not carry; a public Pokédex opens nothing, so it needs none. */
-export type DexCardLike = Pick<Card, "id" | "name" | "number" | "species_id" | "rarity" | "image_url" | "image_high_url"> & {
+export type DexCardLike = Pick<Card, "id" | "name" | "number" | "species_id" | "species_ids" | "rarity" | "image_url" | "image_high_url"> & {
     set?: string | null;
     set_name?: string | null;
     /** How many of it are held; a public card says nothing and counts once. */
@@ -63,8 +63,10 @@ export function groupByDex(
     const bySlot = new Map<number, DexCardLike[]>();
     const count: DexCount = { cards: 0, copies: 0, value: null, unpriced: 0 };
     for (const card of cards) {
-        const id = card.species_id;
-        if (id === null || id < range.from || id > range.to) continue;
+        // A tag team is a card of each Pokémon on it, so it fills each of their slots; it is still
+        // one card in the numbers above the grid.
+        const ids = speciesOfCard(card).filter((id) => id >= range.from && id <= range.to);
+        if (ids.length === 0) continue;
         // Counted whatever its rarity, and that is the point: the cards and the worth say what you
         // hold, the way every other binder says it. The rarities answer one question, which is when
         // a Pokémon counts as caught, and they used to quietly take a thousand cards out of the
@@ -78,9 +80,11 @@ export function groupByDex(
         // The slots are the other question: a card in a rarity that does not count leaves its
         // Pokémon grey, so it is not one of the slot's cards either.
         if (kept && !rarityKept(kept, card.rarity, card.name)) continue;
-        const list = bySlot.get(id) ?? [];
-        list.push(card);
-        bySlot.set(id, list);
+        for (const id of ids) {
+            const list = bySlot.get(id) ?? [];
+            list.push(card);
+            bySlot.set(id, list);
+        }
     }
     const slots: NamedDexSlot[] = [];
     for (let number = range.from; number <= range.to; number += 1) {
@@ -124,4 +128,8 @@ export function groupByDex(
  * through (the rows in the slots; the list read more, and those are not shown), `copies`, `value`
  * and `unpriced` the slots' own, from `DexCount`.
  */
-export type DexList = ReturnType<typeof groupByDex> & { total: number };
+export type DexList = ReturnType<typeof groupByDex> & {
+    total: number;
+    /** Every card the list read, the ones no slot takes (a trainer, a Pokémon outside the range) included. */
+    held?: number;
+};

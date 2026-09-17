@@ -2,7 +2,6 @@
 
 import { useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { countCards } from "@/app/(app)/dashboard/list-actions";
 import { type FilterAnswer, type FilterGroup, type FilterOption, type FilterValues, FiltersSheet } from "@/components/app/filters-sheet";
 import { FlagIcon } from "@/components/app/flag-icon";
 import { TypeIcon } from "@/components/app/type-icon";
@@ -12,6 +11,7 @@ import type { CardFilter } from "@/lib/cards";
 import type { Facets } from "@/lib/cards";
 import { languageOf } from "@/lib/languages";
 import { type ListQuery, listHref } from "@/lib/list-query";
+import { countCards } from "@/lib/reads";
 
 const FULL_ART = "fullArt";
 const DUPLICATES = "duplicates";

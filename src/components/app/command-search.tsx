@@ -4,16 +4,17 @@ import type { ReactNode } from "react";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { type CatalogueFilters, type PokemonCard, addCard, listRows, searchPokemon } from "@/app/(app)/dashboard/cards/actions";
-import { listSetsShelf } from "@/app/(app)/dashboard/sets/actions";
+import { type CatalogueFilters, type PokemonCard, addCard } from "@/app/(app)/dashboard/cards/actions";
 import type { FilterOption } from "@/components/app/filter-chip";
 import { SearchTrigger } from "@/components/app/search-trigger";
 import { notify } from "@/components/app/toast";
+import { forgetMineQuietly } from "@/components/app/use-copy-steps";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import { type Card, cardFromPokemonCard } from "@/lib/api-shapes";
 import { loadCatalogueIndex, loadSpecies, lookupCards } from "@/lib/catalogue-client";
 import { searchIndex } from "@/lib/catalogue-index";
 import type { BrowseLanguage } from "@/lib/languages";
+import { listRows, listSetsShelf, searchPokemon } from "@/lib/reads";
 import { hitFromRows, takenHit } from "@/lib/search-hit";
 
 /** What one answer from the catalogue search holds at most: the API's page. A full one means there may be more. */
@@ -140,30 +141,32 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
     }, [inputValue, filters]);
 
     /* To the collection, or to the wishlist: the same card cannot be in both, so one press settles
-       it. The hit is marked at once (takenHit), because the hits are this component's and no
-       refresh re-reads them: the row under the closed preview would still offer the card as one
-       you did not have. `adding` holds the hit whose add is in flight and which of the two lists it
-       is going to, so both buttons wait and the spinner sits on the one that was pressed. */
-    const [adding, setAdding] = useState<{ id: string; target: "collection" | "wishlist" } | null>(null);
+       it. The hit is marked on the press (takenHit) and the write follows: the buttons waited for the
+       write and then for the page behind to be drawn again, seconds for a card already chosen. The
+       hits are this component's and no refresh re-reads them, so the mark is the only thing that
+       says the card is taken; a write that fails puts the hit back as it was and says so. */
     /* The page behind is re-read when the palette closes, not on every add: read at once, Home
        swapped its welcome for the stats under a palette still open, and the change landed on a
-       screen nobody was looking at. Read on close, it lands on the screen you come back to. */
+       screen nobody was looking at. Read on close, it lands on the screen you come back to, once the
+       writes still in the air have landed. */
     const wrote = useRef(false);
-    const add = async (card: PokemonCard, target: "collection" | "wishlist") => {
-        setAdding({ id: card.id, target });
-        const res = await addCard(card, target);
-        setAdding(null);
-        if (res.ok) {
-            update((hits) => takenHit(hits, card.id, target));
-            wrote.current = true;
-            // The hit's mark says the press landed; where the card went is a page under the
-            // palette. The same sentence as the sheet's own Add.
-            notify.done(target === "wishlist" ? `${card.name} is on your wishlist now` : `${card.name} is in your collection now`);
-        } else {
-            // The buttons come back as they were, which reads as a missed click; the toast is the
-            // only thing that says the card is not there.
+    // Whether the palette is open when a write from its sheet lands, which can be after it closed.
+    const openNow = useRef(isOpen);
+    useEffect(() => {
+        openNow.current = isOpen;
+    }, [isOpen]);
+    const writes = useRef<Promise<unknown>>(Promise.resolve());
+    const add = (card: PokemonCard, target: "collection" | "wishlist") => {
+        const before = { owned: card.owned, wishlist: card.wishlist, quantity: card.quantity };
+        update((hits) => takenHit(hits, card.id, target));
+        wrote.current = true;
+        notify.done(target === "wishlist" ? `${card.name} is on your wishlist now` : `${card.name} is in your collection now`);
+        const write = addCard(card, target, undefined, { reread: false }).then((res) => {
+            if (res.ok) return forgetMineQuietly();
+            update((hits) => hits.map((h) => (h.id === card.id ? { ...h, ...before } : h)));
             notify.failed(`${card.name} was not added to your ${target}`, { description: res.error });
-        }
+        });
+        writes.current = writes.current.then(() => write);
     };
 
     /* View details, in the preview: the card's full sheet over the palette, with its price line and
@@ -240,7 +243,7 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
                             setFilters({});
                             if (wrote.current) {
                                 wrote.current = false;
-                                router.refresh();
+                                void writes.current.then(() => router.refresh());
                             }
                         }
                     }}
@@ -257,7 +260,6 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
                     loadingMore={loadingMore}
                     onLoadMore={loadMore}
                     total={total}
-                    adding={adding}
                     onAdd={add}
                     onView={(hit) => void view(hit)}
                 />
@@ -270,7 +272,12 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
                     addable={viewed && !viewed.owned && !viewed.wishlist ? viewed : null}
                     onClose={closeSheet}
                     /* The hit the card came from says so at once. */
-                    onTaken={(card, list) => update((hits) => takenHit(hits, card.id, list))}
+                    onTaken={(card, list) => {
+                        update((hits) => takenHit(hits, card.id, list));
+                        // The page behind learns it when the palette closes, or now if it already has.
+                        if (openNow.current) wrote.current = true;
+                        else router.refresh();
+                    }}
                 />
             ) : null}
         </CommandSearchContext.Provider>

@@ -3,11 +3,12 @@
 import { type ReactNode, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
-import { createCollection, loadFacets, updateCollection } from "@/app/(app)/dashboard/collections/actions";
+import { createCollection, updateCollection } from "@/app/(app)/dashboard/collections/actions";
 import { DexRangeFields, dexDraft, dexFromDraft } from "@/components/app/dex-range-fields";
 import { FormError } from "@/components/app/form-error";
 import { RarityPicker } from "@/components/app/rarity-picker";
 import { notify } from "@/components/app/toast";
+import { forgetMineQuietly } from "@/components/app/use-copy-steps";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { BadgeWithButton } from "@/components/base/badges/badges";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
@@ -17,6 +18,7 @@ import { NativeSelect } from "@/components/base/select/select-native";
 import { Toggle } from "@/components/base/toggle/toggle";
 import { type Facets, NO_FACETS } from "@/lib/facets";
 import { type FolderKind, type FolderRule, type PokedexSetting, ruleSummary } from "@/lib/folder-rule";
+import { loadFacets } from "@/lib/reads";
 
 type FolderShape = { id: string; name: string; kind: FolderKind; rule: FolderRule | null; pokedex: PokedexSetting | null; isPublic: boolean };
 type FormProps = {
@@ -106,36 +108,44 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
         };
     };
 
+    /* The dialog waits for the write, because the API is what says a name is taken and what hands
+       back a new binder's id, and a form closed before that answer loses what was typed into it.
+       It no longer waits for the redraw: the button spun on while the whole page was drawn inside
+       the action's answer, and the refresh after it drew the page a second time. Now the write
+       forgets nothing itself, the cache is dropped quietly and the page is drawn once. */
     const save = async (close: () => void) => {
         setSaving(true);
         setError(null);
         const res =
             mode === "create"
-                ? await createCollection(name, rule(), pokedex() ?? undefined, isPublic)
-                : await updateCollection(folder!.id, { name, ...(kind === "rule" ? { rule: rule() } : {}), pokedex: pokedex(), isPublic });
+                ? await createCollection(name, rule(), pokedex() ?? undefined, isPublic, { reread: false })
+                : await updateCollection(folder!.id, { name, ...(kind === "rule" ? { rule: rule() } : {}), pokedex: pokedex(), isPublic }, { reread: false });
         setSaving(false);
         if (!res.ok) {
             setError(res.error);
             return;
         }
         close();
+        const forgotten = forgetMineQuietly();
         // A new rule folder is worth seeing filled; a renamed one is where it was. An opener that
         // asked for the id stays where it is and gets it.
         if (onSaved) {
             // No toast: the opener puts the new binder in front of you; the card sheet's select
             // switches to it the moment this returns.
             onSaved(res.id);
-            router.refresh();
+            void forgotten.then(() => router.refresh());
         } else if (mode === "create" && kind === "rule" && res.id) {
-            // No toast either: the page you land on, filled, is the answer.
-            router.push(`/dashboard/collections/${res.id}`);
+            // No toast either: the page you land on, filled, is the answer. After the cache is gone,
+            // or the binder's page reads the list of binders from before it existed.
+            const id = res.id;
+            void forgotten.then(() => router.push(`/dashboard/collections/${id}`));
         } else {
             // Nothing here moves. A new binder joins a list you are not looking at, and a rename
             // swaps one word in a header that is easy to miss.
             notify.done(
                 mode === "create" ? `${name} is in your Binders now` : folder!.name !== name ? `This binder is called ${name} now` : `${name} is saved`,
             );
-            router.refresh();
+            void forgotten.then(() => router.refresh());
         }
     };
 

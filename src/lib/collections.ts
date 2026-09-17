@@ -55,6 +55,19 @@ export async function getMyFolders(): Promise<{ id: string; name: string; kind: 
 }
 
 /**
+ * Every binder with its rule, for the card sheet and the Got it form: the same cached read the
+ * sidebar makes, so opening a sheet is a cache hit rather than its own GET /folders (182 ms on
+ * 2026-09-16). Fails soft to none, as the sheet always did: without them a sheet files nowhere.
+ */
+export async function getFolderChoices(): Promise<{ id: string; name: string; rule: FolderRule | null }[]> {
+    try {
+        return (await folders()).map((f) => ({ id: f.id, name: f.name, rule: f.rule }));
+    } catch {
+        return [];
+    }
+}
+
+/**
  * How many cards you have starred, for the sidebar's Favorites row. Fails soft as the folders
  * do: null draws the row without a number. The stats are cached with the folders, under the
  * same tag, so the frame pays this read once per five minutes and after a write.

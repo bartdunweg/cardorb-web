@@ -91,6 +91,14 @@ export function SetCardTile({
         onStored: (id) => onChange?.({ itemIds: id ? [id] : [] }),
     });
     const error = stepError ?? wish.error;
+    /* The heart is drawn anew when it fills or empties, so a keyboard on it lost its place and
+       started again at the top of the page. Focus goes to the new heart, the first button, once it
+       is drawn: the plus beside a fresh wish is still waiting for its row and cannot take it. */
+    const pressWish = (next: boolean) => {
+        const hadFocus = buttons.current?.contains(document.activeElement);
+        wish.press(next);
+        if (hadFocus) requestAnimationFrame(() => buttons.current?.querySelector("button")?.focus());
+    };
 
     const state = held > 0 ? "owned" : wish.wished ? "wishlist" : "missing";
     // One wish row, or none yet (a wish pressed a moment ago): two rows are managed in Cards.
@@ -202,12 +210,12 @@ export function SetCardTile({
                             icon={Heart}
                             on="wishlist"
                             label={`Remove ${card.name} #${card.number} from your wishlist`}
-                            onPress={() => wish.press(false)}
+                            onPress={() => pressWish(false)}
                         />
                     ) : null}
                     {state === "missing" ? (
                         <>
-                            <TileIconButton icon={Heart} label={`Add ${card.name} #${card.number} to your wishlist`} onPress={() => wish.press(true)} />
+                            <TileIconButton icon={Heart} label={`Add ${card.name} #${card.number} to your wishlist`} onPress={() => pressWish(true)} />
                             <TileIconButton icon={Plus} label={`Add ${card.name} #${card.number} to your collection`} onPress={() => press(1)} />
                         </>
                     ) : null}

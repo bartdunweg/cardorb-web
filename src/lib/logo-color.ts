@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { createHash } from "node:crypto";
 import sharp from "sharp";
 import { elapsed, logTiming } from "@/lib/timing";
 
@@ -53,6 +54,37 @@ export async function logoPalettes(urls: (string | null)[]): Promise<string[][]>
     };
     await Promise.all(Array.from({ length: Math.min(CONCURRENCY, urls.length) }, worker));
     return out;
+}
+
+/**
+ * A whole shelf's palettes by logo address, as one cache read.
+ *
+ * `logoPalettes` over a shelf is a cache hit per logo, and every hit is its own round trip to the
+ * Data Cache: 188 of them on each read of the English shelf, 200 to 500 ms of wall time and seconds
+ * of CPU, on every visit to Browse, long after every logo had been read. The answers for a shelf are
+ * kept together here, under the set of addresses they are for, so a shelf that has not changed is
+ * one read. A set added to the catalogue changes the key: that one read then walks the per-logo
+ * entries again, all hits but the new logo's, and keeps the new whole.
+ */
+export async function logoPaletteMap(urls: (string | null)[]): Promise<Record<string, string[]>> {
+    const unique = [...new Set(urls.filter((url): url is string => Boolean(url)))].sort();
+    if (unique.length === 0) return {};
+    const key = createHash("sha1").update(unique.join("\n")).digest("hex");
+    const start = performance.now();
+    let ran = false;
+    try {
+        return await unstable_cache(
+            async () => {
+                ran = true;
+                const palettes = await logoPalettes(unique);
+                return Object.fromEntries(unique.map((url, i) => [url, palettes[i] ?? []]));
+            },
+            ["logo-colors", VERSION, key],
+            { revalidate: THIRTY_DAYS },
+        )();
+    } finally {
+        logTiming("cache logo-colors", elapsed(start), `${ran ? "miss" : "hit"} ${unique.length}`);
+    }
 }
 
 /** Reads in flight at once for a shelf. At the five-second limit each, a catalogue that answers nothing costs a 200-set shelf under a minute, once. */

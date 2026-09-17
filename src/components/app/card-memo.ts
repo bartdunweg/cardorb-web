@@ -1,7 +1,8 @@
-import { type CardFacts, type PricePoint, cardFacts, cardFactsMany, cardPriceHistory, listSetRows } from "@/app/(app)/dashboard/cards/actions";
+import type { CardFacts, PricePoint } from "@/app/(app)/dashboard/cards/actions";
 import { CARD_FACTS_BATCH } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
 import { type CardName, sameCard } from "@/lib/copies";
+import { cardFacts, cardFactsMany, cardPriceHistory, listSetRows } from "@/lib/reads";
 
 /**
  * What the catalogue has said about a printing, kept for as long as the page lives.

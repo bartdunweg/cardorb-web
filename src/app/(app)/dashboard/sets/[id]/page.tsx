@@ -13,7 +13,7 @@ import { rememberedView } from "@/lib/list-memory-server";
 import { logoPalette } from "@/lib/logo-color";
 import { holdingStamp } from "@/lib/set-holding";
 import { setStats } from "@/lib/set-stats";
-import { CatalogueUnavailable, getSet, getSets } from "@/lib/sets";
+import { CatalogueUnavailable, getSet, getShelf } from "@/lib/sets";
 
 // The set's own name in the tab, so a history of open sets is readable.
 //
@@ -32,7 +32,7 @@ export async function generateMetadata({
     const { language: raw } = await searchParams;
     const language = isBrowseLanguage(raw) ? raw : "en";
     try {
-        const { series } = await getSets(language);
+        const { series } = await getShelf(language);
         const set = series.flatMap((group) => group.sets).find((s) => s.id === id);
         if (set) return { title: set.name };
     } catch {

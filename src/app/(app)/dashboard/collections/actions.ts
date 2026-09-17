@@ -2,8 +2,9 @@
 
 import { z } from "zod";
 import { ApiError, api } from "@/lib/api";
-import { createdFolderAnswer, foldersAnswer } from "@/lib/api-shapes";
+import { createdFolderAnswer } from "@/lib/api-shapes";
 import { getFacets } from "@/lib/cards";
+import { getFolderChoices } from "@/lib/collections";
 import { type Facets, NO_FACETS } from "@/lib/facets";
 import { type FolderRule, type PokedexSetting, folderRuleSchema, pokedexSettingSchema } from "@/lib/folder-rule";
 import { forgetMine } from "@/lib/user-cache";
@@ -19,7 +20,17 @@ const nameSchema = z.string().trim().min(1, "Enter a name.").max(60);
 
 // Folders live in the API; every call is scoped to the caller there. With a rule the folder
 // fills itself from the cards you own; without one you file cards in it by hand.
-export async function createCollection(name: string, rule?: FolderRule, pokedex?: PokedexSetting, isPublic?: boolean): Promise<CollectionResult> {
+//
+// `reread: false` writes and nothing more, as on the card actions: forgetMine() redraws the page
+// inside this action's answer, and a dialog that waited for that redraw span for seconds on a
+// write that had landed. Such a caller drops the cache itself and refreshes once.
+export async function createCollection(
+    name: string,
+    rule?: FolderRule,
+    pokedex?: PokedexSetting,
+    isPublic?: boolean,
+    { reread = true }: { reread?: boolean } = {},
+): Promise<CollectionResult> {
     const parsed = z
         .object({ name: nameSchema, rule: folderRuleSchema.optional(), pokedex: pokedexSettingSchema.optional(), isPublic: z.boolean().optional() })
         .safeParse({ name, rule, pokedex, isPublic });
@@ -36,7 +47,7 @@ export async function createCollection(name: string, rule?: FolderRule, pokedex?
                 ...(parsed.data.isPublic ? { isPublic: true } : {}),
             },
         });
-        await forgetMine();
+        if (reread) await forgetMine();
         return { ok: true, id: folder.id };
     } catch (err) {
         return failed(err);
@@ -47,6 +58,7 @@ export async function createCollection(name: string, rule?: FolderRule, pokedex?
 export async function updateCollection(
     id: string,
     patch: { name?: string; rule?: FolderRule; pokedex?: PokedexSetting | null; isPublic?: boolean },
+    { reread = true }: { reread?: boolean } = {},
 ): Promise<CollectionResult> {
     const parsed = z
         .object({
@@ -67,7 +79,7 @@ export async function updateCollection(
         return failed(err);
     }
 
-    await forgetMine();
+    if (reread) await forgetMine();
     return { ok: true, id: parsed.data.id };
 }
 
@@ -85,14 +97,10 @@ export async function loadFacets(): Promise<Facets> {
 }
 
 // Every folder with its rule, for the card sheet: the ones filled by hand are where a card can be
-// filed; the rule folders say, by their rule, whether they hold it.
+// filed; the rule folders say, by their rule, whether they hold it. The cached read (collections.ts);
+// the sheet itself asks through GET /api/read/folders, which reads the same.
 export async function listCollections(): Promise<FolderChoice[]> {
-    try {
-        const { folders } = await api("/folders", { schema: foldersAnswer });
-        return folders.map((f) => ({ id: f.id, name: f.name, rule: f.rule ?? null }));
-    } catch {
-        return [];
-    }
+    return getFolderChoices();
 }
 
 export async function deleteCollection(id: string): Promise<CollectionResult> {

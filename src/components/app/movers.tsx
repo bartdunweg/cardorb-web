@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Button as AriaButton } from "react-aria-components";
-import { moversFor } from "@/app/(app)/dashboard/(home)/actions";
-import { listRows } from "@/app/(app)/dashboard/cards/actions";
 import { CardImage } from "@/components/app/card-image";
 import { PERIODS, type PeriodKey } from "@/components/app/chart-periods";
 import { useHomePeriod } from "@/components/app/home-period";
@@ -13,6 +11,7 @@ import { cardLine, copyLine } from "@/lib/card-label";
 import type { Card } from "@/lib/cards";
 import { formatPrice } from "@/lib/format";
 import type { Mover } from "@/lib/movers";
+import { listRows, moversFor } from "@/lib/reads";
 import { TILE_SURFACE } from "@/lib/tile";
 import { cx } from "@/utils/cx";
 
@@ -39,8 +38,10 @@ export function Movers() {
     const said = (PERIODS.find((p) => p.key === period) ?? PERIODS[1]).said;
     const [answers, setAnswers] = useState<Partial<Record<PeriodKey, Answer>>>({});
     const known = period in answers;
+    // A period whose read failed is asked again when it is chosen again, not remembered as failed.
+    const failed = answers[period] === null;
     useEffect(() => {
-        if (known) return;
+        if (known && !failed) return;
         let current = true;
         void moversFor(period).then((answer) => {
             if (current) setAnswers((a) => ({ ...a, [period]: answer }));
@@ -48,7 +49,9 @@ export function Movers() {
         return () => {
             current = false;
         };
-    }, [period, known]);
+        // Not on `failed` itself: that would ask again straight after every failure.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [period]);
     const answer = answers[period];
     /* Each tile leads to the whole collection sorted its way, over the same period (list-query.ts). */
     const listOf = (sort: "change-desc" | "change-asc") => `/dashboard/cards?sort=${sort}${period === "1m" ? "" : `&period=${period}`}`;

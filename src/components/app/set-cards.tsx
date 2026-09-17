@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SearchLg, SwitchVertical01 } from "@untitledui/icons";
 import dynamic from "next/dynamic";
 import { usePathname, useSearchParams } from "next/navigation";
-import { listRows } from "@/app/(app)/dashboard/cards/actions";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { awaitRows, knownRows, warmCardFacts, warmSetRows } from "@/components/app/card-memo";
 import { type FilterAnswer, type FilterValues, FiltersSheet } from "@/components/app/filters-sheet";
@@ -22,6 +21,7 @@ import { type SetCard, pokemonCardFromSetCard } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
 import { type CardsSize, GRID_COLUMNS } from "@/lib/cards-view";
 import { FULL_ART, setFullArt } from "@/lib/full-art";
+import { listRows } from "@/lib/reads";
 import { holdingKey } from "@/lib/set-holding";
 import { SET_SORTS, type SetHolding, type SetQuery, readSetQuery, writeSetQuery } from "@/lib/set-query";
 
@@ -94,7 +94,7 @@ export function SetCards({
     /* The cards as the tiles show them: what the server drew, with every press since laid over it
        (`SetLive`). The tabs, their counts and the sheet read these, so a heart pressed a moment ago
        is counted under Wishlisted and opens on the wish. */
-    const { live, report } = useSetLive();
+    const { live, report, outsideCount } = useSetLive();
     const cards = useMemo(() => drawnCards.map(live), [drawnCards, live]);
     const drawnById = useMemo(() => new Map(drawnCards.map((c) => [c.id, c])), [drawnCards]);
     /* The choices live in the URL (`@/lib/set-query`), written with the history API rather than the
@@ -249,7 +249,10 @@ export function SetCards({
        had no arrows at all: you left the sheet, found the next card and opened it again, on a page
        whose whole point is going through a set in order. */
     const [at, setAt] = useState(-1);
+    // The card the sheet is on, so what the sheet does to it reaches its tile and the counts.
+    const [openId, setOpenId] = useState<string | null>(null);
     const open = async (card: SetCard) => {
+        setOpenId(card.id);
         const index = shown.findIndex((c) => c.id === card.id);
         setAt(index);
         // The sheet's arrows can go past the cards drawn; draw them, so closing it lands on a tile.
@@ -270,9 +273,13 @@ export function SetCards({
         setSelected(known ? onRow(known) : fromCatalogue(card));
         if (!held || known) return;
         const row = (pressed ? undefined : (await awaitRows(name))?.[0]) ?? (await listRows(name))[0];
+        /* No row yet: a tile's own add is still in the air. The sheet stays pending and reads again
+           once the tile has its row (the effect below), rather than settling on a card with no copies
+           and no way to take it. */
+        if (!row) return;
         // Only onto the sheet still showing this card, not one opened or closed since.
         setPendingId((id) => (id === card.id ? null : id));
-        if (row) setSelected((shown) => (shown?.id === card.id ? onRow(row) : shown));
+        setSelected((shown) => (shown?.id === card.id ? onRow(row) : shown));
     };
 
     /* Null rather than a dead button at either end: the sheet draws no arrow where there is
@@ -369,10 +376,17 @@ export function SetCards({
                                 <li key={card.id} className="arrive" style={{ "--arrive-delay": `${Math.min(i, 16) * 20}ms` } as React.CSSProperties}>
                                     <SetCardTile
                                         card={card}
-                                        stamp={holdingKey(drawnById.get(card.id) ?? card)}
+                                        stamp={`${holdingKey(drawnById.get(card.id) ?? card)}#${outsideCount(drawnById.get(card.id) ?? card)}`}
                                         onChange={(patch) => {
                                             const drawnCard = drawnById.get(card.id);
                                             if (drawnCard) report(drawnCard, patch);
+                                            /* A sheet opened on this card while its add was in the air is waiting for
+                                               the row: open it again once the tile has one, or once the write failed
+                                               and the card is not held after all. */
+                                            if (drawnCard && pendingId === card.id) {
+                                                const now = { ...live(drawnCard), ...patch };
+                                                if (now.itemIds[0] || !(now.owned || now.wishlist)) void open(now);
+                                            }
                                             setTouched((t) => ({ view, ids: new Set(t.view === view ? t.ids : []).add(card.id) }));
                                         }}
                                         language={language}
@@ -407,8 +421,43 @@ export function SetCards({
                     setAddable(null);
                     setPendingId(null);
                     setAt(-1);
+                    setOpenId(null);
                 }}
                 addable={addable ? pokemonCardFromSetCard(addable, language) : null}
+                /* The sheet writes without drawing the page again; the tile and the counts are told here. */
+                onTaking={(taken, list) => {
+                    const drawnCard = drawnById.get(taken.id);
+                    if (!drawnCard) return;
+                    const before = live(drawnCard);
+                    // Held at once, with no row yet: the tile's buttons cannot write a second row meanwhile.
+                    report(
+                        drawnCard,
+                        list === "wishlist"
+                            ? { wishlist: true, owned: false, quantity: 0, itemIds: [] }
+                            : { owned: true, quantity: 1, wishlist: false, itemIds: [] },
+                        true,
+                    );
+                    return () =>
+                        report(drawnCard, { owned: before.owned, quantity: before.quantity, wishlist: before.wishlist, itemIds: before.itemIds }, true);
+                }}
+                onTaken={(taken, list, id) => {
+                    const drawnCard = drawnById.get(taken.id);
+                    if (!drawnCard) return;
+                    const itemIds = id ? [id] : [];
+                    report(
+                        drawnCard,
+                        list === "wishlist" ? { wishlist: true, owned: false, quantity: 0, itemIds } : { owned: true, quantity: 1, wishlist: false, itemIds },
+                        true,
+                    );
+                }}
+                onRemoved={(row) => {
+                    const drawnCard = openId ? drawnById.get(openId) : undefined;
+                    if (!drawnCard) return;
+                    const now = live(drawnCard);
+                    const itemIds = now.itemIds.filter((i) => i !== row.id);
+                    const quantity = row.owned ? Math.max(0, now.quantity - (row.quantity ?? 1)) : now.quantity;
+                    report(drawnCard, { itemIds, quantity, owned: quantity > 0, wishlist: row.wishlist ? false : now.wishlist }, true);
+                }}
                 rowPending={!!selected && selected.id === pendingId}
                 onPrev={step(-1)}
                 onNext={step(1)}

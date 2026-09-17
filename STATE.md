@@ -25,6 +25,34 @@ reachable only by typing the address (see `CLAUDE.md`).
 
 ## Last session
 
+**2026-09-17, a fourth bug hunt: Home, the card lists, Settings.** Home: a failed movers read is
+asked again when its period is chosen again, the movers start over after a write (keyed on what you
+hold), a deleted binder in `?value=` falls back to the collection with its line and movers, and a
+period's first day is the local day, not UTC's. Lists: a Pokédex swipe tracks the face it wrote
+(comparing with the page's stale flags left two faces), a slot's line under the picture follows the
+slot after a card is removed, a set heading's count waits until its set is whole, set sections are
+keyed by place, and `?duplicates=1` no longer narrows the wishlist. Settings: the username is claimed
+before the profile goes public (a 409 left the profile public under a switch saying private), the
+sheet no longer sends the wishlist flag it has no control for, a call that never answers stops the
+spinner, and the field shows the saved lowercase name. Checked and wrong: € on dollar figures (the
+API converts). Left: the chart's 3M/6M are 91/182 days, the movers' 90/180; the API accepts only
+those. Not measured live: the hidden pane stalled every streamed page.
+
+**2026-09-17, a third bug hunt: Browse, set pages, the public profile.** Three reviews, each
+finding read against the code first. Browse: the search field kept the old language's set names
+after Filters changed it (the index now resets on its key), a sort picked inside the 250 ms after
+typing was written back out (the timer reads the URL as it is), and an empty shelf the progress
+filter made said no set had that name. Set page: Add from the sheet marks the tile on the press
+(`onTaking`), so a plus in the write's round trip no longer makes a second row; a sheet opened on a
+tile whose add is in the air waits for the row instead of settling on nothing; the split form
+ignores a second Enter. Public profile: a name nobody has answers 404, not 200 (the route-level
+`loading.tsx` streamed first; the profile read now runs above the page's own Suspense), the
+canonical and chip links use the owner's spelling, and a signed-in visitor pressing another
+printing no longer sees a market price where the owner keeps prices private. Checked and wrong:
+favorite stars leaking where favorites are hidden (the API stars nothing then). Measured on the dev
+server: 404, canonical, the progress empty state; the two set-page races are timing and were not
+reproduced.
+
 **2026-09-16, the card sheet's writes read over.** A code review of the sheet, its two forms
 and their actions, then the pane. Mark as owned started every wish at English and sent the
 language whatever the wish was, so a Japanese wish came out an English copy with nothing on screen
@@ -50,9 +78,10 @@ as another's row; a Pokédex binder whose cards are in no counted rarity drew a 
 cardorb-api: an import drops the purchase price on insert; the export writes no grade, purchase
 date or favourite; a failed batch leaves earlier batches written under a message that says nothing
 happened; the web's 2 MB limit is larger than the API's body limit; a guessed column cannot be set
-to "Not in this file"; line numbers drift after a multi-line note. Left on the web: a tag team
-fills one Pokédex slot (the API sends one species id), and a Pokédex binder of trainers only says
-it has no cards.
+to "Not in this file"; line numbers drift after a multi-line note. Since then, all fixed: the import
+faults (cardorb-api#522), the export's grade, purchase date and star, the line numbers and a quote
+mid-field (cardorb-api#524), a tag team in the slot of every Pokémon on it (`species_ids`,
+cardorb-api#523), and a Pokédex binder of trainers only, which said it had no cards.
 
 **2026-09-16, auth and Settings read over.** A code review, then the pane. Any signed-in session
 could open /reset-password and set a new password without the old one: the page and its action

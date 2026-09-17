@@ -23,19 +23,21 @@ const profileSchema = z.object({
         .toLowerCase()
         .regex(/^[a-z0-9][a-z0-9-]{1,29}$/, "Use 2 to 30 lowercase letters, numbers and hyphens, starting with a letter or number."),
     is_public: z.boolean(),
-    wishlist_public: z.boolean(),
 });
 
 // The profile goes through the API: the name and the public flag in one call, the username in its
-// own, because the API claims a username as a separate, checked step.
+// own, because the API claims a username as a separate, checked step. The username first: a name
+// refused with 409 used to arrive after the profile had already gone public, while the page's
+// switch still said private. The wishlist's flag is not sent: this form has no control for it, and
+// the value it held from its page could undo a change just made on the wishlist.
 export async function updateProfile(input: unknown): Promise<ActionResult> {
     const parsed = profileSchema.safeParse(input);
     if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
     const p = parsed.data;
     try {
-        await api("/profile", { method: "PATCH", body: { displayName: p.display_name, isPublic: p.is_public, wishlistPublic: p.wishlist_public } });
         await api("/username", { method: "POST", body: { username: p.username } });
+        await api("/profile", { method: "PATCH", body: { displayName: p.display_name, isPublic: p.is_public } });
     } catch (err) {
         return failed(err);
     } finally {
@@ -180,7 +182,9 @@ export async function updateEmail(email: string): Promise<ActionResult> {
 const listSchema = z.object({ list: z.enum(["wishlist", "favorites"]), shown: z.boolean() });
 const FLAG = { wishlist: "wishlistPublic", favorites: "favoritesPublic" } as const;
 
-export async function updateListPublic(input: unknown): Promise<ActionResult> {
+// `reread: false` on this and the two flags below: the caller drops the cache itself and refreshes
+// once, rather than waiting for the page to be drawn again inside this answer.
+export async function updateListPublic(input: unknown, { reread = true }: { reread?: boolean } = {}): Promise<ActionResult> {
     const parsed = listSchema.safeParse(input);
     if (!parsed.success) return { ok: false, error: "Something went wrong. Try again." };
     try {
@@ -188,22 +192,22 @@ export async function updateListPublic(input: unknown): Promise<ActionResult> {
     } catch (err) {
         return failed(err);
     }
-    await forgetMine();
+    if (reread) await forgetMine();
     return { ok: true };
 }
 
 // The public flag on its own, from the row on the settings page: one PATCH, nothing else touched.
 // The Manage sheet still sends it with the name and the username; this is the fast road.
-export async function setProfilePublic(isPublic: boolean): Promise<ActionResult> {
-    return setProfileFlag("isPublic", isPublic);
+export async function setProfilePublic(isPublic: boolean, options: { reread?: boolean } = {}): Promise<ActionResult> {
+    return setProfileFlag("isPublic", isPublic, options);
 }
 
 // Whether the public page prices what it shows, from the row under Public profile: the same one PATCH.
-export async function setPricesPublic(pricesPublic: boolean): Promise<ActionResult> {
-    return setProfileFlag("pricesPublic", pricesPublic);
+export async function setPricesPublic(pricesPublic: boolean, options: { reread?: boolean } = {}): Promise<ActionResult> {
+    return setProfileFlag("pricesPublic", pricesPublic, options);
 }
 
-async function setProfileFlag(flag: "isPublic" | "pricesPublic", value: boolean): Promise<ActionResult> {
+async function setProfileFlag(flag: "isPublic" | "pricesPublic", value: boolean, { reread = true }: { reread?: boolean }): Promise<ActionResult> {
     const parsed = z.boolean().safeParse(value);
     if (!parsed.success) return { ok: false, error: "Something went wrong. Try again." };
     try {
@@ -211,6 +215,6 @@ async function setProfileFlag(flag: "isPublic" | "pricesPublic", value: boolean)
     } catch (err) {
         return failed(err);
     }
-    await forgetMine();
+    if (reread) await forgetMine();
     return { ok: true };
 }

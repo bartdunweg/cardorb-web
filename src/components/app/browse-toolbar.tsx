@@ -3,7 +3,6 @@
 import { useCallback, useTransition } from "react";
 import { Grid01, Rows01, SwitchVertical01 } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
-import { countShelf } from "@/app/(app)/dashboard/sets/actions";
 import { CardsSearch } from "@/components/app/cards-search";
 import { type FilterAnswer, type FilterValues, FiltersSheet } from "@/components/app/filters-sheet";
 import { FlagIcon } from "@/components/app/flag-icon";
@@ -11,12 +10,12 @@ import { RowButton } from "@/components/app/row-button";
 import { LIST_ROW } from "@/components/app/row-search";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Dot } from "@/components/foundations/dot-icon";
+import { setSetsView, useSetsView } from "@/hooks/use-sets-view";
 import { BROWSE_PROGRESS_OPTIONS, BROWSE_SORT_OPTIONS, type BrowseQuery, browseHref, isBrowseProgress, isBrowseSort } from "@/lib/browse-query";
 import { BROWSE_LANGUAGES, isBrowseLanguage } from "@/lib/languages";
-import { SETS_VIEW_COOKIE, type SetsViewMode } from "@/lib/sets-view";
+import { countShelf } from "@/lib/reads";
+import type { SetsViewMode } from "@/lib/sets-view";
 import { cx } from "@/utils/cx";
-
-const ONE_YEAR = 60 * 60 * 24 * 365;
 
 /** A set's progress as a dot of colour beside its word, the way a status tag reads: done, under way, untouched. */
 const PROGRESS_DOT: Record<string, string> = {
@@ -34,9 +33,11 @@ const first = (keys: "all" | Set<React.Key>) => (keys === "all" ? undefined : [.
  * View draws it as tiles or rows. Search, language, progress and sort go into the URL (`?q=`,
  * `?language=`, `?progress=`, `?sort=`), so the page
  * can be shared and comes back the same; the view is a cookie the server reads, so the chosen
- * layout is in the first paint. The shelf under the row re-reads on each.
+ * layout is in the first paint. The shelf under the row re-reads on each but the view, which only
+ * redraws the sets already there.
  */
-export function BrowseToolbar({ query, view }: { query: BrowseQuery; view: SetsViewMode }) {
+export function BrowseToolbar({ query, view: initialView }: { query: BrowseQuery; view: SetsViewMode }) {
+    const view = useSetsView(initialView);
     const router = useRouter();
     const [pending, startTransition] = useTransition();
     // Per choice, the sets it would leave (the search as typed); the button's total with it.
@@ -117,8 +118,8 @@ export function BrowseToolbar({ query, view }: { query: BrowseQuery; view: SetsV
                         onSelectionChange={(keys) => {
                             const key = first(keys);
                             if (key !== "grid" && key !== "list") return;
-                            document.cookie = `${SETS_VIEW_COOKIE}=${key}; path=/; max-age=${ONE_YEAR}; samesite=lax`;
-                            startTransition(() => router.refresh());
+                            // The shelf redraws from the sets it holds; the cookie is for the next load (use-sets-view.ts).
+                            setSetsView(key);
                         }}
                     >
                         <Dropdown.Item id="grid" icon={Grid01}>

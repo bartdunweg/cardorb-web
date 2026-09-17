@@ -2,13 +2,13 @@ import Link from "next/link";
 import { TopCardsRow } from "@/components/app/top-cards-row";
 import { getMyCards } from "@/lib/cards";
 import { TILE_SURFACE } from "@/lib/tile";
+import { perUser } from "@/lib/user-cache";
 
 // Home's most valuable cards: the twelve dearest copies you hold, as a row that scrolls sideways,
 // each tile its picture, name and price, opening the card's sheet. The heading leads to the whole list sorted the same way. Read
 // under Suspense so the page does not wait for it.
 export async function TopCards() {
-    const { cards } = await getMyCards({ sort: "price", order: "desc", limit: 12, facets: false });
-    const top = cards.filter((c) => c.price != null);
+    const top = await topCards();
     if (top.length === 0) return null;
     return (
         <section aria-labelledby="top-cards-heading" className="flex flex-col gap-4">
@@ -26,4 +26,14 @@ export async function TopCards() {
             </div>
         </section>
     );
+}
+
+// Kept per person like the list's first batch: twelve is not a batch size, so this read went to the
+// API on every open of Home. Five minutes under the person's tag, dropped by a write; the window in
+// the key also carries the night's new prices in by the next morning's first open.
+function topCards() {
+    return perUser("top-cards:v1", async (token) => {
+        const { cards } = await getMyCards({ sort: "price", order: "desc", limit: 12, facets: false, token });
+        return cards.filter((c) => c.price != null);
+    });
 }

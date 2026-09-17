@@ -28,7 +28,7 @@ export default async function SetsPage({ searchParams }: { searchParams: Promise
             <PageHeader title="Browse" />
             {/* The shelf is not awaited: the title and the row go out first, the sets when the catalogue answers. */}
             <BrowseToolbar query={query} view={view} />
-            <Suspense key={`${query.language}:${query.sort}:${query.progress}:${query.q ?? ""}:${view}`} fallback={<SetsOutline />}>
+            <Suspense key={`${query.language}:${query.sort}:${query.progress}:${query.q ?? ""}`} fallback={<SetsOutline />}>
                 <Shelf query={query} view={view} />
             </Suspense>
         </div>
@@ -49,8 +49,10 @@ async function Shelf({ query, view }: { query: BrowseQuery; view: SetsViewMode }
             />
         );
     }
-    const series = sortShelf(progressShelf(searchShelf(shelf.series, query.q), query.progress), query.sort);
-    if (series.length === 0 && query.q) {
+    // The name first, on its own: an empty shelf the progress filter made is not a name nobody has.
+    const named = searchShelf(shelf.series, query.q);
+    const series = sortShelf(progressShelf(named, query.progress), query.sort);
+    if (named.length === 0 && query.q) {
         return <AppEmptyState icon="search" title="No sets found" description={`No set is called “${query.q}”. Try another name.`} />;
     }
     if (series.length === 0 && query.progress !== "all") {
