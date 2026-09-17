@@ -53,7 +53,6 @@ export function rarityKept(entries: string[], rarity: string | null, name: strin
     });
 }
 
-export const DEFAULT_POKEDEX: PokedexSetting = { missing: true };
 export type FolderKind = "manual" | "rule";
 
 /** The last national dex number. Defined here, not read from pokedex.ts: that file reaches the

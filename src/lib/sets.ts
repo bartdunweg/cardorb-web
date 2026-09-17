@@ -1,14 +1,5 @@
 import { ApiError, api } from "@/lib/api";
-import {
-    type BrowseCard,
-    type CatalogueSet,
-    type SetCard,
-    catalogueSetsAnswer,
-    ownImage,
-    seriesFromSets,
-    setCardFromBrowse,
-    setPageAnswer,
-} from "@/lib/api-shapes";
+import { type SetCard, catalogueSetsAnswer, ownImage, seriesFromSets, setCardFromBrowse, setPageAnswer } from "@/lib/api-shapes";
 import type { BrowseLanguage } from "@/lib/languages";
 import { logoPaletteMap } from "@/lib/logo-color";
 import { perUser } from "@/lib/user-cache";
@@ -102,13 +93,6 @@ export async function getSet(id: string, language: BrowseLanguage = "en"): Promi
 }
 
 async function readSet(id: string, language: BrowseLanguage, token: string): Promise<SetDetail> {
-    type Page = {
-        set: Omit<CatalogueSet, "ownedCount" | "wishlistCount">;
-        cards: BrowseCard[];
-        totalCount: number;
-        ownedCount: number;
-        hasMore: boolean;
-    };
     const read = (page: number) =>
         api(`/catalog/sets/${encodeURIComponent(id)}`, {
             token,

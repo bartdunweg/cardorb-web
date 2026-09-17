@@ -8,7 +8,6 @@ import { DexRangeFields, dexDraft, dexFromDraft } from "@/components/app/dex-ran
 import { FormError } from "@/components/app/form-error";
 import { RarityPicker } from "@/components/app/rarity-picker";
 import { notify } from "@/components/app/toast";
-import { forgetMineQuietly } from "@/components/app/use-copy-steps";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { BadgeWithButton } from "@/components/base/badges/badges";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
@@ -18,6 +17,7 @@ import { NativeSelect } from "@/components/base/select/select-native";
 import { Toggle } from "@/components/base/toggle/toggle";
 import { type Facets, NO_FACETS } from "@/lib/facets";
 import { type FolderKind, type FolderRule, type PokedexSetting, ruleSummary } from "@/lib/folder-rule";
+import { forgetMineQuietly } from "@/lib/forget-mine";
 import { loadFacets } from "@/lib/reads";
 
 type FolderShape = { id: string; name: string; kind: FolderKind; rule: FolderRule | null; pokedex: PokedexSetting | null; isPublic: boolean };

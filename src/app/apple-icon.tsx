@@ -9,7 +9,6 @@ export const contentType = "image/png";
 export default function AppleIcon() {
     return new ImageResponse(
         <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#ffffff" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element -- Satori draws an img, not next/image */}
             <img src={`data:image/svg+xml;base64,${Buffer.from(orbLogoSvg(150, "#0a0a0a")).toString("base64")}`} width={150} height={150} alt="" />
         </div>,
         size,

@@ -1,5 +1,5 @@
 import { api } from "@/lib/api";
-import { type Card, type CardItem, type FilterCounts, cardFromItem, cardsAnswer, facetsAnswer, statsAnswer } from "@/lib/api-shapes";
+import { type Card, type FilterCounts, cardFromItem, cardsAnswer, facetsAnswer, statsAnswer } from "@/lib/api-shapes";
 import { type Facets, facetsFrom } from "@/lib/facets";
 import { perUser } from "@/lib/user-cache";
 

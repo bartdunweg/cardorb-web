@@ -4,10 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateCollection } from "@/app/(app)/dashboard/collections/actions";
 import { notify } from "@/components/app/toast";
-import { forgetMineQuietly } from "@/components/app/use-copy-steps";
 import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { type PokedexSetting, rarityLabel } from "@/lib/folder-rule";
+import { forgetMineThenRefresh } from "@/lib/forget-then-refresh";
 
 /**
  * What a binder shown as a Pokédex is counting, where it counts less than everything: the rarities
@@ -46,7 +46,7 @@ export function PokedexRarityNote({ folderId, setting }: { folderId: string; set
                     notify.failed("Only these rarities still count", { description: res.error });
                     return;
                 }
-                void forgetMineQuietly("binders").then(() => router.refresh());
+                void forgetMineThenRefresh("binders", router);
             },
             () => {
                 setCleared(null);

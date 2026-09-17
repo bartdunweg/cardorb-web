@@ -9,7 +9,7 @@ test("adding a card shows on the tile, on Collection and on Home, before and aft
 
     await page.goto(setPage);
     // Registered before the click: the set tile presses with quiet: true, so the add's own cache
-    // clear is /api/forget-mine (use-copy-steps.ts's forgetMineQuietly()), which the reload below
+    // clear is /api/forget-mine (forget-mine.ts's forgetMineQuietly()), which the reload below
     // depends on having landed, not just the toast.
     const settled = cacheCleared(page);
     await addButton(page, c).click();

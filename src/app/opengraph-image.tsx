@@ -24,7 +24,6 @@ export default function OpenGraphImage() {
             }}
         >
             <div style={{ display: "flex", alignItems: "center", gap: 20, fontSize: 40, fontWeight: 600, letterSpacing: -1 }}>
-                {/* eslint-disable-next-line @next/next/no-img-element -- Satori draws an img, not next/image */}
                 <img src={`data:image/svg+xml;base64,${Buffer.from(orbLogoSvg(64, "#fafafa")).toString("base64")}`} width={64} height={64} alt="" />
                 Cardorb
             </div>

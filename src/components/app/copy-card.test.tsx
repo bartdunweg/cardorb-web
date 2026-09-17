@@ -14,7 +14,7 @@ vi.mock("@/app/(app)/dashboard/cards/actions", () => ({ editCopies: (...args: un
 vi.mock("@/app/(app)/dashboard/collections/actions", () => ({ createCollection: vi.fn(), updateCollection: vi.fn() }));
 vi.mock("@/lib/reads", () => ({ loadFacets: vi.fn().mockResolvedValue({ sets: [], rarities: [] }) }));
 const forget = vi.fn();
-vi.mock("@/components/app/use-copy-steps", () => ({ forgetMineQuietly: () => (forget(), Promise.resolve()) }));
+vi.mock("@/lib/forget-mine", () => ({ forgetMineQuietly: () => (forget(), Promise.resolve()) }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 const failed = vi.fn();
 vi.mock("@/components/app/toast", () => ({ notify: { done: vi.fn(), failed: (...args: unknown[]) => failed(...args) } }));

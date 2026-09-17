@@ -14,10 +14,10 @@
  * drift, and is listed apart. Same idea as `docs/accessibility-decisions.md`: an exception someone
  * can reread and overturn is fine, a silent one is a blind spot.
  *
- * `node scripts/kit-drift.mjs` prints it, `--json` writes the shape the design system page reads,
+ * `node scripts/kit-drift.mjs` prints it, `--json` prints the same report as JSON on stdout,
  * and `--check` is the gate: it fails on drift the baseline does not already know about. The
- * baseline only ever shrinks; that is the whole mechanism. It is not a licence for the fifteen
- * sites in it, it is a floor under them.
+ * baseline only ever shrinks; that is the whole mechanism. It is empty now, so any control built
+ * by hand without a reason fails.
  */
 import { readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";

@@ -4,7 +4,6 @@ import { z } from "zod";
 import { ApiError, api } from "@/lib/api";
 import { createdFolderAnswer } from "@/lib/api-shapes";
 import { getFacets } from "@/lib/cards";
-import { getFolderChoices } from "@/lib/collections";
 import { type Facets, NO_FACETS } from "@/lib/facets";
 import { type FolderRule, type PokedexSetting, folderRuleSchema, pokedexSettingSchema } from "@/lib/folder-rule";
 import { forgetMine } from "@/lib/user-cache";
@@ -96,16 +95,9 @@ export async function loadFacets(): Promise<Facets> {
     }
 }
 
-// Every folder with its rule, for the card sheet: the ones filled by hand are where a card can be
-// filed; the rule folders say, by their rule, whether they hold it. The cached read (collections.ts);
-// the sheet itself asks through GET /api/read/folders, which reads the same.
-export async function listCollections(): Promise<FolderChoice[]> {
-    return getFolderChoices();
-}
-
 export async function deleteCollection(id: string): Promise<CollectionResult> {
     const parsed = z.string().uuid().safeParse(id);
-    if (!parsed.success) return { ok: false, error: "Invalid collection." };
+    if (!parsed.success) return { ok: false, error: "Invalid binder." };
 
     try {
         await api(`/folders/${parsed.data}`, { method: "DELETE" });

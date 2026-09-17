@@ -13,7 +13,6 @@ import {
     pokemonCardFromSetCard,
     priceForCopy,
     publicCardFromItem,
-    removedCardSchema,
     seriesFromSets,
     setCardFromBrowse,
 } from "./api-shapes";
