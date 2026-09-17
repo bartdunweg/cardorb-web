@@ -175,7 +175,8 @@ test("a printing chosen in the sheet is the printing the copy is added as", asyn
     // the sheet opened on and not the Cosmos holo beside it.
     const printed = async () => {
         await expect(collectionTile(page, c)).toHaveCount(1);
-        await expect(collectionTile(page, c)).toContainText(/\bHolo\b/);
+        // Its own line under the name and the set line (the tile's text runs together: "RareHoloYou hold").
+        await expect(collectionTile(page, c).getByText("Holo", { exact: true })).toBeVisible();
         await expect(collectionTile(page, c)).not.toContainText("Reverse");
         await expect(collectionTile(page, c)).not.toContainText("Cosmos");
     };
