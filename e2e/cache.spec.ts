@@ -21,6 +21,13 @@ test("after a write, Back and a reload show the new state, not the cached one", 
     await expect(setTile(page, c, "in your collection")).toBeVisible();
     await page.reload();
     await expect(setTile(page, c, "in your collection")).toBeVisible();
+
+    // Leaves the account as this test found it: `stack.spec.ts`'s "a new account opens on Home"
+    // expects a fully empty account, and Playwright runs spec files in name order, which puts this
+    // file (cache.spec.ts) before stack.spec.ts. An unremoved card here would fail that test.
+    await removeButton(page, c).click();
+    await expect(page.getByText(`${c.name} is out of your collection`)).toBeVisible();
+    await expect(setTile(page, c, "not in your collection")).toBeVisible();
 });
 
 test("the public profile shows an added card and loses a removed one", async ({ page, browser }) => {
