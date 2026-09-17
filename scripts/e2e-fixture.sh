@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copies the end-to-end fixture set out of production, read-only: the set row, its first twelve
+# Copies the end-to-end fixture set out of production, read-only: the set row, its first twenty
 # English cards and the TCGplayer prices for whichever of those cards TCGplayer has a product for.
 # Run by hand from a machine linked to the project; the result is committed as
 # e2e/fixtures/catalogue.json.
@@ -25,7 +25,7 @@ select json_build_object(
   'sets', (select json_agg(s) from catalogue_sets s where s.id = '$SET' and s.language = 'en'),
   'cards', (select json_agg(c order by c.number_order, c.local_id) from (
       select * from catalogue_cards where set_id = '$SET' and language = 'en'
-      order by number_order nulls last, local_id limit 12) c)
+      order by number_order nulls last, local_id limit 20) c)
 ) as fixture")"
 
 # The CLI wraps the row in {boundary, rows: [{fixture: {...}}], warning}; unwrap it and drop the
