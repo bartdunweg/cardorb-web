@@ -551,7 +551,7 @@ export function CardDetailSlideout({
        dead in between. Now the panel shows the new count and the store catches up: one write in
        the air per row, always for the last count pressed, and the rows are read back once it has
        landed. A write that fails puts the store's number back and says so. */
-    const [settleQuantity] = useState(() => settleLatest((id: string, quantity: number) => setCopies(id, quantity, { reread: false })));
+    const [settleQuantity] = useState(() => settleLatest((id: string, quantity: number) => orFailed(setCopies(id, quantity, { reread: false }))));
     const showQuantity = (row: Card, quantity: number) => {
         if (!mine) return;
         pressed.current += 1;
