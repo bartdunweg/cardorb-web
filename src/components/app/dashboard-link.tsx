@@ -9,7 +9,7 @@ export function DashboardLink({ account }: { account: { name: string; avatarUrl:
         <Link
             href="/dashboard"
             aria-label={`${account.name}, to your dashboard`}
-            className="flex pressable items-center gap-2 rounded-full bg-primary py-1 pr-3 pl-1 ring-1 ring-primary outline-offset-2 outline-focus-ring transition-colors duration-150 ring-inset hover:bg-primary_hover focus-visible:outline-2"
+            className="flex pressable items-center gap-2 rounded-full bg-primary py-1 pr-3 pl-1 ring-1 ring-primary outline-offset-2 outline-focus-ring ring-inset hover:bg-primary_hover focus-visible:outline-2"
         >
             <Avatar size="sm" src={account.avatarUrl ?? undefined} alt="" />
             <span className="max-w-32 truncate text-sm font-semibold text-primary">{account.name}</span>

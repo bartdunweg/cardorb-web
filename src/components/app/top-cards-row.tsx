@@ -31,7 +31,7 @@ export function TopCardsRow({ cards }: { cards: Card[] }) {
                         <AriaButton
                             onPress={() => setAt(i)}
                             aria-label={`${card.name}, ${cardLabel(card)}, ${formatPrice(card.price)}`}
-                            className="flex w-60 pressable cursor-pointer items-center gap-3 rounded-lg p-1.5 text-left outline-focus-ring transition-colors hover:bg-alpha-black/4 data-focus-visible:outline-2"
+                            className="flex w-60 pressable cursor-pointer items-center gap-3 rounded-lg p-1.5 text-left outline-focus-ring hover:bg-alpha-black/4 data-focus-visible:outline-2"
                         >
                             {/* The rank, for the eye: the list is an ordered one, so a screen reader already says which place. */}
                             <span aria-hidden="true" className="w-5 shrink-0 text-center text-sm font-semibold text-tertiary tabular-nums">

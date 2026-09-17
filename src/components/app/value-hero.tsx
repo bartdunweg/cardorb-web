@@ -48,8 +48,13 @@ export function ValueHero({
     const change = split ? split.change : null;
     const list = lists.find((l) => l.id === selected) ?? lists[0];
 
+    // Dims while the next answer is fetched, after 150 ms, so a quick answer never flickers; it
+    // lights up again at once.
     return (
-        <section aria-labelledby="value-heading" className={cx("flex flex-col gap-4 transition-opacity duration-150", pending && "opacity-60")}>
+        <section
+            aria-labelledby="value-heading"
+            className={cx("flex flex-col gap-4 transition-opacity duration-(--duration-fast)", pending && "opacity-60 delay-150")}
+        >
             <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between gap-x-2">
                     <h2 id="value-heading" className="text-sm font-semibold text-tertiary">

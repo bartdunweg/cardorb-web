@@ -24,7 +24,7 @@ export function FilterChipRow({ onClear, className, children }: { onClear?: () =
             {onClear ? (
                 <AriaButton
                     onPress={onClear}
-                    className="shrink-0 pressable cursor-pointer rounded-full px-2 py-1.5 text-xs font-semibold whitespace-nowrap text-tertiary outline-focus-ring transition-colors duration-150 hover:text-secondary focus-visible:outline-2"
+                    className="shrink-0 pressable cursor-pointer rounded-full px-2 py-1.5 text-xs font-semibold whitespace-nowrap text-tertiary outline-focus-ring hover:text-secondary focus-visible:outline-2"
                 >
                     Clear
                 </AriaButton>
@@ -60,7 +60,7 @@ export function FilterChip({
         setOpen(false);
     };
     const chipClass = cx(
-        "flex shrink-0 pressable cursor-pointer items-center gap-1 rounded-full py-1.5 pr-2 pl-3 text-xs font-semibold whitespace-nowrap ring-1 outline-focus-ring transition-colors duration-150 ring-inset focus-visible:outline-2",
+        "flex shrink-0 pressable cursor-pointer items-center gap-1 rounded-full py-1.5 pr-2 pl-3 text-xs font-semibold whitespace-nowrap ring-1 outline-focus-ring ring-inset focus-visible:outline-2",
         chosen ? "bg-alpha-black/8 text-primary ring-transparent" : "bg-primary text-secondary ring-primary hover:bg-secondary",
     );
     const chipContent = (
@@ -239,7 +239,7 @@ function Choice({
             // Nothing left to show with it: passed over, unless it is chosen and has to come off again.
             isDisabled={count === 0 && !pressed}
             className={cx(
-                "flex pressable cursor-pointer items-center gap-3 rounded-lg px-2 py-2 text-left outline-focus-ring transition-colors hover:bg-secondary focus-visible:outline-2 disabled:cursor-default disabled:opacity-50 disabled:hover:bg-transparent",
+                "flex pressable cursor-pointer items-center gap-3 rounded-lg px-2 py-2 text-left outline-focus-ring hover:bg-secondary focus-visible:outline-2 disabled:cursor-default disabled:opacity-50 disabled:hover:bg-transparent",
                 pressed && "bg-alpha-black/4",
             )}
         >
