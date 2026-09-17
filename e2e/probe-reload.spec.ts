@@ -10,15 +10,16 @@ test("probe: reload right after two presses, fifteen rounds", async ({ page }) =
     const setPage = `/dashboard/sets/${SET_ID}`;
     const results: string[] = [];
     const events: string[] = [];
+    const t0 = Date.now();
     page.on("request", (r) => {
         const u = r.url();
-        if (r.method() === "POST" || (r.method() === "GET" && u.includes(setPage)))
-            events.push(`+${Date.now()} ${r.method()} ${u.replace("http://localhost:3000", "")}${r.headers()["next-action"] ? " action" : ""}`);
+        if (r.method() === "POST" || (r.method() === "GET" && u.endsWith(setPage)))
+            events.push(`+${Date.now() - t0} ${r.method()} ${u.replace("http://localhost:3000", "")}${r.headers()["next-action"] ? " action" : ""}`);
     });
     page.on("requestfinished", (r) => {
         const u = r.url();
-        if (r.method() === "POST" || (r.method() === "GET" && u.includes(setPage)))
-            events.push(`-${Date.now()} ${r.method()} ${u.replace("http://localhost:3000", "")}`);
+        if (r.method() === "POST" || (r.method() === "GET" && u.endsWith(setPage)))
+            events.push(`-${Date.now() - t0} ${r.method()} ${u.replace("http://localhost:3000", "")}`);
     });
     page.on("dialog", (d) => {
         events.push(`dialog ${d.type()}`);
@@ -31,7 +32,7 @@ test("probe: reload right after two presses, fifteen rounds", async ({ page }) =
         await addButton(page, c).click();
         await addCopyButton(page, c).click();
         await expect(setTile(page, c, "2 copies")).toBeVisible();
-        events.push(`reload ${Date.now()}`);
+        events.push(`reload ${Date.now() - t0}`);
         await page.reload();
         const tile = page.getByRole("button", { name: new RegExp(`^${literal(c.name)} #\\S+, `) });
         let said = "";

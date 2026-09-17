@@ -92,17 +92,7 @@ export type SetDetail = {
 // changes: an entry survives a deploy (#206).
 export async function getSet(id: string, language: BrowseLanguage = "en"): Promise<SetDetail | null> {
     try {
-        const began = Date.now();
-        const got = await perUser(`set:v1:${language}:${id}`, async (token) => {
-            console.log(`[probe] ${Date.now()} readSet start ${id}`);
-            const read = await readSet(id, language, token);
-            const s = read.cards.find((c) => c.number.endsWith("011"));
-            console.log(`[probe] ${Date.now()} readSet end ${id} began ${began} skiddo owned=${s?.owned} q=${s?.quantity}`);
-            return read;
-        });
-        const s = got.cards.find((c) => c.number.endsWith("011"));
-        console.log(`[probe] ${Date.now()} getSet ${id} began ${began} skiddo owned=${s?.owned} q=${s?.quantity}`);
-        return got;
+        return await perUser(`set:v1:${language}:${id}`, (token) => readSet(id, language, token));
     } catch (err) {
         if (err instanceof ApiError && err.status === 404) return null;
         if (catalogueDown(err)) throw new CatalogueUnavailable();
