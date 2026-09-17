@@ -159,6 +159,54 @@ describe("CardsList elsewhere", () => {
 });
 
 /*
+ * A card the reader has just written off this very list (a star turned off on Favorites) is gone
+ * from it on the press. The list is read again after such a write, and until that read lands, or
+ * where it never lands because the read answers from a cache that has not caught up with the write,
+ * the card sat there as if nothing had happened, until a reload.
+ */
+describe("CardsList with cards written off the list", () => {
+    const of = (id: string, name: string): Card => ({ ...card, id, name, owned: true, quantity: 1 });
+    const two = [of("a", "Pikachu"), of("b", "Raichu")];
+    const drawWith = async (gone: ReadonlySet<string>, cards = two) =>
+        act(async () =>
+            render(
+                <Suspense fallback={null}>
+                    <CardsList
+                        list={Promise.resolve({ cards, total: cards.length, facets: { sets: [], rarities: [], gens: [], types: [] } } as unknown as CardList)}
+                        filter={{}}
+                        narrowed={false}
+                        view="grid"
+                        size="md"
+                        onSelect={vi.fn()}
+                        noHits={null}
+                        empty={<p>No favorites yet</p>}
+                        gone={gone}
+                    />
+                </Suspense>,
+            ),
+        );
+
+    it("leaves the card out, and out of the count it says", async () => {
+        await drawWith(new Set(["b"]));
+        expect(await screen.findByText("Pikachu")).toBeInTheDocument();
+        expect(screen.queryByText("Raichu")).toBeNull();
+        expect(screen.getByText("Showing 1 of 1 cards")).toBeInTheDocument();
+    });
+
+    it("draws the list as it was when nothing was written off it", async () => {
+        await drawWith(new Set());
+        expect(await screen.findByText("Pikachu")).toBeInTheDocument();
+        expect(screen.getByText("Raichu")).toBeInTheDocument();
+    });
+
+    it("shows the empty state once the last card has gone", async () => {
+        await drawWith(new Set(["a", "b"]));
+        expect(await screen.findByText("No favorites yet")).toBeInTheDocument();
+        expect(screen.queryByText("Pikachu")).toBeNull();
+    });
+});
+
+/*
  * "Set" asks the API for nothing, because the order it answers in is set by set already. That
  * grouping was on screen and unnamed, so the list read as unsorted. These are the runs the
  * headings are drawn from: one per set, in the order the list arrived, never a group-by that
