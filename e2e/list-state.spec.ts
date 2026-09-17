@@ -43,13 +43,13 @@ test("search, sort and view survive a reload, Back and Forward", async ({ page }
         .getByRole("menuitemradio", { name: "List" })
         .or(page.getByRole("menuitem", { name: "List" }))
         .click();
-    await expect(page.getByRole("table", { name: "Cards" })).toBeVisible();
+    await expect(page.getByRole("grid", { name: "Cards" })).toBeVisible();
 
     const holds = async () => {
         await expect(page.getByLabel("Search your cards")).toHaveValue(target.name);
         await expect(page).toHaveURL(/[?&]sort=name/);
-        await expect(page.getByRole("table", { name: "Cards" })).toBeVisible();
-        await expect(page.getByRole("table", { name: "Cards" }).getByRole("rowheader", { name: target.name })).toBeVisible();
+        await expect(page.getByRole("grid", { name: "Cards" })).toBeVisible();
+        await expect(page.getByRole("grid", { name: "Cards" }).getByRole("rowheader", { name: target.name })).toBeVisible();
     };
 
     await page.reload();
