@@ -108,6 +108,9 @@ export function CardsList({
         return [...first.cards, ...appended.filter((c) => !onFirst.has(c.id))];
     }, [first.cards, appended]);
     const groups = useMemo(() => setGroups(cards, groupedBySet), [cards, groupedBySet]);
+    /* The ids of the first page, for the arrival wave: a set's grid that a scroll batch starts is new,
+       and its own first draw is not the page's. One reference per first page, so no tile redraws. */
+    const firstPageIds = useMemo(() => new Set(first.cards.map((c) => c.id)), [first.cards]);
     const selectFromList = useCallback((card: Card) => onSelect(card, cards), [onSelect, cards]);
     /* The facts of every card on the list, a page per request as the pages arrive, so a sheet opened
        on any of them draws its choices on its first paint (card-memo.ts). */
@@ -304,6 +307,7 @@ export function CardsList({
                                         steps={!filter.wishlist}
                                         // The first row at load is the first set's; a later set's tiles, and a batch appended on scroll, load as they come in.
                                         priority={i === 0 ? Math.min(FIRST_ROW, first.cards.length) : 0}
+                                        firstPage={firstPageIds}
                                     />
                                 </section>
                             ))}

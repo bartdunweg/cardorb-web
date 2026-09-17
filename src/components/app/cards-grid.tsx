@@ -52,6 +52,7 @@ export function CardsGrid<T extends GridCard>({
     action,
     steps = false,
     priority = FIRST_ROW,
+    firstPage,
 }: {
     /** Whose cards these are, for the words a screen reader gets under a count: the person looking, or the owner of a public page. */
     holder?: "you" | "owner";
@@ -81,6 +82,13 @@ export function CardsGrid<T extends GridCard>({
      * page: every later set, and every batch appended on scroll, passes 0.
      */
     priority?: number;
+    /**
+     * The ids of the list's first page, for a list drawn as one grid per set: a set's grid that a
+     * batch appended on scroll brings in is new, and without this its tiles took the wave as if they
+     * were the page's first. Only a tile on both this and the grid's own first draw staggers. Pass a
+     * stable reference, so the memoised tiles are not drawn again for it.
+     */
+    firstPage?: ReadonlySet<string>;
 }) {
     /* One press handler for every tile, whatever the parent hands in on each render: a tile is
        memoised, and a new closure per tile per render drew all of them again. It reads the list and
@@ -91,15 +99,16 @@ export function CardsGrid<T extends GridCard>({
     });
     const select = useCallback((card: T) => latest.current.onSelect(card, latest.current.cards), []);
     /* The first page is what the grid held when it was first drawn: those tiles arrive in a wave.
-       A batch appended on scroll and a card the list read again (a new row id) arrive at once. */
-    const [firstPage] = useState(() => new Set(cards.map((c) => c.id)));
+       A batch appended on scroll and a card the list read again (a new row id) arrive at once, and so
+       does a tile the list says was not on its first page. */
+    const [drawnFirst] = useState(() => new Set(cards.map((c) => c.id)));
     return (
         <div className={cx("grid gap-4", GRID_COLUMNS[size])}>
             {cards.map((card, i) => (
                 <GridCell
                     key={card.id}
                     card={card}
-                    arriveDelay={arriveDelay(i, firstPage.has(card.id))}
+                    arriveDelay={arriveDelay(i, drawnFirst.has(card.id) && (firstPage?.has(card.id) ?? true))}
                     priority={i < priority}
                     size={size}
                     holder={holder}
