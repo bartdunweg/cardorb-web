@@ -14,6 +14,8 @@ vi.mock("react", async (original) => ({
 const { cacheKeys, cacheTags } = vi.hoisted(() => ({ cacheKeys: [] as string[][], cacheTags: [] as string[][] }));
 vi.mock("next/cache", () => ({
     unstable_cache: (fn: () => unknown, keys: string[], options: { tags: string[] }) => {
+        // A scope's mark, found stored, so the read after it goes through the cache (user-cache-race.test.ts has the rest).
+        if (keys[0] === "#mark") return async () => "m1";
         cacheKeys.push(keys);
         cacheTags.push(options.tags);
         return fn;
