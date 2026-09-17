@@ -6,6 +6,6 @@ import { AppErrorState } from "@/components/app/app-error-state";
 // the person can go elsewhere, and Try again repeats this page's reads. The layout's own reads
 // (profile, folders) never throw into a boundary: a 401 redirects to /login, anything else draws
 // the frame without them, so what shows here is always this page's own failure.
-export default function AppError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
-    return <AppErrorState reset={reset} home={{ href: "/dashboard", label: "Go to Home" }} />;
+export default function AppError({ retry }: { error: Error & { digest?: string }; retry: () => void }) {
+    return <AppErrorState retry={retry} home={{ href: "/dashboard", label: "Go to Home" }} />;
 }

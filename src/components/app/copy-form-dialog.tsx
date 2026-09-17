@@ -127,8 +127,11 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
         // made its row before an answer this app could not read.
         const res =
             mode === "add"
-                ? await addCopy(from.id, { ...changes, ...(acquired ? { acquiredAt: acquired } : {}) }, count, { reread: false })
-                : await splitCopy(from.id, changes, count, { reread: false });
+                ? await addCopy(from.id, { ...changes, ...(acquired ? { acquiredAt: acquired } : {}) }, count, { reread: false }).catch(() => ({
+                      ok: false as const,
+                      error: "Something went wrong. Try again.",
+                  }))
+                : await splitCopy(from.id, changes, count, { reread: false }).catch(() => ({ ok: false as const, error: "Something went wrong. Try again." }));
         setSaving(false);
         const forgotten = forgetMineQuietly();
         if (!res.ok) {

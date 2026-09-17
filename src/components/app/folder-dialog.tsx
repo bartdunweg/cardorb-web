@@ -118,8 +118,15 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
         setError(null);
         const res =
             mode === "create"
-                ? await createCollection(name, rule(), pokedex() ?? undefined, isPublic, { reread: false })
-                : await updateCollection(folder!.id, { name, ...(kind === "rule" ? { rule: rule() } : {}), pokedex: pokedex(), isPublic }, { reread: false });
+                ? await createCollection(name, rule(), pokedex() ?? undefined, isPublic, { reread: false }).catch(() => ({
+                      ok: false as const,
+                      error: "Something went wrong. Try again.",
+                  }))
+                : await updateCollection(
+                      folder!.id,
+                      { name, ...(kind === "rule" ? { rule: rule() } : {}), pokedex: pokedex(), isPublic },
+                      { reread: false },
+                  ).catch(() => ({ ok: false as const, error: "Something went wrong. Try again." }));
         setSaving(false);
         if (!res.ok) {
             setError(res.error);

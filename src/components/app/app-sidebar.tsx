@@ -65,12 +65,13 @@ export function AppSidebar({
     /* The numbers read again after a list's tiles stepped copies. Those presses do not draw the page
        again, so the layout's read stays from before them; the sidebar asks for its own, and puts
        the answer over the layout's until the layout reads again (a navigation that redraws it). */
-    const [fresh, setFresh] = useState<{ of: Promise<FolderLink[]>; collections: FolderLink[]; favorites: number | null } | null>(null);
+    // `collections: null` is a binders read that failed: the layout's list stays, not an empty one.
+    const [fresh, setFresh] = useState<{ of: Promise<FolderLink[]>; collections: FolderLink[] | null; favorites: number | null } | null>(null);
     useEffect(() => {
         // A fetch, not an action: an action waits its turn behind the writes (api/sidebar-counts).
         const reread = () =>
             void fetch("/api/sidebar-counts")
-                .then((res) => (res.ok ? (res.json() as Promise<{ collections: FolderLink[]; favorites: number | null }>) : null))
+                .then((res) => (res.ok ? (res.json() as Promise<{ collections: FolderLink[] | null; favorites: number | null }>) : null))
                 .then(
                     (r) => r && setFresh({ of: collections, ...r }),
                     () => undefined,
@@ -129,7 +130,7 @@ export function AppSidebar({
                     afterItems={
                         <>
                             <Suspense fallback={null}>
-                                <FolderRows collections={collections} fresh={override?.collections} activeUrl={pathname} />
+                                <FolderRows collections={collections} fresh={override?.collections ?? undefined} activeUrl={pathname} />
                             </Suspense>
                             {/* An item like the others: the same padding, icon size and type, at the list's end. */}
                             <li className="py-px">

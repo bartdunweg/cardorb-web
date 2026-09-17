@@ -12,6 +12,7 @@ import { PricesPublicRow } from "@/components/app/prices-public-row";
 import { PublicProfileRow, publicUrl } from "@/components/app/public-profile-row";
 import { SettingsGroup, SettingsLinkRow, SettingsRow, SheetHeader } from "@/components/app/settings-rows";
 import { SheetDialog } from "@/components/app/sheet-dialog";
+import { notify } from "@/components/app/toast";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Button } from "@/components/base/buttons/button";
@@ -226,7 +227,7 @@ export function SettingsForm({
         }
         setSavingPw(true);
         setPwMsg(null);
-        const res = await updatePassword(pwCurrent, pw);
+        const res = await updatePassword(pwCurrent, pw).catch(() => ({ ok: false as const, error: "Something went wrong. Try again." }));
         setSavingPw(false);
         if (res.ok) {
             setPwCurrent("");
@@ -411,7 +412,13 @@ export function SettingsForm({
                 <SettingsLinkRow icon={File02} label="Terms" href="/terms" />
             </SettingsGroup>
 
-            <form action={signOut}>
+            <form
+                action={async () => {
+                    // A refused sign-out keeps the session, so it says so rather than staying silent.
+                    const result = await signOut().catch(() => ({ error: "Signing out did not go through. Try again." }));
+                    if (result) notify.failed(result.error);
+                }}
+            >
                 <Button type="submit" color="secondary-destructive" className="w-full sm:w-auto">
                     Sign out
                 </Button>

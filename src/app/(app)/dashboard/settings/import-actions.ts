@@ -182,7 +182,7 @@ export async function previewImport(input: unknown): Promise<PreviewOutcome> {
  * screen says the write may still be finishing, rather than inviting a second
  * run that would double everything the first one wrote.
  */
-export async function commitImport(input: unknown): Promise<{ ok: true; result: ImportResult } | { ok: false; error: string }> {
+export async function commitImport(input: unknown): Promise<{ ok: true; result: ImportResult } | { ok: false; error: string; uncertain?: true }> {
     const parsed = request.safeParse(input);
     if (!parsed.success) return { ok: false, error: parsed.error.issues[0]!.message };
 
@@ -198,6 +198,8 @@ export async function commitImport(input: unknown): Promise<{ ok: true; result: 
         if (err instanceof Error && err.name === "TimeoutError") {
             return {
                 ok: false,
+                // The write may have landed: the dialog takes its Add button away rather than offer it twice.
+                uncertain: true,
                 error: "That import is taking longer than expected. It may still be finishing. Close this, reload, and check your cards before trying again.",
             };
         }

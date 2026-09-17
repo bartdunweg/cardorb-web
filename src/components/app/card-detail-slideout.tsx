@@ -46,6 +46,11 @@ import { listCollections, listCopies, loadFacets, seriesLogo } from "@/lib/reads
 import { settleLatest } from "@/lib/settle-latest";
 import { cx } from "@/utils/cx";
 
+/* What a write that never answered (the network dropped, the action threw) lands as: the same
+   { ok: false } every write already handles, so the panel puts its numbers back and says so
+   instead of staying busy or showing a change that did not happen. */
+const failedWrite = { ok: false as const, error: "Something went wrong. Try again." };
+
 // `late`: a row the catalogue sends a hop after the sheet has settled arrives like the rest of what streams in.
 function DetailRow({ label, value, late = false }: { label: string; value: ReactNode; late?: boolean }) {
     return (
@@ -180,7 +185,7 @@ export function CardDetailSlideout({
            answer drew the page again once per copy, and those redraws queued behind one another.
            The cache is dropped once, quietly, when they have all landed, failed ones included,
            since the others may still have removed their rows. */
-        const results = await Promise.all(group.map((row) => removeCard(row.id, { reread: false })));
+        const results = await Promise.all(group.map((row) => removeCard(row.id, { reread: false }).catch(() => failedWrite)));
         setBusy(false);
         const forgotten = forgetMineQuietly();
         const failed = results.find((r) => !r.ok);
@@ -259,18 +264,20 @@ export function CardDetailSlideout({
             printing: printing ? { finish: printing.finish, foilPattern: printing.foilPattern } : undefined,
             edition: edition ?? undefined,
             reread: false,
-        }).then((res) => {
-            if (!res.ok) {
-                notify.failed(`That card was not added to ${where}`, { description: res.error });
-                putBack?.();
-                return;
-            }
-            // The write forgot nothing (reread: false), so a refresh on its own drew the sidebar's
-            // counts from the cache as they were before the add.
-            const forgotten = forgetMineQuietly();
-            if (onTaken) onTaken(taken, list, res.id);
-            else void forgotten.then(() => router.refresh());
-        });
+        })
+            .catch(() => failedWrite)
+            .then((res) => {
+                if (!res.ok) {
+                    notify.failed(`That card was not added to ${where}`, { description: res.error });
+                    putBack?.();
+                    return;
+                }
+                // The write forgot nothing (reread: false), so a refresh on its own drew the sidebar's
+                // counts from the cache as they were before the add.
+                const forgotten = forgetMineQuietly();
+                if (onTaken) onTaken(taken, list, res.id);
+                else void forgotten.then(() => router.refresh());
+            });
     };
     /* A card you hold, into the binder this page is: the first row not yet in a binder, else the
        row shown, which then moves. A row is one kind of copy, so ×4 goes as four, as the Binder
@@ -288,18 +295,20 @@ export function CardDetailSlideout({
         pressed.current += 1;
         setCopiesState({ of: copiesKey(mine), rows: copies.map((r) => (r.id === row.id ? { ...r, collection_id: into.id } : r)) });
         notify.done(`Added to ${into.name}`, { description: row.collection_id ? "Moved from another binder" : mine.name });
-        void editCopies([row.id], { collectionId: into.id }, { reread: false }).then((res) => {
-            if (!res.ok) {
-                pressed.current += 1;
-                setCopiesState({ of: copiesKey(mine), rows: before });
-                notify.failed(`${mine.name} was not added to ${into.name}`, { description: res.error });
-                return;
-            }
-            void forgetMineQuietly().then(() => {
-                scheduleRefresh();
-                void reloadCopies();
+        void editCopies([row.id], { collectionId: into.id }, { reread: false })
+            .catch(() => failedWrite)
+            .then((res) => {
+                if (!res.ok) {
+                    pressed.current += 1;
+                    setCopiesState({ of: copiesKey(mine), rows: before });
+                    notify.failed(`${mine.name} was not added to ${into.name}`, { description: res.error });
+                    return;
+                }
+                void forgetMineQuietly().then(() => {
+                    scheduleRefresh();
+                    void reloadCopies();
+                });
             });
-        });
     };
     const [facets, setFacets] = useState<Facets | undefined>(undefined);
     /*
@@ -575,7 +584,7 @@ export function CardDetailSlideout({
                 label: "Put back",
                 onUndo: () => {
                     // Forgotten once for the lot, quietly, as the removal was (dropCopies says why).
-                    void Promise.all(rows.map((row) => restoreCard(row, { reread: false }))).then(async (results) => {
+                    void Promise.all(rows.map((row) => restoreCard(row, { reread: false }).catch(() => failedWrite))).then(async (results) => {
                         const failed = results.find((r) => !r.ok);
                         if (failed && !failed.ok) notify.failed("That did not go back", { description: failed.error });
                         else {
@@ -598,16 +607,18 @@ export function CardDetailSlideout({
         const wishlist = !!row.wishlist;
         onClose();
         onRemoved?.(row);
-        void removeCard(row.id, { reread: false }).then((res) => {
-            if (!res.ok) {
-                notify.failed(wishlist ? "That card is still on your wishlist" : "That card is still in your collection", { description: res.error });
-                router.refresh();
-                return;
-            }
-            const forgotten = forgetMineQuietly();
-            if (!onRemoved) void forgotten.then(() => router.refresh());
-            offerUndo(res.card ? [res.card] : [], wishlist ? "Removed from your wishlist" : "Removed from your collection");
-        });
+        void removeCard(row.id, { reread: false })
+            .catch(() => failedWrite)
+            .then((res) => {
+                if (!res.ok) {
+                    notify.failed(wishlist ? "That card is still on your wishlist" : "That card is still in your collection", { description: res.error });
+                    router.refresh();
+                    return;
+                }
+                const forgotten = forgetMineQuietly();
+                if (!onRemoved) void forgotten.then(() => router.refresh());
+                offerUndo(res.card ? [res.card] : [], wishlist ? "Removed from your wishlist" : "Removed from your collection");
+            });
     };
 
     // The folders and the facets are for the sheet's own controls, so they are asked for when a
