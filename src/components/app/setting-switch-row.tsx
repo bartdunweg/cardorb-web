@@ -7,6 +7,7 @@ import { notify } from "@/components/app/toast";
 import { Toggle } from "@/components/base/toggle/toggle";
 import type { ForgetWrite } from "@/lib/cache-scopes";
 import { forgetMineThenRefresh } from "@/lib/forget-then-refresh";
+import { orFailed } from "@/lib/write-outcome";
 import { cx } from "@/utils/cx";
 
 /**
@@ -63,7 +64,7 @@ export function SettingSwitchRow({
         const before = isSelected;
         onChange(next);
         setPending(true);
-        const res = await save(next, { reread: false }).catch(() => ({ ok: false as const, error: "Something went wrong. Try again." }));
+        const res = await orFailed(save(next, { reread: false }));
         setPending(false);
         if (!res.ok) {
             onChange(before);

@@ -22,6 +22,7 @@ import { forgetMineQuietly } from "@/lib/forget-mine";
 import { formatPrice } from "@/lib/format";
 import { languageOf } from "@/lib/languages";
 import { parsePrice, priceError } from "@/lib/price-input";
+import { orFailed } from "@/lib/write-outcome";
 import { cx } from "@/utils/cx";
 
 /**
@@ -99,12 +100,14 @@ export function CopyCard({
            read and redrawn before it was done, and the next field's save queued behind that. The
            cache is dropped here instead, quietly, and the sheet re-reads the list once for a run
            of fields (its scheduleRefresh). */
-        const res = await editCopies(
-            group.rows.map((r) => r.id),
-            edits,
-            { reread: false },
-            // A write that never answered takes the shown value back like one that said no.
-        ).catch(() => ({ ok: false as const, error: "Something went wrong. Try again." }));
+        // A write that never answered takes the shown value back like one that said no.
+        const res = await orFailed(
+            editCopies(
+                group.rows.map((r) => r.id),
+                edits,
+                { reread: false },
+            ),
+        );
         if (!res.ok) {
             notify.failed(failed, { description: res.error });
             setOver((o) => {

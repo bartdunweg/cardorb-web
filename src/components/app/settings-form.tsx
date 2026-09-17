@@ -20,6 +20,7 @@ import { Input } from "@/components/base/input/input";
 import { Toggle } from "@/components/base/toggle/toggle";
 import type { Profile } from "@/lib/profile";
 import { isTheme } from "@/lib/theme-script";
+import { orFailed } from "@/lib/write-outcome";
 import { useTheme } from "@/providers/theme";
 
 type Msg = { type: "ok" | "err"; text: string } | null;
@@ -162,7 +163,7 @@ export function SettingsForm({
         }
 
         // A call that never answers (no signal, a deploy in between) must not leave the button spinning.
-        const res = await uploadAvatar(image).catch(() => ({ ok: false as const, error: "Something went wrong. Try again." }));
+        const res = await orFailed(uploadAvatar(image));
         setUploading(false);
         if (res.ok) {
             setAvatarUrl(res.avatarUrl ?? "");
@@ -175,7 +176,7 @@ export function SettingsForm({
     const onRemoveAvatar = async () => {
         setUploading(true);
         setProfileMsg(null);
-        const res = await removeAvatar().catch(() => ({ ok: false as const, error: "Something went wrong. Try again." }));
+        const res = await orFailed(removeAvatar());
         setUploading(false);
         if (res.ok) {
             setAvatarUrl("");
@@ -199,10 +200,7 @@ export function SettingsForm({
     const saveProfile = async (publicDraft: boolean) => {
         setSavingProfile(true);
         setProfileMsg(null);
-        const res = await updateProfile({ display_name: displayName, username, is_public: publicDraft }).catch(() => ({
-            ok: false as const,
-            error: "Something went wrong. Try again.",
-        }));
+        const res = await orFailed(updateProfile({ display_name: displayName, username, is_public: publicDraft }));
         // The page's row follows the server, not the sheet's toggle: what was saved is public.
         if (res.ok) {
             setIsPublic(publicDraft);
@@ -212,7 +210,7 @@ export function SettingsForm({
         // The address goes to Supabase, not the API, and lands only once the mail it sends is answered.
         const newEmail = emailValue.trim().toLowerCase();
         const changed = newEmail !== (email ?? "").toLowerCase();
-        const mail = res.ok && changed ? await updateEmail(newEmail).catch(() => ({ ok: false as const, error: "Something went wrong. Try again." })) : null;
+        const mail = res.ok && changed ? await orFailed(updateEmail(newEmail)) : null;
         setSavingProfile(false);
         if (!res.ok) setProfileMsg({ type: "err", text: res.error });
         else if (mail && !mail.ok) setProfileMsg({ type: "err", text: mail.error });
@@ -227,7 +225,7 @@ export function SettingsForm({
         }
         setSavingPw(true);
         setPwMsg(null);
-        const res = await updatePassword(pwCurrent, pw).catch(() => ({ ok: false as const, error: "Something went wrong. Try again." }));
+        const res = await orFailed(updatePassword(pwCurrent, pw));
         setSavingPw(false);
         if (res.ok) {
             setPwCurrent("");

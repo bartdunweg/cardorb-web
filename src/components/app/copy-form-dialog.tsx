@@ -24,6 +24,7 @@ import { forgetMineQuietly } from "@/lib/forget-mine";
 import { today } from "@/lib/format";
 import { languageOf } from "@/lib/languages";
 import { parsePrice, priceError } from "@/lib/price-input";
+import { orFailed } from "@/lib/write-outcome";
 
 // A copy that differs from the row it comes from. `add`: one more, pulled today, in the
 // language, condition, finish, binder and at the price given. `split`: some of this row's
@@ -135,11 +136,8 @@ function CopyForm({ mode, from, binders, languages, facts, onSaved, close }: Pro
         // made its row before an answer this app could not read.
         const res =
             mode === "add"
-                ? await addCopy(from.id, { ...changes, ...(acquired ? { acquiredAt: acquired } : {}) }, count, { reread: false }).catch(() => ({
-                      ok: false as const,
-                      error: "Something went wrong. Try again.",
-                  }))
-                : await splitCopy(from.id, changes, count, { reread: false }).catch(() => ({ ok: false as const, error: "Something went wrong. Try again." }));
+                ? await orFailed(addCopy(from.id, { ...changes, ...(acquired ? { acquiredAt: acquired } : {}) }, count, { reread: false }))
+                : await orFailed(splitCopy(from.id, changes, count, { reread: false }));
         setSaving(false);
         const forgotten = forgetMineQuietly("cards");
         if (!res.ok) {

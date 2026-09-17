@@ -25,6 +25,7 @@ import { forgetMineThenRefresh } from "@/lib/forget-then-refresh";
 import { today } from "@/lib/format";
 import { WESTERN_LANGUAGES, languageOf } from "@/lib/languages";
 import { parsePrice, priceError } from "@/lib/price-input";
+import { orFailed } from "@/lib/write-outcome";
 
 // A wish becomes a copy you hold. The moment to say what it is: language, condition (Near Mint
 // unless said), finish, binder, what you paid and the day you got it (today unless said). One
@@ -96,7 +97,7 @@ export function MarkOwnedForm({ card, binders, languages, facts, onSaved, close 
            described field by field is not something to lose to a toast. Only the write is waited
            for: it forgets nothing itself, so the button no longer spins through the page being
            drawn inside the action's answer and then drawn again by the refresh. */
-        const res = await markOwnedWith(card.id, edits, { reread: false }).catch(() => ({ ok: false as const, error: "Something went wrong. Try again." }));
+        const res = await orFailed(markOwnedWith(card.id, edits, { reread: false }));
         setSaving(false);
         if (!res.ok) {
             setError(res.error);
