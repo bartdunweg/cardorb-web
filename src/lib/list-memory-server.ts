@@ -1,5 +1,6 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 import {
     CARDS_GROUP_COOKIE,
     CARDS_SIZE_COOKIE,
@@ -11,17 +12,37 @@ import {
     parseCardsSize,
     parseCardsView,
 } from "@/lib/cards-view";
-import { LIST_MEMORY_COOKIE, memoryKey, parseListMemory } from "@/lib/list-memory";
+import {
+    LIST_GROUPS,
+    LIST_MEMORY_COOKIE,
+    LIST_SIZES,
+    LIST_VIEWS,
+    type ListMemory,
+    MAX_KEY_LENGTH,
+    MAX_QUERY_LENGTH,
+    listMemoryJson,
+    memoryKey,
+} from "@/lib/list-memory";
 
 /**
  * The server's side of `use-list-memory`: what a page remembers, read from the cookie for the
- * first paint. `next/headers` keeps this out of `list-memory.ts`, which the browser imports too.
+ * first paint. `next/headers` keeps this out of `list-memory.ts`, which the browser imports too,
+ * and so does zod: the cookie arrives from outside here, so here it is parsed with a schema.
  */
+
+const entry = z.object({ view: z.enum(LIST_VIEWS), size: z.enum(LIST_SIZES), group: z.enum(LIST_GROUPS), query: z.string().max(MAX_QUERY_LENGTH) }).partial();
+const memorySchema = z.record(z.string().min(1).max(MAX_KEY_LENGTH), entry);
+
+/** The cookie's value, read forgivingly: anything but a well-formed memory is an empty one. */
+export function parseListMemoryCookie(raw: string | undefined): ListMemory {
+    const parsed = memorySchema.safeParse(listMemoryJson(raw));
+    return parsed.success ? parsed.data : {};
+}
 
 /** The View menu as this page was left; a page never chosen on takes the last choice made anywhere. */
 export async function rememberedView(pathname: string): Promise<{ view: CardsViewMode; size: CardsSize; group: CardsGroup }> {
     const jar = await cookies();
-    const page = parseListMemory(jar.get(LIST_MEMORY_COOKIE)?.value)[memoryKey(pathname)];
+    const page = parseListMemoryCookie(jar.get(LIST_MEMORY_COOKIE)?.value)[memoryKey(pathname)];
     return {
         view: page?.view ?? parseCardsView(jar.get(CARDS_VIEW_COOKIE)?.value),
         size: page?.size ?? parseCardsSize(jar.get(CARDS_SIZE_COOKIE)?.value),
@@ -48,6 +69,6 @@ export async function openAsLeft(pathname: string, params: object): Promise<void
        for the router's fetch. A client that sends none (curl, an old Safari) is read as a document. */
     const dest = (await headers()).get("sec-fetch-dest");
     if (dest && dest !== "document") return;
-    const query = parseListMemory((await cookies()).get(LIST_MEMORY_COOKIE)?.value)[memoryKey(pathname)]?.query;
+    const query = parseListMemoryCookie((await cookies()).get(LIST_MEMORY_COOKIE)?.value)[memoryKey(pathname)]?.query;
     if (query) redirect(`${pathname}?${query}`);
 }

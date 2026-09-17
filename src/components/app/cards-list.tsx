@@ -1,16 +1,20 @@
 "use client";
 
 import { type ReactNode, use, useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import dynamic from "next/dynamic";
 import { warmCardFacts } from "@/components/app/card-memo";
 import { CardsGrid, FIRST_ROW } from "@/components/app/cards-grid";
-import { CardsTable } from "@/components/app/cards-table";
 import { GotItButton } from "@/components/app/got-it-button";
+import { TableSkeleton } from "@/components/app/skeletons";
 import { WishHeartButton } from "@/components/app/wish-heart-button";
 import { Button } from "@/components/base/buttons/button";
 import type { Card, CardFilter, CardList } from "@/lib/cards";
 import type { CardsSize, CardsViewMode } from "@/lib/cards-view";
 import { MORE_CEILING } from "@/lib/list-filter";
 import { loadMoreCards } from "@/lib/reads";
+
+// Drawn only in the table view, so its code (the kit table) loads when that view is chosen; still drawn on the server.
+const CardsTable = dynamic(() => import("@/components/app/cards-table").then((m) => m.CardsTable), { loading: () => <TableSkeleton /> });
 
 /**
  * The cards of a binder, as many as the reader has scrolled to.

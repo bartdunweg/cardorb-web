@@ -245,9 +245,27 @@ export const dexCardsKey = (filter: CardFilter) => `dex-cards:v1:${JSON.stringif
  *
  * The binder's Pokédex setting is not in the key: it is applied after the read (`groupByDex`), so
  * the kept cards are the same whatever it says, and changing it is a binder write, which forgets them.
+ *
+ * Each miss logs the entry's serialized size, so a collection growing towards the ceiling shows in
+ * the logs before its entry quietly stops being kept.
  */
 export const getDexCards = (filter: CardFilter): Promise<DexCards> =>
     perUser("lists", dexCardsKey(filter), async (token) => {
         const all = await getAllMyCards(filter, token);
-        return { cards: all.cards.map(dexFields), facets: all.facets };
+        const kept: DexCards = { cards: all.cards.map(dexFields), facets: all.facets };
+        logDexEntrySize(kept);
+        return kept;
     });
+
+/** The Data Cache keeps no entry over 2 MB; past this share of it the log line says so. */
+const DATA_CACHE_LIMIT_BYTES = 2 * 1024 * 1024;
+const NEAR_LIMIT = 0.75;
+
+export function logDexEntrySize(entry: DexCards): number {
+    const bytes = new TextEncoder().encode(JSON.stringify(entry)).length;
+    const share = bytes / DATA_CACHE_LIMIT_BYTES;
+    const line = `[cache] dex-cards entry ${bytes} bytes, ${entry.cards.length} cards, ${Math.round(share * 100)}% of the 2 MB limit`;
+    if (share >= NEAR_LIMIT) console.warn(`${line}: near the limit, past it the entry is not kept`);
+    else console.info(line);
+    return bytes;
+}

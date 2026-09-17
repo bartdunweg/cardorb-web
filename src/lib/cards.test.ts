@@ -15,7 +15,7 @@ vi.mock("@/lib/user-cache", () => ({
     },
 }));
 
-const { dexCardsKey, getDexCards } = await import("@/lib/cards");
+const { dexCardsKey, getDexCards, logDexEntrySize } = await import("@/lib/cards");
 
 const card = (n: number): Card =>
     ({
@@ -98,5 +98,21 @@ describe("getDexCards", () => {
         const got = await getDexCards({ collectionId: "b1" });
         expect(got.cards).toHaveLength(2000);
         expect(new TextEncoder().encode(JSON.stringify(got)).length).toBeLessThan(1024 * 1024);
+    });
+
+    it("logs the size of the entry it keeps, and warns once it nears the 2 MB limit", async () => {
+        const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+        api.mockResolvedValueOnce(answer([card(1)]));
+        const got = await getDexCards({ collectionId: "b1" });
+        const bytes = new TextEncoder().encode(JSON.stringify(got)).length;
+        expect(info).toHaveBeenCalledWith(expect.stringContaining(`[cache] dex-cards entry ${bytes} bytes, 1 cards`));
+        expect(warn).not.toHaveBeenCalled();
+
+        const big = { cards: got.cards, facets: { ...got.facets, sets: [{ name: "x".repeat(1.6 * 1024 * 1024), title: "X" }] } };
+        logDexEntrySize(big);
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining("near the limit"));
+        info.mockRestore();
+        warn.mockRestore();
     });
 });

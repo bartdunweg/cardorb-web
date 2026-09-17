@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CardFilter } from "@/lib/cards";
-import { loadMoreInput } from "@/lib/list-filter";
+import { loadMoreInput } from "@/lib/list-filter-schema";
 
 describe("loadMoreInput", () => {
     it("keeps every filter a list page sends", () => {

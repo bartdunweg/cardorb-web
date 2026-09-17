@@ -14,7 +14,7 @@ import { formatCount } from "@/lib/format";
 import { type ListSearchParams, PUBLIC_DEFAULT_SORT, PUBLIC_SORT_OPTIONS, isNarrowed, listHref, readPublicListQuery } from "@/lib/list-query";
 import { getDexNames } from "@/lib/pokedex";
 import { getViewer } from "@/lib/profile";
-import { PUBLIC_PAGE_SIZE, countPublicCards, getAllPublicCards, getPublicBinders, getPublicCards, getPublicProfile } from "@/lib/public-profile";
+import { PUBLIC_PAGE_SIZE, getPublicProfile, readPublicList } from "@/lib/public-profile";
 
 type Params = { params: Promise<{ username: string }>; searchParams: Promise<ListSearchParams> };
 
@@ -72,30 +72,30 @@ async function Profile({
         query.list === "wishlist" && profile.wishlist_public ? "wishlist" : query.list === "favorites" && profile.favorites_public ? "favorites" : undefined;
     if (list !== query.list) query.list = list;
     // The paged read for every list: its first page carries the count and the facets at once, while
-    // a Pokédex binder's own read of every card streams in behind the row.
-    const [{ cards, total, facets, value }, binders, viewer, owned, wishes] = await Promise.all([
-        getPublicCards(decodeURIComponent(username), query),
-        getPublicBinders(decodeURIComponent(username)),
+    // a Pokédex binder's own read of every card streams in behind the row. The line under the name
+    // counts the whole collection and the wishlist, whatever list is open, and says what the
+    // collection is worth where its owner shows prices (readPublicList says which calls answer what).
+    const [{ page, facets, binders, binder, dex: dexCards, owned, wishes }, viewer] = await Promise.all([
+        readPublicList(decodeURIComponent(username), query, { wishlistPublic: profile.wishlist_public }),
         getViewer(),
-        // The line under the name counts the whole collection and the wishlist, whatever list is open,
-        // and says what the collection is worth where its owner shows prices.
-        countPublicCards(decodeURIComponent(username)),
-        profile.wishlist_public ? countPublicCards(decodeURIComponent(username), "wishlist") : Promise.resolve(null),
     ]);
+    const cards = page?.cards ?? [];
+    const total = page?.total ?? 0;
+    const value = page?.value;
     // A binder in the URL that the owner does not show: the API answered the whole list; the chips say so too.
-    const binder = binders.find((f) => f.id === query.folder) ?? null;
     // A binder shown as a Pokédex draws as one here too, the way it does on its owner's page: the
     // Pokédex is a binder now and nothing else. Every card of it is needed, which takes longest to
     // read, so it is not awaited: the slots take their place under the row when the last page is in.
     const dexSetting = binder?.pokedex ?? null;
-    const dex: Promise<DexList> | null = dexSetting
-        ? Promise.all([getAllPublicCards(decodeURIComponent(username), query), getDexNames()]).then(([r, names]) => {
-              // The count is the slots' own, as the owner's page says it, and the value too where the owner
-              // shows prices: the cards carry one then, and none otherwise, which leaves the value null.
-              const grouped = groupByDex(r.cards, names, dexSetting);
-              return { ...grouped, total: grouped.cards };
-          })
-        : null;
+    const dex: Promise<DexList> | null =
+        dexSetting && dexCards
+            ? Promise.all([dexCards, getDexNames()]).then(([r, names]) => {
+                  // The count is the slots' own, as the owner's page says it, and the value too where the owner
+                  // shows prices: the cards carry one then, and none otherwise, which leaves the value null.
+                  const grouped = groupByDex(r.cards, names, dexSetting);
+                  return { ...grouped, total: grouped.cards };
+              })
+            : null;
     const base = `/user/${encodeURIComponent(profile.username ?? decodeURIComponent(username))}`;
     const name = profile.display_name || profile.username || "Collection";
     // What an empty list says, by which list it is: the words are the visitor's, not the owner's.

@@ -1,8 +1,9 @@
+import { cache } from "react";
 import { ApiError, api } from "@/lib/api";
 import { type PublicCard, publicBindersAnswer, publicCardFromItem, publicCardsAnswer, publicProfileAnswer, publicTotalAnswer } from "@/lib/api-shapes";
 import type { PokedexSetting } from "@/lib/binder-rule";
 import { type Facets, facetsFrom } from "@/lib/facets";
-import type { ListQuery } from "@/lib/list-query";
+import { type ListQuery, isNarrowed } from "@/lib/list-query";
 import { publicTag } from "@/lib/user-cache";
 
 /**
@@ -12,6 +13,10 @@ import { publicTag } from "@/lib/user-cache";
  * tag (`publicTag`): the moment they make the profile private, or take a copy off it, the write
  * drops the lot. Without the tag the page went on answering out of the cache: a profile turned
  * private and still readable for five minutes, which is the one thing a public page must get right.
+ *
+ * The five-minute cache does not make a second call in one request free: `api()` gives each fetch
+ * a timeout signal, and Next does not dedupe a fetch that carries one. So a read both the metadata
+ * and the page make goes through React's `cache`, once per request.
  */
 export type PublicProfile = {
     display_name: string | null;
@@ -25,7 +30,7 @@ export type PublicProfile = {
 
 // The public face of a profile, or null when there is none by that name or it is not public.
 // Unkeyed: the API's public routes serve exactly this page, and carry a price only where the owner shows them.
-export async function getPublicProfile(username: string): Promise<PublicProfile | null> {
+export const getPublicProfile = cache(async (username: string): Promise<PublicProfile | null> => {
     try {
         const p = await api(`/public/${encodeURIComponent(username)}/profile`, { auth: false, tags: [publicTag(username)], schema: publicProfileAnswer });
         return {
@@ -40,7 +45,7 @@ export async function getPublicProfile(username: string): Promise<PublicProfile 
         if (err instanceof ApiError && err.status === 404) return null;
         throw err;
     }
-}
+});
 
 export const PUBLIC_PAGE_SIZE = 100;
 
@@ -73,7 +78,8 @@ const ALL_PAGE_SIZE = 500;
 
 // Every owned card behind a public profile, for the page that draws them as a Pokédex: the slots
 // need all of them, not a page. The first page says how many there are; the rest come at once.
-export async function getAllPublicCards(username: string, query: ListQuery): Promise<PublicCardsPage> {
+// `facets` is ready with the first page, so the row above the slots need not wait for the rest.
+export function readAllPublicCards(username: string, query: ListQuery): { facets: Promise<Facets>; all: Promise<PublicCardsPage> } {
     const read = async (offset: number) =>
         api(`/public/${encodeURIComponent(username)}/cards`, {
             auth: false,
@@ -83,17 +89,27 @@ export async function getAllPublicCards(username: string, query: ListQuery): Pro
             params: { q: query.q, set: query.set, rarity: query.rarity, collection: query.folder, limit: ALL_PAGE_SIZE, offset },
             schema: publicCardsAnswer,
         });
-    const first = await read(0);
-    const rest = await Promise.all(Array.from({ length: Math.max(0, Math.ceil(first.total / ALL_PAGE_SIZE) - 1) }, (_, i) => read((i + 1) * ALL_PAGE_SIZE)));
-    return {
-        cards: [first, ...rest].flatMap((p) => p.cards).map(publicCardFromItem),
-        total: first.total,
-        copies: first.copies,
-        facets: facetsFrom(first.facets),
-        value: first.value,
-        unpriced: first.unpriced,
-    };
+    const firstPage = read(0);
+    const all = firstPage.then(async (first) => {
+        const rest = await Promise.all(
+            Array.from({ length: Math.max(0, Math.ceil(first.total / ALL_PAGE_SIZE) - 1) }, (_, i) => read((i + 1) * ALL_PAGE_SIZE)),
+        );
+        return {
+            cards: [first, ...rest].flatMap((p) => p.cards).map(publicCardFromItem),
+            total: first.total,
+            copies: first.copies,
+            facets: facetsFrom(first.facets),
+            value: first.value,
+            unpriced: first.unpriced,
+        };
+    });
+    // A failure still reaches whoever awaits `all`; this only keeps it from counting as unhandled
+    // while the page is still waiting on the facets or another read that failed first.
+    all.catch(() => undefined);
+    return { facets: firstPage.then((first) => facetsFrom(first.facets)), all };
 }
+
+export const getAllPublicCards = (username: string, query: ListQuery): Promise<PublicCardsPage> => readAllPublicCards(username, query).all;
 
 /** A binder its owner shows on the profile: a chip over the list, with how many cards it holds. */
 export type PublicBinder = {
@@ -107,7 +123,7 @@ export type PublicBinder = {
 
 // The binders a person shows, oldest first; none when they show none. Fails soft to none: a
 // profile without its chips is a poorer page, and an API from before the route answers 404.
-export async function getPublicBinders(username: string): Promise<PublicBinder[]> {
+export const getPublicBinders = cache(async (username: string): Promise<PublicBinder[]> => {
     try {
         const { folders: binders } = await api(`/public/${encodeURIComponent(username)}/folders`, {
             auth: false,
@@ -119,7 +135,7 @@ export async function getPublicBinders(username: string): Promise<PublicBinder[]
         if (err instanceof ApiError && (err.status === 404 || err.status === 503)) return [];
         throw err;
     }
-}
+});
 
 // How many cards a public list holds and what they are worth, and nothing else: one item asked
 // for, the numbers read off it. For the line under the name, which counts the collection and the
@@ -133,4 +149,51 @@ export async function countPublicCards(username: string, list?: "wishlist" | "fa
         schema: publicTotalAnswer,
     });
     return { count: copies ?? total, value: value ?? null };
+}
+
+export type PublicCount = Awaited<ReturnType<typeof countPublicCards>>;
+
+/** What the visitor's page reads for one list, each part in the fewest calls that answer it. */
+export type PublicListReads = {
+    binders: PublicBinder[];
+    /** The binder the URL names, where the owner shows it. */
+    binder: PublicBinder | null;
+    /** The page of cards; null for a Pokédex binder, which reads every card in `dex` instead. */
+    page: PublicCardsPage | null;
+    facets: Facets;
+    /** Every card of a Pokédex binder, still arriving; null for any other list. */
+    dex: Promise<PublicCardsPage> | null;
+    /** The whole collection, for the line under the name. */
+    owned: PublicCount;
+    /** The whole wishlist, where the owner shows it. */
+    wishes: PublicCount | null;
+};
+
+/**
+ * The reads behind one visit, without asking the API anything twice:
+ * - a Pokédex binder reads every card, and its first page carries the facets, so the paged read
+ *   (whose cards it would not draw) is not made;
+ * - the collection as it opens, nothing searched, filtered or chosen, is exactly what the line
+ *   under the name counts, so its count and worth come off the paged read instead of a second call.
+ */
+export async function readPublicList(username: string, query: ListQuery, { wishlistPublic }: { wishlistPublic: boolean }): Promise<PublicListReads> {
+    const bindersRead = getPublicBinders(username);
+    // Only a binder in the URL can be a Pokédex, so only then does the list wait on the binders.
+    const binderRead = query.folder ? bindersRead.then((binders) => binders.find((f) => f.id === query.folder) ?? null) : Promise.resolve(null);
+    const dexRead = binderRead.then((binder) => (binder?.pokedex ? readAllPublicCards(username, query) : null));
+    const pageRead = binderRead.then((binder) => (binder?.pokedex ? null : getPublicCards(username, query)));
+    const whole = !isNarrowed(query) && !query.folder && !query.list;
+    const ownedRead: Promise<PublicCount> = whole
+        ? pageRead.then((page) => (page ? { count: page.copies ?? page.total, value: page.value ?? null } : countPublicCards(username)))
+        : countPublicCards(username);
+    const [binders, binder, page, dex, owned, wishes] = await Promise.all([
+        bindersRead,
+        binderRead,
+        pageRead,
+        dexRead,
+        ownedRead,
+        wishlistPublic ? countPublicCards(username, "wishlist") : Promise.resolve(null),
+    ]);
+    const facets = page ? page.facets : dex ? await dex.facets : facetsFrom(undefined);
+    return { binders, binder, page, facets, dex: dex?.all ?? null, owned, wishes };
 }
