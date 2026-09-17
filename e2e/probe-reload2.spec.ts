@@ -5,7 +5,7 @@ import { SET_ID, addButton, addCopyButton, card, literal, setTile } from "./supp
    "test" reloads as writes.spec.ts does (right after "2 copies" shows); mode "in-flight" waits for
    the second write's request to leave first, so the reload always races it. Node's clock is the
    server's clock here, so these lines sort against the [probe] lines in e2e-web.log. */
-for (const mode of ["test", "in-flight"] as const) {
+for (const mode of ["in-flight", "in-flight-dialog"] as const) {
     test(`probe: reload racing the second write, mode ${mode}`, async ({ page }) => {
         test.setTimeout(400_000);
         const c = card(10);
@@ -23,16 +23,23 @@ for (const mode of ["test", "in-flight"] as const) {
             if (r.method() === "POST") log(`FAILED ${r.url().replace("http://localhost:3000", "")} ${r.failure()?.errorText}`);
         });
 
-        const rounds = mode === "test" ? 10 : 6;
+        const rounds = 6;
+        if (mode === "in-flight-dialog")
+            page.on("dialog", (d) => {
+                log(`dialog ${d.type()}`);
+                void d.accept();
+            });
         for (let round = 1; round <= rounds; round++) {
             await page.goto(setPage);
             await expect(setTile(page, c, "not in your collection")).toBeVisible();
             log(`round ${round} start`);
             await addButton(page, c).click();
-            const second = page.waitForRequest((r) => r.method() === "POST" && Boolean(r.headers()["next-action"]) && /,2,/.test(r.postData() ?? ""), { timeout: 10000 });
+            const second = page.waitForRequest((r) => r.method() === "POST" && Boolean(r.headers()["next-action"]) && /,2,/.test(r.postData() ?? ""), {
+                timeout: 10000,
+            });
             await addCopyButton(page, c).click();
-            await expect(setTile(page, c, "2 copies")).toBeVisible();
-            if (mode === "in-flight") await second.catch(() => log("no second action request seen"));
+            // Reload the moment the second write leaves: the state the failing runs showed.
+            await second.catch(() => log("no second action request seen"));
             log("reload");
             await page.reload();
             log("reloaded");
