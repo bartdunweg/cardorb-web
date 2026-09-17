@@ -67,3 +67,32 @@ export const ownedCount = async (page: Page): Promise<number> => {
         .innerText();
     return Number(text.replace(/[^0-9]/g, ""));
 };
+
+/**
+ * A binder made the way a person makes one, from the Binders page, and the address of its own
+ * page. New binder stands in the sidebar, beside the page title and in the empty state, all three
+ * the same dialog; whichever of them the screen is showing will do.
+ *
+ * The cache clear is registered before the press: binder-form.tsx's save() calls
+ * forgetMineQuietly("binders") and refreshes the page only once that has answered, so the tile
+ * this reads the address off is drawn after it rather than before.
+ */
+export const makeBinder = async (page: Page, name: string): Promise<string> => {
+    await page.goto("/dashboard/collections");
+    await page.getByRole("button", { name: "New binder" }).filter({ visible: true }).first().click();
+    const dialog = page.getByRole("dialog");
+    // Not getByLabel: the kit's Label renders the required-asterisk span in the DOM whether or not
+    // it is shown, so an exact label match can miss where the accessible name does not (auth.setup.ts).
+    await dialog.getByRole("textbox", { name: "Name", exact: true }).fill(name);
+    const settled = cacheCleared(page);
+    await dialog.getByRole("button", { name: "Create" }).click();
+    await expect(page.getByText(`${name} is in your Binders now`)).toBeVisible();
+    await settled;
+
+    // Inside main: the sidebar keeps a row per binder, with the same name and the same address.
+    const tile = page.getByRole("main").getByRole("link", { name: new RegExp(`^${literal(name)}\\b`) });
+    await expect(tile).toBeVisible();
+    const href = (await tile.getAttribute("href")) ?? "";
+    expect(href).toMatch(/^\/dashboard\/collections\/.+/);
+    return href;
+};

@@ -1,5 +1,5 @@
 import { type Page, expect, test } from "@playwright/test";
-import { E2E_USER, SET_ID, cacheCleared } from "./support.ts";
+import { E2E_USER, SET_ID, makeBinder } from "./support.ts";
 
 /**
  * Every page the app has, opened once: the signed-in routes under `src/app/(app)` plus the public
@@ -100,30 +100,8 @@ test.describe.configure({ mode: "serial" });
 test.beforeAll(async ({ browser }) => {
     const context = await browser.newContext({ storageState: "e2e/.auth/user.json" });
     const page = await context.newPage();
-    await page.goto("/dashboard/collections");
-
-    // The only write in this file. New binder stands in the sidebar, beside the page title and in
-    // the empty state, all three the same dialog; the first one on the page is as good as any.
-    await page.getByRole("button", { name: "New binder" }).first().click();
-    const dialog = page.getByRole("dialog");
-    // Not getByLabel: the kit's Label renders the required-asterisk span in the DOM whether or not
-    // it is shown, so an exact label match can miss where the accessible name does not (see
-    // auth.setup.ts).
-    await dialog.getByRole("textbox", { name: "Name", exact: true }).fill(BINDER);
-    // Registered before the press: binder-form.tsx's save() calls forgetMineQuietly("binders") and
-    // refreshes the page only once that has answered, so the tile this reads the address off is
-    // drawn after it rather than before.
-    const settled = cacheCleared(page);
-    await dialog.getByRole("button", { name: "Create" }).click();
-    await expect(page.getByText(`${BINDER} is in your Binders now`)).toBeVisible();
-    await settled;
-
-    // The tile is a link whose accessible name starts with the binder's name and ends with its
-    // count. Inside main: the sidebar keeps a row per binder and carries the same name and address.
-    const tile = page.getByRole("main").getByRole("link", { name: new RegExp(`^${BINDER}\\b`) });
-    await expect(tile).toBeVisible();
-    binderPath = (await tile.getAttribute("href")) ?? "";
-    expect(binderPath).toMatch(/^\/dashboard\/collections\/.+/);
+    // The only write in this file.
+    binderPath = await makeBinder(page, BINDER);
     await context.close();
 });
 

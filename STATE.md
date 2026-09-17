@@ -23,12 +23,19 @@ Live: landing, Home, Collection, Browse, Binders, Favorites, wishlist, set pages
 command-palette search, Settings, public profile, and `/dashboard/design`, the design system,
 reachable only by typing the address (see `CLAUDE.md`).
 
-End-to-end smoke tests run on every pull request (job `e2e`), thirty-six scenarios, fixture set from
-`scripts/e2e-fixture.sh` (the first 20 cards of sv01). Thirteen of them are the crawl
+End-to-end smoke tests run on every pull request (job `e2e`), forty-two scenarios, fixture set from
+`scripts/e2e-fixture.sh` (the first 20 cards of sv01, plus four more whose names none of those
+twenty carry: cards 20 to 23, for the flows below). Thirteen of them are the crawl
 (`e2e/crawl.spec.ts`): every signed-in route the app has, the design page and the public profile
 among them, each opened once and failed on a missing `h1`, a document or `/api/` answer of 500 or
 worse, or a console error outside the allowed list in that file. It is the only test that looks at
-Pokédex, Settings, You, Browse and the design page at all. The double-press tests caught a set page drawn from before a write
+Pokédex, Settings, You, Browse and the design page at all. Six more are the flows that had nothing
+holding them: a binder made, filled from the collection and read back on the card's sheet, a binder
+renamed and a binder deleted (`e2e/binders.spec.ts`); a wished card marked as owned, which has to
+leave one list and join the other (`e2e/wishlist.spec.ts`); the Settings switch for the public
+profile, read from a signed-out visitor's browser, which must get a 404 while it is off
+(`e2e/profile.spec.ts`); and the command palette finding a card by name and opening its sheet
+(`e2e/search.spec.ts`). The double-press tests caught a set page drawn from before a write
 (`/api/revalidate` used "max"); fixed in web#676 and both run again. The card sheet has its own six
 (`e2e/sheet.spec.ts`, cards 12 to 19 bar the three Tarountula): one copy more, a removal put back, an add
 from the sheet, a chosen printing, the previous and next arrows, and a sheet opened from Collection,
