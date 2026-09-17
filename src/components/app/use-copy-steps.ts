@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { useRouter } from "next/navigation";
 import { removeCard, rereadMine, restoreCard, setCopies } from "@/app/(app)/dashboard/cards/actions";
 import { notify } from "@/components/app/toast";
-import { useLatestPress } from "@/hooks/use-latest-press";
+import { useLatestPress } from "@/components/app/use-latest-press";
 import type { RemovedCard } from "@/lib/api-shapes";
 import { forgetMineQuietly } from "@/lib/forget-mine";
 
