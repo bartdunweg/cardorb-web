@@ -32,6 +32,21 @@ but never the set/rarity Filters sheet.
 
 ## Last session
 
+**2026-09-17, a fifth hunt with performance and refactors (#677 to #683, api#529).** The grid
+"refresh": a new first page threw away every scrolled batch; it keeps them now and re-reads that
+span quietly, and set sections are keyed by name and run. Twenty bugs from a whole-app hunt: sign
+out is `scope: "local"` (it signed out the iOS app), error pages use `retry` (`reset` fetched
+nothing), an import of unknown outcome cannot be added twice, rejected writes in the sheet and four
+forms stop spinning, sign-in has no length floor, the sidebar keeps its binders on a failed read,
+Home's side reads fail soft (`side-read.ts`), and a comma decimal is a price. Performance: first-row
+image priority only, a press redraws one tile, the day picker and zod mappers leave the first load
+(about 70 KB gzip off the list pages). The per-user cache is split into scopes
+(`cache-scopes.ts`); a write forgets only its kind, and the API names the kind on `/api/revalidate`.
+Left: split `card-detail-slideout.tsx` and the write-engine hooks (only with e2e green), the
+folder-to-binder rename in code, a Pokédex binder's uncached 2,000-card read, Home's serial reads,
+`loading.tsx` skeletons, the glass bar on low-end phones (Bart's call). Not measured in a browser:
+most of it.
+
 **2026-09-17, a fourth bug hunt: Home, the card lists, Settings.** Home: a failed movers read is
 asked again when its period is chosen again, the movers start over after a write (keyed on what you
 hold), a deleted binder in `?value=` falls back to the collection with its line and movers, and a
