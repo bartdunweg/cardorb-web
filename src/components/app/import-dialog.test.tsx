@@ -79,7 +79,41 @@ describe("ImportDialog when the action throws", () => {
         fireEvent.click(add);
 
         await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("may or may not have finished"));
-        expect(screen.getByRole("button", { name: "Add 1 card" })).not.toBeDisabled();
+        // It may have landed, so the button that writes is gone and only the ways out are left.
+        expect(screen.queryByRole("button", { name: /^Add / })).toBeNull();
+        expect(screen.getAllByRole("button", { name: "Close" })).toHaveLength(2);
+        expect(screen.getByRole("link", { name: "View your cards" })).toBeVisible();
+    });
+
+    it("takes Add away when the write answers that it may still be finishing", async () => {
+        previewImport.mockResolvedValue({
+            ok: true,
+            preview: { seen: 1, skipped: 0, notOwned: 0, existing: 0, sample: [], source: "generic", header: ["Name", "Set"], skippedRows: [] },
+        });
+        commitImport.mockResolvedValue({ ok: false, uncertain: true, error: "That import is taking longer than expected. It may still be finishing." });
+        await dropFile();
+
+        fireEvent.click(await screen.findByRole("button", { name: "Add 1 card" }));
+
+        await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("may still be finishing"));
+        expect(screen.queryByRole("button", { name: /^Add / })).toBeNull();
+        expect(screen.queryByRole("button", { name: "Back" })).toBeNull();
+        expect(screen.getByRole("link", { name: "View your cards" })).toBeVisible();
+    });
+
+    it("cannot be closed while the write is out", async () => {
+        previewImport.mockResolvedValue({
+            ok: true,
+            preview: { seen: 1, skipped: 0, notOwned: 0, existing: 0, sample: [], source: "generic", header: ["Name", "Set"], skippedRows: [] },
+        });
+        commitImport.mockReturnValue(new Promise(() => {}));
+        await dropFile();
+
+        fireEvent.click(await screen.findByRole("button", { name: "Add 1 card" }));
+
+        await waitFor(() => expect(screen.getAllByRole("button", { name: "Close" })[0]).toBeDisabled());
+        fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+        expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 });
 

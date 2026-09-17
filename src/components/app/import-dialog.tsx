@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { SearchLg } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
@@ -149,20 +149,27 @@ const steps = (current: StepName): Step[] => {
 };
 
 export function ImportDialog({ children }: { children: ReactNode }) {
+    /*
+     * True while the write is out. Escape is the overlay's, not the form's, so
+     * the form reports it up here: closing mid-write unmounted the only screen
+     * that could say what the write did.
+     */
+    const [writing, setWriting] = useState(false);
+
     return (
         <DialogTrigger>
             {children}
             {/* No padding around it on a phone: the dialog is the screen there. */}
-            <ModalOverlay className="max-sm:p-0">
+            <ModalOverlay className="max-sm:p-0" isKeyboardDismissDisabled={writing}>
                 <Modal className="max-w-2xl max-sm:h-dvh max-sm:max-w-none max-sm:overflow-hidden max-sm:rounded-none">
-                    <Dialog className="h-full">{({ close }) => <ImportForm close={close} />}</Dialog>
+                    <Dialog className="h-full">{({ close }) => <ImportForm close={close} onWriting={setWriting} />}</Dialog>
                 </Modal>
             </ModalOverlay>
         </DialogTrigger>
     );
 }
 
-function ImportForm({ close }: { close: () => void }) {
+function ImportForm({ close, onWriting }: { close: () => void; onWriting: (writing: boolean) => void }) {
     const router = useRouter();
 
     const [file, setFile] = useState<{ name: string; size: number } | null>(null);
@@ -173,6 +180,12 @@ function ImportForm({ close }: { close: () => void }) {
     const [busy, setBusy] = useState<"reading" | "importing" | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [result, setResult] = useState<ImportResult | null>(null);
+    /**
+     * A write whose answer never came, or came as "may still be finishing". It
+     * may have landed, so Add is gone for good: pressing it again is how a
+     * collection gets doubled. What is left is Close and the cards page.
+     */
+    const [uncertain, setUncertain] = useState(false);
     /**
      * Rows struck off, by the line of the file they came from.
      *
@@ -194,6 +207,12 @@ function ImportForm({ close }: { close: () => void }) {
      * next to the drop zone that will take the next one.
      */
     const step: StepName = result ? "done" : preview || header.length > 0 ? "review" : "upload";
+
+    const importing = busy === "importing";
+    useEffect(() => {
+        onWriting(importing);
+        return () => onWriting(false);
+    }, [importing, onWriting]);
 
     const reset = () => {
         setPreview(null);
@@ -290,11 +309,11 @@ function ImportForm({ close }: { close: () => void }) {
         if (csv) await guard(() => run(csv, next));
     };
 
-    const onImport = () =>
-        guard(async () => {
-            if (!csv) return;
-            setBusy("importing");
-            setError(null);
+    const onImport = async () => {
+        if (!csv) return;
+        setBusy("importing");
+        setError(null);
+        try {
             const outcome = await commitImport({
                 csv,
                 map: Object.keys(map).length ? map : undefined,
@@ -303,6 +322,7 @@ function ImportForm({ close }: { close: () => void }) {
             setBusy(null);
 
             if (!outcome.ok) {
+                if ("uncertain" in outcome && outcome.uncertain) setUncertain(true);
                 setError(outcome.error);
                 return;
             }
@@ -310,7 +330,13 @@ function ImportForm({ close }: { close: () => void }) {
             // The collection this just wrote to is read through a cache the write
             // dropped; without this the cards page would show yesterday's count.
             router.refresh();
-        }, "Something went wrong, and the import may or may not have finished. Close this, reload, and check your cards before trying again.");
+        } catch {
+            // A write that threw is the same unknown as a timeout: it may have landed.
+            setBusy(null);
+            setUncertain(true);
+            setError("Something went wrong, and the import may or may not have finished. Close this, reload, and check your cards before trying again.");
+        }
+    };
 
     /*
      * What the row under the drop zone says.
@@ -323,19 +349,21 @@ function ImportForm({ close }: { close: () => void }) {
      * asking. Red is only for a file nothing could be made of. And a file with
      * unreadable rows in it is neither: those rows are counted, not fatal.
      */
-    const fileStatus: FileUploadStatus = busy !== null ? "busy" : !error ? "ready" : header.length > 0 ? "attention" : "failed";
+    const fileStatus: FileUploadStatus = busy !== null ? "busy" : uncertain ? "attention" : !error ? "ready" : header.length > 0 ? "attention" : "failed";
     const fileStatusLabel =
         busy === "reading"
             ? "Reading…"
             : busy === "importing"
               ? "Importing…"
-              : fileStatus === "failed"
-                ? "Could not be read"
-                : fileStatus === "attention"
-                  ? "Needs its columns"
-                  : result
-                    ? "Imported"
-                    : "Ready to import";
+              : uncertain
+                ? "May have been imported"
+                : fileStatus === "failed"
+                  ? "Could not be read"
+                  : fileStatus === "attention"
+                    ? "Needs its columns"
+                    : result
+                      ? "Imported"
+                      : "Ready to import";
 
     /**
      * The rows on offer, and what is left ticked.
@@ -412,7 +440,7 @@ function ImportForm({ close }: { close: () => void }) {
                      * the footer is a scroll away while a long file is being read. The cross
                      * is the way out that is always where you expect it.
                      */}
-                    <CloseButton onClick={close} size="sm" className="-mt-1 -mr-1" />
+                    <CloseButton onClick={close} isDisabled={importing} size="sm" className="-mt-1 -mr-1" />
                 </div>
                 <Progress.IconsWithText items={steps(step)} size="sm" />
             </div>
@@ -446,7 +474,7 @@ function ImportForm({ close }: { close: () => void }) {
                             size={file.size}
                             status={fileStatus}
                             statusLabel={fileStatusLabel}
-                            onRemove={busy === null && step !== "done" ? startOver : undefined}
+                            onRemove={busy === null && step !== "done" && !uncertain ? startOver : undefined}
                             removeLabel="Choose another file"
                         />
                     </FileUploadList>
@@ -760,7 +788,7 @@ function ImportForm({ close }: { close: () => void }) {
             </div>
 
             <div className="flex justify-end gap-3 border-t border-secondary px-5 py-4 sm:px-6">
-                {step === "done" ? (
+                {step === "done" || uncertain ? (
                     <>
                         <Button size="md" color="secondary" onClick={close}>
                             Close

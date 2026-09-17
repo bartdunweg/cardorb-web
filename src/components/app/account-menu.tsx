@@ -3,6 +3,7 @@
 import { ChevronSelectorVertical, Eye, LogOut01, Settings01 } from "@untitledui/icons";
 import { Button as AriaButton } from "react-aria-components";
 import { signOut } from "@/app/(auth)/actions";
+import { notify } from "@/components/app/toast";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { AvatarLabelGroup } from "@/components/base/avatar/avatar-label-group";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
@@ -85,7 +86,16 @@ export function AccountMenuItems({ publicUrl }: { publicUrl?: string | null } = 
 
             <Dropdown.Separator />
 
-            <Dropdown.Item icon={LogOut01} onAction={() => void signOut()}>
+            <Dropdown.Item
+                icon={LogOut01}
+                onAction={() =>
+                    void signOut()
+                        .then((result) => {
+                            if (result) notify.failed(result.error);
+                        })
+                        .catch(() => notify.failed("Signing out did not go through. Try again."))
+                }
+            >
                 Sign out
             </Dropdown.Item>
         </>

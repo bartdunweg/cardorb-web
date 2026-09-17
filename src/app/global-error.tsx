@@ -12,7 +12,7 @@ import { Button } from "@/components/base/buttons/button";
  * cannot use the app's theme (the provider is exactly what may have failed), so it states its
  * own colours rather than reading a token, and keeps to the page ground both themes start from.
  */
-export default function GlobalError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function GlobalError({ retry }: { error: Error & { digest?: string }; retry: () => void }) {
     return (
         <html lang="en">
             <body style={{ margin: 0, backgroundColor: "#fafafa", color: "#181818", fontFamily: "system-ui, -apple-system, sans-serif" }}>
@@ -33,7 +33,7 @@ export default function GlobalError({ reset }: { error: Error & { digest?: strin
                         Something went wrong before the page could be drawn. Your collection is safe: this is the app failing to load, not your cards.
                     </p>
                     <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", justifyContent: "center" }}>
-                        <Button color="primary" size="md" onClick={reset}>
+                        <Button color="primary" size="md" onClick={retry}>
                             Try again
                         </Button>
                         <Button color="secondary" size="md" href="/">

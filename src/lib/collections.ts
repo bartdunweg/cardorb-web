@@ -40,13 +40,21 @@ export async function getDexBinder(): Promise<{ id: string; name: string; pokede
 }
 
 /**
+ * The folder names and their counts, as the API answers them: a failed read throws. For the
+ * sidebar's read after a write, where an empty list would wipe the binders the layout drew.
+ */
+export async function readMyFolders(): Promise<{ id: string; name: string; kind: FolderKind; count: number }[]> {
+    return (await folders()).map((f) => ({ id: f.id, name: f.name, kind: f.kind, count: f.count }));
+}
+
+/**
  * The folder names and their counts, for the sidebar. Fails soft: a sidebar without its folders is a poorer page,
  * a thrown error is no page at all, and on 2026-09-04 a catalogue outage took every screen down
  * through this one read. A 401 still throws: that is the session, not the folders.
  */
 export async function getMyFolders(): Promise<{ id: string; name: string; kind: FolderKind; count: number }[]> {
     try {
-        return (await folders()).map((f) => ({ id: f.id, name: f.name, kind: f.kind, count: f.count }));
+        return await readMyFolders();
     } catch (err) {
         if (err instanceof ApiError && err.status === 401) throw err;
         console.error("Folders unavailable, sidebar drawn without them:", err instanceof Error ? err.message : err);

@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { RECOVERY_COOKIE } from "@/lib/auth-redirect";
 import { createClient } from "@/lib/supabase/server";
 import { usernameFromEmail } from "@/lib/username";
-import { credentialsSchema, emailSchema, newPasswordSchema } from "@/lib/validation/auth";
+import { credentialsSchema, emailSchema, newPasswordSchema, signInSchema } from "@/lib/validation/auth";
 
 /** `existing`: the address on a sign-up already has an account, and the password typed was not its own. */
 export type AuthState = { error: string } | { success: string } | { existing: true } | undefined;
@@ -18,7 +18,8 @@ function parseCredentials(formData: FormData) {
 }
 
 export async function signIn(_prev: AuthState, formData: FormData): Promise<AuthState> {
-    const parsed = parseCredentials(formData);
+    // No floor on the length here: an account made before the floor rose still signs in.
+    const parsed = signInSchema.safeParse({ email: formData.get("email"), password: formData.get("password") });
     if (!parsed.success) return { error: parsed.error.issues[0].message };
 
     const supabase = await createClient();
@@ -107,8 +108,17 @@ export async function requestPasswordReset(_prev: AuthState, formData: FormData)
     return { success: "If that email has an account, a link is on its way." };
 }
 
-export async function signOut() {
+/**
+ * Ends this browser's session only. The default scope is global, which also signed out the iOS app
+ * and every other device. When Supabase refuses, the session is still there, so the answer says so
+ * instead of landing on the home page as if it had worked.
+ */
+export async function signOut(): Promise<{ error: string } | undefined> {
     const supabase = await createClient();
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut({ scope: "local" });
+    if (error) {
+        console.error("Signing out failed:", error.message);
+        return { error: "Signing out did not go through. Try again." };
+    }
     redirect("/");
 }

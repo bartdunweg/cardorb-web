@@ -95,7 +95,7 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
            described field by field is not something to lose to a toast. Only the write is waited
            for: it forgets nothing itself, so the button no longer spins through the page being
            drawn inside the action's answer and then drawn again by the refresh. */
-        const res = await markOwnedWith(card.id, edits, { reread: false });
+        const res = await markOwnedWith(card.id, edits, { reread: false }).catch(() => ({ ok: false as const, error: "Something went wrong. Try again." }));
         setSaving(false);
         if (!res.ok) {
             setError(res.error);

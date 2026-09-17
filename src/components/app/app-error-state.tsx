@@ -11,9 +11,10 @@ import { Circle } from "@/components/shared-assets/background-patterns/circle";
 //
 // Nearly every throw here is the Card Orb API answering 503 because a catalogue behind it did
 // not answer (2026-09-04: TCGdex down, every page a bare Next error). That is a passing fault,
-// so the copy says to try again and the first button does exactly that. `reset` re-renders the
-// route segment, which repeats the reads; the second button is the way out when it keeps failing.
-export function AppErrorState({ reset, home }: { reset: () => void; home: { href: string; label: string } }) {
+// so the copy says to try again and the first button does exactly that. `retry` fetches the route
+// segment again and re-renders it (`reset` only re-rendered what had already failed, so the reads
+// never ran again); the second button is the way out when it keeps failing.
+export function AppErrorState({ retry, home }: { retry: () => void; home: { href: string; label: string } }) {
     return (
         <div className="flex flex-1 items-center justify-center">
             <div className="mx-auto flex w-full max-w-lg flex-col items-center justify-center">
@@ -30,7 +31,7 @@ export function AppErrorState({ reset, home }: { reset: () => void; home: { href
                     <Button color="secondary" size="lg" href={home.href}>
                         {home.label}
                     </Button>
-                    <Button size="lg" iconLeading={RefreshCcw01} onClick={reset}>
+                    <Button size="lg" iconLeading={RefreshCcw01} onClick={retry}>
                         Try again
                     </Button>
                 </div>

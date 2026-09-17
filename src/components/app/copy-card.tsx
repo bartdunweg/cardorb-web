@@ -102,7 +102,8 @@ export function CopyCard({
             group.rows.map((r) => r.id),
             edits,
             { reread: false },
-        );
+            // A write that never answered takes the shown value back like one that said no.
+        ).catch(() => ({ ok: false as const, error: "Something went wrong. Try again." }));
         if (!res.ok) {
             notify.failed(failed, { description: res.error });
             setOver((o) => {
