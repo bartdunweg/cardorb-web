@@ -41,7 +41,6 @@ export async function POST(request: Request) {
     // answer from before the write while the fresh one was fetched behind it: a set page reloaded
     // right after a plus and a second copy said "not in your collection" (1 round in 3, e2e probe
     // on web#676, 2026-09-17).
-    console.log(`[probe] ${Date.now()} api-revalidate write=${parsed.data.write}`);
     revalidateTag(publicTag(parsed.data.username), { expire: 0 });
     for (const tag of forgetTags(parsed.data.userId, parsed.data.write)) revalidateTag(tag, { expire: 0 });
     return new Response(null, { status: 204 });

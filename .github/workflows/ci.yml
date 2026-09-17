@@ -73,9 +73,9 @@ jobs:
                   done
 
             - run: ./scripts/e2e-stack.sh "$RUNNER_TEMP/api"
-            - run: pnpm e2e e2e/probe-reload2.spec.ts
+            - run: pnpm e2e
 
-            - if: ${{ always() }}
+            - if: ${{ !success() }}
               uses: actions/upload-artifact@v4
               with:
                   name: e2e-report

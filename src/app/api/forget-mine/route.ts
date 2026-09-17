@@ -25,8 +25,6 @@ export async function POST(request: Request) {
     if (origin !== url.origin) return new Response(null, { status: 403 });
     const write = forgetWriteSchema.safeParse(url.searchParams.get("write") ?? "all");
     if (!write.success) return new Response(null, { status: 400 });
-    const began = Date.now();
     const forgotten = await forgetMineLater(write.data);
-    console.log(`[probe] ${Date.now()} forget-mine ${write.data} began ${began}`);
     return new Response(null, { status: forgotten ? 204 : 401 });
 }

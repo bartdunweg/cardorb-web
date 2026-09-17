@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { createContext, useContext, useEffect, useRef, useSyncExternalStore } from "react";
 import { DARK_CLASS, STORAGE_KEY, SYSTEM_QUERY, type Theme, isTheme } from "@/lib/theme-script";
 
 /**
@@ -14,6 +14,8 @@ import { DARK_CLASS, STORAGE_KEY, SYSTEM_QUERY, type Theme, isTheme } from "@/li
 
 type Resolved = "light" | "dark";
 type ThemeContextValue = { theme: Theme | undefined; resolvedTheme: Resolved | undefined; setTheme: (theme: Theme) => void };
+
+const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 const CHANGE_EVENT = "theme-change";
 const undefinedOnServer = () => undefined;
@@ -80,12 +82,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         }
     }, [resolvedTheme]);
 
-    return children;
+    return <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme }}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme(): ThemeContextValue {
-    const theme = useSyncExternalStore(subscribeStored, readStored, undefinedOnServer);
-    const system = useSyncExternalStore(subscribeSystem, readSystem, undefinedOnServer);
-    const resolvedTheme = theme && system ? (theme === "system" ? system : theme) : undefined;
-    return { theme, resolvedTheme, setTheme };
+    const value = useContext(ThemeContext);
+    if (!value) throw new Error("useTheme needs the ThemeProvider from the root layout.");
+    return value;
 }
