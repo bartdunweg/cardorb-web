@@ -23,6 +23,13 @@ Live: landing, Home, Collection, Browse, Binders, Favorites, wishlist, set pages
 command-palette search, Settings, public profile, and `/dashboard/design`, the design system,
 reachable only by typing the address (see `CLAUDE.md`).
 
+End-to-end smoke tests run on every pull request (job `e2e`), ten scenarios, fixture set from
+`scripts/e2e-fixture.sh`. Open: both double-press tests in `e2e/writes.spec.ts` are `test.fixme`
+until the set-page reload bug they cover is fixed. Gaps left for later: scenario 1 (adding a card)
+does not check the card sheet, scenario 6 (cache after a write) covers an add only, not a remove,
+and scenarios 8 and 10 (list state, the set page's own address) test search, sort and view state
+but never the set/rarity Filters sheet.
+
 ## Last session
 
 **2026-09-17, a fourth bug hunt: Home, the card lists, Settings.** Home: a failed movers read is

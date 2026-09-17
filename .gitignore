@@ -48,3 +48,10 @@ supabase/.temp/
 # a log dump a session streams from Vercel while measuring
 .timing-logs.jsonl
 emails-out/
+
+# end-to-end runs
+/e2e/.auth/
+/e2e/.stack.env
+/test-results/
+/playwright-report/
+/e2e-*.log

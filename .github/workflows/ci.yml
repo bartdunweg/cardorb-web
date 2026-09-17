@@ -30,3 +30,58 @@ jobs:
                     | tar -xz -C /usr/local/bin gitleaks
 
             - run: ./scripts/verify.sh
+
+    e2e:
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/checkout@v4
+              with:
+                  repository: bartdunweg/cardorb-api
+                  ref: main
+                  path: api
+
+            # api/ sits inside this checkout only long enough to move: left there, the web
+            # workspace's pnpm/tsc walk into it (its own @/* alias resolves against the wrong
+            # tsconfig). scripts/e2e-stack.sh gets the moved path.
+            - run: mv api "$RUNNER_TEMP/api"
+
+            - uses: pnpm/action-setup@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version-file: .nvmrc
+                  cache: pnpm
+            - uses: supabase/setup-cli@v1
+              with:
+                  # Pinned to what the last green run (35205722860, 2026-09-17) installed under
+                  # "latest", so the same commit builds the same stack twice.
+                  version: 2.117.0
+            - run: pnpm install --frozen-lockfile
+            - run: pnpm exec playwright install --with-deps chromium
+
+            # Outside catalogues and picture hosts answer nothing, so an outage there never turns
+            # this job red. Added after every install, which needs the network.
+            - name: Block outside hosts
+              run: |
+                  for h in api.tcgdex.net assets.tcgdex.net api.pokemontcg.io images.pokemontcg.io \
+                           images.scrydex.com scrydex.com tcgcsv.com tcgplayer-cdn.tcgplayer.com \
+                           images.cardorb.com api.cardorb.com cardorb.com api.frankfurter.dev \
+                           limitlesstcg.nyc3.cdn.digitaloceanspaces.com bulbapedia.bulbagarden.net \
+                           www.cardmarket.com; do
+                      echo "0.0.0.0 $h" | sudo tee -a /etc/hosts > /dev/null
+                  done
+
+            - run: ./scripts/e2e-stack.sh "$RUNNER_TEMP/api"
+            - run: pnpm e2e
+
+            - if: ${{ !success() }}
+              uses: actions/upload-artifact@v4
+              with:
+                  name: e2e-report
+                  path: |
+                      playwright-report
+                      test-results
+                      e2e-api.log
+                      e2e-web.log
+                  retention-days: 7
