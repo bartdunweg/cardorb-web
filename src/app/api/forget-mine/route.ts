@@ -17,6 +17,8 @@ export async function POST(request: Request) {
     const origin = request.headers.get("origin");
     // Compared as strings: `Origin: null` (a sandboxed frame) is no URL, and parsing it threw a 500.
     if (origin !== new URL(request.url).origin) return new Response(null, { status: 403 });
+    const began = Date.now();
     const forgotten = await forgetMineLater();
+    console.log(`[probe] ${Date.now()} forget-mine began ${began}`);
     return new Response(null, { status: forgotten ? 204 : 401 });
 }

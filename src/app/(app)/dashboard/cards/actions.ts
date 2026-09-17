@@ -208,6 +208,7 @@ export async function addCard(
     // answered with it since the route was written, but an add that worked is still an add
     // without it, just one with no way back.
     let id: string | undefined;
+    console.log(`[probe] ${Date.now()} addCard start ${input.name}`);
     try {
         const answer = await api("/cards", {
             method: "POST",
@@ -235,6 +236,7 @@ export async function addCard(
         return failed(err);
     }
 
+    console.log(`[probe] ${Date.now()} addCard end ${input.name}`);
     if (reread) await forgetMine();
     return { ok: true, id };
 }
@@ -250,8 +252,10 @@ export async function setCopies(cardId: string, quantity: number, { reread = tru
     const parsed = z.object({ cardId: z.string().uuid(), quantity: z.number().int().min(1).max(999) }).safeParse({ cardId, quantity });
     if (!parsed.success) return { ok: false, error: "Invalid card." };
 
+    console.log(`[probe] ${Date.now()} setCopies start ${quantity}`);
     try {
         await api(`/collection/items/${parsed.data.cardId}`, { method: "PATCH", body: { quantity: parsed.data.quantity } });
+        console.log(`[probe] ${Date.now()} setCopies end ${quantity}`);
     } catch (err) {
         return failed(err);
     }
