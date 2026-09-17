@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { Card, CardList } from "@/lib/cards";
 import { CardsList, runKey, setGroups } from "./cards-list";
@@ -108,8 +108,11 @@ describe("CardsList on the wishlist", () => {
         const gotIt = await screen.findByRole("button", { name: "Add Pikachu to your collection" });
         fireEvent.click(gotIt);
         expect(onSelect).not.toHaveBeenCalled();
-        // The form the sheet opens, not a second one.
-        expect(await screen.findByRole("dialog")).toHaveTextContent("It leaves the wishlist and joins your collection.");
+        // The form the sheet opens, not a second one. It loads when the dialog opens: the dialog is
+        // there at once, named after the card, with focus in it, and the form follows.
+        const dialog = await screen.findByRole("dialog", { name: "Pikachu" });
+        await waitFor(() => expect(dialog.contains(document.activeElement)).toBe(true));
+        await waitFor(() => expect(dialog).toHaveTextContent("It leaves the wishlist and joins your collection."));
     });
 
     it("opens the sheet from the tile as before", async () => {
