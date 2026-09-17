@@ -399,7 +399,32 @@ describe("setCardFromBrowse", () => {
             itemIds: ["row"],
             price: null,
             tcgId: null,
+            printedNumber: "1",
         });
+    });
+
+    it("keeps the number the card prints beside the catalogue's, the one a label reads", () => {
+        const charizard = {
+            id: "30th-c-001",
+            number: "001",
+            name: "Charizard",
+            setName: "30th Classic Collection",
+            image: null,
+            imageHigh: null,
+            rarity: null,
+            types: [],
+            series: "Mega Evolution",
+            owned: true,
+            wishlist: false,
+            quantity: 1,
+            itemIds: ["row"],
+            price: null,
+            tcgId: "30th-c-001",
+        };
+        expect(setCardFromBrowse({ ...charizard, printedNumber: "4/102" }, "30C")).toMatchObject({ number: "001", printedNumber: "4/102" });
+        expect(pokemonCardFromBrowse({ ...charizard, printedNumber: "4/102" })).toMatchObject({ number: "001", printedNumber: "4/102" });
+        // An API from before printedNumber: the catalogue's number is the printed one.
+        expect(setCardFromBrowse(charizard).printedNumber).toBe("001");
     });
 });
 

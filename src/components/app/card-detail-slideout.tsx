@@ -33,7 +33,7 @@ import { Tooltip } from "@/components/base/tooltip/tooltip";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
 import type { PokemonCard, RemovedCard } from "@/lib/api-shapes";
 import { binderFromPath, isBinderPath } from "@/lib/binder-from-path";
-import { cardLabelFull, copyLine } from "@/lib/card-label";
+import { cardLabel, cardLabelFull, copyLine } from "@/lib/card-label";
 import { type Finish, isReverseFinish } from "@/lib/card-shapes";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
 import { type CopyGroup, groupCopies, sortCopies } from "@/lib/copies";
@@ -1397,11 +1397,8 @@ export function CardDetailSlideout({
                                     ? [
                                           card.name,
                                           card.set_name,
-                                          "set_abbr" in card && card.set_abbr
-                                              ? [card.set_abbr, card.number].filter(Boolean).join(" ")
-                                              : card.number
-                                                ? `#${card.number}`
-                                                : null,
+                                          // The label the line under the title prints, without the set's name said just before it.
+                                          cardLabel({ ...card, set_name: null }) || null,
                                       ]
                                           .filter(Boolean)
                                           .join(", ")

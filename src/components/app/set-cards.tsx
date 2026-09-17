@@ -476,6 +476,7 @@ const fromCatalogue = (c: SetCard): Card => ({
     set_abbr: c.setAbbr,
     set: c.setName,
     number: c.number,
+    printed_number: c.printedNumber,
     rarity: c.rarity,
     gen: null,
     types: c.types,
