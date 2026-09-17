@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { DARK_CLASS, STORAGE_KEY, SYSTEM_QUERY, type Theme, isTheme } from "@/lib/theme-script";
 
 /**
@@ -10,12 +10,17 @@ import { DARK_CLASS, STORAGE_KEY, SYSTEM_QUERY, type Theme, isTheme } from "@/li
  *
  * Both values are undefined on the server and the first client render, so a component that draws
  * something theme-dependent hydrates without a mismatch and resolves right after.
+ *
+ * No context. The values turn from undefined into the choice the moment the page hydrates, and a
+ * context value that changes then reaches every Suspense boundary under it that React has not
+ * hydrated yet: React gives up on such a boundary and draws it again in the browser. The set page's
+ * cards stream in one that is often revealed after that moment, so most loads drew the set twice,
+ * the server's drawing thrown away (e2e/hydration.spec.ts). Whoever wants the theme reads it
+ * through `useTheme`, which subscribes on its own, and nothing above the pages changes.
  */
 
 type Resolved = "light" | "dark";
 type ThemeContextValue = { theme: Theme | undefined; resolvedTheme: Resolved | undefined; setTheme: (theme: Theme) => void };
-
-const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 const CHANGE_EVENT = "theme-change";
 const undefinedOnServer = () => undefined;
@@ -82,11 +87,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         }
     }, [resolvedTheme]);
 
-    return <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme }}>{children}</ThemeContext.Provider>;
+    return children;
 }
 
+/** The choice, what it resolves to and the way to change it, for whoever draws a theme switch. */
 export function useTheme(): ThemeContextValue {
-    const value = useContext(ThemeContext);
-    if (!value) throw new Error("useTheme needs the ThemeProvider from the root layout.");
-    return value;
+    const theme = useSyncExternalStore(subscribeStored, readStored, undefinedOnServer);
+    const system = useSyncExternalStore(subscribeSystem, readSystem, undefinedOnServer);
+    const resolvedTheme = theme && system ? (theme === "system" ? system : theme) : undefined;
+    return { theme, resolvedTheme, setTheme };
 }

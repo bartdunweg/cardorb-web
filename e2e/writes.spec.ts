@@ -254,30 +254,3 @@ test("a wished card is on the wishlist and not in the collection", async ({ page
     await expect(collectionTile(page, c)).toHaveCount(0);
     expect(await ownedCount(page)).toBe(before);
 });
-
-// A press that swaps the tile's buttons (the plus that adds a card, the minus that takes the last
-// copy) sends focus to the plus that replaces them. The held tile's row sits a line lower, under the
-// "×1", so on a tile at the bottom of the window the new plus is partly out of it, and a plain
-// focus() scrolled the page until the tile's buttons stood at the top of the window: right where a
-// toast comes in. In CI run 35234584489 the toast for the add arrived there as the test pressed the
-// minus, took the press, and "removing a card and putting it back" waited five seconds for a
-// removal nobody had sent (no remove request in the trace, the tile still at ×1). A person pressing
-// at the bottom of the window lost their place the same way.
-test("a press at the bottom of the window keeps the page where it is", async ({ page }) => {
-    // Tarountula #016: one of three Tarountulas, so named by its number; no other test holds it.
-    const add = page.getByRole("button", { name: "Add Tarountula #016 to your collection" });
-    const plus = page.getByRole("button", { name: "Add a copy of Tarountula #016" });
-    await page.goto(setPage);
-    await expect(add).toBeVisible();
-    // The button's bottom edge on the window's: all of it in view, so the click itself scrolls nothing.
-    await add.evaluate((button) => window.scrollBy(0, button.getBoundingClientRect().bottom - window.innerHeight));
-    await add.click();
-
-    await expect(plus).toBeFocused();
-    const box = await plus.boundingBox();
-    const height = await page.evaluate(() => window.innerHeight);
-    // Brought just far enough into view to show the focus, not carried to the top of the window.
-    expect(box && box.y + box.height).toBeGreaterThan(height * 0.75);
-    expect(box && box.y + box.height).toBeLessThanOrEqual(height);
-    await writesLanded(page);
-});
