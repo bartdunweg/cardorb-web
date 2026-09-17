@@ -136,7 +136,7 @@ export function CardsView({
                 onPrev={step(-1)}
                 onNext={step(1)}
                 period={period}
-                onStarChanged={filter.favoritesOnly ? starChanged : undefined}
+                onStarChanged={undefined}
             />
         </div>
     );
