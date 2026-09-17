@@ -21,7 +21,7 @@ const tabs = [
 ];
 
 // Labels a size under the body scale, as a native tab bar writes them, so five fit with room.
-const tabClass = "pressable relative flex flex-1 flex-col items-center gap-1 rounded-full py-1.5 text-3xs font-medium transition-colors duration-150";
+const tabClass = "pressable relative flex flex-1 flex-col items-center gap-1 rounded-full py-1.5 text-3xs font-medium";
 
 // Bottom tab bar for mobile: the sidebar's five pages in the sidebar's order: Home, Browse, the
 // wishlist, the collection, and Binders (Favorites, the Pokédex and the binders you made, one level

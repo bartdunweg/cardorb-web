@@ -23,7 +23,7 @@ function BinderCard({ href, icon, name, count }: { href: string; icon: FC<{ clas
         <Link
             href={href}
             className={cx(
-                "flex pressable items-center gap-3 outline-focus-ring transition-[color,background-color,box-shadow] focus-visible:outline-2",
+                "flex pressable items-center gap-3 outline-focus-ring focus-visible:outline-2",
                 // The row: no surface of its own, the page's, with the divider the list draws between rows.
                 "max-sm:-mx-1 max-sm:rounded-lg max-sm:px-1 max-sm:py-3 max-sm:hover:bg-alpha-black/4",
                 // The tile.

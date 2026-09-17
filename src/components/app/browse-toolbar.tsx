@@ -50,8 +50,10 @@ export function BrowseToolbar({ query, view: initialView }: { query: BrowseQuery
     );
     const go = (patch: Partial<BrowseQuery>) => startTransition(() => router.replace(browseHref(query, patch), { scroll: false }));
 
+    // Dims while the next answer is fetched, after 150 ms, so a quick answer never flickers; it
+    // lights up again at once.
     return (
-        <div className={cx(LIST_ROW, "transition-opacity", pending && "opacity-60")}>
+        <div className={cx(LIST_ROW, "transition-opacity duration-(--duration-fast)", pending && "opacity-60 delay-150")}>
             {/* A round button on a phone, a short field from sm (`RowSearch`), as in a binder's row. */}
             {/* The shelf it filters is the shelf it offers: its set names, in the language chosen. */}
             <CardsSearch size="sm" initialValue={query.q ?? ""} label="Search sets" placeholder="Search sets" shelf={query.language} />
