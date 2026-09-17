@@ -342,3 +342,78 @@ describe("the key a set's run is drawn under", () => {
         expect(runKey(groups, 0)).not.toBe(runKey(groups, 2));
     });
 });
+
+/*
+ * The grid is drawn once per set, so a tile's place restarted in every set and the first six tiles
+ * of every set, in every batch, were fetched ahead of everything else. Only the first set's first
+ * row is at the top of the page; everything under it loads as it scrolls in.
+ */
+describe("the tiles fetched first", () => {
+    const of = (id: string, set: string): Card => ({ ...card, id, name: `Card ${id}`, set_name: set, image_url: `https://images.cardorb.com/${id}.png` });
+    const eager = () => [...document.querySelectorAll("img")].filter((img) => img.getAttribute("loading") !== "lazy");
+
+    it("are the first set's first row, and no other set's", async () => {
+        const cards = [...Array.from({ length: 7 }, (_, i) => of(`a${i}`, "Jungle")), ...Array.from({ length: 7 }, (_, i) => of(`b${i}`, "Fossil"))];
+        await act(async () =>
+            render(
+                <Suspense fallback={null}>
+                    <CardsList
+                        list={Promise.resolve({ cards, total: cards.length, facets: { sets: [], rarities: [], gens: [], types: [] } } as unknown as CardList)}
+                        filter={{}}
+                        narrowed={false}
+                        view="grid"
+                        size="md"
+                        groupedBySet
+                        onSelect={vi.fn()}
+                        noHits={null}
+                        empty={null}
+                    />
+                </Suspense>,
+            ),
+        );
+        expect(document.querySelectorAll("img")).toHaveLength(14);
+        expect(eager()).toHaveLength(6);
+        const [jungle] = document.querySelectorAll("section");
+        expect(eager().every((img) => jungle!.contains(img))).toBe(true);
+    });
+
+    it("are never in a batch appended on scroll", async () => {
+        const { loadMoreCards } = await import("@/lib/reads");
+        const load = vi.mocked(loadMoreCards);
+        load.mockReset();
+        load.mockResolvedValueOnce({ cards: [of("c", "Base"), of("d", "Base")], total: 4 });
+        class Seen {
+            constructor(private readonly callback: IntersectionObserverCallback) {}
+            observe() {
+                queueMicrotask(() => this.callback([{ isIntersecting: true } as IntersectionObserverEntry], this as unknown as IntersectionObserver));
+            }
+            disconnect() {}
+        }
+        vi.stubGlobal("IntersectionObserver", Seen);
+        await act(async () =>
+            render(
+                <Suspense fallback={null}>
+                    <CardsList
+                        list={Promise.resolve({
+                            cards: [of("a", "Base"), of("b", "Base")],
+                            total: 4,
+                            facets: { sets: [], rarities: [], gens: [], types: [] },
+                        } as unknown as CardList)}
+                        filter={{}}
+                        narrowed={false}
+                        view="grid"
+                        size="md"
+                        onSelect={vi.fn()}
+                        noHits={null}
+                        empty={null}
+                    />
+                </Suspense>,
+            ),
+        );
+        for (let i = 0; i < 10; i++) await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
+        vi.unstubAllGlobals();
+        vi.stubGlobal("matchMedia", () => ({ matches: true, addEventListener() {}, removeEventListener() {} }));
+        expect(document.querySelectorAll("img")).toHaveLength(4);
+        expect(eager().map((img) => img.getAttribute("src"))).toEqual([expect.stringContaining("a.png"), expect.stringContaining("b.png")]);
+    });
+});

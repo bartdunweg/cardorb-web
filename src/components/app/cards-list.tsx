@@ -2,7 +2,7 @@
 
 import { type ReactNode, use, useEffect, useRef, useState, useTransition } from "react";
 import { warmCardFacts } from "@/components/app/card-memo";
-import { CardsGrid } from "@/components/app/cards-grid";
+import { CardsGrid, FIRST_ROW } from "@/components/app/cards-grid";
 import { CardsTable } from "@/components/app/cards-table";
 import { GotItButton } from "@/components/app/got-it-button";
 import { WishHeartButton } from "@/components/app/wish-heart-button";
@@ -280,6 +280,8 @@ export function CardsList({
                                                 : undefined
                                         }
                                         steps={!filter.wishlist}
+                                        // The first row at load is the first set's; a later set's tiles, and a batch appended on scroll, load as they come in.
+                                        priority={i === 0 ? Math.min(FIRST_ROW, first.cards.length) : 0}
                                     />
                                 </section>
                             ))}
