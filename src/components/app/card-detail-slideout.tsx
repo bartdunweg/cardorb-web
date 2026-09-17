@@ -1,30 +1,31 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useRef } from "react";
 import { ChevronLeft, ChevronRight, DotsHorizontal, Heart, Phone01, Plus, Star01, Trash01, XClose } from "@untitledui/icons";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
-import { type CardFacts, type PricePoint, addCard, editCopies, removeCard, restoreCard, setCopies, setFavorite } from "@/app/(app)/dashboard/cards/actions";
-import type { BinderChoice } from "@/app/(app)/dashboard/collections/actions";
-import { NO_ART, artStack, nextArt } from "@/components/app/card-art";
+import { artStack } from "@/components/app/card-art";
 import { CardBack } from "@/components/app/card-back";
-import { CardImage, preloadCardImage } from "@/components/app/card-image";
-import { knownCardFacts, knownPriceHistory, knownRows, preloadCardFacts, preloadPriceHistory, rememberCopies } from "@/components/app/card-memo";
+import { CardImage } from "@/components/app/card-image";
 import { CardPriceChart } from "@/components/app/card-price-chart";
-import { PERIODS, type PeriodKey } from "@/components/app/chart-periods";
+import type { PeriodKey } from "@/components/app/chart-periods";
 import { CopyCard } from "@/components/app/copy-card";
 import { CopyFormDialog } from "@/components/app/copy-form-dialog";
 import { HoloCard } from "@/components/app/holo-card";
 import { MarkOwnedDialog } from "@/components/app/mark-owned-dialog";
-import { editionChoices, openingChoice, pressedPrinting, printingChoices } from "@/components/app/printing-choices";
 import { SheetActionBar } from "@/components/app/sheet-action-bar";
 import { SheetBar } from "@/components/app/sheet-bar";
-import { type StepFrom, stepMotion } from "@/components/app/step-motion";
 import { MARK_ON } from "@/components/app/tile-icon-button";
-import { notify } from "@/components/app/toast";
 import { TypeIcon } from "@/components/app/type-icon";
+import { useCardArt } from "@/components/app/use-card-art";
+import { useSheetBinders } from "@/components/app/use-sheet-binders";
+import { useSheetCopies } from "@/components/app/use-sheet-copies";
+import { useSheetFacts } from "@/components/app/use-sheet-facts";
+import { useSheetPrinting } from "@/components/app/use-sheet-printing";
+import { useSheetStar } from "@/components/app/use-sheet-star";
+import { useSheetSteps } from "@/components/app/use-sheet-steps";
+import { useSheetWrites } from "@/components/app/use-sheet-writes";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Tab, TabList, TabPanel, Tabs } from "@/components/application/tabs/tabs";
 import { Badge } from "@/components/base/badges/badges";
@@ -32,21 +33,15 @@ import { Button, styles as buttonStyles } from "@/components/base/buttons/button
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Tooltip } from "@/components/base/tooltip/tooltip";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
-import type { PokemonCard, RemovedCard } from "@/lib/api-shapes";
-import { binderFromPath, isBinderPath } from "@/lib/binder-from-path";
+import type { PokemonCard } from "@/lib/api-shapes";
 import { matchesRule } from "@/lib/binder-rule";
 import { cardLabel, cardLabelFull, copyLine } from "@/lib/card-label";
-import { type Finish, isReverseFinish } from "@/lib/card-shapes";
-import type { Card, Facets, PublicCard } from "@/lib/cards";
-import { type CopyGroup, groupCopies, sortCopies } from "@/lib/copies";
-import { forgetMineQuietly } from "@/lib/forget-mine";
+import { isReverseFinish } from "@/lib/card-shapes";
+import type { Card, PublicCard } from "@/lib/cards";
+import { groupCopies } from "@/lib/copies";
 import { formatPrice } from "@/lib/format";
-import { orientationNeedsPermission, requestOrientation } from "@/lib/holo/orientation";
-import { periodChange } from "@/lib/price-change";
 import { tcgplayerUrl } from "@/lib/price-links";
-import { listBinders, listCopies, loadFacets, seriesLogo } from "@/lib/reads";
-import { settleLatest } from "@/lib/settle-latest";
-import { orFailed } from "@/lib/write-outcome";
+import { listBinders } from "@/lib/reads";
 import { cx } from "@/utils/cx";
 
 /* What a write that never answered (the network dropped, the action threw) lands as: the same
@@ -129,383 +124,36 @@ export function CardDetailSlideout({
     rowPending = false,
     period: opensOn = "1m",
 }: Props) {
-    const router = useRouter();
-    // The owner's fields exist only on the editable view; the public view never receives them.
-    // The row the sheet shows: the one it opened on, or another copy of the card tapped in the
-    // Copies tile. Kept with the card it was chosen for, so a new card opens on its own row.
-    const [viewing, setViewing] = useState<{ of: string; row: Card } | null>(null);
-    const mine = readOnly ? null : viewing && card && viewing.of === card.id ? viewing.row : (card as Card | null);
-    // Every row of this card the person holds, read when the sheet opens and after each write.
-    const copiesKey = (c: Card) => `${c.set_name ?? c.set ?? ""}|${c.number ?? ""}|${c.name}`;
-    const [copiesState, setCopiesState] = useState<{ of: string; rows: Card[] } | null>(null);
-    /* Before this sheet has read them, the copies the page already had (a set page's rows,
-       card-memo.ts), where they include the row shown: then every kind is there on the first paint. */
-    const pageCopies = mine?.owned ? knownRows(mine)?.filter((r) => r.owned) : undefined;
-    const copies = mine && copiesState?.of === copiesKey(mine) ? copiesState.rows : pageCopies?.some((r) => r.id === mine?.id) ? sortCopies(pageCopies) : null;
-    /* Counts the presses the sheet has answered on screen before the store has. A read that
-       started before one of those would put the old number back over the new one, so it is
-       dropped; the press that made it stale reads again once its write has landed. */
-    const pressed = useRef(0);
-    // The card on screen now, for a read that answers after the arrows stepped on to another one.
-    const shownCard = useRef(card);
-    useEffect(() => {
-        shownCard.current = card;
-    }, [card]);
-    const reloadCopies = async (row: Card | null = mine) => {
-        if (!row || !row.owned) return;
-        const asOf = pressed.current;
-        const readFor = card?.id;
-        const rows = sortCopies(await listCopies(row));
-        if (asOf !== pressed.current) return;
-        rememberCopies(row, rows);
-        // A late answer for card A is kept in the memo but does not touch the sheet now showing card B.
-        if (shownCard.current?.id !== readFor) return;
-        setCopiesState({ of: copiesKey(row), rows });
-        /* A row that is gone (removed, merged away, or put back under a new id) cannot stay the one
-           shown: the sheet moves to the first row left, so the star and the copy form act on a row
-           that exists. */
-        const shownId = viewing?.of === card?.id ? viewing?.row.id : row.id;
-        if (card && !rows.some((r) => r.id === shownId)) setViewing(rows[0] ? { of: card.id, row: rows[0] } : null);
-    };
-    // A new copy as a row of its own, made like the row shown, pulled today; the sheet moves to
-    // it so what differs can be set at once.
-    /* One copy of several. The sheet stays open on whatever is left, so removing the row you were
-       reading moves you to the first one rather than closing the card out from under you. */
-    /* A card the sheet has just emptied stays on screen as a card you could take again, so the
-       last minus is not a door slamming. The set page hands one of these in; everywhere else the
-       card on screen is enough to build it. */
-    const [removed, setRemoved] = useState<string | null>(null);
-    const emptied = !!card && removed === card.id;
-    /* A line is a kind of copy, so the bin on it removes every row behind it. Removing one of four
-       identical rows would leave a line still saying ×3 and nothing to show for the press. */
-    const dropCopies = async (group: Card[]) => {
-        if (!mine || !card || !group.length) return;
-        /* Gone from the panel at once; the store follows. A failure reads the rows back. */
-        const gone = new Set(group.map((r) => r.id));
-        const rows = (copies ?? [mine]).filter((r) => !gone.has(r.id));
-        pressed.current += 1;
-        setCopiesState({ of: copiesKey(mine), rows });
-        if (gone.has(mine.id) && rows[0]) setViewing({ of: card.id, row: rows[0] });
-        setBusy(true);
-        /* At once, not one after another. Each of these is a round trip from the browser through
-           the app to the API and on to the database in another region, so a group of four in a
-           `for await` was four of those in a queue: the wait grew with the number of copies, on
-           the one action where the number of copies is the whole point. They touch different rows,
-           so nothing is racing. None of them forgets (reread: false): each forgetting in its own
-           answer drew the page again once per copy, and those redraws queued behind one another.
-           The cache is dropped once, quietly, when they have all landed, failed ones included,
-           since the others may still have removed their rows. */
-        const results = await Promise.all(group.map((row) => orFailed(removeCard(row.id, { reread: false }))));
-        setBusy(false);
-        const forgotten = forgetMineQuietly("cards");
-        const failed = results.find((r) => !r.ok);
-        if (failed && !failed.ok) {
-            notify.failed(group.length > 1 ? "Those copies were not removed" : "That copy was not removed", { description: failed.error });
-            void forgotten.then(() => {
-                scheduleRefresh();
-                void reloadCopies();
-            });
-            return;
-        }
-        offerUndo(
-            results.flatMap((r) => (r.ok && r.card ? [r.card] : [])),
-            group.length > 1 ? `${group.length} copies removed` : "Copy removed",
-        );
-        // Nothing left: the sheet says so, rather than staying on a row that is gone with "Add a
-        // copy" and the star still writing to it. Only the minus's own path said it before.
-        if (!rows.length && card) setRemoved(card.id);
-        void forgotten.then(scheduleRefresh);
-    };
-    /* Read-only sheets never take a card, so the public shape is not asked to answer for one. */
-    const own = readOnly ? null : (card as Card | null);
-    const takeable: PokemonCard | null =
-        addable ??
-        (own
-            ? {
-                  id: own.id,
-                  name: own.name,
-                  // The official name: what every catalogue add sends, and what a new row is filed under.
-                  set: own.set_name ?? own.set ?? "",
-                  number: own.number ?? "",
-                  rarity: own.rarity,
-                  image: own.image_url,
-                  supertype: null,
-                  subtypes: null,
-                  hp: null,
-                  types: own.types?.length ? own.types : null,
-                  artist: null,
-                  series: null,
-                  releaseDate: null,
-                  setPrintedTotal: null,
-                  flavorText: null,
-                  nationalPokedexNumbers: null,
-                  owned: false,
-                  wishlist: false,
-                  quantity: 0,
-                  price: own.price,
-              }
-            : null);
-
-    const [binders, setBinders] = useState<BinderChoice[]>([]);
-    /* The hand-filled binder whose page this sheet was opened on, if any: a card taken here goes
-       into it as well. Read from the path, the one fact every mounted sheet shares: the palette's
-       sheet hangs from the layout, beside the page, out of reach of anything the page provides. */
-    const pathname = usePathname();
-    const binder = readOnly ? null : binderFromPath(pathname, binders);
-    // On a binder's page before the binder list has answered: the press would file nowhere, so it waits a beat.
-    const binderPending = !readOnly && isBinderPath(pathname) && binders.length === 0;
-
-    /* Taking a card the sheet was only showing. The sheet closes on the press, with the toast, and
-       the write follows: it waited for the write and then for the list behind to be drawn again, a
-       spinner on a card already chosen. What it was showing is not what it is now, and the row it
-       became has its own copies. A write that fails says so; nothing was marked, so nothing goes back. */
-    const add = (list: "collection" | "wishlist") => {
-        if (!takeable) return;
-        const taken = takeable;
-        const into = list === "collection" ? binder : null;
-        const where = list === "wishlist" ? "your wishlist" : into ? into.name : "your collection";
-        setRemoved(null);
-        onClose();
-        notify.done(`Added to ${where}`, { description: taken.name });
-        const putBack = onTaking?.(taken, list);
-        /* The printing and run pressed under the card, where the sheet offers a choice (Bart,
-           2026-09-15): you add the one you are looking at. Otherwise the API's own default. */
-        void orFailed(
-            addCard(taken, list, into?.id, {
-                printing: printing ? { finish: printing.finish, foilPattern: printing.foilPattern } : undefined,
-                edition: edition ?? undefined,
-                reread: false,
-            }),
-        ).then((res) => {
-            if (!res.ok) {
-                notify.failed(`That card was not added to ${where}`, { description: res.error });
-                putBack?.();
-                return;
-            }
-            // The write forgot nothing (reread: false), so a refresh on its own drew the sidebar's
-            // counts from the cache as they were before the add.
-            const forgotten = forgetMineQuietly("cards");
-            if (onTaken) onTaken(taken, list, res.id);
-            else void forgotten.then(() => router.refresh());
-        });
-    };
-    /* A card you hold, into the binder this page is: the first row not yet in a binder, else the
-       row shown, which then moves. A row is one kind of copy, so ×4 goes as four, as the Binder
-       select on a copy does it. Only a row the store has answered with: a sheet opened from the
-       palette shows the catalogue's card until its rows land, and that card's id is no row's. */
-    /* Filed on the press: the row says the binder at once, so the button and the chip under "In
-       binders" trade places under the finger, and the write follows. It used to hold every button
-       in the sheet through the write and the list behind drawn inside the action's answer. A write
-       that fails puts the rows back and says so. */
-    const fileInBinder = () => {
-        if (!mine || !binder || !copies?.length) return;
-        const into = binder;
-        const before = copies;
-        const row = copies.find((r) => r.collection_id === null) ?? copies[0];
-        pressed.current += 1;
-        setCopiesState({ of: copiesKey(mine), rows: copies.map((r) => (r.id === row.id ? { ...r, collection_id: into.id } : r)) });
-        notify.done(`Added to ${into.name}`, { description: row.collection_id ? "Moved from another binder" : mine.name });
-        void orFailed(editCopies([row.id], { collectionId: into.id }, { reread: false })).then((res) => {
-            if (!res.ok) {
-                pressed.current += 1;
-                setCopiesState({ of: copiesKey(mine), rows: before });
-                notify.failed(`${mine.name} was not added to ${into.name}`, { description: res.error });
-                return;
-            }
-            void forgetMineQuietly("cards").then(() => {
-                scheduleRefresh();
-                void reloadCopies();
-            });
-        });
-    };
-    const [facets, setFacets] = useState<Facets | undefined>(undefined);
-    /*
-     * The star, kept here so a tap answers at once: it fills or empties on the press and the save
-     * runs behind it, with no spinner, because a favourite is a mark and not a task to wait for.
-     * Bart's call, 2026-09-13. The button stays pressable while a save is out, so the writes go
-     * one after the other (a second tap cannot land before the first), and only the last tap's
-     * failure puts the star back, to what the store last took: an earlier tap in the run may have
-     * failed too, so the tap before is not proof of what was saved.
-     */
-    // Kept with the row it was pressed on, so a save that fails after the arrows moved on puts
-    // back that card's star and not the one now showing.
-    const [starred, setStarred] = useState<{ id: string; on: boolean } | null>(null);
-    const isStarred = starred && starred.id === mine?.id ? starred.on : (mine?.is_favorite ?? false);
-    const starWrites = useRef<Promise<unknown>>(Promise.resolve());
-    const starTaps = useRef(0);
-    // What the store holds per card while a run of taps is out: taken from the star when a run
-    // starts (it shows the store then), moved on by every write that lands, dropped when the run ends.
-    const starSaved = useRef(new Map<string, boolean>());
-    const toggleStar = () => {
-        if (!mine) return;
-        const id = mine.id;
-        const next = !isStarred;
-        const tap = ++starTaps.current;
-        if (!starSaved.current.has(id)) starSaved.current.set(id, isStarred);
-        setStarred({ id, on: next });
-        const putBack = (error?: string) => {
-            const saved = starSaved.current.get(id) ?? !next;
-            starSaved.current.delete(id);
-            setStarred({ id, on: saved });
-            const title = saved ? "That card is still a Favorite" : "That card is not a Favorite";
-            if (error === undefined) notify.failed(title);
-            else notify.failed(title, { description: error });
-        };
-        // Written without the re-read (the page drawn inside each answer held the next tap's write
-        // in Next's action queue), and the cache dropped once the last tap has landed, either way:
-        // the taps before it may have written.
-        const write = starWrites.current.then(() => setFavorite(id, next, { reread: false }));
-        starWrites.current = write.catch(() => undefined);
-        void write.then(
-            (res) => {
-                if (res.ok) starSaved.current.set(id, next);
-                if (tap !== starTaps.current) return;
-                const forgotten = forgetMineQuietly("favorite");
-                if (res.ok) {
-                    starSaved.current.delete(id);
-                    void forgotten.then(scheduleRefresh);
-                } else putBack(res.error);
-            },
-            () => {
-                if (tap !== starTaps.current) return;
-                void forgetMineQuietly("favorite");
-                putBack();
-            },
-        );
-    };
-    // The generation's logo, asked for when a card opens; kept with the series it was read for.
-    const [logo, setLogo] = useState<{ series: string; url: string | null } | null>(null);
-    const gen = card?.gen ?? null;
-    useEffect(() => {
-        if (!gen) return;
-        let live = true;
-        seriesLogo(gen).then((url) => {
-            if (live) setLogo({ series: gen, url });
-        });
-        return () => {
-            live = false;
-        };
-    }, [gen]);
-    const genLogo = logo?.series === gen ? logo.url : null;
-    // What the catalogue knows about the printing: read when a card opens, kept with its id.
-    //
-    // Seeded from the card memo, which is why a card opened twice fills in at once rather than a
-    // half-second later with its rows animating: measured, the sheet is on screen at 92 ms and
-    // the catalogue answers at 559 ms, and the `arrive` on those rows spends that gap drawing
-    // attention to it. The second time there is no gap to draw.
-    const [facts, setFacts] = useState<{ tcgId: string; facts: CardFacts | null } | null>(null);
-    const [history, setHistory] = useState<{ tcgId: string; points: PricePoint[] } | null>(null);
-    const tcgId = card?.tcg_id ?? null;
-    /* The catalogue the card is from: a card taken off a Japanese set page says so, and a copy of one
-       carries its language. Its facts are asked of that catalogue (card-memo.ts). */
-    const catalogue = addable?.language === "ja" || (card && "language" in card && card.language === "ja") ? "ja" : "en";
-    useEffect(() => {
-        if (!tcgId) return;
-        // The price line too, so the price section opens on it rather than on "No readings" for the
-        // half second the API takes. The header's arrow reads the same answer, for its average.
-        let live = true;
-        preloadPriceHistory(tcgId).then((points) => {
-            if (live) setHistory({ tcgId, points });
-        });
-        return () => {
-            live = false;
-        };
-    }, [tcgId]);
-    useEffect(() => {
-        if (!tcgId) return;
-        if (knownCardFacts(tcgId, catalogue) !== undefined) return;
-        let live = true;
-        preloadCardFacts(tcgId, catalogue).then((f) => {
-            if (live) setFacts({ tcgId, facts: f });
-        });
-        return () => {
-            live = false;
-        };
-    }, [tcgId, catalogue]);
-    /*
-     * Read from what was fetched, or from what a previous open already learned. Derived rather
-     * than copied into state, so a card whose answer is already known needs no effect and no
-     * render to show it.
-     *
-     * That is the whole of it: measured, the sheet is on screen at 63 ms and the catalogue
-     * answers at 739 ms, and the `arrive` on those rows spends the gap between drawing attention
-     * to it. Opened a second time there is no gap, so nothing animates.
-     */
-    // The copy forms are told the wait apart from no answer: undefined until the catalogue answers, and they offer nothing yet (copy-fields).
-    const formFacts = tcgId ? (facts?.tcgId === tcgId ? facts.facts : knownCardFacts(tcgId, catalogue)) : null;
-    const known = formFacts ?? null;
-    // The line beside the price in the header: how far this printing moved over the period the
-    // chart under it is drawing, out of the card's own history. The period lives here rather than
-    // in the chart, so pressing 7D moves the number and the line together.
-    const points = tcgId ? (history?.tcgId === tcgId ? history.points : (knownPriceHistory(tcgId) ?? [])) : [];
-    const [periodState, setPeriodState] = useState<{ opensOn: PeriodKey; period: PeriodKey }>({ opensOn, period: opensOn });
-    // A list with a period of its own (Home's movers) opens every card it hands over on that one.
-    if (periodState.opensOn !== opensOn) setPeriodState({ opensOn, period: opensOn });
-    const period = periodState.period;
-    const setPeriod = (next: PeriodKey) => setPeriodState({ opensOn, period: next });
-    const chosen = PERIODS.find((p) => p.key === period) ?? PERIODS[1];
-    const change = mine ? periodChange(points, period, isReverseFinish(mine.finish), mine.price_printing ?? null, chosen.said) : null;
-
-    /*
-     * The arrow keys, which is how anybody who is already looking at a list expects to move
-     * through it. Only when nothing is being typed into: the sheet holds a note field and a
-     * grade box, and a left arrow inside those belongs to the cursor.
-     */
-    /*
-     * Which way the list was stepped and how, kept for the art below (`stepMotion`): after a chevron
-     * the next card slides in from the side its arrow sits on and the last one leaves through the
-     * other; after an arrow key it fades in place, and a held key's repeats draw it at once. Zero
-     * when the sheet opened on this card, so there is nothing to slide from.
-     */
-    const stepFrom = useRef<StepFrom>({ dir: 0, key: false, repeat: false });
-    const step = useCallback(
-        (dir: -1 | 1, key?: { repeat: boolean }) => {
-            const go = dir < 0 ? onPrev : onNext;
-            if (!go) return;
-            stepFrom.current = { dir, key: !!key, repeat: key?.repeat ?? false };
-            go();
-        },
-        [onPrev, onNext],
-    );
-    useEffect(() => {
-        const onKey = (e: KeyboardEvent) => {
-            if (e.metaKey || e.ctrlKey || e.altKey) return;
-            const el = e.target as HTMLElement | null;
-            /* Not only the fields: react-aria's tab list moves between tabs with the arrow keys,
-               and the price chart's arrows are the only way to reach its individual figures, the
-               whole of its text alternative. Both sat under this handler, so on the Price tab a
-               right arrow threw you onto another card instead of reading the next price. */
-            if (
-                el?.closest(
-                    // The kit's Select is a button with a listbox behind it, and react-aria moves its
-                    // selection with these keys: one ArrowRight on a copy's Language saved the next
-                    // language to every row of that kind and stepped to the next card in one press.
-                    "input, textarea, select, [aria-haspopup='listbox'], [contenteditable='true'], [role='tab'], [role='tablist'], [role='menu'], [role='menuitem'], [role='listbox'], [role='option'], [role='slider'], [tabindex]:not([tabindex='-1']) svg, figure",
-                )
-            )
-                return;
-            // A second dialog over the sheet (Add a copy, Mark as owned, the palette) owns the keys:
-            // stepping the card under an open form wrote the form's values to the next card's id.
-            if (document.querySelectorAll("[role='dialog']").length > 1) return;
-            if (e.key === "ArrowLeft") step(-1, { repeat: e.repeat });
-            if (e.key === "ArrowRight") step(1, { repeat: e.repeat });
-        };
-        document.addEventListener("keydown", onKey);
-        return () => document.removeEventListener("keydown", onKey);
-    }, [step]);
-    // On an iPhone the card can follow the phone's tilt once the browser has asked; a Tilt button
-    // in the bar is the tap it asks from. The question is the browser's, read as an external store,
-    // false on the server, so both renders agree.
-    const tiltNeedsAsk = useSyncExternalStore(
-        () => () => {},
-        () => orientationNeedsPermission(),
-        () => false,
-    );
-    const [tiltGranted, setTiltGranted] = useState(false);
-    const askTilt = async () => {
-        if (await requestOrientation()) setTiltGranted(true);
-    };
-    const canTilt = tiltNeedsAsk && !tiltGranted;
+    const { mine, copies, setViewing, showRows, pressedRef, reloadCopies } = useSheetCopies({ card, readOnly });
+    const { binders, setBinders, facets, binder, binderPending } = useSheetBinders({ card, readOnly });
+    const { stepFromRef, step } = useSheetSteps({ onPrev, onNext });
+    const { tcgId, genLogo, formFacts, known, points, period, setPeriod, said, change } = useSheetFacts({ card, mine, addable, opensOn });
+    const { printings, editions, printingKey, editionKey, printing, edition, pressedImage, pick, shownSeries, shownPrice, shownChange, publicPrice } =
+        useSheetPrinting({ card, mine, readOnly, tcgId, known, points, period, said, change, stepFromRef });
+    const { takeable, emptied, busy, scheduleRefresh, add, fileInBinder, dropCopies, stepUp, stepDown, closeSheet, removeAndOffer } = useSheetWrites({
+        card,
+        readOnly,
+        mine,
+        copies,
+        showRows,
+        setViewing,
+        pressedRef,
+        reloadCopies,
+        binder,
+        printing,
+        edition,
+        addable,
+        onClose,
+        onTaken,
+        onTaking,
+        onRemoved,
+    });
+    const { isStarred, toggleStar } = useSheetStar({ card, mine, scheduleRefresh });
+    const { art, backdrop, scanLoaded, blurLoaded, scanFade, prevScan, blurFade, onScanLoad, onBlurLoad, canTilt, tiltGranted, askTilt } = useCardArt({
+        card,
+        pressedImage,
+        stepFromRef,
+    });
     // In the dots menu, where the card's other actions are; a bar button of its own spent one of
     // the four places up there on a thing an iPhone asks once and never again. Where there is no
     // menu (somebody else's card, a read-only sheet) it stays a button, because otherwise it has
@@ -521,359 +169,6 @@ export function CardDetailSlideout({
                 onClick={() => void askTilt()}
             />
         ) : null;
-    // The dots menu's actions: each one server call, then the page re-reads; removing closes the sheet
-    // first, since the card it showed is gone.
-    const [busy, setBusy] = useState(false);
-    /* The list behind the sheet re-reads after a write, but not after each one: a run of presses
-       is one change to it, and a re-read per press had every one of them competing with the next
-       write for the same connection. Closing the sheet takes whatever is still waiting with it. */
-    const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const scheduleRefresh = () => {
-        if (refreshTimer.current) clearTimeout(refreshTimer.current);
-        refreshTimer.current = setTimeout(() => {
-            refreshTimer.current = null;
-            router.refresh();
-        }, 500);
-    };
-    const flushRefresh = () => {
-        if (!refreshTimer.current) return;
-        clearTimeout(refreshTimer.current);
-        refreshTimer.current = null;
-        router.refresh();
-    };
-    /* How many of a kind. Plus adds one to the row on screen for it. Minus takes one from a row
-       that holds more than one, and otherwise drops a whole row of the kind, since four identical
-       copies are four rows of one in the store. The last one may go: the panel answers at once
-       with the two ways to take it back.
-
-       The number changes under the finger. It used to wait for the write to land in another
-       region and then for the rows to be read back, two round trips, with the button looking
-       dead in between. Now the panel shows the new count and the store catches up: one write in
-       the air per row, always for the last count pressed, and the rows are read back once it has
-       landed. A write that fails puts the store's number back and says so. */
-    const [settleQuantity] = useState(() => settleLatest((id: string, quantity: number) => orFailed(setCopies(id, quantity, { reread: false }))));
-    const showQuantity = (row: Card, quantity: number) => {
-        if (!mine) return;
-        pressed.current += 1;
-        const base = copies ?? [mine];
-        setCopiesState({ of: copiesKey(mine), rows: base.map((r) => (r.id === row.id ? { ...r, quantity } : r)) });
-        void settleQuantity(row.id, quantity, (error) => {
-            notify.failed("The number of copies did not change", { description: error });
-        }).then((landed) => {
-            // null is a press folded into one still flying; that one re-reads for both. The
-            // writes forget nothing themselves (setCopies, reread: false): the cache is dropped
-            // here, once, when no write is in the air to race the re-read that fills it again.
-            // A failed run may still have landed its first presses, so it re-reads too.
-            if (landed === null) return;
-            // Quietly, through the route: rereadMine() is an action, and a cache dropped inside one
-            // draws the page again in its answer, a redraw of the list behind the sheet on top of the
-            // refresh this schedules.
-            void forgetMineQuietly("cards").then(() => {
-                scheduleRefresh();
-                void reloadCopies();
-            });
-        });
-    };
-    const stepUp = (group: CopyGroup) => {
-        const row = group.shown;
-        showQuantity(row, (row.quantity ?? 1) + 1);
-    };
-    const stepDown = async (group: CopyGroup) => {
-        const many = group.rows.find((r) => (r.quantity ?? 1) > 1);
-        if (many) return showQuantity(many, (many.quantity ?? 1) - 1);
-        // Any row but the one the sheet opened on, so what it shows stays as long as it can.
-        const spare = group.rows.find((r) => r.id !== mine?.id) ?? group.rows[0];
-        if (!spare) return;
-        await dropCopies([spare]);
-    };
-
-    const closeSheet = async () => {
-        flushRefresh();
-        // The next card, or this one again, opens on its own row.
-        setViewing(null);
-        onClose();
-    };
-    /* A way back that puts the row back whole. The rows live only in this closure, for as long as
-       the toast is up: the API keeps nothing, so an undo nobody presses costs nothing and leaves
-       nothing behind. An API that has not deployed the change yet hands back no row, and then
-       there is nothing to offer: the removal stands and says so without an Undo, which is better
-       than a button that would quietly create a card missing everything it held. */
-    const offerUndo = (rows: RemovedCard[], done: string) => {
-        if (!rows.length) return notify.removed(done);
-        notify.removed(done, {
-            undo: {
-                label: "Put back",
-                onUndo: () => {
-                    // Forgotten once for the lot, quietly, as the removal was (dropCopies says why).
-                    void Promise.all(rows.map((row) => orFailed(restoreCard(row, { reread: false })))).then(async (results) => {
-                        const failed = results.find((r) => !r.ok);
-                        if (failed && !failed.ok) notify.failed("That did not go back", { description: failed.error });
-                        else {
-                            setRemoved(null);
-                            notify.done(rows.length > 1 ? `${rows.length} copies are back` : "It is back");
-                        }
-                        await forgetMineQuietly("cards");
-                        scheduleRefresh();
-                        void reloadCopies();
-                    });
-                },
-            },
-        });
-    };
-
-    /* Closed on the press and written after, as the add is: the sheet waited for the delete and the
-       redraw with its menu spinning. The toast comes with the answer, because its way back is the row
-       the delete hands back. */
-    const removeAndOffer = (row: Card) => {
-        const wishlist = !!row.wishlist;
-        onClose();
-        onRemoved?.(row);
-        void orFailed(removeCard(row.id, { reread: false })).then((res) => {
-            if (!res.ok) {
-                notify.failed(wishlist ? "That card is still on your wishlist" : "That card is still in your collection", { description: res.error });
-                router.refresh();
-                return;
-            }
-            const forgotten = forgetMineQuietly("cards");
-            if (!onRemoved) void forgotten.then(() => router.refresh());
-            offerUndo(res.card ? [res.card] : [], wishlist ? "Removed from your wishlist" : "Removed from your collection");
-        });
-    };
-
-    // The binders and the facets are for the sheet's own controls, so they are asked for when a
-    // card first opens, not when the page mounts: this sits on every list page, closed, and used
-    // to cost two calls on every visit for a sheet nobody had opened.
-    // The card's copies, read when a card opens; the list behind hands the sheet one row.
-    const opened = !readOnly && (card as Card | null)?.owned ? (card as Card) : null;
-    const openedId = opened?.id ?? null;
-    useEffect(() => {
-        if (!opened) return;
-        let live = true;
-        const asOf = pressed.current;
-        listCopies(opened).then((rows) => {
-            if (live && asOf === pressed.current) {
-                rememberCopies(opened, rows);
-                setCopiesState({ of: copiesKey(opened), rows: sortCopies(rows) });
-            }
-        });
-        return () => {
-            live = false;
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [openedId]);
-    const askedForChoices = useRef(false);
-    useEffect(() => {
-        if (readOnly || !card || askedForChoices.current) return;
-        askedForChoices.current = true;
-        listBinders().then(setBinders);
-        loadFacets().then(setFacets);
-    }, [readOnly, card]);
-
-    // Reset the editable collection value when a different card opens, done during render (React's
-    // documented pattern for adjusting state on prop change) rather than in an effect.
-    const [syncedCardId, setSyncedCardId] = useState(card?.id);
-    if (card?.id !== syncedCardId) {
-        setSyncedCardId(card?.id);
-        setStarred(null);
-    }
-
-    /*
-     * Stepping through a list with the arrows swapped the art in one frame: the header's colour
-     * jumped and the card teleported. Now the art crosses over. The last card's scan and blurred
-     * copy stay underneath while the next card's are fetched, and each fades in over them once
-     * its own picture is on screen, not on mount, or the fade would run on an empty box and the
-     * picture still pop in after it. The blurred copy is opacity only. The scan also travels:
-     * 12 px in from the side its arrow sits on while the last one slides 12 px out the other way,
-     * so stepping through a list reads as paging rather than as one card replaced by another.
-     * 250 ms on the enter curve: this runs on every arrow press, so it stays small. Reduced
-     * motion drops the travel and keeps the fade.
-     *
-     * The picture underneath is the very element that was showing the last card, not a copy of
-     * it. It used to be a copy: a second <img> mounted at the moment of the step, and an <img>
-     * that has just been put in the page paints nothing until the browser has decoded it, even
-     * from cache, and next/image asks for that decode off the main thread. So for the first
-     * frames after a press both layers were empty and the page's ground showed through the head:
-     * a white blink on every step on a phone, where the decode takes longest. Now the layers are
-     * a keyed list (`artStack`), the key being the scan's address: the last card's element stays
-     * where it is and only becomes the one underneath, and the new one is added over it. The
-     * scans sit inside the tilting card together, so a card tilted under the pointer cannot show
-     * the one underneath peeking out beside it. The layer underneath goes once the fade has
-     * ended. Adjusted during render, the same way as the collection value above.
-     */
-    /*
-     * The printing on show, under the card (printing-choices.ts): the copy's own to begin with,
-     * and whichever button was pressed after that, until the sheet moves to another card. A
-     * printing with its own photo shows that photo; any other shows the card's scan with that
-     * printing's foil over it.
-     */
-    const printings = printingChoices(known);
-    const editions = editionChoices(known?.editions, known?.editionPictures);
-    // The printings' and the runs' own pictures fetched as soon as the sheet knows them, at the sizes the head and the
-    // frame draw, so pressing one swaps the card at once instead of after its download.
-    // A cosmos print's shine is three textures (268 KB) the vendored effect only asks for once it is on
-    // screen, so the first press of Cosmos waited for those too.
-    const printingImages = [...(printings ?? []), ...(editions ?? [])].flatMap((p) => (p.image ? [p.image] : [])).join("|");
-    const hasCosmos = !!printings?.some((p) => p.foilPattern === "cosmos");
-    useEffect(() => {
-        for (const image of printingImages ? printingImages.split("|") : []) {
-            preloadCardImage(image, 176, 75);
-            preloadCardImage(image, 64, 60);
-        }
-        if (hasCosmos)
-            for (const texture of ["cosmos-bottom.png", "cosmos-middle-trans.png", "cosmos-top-trans.png"]) new window.Image().src = `/holo/${texture}`;
-    }, [printingImages, hasCosmos]);
-    // On a public page the card's own printing is the one it opens on, as it is for its owner.
-    const held = mine ?? (readOnly ? card : null);
-    const ownPrinting = held?.finish ? (held.foil_pattern ? `${held.finish}/${held.foil_pattern}` : held.finish) : null;
-    const [picked, setPicked] = useState<{ tcgId: string | null; printing: string | null; edition: string | null }>({
-        tcgId: null,
-        printing: null,
-        edition: null,
-    });
-    const pickedHere = picked.tcgId === tcgId ? picked : null;
-    const openingPrinting = openingChoice(printings, ownPrinting);
-    // A card you do not hold opens on its unlimited run, not on the 1st Edition's price.
-    const openingEdition = openingChoice(editions, mine?.edition, "unlimited");
-    const printingKey = pickedHere?.printing ?? openingPrinting;
-    const editionKey = pickedHere?.edition ?? openingEdition;
-    const printing = printings?.find((p) => p.key === printingKey) ?? null;
-    const editionChoice = editions?.find((e) => e.key === editionKey) ?? null;
-    const edition = editionChoice?.key ?? null;
-    // A run's own picture shows as a printing's does; a card has one group or the other, never both.
-    const pressedImage = printing?.image ?? editionChoice?.image ?? null;
-    const pick = (next: { printing?: string; edition?: string }) => {
-        // A printing is not a step through the list: the new picture fades in where it is.
-        stepFrom.current = { dir: 0, key: false, repeat: false };
-        setPicked({ tcgId, printing: next.printing ?? printingKey, edition: next.edition ?? editionKey });
-    };
-    /*
-     * The price above follows the buttons (Bart, 2026-09-15). On the printing the sheet opened on it
-     * is the copy's own price, as before; another one reads that printing's latest figure from the
-     * card's history, or a pattern print's own figure. `undefined` is "the copy's price", null is
-     * "that printing has none".
-     */
-    const pressedAway = (printing && printingKey !== openingPrinting) || (editionKey && editionKey !== openingEdition);
-    const patternPrice = printing?.foilPattern
-        ? known?.patternPrints?.prints.find((p) => p.finish === printing.finish && p.foilPattern === printing.foilPattern)?.price?.market
-        : undefined;
-    /* A public card with no price field is one whose owner keeps prices private: another printing
-       pressed there must not bring a market figure in through the catalogue's history. */
-    const pricesHidden = readOnly && !(card && "price" in card);
-    const { series: shownSeries, price: pressedPrice } = pressedPrinting({
-        pressedAway: !!pressedAway,
-        finish: printing?.finish ?? (mine?.finish as Finish | null) ?? "normal",
-        edition,
-        foilPattern: printing?.foilPattern ?? null,
-        latest: points.at(-1)?.printings,
-        patternPrice,
-    });
-    const shownPrice = pricesHidden ? undefined : pressedPrice;
-    const shownChange = pressedAway ? (shownPrice != null && shownSeries ? periodChange(points, period, false, shownSeries, chosen.said) : null) : change;
-    // On a public page the card carries a price only where its owner shows them; that is the figure under the title then.
-    const publicPrice = readOnly && card && "price" in card ? (card.price ?? null) : null;
-    const [art, setArt] = useState(NO_ART);
-    const [scanLoaded, setScanLoaded] = useState(false);
-    const [blurLoaded, setBlurLoaded] = useState(false);
-    const scanFade = useRef<HTMLDivElement>(null);
-    const prevScan = useRef<HTMLDivElement>(null);
-    const blurFade = useRef<HTMLDivElement>(null);
-    const fades = useRef<{ scan?: Animation; blur?: Animation; prev?: Animation }>({});
-    const artNow = nextArt(art, pressedImage && card ? { image_url: pressedImage, image_high_url: null } : card);
-    if (artNow !== art) {
-        setArt(artNow);
-        setScanLoaded(false);
-    }
-    /*
-     * The blurred copy behind the head is the card's own picture, not the printing on show: pressing
-     * Reverse or Cosmos holo swaps the card and leaves the colour behind it where it was, so nothing
-     * but the card has to load again (Bart, 2026-09-15). It changes only with the card.
-     */
-    const [backdrop, setBackdrop] = useState(NO_ART);
-    const backdropNow = nextArt(backdrop, card);
-    if (backdropNow !== backdrop) {
-        setBackdrop(backdropNow);
-        setBlurLoaded(false);
-    }
-    /*
-     * The fade is a Web Animation started the moment the picture reports in, not a class the
-     * layer transitions to. A cached picture reports in the same task that made its layer
-     * transparent, and a class flipped back within that task is never seen by the browser: it
-     * styles the end state once and nothing crosses. An animation started then plays from zero
-     * whatever the base style does underneath it. Both pictures are keyed by their address, so a
-     * new picture is a fresh <img>: on a reused one Chrome still calls the old request complete
-     * for a tick after the address changes, and next/image took that for the new picture being there.
-     */
-    const landed = (which: "scan" | "blur", layer: React.RefObject<HTMLDivElement | null>, set: (v: boolean) => void, done?: () => void) => () => {
-        set(true);
-        fades.current[which]?.cancel();
-        fades.current.prev?.cancel();
-        const el = layer.current;
-        if (!el) return;
-        const from: StepFrom = which === "scan" ? stepFrom.current : { dir: 0, key: false, repeat: false };
-        const motion = stepMotion(from, window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-        // A held arrow key: the picture is simply there, and the one under it goes with it.
-        if (!motion) {
-            done?.();
-            return;
-        }
-        const tokens = getComputedStyle(el);
-        const easing = tokens.getPropertyValue("--ease-enter").trim() || "ease-out";
-        const travel = motion.travel;
-        const duration = parseFloat(tokens.getPropertyValue(`--duration-${motion.duration}`)) || (motion.duration === "instant" ? 100 : 200);
-        const fade = el.animate(
-            [
-                { opacity: 0, transform: `translateX(${travel}px)` },
-                { opacity: 1, transform: "translateX(0)" },
-            ],
-            { duration, easing },
-        );
-        fades.current[which] = fade;
-        if (done) fade.onfinish = done;
-        // The last scan leaves the way the new one came, or it would peek out beside the new
-        // one for the length of its travel.
-        const under = which === "scan" ? prevScan.current : null;
-        if (under && travel) {
-            fades.current.prev = under.animate(
-                [
-                    { opacity: 1, transform: "translateX(0)" },
-                    { opacity: 0, transform: `translateX(${-travel}px)` },
-                ],
-                {
-                    duration,
-                    easing,
-                    fill: "forwards",
-                },
-            );
-        }
-    };
-    // Stepping on before the last fade finished: its finish would have cleared the scan the
-    // next card now needs underneath, so it is cancelled with the card it belonged to.
-    useEffect(() => {
-        const running = fades.current;
-        return () => {
-            running.scan?.cancel();
-            running.prev?.cancel();
-        };
-    }, [art.shown?.scan]);
-    useEffect(() => {
-        const running = fades.current;
-        return () => running.blur?.cancel();
-    }, [backdrop.shown?.scan]);
-    // Stepped back to the card still fading out: its picture never left the screen, so the browser
-    // will not report it loaded again. The fade starts here instead, on the element it now is.
-    const clearUnder = () => setArt((a) => (a.under ? { ...a, under: null } : a));
-    const clearBackdropUnder = () => setBackdrop((a) => (a.under ? { ...a, under: null } : a));
-    const swapped = art.swapped ? art.shown?.scan : undefined;
-    useEffect(() => {
-        if (!swapped) return;
-        landed("scan", scanFade, setScanLoaded, clearUnder)();
-        // Only on the step: the handlers are rebuilt each render and carry nothing of their own.
-    }, [swapped]);
-    const backdropSwapped = backdrop.swapped ? backdrop.shown?.scan : undefined;
-    useEffect(() => {
-        if (!backdropSwapped) return;
-        landed("blur", blurFade, setBlurLoaded, clearBackdropUnder)();
-    }, [backdropSwapped]);
 
     const titleRef = useRef<HTMLHeadingElement>(null);
     /* The binders any copy of this card is in: filed by hand, or fitting a rule binder's rule. */
@@ -1272,7 +567,7 @@ export function CardDetailSlideout({
                                                 // Eager: the header's colour at the moment the sheet opens, and lazy
                                                 // it waited for a scroll that never comes inside the sheet.
                                                 priority
-                                                onLoad={shown ? landed("blur", blurFade, setBlurLoaded, clearBackdropUnder) : undefined}
+                                                onLoad={shown ? onBlurLoad : undefined}
                                             />
                                         </div>
                                     ))}
@@ -1390,7 +685,7 @@ export function CardDetailSlideout({
                                                         quality={75}
                                                         className="object-cover"
                                                         priority
-                                                        onLoad={shown ? landed("scan", scanFade, setScanLoaded, clearUnder) : undefined}
+                                                        onLoad={shown ? onScanLoad : undefined}
                                                     />
                                                 </div>
                                             ))}
