@@ -12,6 +12,7 @@ import { useListTotals } from "@/components/app/list-totals";
 import { PriceChangeLine } from "@/components/app/price-change";
 import { TileIconButton } from "@/components/app/tile-icon-button";
 import { useCopySteps } from "@/components/app/use-copy-steps";
+import { useTileExit } from "@/components/app/use-tile-exit";
 import type { PriceChange } from "@/lib/api-shapes";
 import { cardLine, copyLine } from "@/lib/card-label";
 import type { PublicCard } from "@/lib/cards";
@@ -140,8 +141,11 @@ const GridCell = memo(function GridCell<T extends GridCard>({ card, index: i, pr
     const held = steps ? stepped : card.quantity;
     // Taken off this list by one of its own buttons (a wish un-hearted), without drawing the list again.
     const [left, setLeft] = useState(false);
-    // Taken to nought: the row is gone, and the toast holds the way back.
-    if (left || (steps && held === 0)) return null;
+    /* Taken to nought: the row is gone, and the toast holds the way back. The count and the line
+       under the title have already moved; the tile fades out first and is taken out once that ends,
+       or stays if its count comes back while it is leaving. */
+    const { ref: cellRef, removed } = useTileExit(left || (steps && held === 0));
+    if (removed) return null;
     const buttons = steps || action;
 
     return (
@@ -152,7 +156,7 @@ const GridCell = memo(function GridCell<T extends GridCard>({ card, index: i, pr
         // its wave is not seen and its delay has passed by the time it is.
         // A column that fills its grid row, so the price and the buttons sit at one height across the row
         // whether or not a tile has the printing's line above them (Bart, 2026-09-16).
-        <div className="flex arrive flex-col" style={{ "--arrive-delay": `${Math.min(i, 12) * 20}ms` } as React.CSSProperties}>
+        <div ref={cellRef} className="flex arrive flex-col" style={{ "--arrive-delay": `${Math.min(i, 12) * 20}ms` } as React.CSSProperties}>
             <CardTile
                 onSelect={() => onSelect(card)}
                 // The buttons have a row of their own in the cell, so the tile must not fill the cell: h-full

@@ -1,0 +1,97 @@
+import { useState } from "react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { CardsGrid } from "./cards-grid";
+
+/*
+ * A tile stepped to nought used to return nothing at once: it vanished under the pointer. It now
+ * fades out first. The line under the title moves at the press, the tile is taken out when the
+ * exit finishes (or is cancelled), and a count that comes back while it leaves keeps the tile.
+ */
+
+const totals = vi.fn();
+vi.mock("@/components/app/list-totals", () => ({ useListTotals: () => totals }));
+vi.mock("@/components/app/card-memo", () => ({ warmCard: vi.fn() }));
+// The steps as the tile sees them: a count it can press, and the line told at the press.
+vi.mock("@/components/app/use-copy-steps", () => ({
+    useCopySteps: ({ held: page, onShown }: { held: number; onShown?: (from: number, to: number) => void }) => {
+        const [held, setHeld] = useState(page);
+        return {
+            held,
+            error: null,
+            buttons: { current: null },
+            press: (to: number) => {
+                onShown?.(held, to);
+                setHeld(to);
+            },
+        };
+    },
+}));
+
+type FakeExit = { onfinish: (() => void) | null; oncancel: (() => void) | null; cancel: () => void; keyframes: Keyframe[] };
+let exits: FakeExit[] = [];
+
+beforeEach(() => {
+    exits = [];
+    totals.mockClear();
+    vi.stubGlobal("matchMedia", () => ({ matches: false, addEventListener() {}, removeEventListener() {} }));
+    Element.prototype.animate = function (keyframes: Keyframe[]) {
+        const exit: FakeExit = {
+            keyframes,
+            onfinish: null,
+            oncancel: null,
+            cancel() {
+                exit.oncancel?.();
+            },
+        };
+        exits.push(exit);
+        return exit as unknown as Animation;
+    } as never;
+});
+afterEach(() => {
+    // @ts-expect-error jsdom has no animate of its own
+    delete Element.prototype.animate;
+    vi.unstubAllGlobals();
+});
+
+const card = (id: string, quantity = 1) => ({ id, name: `Card ${id}`, quantity, price: 2, owned: true }) as never;
+
+describe("a tile leaving its list", () => {
+    it("moves the line at the press and takes the tile out when the exit finishes", () => {
+        render(<CardsGrid cards={[card("a")]} onSelect={() => {}} steps />);
+        fireEvent.click(screen.getByRole("button", { name: "Remove Card a from your collection" }));
+
+        expect(totals).toHaveBeenCalledWith({ copies: -1, value: -2, rows: -1 });
+        expect(exits).toHaveLength(1);
+        expect(exits[0]!.keyframes.at(-1)).toEqual({ opacity: 0, transform: "scale(0.96)" });
+        expect(screen.getByText("Card a")).toBeInTheDocument();
+
+        act(() => exits[0]!.onfinish?.());
+        expect(screen.queryByText("Card a")).not.toBeInTheDocument();
+    });
+
+    it("takes the tile out when the exit is cancelled from outside", () => {
+        render(<CardsGrid cards={[card("a")]} onSelect={() => {}} steps />);
+        fireEvent.click(screen.getByRole("button", { name: "Remove Card a from your collection" }));
+        act(() => exits[0]!.cancel());
+        expect(screen.queryByText("Card a")).not.toBeInTheDocument();
+    });
+
+    it("keeps the tile when its count comes back while it leaves", () => {
+        render(<CardsGrid cards={[card("a")]} onSelect={() => {}} steps />);
+        fireEvent.click(screen.getByRole("button", { name: "Remove Card a from your collection" }));
+        fireEvent.click(screen.getByRole("button", { name: "Add a copy of Card a" }));
+
+        // The exit was cancelled by the tile itself, and that cancel removes nothing.
+        expect(screen.getByText("Card a")).toBeInTheDocument();
+        act(() => exits[0]!.onfinish?.());
+        expect(screen.getByText("Card a")).toBeInTheDocument();
+    });
+
+    it("fades without the shrink under reduced motion", () => {
+        vi.stubGlobal("matchMedia", () => ({ matches: true, addEventListener() {}, removeEventListener() {} }));
+        render(<CardsGrid cards={[card("a")]} onSelect={() => {}} steps />);
+        fireEvent.click(screen.getByRole("button", { name: "Remove Card a from your collection" }));
+        expect(exits[0]!.keyframes).toEqual([{ opacity: 1 }, { opacity: 0 }]);
+    });
+});
