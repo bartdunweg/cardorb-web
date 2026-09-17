@@ -8,6 +8,7 @@ import { TileIconButton } from "@/components/app/tile-icon-button";
 import { notify } from "@/components/app/toast";
 import { forgetMineQuietly } from "@/lib/forget-mine";
 import { forgetMineThenRefresh } from "@/lib/forget-then-refresh";
+import { orFailed } from "@/lib/write-outcome";
 
 /**
  * Ours: the heart under a wished card, filled on pink because the card is on the wishlist, and
@@ -28,7 +29,9 @@ export function WishHeartButton({ card, onGone }: { card: { id: string; name: st
             pending={pending}
             onPress={() =>
                 startTransition(async () => {
-                    const res = await removeCard(card.id, { reread: false });
+                    // A throw reads like a refusal: the tile stays and the toast says so, where a throw
+                    // in a transition would have swapped the wishlist for the error page.
+                    const res = await orFailed(removeCard(card.id, { reread: false }));
                     if (!res.ok) {
                         notify.failed(`${card.name} is still on your wishlist`, { description: res.error });
                         return;
@@ -45,7 +48,7 @@ export function WishHeartButton({ card, onGone }: { card: { id: string; name: st
                                          wishlist again in its answer. The wish comes back with a new id, so the list is read
                                          again once the cache is gone, and keeps its scrolled batches (`cards-list.tsx`). */
                                       onUndo: () =>
-                                          void restoreCard(removed, { reread: false }).then((r) => {
+                                          void orFailed(restoreCard(removed, { reread: false })).then((r) => {
                                               if (!r.ok) return notify.failed("That did not go back", { description: r.error });
                                               void forgetMineThenRefresh("cards", router);
                                           }),
