@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { Card, CardList } from "@/lib/cards";
 import { CardsList, runKey, setGroups } from "./cards-list";
@@ -108,8 +108,11 @@ describe("CardsList on the wishlist", () => {
         const gotIt = await screen.findByRole("button", { name: "Add Pikachu to your collection" });
         fireEvent.click(gotIt);
         expect(onSelect).not.toHaveBeenCalled();
-        // The form the sheet opens, not a second one.
-        expect(await screen.findByRole("dialog")).toHaveTextContent("It leaves the wishlist and joins your collection.");
+        // The form the sheet opens, not a second one. It loads when the dialog opens: the dialog is
+        // there at once, named after the card, with focus in it, and the form follows.
+        const dialog = await screen.findByRole("dialog", { name: "Pikachu" });
+        await waitFor(() => expect(dialog.contains(document.activeElement)).toBe(true));
+        await waitFor(() => expect(dialog).toHaveTextContent("It leaves the wishlist and joins your collection."));
     });
 
     it("opens the sheet from the tile as before", async () => {
@@ -118,6 +121,8 @@ describe("CardsList on the wishlist", () => {
         const [tile] = screen.getAllByRole("button").filter((b) => b.getAttribute("aria-label") !== "Add Pikachu to your collection");
         fireEvent.click(tile!);
         expect(onSelect).toHaveBeenCalledTimes(1);
+        // With the list it was picked from, which the tile reads at the press rather than when it was drawn.
+        expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ id: card.id }), [expect.objectContaining({ id: card.id })]);
     });
 });
 
@@ -340,5 +345,80 @@ describe("the key a set's run is drawn under", () => {
     it("tells apart two runs of one name", () => {
         const groups = [{ name: "Base" }, { name: "Jungle" }, { name: "Base" }];
         expect(runKey(groups, 0)).not.toBe(runKey(groups, 2));
+    });
+});
+
+/*
+ * The grid is drawn once per set, so a tile's place restarted in every set and the first six tiles
+ * of every set, in every batch, were fetched ahead of everything else. Only the first set's first
+ * row is at the top of the page; everything under it loads as it scrolls in.
+ */
+describe("the tiles fetched first", () => {
+    const of = (id: string, set: string): Card => ({ ...card, id, name: `Card ${id}`, set_name: set, image_url: `https://images.cardorb.com/${id}.png` });
+    const eager = () => [...document.querySelectorAll("img")].filter((img) => img.getAttribute("loading") !== "lazy");
+
+    it("are the first set's first row, and no other set's", async () => {
+        const cards = [...Array.from({ length: 7 }, (_, i) => of(`a${i}`, "Jungle")), ...Array.from({ length: 7 }, (_, i) => of(`b${i}`, "Fossil"))];
+        await act(async () =>
+            render(
+                <Suspense fallback={null}>
+                    <CardsList
+                        list={Promise.resolve({ cards, total: cards.length, facets: { sets: [], rarities: [], gens: [], types: [] } } as unknown as CardList)}
+                        filter={{}}
+                        narrowed={false}
+                        view="grid"
+                        size="md"
+                        groupedBySet
+                        onSelect={vi.fn()}
+                        noHits={null}
+                        empty={null}
+                    />
+                </Suspense>,
+            ),
+        );
+        expect(document.querySelectorAll("img")).toHaveLength(14);
+        expect(eager()).toHaveLength(6);
+        const [jungle] = document.querySelectorAll("section");
+        expect(eager().every((img) => jungle!.contains(img))).toBe(true);
+    });
+
+    it("are never in a batch appended on scroll", async () => {
+        const { loadMoreCards } = await import("@/lib/reads");
+        const load = vi.mocked(loadMoreCards);
+        load.mockReset();
+        load.mockResolvedValueOnce({ cards: [of("c", "Base"), of("d", "Base")], total: 4 });
+        class Seen {
+            constructor(private readonly callback: IntersectionObserverCallback) {}
+            observe() {
+                queueMicrotask(() => this.callback([{ isIntersecting: true } as IntersectionObserverEntry], this as unknown as IntersectionObserver));
+            }
+            disconnect() {}
+        }
+        vi.stubGlobal("IntersectionObserver", Seen);
+        await act(async () =>
+            render(
+                <Suspense fallback={null}>
+                    <CardsList
+                        list={Promise.resolve({
+                            cards: [of("a", "Base"), of("b", "Base")],
+                            total: 4,
+                            facets: { sets: [], rarities: [], gens: [], types: [] },
+                        } as unknown as CardList)}
+                        filter={{}}
+                        narrowed={false}
+                        view="grid"
+                        size="md"
+                        onSelect={vi.fn()}
+                        noHits={null}
+                        empty={null}
+                    />
+                </Suspense>,
+            ),
+        );
+        for (let i = 0; i < 10; i++) await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
+        vi.unstubAllGlobals();
+        vi.stubGlobal("matchMedia", () => ({ matches: true, addEventListener() {}, removeEventListener() {} }));
+        expect(document.querySelectorAll("img")).toHaveLength(4);
+        expect(eager().map((img) => img.getAttribute("src"))).toEqual([expect.stringContaining("a.png"), expect.stringContaining("b.png")]);
     });
 });

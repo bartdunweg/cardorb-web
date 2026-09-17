@@ -1,16 +1,7 @@
 import { z } from "zod";
-import {
-    type Card,
-    EDITIONS,
-    EDITION_LABELS,
-    type Edition,
-    FINISHES,
-    FINISH_LABELS,
-    FOIL_PATTERN_LABELS,
-    type Finish,
-    type FoilPattern,
-} from "@/lib/api-shapes";
+import type { Card } from "@/lib/api-shapes";
 import { sameNumber } from "@/lib/card-number";
+import { EDITIONS, EDITION_LABELS, type Edition, FINISHES, FINISH_LABELS, FOIL_PATTERN_LABELS, type Finish, type FoilPattern } from "@/lib/card-shapes";
 import { WESTERN_LANGUAGES, languageOf } from "@/lib/languages";
 
 /** One card as the sheet, a list or a search names it: set, number, name, and the set's title where known. */

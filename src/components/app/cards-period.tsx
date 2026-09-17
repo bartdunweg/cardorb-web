@@ -2,15 +2,36 @@
 
 import { useState } from "react";
 import { Calendar } from "@untitledui/icons";
+import dynamic from "next/dynamic";
 import { usePathname, useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
-import { AcquiredDatePicker } from "@/components/app/acquired-date-picker";
 import { RowButton } from "@/components/app/row-button";
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { formatDate } from "@/lib/format";
 import { CHANGE_PERIODS, type ChangePeriod, type ListQuery, type SortKey, listHref } from "@/lib/list-query";
+
+/*
+ * The day picker, and @internationalized/date under it, load when Custom dates is chosen: every list
+ * sorted by price change draws this row, and few ask for two days of their own. Until it is in, a
+ * disabled button of the picker's own size and shape stands in its place, so nothing moves.
+ */
+const AcquiredDatePicker = dynamic(() => import("@/components/app/acquired-date-picker").then((m) => m.AcquiredDatePicker), {
+    ssr: false,
+    loading: () => (
+        <Button
+            size="sm"
+            color="secondary"
+            shape="rect"
+            iconLeading={Calendar}
+            isDisabled
+            className="w-full justify-start font-medium text-placeholder shadow-xs"
+        >
+            Select date
+        </Button>
+    ),
+});
 
 /**
  * Ours: the period a list sorted by price change reads over, beside Sort while that sort is on.

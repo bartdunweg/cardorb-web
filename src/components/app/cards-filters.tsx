@@ -6,7 +6,7 @@ import { type FilterAnswer, type FilterGroup, type FilterOption, type FilterValu
 import { FlagIcon } from "@/components/app/flag-icon";
 import { TypeIcon } from "@/components/app/type-icon";
 import { Dot } from "@/components/foundations/dot-icon";
-import { FINISH_LABELS, type Finish } from "@/lib/api-shapes";
+import { FINISH_LABELS, type Finish } from "@/lib/card-shapes";
 import type { CardFilter } from "@/lib/cards";
 import type { Facets } from "@/lib/cards";
 import { languageOf } from "@/lib/languages";

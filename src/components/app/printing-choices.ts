@@ -1,4 +1,4 @@
-import { EDITION_LABELS, type Edition, FOIL_PATTERN_LABELS, type Finish, type FoilPattern } from "@/lib/api-shapes";
+import { EDITION_LABELS, type Edition, FOIL_PATTERN_LABELS, type Finish, type FoilPattern } from "@/lib/card-shapes";
 
 /**
  * The printings a card's sheet lets you look at, under its picture.

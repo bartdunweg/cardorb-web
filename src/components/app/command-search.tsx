@@ -10,9 +10,8 @@ import { SearchTrigger } from "@/components/app/search-trigger";
 import { notify } from "@/components/app/toast";
 import { forgetMineQuietly } from "@/components/app/use-copy-steps";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
-import { type Card, cardFromPokemonCard } from "@/lib/api-shapes";
-import { loadCatalogueIndex, loadSpecies, lookupCards } from "@/lib/catalogue-client";
-import { searchIndex } from "@/lib/catalogue-index";
+import type { Card } from "@/lib/api-shapes";
+import { cardFromPokemonCard } from "@/lib/card-shapes";
 import type { BrowseLanguage } from "@/lib/languages";
 import { listRows, listSetsShelf, searchPokemon } from "@/lib/reads";
 import { hitFromRows, takenHit } from "@/lib/search-hit";
@@ -26,6 +25,9 @@ const CommandSearchMenu = dynamic(() => import("@/components/app/command-search-
 
 // The card sheet the preview's View details opens, fetched on that press: it is the app's largest client chunk.
 const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-slideout").then((m) => m.CardDetailSlideout), { ssr: false });
+
+// The catalogue in the browser and the search over it, with the zod schemas that read them, load when the palette is first wanted.
+const catalogueClient = () => import("@/lib/catalogue-client");
 
 const CommandSearchContext = createContext<{ open: () => void }>({ open: () => {} });
 export const useCommandSearch = () => useContext(CommandSearchContext);
@@ -83,14 +85,17 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
     const [inBrowser, setInBrowser] = useState(false);
     useEffect(() => {
         if (!wanted) return;
-        loadCatalogueIndex().then((found) => setInBrowser(Boolean(found)));
-        void loadSpecies();
+        void catalogueClient().then(({ loadCatalogueIndex, loadSpecies }) => {
+            loadCatalogueIndex().then((found) => setInBrowser(Boolean(found)));
+            void loadSpecies();
+        });
     }, [wanted]);
     const search = async (term: string, params: CatalogueFilters, page: number) => {
         /* Full art goes to the API whatever the browser holds: the document carries a rarity and
            not the kind of card, and which cards are full art is worked out per set and kept in
            the catalogue's copy behind the API (`@/lib/full-art` says why the rarity will not do). */
         if (!params.fullArt && (params.language ?? "en") === "en") {
+            const [{ loadCatalogueIndex, loadSpecies }, { searchIndex }] = await Promise.all([catalogueClient(), import("@/lib/catalogue-index")]);
             const [index, species] = await Promise.all([loadCatalogueIndex(), loadSpecies()]);
             if (index) return searchIndex(index, term, { set: params.set, type: params.type }, page, species);
         }
@@ -123,7 +128,8 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
         const ids = hits.filter((h) => !lookedUp.current.has(h.id)).map((h) => h.id);
         if (!ids.length) return;
         for (const id of ids) lookedUp.current.add(id);
-        lookupCards(ids)
+        catalogueClient()
+            .then(({ lookupCards }) => lookupCards(ids))
             .then((known) => {
                 const byId = new Map(known.map((c) => [c.id, c]));
                 // Laid over the hit rather than in its place: the heading is the document's, not the API's.
