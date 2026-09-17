@@ -95,3 +95,24 @@ describe("a tile leaving its list", () => {
         expect(exits[0]!.keyframes).toEqual([{ opacity: 1 }, { opacity: 0 }]);
     });
 });
+
+describe("the wave a grid's tiles arrive in", () => {
+    const delays = (container: HTMLElement) => [...container.querySelectorAll<HTMLElement>(".arrive")].map((el) => el.style.getPropertyValue("--arrive-delay"));
+
+    it("staggers the first page and lets a batch appended on scroll arrive at once", () => {
+        const first = Array.from({ length: 10 }, (_, i) => card(`f${i}`));
+        const { container, rerender } = render(<CardsGrid cards={first} onSelect={() => {}} />);
+        expect(delays(container)[0]).toBe("0ms");
+        expect(delays(container)[2]).toBe("calc(2 * var(--stagger-step))");
+        expect(delays(container)[9]).toBe("calc(8 * var(--stagger-step))");
+
+        rerender(<CardsGrid cards={[...first, card("n0"), card("n1")]} onSelect={() => {}} />);
+        expect(delays(container).slice(10)).toEqual(["0ms", "0ms"]);
+    });
+
+    it("lets a card read again under a new row id arrive at once, even high on the page", () => {
+        const { container, rerender } = render(<CardsGrid cards={[card("a"), card("b"), card("c")]} onSelect={() => {}} />);
+        rerender(<CardsGrid cards={[card("a"), card("b2"), card("c")]} onSelect={() => {}} />);
+        expect(delays(container)).toEqual(["0ms", "0ms", "calc(2 * var(--stagger-step))"]);
+    });
+});
