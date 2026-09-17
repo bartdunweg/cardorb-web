@@ -114,7 +114,7 @@ export function CopyCard({
             });
             return;
         }
-        await forgetMineQuietly();
+        await forgetMineQuietly("cards");
         onSaved();
     };
 

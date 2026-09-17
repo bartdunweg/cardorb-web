@@ -35,6 +35,7 @@ const catalogueDown = (err: unknown) => err instanceof ApiError && err.status ==
 export async function getShelf(language: BrowseLanguage = "en") {
     try {
         const sets = await perUser(
+            "sets",
             `sets:${language}`,
             async (token) => (await api("/catalog/sets", { token, params: language === "en" ? {} : { language }, schema: catalogueSetsAnswer })).sets,
         );
@@ -92,7 +93,7 @@ export type SetDetail = {
 // changes: an entry survives a deploy (#206).
 export async function getSet(id: string, language: BrowseLanguage = "en"): Promise<SetDetail | null> {
     try {
-        return await perUser(`set:v1:${language}:${id}`, (token) => readSet(id, language, token));
+        return await perUser("sets", `set:v1:${language}:${id}`, (token) => readSet(id, language, token));
     } catch (err) {
         if (err instanceof ApiError && err.status === 404) return null;
         if (catalogueDown(err)) throw new CatalogueUnavailable();

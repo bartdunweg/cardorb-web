@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { removeCard, rereadMine, restoreCard, setCopies } from "@/app/(app)/dashboard/cards/actions";
 import { notify } from "@/components/app/toast";
 import type { RemovedCard } from "@/lib/api-shapes";
+import type { ForgetWrite } from "@/lib/cache-scopes";
 import { holdPage } from "@/lib/unsent-writes";
 
 type Added = { ok: true; id?: string } | { ok: false; error: string };
@@ -132,7 +133,7 @@ export function useCopySteps({
                         onStored?.(have, id);
                     }
                     // Once, with nothing in the air to race it; a press during the re-read goes round again.
-                    await (quiet ? forgetMineQuietly() : rereadMine());
+                    await (quiet ? forgetMineQuietly("cards") : rereadMine());
                 } while (!failure && want.current !== have);
             } catch {
                 // An action that threw (no signal, a deploy in between) is a failure like a refused one.
@@ -158,7 +159,7 @@ export function useCopySteps({
         if (!quiet) return void restoreCard(removed);
         void restoreCard(removed, { reread: false }).then((res) => {
             if (!res.ok) return notify.failed("That did not go back", { description: res.error });
-            void forgetMineQuietly().then(() => router.refresh());
+            void forgetMineQuietly("cards").then(() => router.refresh());
         });
     };
 
@@ -168,9 +169,12 @@ export function useCopySteps({
 /**
  * The cache forgotten without the page drawn again (`/api/forget-mine`). Best effort: a list that
  * could not forget still shows the right count, and the cache holds the old one five minutes at most.
+ *
+ * `write` names what was written, so only what it changes goes (`cache-scopes.ts`); a caller that
+ * names nothing forgets everything.
  */
-export const forgetMineQuietly = () =>
-    fetch("/api/forget-mine", { method: "POST" }).then(
+export const forgetMineQuietly = (write: ForgetWrite = "all") =>
+    fetch(`/api/forget-mine?write=${write}`, { method: "POST" }).then(
         () => void window.dispatchEvent(new Event(CARDS_CHANGED)),
         () => undefined,
     );

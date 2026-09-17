@@ -47,7 +47,7 @@ export async function createCollection(
                 ...(parsed.data.isPublic ? { isPublic: true } : {}),
             },
         });
-        if (reread) await forgetMine();
+        if (reread) await forgetMine("binders");
         return { ok: true, id: folder.id };
     } catch (err) {
         return failed(err);
@@ -79,7 +79,7 @@ export async function updateCollection(
         return failed(err);
     }
 
-    if (reread) await forgetMine();
+    if (reread) await forgetMine("binders");
     return { ok: true, id: parsed.data.id };
 }
 
@@ -113,6 +113,6 @@ export async function deleteCollection(id: string): Promise<CollectionResult> {
         return failed(err);
     }
 
-    await forgetMine();
+    await forgetMine("binders");
     return { ok: true };
 }

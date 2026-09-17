@@ -134,7 +134,7 @@ function CopyForm({ mode, from, folders, languages, facts, onSaved, close }: Pro
                   }))
                 : await splitCopy(from.id, changes, count, { reread: false }).catch(() => ({ ok: false as const, error: "Something went wrong. Try again." }));
         setSaving(false);
-        const forgotten = forgetMineQuietly();
+        const forgotten = forgetMineQuietly("cards");
         if (!res.ok) {
             setError(res.error);
             return;

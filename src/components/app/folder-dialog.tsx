@@ -133,7 +133,7 @@ function FolderForm({ mode, folder, facets: given, onSaved, close }: FormProps &
             return;
         }
         close();
-        const forgotten = forgetMineQuietly();
+        const forgotten = forgetMineQuietly("binders");
         // A new rule folder is worth seeing filled; a renamed one is where it was. An opener that
         // asked for the id stays where it is and gets it.
         if (onSaved) {

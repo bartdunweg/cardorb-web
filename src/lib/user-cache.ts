@@ -2,6 +2,7 @@ import { cache } from "react";
 import { revalidatePath, revalidateTag, unstable_cache, updateTag } from "next/cache";
 import { ApiError, CACHE_SECONDS, api, cacheWindow, session } from "@/lib/api";
 import { ownProfileSchema } from "@/lib/api-shapes";
+import { type CacheScope, type ForgetWrite, forgetTags, readTags, scopesForgotten } from "@/lib/cache-scopes";
 import { elapsed, logTiming } from "@/lib/timing";
 
 /**
@@ -10,7 +11,8 @@ import { elapsed, logTiming } from "@/lib/timing";
  * The app layout asks the API for the profile, the folders and the stats on every screen, one
  * after the other, and the API sits in another region. Those three answers change when the
  * person writes (adds a card, renames a folder, changes their name) and not otherwise, so
- * they are kept for five minutes under one tag per person, and every write drops the tag.
+ * they are kept for five minutes per person, each under its scope (`cache-scopes.ts`), and a write
+ * drops the scopes it changed: a plus on a tile leaves the profile standing.
  *
  * Keyed by the person's id, never by the token: the token rotates every hour and would only
  * fragment the cache. The token is resolved *before* the cached function runs and handed in,
@@ -24,7 +26,13 @@ import { elapsed, logTiming } from "@/lib/timing";
 
 // The window in the key is what stops the Data Cache answering an entry past its five minutes (api.ts, cacheWindow).
 
-export const userTag = (userId: string) => `user:${userId}`;
+export { userTag } from "@/lib/cache-scopes";
+
+/**
+ * In every key since reads were filed by scope. An entry from before carries only the person's tag,
+ * so a scoped forget would not reach it, and the Data Cache keeps entries across a deploy (#206).
+ */
+const KEY_VERSION = "scoped:v2";
 
 /**
  * What the public pages of one person are filed under. Those are read without a session, so they
@@ -43,23 +51,24 @@ export const publicTag = (username: string) => `public:${username.toLowerCase()}
 const inFlight = cache(() => new Map<string, Promise<unknown>>());
 
 /**
- * `load` gets the session's token; its answer is kept five minutes under this person's tag.
+ * `load` gets the session's token; its answer is kept five minutes under this person's tag and its scope's.
  *
  * Also once per request: the layout and the page render at the same time and both ask for the
  * stats, and on a miss the cache does not join the two; the log showed `/stats` fetched twice in
  * one render. The second caller gets the first caller's promise, so a name is read once per
  * request whatever the cache says.
  */
-export function perUser<T>(name: string, load: (token: string) => Promise<T>): Promise<T> {
+export function perUser<T>(scope: CacheScope, name: string, load: (token: string) => Promise<T>): Promise<T> {
     const reads = inFlight();
-    const started = reads.get(name);
+    const key = `${scope}|${name}`;
+    const started = reads.get(key);
     if (started) return started as Promise<T>;
-    const read = perUserUncached(name, load);
-    reads.set(name, read);
+    const read = perUserUncached(scope, name, load);
+    reads.set(key, read);
     return read;
 }
 
-async function perUserUncached<T>(name: string, load: (token: string) => Promise<T>): Promise<T> {
+async function perUserUncached<T>(scope: CacheScope, name: string, load: (token: string) => Promise<T>): Promise<T> {
     const s = await session();
     if (!s) throw new ApiError(401, "Sign in to see this.");
     // A miss runs `load` (its API call logs its own line); a hit is one read from the cache.
@@ -71,8 +80,8 @@ async function perUserUncached<T>(name: string, load: (token: string) => Promise
                 ran = true;
                 return load(s.token);
             },
-            [name, s.userId, cacheWindow()],
-            { revalidate: CACHE_SECONDS, tags: [userTag(s.userId)] },
+            [name, s.userId, cacheWindow(), KEY_VERSION],
+            { revalidate: CACHE_SECONDS, tags: readTags(s.userId, scope) },
         )();
     } finally {
         logTiming(`cache ${name}`, elapsed(start), ran ? "miss" : "hit");
@@ -80,23 +89,33 @@ async function perUserUncached<T>(name: string, load: (token: string) => Promise
 }
 
 /**
- * After a write: the person's cached answers are gone before the action returns, so the very next
+ * After a write: the cached answers it changed are gone before the action returns, so the very next
  * render reads fresh. `updateTag` rather than `revalidateTag` because this is read-your-own-write:
  * stale-while-revalidate would hand the writer the screen from before their write.
+ *
+ * `write` names what was written (`cache-scopes.ts`); `all` forgets everything the person has.
  */
-export async function forgetMine(): Promise<void> {
+export async function forgetMine(write: ForgetWrite = "all"): Promise<void> {
     const s = await session();
     if (s) {
         // Before the tag goes: dropping it first would make this read a miss and cost a call.
         // The name it returns is the one from before the write, which is exactly the name whose
         // public pages are now stale; a rename leaves nothing cached under the new one.
         const username = await myUsername();
-        updateTag(userTag(s.userId));
+        for (const tag of forgetTags(s.userId, write)) updateTag(tag);
         if (username) updateTag(publicTag(username));
     }
     // The render after this action runs in the same request; it must not get a read from before the write.
-    inFlight().clear();
+    forgetInFlight(write);
     revalidatePath("/dashboard", "layout");
+}
+
+/** This request's reads in the scopes a write changed. */
+function forgetInFlight(write: ForgetWrite) {
+    const reads = inFlight();
+    if (write === "all") return reads.clear();
+    const gone = scopesForgotten(write);
+    for (const key of [...reads.keys()]) if (gone.some((scope) => key.startsWith(`${scope}|`))) reads.delete(key);
 }
 
 /**
@@ -110,11 +129,11 @@ export async function forgetMine(): Promise<void> {
  * press while a fresh one was fetched behind it, so the sidebar read after a plus still said the
  * old count and caught up one press late (measured 2026-09-13).
  */
-export async function forgetMineLater(): Promise<boolean> {
+export async function forgetMineLater(write: ForgetWrite = "all"): Promise<boolean> {
     const s = await session();
     if (!s) return false;
     const username = await myUsername();
-    revalidateTag(userTag(s.userId), { expire: 0 });
+    for (const tag of forgetTags(s.userId, write)) revalidateTag(tag, { expire: 0 });
     if (username) revalidateTag(publicTag(username), { expire: 0 });
     return true;
 }
@@ -129,7 +148,7 @@ export async function forgetMineLater(): Promise<boolean> {
  */
 async function myUsername(): Promise<string | null> {
     try {
-        const own = await perUser("profile", (token) => api("/profile", { token, schema: ownProfileSchema }));
+        const own = await perUser("profile", "profile", (token) => api("/profile", { token, schema: ownProfileSchema }));
         return own.username || null;
     } catch {
         return null;

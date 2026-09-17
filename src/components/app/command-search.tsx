@@ -175,7 +175,7 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
         // outlive it, and the chain below must stay resolved or the refresh on close never runs.
         const write = addCard(card, target, undefined, { reread: false }).then(
             (res) => {
-                if (res.ok) return forgetMineQuietly();
+                if (res.ok) return forgetMineQuietly("cards");
                 putBack(res.error);
             },
             () => putBack(),

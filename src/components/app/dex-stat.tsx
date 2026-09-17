@@ -27,13 +27,13 @@ export async function DexStat() {
     return <StatCard label="Pokémon collected" value={formatCount(caught)} href="/dashboard/cards?sort=dex" delay={120} />;
 }
 
-// The number alone is kept per person, under the same tag and window as the rest of Home: reading
+// The number alone is kept per person, in the stats scope and window as the rest of Home: reading
 // every card to count them took a two-thousand-card read on each open of Home, which no cache
 // held (the list cache keeps first batches only). Only the count is stored, not the cards. A
-// write drops it with the rest (forgetMine). The setting is in the key, so a binder given other
+// card write drops it (forgetMine). The setting is in the key, so a binder given other
 // rarities or another range counts afresh rather than waiting on the tag.
 function caughtCount(setting: PokedexSetting): Promise<number> {
-    return perUser(`dex-caught:v1:${JSON.stringify(setting)}`, async (token) => {
+    return perUser("stats", `dex-caught:v1:${JSON.stringify(setting)}`, async (token) => {
         const [all, names] = await Promise.all([getAllMyCards({ facets: false }, token), getDexNames()]);
         return groupByDex(all.cards, names, setting).caught;
     });

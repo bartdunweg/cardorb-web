@@ -6,6 +6,7 @@ import type { ActionResult } from "@/app/(app)/dashboard/settings/actions";
 import { notify } from "@/components/app/toast";
 import { forgetMineQuietly } from "@/components/app/use-copy-steps";
 import { Toggle } from "@/components/base/toggle/toggle";
+import type { ForgetWrite } from "@/lib/cache-scopes";
 import { cx } from "@/utils/cx";
 
 /**
@@ -34,6 +35,7 @@ export function SettingSwitchRow({
     isDisabled = false,
     onChange,
     save,
+    forgets,
     stillTitle,
 }: {
     icon: FC<{ className?: string; "aria-hidden"?: boolean | "true" }>;
@@ -46,6 +48,8 @@ export function SettingSwitchRow({
     onChange: (next: boolean) => void;
     /** The write, told not to re-read: the row drops the cache itself. */
     save: (next: boolean, options: { reread: boolean }) => Promise<ActionResult>;
+    /** What the write changed, for the cache it drops (`cache-scopes.ts`). */
+    forgets: ForgetWrite;
     /** The failed toast's title, by the value the setting still has. */
     stillTitle: (still: boolean) => string;
 }) {
@@ -67,7 +71,7 @@ export function SettingSwitchRow({
             return;
         }
         // Whatever else reads the profile from the server (the Manage sheet, the account menu) gets the new one.
-        void forgetMineQuietly().then(() => router.refresh());
+        void forgetMineQuietly(forgets).then(() => router.refresh());
     };
 
     return (

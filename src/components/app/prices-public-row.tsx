@@ -37,6 +37,7 @@ export function PricesPublicRow({
             isSelected={pricesPublic}
             onChange={onChange}
             save={setPricesPublic}
+            forgets="profile"
             stillTitle={(still) => (still ? "Prices are still shown" : "Prices are still private")}
         />
     );

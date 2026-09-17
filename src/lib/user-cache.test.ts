@@ -10,11 +10,12 @@ vi.mock("react", async (original) => ({
         return memo.get(fn);
     },
 }));
-/** The key parts every `unstable_cache` was given, in order. */
-const { cacheKeys } = vi.hoisted(() => ({ cacheKeys: [] as string[][] }));
+/** The key parts and the tags every `unstable_cache` was given, in order. */
+const { cacheKeys, cacheTags } = vi.hoisted(() => ({ cacheKeys: [] as string[][], cacheTags: [] as string[][] }));
 vi.mock("next/cache", () => ({
-    unstable_cache: (fn: () => unknown, keys: string[]) => {
+    unstable_cache: (fn: () => unknown, keys: string[], options: { tags: string[] }) => {
         cacheKeys.push(keys);
+        cacheTags.push(options.tags);
         return fn;
     },
     updateTag: vi.fn(),
@@ -40,7 +41,7 @@ describe("perUser", () => {
 
     it("reads a name once per request, whoever asks", async () => {
         const load = vi.fn(async () => 42);
-        const [a, b] = await Promise.all([perUser("stats", load), perUser("stats", load)]);
+        const [a, b] = await Promise.all([perUser("stats", "stats", load), perUser("stats", "stats", load)]);
         expect(a).toBe(42);
         expect(b).toBe(42);
         expect(load).toHaveBeenCalledTimes(1);
@@ -49,7 +50,7 @@ describe("perUser", () => {
     it("keeps two names apart", async () => {
         const stats = vi.fn(async () => 1);
         const folders = vi.fn(async () => 2);
-        await Promise.all([perUser("stats", stats), perUser("folders", folders)]);
+        await Promise.all([perUser("stats", "stats", stats), perUser("binders", "folders", folders)]);
         expect(stats).toHaveBeenCalledTimes(1);
         expect(folders).toHaveBeenCalledTimes(1);
     });
@@ -58,13 +59,13 @@ describe("perUser", () => {
         vi.useFakeTimers();
         try {
             vi.setSystemTime(new Date("2026-09-16T04:00:00Z"));
-            await perUser("stats", async () => 1);
+            await perUser("stats", "stats", async () => 1);
             memo.clear();
             vi.setSystemTime(new Date("2026-09-16T04:04:59Z"));
-            await perUser("stats", async () => 1);
+            await perUser("stats", "stats", async () => 1);
             memo.clear();
             vi.setSystemTime(new Date("2026-09-16T04:05:00Z"));
-            await perUser("stats", async () => 1);
+            await perUser("stats", "stats", async () => 1);
             const [within, stillWithin, next] = cacheKeys.slice(-3);
             // The Data Cache answers an entry past its five minutes and refreshes it behind the
             // reader, so a key that stands for ever handed the first open of the day yesterday's
@@ -78,12 +79,41 @@ describe("perUser", () => {
         }
     });
 
+    it("files a read under the person and its scope, in a key from after the split", async () => {
+        await perUser("profile", "profile", async () => 1);
+        expect(cacheTags.at(-1)).toEqual(["user:u1", "user:u1:profile"]);
+        // Entries from before the split carry the person's tag alone, which a scoped forget misses.
+        expect(cacheKeys.at(-1)).toContain("scoped:v2");
+    });
+
+    it("keeps one name in two scopes apart", async () => {
+        const a = vi.fn(async () => 1);
+        const b = vi.fn(async () => 2);
+        await Promise.all([perUser("stats", "x", a), perUser("value", "x", b)]);
+        expect(a).toHaveBeenCalledTimes(1);
+        expect(b).toHaveBeenCalledTimes(1);
+    });
+
     it("reads again after a write in the same request", async () => {
         const load = vi.fn(async () => 1);
-        await perUser("stats", load);
+        await perUser("stats", "stats", load);
         await forgetMine();
-        await perUser("stats", load);
+        await perUser("stats", "stats", load);
         expect(load).toHaveBeenCalledTimes(2);
+    });
+});
+
+describe("a card write in the same request", () => {
+    beforeEach(() => memo.clear());
+
+    it("reads the numbers again but not the profile", async () => {
+        const stats = vi.fn(async () => 1);
+        const profile = vi.fn(async () => ({ username: "Bart" }));
+        await Promise.all([perUser("stats", "stats", stats), perUser("profile", "profile", profile)]);
+        await forgetMine("cards");
+        await Promise.all([perUser("stats", "stats", stats), perUser("profile", "profile", profile)]);
+        expect(stats).toHaveBeenCalledTimes(2);
+        expect(profile).toHaveBeenCalledTimes(1);
     });
 });
 
@@ -98,6 +128,23 @@ describe("forgetMine", () => {
     it("drops the public pages of the writer's own name, not only their own screens", async () => {
         await forgetMine();
         expect(vi.mocked(updateTag).mock.calls.flat()).toEqual(["user:u1", "public:bart"]);
+    });
+
+    it("drops only the scopes a card write changes, never the profile", async () => {
+        await forgetMine("cards");
+        expect(vi.mocked(updateTag).mock.calls.flat()).toEqual([
+            "user:u1:lists",
+            "user:u1:stats",
+            "user:u1:binders",
+            "user:u1:sets",
+            "user:u1:value",
+            "public:bart",
+        ]);
+    });
+
+    it("drops the profile alone after a profile write", async () => {
+        await forgetMine("profile");
+        expect(vi.mocked(updateTag).mock.calls.flat()).toEqual(["user:u1:profile", "public:bart"]);
     });
 
     it("reads the name before dropping the tag it is cached under", async () => {

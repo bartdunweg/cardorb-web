@@ -10,7 +10,7 @@ export type CollectionSummary = { id: string; name: string; count: number; kind:
 // screens keep calling them collections. Kept five minutes per person: the layout asks on every
 // screen, and every write to a folder or a card drops the cache.
 const folders = (): Promise<Folder[]> =>
-    perUser("folders", async (token) => (await api("/folders", { token, schema: foldersAnswer })).folders.map(folderFromApi));
+    perUser("binders", "folders", async (token) => (await api("/folders", { token, schema: foldersAnswer })).folders.map(folderFromApi));
 
 export async function getMyCollections(): Promise<{
     collections: CollectionSummary[];
@@ -77,8 +77,8 @@ export async function getFolderChoices(): Promise<{ id: string; name: string; ru
 
 /**
  * How many cards you have starred, for the sidebar's Favorites row. Fails soft as the folders
- * do: null draws the row without a number. The stats are cached with the folders, under the
- * same tag, so the frame pays this read once per five minutes and after a write.
+ * do: null draws the row without a number. The stats are cached like the folders, in their own
+ * scope, so the frame pays this read once per five minutes and after a card write.
  */
 export async function getFavoritesCount(): Promise<number | null> {
     try {

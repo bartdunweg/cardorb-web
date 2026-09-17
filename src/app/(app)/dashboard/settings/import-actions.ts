@@ -210,6 +210,6 @@ export async function commitImport(input: unknown): Promise<{ ok: true; result: 
         // the cached counts alone would show the person their collection from before the import,
         // exactly as they were told to go and check it, and invite a second run of the one action
         // in this app that cannot be undone. Dropping a cache after a write is never wrong.
-        await forgetMine();
+        await forgetMine("all");
     }
 }

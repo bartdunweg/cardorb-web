@@ -196,7 +196,7 @@ export function CardDetailSlideout({
            since the others may still have removed their rows. */
         const results = await Promise.all(group.map((row) => removeCard(row.id, { reread: false }).catch(() => failedWrite)));
         setBusy(false);
-        const forgotten = forgetMineQuietly();
+        const forgotten = forgetMineQuietly("cards");
         const failed = results.find((r) => !r.ok);
         if (failed && !failed.ok) {
             notify.failed(group.length > 1 ? "Those copies were not removed" : "That copy was not removed", { description: failed.error });
@@ -283,7 +283,7 @@ export function CardDetailSlideout({
                 }
                 // The write forgot nothing (reread: false), so a refresh on its own drew the sidebar's
                 // counts from the cache as they were before the add.
-                const forgotten = forgetMineQuietly();
+                const forgotten = forgetMineQuietly("cards");
                 if (onTaken) onTaken(taken, list, res.id);
                 else void forgotten.then(() => router.refresh());
             });
@@ -313,7 +313,7 @@ export function CardDetailSlideout({
                     notify.failed(`${mine.name} was not added to ${into.name}`, { description: res.error });
                     return;
                 }
-                void forgetMineQuietly().then(() => {
+                void forgetMineQuietly("cards").then(() => {
                     scheduleRefresh();
                     void reloadCopies();
                 });
@@ -347,7 +347,7 @@ export function CardDetailSlideout({
         void write.then(
             (res) => {
                 if (tap !== starTaps.current) return;
-                const forgotten = forgetMineQuietly();
+                const forgotten = forgetMineQuietly("cards");
                 if (res.ok) void forgotten.then(scheduleRefresh);
                 else {
                     setStarred({ id, on: !next });
@@ -356,7 +356,7 @@ export function CardDetailSlideout({
             },
             () => {
                 if (tap !== starTaps.current) return;
-                void forgetMineQuietly();
+                void forgetMineQuietly("cards");
                 setStarred({ id, on: !next });
                 notify.failed(next ? "That card is not a Favorite" : "That card is still a Favorite");
             },
@@ -556,7 +556,7 @@ export function CardDetailSlideout({
             // Quietly, through the route: rereadMine() is an action, and a cache dropped inside one
             // draws the page again in its answer, a redraw of the list behind the sheet on top of the
             // refresh this schedules.
-            void forgetMineQuietly().then(() => {
+            void forgetMineQuietly("cards").then(() => {
                 scheduleRefresh();
                 void reloadCopies();
             });
@@ -600,7 +600,7 @@ export function CardDetailSlideout({
                             setRemoved(null);
                             notify.done(rows.length > 1 ? `${rows.length} copies are back` : "It is back");
                         }
-                        await forgetMineQuietly();
+                        await forgetMineQuietly("cards");
                         scheduleRefresh();
                         void reloadCopies();
                     });
@@ -624,7 +624,7 @@ export function CardDetailSlideout({
                     router.refresh();
                     return;
                 }
-                const forgotten = forgetMineQuietly();
+                const forgotten = forgetMineQuietly("cards");
                 if (!onRemoved) void forgotten.then(() => router.refresh());
                 offerUndo(res.card ? [res.card] : [], wishlist ? "Removed from your wishlist" : "Removed from your collection");
             });
