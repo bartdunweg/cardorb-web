@@ -147,39 +147,48 @@ test("a card not held is added from its sheet and then has copies, on the tile a
 });
 
 test("a printing chosen in the sheet is the printing the copy is added as", async ({ page }) => {
-    // Meowscarada's variants are a reverse and a holo (fixture), so the card route offers both and the
-    // sheet opens on the first in the API's FINISHES order, the reverse.
+    /*
+     * Meowscarada (sv01-015): TCGdex lists a reverse and a holo, and the API's TCGplayer patterns add
+     * a Cosmos holo, so its sheet has three tabs, "Reverse", "Holo" and "Cosmos holo" (read from CI
+     * run 35226361044). A card you do not hold opens on the first, the reverse (openingChoice, in the
+     * API's FINISHES order); Holo is pressed. exact: "Holo" alone is a substring of "Cosmos holo".
+     */
     const c = meowscarada;
     await page.goto(setPage);
     await setTile(page, c, "not in your collection").click();
     const sheet = sheetOf(page, c.name);
-    const printings = sheet.getByRole("tablist", { name: "Printing" });
-    await expect(printings.getByRole("tab")).toHaveCount(2);
+    const tab = (name: string) => sheet.getByRole("tablist", { name: "Printing" }).getByRole("tab", { name, exact: true });
+    await expect(tab("Reverse")).toHaveAttribute("aria-selected", "true");
 
-    const opening = (await printings.getByRole("tab", { selected: true }).innerText()).trim();
-    const other = printings.getByRole("tab", { selected: false });
-    const chosen = (await other.innerText()).trim();
-    expect(chosen).not.toBe(opening);
-    await other.click();
-    await expect(printings.getByRole("tab", { name: chosen })).toHaveAttribute("aria-selected", "true");
+    await tab("Holo").click();
+    await expect(tab("Holo")).toHaveAttribute("aria-selected", "true");
+    await expect(tab("Reverse")).toHaveAttribute("aria-selected", "false");
 
+    // add() sends the pressed printing with the add, then forgetMineQuietly() once it has landed.
     const settled = cacheCleared(page);
     await copiesOf(sheet).getByRole("button", { name: "Add to collection" }).click();
     await expect(page.getByText("Added to your collection")).toBeVisible();
     await expect(setTile(page, c, "in your collection")).toBeVisible();
     await settled;
 
-    // Collection's tile names the copy's printing under the name (copyLine, in the tab's words).
+    // Collection's tile names the copy's printing under its name (copyLine): "Holo", not the reverse
+    // the sheet opened on and not the Cosmos holo beside it.
+    const printed = async () => {
+        await expect(collectionTile(page, c)).toHaveCount(1);
+        await expect(collectionTile(page, c)).toContainText(/\bHolo\b/);
+        await expect(collectionTile(page, c)).not.toContainText("Reverse");
+        await expect(collectionTile(page, c)).not.toContainText("Cosmos");
+    };
     await page.goto(collection(c.name));
-    await expect(collectionTile(page, c)).toHaveCount(1);
-    await expect(collectionTile(page, c)).toContainText(chosen);
-    await expect(collectionTile(page, c)).not.toContainText(opening);
+    await printed();
+    await page.reload();
+    await printed();
 
-    // The set tile has no printing line; its sheet opens on the copy's own printing instead.
+    // The set tile has no printing line; its sheet, on a fresh page, opens on the copy's own printing.
     await page.goto(setPage);
     await setTile(page, c, "in your collection").click();
-    await expect(sheet.getByRole("tablist", { name: "Printing" }).getByRole("tab", { name: chosen })).toHaveAttribute("aria-selected", "true");
     await expect(removeLink(sheet)).toBeVisible();
+    await expect(tab("Holo")).toHaveAttribute("aria-selected", "true");
 });
 
 test("next and previous card in the sheet show each card with its own state", async ({ page }) => {
