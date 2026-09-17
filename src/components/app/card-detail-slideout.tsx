@@ -144,12 +144,20 @@ export function CardDetailSlideout({
        started before one of those would put the old number back over the new one, so it is
        dropped; the press that made it stale reads again once its write has landed. */
     const pressed = useRef(0);
+    // The card on screen now, for a read that answers after the arrows stepped on to another one.
+    const shownCard = useRef(card);
+    useEffect(() => {
+        shownCard.current = card;
+    }, [card]);
     const reloadCopies = async (row: Card | null = mine) => {
         if (!row || !row.owned) return;
         const asOf = pressed.current;
+        const readFor = card?.id;
         const rows = sortCopies(await listCopies(row));
         if (asOf !== pressed.current) return;
         rememberCopies(row, rows);
+        // A late answer for card A is kept in the memo but does not touch the sheet now showing card B.
+        if (shownCard.current?.id !== readFor) return;
         setCopiesState({ of: copiesKey(row), rows });
         /* A row that is gone (removed, merged away, or put back under a new id) cannot stay the one
            shown: the sheet moves to the first row left, so the star and the copy form act on a row

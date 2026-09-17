@@ -9,6 +9,7 @@ import { CardImage } from "@/components/app/card-image";
 import { CardTile } from "@/components/app/card-tile";
 import { DexSlider } from "@/components/app/dex-slider";
 import { CardsSkeleton } from "@/components/app/skeletons";
+import { notify } from "@/components/app/toast";
 import { ViewMenu } from "@/components/app/view-menu";
 import { Button } from "@/components/base/buttons/button";
 import { useCardsView } from "@/hooks/use-cards-view";
@@ -129,6 +130,28 @@ export function DexGrid({ generations, size = "md", linked = true }: { generatio
     );
 }
 
+/**
+ * Writes where a swipe settled as the slot's face. `face` moves on the swipe, so a second swipe
+ * before the first write answers unsets the right card; a write that fails or answers no puts it
+ * back, if no later swipe has moved it since, and says so.
+ */
+export function settleFace(
+    face: { current: string | null },
+    cardId: string,
+    write: (cardId: string, previousId: string | null) => Promise<{ ok: boolean }>,
+): Promise<void> {
+    if (face.current === cardId) return Promise.resolve();
+    const previous = face.current;
+    face.current = cardId;
+    const putBack = () => {
+        if (face.current === cardId) face.current = previous;
+        notify.failed("The card this Pokémon shows was not saved");
+    };
+    return write(cardId, previous).then((res) => {
+        if (!res.ok) putBack();
+    }, putBack);
+}
+
 // `onSelect`: a card opens its sheet; on a public page there is nowhere to go, so the tile is a plain tile.
 // `remembers`: only the owner's own Pokédex writes down the card a swipe settles on.
 function DexTile({ slot, onSelect, remembers }: { slot: NamedDexSlot; onSelect?: (card: DexCard) => void; remembers: boolean }) {
@@ -213,16 +236,7 @@ function DexTile({ slot, onSelect, remembers }: { slot: NamedDexSlot; onSelect?:
                         onShow={(card) => setShownId(card.id)}
                         // Where a swipe stops is the slot's card. Nothing is written for the card that is
                         // already the face, and nothing at all on somebody else's profile.
-                        onSettle={
-                            remembers
-                                ? (card) => {
-                                      if (face.current === card.id) return;
-                                      const previous = face.current;
-                                      face.current = card.id;
-                                      void setDexFace(card.id, previous);
-                                  }
-                                : undefined
-                        }
+                        onSettle={remembers ? (card) => void settleFace(face, card.id, setDexFace) : undefined}
                     />
                 }
                 words={words}

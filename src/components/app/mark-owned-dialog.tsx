@@ -25,6 +25,7 @@ import { cardLabelFull } from "@/lib/card-label";
 import type { CopyEdits } from "@/lib/copies";
 import { today } from "@/lib/format";
 import { WESTERN_LANGUAGES, languageOf } from "@/lib/languages";
+import { parsePrice } from "@/lib/price-input";
 
 // A wish becomes a copy you hold. The moment to say what it is: language, condition (Near Mint
 // unless said), finish, folder, what you paid and the day you got it (today unless said). One
@@ -88,7 +89,7 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
             foilPattern: (effectivePattern || null) as CopyEdits["foilPattern"],
             edition: (effectiveEdition || null) as CopyEdits["edition"],
             collectionId: folder || null,
-            purchasePrice: price.trim() === "" ? null : Number(price),
+            purchasePrice: parsePrice(price),
             acquiredAt: date || today(),
         };
         /* Waited for, because a refused save keeps the form and what was chosen in it; a copy
@@ -315,12 +316,12 @@ function MarkOwnedForm({ card, folders, languages, facts, onSaved, close }: Prop
             <div className={row}>
                 Purchase price
                 <Input
-                    type="number"
+                    // Text with a decimal keypad, not a number field: that emptied "12,50" in most browsers.
+                    type="text"
+                    inputMode="decimal"
                     aria-label="Purchase price"
                     size="sm"
                     className="w-28"
-                    min={0}
-                    step="0.01"
                     placeholder="0.00"
                     value={price}
                     onChange={setPrice}

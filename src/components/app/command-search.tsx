@@ -161,12 +161,23 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
         update((hits) => takenHit(hits, card.id, target));
         wrote.current = true;
         notify.done(target === "wishlist" ? `${card.name} is on your wishlist now` : `${card.name} is in your collection now`);
-        const write = addCard(card, target, undefined, { reread: false }).then((res) => {
-            if (res.ok) return forgetMineQuietly();
+        const putBack = (description?: string) => {
             update((hits) => hits.map((h) => (h.id === card.id ? { ...h, ...before } : h)));
-            notify.failed(`${card.name} was not added to your ${target}`, { description: res.error });
-        });
-        writes.current = writes.current.then(() => write);
+            notify.failed(`${card.name} was not added to your ${target}`, description ? { description } : undefined);
+        };
+        // A write that throws (the network gone) is put back as one that answered no: the mark must not
+        // outlive it, and the chain below must stay resolved or the refresh on close never runs.
+        const write = addCard(card, target, undefined, { reread: false }).then(
+            (res) => {
+                if (res.ok) return forgetMineQuietly();
+                putBack(res.error);
+            },
+            () => putBack(),
+        );
+        writes.current = writes.current.then(
+            () => write,
+            () => write,
+        );
     };
 
     /* View details, in the preview: the card's full sheet over the palette, with its price line and

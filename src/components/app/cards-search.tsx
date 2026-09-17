@@ -21,6 +21,26 @@ type Index = { titles: CardTitle[]; sets: TitleSet[]; complete: boolean };
    the scope, so the wishlist and a binder do not answer for each other. */
 const indexes = new Map<string, Index | Promise<Index>>();
 
+/** A read of the names, with whether it failed: a shelf the API did not send, or a read that threw. */
+type Loaded = Index & { failed?: boolean };
+
+/**
+ * The index for `key`: the one the tab has, or `read` once. Only an answer is kept. A read that
+ * failed is handed back as an empty index for this field and forgotten, so the next field that
+ * mounts asks again rather than offering nothing for as long as the tab lives.
+ */
+export function loadIndex(key: string, read: () => Promise<Loaded>): Promise<Index> {
+    const known = indexes.get(key);
+    if (known) return Promise.resolve(known);
+    const asked = read().catch((): Loaded => ({ titles: [], sets: [], complete: false, failed: true }));
+    indexes.set(key, asked);
+    return asked.then((ready) => {
+        if (!ready.failed) indexes.set(key, ready);
+        else if (indexes.get(key) === asked) indexes.delete(key);
+        return ready;
+    });
+}
+
 /** What is offered under the field: a title to search for, a set to narrow the list to, or a term searched for before. */
 type Suggestion = { kind: "title"; title: CardTitle } | { kind: "set"; set: TitleSet } | { kind: "recent"; term: string };
 
@@ -124,13 +144,14 @@ export function CardsSearch({
     const listKey = JSON.stringify([shelf ?? null, scope?.collectionId ?? null, scope?.wishlist ?? false, scope?.favoritesOnly ?? false]);
     /* Where the names come from: a binder reads its own cards, Browse reads the shelf it shows.
        A shelf is one read of set names, so it is always whole; a binder may be larger than one. */
-    const read = (): Promise<Index> =>
+    const read = (): Promise<Loaded> =>
         scope
             ? collectionIndex(scope)
-            : listSetsShelf(shelf).then(({ series }) => ({
+            : listSetsShelf(shelf).then(({ series, unavailable }) => ({
                   titles: series.flatMap((group) => group.sets.map((set) => ({ name: set.name, hint: group.name }))),
                   sets: [],
-                  complete: true,
+                  complete: !unavailable,
+                  failed: unavailable,
               }));
 
     // The list's own names, once. Asked for on the first keystroke rather than on mount: a page
@@ -138,10 +159,7 @@ export function CardsSearch({
     useEffect(() => {
         if (!suggests || !value.trim() || index) return;
         let live = true;
-        const known = indexes.get(sourceKey) ?? read().catch(() => ({ titles: [], sets: [], complete: false }));
-        indexes.set(sourceKey, known);
-        Promise.resolve(known).then((ready) => {
-            indexes.set(sourceKey, ready);
+        void loadIndex(sourceKey, read).then((ready) => {
             if (live) setIndex(ready);
         });
         return () => {

@@ -18,14 +18,19 @@ export async function GET() {
     const token = await accessToken();
     if (!token) return new Response("Sign in to export your collection.", { status: 401 });
 
-    const res = await fetch(`${API_URL}/collection/export`, {
-        headers: { authorization: `Bearer ${token}`, accept: "text/csv" },
-        cache: "no-store",
-        signal: AbortSignal.timeout(API_TIMEOUT_MS),
-    });
-    if (!res.ok) {
-        return new Response("Your collection could not be read. Try again in a moment.", { status: res.status === 401 ? 401 : 503 });
+    const unreadable = (status = 503) => new Response("Your collection could not be read. Try again in a moment.", { status });
+    let res: Response;
+    try {
+        res = await fetch(`${API_URL}/collection/export`, {
+            headers: { authorization: `Bearer ${token}`, accept: "text/csv" },
+            cache: "no-store",
+            signal: AbortSignal.timeout(API_TIMEOUT_MS),
+        });
+    } catch {
+        // No answer at all (the API down, or the timeout): the same words as a refusal, not a bare 500.
+        return unreadable();
     }
+    if (!res.ok) return unreadable(res.status === 401 ? 401 : 503);
 
     return new Response(res.body, {
         headers: {

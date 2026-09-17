@@ -21,6 +21,7 @@ import { NativeSelect } from "@/components/base/select/select-native";
 import { type CopyEdits, type CopyGroup, copyLabel } from "@/lib/copies";
 import { formatPrice } from "@/lib/format";
 import { languageOf } from "@/lib/languages";
+import { parsePrice } from "@/lib/price-input";
 import { cx } from "@/utils/cx";
 
 /**
@@ -148,7 +149,7 @@ export function CopyCard({
     const priceText = priceDraft ?? (purchasePrice != null ? String(purchasePrice) : "");
     const commitPrice = () => {
         if (priceDraft === null) return;
-        const p = priceDraft.trim() === "" ? null : Number(priceDraft);
+        const p = parsePrice(priceDraft);
         setPriceDraft(null);
         if (p !== null && (!Number.isFinite(p) || p < 0)) {
             // Every other refused save on this card says so; this one snapped back in silence.
@@ -386,12 +387,12 @@ export function CopyCard({
                     <div className={field}>
                         Purchase price
                         <Input
-                            type="number"
+                            // Text with a decimal keypad, not a number field: that emptied "12,50" in most browsers.
+                            type="text"
+                            inputMode="decimal"
                             aria-label="Purchase price"
                             size="sm"
                             className="w-28"
-                            min={0}
-                            step="0.01"
                             placeholder="0.00"
                             isDisabled={disabled}
                             value={priceText}

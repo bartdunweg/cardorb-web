@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { TopCardsRow } from "@/components/app/top-cards-row";
 import { getMyCards } from "@/lib/cards";
+import { sideRead } from "@/lib/side-read";
 import { TILE_SURFACE } from "@/lib/tile";
 import { perUser } from "@/lib/user-cache";
 
@@ -8,7 +9,8 @@ import { perUser } from "@/lib/user-cache";
 // each tile its picture, name and price, opening the card's sheet. The heading leads to the whole list sorted the same way. Read
 // under Suspense so the page does not wait for it.
 export async function TopCards() {
-    const top = await topCards();
+    // A failed read hides the row, as an empty one does, rather than taking Home down with it.
+    const top = await sideRead("top cards", topCards, []);
     if (top.length === 0) return null;
     return (
         <section aria-labelledby="top-cards-heading" className="flex flex-col gap-4">
