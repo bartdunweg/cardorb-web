@@ -27,7 +27,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     // Not awaited. The profile and the folders are reads of an API in another region, and after
     // every write both miss the cache. Awaited here, nothing reached the browser until the slower
     // of the two answered: no frame, no skeleton, a blank tab for as long as the API took. Now the
-    // frame streams at once, the page's loading.tsx with it, and the folder rows and the account
+    // frame streams at once, the page's own Suspense fallbacks with it (no loading.tsx, R-UI-003), and the folder rows and the account
     // card fill in when their read lands (each logs its own timing line).
     //
     // The folders' counts ride along in that one answer; the favorites count is a read of the

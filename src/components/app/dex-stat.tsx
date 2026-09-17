@@ -17,14 +17,24 @@ import { perUser } from "@/lib/user-cache";
 //
 // It leads to the collection in Pokédex order, not to the Pokédex binder: the tile counts the cards
 // you hold, and the list of them by number is where you read that (Bart's call, 2026-09-14).
-export async function DexStat() {
-    // Either read failing leaves the tile out, as having no Pokédex binder does, and Home stands.
-    const binder = await sideRead("dex binder", getDexBinder, null);
-    if (!binder) return null;
+//
+// `caught` is the read, started by the page before it waits on the stats (readDexCaught): the tile
+// only draws what it answers.
+export async function DexStat({ caught: read }: { caught: Promise<number | null> }) {
     // The count alone: "of 1,025" beside it went (Bart, 2026-09-15).
-    const caught = await sideRead("dex caught", () => caughtCount(binder.pokedex), null);
+    const caught = await read;
     if (caught === null) return null;
     return <StatCard label="Pokémon collected" value={formatCount(caught)} href="/dashboard/cards?sort=dex" delay={120} />;
+}
+
+/**
+ * The Pokémon count, or null for no tile. Never rejects: either read failing leaves the tile out, as
+ * having no Pokédex binder does, and Home stands. So it can be started ahead of the reads Home waits on.
+ */
+export async function readDexCaught(): Promise<number | null> {
+    const binder = await sideRead("dex binder", getDexBinder, null);
+    if (!binder) return null;
+    return sideRead("dex caught", () => caughtCount(binder.pokedex), null);
 }
 
 // The number alone is kept per person, in the stats scope and window as the rest of Home: reading

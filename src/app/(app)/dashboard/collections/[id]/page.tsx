@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { type ComponentProps, Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AddCardButton } from "@/components/app/add-card-button";
@@ -9,10 +9,10 @@ import { FolderPage } from "@/components/app/folder-page";
 import { PokedexRarityNote } from "@/components/app/pokedex-rarity-note";
 import { ListSkeleton } from "@/components/app/skeletons";
 import { Badge } from "@/components/base/badges/badges";
-import { type CardFilter, getAllMyCards, getFacets, getMyCards } from "@/lib/cards";
+import { type CardFilter, type Facets, getDexCards, getMyCards } from "@/lib/cards";
 import { getCollection } from "@/lib/collections";
 import { type DexList, groupByDex } from "@/lib/dex-groups";
-import { ruleChips } from "@/lib/folder-rule";
+import { type FolderRule, ruleChips } from "@/lib/folder-rule";
 import { openAsLeft } from "@/lib/list-memory-server";
 import { type ListSearchParams, changeWindow, isNarrowed, readListQuery } from "@/lib/list-query";
 import { getDexNames } from "@/lib/pokedex";
@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 }
 
 // A folder of your own: filed by hand, or filled by its rule; as a list, or as a Pokédex. The
-// folder itself and the facets are cached reads; the cards are not awaited (see cards/page.tsx).
+// folder itself is a cached read; the cards are not awaited, and the facets come with them (see cards/page.tsx).
 export default function CollectionDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<ListSearchParams> }) {
     // The binder's name comes with the folder list, so the title waits on that read; Back does not.
     return (
@@ -38,7 +38,7 @@ export default function CollectionDetailPage({ params, searchParams }: { params:
 
 async function Binder({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<ListSearchParams> }) {
     const { id } = await params;
-    const [collection, facets] = await Promise.all([getCollection(id), getFacets()]);
+    const collection = await getCollection(id);
     if (!collection) notFound();
 
     const asked = await searchParams;
@@ -64,17 +64,19 @@ async function Binder({ params, searchParams }: { params: Promise<{ id: string }
         duplicates,
     };
     const narrowed = isNarrowed(query);
-    // A rule names a set by its code; the facets carry the title a chip should read.
-    const chips = collection.rule ? (
-        <ul className="flex flex-wrap gap-1.5" aria-label="Rule">
-            {ruleChips(collection.rule, facets).map((chip) => (
-                <li key={chip}>
-                    <Badge size="sm" color="gray" type="pill-color">
-                        {chip}
-                    </Badge>
-                </li>
-            ))}
-        </ul>
+    // The cards are read before anything is drawn and not awaited: the facets ride with their first
+    // answer, as on the Collection page, rather than costing a read of their own before the first byte.
+    const setting = collection.pokedex;
+    const dexCards = setting ? getDexCards(filter) : null;
+    const list = dexCards ? null : getMyCards(filter);
+    const facets: Promise<Facets> = dexCards ? dexCards.then((r) => r.facets) : list!.then((r) => r.facets);
+    // A rule names a set by its code; the facets carry the title a chip should read. Until they are in,
+    // the chips read as they would without them.
+    const rule = collection.rule;
+    const chips = rule ? (
+        <Suspense fallback={<RuleChips rule={rule} />}>
+            <RuleChipsWithTitles rule={rule} facets={facets} />
+        </Suspense>
     ) : null;
     // The same plus the header has, in the middle of the room: on a phone the header's plus is
     // in the bar at the bottom, and "press the plus" pointed at nothing in view.
@@ -93,7 +95,13 @@ async function Binder({ params, searchParams }: { params: Promise<{ id: string }
         // The dots and the plus, the pair every list has. A binder filled by hand takes a card from
         // its own page, new or already yours, so its plus asks which; a rule binder fills itself, and
         // its plus is the plain Add card.
-        settings: (compact: boolean) => <BinderMenu folder={collection} facets={facets} compact={compact} />,
+        // The menu is there at once; its edit form is handed the facets when they are in, and asks for
+        // them itself when opened before that (folder-dialog.tsx).
+        settings: (compact: boolean) => (
+            <Suspense fallback={<BinderMenu folder={collection} compact={compact} />}>
+                <BinderMenuWithFacets folder={collection} facets={facets} compact={compact} />
+            </Suspense>
+        ),
         add: collection.rule
             ? (compact: boolean) => <AddCardButton compact={compact} />
             : (compact: boolean) => <BinderAddButton folder={collection} compact={compact} />,
@@ -104,12 +112,11 @@ async function Binder({ params, searchParams }: { params: Promise<{ id: string }
         empty,
     };
 
-    if (collection.pokedex) {
-        // The slots need every card, not a batch; the names fill the slots the folder has none of.
-        const setting = collection.pokedex;
-        // The count and the value are the slots' own, as on the built-in Pokédex: a rarity the
-        // setting leaves out is not in the binder, whatever the read returned.
-        const dex: Promise<DexList> = Promise.all([getAllMyCards(filter), getDexNames()]).then(([r, names]) => {
+    if (setting && dexCards) {
+        // The slots need every card, not a batch (getDexCards, kept per person); the names fill the
+        // slots the folder has none of. The count and the value are the slots' own, as on the built-in
+        // Pokédex: a rarity the setting leaves out is not in the binder, whatever the read returned.
+        const dex: Promise<DexList> = Promise.all([dexCards, getDexNames()]).then(([r, names]) => {
             const grouped = groupByDex(r.cards, names, setting);
             return { ...grouped, total: grouped.cards, held: r.cards.length };
         });
@@ -130,11 +137,34 @@ async function Binder({ params, searchParams }: { params: Promise<{ id: string }
         );
     }
 
-    const list = getMyCards(filter);
-    const datapoints = list.then((r) => ({ total: r.total, copies: r.copies ?? undefined, narrowed, value: r.value, unpriced: r.unpriced }));
+    const cards = list!;
+    const datapoints = cards.then((r) => ({ total: r.total, copies: r.copies ?? undefined, narrowed, value: r.value, unpriced: r.unpriced }));
     return (
-        <FolderPage {...common} datapoints={datapoints} list={list}>
+        <FolderPage {...common} datapoints={datapoints} list={cards}>
             {chips}
         </FolderPage>
     );
+}
+
+function RuleChips({ rule, facets }: { rule: FolderRule; facets?: Facets }) {
+    return (
+        <ul className="flex flex-wrap gap-1.5" aria-label="Rule">
+            {ruleChips(rule, facets).map((chip) => (
+                <li key={chip}>
+                    <Badge size="sm" color="gray" type="pill-color">
+                        {chip}
+                    </Badge>
+                </li>
+            ))}
+        </ul>
+    );
+}
+
+// A list that cannot be read shows its own error below; the chips keep the codes rather than join it.
+async function RuleChipsWithTitles({ rule, facets }: { rule: FolderRule; facets: Promise<Facets> }) {
+    return <RuleChips rule={rule} facets={await facets.catch(() => undefined)} />;
+}
+
+async function BinderMenuWithFacets({ facets, ...menu }: Omit<ComponentProps<typeof BinderMenu>, "facets"> & { facets: Promise<Facets> }) {
+    return <BinderMenu {...menu} facets={await facets.catch(() => undefined)} />;
 }

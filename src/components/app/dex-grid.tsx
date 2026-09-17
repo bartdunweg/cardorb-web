@@ -17,6 +17,7 @@ import type { DexCard } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
 import { type CardsSize, GRID_COLUMNS, TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
 import type { DexGeneration, DexList, NamedDexSlot } from "@/lib/dex-groups";
+import { forgetMineQuietly } from "@/lib/forget-mine";
 import { formatCount, formatPrice } from "@/lib/format";
 import { listCopies } from "@/lib/reads";
 import { cx } from "@/utils/cx";
@@ -135,6 +136,16 @@ export function DexGrid({ generations, size = "md", linked = true }: { generatio
  * before the first write answers unsets the right card; a write that fails or answers no puts it
  * back, if no later swipe has moved it since, and says so.
  */
+/**
+ * The face written, then the kept Pokédex cards forgotten without a redraw: the binder's cards are
+ * cached (getDexCards), and the next visit would otherwise show the face from before the swipe.
+ */
+const writeDexFace = (cardId: string, previousId: string | null) =>
+    setDexFace(cardId, previousId).then((res) => {
+        if (res.ok) void forgetMineQuietly("dexFace");
+        return res;
+    });
+
 export function settleFace(
     face: { current: string | null },
     cardId: string,
@@ -236,7 +247,7 @@ function DexTile({ slot, onSelect, remembers }: { slot: NamedDexSlot; onSelect?:
                         onShow={(card) => setShownId(card.id)}
                         // Where a swipe stops is the slot's card. Nothing is written for the card that is
                         // already the face, and nothing at all on somebody else's profile.
-                        onSettle={remembers ? (card) => void settleFace(face, card.id, setDexFace) : undefined}
+                        onSettle={remembers ? (card) => void settleFace(face, card.id, writeDexFace) : undefined}
                     />
                 }
                 words={words}

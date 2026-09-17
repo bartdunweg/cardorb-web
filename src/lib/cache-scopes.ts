@@ -24,7 +24,7 @@ export type CacheScope = (typeof CACHE_SCOPES)[number];
  * The writes this app makes, by what they change. `all` is for a write whose reach is not clear
  * (an import) and for an old caller that names nothing.
  */
-export const FORGET_WRITES = ["all", "cards", "binders", "profile"] as const;
+export const FORGET_WRITES = ["all", "cards", "binders", "profile", "dexFace"] as const;
 export const forgetWriteSchema = z.enum(FORGET_WRITES);
 export type ForgetWrite = z.infer<typeof forgetWriteSchema>;
 
@@ -36,11 +36,14 @@ export type ForgetWrite = z.infer<typeof forgetWriteSchema>;
  * edited or deleted changes the binder list, which cards a binder's list holds, and that binder's
  * value line; its Pokédex setting is part of the Pokémon count's key, so that count needs no forget.
  * A profile write changes the profile alone; the public pages go with every write (`publicTag`).
+ * A Pokédex face chosen (`dexFace`) changes which card a slot shows, which is kept with a Pokédex
+ * binder's cards in the lists; no count and no value.
  */
 export const FORGETS: Record<Exclude<ForgetWrite, "all">, readonly CacheScope[]> = {
     cards: ["lists", "stats", "binders", "sets", "value"],
     binders: ["binders", "lists", "value"],
     profile: ["profile"],
+    dexFace: ["lists"],
 };
 
 export const userTag = (userId: string) => `user:${userId}`;

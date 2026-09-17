@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { TopCardsRow } from "@/components/app/top-cards-row";
-import { getMyCards } from "@/lib/cards";
+import { type Card, getMyCards } from "@/lib/cards";
 import { sideRead } from "@/lib/side-read";
 import { TILE_SURFACE } from "@/lib/tile";
 import { perUser } from "@/lib/user-cache";
@@ -8,9 +8,10 @@ import { perUser } from "@/lib/user-cache";
 // Home's most valuable cards: the twelve dearest copies you hold, as a row that scrolls sideways,
 // each tile its picture, name and price, opening the card's sheet. The heading leads to the whole list sorted the same way. Read
 // under Suspense so the page does not wait for it.
-export async function TopCards() {
-    // A failed read hides the row, as an empty one does, rather than taking Home down with it.
-    const top = await sideRead("top cards", topCards, []);
+//
+// `top` is the read, started by the page before it waits on the stats (readTopCards).
+export async function TopCards({ top: read }: { top: Promise<Card[]> }) {
+    const top = await read;
     if (top.length === 0) return null;
     return (
         <section aria-labelledby="top-cards-heading" className="flex flex-col gap-4">
@@ -29,6 +30,9 @@ export async function TopCards() {
         </section>
     );
 }
+
+/** The dearest cards, never rejecting: a failed read hides the row, as an empty one does, rather than taking Home down with it. */
+export const readTopCards = (): Promise<Card[]> => sideRead("top cards", topCards, []);
 
 // Kept per person like the list's first batch: twelve is not a batch size, so this read went to the
 // API on every open of Home. Five minutes in the person's stats scope, dropped by a card write; the window in

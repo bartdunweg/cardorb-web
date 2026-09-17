@@ -26,7 +26,8 @@ export function BinderMenu({
     compact,
 }: {
     folder: { id: string; name: string; kind: FolderKind; rule: FolderRule | null; pokedex: PokedexSetting | null; isPublic: boolean };
-    facets: Facets;
+    /** Absent until the page's read is in: the edit form then asks for them itself. */
+    facets?: Facets;
     /** In the phone's bar, the size of Back beside it. */
     compact: boolean;
 }) {

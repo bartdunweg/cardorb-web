@@ -45,8 +45,7 @@ image priority only, a press redraws one tile, the day picker and zod mappers le
 (about 70 KB gzip off the list pages). The per-user cache is split into scopes
 (`cache-scopes.ts`); a write forgets only its kind, and the API names the kind on `/api/revalidate`.
 Left: split `card-detail-slideout.tsx` and the write-engine hooks (only with e2e green), the
-folder-to-binder rename in code, a Pokédex binder's uncached 2,000-card read, Home's serial reads,
-`loading.tsx` skeletons, the glass bar on low-end phones (Bart's call). Not measured in a browser:
+folder-to-binder rename in code, the glass bar on low-end phones (Bart's call). Not measured in a browser:
 most of it.
 
 **2026-09-17, a fourth bug hunt: Home, the card lists, Settings.** Home: a failed movers read is
