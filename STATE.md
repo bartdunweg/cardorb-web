@@ -34,6 +34,25 @@ as an add, and list state now covers a rarity filter chosen and cleared in the F
 
 ## Last session
 
+**2026-09-17 evening, a second round on today's work (#684 to #698).** A Pokédex binder caches
+trimmed cards per person (`getDexCards`, logs its entry size) and Home starts its reads together.
+Folder and collection identifiers are Binder in code (#688; wire names, routes and cache keys kept).
+The value chart drew a smoothed line that rose on days the value fell; it draws the real readings
+now, thinned by min and max per span (#690). Motion: shared duration tokens, `pressable` owns its
+transition list (a `transition-colors` beside it had killed the press scale), the palette opens
+without animation on desktop, the sidebar folds instantly, tiles fade out at 0, only the first
+page staggers (#691, #692, #698). Fixes: a scroll batch during a list re-read, the re-read in one
+request, Undo on a set tile, price input refuses "1,234" as ambiguous and says why on the field,
+lazy chunks have a retry, the wish heart recovers from a throw, `orFailed`, a `favorite` forget
+scope (#693, #695, #696). zod left the browser's first load (hand-written list-memory cookie guard
+on the client, zod on the server), the public profile asks once per thing, table, import and
+binder forms load when opened: login 259 to 202 KB, cards 438 to 347 KB gzip (#697). Loading
+skeletons were proposed and refused: R-UI-003. Two PRs green alone broke main together (#693 listed
+the writes, #695 added one); #696 fixed it. The writes.spec flakes are test waits, with the
+e2e session on `claude/e2e-flakes`. Left: split `card-detail-slideout.tsx` and a shared press
+engine (need unit harnesses first), the API sending `favorite` instead of `cards`, a new set's
+grid in a scroll batch still staggers. Not measured in a browser: most of it.
+
 **2026-09-17, a fifth hunt with performance and refactors (#677 to #683, api#529).** The grid
 "refresh": a new first page threw away every scrolled batch; it keeps them now and re-reads that
 span quietly, and set sections are keyed by name and run. Twenty bugs from a whole-app hunt: sign
