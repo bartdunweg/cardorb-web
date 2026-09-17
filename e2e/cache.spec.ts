@@ -11,11 +11,11 @@ test("after a write, Back and a reload show the new state, not the cached one", 
     // The tile flips at once (use-copy-steps.ts presses optimistically), and the toast is the
     // signal the add itself has reached the server, the same wait writes.spec.ts uses before
     // trusting a fresh read. The set page's own per-card cache (perUser, sets.ts) is cleared by
-    // the same deferred rereadMine() the public profile test below waits on explicitly: this test
-    // does not wait for it by name because the goto/assert to /dashboard/cards and the goBack
-    // below cost real wall-clock time first, which has given it margin across every run so far.
-    // That margin is empirical, not guaranteed; the public profile test needed the explicit wait
-    // because it reloads right after the toast, with none of that margin.
+    // POST /api/forget-mine (the set tile passes quiet: true, so use-copy-steps.ts calls
+    // forgetMineQuietly() instead of the rereadMine action), which the public profile test below
+    // waits on by name because it reloads right after the toast: this test does not, because the
+    // goto/assert to /dashboard/cards and the goBack below cost real wall-clock time first, which
+    // has given it margin across every run so far. That margin is empirical, not guaranteed.
     await expect(page.getByText(`${c.name} is in your collection now`)).toBeVisible();
     await expect(setTile(page, c, "in your collection")).toBeVisible();
 
@@ -44,32 +44,25 @@ test("the public profile shows an added card and loses a removed one", async ({ 
     await expect(visitor.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(collectionTile(visitor, c)).toHaveCount(0);
 
-    // The public profile is cached under the owner's publicTag (public-profile.ts), and only
-    // rereadMine() clears it (user-cache.ts's forgetMine). The set tile calls addCard and
-    // removeCard with reread: false (set-card-tile.tsx), so use-copy-steps.ts defers that clear
-    // to its own trailing rereadMine() call, which runs after the toast fires in both the add and
-    // the remove branch, not before: waiting for the toast alone proves the write landed, not that
-    // the cache the visitor reads is empty yet. CI run 35198515180 failed on the add step this
-    // way (the visitor's reload beat rereadMine's own round trip). A visitor briefly seeing the
-    // old state during the owner's round trip is fine; reloading before rereadMine's write has
-    // landed is not, so each step below waits for that call by name, not just its toast.
+    // The public profile is cached under the owner's publicTag (public-profile.ts), and only a
+    // cache-forgetting write clears it (user-cache.ts's forgetMine/forgetMineLater). The set tile
+    // presses with quiet: true (set-card-tile.tsx), so use-copy-steps.ts calls forgetMineQuietly()
+    // once the row has settled, POST /api/forget-mine, the same call writes.spec.ts's own
+    // double-press test already waits for by name. That POST runs after the toast fires in both
+    // the add and the remove branch, not before: waiting for the toast alone proves the write
+    // landed, not that the cache the visitor reads is empty yet.
     //
-    // rereadMine() takes no arguments, so its Server Action body decodes to an empty array; that
-    // is what distinguishes it from addCard/removeCard's own call, whose bodies carry their
-    // arguments (the same body-shape matching isFavoriteWrite uses in writes.spec.ts, verified
-    // there against a real trace).
-    const isRereadMine = (body: string | null) => {
-        if (!body) return false;
-        try {
-            const args: unknown = JSON.parse(body);
-            return Array.isArray(args) && args.length === 0;
-        } catch {
-            return false;
-        }
-    };
+    // A first attempt here matched on the rereadMine Server Action instead (the non-quiet sibling
+    // call), reasoning from the code without checking a trace; it hung the full 30s timeout, because
+    // the set tile never calls that action at all. Read from a CI trace (run 35201215969) that the
+    // one write-adjacent POST on this page is /api/forget-mine, matching writes.spec.ts's own
+    // finding for the same tile. A visitor briefly seeing the old state during the owner's round
+    // trip is fine; reloading before that POST has answered is not, so each step below waits for
+    // it by name, not just its toast.
+    const settled = () => page.waitForResponse((r) => r.request().method() === "POST" && r.url().includes("/api/forget-mine"));
 
     await page.goto(setPage);
-    const added = page.waitForResponse((r) => r.request().method() === "POST" && isRereadMine(r.request().postData()));
+    const added = settled();
     await addButton(page, c).click();
     await expect(page.getByText(`${c.name} is in your collection now`)).toBeVisible();
     await added;
@@ -78,7 +71,7 @@ test("the public profile shows an added card and loses a removed one", async ({ 
     await visitor.reload();
     await expect(collectionTile(visitor, c)).toHaveCount(1);
 
-    const removed = page.waitForResponse((r) => r.request().method() === "POST" && isRereadMine(r.request().postData()));
+    const removed = settled();
     await removeButton(page, c).click();
     await expect(page.getByText(`${c.name} is out of your collection`)).toBeVisible();
     await removed;
