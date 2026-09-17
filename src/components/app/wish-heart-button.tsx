@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { Heart } from "@untitledui/icons";
+import { useRouter } from "next/navigation";
 import { removeCard, restoreCard } from "@/app/(app)/dashboard/cards/actions";
 import { TileIconButton } from "@/components/app/tile-icon-button";
 import { notify } from "@/components/app/toast";
@@ -17,6 +18,7 @@ import { forgetMineQuietly } from "@/components/app/use-copy-steps";
  */
 export function WishHeartButton({ card, onGone }: { card: { id: string; name: string }; onGone: () => void }) {
     const [pending, startTransition] = useTransition();
+    const router = useRouter();
     return (
         <TileIconButton
             icon={Heart}
@@ -34,7 +36,21 @@ export function WishHeartButton({ card, onGone }: { card: { id: string; name: st
                     const removed = res.card;
                     notify.removed(
                         `${card.name} is off your wishlist`,
-                        removed ? { undo: { label: "Put back", onUndo: () => void restoreCard(removed) } } : {},
+                        removed
+                            ? {
+                                  undo: {
+                                      label: "Put back",
+                                      /* Forgetting nothing in the action: a restore that dropped the cache there drew the
+                                         wishlist again in its answer. The wish comes back with a new id, so the list is read
+                                         again once the cache is gone, and keeps its scrolled batches (`cards-list.tsx`). */
+                                      onUndo: () =>
+                                          void restoreCard(removed, { reread: false }).then((r) => {
+                                              if (!r.ok) return notify.failed("That did not go back", { description: r.error });
+                                              void forgetMineQuietly().then(() => router.refresh());
+                                          }),
+                                  },
+                              }
+                            : {},
                     );
                     await forgetMineQuietly();
                 })

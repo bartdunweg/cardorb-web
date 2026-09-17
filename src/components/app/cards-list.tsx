@@ -71,12 +71,24 @@ export function CardsList({
        count asked for an empty batch, drew the skeleton, and asked again, for as long as you looked. */
     const [read, setRead] = useState(first.cards.length);
     const [end, setEnd] = useState(false);
+    /* A new first page for this same list (the list is keyed on its URL, so another search is another
+       mount) is the page read again after a write: the sheet's refresh, a copy saved, a wish put back.
+       It used to throw away every batch scrolling had appended, so a reader two hundred tiles down
+       was dropped back to the first 48, the page shrank under them and the list read itself back in:
+       the grid "refreshed". What was appended stays on screen now, less anything the new first page
+       already holds, and the span is read again behind it (`recheck`) so a card removed or changed
+       down there follows too. */
     const [seed, setSeed] = useState(first.cards);
+    const [recheck, setRecheck] = useState<Card[] | null>(null);
     if (seed !== first.cards) {
         setSeed(first.cards);
-        setAppended([]);
-        setRead(first.cards.length);
-        setEnd(false);
+        const onFirst = new Set(first.cards.map((c) => c.id));
+        setAppended((have) => have.filter((c) => !onFirst.has(c.id)));
+        if (appended.length) setRecheck(first.cards);
+        else {
+            setRead(first.cards.length);
+            setEnd(false);
+        }
     }
     const cards = appended.length ? [...first.cards, ...appended] : first.cards;
     /* The facts of every card on the list, a page per request as the pages arrive, so a sheet opened
@@ -93,13 +105,55 @@ export function CardsList({
     const setCards = (next: (have: Card[]) => Card[]) => setAppended((have) => next([...first.cards, ...have]).slice(first.cards.length));
     const [failed, setFailed] = useState(false);
     const [pending, startTransition] = useTransition();
+    const [rechecking, startRecheck] = useTransition();
     const sentinel = useRef<HTMLDivElement>(null);
     const more = !end && read < first.total;
     // Once the list has run out, what it holds is the count, whatever the first page said.
     const total = end ? cards.length : first.total;
 
+    /* The appended span read again after the first page was, as far as the reader had scrolled. Its
+       own transition, so the button at the end does not spin and a screen reader is not told more
+       cards are loading; a batch on scroll waits for it, since both write the same offsets. A read
+       that fails keeps what is on screen. */
+    useEffect(() => {
+        if (!recheck) return;
+        let live = true;
+        const upTo = read;
+        startRecheck(async () => {
+            const got: Card[] = [];
+            let offset = recheck.length;
+            let done = false;
+            try {
+                while (offset < upTo) {
+                    const batch = await loadMoreCards({ ...filter, offset });
+                    got.push(...batch.cards);
+                    offset += batch.cards.length;
+                    if (batch.cards.length === 0 || offset >= batch.total) {
+                        done = true;
+                        break;
+                    }
+                }
+            } catch {
+                if (live) setRecheck(null);
+                return;
+            }
+            if (!live) return;
+            const onFirst = new Set(recheck.map((c) => c.id));
+            const seen = new Set<string>();
+            setAppended(got.filter((c) => !onFirst.has(c.id) && !seen.has(c.id) && seen.add(c.id)));
+            setRead(offset);
+            setEnd(done);
+            setRecheck(null);
+        });
+        return () => {
+            live = false;
+        };
+        // Once per first page: `read` and `filter` are read as they are when that page arrived.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [recheck]);
+
     const loadMore = () => {
-        if (pending) return;
+        if (pending || rechecking || recheck) return;
         setFailed(false);
         startTransition(async () => {
             try {
@@ -123,7 +177,7 @@ export function CardsList({
     // one when the appended cards move the sentinel down.
     useEffect(() => {
         const el = sentinel.current;
-        if (!el || !more || pending || failed || typeof IntersectionObserver === "undefined") return;
+        if (!el || !more || pending || rechecking || recheck || failed || typeof IntersectionObserver === "undefined") return;
         const observer = new IntersectionObserver(
             ([entry]) => {
                 if (!entry?.isIntersecting) return;
@@ -136,7 +190,7 @@ export function CardsList({
         return () => observer.disconnect();
         // loadMore closes over how far the list has read; the effect reruns when it changes.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [more, pending, failed, read]);
+    }, [more, pending, rechecking, recheck, failed, read]);
 
     /* The count a screen reader hears. The zero case is in it, and the region is the first thing
        returned rather than the last: it used to sit after the list, behind the early return that a
@@ -190,9 +244,11 @@ export function CardsList({
                     {view === "grid" ? (
                         <div className="flex flex-col gap-8">
                             {setGroups(cards, groupedBySet).map((group, i, groups) => (
-                                /* By place, not name: two sets can share a name (an English and a Japanese one) and
-                                   come apart in the list, which gave two sections one key and one heading id. */
-                                <section key={i} aria-labelledby={group.name ? headingId(group.name, i) : undefined}>
+                                /* By name and which run of that name it is, not by place: two sets can share a name (an
+                                   English and a Japanese one) and come apart in the list, which gave two sections one key.
+                                   Place alone moved every section after a set that emptied (its last card removed from the
+                                   sheet) to another key, and each tile under it was drawn anew, its arrival played again. */
+                                <section key={runKey(groups, i)} aria-labelledby={group.name ? headingId(group.name, i) : undefined}>
                                     {group.name ? (
                                         /* Sticky, so the set a tile belongs to is still readable halfway down a
                                            long one. `top-0` against the page's own scroll: this list has no
@@ -277,6 +333,10 @@ export function setGroups(cards: Card[], grouped: boolean): { name: string | nul
     }
     return runs;
 }
+
+/** A run's key: its set's name and how many runs of that name come before it, so a run keeps its key when another one goes. */
+export const runKey = (groups: { name: string | null }[], at: number): string =>
+    `${groups[at]?.name ?? ""}#${groups.slice(0, at).filter((g) => g.name === groups[at]?.name).length}`;
 
 /** A heading's id, for the section that names it: one per set name, stable across renders. */
 const headingId = (setName: string, at: number): string => `set-${at}-${setName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;

@@ -6,17 +6,7 @@ import { ChevronLeft, ChevronRight, DotsHorizontal, Heart, Phone01, Plus, Star01
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
-import {
-    type CardFacts,
-    type PricePoint,
-    addCard,
-    editCopies,
-    removeCard,
-    rereadMine,
-    restoreCard,
-    setCopies,
-    setFavorite,
-} from "@/app/(app)/dashboard/cards/actions";
+import { type CardFacts, type PricePoint, addCard, editCopies, removeCard, restoreCard, setCopies, setFavorite } from "@/app/(app)/dashboard/cards/actions";
 import type { FolderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { NO_ART, artStack, nextArt } from "@/components/app/card-art";
 import { CardBack } from "@/components/app/card-back";
@@ -545,7 +535,10 @@ export function CardDetailSlideout({
             // here, once, when no write is in the air to race the re-read that fills it again.
             // A failed run may still have landed its first presses, so it re-reads too.
             if (landed === null) return;
-            void rereadMine().then(() => {
+            // Quietly, through the route: rereadMine() is an action, and a cache dropped inside one
+            // draws the page again in its answer, a redraw of the list behind the sheet on top of the
+            // refresh this schedules.
+            void forgetMineQuietly().then(() => {
                 scheduleRefresh();
                 void reloadCopies();
             });

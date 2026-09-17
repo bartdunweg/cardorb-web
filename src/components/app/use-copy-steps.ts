@@ -1,8 +1,10 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { removeCard, rereadMine, restoreCard, setCopies } from "@/app/(app)/dashboard/cards/actions";
 import { notify } from "@/components/app/toast";
+import type { RemovedCard } from "@/lib/api-shapes";
 import { holdPage } from "@/lib/unsent-writes";
 
 type Added = { ok: true; id?: string } | { ok: false; error: string };
@@ -50,6 +52,7 @@ export function useCopySteps({
     onStored?: (quantity: number, id: string | undefined) => void;
 }) {
     const [pending, startTransition] = useTransition();
+    const router = useRouter();
     const [error, setError] = useState<string | null>(null);
     const page = `${heldOnPage}:${rowId ?? ""}`;
     // The last count pressed, and the page it was pressed on.
@@ -111,10 +114,7 @@ export function useCopySteps({
                             }
                             const removed = res.card;
                             id = undefined;
-                            notify.removed(
-                                `${name} is out of your collection`,
-                                removed ? { undo: { label: "Put back", onUndo: () => void restoreCard(removed) } } : {},
-                            );
+                            notify.removed(`${name} is out of your collection`, removed ? { undo: { label: "Put back", onUndo: () => putBack(removed) } } : {});
                         } else if (id) {
                             const res = await setCopies(id, target, { reread: false });
                             if (!res.ok) {
@@ -147,6 +147,18 @@ export function useCopySteps({
                 setPressed({ quantity: have, on: page });
                 setError(failure);
             }
+        });
+    };
+
+    /* "Put back" on a copy the minus took to nought. On a list the write forgets nothing itself: a
+       restore that dropped the cache inside its action drew the page again in the answer, and the
+       list under the toast was redrawn with it. The row comes back with a new id, so the list is
+       read again once the cache is gone, which keeps its scrolled batches (`cards-list.tsx`). */
+    const putBack = (removed: RemovedCard) => {
+        if (!quiet) return void restoreCard(removed);
+        void restoreCard(removed, { reread: false }).then((res) => {
+            if (!res.ok) return notify.failed("That did not go back", { description: res.error });
+            void forgetMineQuietly().then(() => router.refresh());
         });
     };
 

@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { Card, CardList } from "@/lib/cards";
-import { CardsList, setGroups } from "./cards-list";
+import { CardsList, runKey, setGroups } from "./cards-list";
 
 /*
  * The wishlist's tiles carry "Got it", the one thing a wish can have done to it. The tile is a
@@ -250,5 +250,95 @@ describe("CardsList at the end of a list", () => {
         expect(load).toHaveBeenCalledWith(expect.objectContaining({ offset: 2 }));
         expect(screen.queryByRole("button", { name: /Show more|Loading/ })).toBeNull();
         expect(document.querySelector("[aria-live]")).toHaveTextContent("Showing 2 of 2 cards");
+    });
+});
+
+/*
+ * The page read again after a write (the sheet's refresh, a copy saved, a wish put back) hands this
+ * same list a new first page. It used to throw away every batch scrolling had appended: a reader
+ * far down was dropped back to the first batch and the list read itself in again, which is the grid
+ * "refreshing". The scrolled cards stay, and the span behind the first page is read again.
+ */
+describe("CardsList when its first page is read again", () => {
+    const of = (id: string): Card => ({ ...card, id, name: `Card ${id}` });
+    // Already settled, as a promise the router hands over after a refresh is by the time it commits:
+    // `use` then reads it without suspending, as it does inside the refresh's transition.
+    const settled = (cards: Card[], total: number) =>
+        Object.assign(Promise.resolve({ cards, total, facets: { sets: [], rarities: [], gens: [], types: [] } } as unknown as CardList), {
+            status: "fulfilled",
+            value: { cards, total, facets: { sets: [], rarities: [], gens: [], types: [] } },
+        }) as unknown as Promise<CardList>;
+
+    class Seen {
+        constructor(private readonly callback: IntersectionObserverCallback) {}
+        observe() {
+            queueMicrotask(() => this.callback([{ isIntersecting: true } as IntersectionObserverEntry], this as unknown as IntersectionObserver));
+        }
+        disconnect() {}
+    }
+    const settle = async () => {
+        for (let i = 0; i < 10; i++) await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
+    };
+    const names = () => [...document.querySelectorAll("[aria-live]")].map((n) => n.textContent);
+
+    it("keeps the scrolled cards and drops one removed further down", async () => {
+        const { loadMoreCards } = await import("@/lib/reads");
+        const load = vi.mocked(loadMoreCards);
+        load.mockReset();
+        // Scrolling: the second batch, and then the list is whole.
+        load.mockResolvedValueOnce({ cards: [of("c"), of("d")], total: 4 });
+        vi.stubGlobal("IntersectionObserver", Seen);
+        const at = (list: Promise<CardList>) => (
+            <Suspense fallback={<p>skeleton</p>}>
+                <CardsList
+                    list={list}
+                    listKey="/dashboard/cards"
+                    filter={{}}
+                    narrowed={false}
+                    view="grid"
+                    size="md"
+                    onSelect={vi.fn()}
+                    noHits={null}
+                    empty={null}
+                />
+            </Suspense>
+        );
+        const view = await act(async () => render(at(settled([of("a"), of("b")], 4))));
+        await settle();
+        expect(names()).toEqual(["Showing 4 of 4 cards"]);
+
+        // A write removed "c"; the refresh hands a new first page, and the span after it reads "d" alone.
+        load.mockReset();
+        let answer: (value: { cards: Card[]; total: number }) => void = () => {};
+        load.mockReturnValue(new Promise((resolve) => (answer = resolve)));
+        await act(async () => view.rerender(at(settled([of("a"), of("b")], 3))));
+        // Before the re-read lands, the scrolled cards are still drawn: nothing went back to the first batch.
+        expect(screen.queryByText("skeleton")).toBeNull();
+        expect(screen.getByText("Card c")).toBeInTheDocument();
+        expect(screen.getByText("Card d")).toBeInTheDocument();
+        await act(async () => answer({ cards: [of("d")], total: 3 }));
+        await settle();
+        vi.unstubAllGlobals();
+        vi.stubGlobal("matchMedia", () => ({ matches: true, addEventListener() {}, removeEventListener() {} }));
+
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(load).toHaveBeenCalledWith(expect.objectContaining({ offset: 2 }));
+        expect(screen.queryByText("Card c")).toBeNull();
+        expect(screen.getByText("Card d")).toBeInTheDocument();
+        expect(names()).toEqual(["Showing 3 of 3 cards"]);
+    });
+});
+
+describe("the key a set's run is drawn under", () => {
+    it("stays with the run when a run above it goes", () => {
+        const before = [{ name: "Jungle" }, { name: "Fossil" }, { name: "Base" }];
+        const after = [{ name: "Fossil" }, { name: "Base" }];
+        expect(runKey(after, 0)).toBe(runKey(before, 1));
+        expect(runKey(after, 1)).toBe(runKey(before, 2));
+    });
+
+    it("tells apart two runs of one name", () => {
+        const groups = [{ name: "Base" }, { name: "Jungle" }, { name: "Base" }];
+        expect(runKey(groups, 0)).not.toBe(runKey(groups, 2));
     });
 });
