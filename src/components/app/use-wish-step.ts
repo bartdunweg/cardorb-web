@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef } from "react";
 import { removeCard } from "@/app/(app)/dashboard/cards/actions";
 import { notify } from "@/components/app/toast";
+import { useLatestPress } from "@/components/app/use-latest-press";
 import { forgetMineQuietly } from "@/lib/forget-mine";
-import { holdPage } from "@/lib/unsent-writes";
 
 type Added = { ok: true; id?: string } | { ok: false; error: string };
 
@@ -13,7 +13,7 @@ type Added = { ok: true; id?: string } | { ok: false; error: string };
  *
  * The heart waited for the write and then for the whole set page to be drawn again: 6.2 s for one
  * press, measured 2026-09-16, of which the write was 0.8 s. Now the heart fills under the finger and
- * the store follows, the way the plus does (`useCopySteps`): one write in the air at a time, always
+ * the store follows, the way the plus does (`useLatestPress`): one write in the air at a time, always
  * for the last state pressed, and the cache forgotten once without drawing the page again.
  *
  * `id` is the wish's row once the store has one: the plus beside the heart opens the form that moves
@@ -39,88 +39,45 @@ export function useWishStep({
     /** The row the store holds after a write: an id, or none. */
     onStored?: (id: string | undefined) => void;
 }) {
-    const [pending, startTransition] = useTransition();
-    const [error, setError] = useState<string | null>(null);
-    const page = `${wishedOnPage}:${rowId ?? ""}`;
-    // The last state pressed, the row it has so far, and the page it was pressed on.
-    const [pressed, setPressed] = useState<{ wished: boolean; id: string | undefined; on: string } | null>(null);
-    const shown = pressed && (pending || pressed.on === page) ? pressed : { wished: wishedOnPage, id: rowId };
-    const want = useRef(wishedOnPage);
-    const flying = useRef(false);
-    const stored = useRef<{ wished: boolean; id: string | undefined }>({ wished: wishedOnPage, id: rowId });
-    const seen = useRef(page);
     // The toast's way back presses the heart as it is now, not as it was when the toast went up.
     const latest = useRef<(wished: boolean) => void>(() => undefined);
+    const steps = useLatestPress<boolean>({
+        value: wishedOnPage,
+        id: rowId,
+        write: async ({ id }, wished) => {
+            if (wished) {
+                const res = await add();
+                if (!res.ok || !res.id) return { failure: res.ok ? "The card was added, but this page could not follow. Reload to see it." : res.error };
+                notify.done(`${name} is on your wishlist now`, { undo: { onUndo: () => latest.current(false) } });
+                return { value: true, id: res.id };
+            }
+            if (!id) return { failure: "This wish cannot be changed from here." };
+            const res = await removeCard(id, { reread: false });
+            if (!res.ok) return { failure: res.error };
+            notify.removed(`${name} is off your wishlist`, { undo: { label: "Put back", onUndo: () => latest.current(true) } });
+            return { value: false, id: undefined };
+        },
+        settle: () => forgetMineQuietly("cards"),
+        onStored: onStored && (({ id }) => onStored(id)),
+        onFailed: ({ error, threw, stored }) => {
+            onShown?.(stored.value);
+            onStored?.(stored.id);
+            /* A write that threw (no signal, a deploy in between) is said in a toast. Without a catch
+               the heart once stayed "in the air" for good and did nothing until a reload. */
+            if (!threw) return error;
+            notify.failed(stored.value ? `${name} is still on your wishlist` : `${name} was not added to your wishlist`);
+            return null;
+        },
+    });
 
     const press = (next: boolean) => {
-        setError(null);
-        // A page drawn again since the last press is the truth to start from.
-        if (!flying.current && seen.current !== page) {
-            seen.current = page;
-            stored.current = { wished: wishedOnPage, id: rowId };
-        }
-        want.current = next;
-        setPressed({ wished: next, id: next && stored.current.wished ? stored.current.id : undefined, on: page });
         onShown?.(next);
-        if (flying.current) return;
-        flying.current = true;
-        // A press waiting on the write before it lives only in this page: a reload now would drop it.
-        const release = holdPage();
-        startTransition(async () => {
-            let failure: string | null = null;
-            let threw = false;
-            try {
-                while (want.current !== stored.current.wished) {
-                    if (want.current) {
-                        const res = await add();
-                        if (!res.ok || !res.id) {
-                            failure = res.ok ? "The card was added, but this page could not follow. Reload to see it." : res.error;
-                            break;
-                        }
-                        stored.current = { wished: true, id: res.id };
-                        notify.done(`${name} is on your wishlist now`, { undo: { onUndo: () => latest.current(false) } });
-                    } else {
-                        const id = stored.current.id;
-                        if (!id) {
-                            failure = "This wish cannot be changed from here.";
-                            break;
-                        }
-                        const res = await removeCard(id, { reread: false });
-                        if (!res.ok) {
-                            failure = res.error;
-                            break;
-                        }
-                        stored.current = { wished: false, id: undefined };
-                        notify.removed(`${name} is off your wishlist`, { undo: { label: "Put back", onUndo: () => latest.current(true) } });
-                    }
-                    onStored?.(stored.current.id);
-                    if (want.current === stored.current.wished) setPressed({ ...stored.current, on: page });
-                }
-            } catch {
-                /* An action that threw (no signal, a deploy in between) is a failure like a refused one.
-                   Without this the heart stayed "in the air" for good and did nothing until a reload. */
-                threw = true;
-                failure = "Something went wrong. Try again.";
-            } finally {
-                flying.current = false;
-                release();
-            }
-            if (failure) {
-                want.current = stored.current.wished;
-                setPressed({ ...stored.current, on: page });
-                onShown?.(stored.current.wished);
-                onStored?.(stored.current.id);
-                if (threw) notify.failed(want.current ? `${name} is still on your wishlist` : `${name} was not added to your wishlist`);
-                else setError(failure);
-                return;
-            }
-            await forgetMineQuietly("cards");
-        });
+        steps.press(next);
     };
 
     useEffect(() => {
         latest.current = press;
     });
 
-    return { wished: shown.wished, id: shown.id, press, error };
+    return { wished: steps.value, id: steps.id, press, error: steps.error };
 }
