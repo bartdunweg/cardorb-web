@@ -235,7 +235,7 @@ export async function addCard(
         return failed(err);
     }
 
-    if (reread) await forgetMine();
+    if (reread) await forgetMine("cards");
     return { ok: true, id };
 }
 
@@ -256,14 +256,14 @@ export async function setCopies(cardId: string, quantity: number, { reread = tru
         return failed(err);
     }
 
-    if (reread) await forgetMine();
+    if (reread) await forgetMine("cards");
     return { ok: true };
 }
 
 // After a run of writes that did not forget on their own: the cached answers go, and the page
 // re-renders from the API with nothing else in flight.
 export async function rereadMine(): Promise<void> {
-    await forgetMine();
+    await forgetMine("cards");
 }
 
 // Removes one row: an owned copy or a wish. The API wants a JSON content type on a delete, so
@@ -287,7 +287,7 @@ export async function removeCard(cardId: string, { reread = true }: { reread?: b
         return failed(err);
     }
 
-    if (reread) await forgetMine();
+    if (reread) await forgetMine("cards");
     return { ok: true, card };
 }
 
@@ -340,7 +340,7 @@ export async function restoreCard(input: RemovedCard, { reread = true }: { rerea
         return failed(err);
     }
 
-    if (reread) await forgetMine();
+    if (reread) await forgetMine("cards");
     return { ok: true };
 }
 
@@ -355,7 +355,7 @@ export async function markOwned(cardId: string): Promise<Result> {
         return failed(err);
     }
 
-    await forgetMine();
+    await forgetMine("cards");
     return { ok: true };
 }
 
@@ -371,7 +371,7 @@ export async function setFavorite(cardId: string, isFavorite: boolean, { reread 
         return failed(err);
     }
 
-    if (reread) await forgetMine();
+    if (reread) await forgetMine("cards");
     return { ok: true };
 }
 
@@ -511,7 +511,7 @@ export async function addCopy(
         // The row is inserted before the answer is parsed, so an answer this app cannot read
         // (ApiShapeError) is still a copy that exists. The cache goes whatever the POST returned,
         // here or, without the reread, by the caller on either answer.
-        if (reread) await forgetMine();
+        if (reread) await forgetMine("cards");
     }
     return id ? { ok: true, id } : { ok: true };
 }
@@ -525,7 +525,7 @@ export async function splitCopy(cardId: string, edits: CopyEdits, count = 1, { r
     } catch (err) {
         return failed(err);
     }
-    if (reread) await forgetMine();
+    if (reread) await forgetMine("cards");
     return { ok: true };
 }
 
@@ -655,7 +655,7 @@ export async function editCopies(cardIds: string[], edits: CopyEdits, { reread =
     } catch (err) {
         return failed(err);
     }
-    if (reread) await forgetMine();
+    if (reread) await forgetMine("cards");
     return { ok: true };
 }
 
@@ -672,6 +672,6 @@ export async function markOwnedWith(cardId: string, edits: CopyEdits, { reread =
     } catch (err) {
         return failed(err);
     }
-    if (reread) await forgetMine();
+    if (reread) await forgetMine("cards");
     return { ok: true };
 }

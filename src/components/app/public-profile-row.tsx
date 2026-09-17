@@ -55,6 +55,7 @@ export function PublicProfileRow({
             isDisabled={!username}
             onChange={onChange}
             save={setProfilePublic}
+            forgets="profile"
             stillTitle={(still) => (still ? "Your profile is still public" : "Your profile is still private")}
         />
     );

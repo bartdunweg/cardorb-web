@@ -53,7 +53,7 @@ export function ListSettingsDialog({
                     notify.failed(still, { description: res.error });
                     return;
                 }
-                void forgetMineQuietly().then(() => router.refresh());
+                void forgetMineQuietly("profile").then(() => router.refresh());
             },
             () => {
                 setSaved((s) => (s === tap ? null : s));

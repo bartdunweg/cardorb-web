@@ -127,7 +127,7 @@ function OwnCardsPicker({ folder, close }: { folder: { id: string; name: string 
                     notify.failed(`Those cards were not added to ${folder.name}`, { description: res.error });
                     return;
                 }
-                void forgetMineQuietly().then(() => router.refresh());
+                void forgetMineQuietly("cards").then(() => router.refresh());
             })
             .catch(() => notify.failed(`Those cards were not added to ${folder.name}`));
     };

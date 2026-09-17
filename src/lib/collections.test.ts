@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 // runs it, which is what it does on a cache miss anyway.
 const { api } = vi.hoisted(() => ({ api: vi.fn(async () => ({ folders: [] as unknown[] })) }));
 vi.mock("@/lib/api", () => ({ ApiError: class extends Error {}, api }));
-vi.mock("@/lib/user-cache", () => ({ perUser: (_key: string, run: (token?: string) => unknown) => run("t.o.k.e.n") }));
+vi.mock("@/lib/user-cache", () => ({ perUser: (_scope: string, _key: string, run: (token?: string) => unknown) => run("t.o.k.e.n") }));
 
 const { getDexBinder } = await import("@/lib/collections");
 

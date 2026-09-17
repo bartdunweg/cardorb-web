@@ -138,6 +138,7 @@ describe("setCopies", () => {
         await setCopies("d6ba4891-3908-48d0-b4da-ed0096bd4360", 3);
         expect(api).toHaveBeenCalledWith("/collection/items/d6ba4891-3908-48d0-b4da-ed0096bd4360", { method: "PATCH", body: { quantity: 3 } });
         expect(forgetMine).toHaveBeenCalledTimes(1);
+        expect(forgetMine).toHaveBeenCalledWith("cards");
     });
 
     it("writes and nothing more when told the caller re-reads once, later", async () => {
@@ -146,6 +147,7 @@ describe("setCopies", () => {
         expect(forgetMine).not.toHaveBeenCalled();
         await rereadMine();
         expect(forgetMine).toHaveBeenCalledTimes(1);
+        expect(forgetMine).toHaveBeenCalledWith("cards");
     });
 });
 

@@ -46,13 +46,13 @@ export function WishHeartButton({ card, onGone }: { card: { id: string; name: st
                                       onUndo: () =>
                                           void restoreCard(removed, { reread: false }).then((r) => {
                                               if (!r.ok) return notify.failed("That did not go back", { description: r.error });
-                                              void forgetMineQuietly().then(() => router.refresh());
+                                              void forgetMineQuietly("cards").then(() => router.refresh());
                                           }),
                                   },
                               }
                             : {},
                     );
-                    await forgetMineQuietly();
+                    await forgetMineQuietly("cards");
                 })
             }
         />

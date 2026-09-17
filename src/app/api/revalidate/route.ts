@@ -2,7 +2,8 @@ import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { z } from "zod";
-import { publicTag, userTag } from "@/lib/user-cache";
+import { forgetTags, forgetWriteSchema } from "@/lib/cache-scopes";
+import { publicTag } from "@/lib/user-cache";
 
 /**
  * The Card Orb API's word that a person's profile changed through it (the iOS app's write), so
@@ -15,8 +16,12 @@ import { publicTag, userTag } from "@/lib/user-cache";
  * as a bearer token and nobody else has; compared in constant time, and a wrong one is a 401
  * that says no more than that. Unconfigured, the route refuses everything: an open door that
  * only empties a cache is still a door.
+ *
+ * `write` names what changed (`cache-scopes.ts`), so a card written from the phone need not drop the
+ * profile and the binders too. The API sends none today; none, or one this app does not know yet, is
+ * `all`, everything, as before, rather than a refusal that would forget nothing.
  */
-const body = z.object({ username: z.string().trim().min(1).max(64), userId: z.string().uuid() });
+const body = z.object({ username: z.string().trim().min(1).max(64), userId: z.string().uuid(), write: forgetWriteSchema.catch("all") });
 
 export async function POST(request: Request) {
     const secret = process.env.REVALIDATE_SECRET?.trim();
@@ -37,6 +42,6 @@ export async function POST(request: Request) {
     // right after a plus and a second copy said "not in your collection" (1 round in 3, e2e probe
     // on web#676, 2026-09-17).
     revalidateTag(publicTag(parsed.data.username), { expire: 0 });
-    revalidateTag(userTag(parsed.data.userId), { expire: 0 });
+    for (const tag of forgetTags(parsed.data.userId, parsed.data.write)) revalidateTag(tag, { expire: 0 });
     return new Response(null, { status: 204 });
 }

@@ -100,7 +100,7 @@ export function useWishStep({
                 setError(failure);
                 return;
             }
-            await forgetMineQuietly();
+            await forgetMineQuietly("cards");
         });
     };
 

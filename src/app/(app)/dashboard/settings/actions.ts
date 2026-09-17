@@ -44,7 +44,7 @@ export async function updateProfile(input: unknown): Promise<ActionResult> {
         // Two writes, so a failure is not the same as nothing having happened: the name can land
         // and the username then come back 409. Dropping the cache only when both succeed left the
         // sidebar showing the old name for five minutes while the API already held the new one.
-        await forgetMine();
+        await forgetMine("profile");
     }
 
     return { ok: true };
@@ -115,7 +115,7 @@ export async function uploadAvatar(image: string): Promise<ActionResult & { avat
     } finally {
         // The picture is stored before the answer is parsed, so an answer this app cannot read
         // (ApiShapeError) is still a write that happened. Drop the cache on the way out either way.
-        await forgetMine();
+        await forgetMine("profile");
     }
 }
 
@@ -125,7 +125,7 @@ export async function removeAvatar(): Promise<ActionResult> {
     } catch (err) {
         return failed(err);
     }
-    await forgetMine();
+    await forgetMine("profile");
     return { ok: true };
 }
 
@@ -192,7 +192,7 @@ export async function updateListPublic(input: unknown, { reread = true }: { rere
     } catch (err) {
         return failed(err);
     }
-    if (reread) await forgetMine();
+    if (reread) await forgetMine("profile");
     return { ok: true };
 }
 
@@ -215,6 +215,6 @@ async function setProfileFlag(flag: "isPublic" | "pricesPublic", value: boolean,
     } catch (err) {
         return failed(err);
     }
-    if (reread) await forgetMine();
+    if (reread) await forgetMine("profile");
     return { ok: true };
 }

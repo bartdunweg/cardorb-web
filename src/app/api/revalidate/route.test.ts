@@ -30,6 +30,18 @@ describe("POST /api/revalidate", () => {
         expect(revalidateTag).toHaveBeenCalledWith(`user:${who.userId}`, { expire: 0 });
     });
 
+    it("drops only what a named write changed, and everything for a name it does not know", async () => {
+        await post({ ...who, write: "cards" }, "s3cret");
+        const dropped = revalidateTag.mock.calls.map(([tag]) => tag);
+        expect(dropped).toContain("public:bart");
+        expect(dropped).toContain(`user:${who.userId}:stats`);
+        expect(dropped).not.toContain(`user:${who.userId}:profile`);
+        expect(dropped).not.toContain(`user:${who.userId}`);
+        revalidateTag.mockClear();
+        expect((await post({ ...who, write: "something-new" }, "s3cret")).status).toBe(204);
+        expect(revalidateTag).toHaveBeenCalledWith(`user:${who.userId}`, { expire: 0 });
+    });
+
     it("refuses a missing or wrong secret, and drops nothing", async () => {
         expect((await post(who)).status).toBe(401);
         expect((await post(who, "guess")).status).toBe(401);

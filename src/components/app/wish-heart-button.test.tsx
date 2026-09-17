@@ -36,7 +36,7 @@ describe("WishHeartButton's Put back", () => {
         await act(async () => options.undo.onUndo());
 
         expect(restoreCard).toHaveBeenCalledWith(removed, { reread: false });
-        expect(fetchMock).toHaveBeenCalledWith("/api/forget-mine", { method: "POST" });
+        expect(fetchMock).toHaveBeenCalledWith("/api/forget-mine?write=cards", { method: "POST" });
         expect(refresh).toHaveBeenCalledTimes(1);
     });
 });

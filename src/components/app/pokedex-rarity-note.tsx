@@ -46,7 +46,7 @@ export function PokedexRarityNote({ folderId, setting }: { folderId: string; set
                     notify.failed("Only these rarities still count", { description: res.error });
                     return;
                 }
-                void forgetMineQuietly().then(() => router.refresh());
+                void forgetMineQuietly("binders").then(() => router.refresh());
             },
             () => {
                 setCleared(null);

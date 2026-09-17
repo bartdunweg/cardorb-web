@@ -14,7 +14,7 @@ export type { Facets } from "@/lib/facets";
  * request to read a session from, and a read that asks for one throws before the API is called.
  */
 export const getFacets = (): Promise<Facets> =>
-    perUser("facets", async (token) => {
+    perUser("stats", "facets", async (token) => {
         const { facets } = await api("/cards", { token, params: { owned: true, limit: 1 }, schema: facetsAnswer });
         return facetsFrom(facets);
     });
@@ -162,7 +162,7 @@ export async function getMyCards({
     };
     // A caller inside the per-user cache (getPokedexCount) hands the token in: the session cannot
     // be read there. Such a read is never the first batch, so it is not cached twice.
-    return key && !token ? perUser(key, read) : read(token);
+    return key && !token ? perUser("lists", key, read) : read(token);
 }
 
 export type CardStats = {
@@ -181,7 +181,7 @@ export type CardStats = {
 export type ApiStats = { cards: number; copies: number; wishlist: number; favorites: number; sets: number; value: number; unpriced: number };
 
 // Kept five minutes per person: the layout and a page both ask, and every write drops the cache.
-export const getStats = () => perUser("stats", async (token) => (await api("/stats", { token, schema: statsAnswer })).stats);
+export const getStats = () => perUser("stats", "stats", async (token) => (await api("/stats", { token, schema: statsAnswer })).stats);
 
 // The dashboard's numbers. "Owned" counts cards (rows), as the page always has.
 export async function getCardStats(): Promise<CardStats> {

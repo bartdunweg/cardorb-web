@@ -100,7 +100,7 @@ export function MarkOwnedForm({ card, folders, languages, facts, onSaved, close 
         // page the user is not on.
         notify.done(`${card.name} is in your collection now`);
         close();
-        void forgetMineQuietly().then(() => router.refresh());
+        void forgetMineQuietly("cards").then(() => router.refresh());
     };
 
     // Label above a full-width field, at every width. Side by side was the old shape and it

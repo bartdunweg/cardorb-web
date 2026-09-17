@@ -31,10 +31,10 @@ export async function TopCards() {
 }
 
 // Kept per person like the list's first batch: twelve is not a batch size, so this read went to the
-// API on every open of Home. Five minutes under the person's tag, dropped by a write; the window in
+// API on every open of Home. Five minutes in the person's stats scope, dropped by a card write; the window in
 // the key also carries the night's new prices in by the next morning's first open.
 function topCards() {
-    return perUser("top-cards:v1", async (token) => {
+    return perUser("stats", "top-cards:v1", async (token) => {
         const { cards } = await getMyCards({ sort: "price", order: "desc", limit: 12, facets: false, token });
         return cards.filter((c) => c.price != null);
     });

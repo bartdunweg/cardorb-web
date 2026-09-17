@@ -1,3 +1,4 @@
+import { forgetWriteSchema } from "@/lib/cache-scopes";
 import { forgetMineLater } from "@/lib/user-cache";
 
 /**
@@ -9,14 +10,21 @@ import { forgetMineLater } from "@/lib/user-cache";
  * first batch and read every batch back in. Fetched from the tile, this answers the fetch and
  * nothing else, and the next screen you open reads fresh.
  *
- * Only the caller's own cache, found from their session; no session is a 401. It takes nothing in
- * and changes nothing but a cache, and it must come from this site's own pages (the Origin a
- * browser sends with a fetch), so another site cannot have a visitor's browser empty it.
+ * `?write=` names what was written (`cards`, `binders`, `profile`, `all`), and only what that
+ * changes is forgotten (`cache-scopes.ts`): a plus on a tile keeps the profile. No `write` is
+ * `all`, as it was before writes were told apart; a name this route does not know is a 400.
+ *
+ * Only the caller's own cache, found from their session; no session is a 401. It changes nothing
+ * but a cache, and it must come from this site's own pages (the Origin a browser sends with a
+ * fetch), so another site cannot have a visitor's browser empty it.
  */
 export async function POST(request: Request) {
+    const url = new URL(request.url);
     const origin = request.headers.get("origin");
     // Compared as strings: `Origin: null` (a sandboxed frame) is no URL, and parsing it threw a 500.
-    if (origin !== new URL(request.url).origin) return new Response(null, { status: 403 });
-    const forgotten = await forgetMineLater();
+    if (origin !== url.origin) return new Response(null, { status: 403 });
+    const write = forgetWriteSchema.safeParse(url.searchParams.get("write") ?? "all");
+    if (!write.success) return new Response(null, { status: 400 });
+    const forgotten = await forgetMineLater(write.data);
     return new Response(null, { status: forgotten ? 204 : 401 });
 }
