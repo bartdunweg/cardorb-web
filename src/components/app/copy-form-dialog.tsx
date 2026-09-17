@@ -23,7 +23,7 @@ import type { CopyEdits } from "@/lib/copies";
 import { forgetMineQuietly } from "@/lib/forget-mine";
 import { today } from "@/lib/format";
 import { languageOf } from "@/lib/languages";
-import { parsePrice } from "@/lib/price-input";
+import { parsePrice, priceError } from "@/lib/price-input";
 
 // A copy that differs from the row it comes from. `add`: one more, pulled today, in the
 // language, condition, finish, binder and at the price given. `split`: some of this row's
@@ -64,6 +64,9 @@ function CopyForm({ mode, from, binders, languages, facts, onSaved, close }: Pro
     const [edition, setEdition] = useState(from.edition ?? "");
     const [binder, setBinder] = useState(from.collection_id ?? "");
     const [price, setPrice] = useState(from.purchase_price != null ? String(from.purchase_price) : "");
+    // Said on the field once it is left or the form is sent, not while a price is half typed.
+    const [priceChecked, setPriceChecked] = useState(false);
+    const priceProblem = priceError(price);
     /* Only asked when adding. A split keeps the row's own date (those copies were already yours,
        they are only being told apart now) and the API is left to say so. */
     const [acquired, setAcquired] = useState(today());
@@ -102,8 +105,7 @@ function CopyForm({ mode, from, binders, languages, facts, onSaved, close }: Pro
         if (ed !== (from.edition ?? null)) out.edition = ed;
         if ((binder || null) !== (from.collection_id ?? null)) out.collectionId = binder || null;
         const p = parsePrice(price);
-        if (p !== null && !Number.isFinite(p)) return out;
-        if (p !== (from.purchase_price ?? null)) out.purchasePrice = p;
+        if (priceProblem === null && p !== (from.purchase_price ?? null)) out.purchasePrice = p;
         return out;
     };
     const changes = edits();
@@ -116,6 +118,11 @@ function CopyForm({ mode, from, binders, languages, facts, onSaved, close }: Pro
     const save = async () => {
         // Enter in a field submits the form whatever the button shows: a second split would split twice.
         if (saving) return;
+        // A price that is not one is said on its field; the copy does not save without it.
+        if (priceProblem) {
+            setPriceChecked(true);
+            return;
+        }
         setSaving(true);
         setError(null);
         // Kept out of `changes`, which decides whether Save is allowed: a date is a fact about
@@ -361,10 +368,16 @@ function CopyForm({ mode, from, binders, languages, facts, onSaved, close }: Pro
                     inputMode="decimal"
                     aria-label="Purchase price"
                     size="sm"
-                    className="w-28"
+                    wrapperClassName="w-28"
                     placeholder="0.00"
                     value={price}
-                    onChange={setPrice}
+                    onChange={(v) => {
+                        setPrice(v);
+                        if (!priceError(v)) setPriceChecked(false);
+                    }}
+                    onBlur={() => setPriceChecked(true)}
+                    isInvalid={priceChecked && priceProblem !== null}
+                    hint={priceChecked && priceProblem ? priceProblem : undefined}
                 />
             </div>
 
@@ -381,7 +394,7 @@ function CopyForm({ mode, from, binders, languages, facts, onSaved, close }: Pro
                 <Button color="secondary" size="sm" onClick={close}>
                     Cancel
                 </Button>
-                <Button type="submit" size="sm" isLoading={saving} isDisabled={(mode === "split" && !differs) || !canSplit}>
+                <Button type="submit" size="sm" isLoading={saving} isDisabled={(mode === "split" && !differs && !priceProblem) || !canSplit}>
                     {mode === "add" ? "Add copy" : "Split"}
                 </Button>
             </div>
