@@ -6,6 +6,7 @@
  * were 483 of them across 131 files on the day the rule was written, so the gate is the same
  * shape as kit-drift: a baseline per file that only ever shrinks. It fails on a file that got
  * worse, or a new file with any, and says so when a file improved so the floor can come down.
+ * The floor has since come down to none: the baseline is empty.
  *
  * Ours is src/app, src/components/app, src/lib, src/emails, scripts, docs and the Markdown at
  * the root. The vendored kit under src/components is not ours to rewrite. CONVENTIONS.md is

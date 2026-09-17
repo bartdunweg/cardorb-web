@@ -97,7 +97,7 @@ export async function loadFacets(): Promise<Facets> {
 
 export async function deleteCollection(id: string): Promise<CollectionResult> {
     const parsed = z.string().uuid().safeParse(id);
-    if (!parsed.success) return { ok: false, error: "Invalid collection." };
+    if (!parsed.success) return { ok: false, error: "Invalid binder." };
 
     try {
         await api(`/folders/${parsed.data}`, { method: "DELETE" });

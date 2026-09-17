@@ -897,7 +897,8 @@ for the failures that leave no trace), and everything both passes found is close
   out, the Cardorb link on /login) carry the image policy that names the card hosts and not that
   one; a click keeps the document, so the browser refused it without a request or a word, and a
   refresh, which loads the landing as its own document with only the frame rule, showed it. The
-  two SVGs (1.2 KB each) are in `public/patterns` now, under `'self'`. Measured in headless
+  two SVGs (1.2 KB each) went into `public/patterns`, under `'self'` (since removed in #626, which
+  put an orb on the landing in place of the dots). Measured in headless
   WebKit and Chromium: the click route loads the picture at 1920 px wide, where it loaded nothing.
   Also seen: in dark mode the dots sit at 20% brightness, near invisible by design; untouched.
 

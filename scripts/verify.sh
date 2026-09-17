@@ -76,8 +76,7 @@ fi
 # .NET / Windows:  run "build" dotnet build -warnaserror
 #                  run "test"  dotnet test
 
-# Next.js app checked with pnpm. `test` uses --passWithNoTests, so it never blocks until real
-# tests exist — quality tooling that does not slow the dev loop.
+# Next.js app checked with pnpm. `test` is `vitest run`: a failing test fails the gate.
 if command -v pnpm >/dev/null 2>&1; then
   run "typecheck" pnpm typecheck
   run "lint"      pnpm lint
@@ -141,7 +140,7 @@ run "kit-drift" kit_drift
 
 # shellcheck disable=SC2329  # invoked indirectly, through `run` below.
 # R-COPY-001: no em dashes in what we write. Same mechanism as kit-drift: a baseline per file
-# that only shrinks, so this fails on a new one and never on the 408 that were there first.
+# that only shrinks. It is empty now, so any em dash in a file we check fails.
 em_dash() {
   node scripts/em-dash.mjs --check
 }

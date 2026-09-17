@@ -54,7 +54,7 @@ export function CardsView({
     toolbar?: ReactNode;
     /** Drawn in the list's place when the filters find nothing, so the row above keeps its place in the tree. */
     noHits: ReactNode;
-    /** Drawn in the list's place when the folder holds nothing at all. */
+    /** Drawn in the list's place when the binder holds nothing at all. */
     empty: ReactNode;
     /**
      * The period a list sorted by price change is read over, where it is one of the chart's: a card

@@ -12,7 +12,7 @@ import type { CardsSize, CardsViewMode } from "@/lib/cards-view";
 import { loadMoreCards } from "@/lib/reads";
 
 /**
- * The cards of a folder, as many as the reader has scrolled to.
+ * The cards of a binder, as many as the reader has scrolled to.
  *
  * The first batch arrives with the page, as a promise the server handed over without waiting
  * for it: the page's title and row are on screen while the API answers, and this suspends in
@@ -53,7 +53,7 @@ export function CardsList({
     onSelect: (card: Card, siblings: Card[]) => void;
     /** When a search or a filter finds nothing. */
     noHits: ReactNode;
-    /** When the folder holds nothing at all. */
+    /** When the binder holds nothing at all. */
     empty: ReactNode;
 }) {
     const first = use(list);
