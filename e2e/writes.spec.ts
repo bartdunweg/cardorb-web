@@ -54,6 +54,30 @@ test.fixme("two quick presses on plus make two copies, not one and not three", a
     await expect(collectionTile(page, c)).toHaveCount(1);
 });
 
+// The #521 guard (presses making extra rows) while both double-press tests are fixme for the reload bug.
+// No reload of the set page here, since that is where the open bug shows. The store is read on
+// a fresh page in the same context instead, only once /api/forget-mine has answered: that call
+// goes out after both writes have landed (use-copy-steps.ts). The collection tile shows the held
+// count as a screen-reader "You hold " before "×2" (cards-grid.tsx), so its text is checked for
+// exactly that, and a single tile rules out a second row.
+test("two presses make exactly two copies", async ({ page }) => {
+    const c = card(11);
+    await page.goto(setPage);
+    const settled = page.waitForResponse((r) => r.request().method() === "POST" && r.url().includes("/api/forget-mine"));
+    await addButton(page, c).click();
+    await addCopyButton(page, c).click();
+
+    await expect(setTile(page, c, "2 copies")).toBeVisible();
+    await settled;
+    await expect(setTile(page, c, "3 copies")).toHaveCount(0);
+
+    const other = await page.context().newPage();
+    await other.goto(`/dashboard/cards?q=${encodeURIComponent(c.name)}`);
+    await expect(collectionTile(other, c)).toHaveCount(1);
+    await expect(collectionTile(other, c)).toContainText("You hold ×2");
+    await other.close();
+});
+
 // This is a guard for the suspected race in set-card-tile.tsx / use-copy-steps.ts: addCard is
 // called with reread: false, and the count write and /api/forget-mine are chained from the
 // browser with no pending guard, so a reload right after two presses could in principle race
@@ -67,8 +91,8 @@ test.fixme("two quick presses on plus make two copies, not one and not three", a
 // this test is for. There is no wait between the second click and the reload beyond the "2
 // copies" assertion already here: the reload should race whatever writes are still in flight.
 // CI run 35195242573 (2026-09-17): both presses landed (tile showed "2 copies" before the
-// reload), but after page.reload() the tile read "not in your collection", zero copies. A real
-// app bug, not a test bug.
+// reload), but after page.reload() the tile read "not in your collection", zero copies. A real,
+// intermittent app bug, not a test bug: the two reruns of that run passed.
 test.fixme("a reload right after two presses keeps both copies", async ({ page }) => {
     const c = card(10);
     await page.goto(setPage);
