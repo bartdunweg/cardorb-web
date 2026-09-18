@@ -136,7 +136,7 @@ async function Binder({ params, searchParams }: { params: Promise<{ id: string }
     }
 
     const cards = list!;
-    const datapoints = cards.then((r) => ({ total: r.total, copies: r.copies ?? undefined, narrowed, value: r.value, unpriced: r.unpriced }));
+    const datapoints = cards.then((r) => ({ total: r.total, copies: r.copies ?? undefined, narrowed, value: r.value, unpriced: r.unpriced, listed: r.listed }));
     return (
         <BinderPage {...common} datapoints={datapoints} list={cards}>
             {chips}

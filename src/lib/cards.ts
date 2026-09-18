@@ -114,6 +114,8 @@ export async function getMyCards({
     value: number | null;
     /** Copies in the filtered list without a price. */
     unpriced: number;
+    /** Of those, the copies shown at a lowest listing and left out of `value`. */
+    listed: number;
     /**
      * The catalogue could not be reached: these are the rows alone, with no scan and no price.
      * A page says so, because a collection with no pictures is otherwise read as a broken app.
@@ -132,7 +134,7 @@ export async function getMyCards({
             ? `cards:${JSON.stringify([q, collectionId, favoritesOnly, wishlist, sort, order, from, to, set, rarity, fullArt, gen, type, condition, finish, language, number, duplicates, wantFacets, wantPictures])}`
             : null;
     const read = async (token?: string) => {
-        const { cards, total, copies, facets, value, unpriced, catalogueUnavailable, counts } = await api("/cards", {
+        const { cards, total, copies, facets, value, unpriced, listed, catalogueUnavailable, counts } = await api("/cards", {
             schema: cardsAnswer,
             token,
             params: {
@@ -168,6 +170,7 @@ export async function getMyCards({
             copies: copies ?? null,
             value: value ?? null,
             unpriced: unpriced ?? 0,
+            listed: listed ?? 0,
             catalogueUnavailable: catalogueUnavailable === true,
             facets: facetsFrom(facets),
             counts: counts ?? null,

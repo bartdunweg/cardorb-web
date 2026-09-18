@@ -20,4 +20,8 @@ describe("datapointsLine", () => {
         expect(datapointsLine({ total: 0, narrowed: false, value: 0 })).toBe("0 cards");
         expect(datapointsLine({ total: 734, narrowed: false, caught: { of: 120, total: 151 } })).toBe("120 of 151 Pokémon · 734 cards");
     });
+    it("says how many copies are shown at a lowest listing and left out of the value", () => {
+        expect(datapointsLine({ total: 3, narrowed: false, value: 2140, listed: 2 })).toBe("3 cards · €2,140 · 2 at lowest listing, not counted");
+        expect(datapointsLine({ total: 3, narrowed: false, value: 2140, listed: 0 })).toBe("3 cards · €2,140");
+    });
 });
