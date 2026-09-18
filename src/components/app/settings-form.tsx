@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
-import { ChevronRight, Code01, Download01, File02, Lock01, Monitor04, Moon01, Sun, UploadCloud01 } from "@untitledui/icons";
+import { Code01, Download01, File02, Lock01, Monitor04, Moon01, Sun, UploadCloud01 } from "@untitledui/icons";
 import dynamic from "next/dynamic";
 import { Button as AriaButton } from "react-aria-components";
 import { checkUsername, removeAvatar, updateEmail, updatePassword, updateProfile, uploadAvatar } from "@/app/(app)/dashboard/settings/actions";
@@ -10,7 +10,7 @@ import { signOut } from "@/app/(auth)/actions";
 import { FormError } from "@/components/app/form-error";
 import { PricesPublicRow } from "@/components/app/prices-public-row";
 import { PublicProfileRow, publicUrl } from "@/components/app/public-profile-row";
-import { SettingsGroup, SettingsLinkRow, SettingsRow, SheetHeader } from "@/components/app/settings-rows";
+import { SettingsGroup, SettingsLinkRow, SettingsRow, SettingsTriggerRow, SheetHeader } from "@/components/app/settings-rows";
 import { SheetDialog } from "@/components/app/sheet-dialog";
 import { notify } from "@/components/app/toast";
 import { Avatar } from "@/components/base/avatar/avatar";
@@ -401,11 +401,7 @@ export function SettingsForm({
             <SettingsGroup title="Collection">
                 {/* Already a dialog of its own, so it is the trigger rather than the content. */}
                 <ImportDialog>
-                    <AriaButton className="flex w-full cursor-pointer items-center gap-3 px-4 py-3.5 text-left outline-focus-ring transition duration-100 ease-linear hover:bg-primary_hover focus-visible:z-10 focus-visible:outline-2 focus-visible:-outline-offset-2">
-                        <UploadCloud01 aria-hidden="true" className="size-5 shrink-0 text-fg-quaternary" />
-                        <span className="flex-1 truncate text-md text-primary">Import a CSV file</span>
-                        <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-fg-quaternary" />
-                    </AriaButton>
+                    <SettingsTriggerRow icon={UploadCloud01} label="Import a CSV file" />
                 </ImportDialog>
                 {/* A file, not a page: the row is a plain link the browser saves, named by the day. */}
                 <SettingsLinkRow icon={Download01} label="Export a CSV file" value="Collection and wishlist" href="/dashboard/settings/export" download />
