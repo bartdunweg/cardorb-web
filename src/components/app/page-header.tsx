@@ -243,8 +243,9 @@ export function PageHeader({
                 className={cx(
                     "lg:hidden",
                     back ? "mb-4 h-11 sm:h-7" : beside ? "h-1.5 sm:h-0" : "h-2 sm:h-0",
-                    // The field's 44 px line on a phone, as Back's, with 16 under it.
-                    searchField && "max-sm:mb-4 max-sm:h-11",
+                    // The field's 44 px line on a phone, and 16 px from it to what comes next: the page's own
+                    // 24 px gap, 8 taken back, the gap the filters keep to the tabs under them (Bart, 2026-09-19).
+                    searchField && "max-sm:-mb-2 max-sm:h-11",
                 )}
             />
             {hero ? (
