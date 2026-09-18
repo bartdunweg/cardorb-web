@@ -7,6 +7,7 @@ import type { CardFacts } from "@/app/(app)/dashboard/cards/actions";
 import { artStack } from "@/components/app/card-art";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
+import { CardPrice } from "@/components/app/card-price";
 import { HoloCard } from "@/components/app/holo-card";
 import type { PrintingChoice } from "@/components/app/printing-choices";
 import { SheetBar } from "@/components/app/sheet-bar";
@@ -18,7 +19,7 @@ import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Tooltip } from "@/components/base/tooltip/tooltip";
 import { cardLabel, cardLabelFull } from "@/lib/card-label";
 import type { Card, PublicCard } from "@/lib/cards";
-import { formatPrice } from "@/lib/format";
+import { LISTING_NOTE, formatPrice } from "@/lib/format";
 import type { PriceChange } from "@/lib/price-change";
 import { cx } from "@/utils/cx";
 
@@ -67,6 +68,13 @@ export function SheetHeader({
     publicPrice,
     shownChange,
 }: Props) {
+    /* The card's lowest listing, only on the printing the sheet opened on (another pressed reads the
+       market history, which holds no listing) and only where no market figure is shown. */
+    const listingCard = mine ?? card;
+    const listing =
+        shownPrice === undefined && (mine?.price ?? publicPrice) == null && listingCard && "listing_price" in listingCard
+            ? (listingCard.listing_price ?? null)
+            : null;
     const { art, backdrop, scanLoaded, blurLoaded, scanFade, prevScan, blurFade, onScanLoad, onBlurLoad, canTilt, tiltGranted, askTilt } = cardArt;
     // In the dots menu, where the card's other actions are; a bar button of its own spent one of
     // the four places up there on a thing an iPhone asks once and never again. Where there is no
@@ -370,6 +378,17 @@ export function SheetHeader({
                                     <span className="sr-only">{shownChange.label}</span>
                                 </span>
                             ) : null}
+                        </p>
+                    ) : listing != null ? (
+                        /* No market figure at all, and TCGplayer lists the card: its lowest asking price,
+                           said as one, the way every tile says it (cardorb-api#561). Never summed. */
+                        <p className="flex flex-col">
+                            <span className="text-md font-semibold text-primary tabular-nums">
+                                <CardPrice price={null} listing={listing} />
+                            </span>
+                            <span aria-hidden="true" className="text-sm text-tertiary">
+                                {LISTING_NOTE}
+                            </span>
                         </p>
                     ) : null}
                 </div>

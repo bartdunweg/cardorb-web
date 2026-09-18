@@ -7,6 +7,7 @@ import { addCard } from "@/app/(app)/dashboard/cards/actions";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { warmCard } from "@/components/app/card-memo";
+import { CardPrice } from "@/components/app/card-price";
 import { GotItButton } from "@/components/app/got-it-button";
 import { TileIconButton } from "@/components/app/tile-icon-button";
 import { useCopySteps } from "@/components/app/use-copy-steps";
@@ -16,7 +17,6 @@ import type { SetCard } from "@/lib/api-shapes";
 import { cardLine } from "@/lib/card-label";
 import { pokemonCardFromSetCard } from "@/lib/card-shapes";
 import { type CardsSize, TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
-import { formatPrice } from "@/lib/format";
 import type { Holding } from "@/lib/set-holding";
 
 /**
@@ -181,12 +181,7 @@ export function SetCardTile({
                         edge), and how many you hold on the right. A set page was the one place that
                         said only the price, so a card you held four of looked like a card you held. */}
                     <span className="text-sm font-medium text-primary tabular-nums">
-                        {card.price != null ? (
-                            <>
-                                <span className="sr-only">Market price </span>
-                                {formatPrice(card.price)}
-                            </>
-                        ) : null}
+                        <CardPrice price={card.price} listing={card.listingPrice} />
                     </span>
                     {/* Polite: a press says its new count, with no toast for a change you are looking at. */}
                     <span aria-live="polite" className="ml-auto text-sm font-medium text-tertiary tabular-nums">

@@ -505,6 +505,7 @@ const fromCatalogue = (c: SetCard): Card => ({
     acquired_at: null,
     notes: null,
     price: c.price,
+    listing_price: c.listingPrice ?? null,
     image_url: c.imageUrl,
     image_high_url: c.imageHighUrl,
     tcg_id: c.tcgId ?? null,

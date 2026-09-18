@@ -110,6 +110,7 @@ export const pokemonCardFromSetCard = (c: SetCard, language?: string): PokemonCa
     wishlist: c.wishlist,
     quantity: c.quantity ?? 0,
     price: c.price,
+    listingPrice: c.listingPrice ?? null,
 });
 
 /**
@@ -148,6 +149,7 @@ export const cardFromPokemonCard = (c: PokemonCard): Card => ({
     acquired_at: null,
     notes: null,
     price: c.price,
+    listing_price: c.listingPrice ?? null,
     image_url: c.image,
     image_high_url: null,
     tcg_id: c.tcgId ?? null,

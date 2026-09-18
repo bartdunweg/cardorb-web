@@ -8,6 +8,7 @@ import {
     cardFromItem,
     cardFromPokemonCard,
     cardItemSchema,
+    listingForCopy,
     ownImage,
     pokemonCardFromBrowse,
     pokemonCardFromSetCard,
@@ -178,6 +179,42 @@ describe("priceForCopy", () => {
         expect(priceForCopy({ finish: "reverse-holo", price, printingPrice: null })).toBeNull();
         expect(priceForCopy({ finish: "poke-ball", price })).toBeNull();
         expect(priceForCopy({ finish: "reverse-holo", edition: "1st-edition", price, priceFirstEd: price })).toBeNull();
+    });
+});
+
+/* Bart, 2026-09-18 (cardorb-api#561): a card listed and never sold, the R/G/B Mew of 30th
+   Celebration, arrives with its lowest listing and no market figure. It is shown as a listing and
+   never as the copy's price, which is what the lists sum and rank by. */
+describe("listingForCopy", () => {
+    const listing = { market: null, lowestListing: 5771.49, basis: "lowest-listing" as const };
+    const market = { market: 3, basis: "market" as const };
+
+    it("is the lowest listing where nothing the copy reads has a market figure", () => {
+        expect(priceForCopy({ price: listing, printingPrice: listing })).toBeNull();
+        expect(listingForCopy({ price: listing, printingPrice: listing })).toBe(5771.49);
+    });
+
+    it("is nothing wherever a market figure is found along the copy's chain", () => {
+        // A printing with only a listing does not hide the card's own market figure.
+        expect(priceForCopy({ price: market, printingPrice: listing })).toBe(3);
+        expect(listingForCopy({ price: market, printingPrice: listing })).toBeNull();
+        expect(listingForCopy({ price: market })).toBeNull();
+    });
+
+    it("keeps a reverse on its own printing", () => {
+        expect(listingForCopy({ finish: "reverse-holo", price: listing, printingPrice: null })).toBeNull();
+        expect(listingForCopy({ finish: "reverse-holo", price: market, printingPrice: listing })).toBe(5771.49);
+    });
+
+    it("reads an API from before it: no listing field, no listing", () => {
+        expect(apiPriceSchema.parse({ market: 4 })).toEqual({ market: 4 });
+        expect(listingForCopy({ price: { market: null } })).toBeNull();
+    });
+
+    it("rides on a browse card as its own field, never as its price", () => {
+        const parsed = apiPriceSchema.parse(listing);
+        expect(parsed).toEqual(listing);
+        expect(listingForCopy({ price: parsed })).toBe(5771.49);
     });
 });
 
@@ -398,6 +435,7 @@ describe("setCardFromBrowse", () => {
             quantity: 2,
             itemIds: ["row"],
             price: null,
+            listingPrice: null,
             tcgId: null,
             printedNumber: "1",
         });

@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { formatCount, formatDate, formatPercent, formatPrice } from "./format";
+import { formatCardPrice, formatCount, formatDate, formatPercent, formatPrice } from "./format";
+
+describe("formatCardPrice", () => {
+    it("is the market figure, or a lowest listing said as one, or nothing", () => {
+        expect(formatCardPrice(12.5)).toBe("€12.50");
+        expect(formatCardPrice(12.5, 9)).toBe("€12.50");
+        expect(formatCardPrice(null, 5771.49)).toBe("From €5,771.49");
+        expect(formatCardPrice(null, null)).toBe("");
+    });
+});
 
 describe("formatDate", () => {
     it("reads a date-only string as a local day, so it does not slip a day", () => {
