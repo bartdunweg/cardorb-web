@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { SET_ID, addButton, cacheCleared, card, collectionTile, literal, makeBinder, setTile } from "./support.ts";
+import { SET_ID, addButton, cacheCleared, card, collectionTile, hydrated, literal, makeBinder, setTile } from "./support.ts";
 
 /**
  * A binder made, filled, renamed and deleted: the whole life of the thing the sidebar, the Binders
@@ -35,7 +35,7 @@ test("a binder is made, a card goes in it, and the binder is on the card's sheet
     // last of the three in the document.
     await page.goto(path);
     await expect(page.getByRole("heading", { name: "No cards in this binder" })).toBeVisible();
-    await page.getByRole("main").getByRole("button", { name: "Add card" }).filter({ visible: true }).last().click();
+    await (await hydrated(page.getByRole("main").getByRole("button", { name: "Add card" }).filter({ visible: true }).last())).click();
     await page.getByRole("menuitem", { name: "From your collection" }).click();
 
     const picker = page.getByRole("dialog", { name: "Add from your collection" });
@@ -76,7 +76,7 @@ test("a renamed binder carries its new name on its page and in the list", async 
 
     // The dots on a binder's page: what is done to the binder itself (binder-menu.tsx). Drawn twice
     // like the plus beside it, so again only the one on screen.
-    await page.getByRole("button", { name: "Open menu" }).filter({ visible: true }).click();
+    await (await hydrated(page.getByRole("button", { name: "Open menu" }).filter({ visible: true }))).click();
     await page.getByRole("menuitem", { name: "Edit binder" }).click();
 
     const dialog = page.getByRole("dialog", { name: "Edit binder" });
@@ -100,7 +100,7 @@ test("a deleted binder is gone from the list", async ({ page }) => {
     const path = await makeBinder(page, name);
 
     await page.goto(path);
-    await page.getByRole("button", { name: "Open menu" }).filter({ visible: true }).click();
+    await (await hydrated(page.getByRole("button", { name: "Open menu" }).filter({ visible: true }))).click();
     await page.getByRole("menuitem", { name: "Delete binder" }).click();
 
     const confirm = page.getByRole("dialog", { name: "Delete this binder?" });

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { SET_ID, cacheCleared, card, collectionTile, setTile, wishButton } from "./support.ts";
+import { SET_ID, cacheCleared, card, collectionTile, hydrated, setTile, wishButton } from "./support.ts";
 
 /**
  * A wished card marked as owned. Owned and wished are exclusive (CLAUDE.md), so this is the one
@@ -27,7 +27,7 @@ test("a wished card marked as owned leaves the wishlist and joins the collection
     // The plus on the tile itself (got-it-button.tsx): it opens the same form the card sheet opens,
     // so a card that arrived in the post leaves the wishlist without opening the sheet first.
     const owned = cacheCleared(page);
-    await page.getByRole("button", { name: `Add ${c.name} to your collection` }).click();
+    await (await hydrated(page.getByRole("button", { name: `Add ${c.name} to your collection` }))).click();
     const form = page.getByRole("dialog", { name: c.name });
     await form.getByRole("button", { name: "Add to collection" }).click();
     await expect(page.getByText(`${c.name} is in your collection now`)).toBeVisible();
