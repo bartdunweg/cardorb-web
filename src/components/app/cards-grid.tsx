@@ -231,7 +231,7 @@ const GridCell = memo(function GridCell<T extends GridCard>({ card, arriveDelay:
                                     "mt-auto flex flex-wrap items-baseline gap-x-2 pt-0.5 text-sm font-medium tabular-nums",
                                     // The buttons' room at the right, where they stand beside it (below): a long
                                     // price wraps its count under it rather than running under them.
-                                    buttons && "@min-[9rem]:pr-18",
+                                    buttons && "@min-[9rem]:pr-17",
                                 )}
                             >
                                 {card.price != null || card.listing_price != null ? (
@@ -258,7 +258,7 @@ const GridCell = memo(function GridCell<T extends GridCard>({ card, arriveDelay:
                             it is sorted by change (Bart's call, 2026-09-18, as a set page's tile). A line's height
                             is kept where the tile has buttons, so the buttons beside the price never reach the
                             printing's line above it. */}
-                        <span className={cx("flex", buttons && "min-h-4 @min-[9rem]:pr-18")}>
+                        <span className={cx("flex", buttons && "min-h-4 @min-[9rem]:pr-17")}>
                             <PriceMove change={card.price_change} over={changeSince(card.price_change?.from)} />
                         </span>
                     </div>

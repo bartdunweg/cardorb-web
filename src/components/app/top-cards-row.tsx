@@ -4,6 +4,7 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import { Button as AriaButton } from "react-aria-components";
 import { CardImage } from "@/components/app/card-image";
+import { PriceMove, changeSince, priceMoveWords } from "@/components/app/price-change";
 import type { Card } from "@/lib/api-shapes";
 import { cardLabel, cardLine, copyLine } from "@/lib/card-label";
 import { LISTING_NOTE, formatCardPrice, formatPrice } from "@/lib/format";
@@ -30,7 +31,17 @@ export function TopCardsRow({ cards }: { cards: Card[] }) {
                     <li key={card.id} className="flex shrink-0 snap-start not-first:border-l not-first:border-secondary not-first:pl-3 not-last:pr-3">
                         <AriaButton
                             onPress={() => setAt(i)}
-                            aria-label={`${card.name}, ${cardLabel(card)}, ${card.price == null && card.listing_price != null ? `${LISTING_NOTE}, ${formatPrice(card.listing_price)}` : formatPrice(card.price)}`}
+                            aria-label={[
+                                card.name,
+                                cardLabel(card),
+                                card.price == null && card.listing_price != null
+                                    ? `${LISTING_NOTE}, ${formatPrice(card.listing_price)}`
+                                    : formatPrice(card.price),
+                                // The label stands in for what the item holds, so the move under the price is said here too.
+                                priceMoveWords(card.price_change),
+                            ]
+                                .filter(Boolean)
+                                .join(", ")}
                             className="flex w-60 pressable cursor-pointer items-center gap-3 rounded-lg p-1.5 text-left outline-focus-ring hover:bg-alpha-black/4 data-focus-visible:outline-2"
                         >
                             {/* The rank, for the eye: the list is an ordered one, so a screen reader already says which place. */}
@@ -47,6 +58,8 @@ export function TopCardsRow({ cards }: { cards: Card[] }) {
                                 <span className="mt-0.5 text-sm font-semibold text-primary tabular-nums">
                                     {formatCardPrice(card.price, card.listing_price)}
                                 </span>
+                                {/* What the price did over the last seven days, under it, as every tile has it (price-change.tsx). */}
+                                <PriceMove change={card.price_change} over={changeSince(card.price_change?.from)} />
                             </span>
                         </AriaButton>
                     </li>

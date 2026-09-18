@@ -19,12 +19,14 @@ export function PriceMove({ change, over, className }: { change: { was: number; 
     // A first reading of nothing has no percent to give.
     const ratio = change.was > 0 ? Math.abs(change.change) / change.was : null;
     return (
-        <span className={cx("text-xs font-medium tabular-nums", up ? "text-success-primary" : "text-error-primary", className)}>
+        <span className={cx("text-xs font-medium whitespace-nowrap tabular-nums", up ? "text-success-primary" : "text-error-primary", className)}>
             <span aria-hidden="true">
                 {up ? "+" : "−"}
                 {amount}
-                {/* Under half a percent rounds to "0%", which read as no move beside a move (€3 on a €760 card). */}
-                {ratio != null ? ` · ${ratio < 0.005 ? "<1%" : formatPercent(ratio)}` : null}
+                {/* Under half a percent rounds to "0%", which read as no move beside a move (€3 on a €760 card).
+                    Narrow spaces round the dot: the line stands beside a tile's buttons in 78 px, and full
+                    ones ran "−€1.30 · 21%" 2 px under them. */}
+                {ratio != null ? `\u202F·\u202F${ratio < 0.005 ? "<1%" : formatPercent(ratio)}` : null}
             </span>
             <span className="sr-only">
                 {up ? "Up" : "Down"} {amount}
@@ -36,3 +38,11 @@ export function PriceMove({ change, over, className }: { change: { was: number; 
 
 /** The rest of the sentence for a move read from `from`, the window's first day: "since 11 Sep 2026". */
 export const changeSince = (from: string | null | undefined): string => (from ? `since ${formatDate(from)}` : "lately");
+
+/** The move in words, for a control whose own label stands in for its contents: "up €0.12, 5 percent, since …". */
+export function priceMoveWords(change: { was: number; change: number; from?: string } | null | undefined): string | null {
+    if (!change || change.change === 0) return null;
+    const ratio = change.was > 0 ? Math.abs(change.change) / change.was : null;
+    const percent = ratio == null ? "" : ratio < 0.005 ? ", under 1 percent" : `, ${Math.round(ratio * 100)} percent`;
+    return `${change.change > 0 ? "up" : "down"} ${formatPrice(Math.abs(change.change))}${percent}, ${changeSince(change.from)}`;
+}
