@@ -77,9 +77,8 @@ let binderPath = "";
 /** Every route, named as the app names the page, with the h1 it must draw. */
 const ROUTES: { name: string; path: () => string; heading: string | RegExp }[] = [
     { name: "Home", path: () => "/dashboard", heading: "Home" },
-    // Both halves of the My cards tab carry its title; the switch under it says which half.
-    { name: "Collection", path: () => "/dashboard/cards", heading: "My cards" },
-    { name: "Wishlist", path: () => "/dashboard/wishlist", heading: "My cards" },
+    { name: "Owned", path: () => "/dashboard/cards", heading: "Owned" },
+    { name: "Wishlist", path: () => "/dashboard/wishlist", heading: "Wishlist" },
     { name: "Favorites", path: () => "/dashboard/favorites", heading: "Favorites" },
     { name: "Binders", path: () => "/dashboard/collections", heading: "Binders" },
     { name: "a binder", path: () => binderPath, heading: BINDER },

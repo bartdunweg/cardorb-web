@@ -46,7 +46,7 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
 
     return (
         <BinderPage
-            title="My cards"
+            title="Wishlist"
             datapoints={datapoints}
             settings={(compact) => <ListSettingsDialog list="wishlist" title="Wishlist" isPublic={profile?.wishlist_public ?? false} compact={compact} />}
             query={query}
@@ -54,7 +54,7 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
             facets={facets}
             list={list}
             filter={filter}
-            // Owned and Wishlist under one title, My cards, one tap apart (collection-switch.tsx).
+            // Owned and Wishlist one tap apart on a phone, where one tab holds both (collection-switch.tsx).
             views={<CollectionSwitch current="wishlist" />}
             empty={
                 <AppEmptyState

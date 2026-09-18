@@ -40,7 +40,7 @@ test("after a write, Back and a reload show the new state, not the cached one", 
     // A heading first, not another card: this is the first write of the whole suite, so nothing
     // else is owned yet to prove the list has drawn before the zero count below is trusted.
     await page.goto(`/dashboard/cards?q=${encodeURIComponent(c.name)}`);
-    await expect(page.getByRole("heading", { name: "My cards", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Owned", exact: true })).toBeVisible();
     await expect(collectionTile(page, c)).toHaveCount(0);
 
     await page.goBack();

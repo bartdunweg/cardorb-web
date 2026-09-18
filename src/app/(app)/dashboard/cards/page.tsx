@@ -9,7 +9,7 @@ import { type ListSearchParams, changeWindow, readListQuery } from "@/lib/list-q
 
 // The tab's name, which the root layout's template finishes as “… · Cardorb”: without it every
 // tab and every history entry read “Cardorb”. The word is the one the navigation uses for this page.
-export const metadata: Metadata = { title: "Collection" };
+export const metadata: Metadata = { title: "Owned" };
 
 // Every card you own: the whole collection as one list, a tab of its own beside Home. No Add card
 // in its header: the search beside the tab bar and in the sidebar opens the same palette, so a plus
@@ -46,14 +46,14 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
 
     return (
         <BinderPage
-            title="My cards"
+            title="Owned"
             // No count or value under the title: Home leads with the value, and the title alone says the page (Bart's call, 2026-09-18).
             query={query}
             basePath="/dashboard/cards"
             facets={facets}
             list={list}
             filter={filter}
-            // Owned and Wishlist under one title, My cards, one tap apart (collection-switch.tsx).
+            // Owned and Wishlist one tap apart on a phone, where one tab holds both (collection-switch.tsx).
             views={<CollectionSwitch current="owned" />}
             empty={
                 <AppEmptyState icon="plus" title="No cards yet" description="Add your first card to start your collection">

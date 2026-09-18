@@ -8,12 +8,13 @@ const LISTS = [
 ] as const;
 
 /**
- * Ours, from the kit's Tabs: Owned | Wishlist under the My cards title, the cards you have and the
+ * Ours, from the kit's Tabs: Owned | Wishlist under the title on a phone, the cards you have and the
  * ones you want. One tab in the phone's bar holds both, named My cards rather than Collection,
- * because the wishlist is not part of the collection; the title stays as you switch and the switch
- * says which half you see (Bart's call, 2026-09-18). Each half stays a list of its own at its own
- * address: each tab is a link, so Back, a shared link and the list's remembered filters work as
- * they did, and the collection's counts still leave the wishlist out (R-DATA-002).
+ * because the wishlist is not part of the collection; each page keeps its own title. From lg the
+ * sidebar lists the two as pages of their own, so the switch is not drawn there (Bart's call,
+ * 2026-09-18). Each half stays a list at its own address: each tab is a link, so Back, a shared
+ * link and the list's remembered filters work as they did, and the collection's counts still leave
+ * the wishlist out (R-DATA-002).
  */
 export function CollectionSwitch({ current }: { current: (typeof LISTS)[number]["id"] }) {
     return (

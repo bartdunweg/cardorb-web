@@ -45,8 +45,8 @@ export function BinderPage({
     settings?: (compact: boolean) => ReactNode;
     add?: (compact: boolean) => ReactNode;
     /**
-     * Sibling lists this page switches between (Owned | Wishlist): beside the title with the actions
-     * from lg, where the row has room, and under the count on a phone, where the bar has none.
+     * Sibling lists this page switches between (Owned | Wishlist), on a phone alone: one tab there holds
+     * both, where from lg the sidebar lists each as a page of its own (Bart's call, 2026-09-18).
      */
     views?: ReactNode;
     /** Under the data points: a rule's chips, a progress bar. */
@@ -73,9 +73,8 @@ export function BinderPage({
                     }
                     back={back}
                     actions={
-                        settings || add || views ? (
+                        settings || add ? (
                             <div className="flex items-center gap-3 max-lg:hidden">
-                                {views}
                                 {settings?.(false)}
                                 {add?.(false)}
                             </div>
