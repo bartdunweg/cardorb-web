@@ -2,7 +2,8 @@
 
 // Changed from the kit: the picture is a next/image, so an avatar from Supabase storage (served
 // as uploaded, no-cache) is resized to the circle it fills and cached by the optimizer. A re-fetch
-// through the Untitled UI CLI or MCP overwrites this; re-apply it.
+// through the Untitled UI CLI or MCP overwrites this; re-apply it. Also changed: `pixels`, for a
+// circle drawn at a size the kit has no step for, so the file asked for is the one drawn.
 import { type FC, type ReactNode, useState } from "react";
 import { User01 } from "@untitledui/icons";
 import Image from "next/image";
@@ -25,6 +26,11 @@ function isOptimisedAvatar(src: string): boolean {
 
 export interface AvatarProps {
     size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
+    /**
+     * The circle's side in CSS pixels where `className` draws it at another size than `size`
+     * (`size-24` is 96). The picture is asked for at this size, not the kit's.
+     */
+    pixels?: number;
     className?: string;
     /**
      * The class name for the main child of the avatar.
@@ -96,6 +102,7 @@ const styles = {
 
 export const Avatar = ({
     size = "md",
+    pixels,
     src,
     alt,
     initials,
@@ -117,7 +124,7 @@ export const Avatar = ({
 
     const renderMainContent = () => {
         if (src && !isFailed) {
-            const px = PIXELS[size];
+            const px = pixels ?? PIXELS[size];
             return (
                 <Image
                     data-avatar-img
