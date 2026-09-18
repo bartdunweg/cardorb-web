@@ -44,7 +44,9 @@ export async function readDexCaught(): Promise<number | null> {
 // rarities or another range counts afresh rather than waiting on the tag.
 function caughtCount(setting: PokedexSetting): Promise<number> {
     return perUser("stats", `dex-caught:v1:${JSON.stringify(setting)}`, async (token) => {
-        const [all, names] = await Promise.all([getAllMyCards({ facets: false }, token), getDexNames()]);
+        // No pictures: the tile counts species and draws nothing, and the printings' pictures of a
+        // whole collection were 1,191 ms of the 1,442 ms this read cost (measured 2026-09-18).
+        const [all, names] = await Promise.all([getAllMyCards({ facets: false, pictures: false }, token), getDexNames()]);
         return groupByDex(all.cards, names, setting).caught;
     });
 }

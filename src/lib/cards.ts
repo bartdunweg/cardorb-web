@@ -24,6 +24,15 @@ export const getFacets = (): Promise<Facets> =>
 export type CardFilter = {
     /** False from a caller that will not read the facets (a further batch on scroll): the API skips that pass. */
     facets?: boolean;
+    /**
+     * False from a caller that counts the cards rather than drawing them: the API leaves the
+     * printings' own pictures off, and skips the read behind them. That read is one query per
+     * catalogue over the page's card ids, which is 67 ms on a batch of forty-eight and 1,191 ms
+     * on a read of the whole collection (measured 2026-09-18, 1,922 cards). `print_image_url` is
+     * then null, which is what a copy whose printing has no picture of its own already carries,
+     * so anything drawing one falls back to the card's scan.
+     */
+    pictures?: boolean;
     q?: string;
     collectionId?: string;
     favoritesOnly?: boolean;
@@ -87,6 +96,7 @@ export async function getMyCards({
     number,
     duplicates,
     facets: wantFacets,
+    pictures: wantPictures,
     counts: wantCounts = false,
     token,
 }: CardFilter & {
@@ -119,7 +129,7 @@ export async function getMyCards({
     // (forgetMine). Further batches and the odd sizes (a count, a whole Pokédex) go straight.
     const key =
         offset === 0 && limit === LIST_BATCH
-            ? `cards:${JSON.stringify([q, collectionId, favoritesOnly, wishlist, sort, order, from, to, set, rarity, fullArt, gen, type, condition, finish, language, number, duplicates, wantFacets])}`
+            ? `cards:${JSON.stringify([q, collectionId, favoritesOnly, wishlist, sort, order, from, to, set, rarity, fullArt, gen, type, condition, finish, language, number, duplicates, wantFacets, wantPictures])}`
             : null;
     const read = async (token?: string) => {
         const { cards, total, copies, facets, value, unpriced, catalogueUnavailable, counts } = await api("/cards", {
@@ -145,6 +155,8 @@ export async function getMyCards({
                 duplicates: duplicates ? 1 : undefined,
                 // The API skips its facets pass when told nobody will read them.
                 facets: wantFacets === false ? 0 : undefined,
+                // And the printings' pictures, likewise, when nobody will draw them.
+                pictures: wantPictures === false ? 0 : undefined,
                 counts: wantCounts ? 1 : undefined,
                 limit,
                 offset,
@@ -251,7 +263,9 @@ export const dexCardsKey = (filter: CardFilter) => `dex-cards:v1:${JSON.stringif
  */
 export const getDexCards = (filter: CardFilter): Promise<DexCards> =>
     perUser("lists", dexCardsKey(filter), async (token) => {
-        const all = await getAllMyCards(filter, token);
+        // No pictures, whatever the filter says: DEX_FIELDS keeps no `print_image_url`, so the
+        // printings' pictures of a whole collection were read and then thrown away.
+        const all = await getAllMyCards({ ...filter, pictures: false }, token);
         const kept: DexCards = { cards: all.cards.map(dexFields), facets: all.facets };
         logDexEntrySize(kept);
         return kept;

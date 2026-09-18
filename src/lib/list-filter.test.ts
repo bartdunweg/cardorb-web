@@ -28,10 +28,10 @@ describe("loadMoreInput", () => {
         expect(parsed).toEqual(sent);
     });
 
-    it("covers every field of CardFilter but facets", () => {
+    it("covers every field of CardFilter but facets and pictures", () => {
         // The type already fails a build when `CardFilter` grows a field this forgets. This says
         // the same thing at test time, so the reason is written down where the failure is read.
-        const everyField: Required<Omit<CardFilter, "facets">> = {
+        const everyField: Required<Omit<CardFilter, "facets" | "pictures">> = {
             q: "a",
             collectionId: "b",
             favoritesOnly: false,
