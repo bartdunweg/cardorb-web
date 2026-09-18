@@ -11,7 +11,7 @@ import { DexView } from "@/components/app/dex-grid";
 import { PublicCardsView } from "@/components/app/public-cards-view";
 import type { CardFilter, CardList, PublicCard } from "@/lib/cards";
 import type { DexList } from "@/lib/dex-groups";
-import { type Facets, NO_FACETS } from "@/lib/facets";
+import type { Facets } from "@/lib/facets";
 import { rememberedView } from "@/lib/list-memory-server";
 import { type ListQuery, SORT_OPTIONS, type SortKey, type SortOption, isNarrowed, listHref } from "@/lib/list-query";
 
@@ -86,15 +86,17 @@ export async function BinderBody(props: BinderBodyProps) {
                           }
                 }
             />
-            <Suspense key="filters" fallback={<CardsFilters query={query} facets={NO_FACETS} offerDuplicates={offerDuplicates} readOnly={props.readOnly} />}>
-                <FiltersWhenReady
-                    query={query}
-                    facets={facets}
-                    offerDuplicates={offerDuplicates}
-                    readOnly={props.readOnly}
-                    countBase={props.readOnly ? undefined : props.filter}
-                />
-            </Suspense>
+            {/* The facets as the promise, not behind a Suspense boundary with Filters as its fallback:
+                the fallback's button and sheet were swapped for new ones when the facets came in, so a
+                sheet opened in between closed under the finger (use-arrived.ts). */}
+            <CardsFilters
+                key="filters"
+                query={query}
+                facets={facets}
+                offerDuplicates={offerDuplicates}
+                readOnly={props.readOnly}
+                countBase={props.readOnly ? undefined : props.filter}
+            />
             <CardsSort key="sort" query={query} options={sortOptions} defaultSortKey={defaultSortKey} />
             {/* A change sort reads over a period: its menu stands beside Sort while that sort is on. */}
             {query.sort === "change" ? <CardsPeriod key="period" query={query} defaultSortKey={defaultSortKey} /> : null}
@@ -194,20 +196,4 @@ async function CatalogueNotice({ list }: { list: Promise<CardList> }) {
             The card catalogue is not answering, so these cards have no pictures or prices right now. Your collection is unchanged; try again in a minute.
         </output>
     );
-}
-
-// The Filters sheet's fields once the sets and rarities are known: they ride with the list's first
-// page, so a page no longer waits for a second read before its first byte.
-async function FiltersWhenReady({
-    query,
-    facets,
-    ...rest
-}: {
-    query: ListQuery;
-    facets: Facets | Promise<Facets>;
-    offerDuplicates: boolean;
-    readOnly?: boolean;
-    countBase?: CardFilter;
-}) {
-    return <CardsFilters query={query} facets={await facets} {...rest} />;
 }
