@@ -190,7 +190,7 @@ export function FiltersSheet({
                                     </Button>
                                 ) : (
                                     <>
-                                        <Button color="link-gray" size="md" isDisabled={countOf(draft) === 0} onClick={clearAll}>
+                                        <Button color="link-gray" size="md" className="hit-area" isDisabled={countOf(draft) === 0} onClick={clearAll}>
                                             Clear all
                                         </Button>
                                         <ShowButton
@@ -272,7 +272,7 @@ function ActiveFilters({
                     ))}
                 </TagList>
             </TagGroup>
-            <Button color="link-gray" size="sm" className="shrink-0" onClick={() => onApply(Object.fromEntries(groups.map((g) => [g.id, []])))}>
+            <Button color="link-gray" size="sm" className="hit-area shrink-0" onClick={() => onApply(Object.fromEntries(groups.map((g) => [g.id, []])))}>
                 Clear all
             </Button>
         </div>

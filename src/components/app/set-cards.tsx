@@ -408,7 +408,7 @@ export function SetCards({
                         <div ref={sentinel} className="flex justify-center py-2">
                             {/* The way on when the sentinel is never seen: a keyboard, or an observer the
                         browser does not have. The kit's quietest button, as the shelf has it. */}
-                            <Button color="link-gray" size="sm" onClick={() => drawUpTo(limit + CARD_BATCH)}>
+                            <Button color="link-gray" size="sm" className="hit-area" onClick={() => drawUpTo(limit + CARD_BATCH)}>
                                 Show more
                             </Button>
                         </div>

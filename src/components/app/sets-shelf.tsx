@@ -86,7 +86,7 @@ export function SetsShelf({ series, language, view: initialView }: { series: Set
                 <div ref={sentinel} className="flex justify-center py-2">
                     {/* The way on when the sentinel is never seen: a keyboard, or an observer the
                         browser does not have. The kit's quietest button, as the Pokédex has it. */}
-                    <Button color="link-gray" size="sm" onClick={() => setShown((n) => n + SHELF_BATCH)}>
+                    <Button color="link-gray" size="sm" className="hit-area" onClick={() => setShown((n) => n + SHELF_BATCH)}>
                         Show more
                     </Button>
                 </div>
