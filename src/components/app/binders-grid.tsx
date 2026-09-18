@@ -53,12 +53,13 @@ function BinderCard({ href, icon, name, count }: { href: string; icon: FC<{ clas
 export function NewBinderButton({ compact }: { compact?: boolean }) {
     return (
         <BinderDialog mode="create">
-            {/* The Binders page's main action, so the primary with the plus: Add card no longer stands
-                beside it with a plus of its own (the search opens that palette). */}
+            {/* The plus, now Add card no longer stands beside it with one of its own (the search opens
+                that palette). Secondary: the round search button is the one black button on a phone
+                (Bart's call, 2026-09-18). */}
             {compact ? (
-                <Button iconLeading={Plus} size="lg" aria-label="New binder" />
+                <Button iconLeading={Plus} color="secondary" size="lg" aria-label="New binder" />
             ) : (
-                <Button iconLeading={Plus} size="md">
+                <Button iconLeading={Plus} color="secondary" size="md">
                     New binder
                 </Button>
             )}

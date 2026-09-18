@@ -21,6 +21,7 @@ export function BinderPage({
     barActions,
     settings,
     add,
+    views,
     children,
     ...body
 }: BinderBodyProps & {
@@ -42,6 +43,11 @@ export function BinderPage({
      */
     settings?: (compact: boolean) => ReactNode;
     add?: (compact: boolean) => ReactNode;
+    /**
+     * Sibling lists this page switches between (Owned | Wishlist): beside the title with the actions
+     * from lg, where the row has room, and under the count on a phone, where the bar has none.
+     */
+    views?: ReactNode;
     /** Under the data points: a rule's chips, a progress bar. */
     children?: ReactNode;
 }) {
@@ -62,8 +68,9 @@ export function BinderPage({
                     }
                     back={back}
                     actions={
-                        settings || add ? (
+                        settings || add || views ? (
                             <div className="flex items-center gap-3 max-lg:hidden">
+                                {views}
                                 {settings?.(false)}
                                 {add?.(false)}
                             </div>
@@ -82,6 +89,7 @@ export function BinderPage({
                         )
                     }
                 >
+                    {views ? <div className="lg:hidden">{views}</div> : null}
                     {children}
                 </PageHeader>
                 <BinderBody {...body} />

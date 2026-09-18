@@ -16,7 +16,7 @@ const LISTS = [
  */
 export function CollectionSwitch({ current }: { current: (typeof LISTS)[number]["id"] }) {
     return (
-        // Two halves of the column on a phone, as wide as their words from sm. Round, as every button in
+        // Two halves of the column on a phone, as wide as their words from sm (beside the title from lg). Round, as every button in
         // the app is (button.tsx), where the kit's minimal tabs have its 8 px corner.
         <Tabs selectedKey={current} className="sm:w-max">
             <TabList aria-label="Collection" type="button-minimal" size="sm" fullWidth className="rounded-full">

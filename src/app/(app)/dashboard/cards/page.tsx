@@ -55,14 +55,13 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
             facets={facets}
             list={list}
             filter={filter}
+            // Owned and Wishlist, one tap apart: the wishlist has no tab of its own in the phone's bar (collection-switch.tsx).
+            views={<CollectionSwitch current="owned" />}
             empty={
                 <AppEmptyState icon="plus" title="No cards yet" description="Add your first card to start your collection">
                     <AddCardButton />
                 </AppEmptyState>
             }
-        >
-            {/* Owned and Wishlist, one tap apart: the wishlist has no tab of its own in the phone's bar (collection-switch.tsx). */}
-            <CollectionSwitch current="owned" />
-        </BinderPage>
+        />
     );
 }

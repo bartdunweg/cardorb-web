@@ -54,6 +54,8 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
             facets={facets}
             list={list}
             filter={filter}
+            // Owned and Wishlist, one tap apart: the wishlist has no tab of its own in the phone's bar (collection-switch.tsx).
+            views={<CollectionSwitch current="wishlist" />}
             empty={
                 <AppEmptyState
                     icon="heart"
@@ -65,9 +67,6 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
                     <AddCardButton label="Find a card" />
                 </AppEmptyState>
             }
-        >
-            {/* Owned and Wishlist, one tap apart: the wishlist has no tab of its own in the phone's bar (collection-switch.tsx). */}
-            <CollectionSwitch current="wishlist" />
-        </BinderPage>
+        />
     );
 }

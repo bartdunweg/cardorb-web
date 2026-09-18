@@ -14,7 +14,7 @@ export default function BindersPage() {
         <div className="flex flex-1 flex-col gap-6">
             <PageHeader
                 title="Binders"
-                // The page's own action is a new binder, so it is the primary, with the plus. Add card left
+                // The page's own action is a new binder, with the plus. Add card left
                 // this page: the search opens the same palette, and a card is added from inside a binder,
                 // where it has somewhere to go (Bart's call, 2026-09-18).
                 actions={
