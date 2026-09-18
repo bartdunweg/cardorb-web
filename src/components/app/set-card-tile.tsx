@@ -9,6 +9,7 @@ import { CardImage } from "@/components/app/card-image";
 import { warmCard } from "@/components/app/card-memo";
 import { CardPrice } from "@/components/app/card-price";
 import { GotItButton } from "@/components/app/got-it-button";
+import { printingLabel } from "@/components/app/printing-choices";
 import { TileIconButton } from "@/components/app/tile-icon-button";
 import { useCopySteps } from "@/components/app/use-copy-steps";
 import { useWarm } from "@/components/app/use-warm";
@@ -17,7 +18,9 @@ import type { SetCard } from "@/lib/api-shapes";
 import { cardLine } from "@/lib/card-label";
 import { pokemonCardFromSetCard } from "@/lib/card-shapes";
 import { type CardsSize, TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
+import { formatPrice } from "@/lib/format";
 import type { Holding } from "@/lib/set-holding";
+import { cx } from "@/utils/cx";
 
 /**
  * One card of a set, and what you can do with it from here. A card you do not hold has two round
@@ -104,6 +107,7 @@ export function SetCardTile({
     const state = held > 0 ? "owned" : wish.wished ? "wishlist" : "missing";
     // One wish row, or none yet (a wish pressed a moment ago): two rows are managed in Cards.
     const wishHere = state === "wishlist" && (oneRow || !base.wishlist);
+    const printed = printingLabel(card.printing);
     // A copy more or less from here: a card you do not hold, or one you hold as one row.
     const stepping = state === "missing" || (state === "owned" && (oneRow || !base.owned));
     const stateLabel = {
@@ -169,106 +173,102 @@ export function SetCardTile({
                 <span className="truncate text-xs text-tertiary tabular-nums">
                     {cardLine({ set_name: card.setName, set_abbr: card.setAbbr, number: card.number, printed_number: card.printedNumber, rarity: card.rarity })}
                 </span>
-                {/* The count and the price on one line, the two controls on their own line under it.
-                    The controls sat in the picture's corner, over the art you came to look at, and on
-                    a grid of 129 that is 129 things floating on top of the cards. Then they shared the
-                    price's line, which on a phone is 110 px across three tiles: the price broke in two
-                    and the buttons ran 6 px past the tile, behind the card beside it. A line of their
-                    own costs 32 px a tile and fits at every width. */}
-                <div className="mt-0.5 flex items-center gap-2">
-                    {/* The two numbers a tile carries: what one is worth on the left, under the name it
-                        belongs to (Bart's call, 2026-09-13: the price read loose against the right
-                        edge), and how many you hold on the right. A set page was the one place that
-                        said only the price, so a card you held four of looked like a card you held. */}
-                    <span className="text-sm font-medium text-primary tabular-nums">
-                        <CardPrice price={card.price} listing={card.listingPrice} />
-                    </span>
-                    {/* Polite: a press says its new count, with no toast for a change you are looking at. */}
-                    <span aria-live="polite" className="ml-auto text-sm font-medium text-tertiary tabular-nums">
-                        {held > 0 ? (
-                            <>
-                                <span className="sr-only">You hold </span>×{held}
-                            </>
-                        ) : null}
-                    </span>
-                </div>
-                {/* The buttons on a line of their own under the count and the price, every one the same
-                    round size, the one you reach for most against the right edge. A card you do not hold
-                    has two answers, the collection or the wishlist, so both are buttons and there is no
-                    menu: the heart sat behind a dots button, one press further than the plus for no reason.
-                    A card you want keeps the heart, filled and pink, and pressed again it comes off the
-                    wishlist; beside it the plus the wishlist's own tiles carry. A card you hold has the
-                    minus and the plus. No menu anywhere: Bart's call, 2026-09-13. Every answer it held is
-                    a button here or in the card's sheet, which the picture opens. */}
-                <div ref={buttons} className="mt-1 flex justify-end gap-1">
-                    {wishHere ? (
-                        <TileIconButton
-                            icon={Heart}
-                            on="wishlist"
-                            label={`Remove ${card.name} #${card.printedNumber ?? card.number} from your wishlist`}
-                            onPress={() => pressWish(false)}
-                        />
-                    ) : null}
-                    {state === "missing" ? (
-                        <>
+                {/* Which printing the price is, "Holo" or "Reverse", on a line of its own as a copy's
+                    printing is on the collection's tiles: a Holo Rare's price read as anyone's guess
+                    between its printings (Bart, 2026-09-18). The sheet opens on the same one. */}
+                {printed ? <span className="truncate text-xs text-tertiary">{printed}</span> : null}
+                {/* The price with its week under it on the left, the buttons on the right of the same line
+                    (Bart's call, 2026-09-18). Where the two do not fit beside each other (a four-figure
+                    price on a phone's 108 px tile) the buttons wrap under, against the right edge, as they
+                    stood before: a price broken in two or buttons run past the tile read worse than a
+                    second line. How many you hold follows the price. */}
+                <div className="mt-0.5 flex flex-wrap items-end justify-between gap-x-2 gap-y-1">
+                    <div className="flex flex-col">
+                        <span className="flex items-baseline gap-1.5 text-sm font-medium tabular-nums">
+                            <span className="text-primary">
+                                <CardPrice price={card.price} listing={card.listingPrice} />
+                            </span>
+                            {/* Polite: a press says its new count, with no toast for a change you are looking at. */}
+                            <span aria-live="polite" className="text-xs text-tertiary">
+                                {held > 0 ? (
+                                    <>
+                                        <span className="sr-only">You hold </span>×{held}
+                                    </>
+                                ) : null}
+                            </span>
+                        </span>
+                        <WeekChange change={card.priceChange} />
+                    </div>
+                    <div ref={buttons} className="ml-auto flex gap-1">
+                        {wishHere ? (
                             <TileIconButton
                                 icon={Heart}
-                                label={`Add ${card.name} #${card.printedNumber ?? card.number} to your wishlist`}
-                                onPress={() => pressWish(true)}
+                                on="wishlist"
+                                label={`Remove ${card.name} #${card.printedNumber ?? card.number} from your wishlist`}
+                                onPress={() => pressWish(false)}
                             />
-                            <TileIconButton
-                                icon={Plus}
-                                label={`Add ${card.name} #${card.printedNumber ?? card.number} to your collection`}
-                                onPress={() => press(1)}
-                            />
-                        </>
-                    ) : null}
-                    {/* The wishlist's own plus, which asks what your copy is like before it joins the
+                        ) : null}
+                        {state === "missing" ? (
+                            <>
+                                <TileIconButton
+                                    icon={Heart}
+                                    label={`Add ${card.name} #${card.printedNumber ?? card.number} to your wishlist`}
+                                    onPress={() => pressWish(true)}
+                                />
+                                <TileIconButton
+                                    icon={Plus}
+                                    label={`Add ${card.name} #${card.printedNumber ?? card.number} to your collection`}
+                                    onPress={() => press(1)}
+                                />
+                            </>
+                        ) : null}
+                        {/* The wishlist's own plus, which asks what your copy is like before it joins the
                         collection. It used to move the card at once here and ask nothing, so the same mark
                         did two different things depending on the page you pressed it on. A wish pressed a
                         moment ago has no row yet to move, so its plus waits for one. */}
-                    {wishHere && wish.id ? (
-                        <GotItButton
-                            card={{
-                                id: wish.id,
-                                name: card.name,
-                                image_url: card.imageUrl,
-                                set_name: card.setName,
-                                set_abbr: card.setAbbr,
-                                number: card.number,
-                                printed_number: card.printedNumber,
-                                grade: null,
-                                finish: null,
-                                foil_pattern: null,
-                                edition: null,
-                                tcg_id: card.tcgId,
-                                language,
-                            }}
-                        />
-                    ) : wishHere ? (
-                        <TileIconButton icon={Plus} label={`Add ${card.name} to your collection`} pending />
-                    ) : null}
-                    {/* A card you hold: the minus where the heart was (a card you own cannot be wished for),
+                        {wishHere && wish.id ? (
+                            <GotItButton
+                                card={{
+                                    id: wish.id,
+                                    name: card.name,
+                                    image_url: card.imageUrl,
+                                    set_name: card.setName,
+                                    set_abbr: card.setAbbr,
+                                    number: card.number,
+                                    printed_number: card.printedNumber,
+                                    grade: null,
+                                    finish: null,
+                                    foil_pattern: null,
+                                    edition: null,
+                                    tcg_id: card.tcgId,
+                                    language,
+                                }}
+                            />
+                        ) : wishHere ? (
+                            <TileIconButton icon={Plus} label={`Add ${card.name} to your collection`} pending />
+                        ) : null}
+                        {/* A card you hold: the minus where the heart was (a card you own cannot be wished for),
                         then the same plus as a card you do not, since it is the same answer. The minus on
                         the last copy takes the card out, with the way back in the toast. */}
-                    {state === "owned" && stepping ? (
-                        <>
-                            <TileIconButton
-                                icon={Minus}
-                                label={
-                                    held > 1
-                                        ? `Remove a copy of ${card.name} #${card.printedNumber ?? card.number}`
-                                        : `Remove ${card.name} #${card.printedNumber ?? card.number} from your collection`
-                                }
-                                onPress={() => press(held - 1)}
-                            />
-                            <TileIconButton
-                                icon={Plus}
-                                label={`Add a copy of ${card.name} #${card.printedNumber ?? card.number}`}
-                                onPress={() => press(held + 1)}
-                            />
-                        </>
-                    ) : null}
+                        {state === "owned" && stepping ? (
+                            <>
+                                <TileIconButton
+                                    icon={Minus}
+                                    label={
+                                        held > 1
+                                            ? `Remove a copy of ${card.name} #${card.printedNumber ?? card.number}`
+                                            : `Remove ${card.name} #${card.printedNumber ?? card.number} from your collection`
+                                    }
+                                    onPress={() => press(held - 1)}
+                                />
+                                <TileIconButton
+                                    icon={Plus}
+                                    label={`Add a copy of ${card.name} #${card.printedNumber ?? card.number}`}
+                                    onPress={() => press(held + 1)}
+                                />
+                            </>
+                        ) : null}
+                    </div>
                 </div>
             </div>
             {/* Announced when it appears; the tile keeps its place so the grid does not jump. */}
@@ -278,5 +278,24 @@ export function SetCardTile({
                 </p>
             ) : null}
         </div>
+    );
+}
+
+/**
+ * What the price did over the last seven days, under it: smaller, green up and red down, with its
+ * sign so the colour is never the only thing that says which (Bart's call, 2026-09-18). Nothing
+ * where the API had fewer than two readings or the price did not move: a line of "€0.00" under half
+ * a set would say nothing a hundred times.
+ */
+function WeekChange({ change }: { change: SetCard["priceChange"] }) {
+    if (!change || change.change === 0) return null;
+    const up = change.change > 0;
+    return (
+        <span className={cx("text-xs font-medium tabular-nums", up ? "text-success-primary" : "text-error-primary")}>
+            <span className="sr-only">{up ? "Up " : "Down "}</span>
+            {up ? "+" : "−"}
+            {formatPrice(Math.abs(change.change))}
+            <span className="sr-only"> in the last 7 days</span>
+        </span>
     );
 }
