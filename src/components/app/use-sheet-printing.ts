@@ -18,6 +18,8 @@ type Params = {
     tcgId: string | null;
     known: CardFacts | null;
     points: PricePoint[];
+    /** Today's lowest listing of each printing with no market figure (knownPriceListings). */
+    listings: Record<string, number>;
     period: PeriodKey;
     said: string;
     change: PriceChange | null;
@@ -28,7 +30,7 @@ type Params = {
  * The printing or print run on show in the card sheet, the one pressed under the card, and the
  * picture and price that follow it.
  */
-export function useSheetPrinting({ card, mine, readOnly, tcgId, known, points, period, said, change, stepFromRef }: Params) {
+export function useSheetPrinting({ card, mine, readOnly, tcgId, known, points, listings, period, said, change, stepFromRef }: Params) {
     /*
      * The printing on show, under the card (printing-choices.ts): the copy's own to begin with,
      * and whichever button was pressed after that, until the sheet moves to another card. A
@@ -82,24 +84,49 @@ export function useSheetPrinting({ card, mine, readOnly, tcgId, known, points, p
      * "that printing has none".
      */
     const pressedAway = (printing && printingKey !== openingPrinting) || (editionKey && editionKey !== openingEdition);
-    const patternPrice = printing?.foilPattern
-        ? known?.patternPrints?.prints.find((p) => p.finish === printing.finish && p.foilPattern === printing.foilPattern)?.price?.market
+    const patternPrint = printing?.foilPattern
+        ? known?.patternPrints?.prints.find((p) => p.finish === printing.finish && p.foilPattern === printing.foilPattern)
         : undefined;
+    const patternPrice = patternPrint ? patternPrint.price?.market : undefined;
+    const patternListing = patternPrint?.price?.market == null ? (patternPrint?.price?.lowestListing ?? null) : null;
     /* A public card with no price field is one whose owner keeps prices private: another printing
        pressed there must not bring a market figure in through the catalogue's history. */
     const pricesHidden = readOnly && !(card && "price" in card);
-    const { series: shownSeries, price: pressedPrice } = pressedPrinting({
+    const {
+        series: shownSeries,
+        price: pressedPrice,
+        listing: pressedListing,
+    } = pressedPrinting({
         pressedAway: !!pressedAway,
         finish: printing?.finish ?? (mine?.finish as Finish | null) ?? "normal",
         edition,
         foilPattern: printing?.foilPattern ?? null,
         latest: points.at(-1)?.printings,
         patternPrice,
+        listings,
+        patternListing,
     });
     const shownPrice = pricesHidden ? undefined : pressedPrice;
+    /* The pressed printing's lowest listing where it has no market figure, under the same rule as
+       its price: never where the owner keeps prices private. */
+    const shownListing = pricesHidden || pressedPrice !== null ? null : (pressedListing ?? null);
     const shownChange = pressedAway ? (shownPrice != null && shownSeries ? periodChange(points, period, false, shownSeries, said) : null) : change;
     // On a public page the card carries a price only where its owner shows them; that is the figure under the title then.
     const publicPrice = readOnly && card && "price" in card ? (card.price ?? null) : null;
 
-    return { printings, editions, printingKey, editionKey, printing, edition, pressedImage, pick, shownSeries, shownPrice, shownChange, publicPrice };
+    return {
+        printings,
+        editions,
+        printingKey,
+        editionKey,
+        printing,
+        edition,
+        pressedImage,
+        pick,
+        shownSeries,
+        shownPrice,
+        shownListing,
+        shownChange,
+        publicPrice,
+    };
 }

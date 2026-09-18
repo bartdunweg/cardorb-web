@@ -6,6 +6,7 @@ import { type CardFacts, editCopies } from "@/app/(app)/dashboard/cards/actions"
 import type { BinderChoice } from "@/app/(app)/dashboard/collections/actions";
 import { AcquiredDatePicker } from "@/components/app/acquired-date-picker";
 import { BinderDialog } from "@/components/app/binder-dialog";
+import { CardPrice } from "@/components/app/card-price";
 import { CONDITIONS } from "@/components/app/condition-badge";
 import { defaultFinishOf, editionOptions, finishOptions, patternOptions, soleOption } from "@/components/app/copy-fields";
 import { FlagIcon } from "@/components/app/flag-icon";
@@ -146,6 +147,8 @@ export function CopyCard({
        until somebody says otherwise; where a run is recorded the row already shows that run's.
        Only the stamped run: Shadowless had a figure from Cardmarket and has none from TCGplayer yet. */
     const runPrices: [string, number][] = row.price_first_ed != null ? [["1st Edition", row.price_first_ed]] : [];
+    /* A stamped run TCGplayer lists and has never sold: its lowest listing, said as one (cardorb-api#561). */
+    const runListing = row.price_first_ed == null ? (row.listing_first_ed ?? null) : null;
 
     /* The price field is typed into, so it saves when it is left, not on every keystroke. */
     const [priceDraft, setPriceDraft] = useState<string | null>(null);
@@ -352,6 +355,10 @@ export function CopyCard({
                 Set nothing prices the stamp, and on a modern card there is no run. */}
             {editions.length && runPrices.length ? (
                 <p className="px-3 pb-2 text-xs text-tertiary">{runPrices.map(([label, amount]) => `${label} ${formatPrice(amount)}`).join(" · ")}</p>
+            ) : editions.length && runListing != null ? (
+                <p className="px-3 pb-2 text-xs text-tertiary">
+                    1st Edition <CardPrice price={null} listing={runListing} />
+                </p>
             ) : null}
 
             {/* Only a binder filled by hand takes a card; a rule binder fills itself. With none

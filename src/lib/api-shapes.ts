@@ -222,6 +222,8 @@ export type Card = {
      * and has none until TCGplayer's Shadowless products are read.
      */
     price_first_ed: number | null;
+    /** The stamped run's lowest listing where it has no market figure (cardorb-api#561); shown as "From €…". */
+    listing_first_ed?: number | null;
     /** Whether this copy has a TCGplayer price, which printing it was, and TCGplayer's id for it. */
     price_source: "tcgplayer" | null;
     price_printing: string | null;
@@ -373,6 +375,7 @@ export const cardFromItem = (item: CardItem): Card => ({
     foil_pattern: item.foilPattern,
     edition: item.edition ?? null,
     price_first_ed: shownPrice(item.priceFirstEd),
+    listing_first_ed: listingOf(item.priceFirstEd),
     price_source: item.priceSource ?? null,
     price_printing: item.pricePrinting ?? null,
     tcgplayer_id: item.tcgplayerId ?? null,
@@ -470,6 +473,11 @@ export const publicItemSchema = z.object({
      * the copies differ or nothing prices the card, absent where prices are not shown at all.
      */
     price: nullable(z.number()).optional(),
+    /**
+     * TCGplayer's lowest listing where no copy has a market figure (cardorb-api#561), under the
+     * same rule as `price`: only for an owner who shows prices. Shown as "From €…", never summed.
+     */
+    listingPrice: z.number().optional(),
 });
 export type PublicItem = z.infer<typeof publicItemSchema>;
 
@@ -501,6 +509,8 @@ export const publicCardFromItem = (item: PublicItem): PublicCard => ({
     ...(item.speciesIds ? { species_ids: item.speciesIds } : {}),
     // Left off, not nulled, where the owner shows no prices: the grid draws a price when the field exists.
     ...(item.price !== undefined ? { price: item.price } : {}),
+    // The listing rides on the same rule: never where the owner keeps prices private.
+    ...(item.price !== undefined && item.listingPrice != null ? { listing_price: item.listingPrice } : {}),
 });
 
 // ── GET /v1/pokedex ───────────────────────────────────────────────────────────────────────
@@ -515,6 +525,8 @@ export type DexCard = {
     imageHighUrl: string | null;
     /** What one copy is worth in euros; null on a public profile whose owner shows no prices. */
     price: number | null;
+    /** TCGplayer's lowest listing where it has no market figure (cardorb-api#561); shown as "From €…", never summed. */
+    listingPrice?: number | null;
     /** The card the slot opens on, because its owner left it standing there. */
     isFace: boolean;
 };
@@ -969,10 +981,20 @@ export const pricePointsAnswer = z.object({
     points: z.array(
         z.object({ date: z.string(), market: nullable(z.number()), holo: nullable(z.number()), printings: z.record(z.string(), z.number()).optional() }),
     ),
+    /**
+     * Today's lowest listing of each printing TCGplayer lists and has no market figure for, keyed as
+     * `printings` is (cardorb-api#561 follow-up): such a printing has no line. Absent from an API before it.
+     */
+    listings: z.record(z.string(), z.number()).optional(),
 });
 
 /** The list's worth, only for an owner who shows prices: euros over the whole list, and the copies it leaves out. */
-const publicWorth = { value: z.number().optional(), unpriced: z.number().optional() };
+const publicWorth = {
+    value: z.number().optional(),
+    unpriced: z.number().optional(),
+    /** Of the unpriced copies, those shown at a lowest listing and left out of `value` (cardorb-api#561). */
+    listed: z.number().optional(),
+};
 export const publicCardsAnswer = z.object({
     cards: z.array(publicItemSchema),
     total: z.number(),

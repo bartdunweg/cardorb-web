@@ -131,6 +131,11 @@ export function priceSeriesOf(finish: Finish, edition: Edition | null, series: R
 /**
  * The price series and the price the sheet shows for the printing and run pressed under the card.
  *
+ * `listing`, only where the printing has no market figure: its lowest listing, from `listings` (the
+ * printings TCGplayer lists and has never sold, which have no line) or the pattern print's own
+ * (cardorb-api#561). Shown as "From €…", never as the printing's price. A market figure on the line
+ * always wins over a listing, whichever key the listing is under.
+ *
  * `price` undefined is "the copy's own price" (nothing pressed away from the opening choice); null is
  * "that printing has none". A foil pattern print reads its own product's figure where the catalogue
  * sent one (it does not for a card you hold), and its line's latest day otherwise (cardorb-api#512:
@@ -143,6 +148,8 @@ export function pressedPrinting({
     foilPattern,
     latest,
     patternPrice,
+    listings,
+    patternListing,
 }: {
     pressedAway: boolean;
     finish: Finish;
@@ -151,9 +158,17 @@ export function pressedPrinting({
     /** The card's latest day of readings, per printing. */
     latest: Record<string, number> | undefined;
     patternPrice: number | null | undefined;
-}): { series: string | null; price: number | null | undefined } {
+    /** Today's lowest listing of each printing with no market figure, keyed as `latest` is. */
+    listings?: Record<string, number>;
+    /** A pattern print's own lowest listing, where it has no market figure. */
+    patternListing?: number | null;
+}): { series: string | null; price: number | null | undefined; listing?: number } {
     if (!pressedAway) return { series: null, price: undefined };
     const series = latest ? priceSeriesOf(finish, edition, new Set(Object.keys(latest)), foilPattern) : null;
     const fromLine = series ? (latest?.[series] ?? null) : null;
-    return { series, price: foilPattern ? (patternPrice ?? fromLine) : fromLine };
+    const price = foilPattern ? (patternPrice ?? fromLine) : fromLine;
+    if (price != null) return { series, price };
+    const listed = listings ? priceSeriesOf(finish, edition, new Set(Object.keys(listings)), foilPattern) : null;
+    const listing = (foilPattern ? patternListing : null) ?? (listed ? listings?.[listed] : null) ?? null;
+    return listing != null ? { series, price, listing } : { series, price };
 }

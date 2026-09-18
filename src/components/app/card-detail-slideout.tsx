@@ -105,9 +105,22 @@ export function CardDetailSlideout({
     const { mine, copies, setViewing, showRows, pressedRef, reloadCopies } = useSheetCopies({ card, readOnly });
     const { binders, setBinders, facets, binder, binderPending } = useSheetBinders({ card, readOnly });
     const { stepFromRef, step } = useSheetSteps({ onPrev, onNext });
-    const { tcgId, genLogo, formFacts, known, points, period, setPeriod, said, change } = useSheetFacts({ card, mine, addable, opensOn });
-    const { printings, editions, printingKey, editionKey, printing, edition, pressedImage, pick, shownSeries, shownPrice, shownChange, publicPrice } =
-        useSheetPrinting({ card, mine, readOnly, tcgId, known, points, period, said, change, stepFromRef });
+    const { tcgId, genLogo, formFacts, known, points, listings, period, setPeriod, said, change } = useSheetFacts({ card, mine, addable, opensOn });
+    const {
+        printings,
+        editions,
+        printingKey,
+        editionKey,
+        printing,
+        edition,
+        pressedImage,
+        pick,
+        shownSeries,
+        shownPrice,
+        shownListing,
+        shownChange,
+        publicPrice,
+    } = useSheetPrinting({ card, mine, readOnly, tcgId, known, points, listings, period, said, change, stepFromRef });
     const { takeable, emptied, busy, scheduleRefresh, add, fileInBinder, dropCopies, stepUp, stepDown, closeSheet, removeAndOffer } = useSheetWrites({
         card,
         readOnly,
@@ -252,6 +265,7 @@ export function CardDetailSlideout({
                         printing={printing}
                         known={known}
                         shownPrice={shownPrice}
+                        shownListing={shownListing}
                         publicPrice={publicPrice}
                         shownChange={shownChange}
                     />

@@ -42,6 +42,8 @@ type Props = {
     printing: PrintingChoice | null;
     known: CardFacts | null;
     shownPrice: number | null | undefined;
+    /** The pressed printing's lowest listing, where it has no market figure (useSheetPrinting). */
+    shownListing?: number | null;
     publicPrice: number | null;
     shownChange: PriceChange | null;
 };
@@ -65,16 +67,20 @@ export function SheetHeader({
     printing,
     known,
     shownPrice,
+    shownListing = null,
     publicPrice,
     shownChange,
 }: Props) {
-    /* The card's lowest listing, only on the printing the sheet opened on (another pressed reads the
-       market history, which holds no listing) and only where no market figure is shown. */
+    /* The lowest listing, only where no market figure is shown: the copy's own on the printing the
+       sheet opened on, and another printing's when it is pressed (the line beside the history,
+       cardorb-api#561). A printing with neither still says it has no price. */
     const listingCard = mine ?? card;
     const listing =
-        shownPrice === undefined && (mine?.price ?? publicPrice) == null && listingCard && "listing_price" in listingCard
-            ? (listingCard.listing_price ?? null)
-            : null;
+        shownPrice === null
+            ? shownListing
+            : shownPrice === undefined && (mine?.price ?? publicPrice) == null && listingCard && "listing_price" in listingCard
+              ? (listingCard.listing_price ?? null)
+              : null;
     const { art, backdrop, scanLoaded, blurLoaded, scanFade, prevScan, blurFade, onScanLoad, onBlurLoad, canTilt, tiltGranted, askTilt } = cardArt;
     // In the dots menu, where the card's other actions are; a bar button of its own spent one of
     // the four places up there on a thing an iPhone asks once and never again. Where there is no
@@ -351,9 +357,9 @@ export function SheetHeader({
                     </AriaHeading>
                     <p className="text-sm text-tertiary">{(card && cardLabelFull(card)) || "—"}</p>
                     {/* The price sits under the title, where a product panel puts it, not among the attributes. */}
-                    {shownPrice === null ? (
+                    {shownPrice === null && listing == null ? (
                         <p className="text-sm text-tertiary">No price for this printing</p>
-                    ) : (shownPrice ?? mine?.price ?? publicPrice) != null ? (
+                    ) : shownPrice !== null && (shownPrice ?? mine?.price ?? publicPrice) != null ? (
                         <p className="flex items-baseline gap-2 text-md font-semibold text-primary tabular-nums">
                             <span>
                                 {formatPrice((shownPrice ?? mine?.price ?? publicPrice)!)}
