@@ -1,10 +1,12 @@
+import { EARLY_PRESS_SCRIPT_HASH } from "@/lib/early-press";
 import { BOOT_SCRIPT_HASH } from "@/lib/theme-script";
 
 /**
  * The script policy for the signed-in and auth pages: one nonce per request, minted in the
  * middleware and named in the Content-Security-Policy. Next finds the policy on the request and
- * signs its own scripts with the nonce; the one inline script of ours, the theme boot script in
- * the root layout, is allowed by its hash instead, so it needs nothing per request.
+ * signs its own scripts with the nonce; the two inline scripts of ours in the root layout, the
+ * theme boot script and the early-press script, are allowed by their hashes instead, so they need
+ * nothing per request.
  *
  * The public profile is covered too, and was not: this said the public pages prerender, and
  * `/user/[username]` does not: it reads cookies for the viewer, so it renders per request and a
@@ -57,7 +59,7 @@ const IMAGE_HOSTS = [...new Set([SUPABASE_HOST, API_HOST, "https://api.cardorb.c
 export function cspFor(nonce: string, dev = process.env.NODE_ENV === "development"): string {
     return [
         "default-src 'self'",
-        `script-src 'nonce-${nonce}' 'sha256-${BOOT_SCRIPT_HASH}' 'strict-dynamic' 'unsafe-inline' https:${dev ? " 'unsafe-eval'" : ""}`,
+        `script-src 'nonce-${nonce}' 'sha256-${BOOT_SCRIPT_HASH}' 'sha256-${EARLY_PRESS_SCRIPT_HASH}' 'strict-dynamic' 'unsafe-inline' https:${dev ? " 'unsafe-eval'" : ""}`,
         "style-src 'self' 'unsafe-inline'",
         `img-src 'self' data: blob: ${IMAGE_HOSTS.join(" ")}`,
         "font-src 'self' data:",

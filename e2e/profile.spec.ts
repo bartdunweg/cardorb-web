@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { E2E_USER, cacheCleared, hydrated } from "./support.ts";
+import { E2E_USER, cacheCleared } from "./support.ts";
 
 /**
  * The switch on Settings that decides whether anyone else can see the collection, read from where
@@ -22,7 +22,6 @@ test("the public profile follows the Settings switch, off and on", async ({ page
 
     await page.goto("/dashboard/settings");
     const row = page.getByRole("main").getByRole("switch", { name: "Public profile" });
-    await hydrated(row);
     await expect(row).toBeChecked();
 
     // setting-switch-row.tsx flips the switch, waits for the write, then forgets the cache quietly

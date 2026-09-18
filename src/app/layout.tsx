@@ -1,6 +1,8 @@
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { EarlyPressReplay } from "@/components/app/early-press-replay";
+import { EARLY_PRESS_SCRIPT } from "@/lib/early-press";
 import { BOOT_SCRIPT } from "@/lib/theme-script";
 import { ThemeProvider } from "@/providers/theme";
 import "@/styles/globals.css";
@@ -55,11 +57,16 @@ export default function RootLayout({
                 {/* Sets the theme class before first paint. A Server Component emits it once, in place;
                     the CSP names its hash, so it needs no nonce and the static pages stay static. */}
                 <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
+                {/* Holds a press made before the page has hydrated and hands it to its button once React
+                    is in (src/lib/early-press.ts); EarlyPressReplay below says when. Hashed in the CSP
+                    like the one above. */}
+                <script dangerouslySetInnerHTML={{ __html: EARLY_PRESS_SCRIPT }} />
             </head>
             <body className={cx(inter.variable, "bg-page antialiased")}>
                 {/* No RouteProvider here: the public pages are static text with plain links, and the
                     provider's react-aria dependency belongs to the signed-in and auth layouts. */}
                 <ThemeProvider>{children}</ThemeProvider>
+                <EarlyPressReplay />
                 {/* How long a page takes on the devices it is actually read on, per route: LCP for
                     what is drawn and INP for how fast a tap is answered. Everything we know about
                     the app's speed until now was measured on one Mac on one connection, which

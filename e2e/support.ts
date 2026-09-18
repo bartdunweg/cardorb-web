@@ -69,24 +69,6 @@ export const ownedCount = async (page: Page): Promise<number> => {
 };
 
 /**
- * Waits until React owns the element, then hands it back.
- *
- * A button in the page's shell (the dots on a binder, the plus that fills it, New binder) is in the
- * document the moment the server's drawing lands, and a press on it before React has hydrated does
- * nothing at all: the kit's buttons are react-aria's, whose handlers are React props and are not
- * attached yet. Nothing on screen says so, so the press is simply lost and the menu never opens
- * (CI run 35288683601, two binder tests). A node carries a `__reactFiber$` key only once React has
- * hydrated it, which is the same mark hydration.spec.ts tells the server's drawing apart by.
- *
- * A read, polled: it presses nothing and repeats nothing.
- */
-export const hydrated = async (target: Locator): Promise<Locator> => {
-    await expect(target).toBeVisible();
-    await expect.poll(() => target.evaluate((el) => Object.keys(el).some((k) => k.startsWith("__reactFiber$"))), { timeout: 15000 }).toBe(true);
-    return target;
-};
-
-/**
  * A binder made the way a person makes one, from the Binders page, and the address of its own
  * page. New binder stands in the sidebar, beside the page title and in the empty state, all three
  * the same dialog; whichever of them the screen is showing will do.
@@ -97,7 +79,7 @@ export const hydrated = async (target: Locator): Promise<Locator> => {
  */
 export const makeBinder = async (page: Page, name: string): Promise<string> => {
     await page.goto("/dashboard/collections");
-    await (await hydrated(page.getByRole("button", { name: "New binder" }).filter({ visible: true }).first())).click();
+    await page.getByRole("button", { name: "New binder" }).filter({ visible: true }).first().click();
     const dialog = page.getByRole("dialog");
     // Not getByLabel: the kit's Label renders the required-asterisk span in the DOM whether or not
     // it is shown, so an exact label match can miss where the accessible name does not (auth.setup.ts).
