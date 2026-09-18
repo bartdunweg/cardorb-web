@@ -12,7 +12,8 @@ import { expect, test } from "@playwright/test";
  * cards in the account; a visitor's context, since the signed-in one is sent on to Home.
  */
 test("the landing page's stat tiles keep their figures level", async ({ browser }) => {
-    const visitor = await (await browser.newContext({ viewport: { width: 768, height: 1024 } })).newPage();
+    // Signed out on purpose: a context made here inherits the project's storageState, which sends "/" on to Home.
+    const visitor = await (await browser.newContext({ viewport: { width: 768, height: 1024 }, storageState: { cookies: [], origins: [] } })).newPage();
     await visitor.goto("/");
     const labels = ["Owned", "Wishlist", "Favorites", "Pokémon collected"];
     for (const label of labels) await expect(visitor.getByRole("heading", { level: 3, name: label })).toBeVisible();
