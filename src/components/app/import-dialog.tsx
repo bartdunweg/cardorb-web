@@ -432,7 +432,9 @@ function ImportForm({ close, onWriting }: { close: () => void; onWriting: (writi
                         <AriaHeading slot="title" className="text-lg font-semibold text-primary">
                             Import a collection
                         </AriaHeading>
-                        <p className="text-sm text-tertiary">A CSV export from Dex, Notion, or any spreadsheet with a card name and a set. Up to 2 MB.</p>
+                        {/* A figure and its unit on one line, never "2" at one line's end and "MB" on the next: the
+                            same no-break space in every size this dialog names. */}
+                        <p className="text-sm text-tertiary">A CSV export from Dex, Notion, or any spreadsheet with a card name and a set. Up to 2&nbsp;MB.</p>
                     </div>
                     {/*
                      * Escape closes this and so does Cancel, but on a phone the dialog is
@@ -451,11 +453,11 @@ function ImportForm({ close, onWriting }: { close: () => void; onWriting: (writi
                         accept=".csv,text/csv,text/plain"
                         allowsMultiple={false}
                         maxSize={MAX_CSV_BYTES}
-                        hint="CSV, up to 2 MB. UTF-8 or UTF-16, commas or semicolons, all fine."
+                        hint={"CSV, up to 2\u00a0MB. UTF-8 or UTF-16, commas or semicolons, all fine."}
                         isDisabled={busy !== null}
                         onDropFiles={onPick}
                         onDropUnacceptedFiles={() => setError("That is not a CSV file.")}
-                        onSizeLimitExceed={() => setError("That file is too large. The limit is 2 MB.")}
+                        onSizeLimitExceed={() => setError("That file is too large. The limit is 2\u00a0MB.")}
                     />
                 ) : null}
 

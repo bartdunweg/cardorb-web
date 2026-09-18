@@ -263,6 +263,19 @@ body {
     font-kerning: normal;
 }
 
+/* No word left alone on a paragraph's last line.
+
+   A sentence that wraps with one word under it reads as a slip: the Import dialog's description at
+   1024 px ended with "2 MB." alone on its second line (566 px of line, then 38), and the Pokédex's
+   rarity note at 768 px with "none." (688, then 37). `pretty` lets the browser rebalance the last
+   few lines so that line takes at least two words; it moves nothing else. In the base layer, so a
+   text-balance or text-wrap utility on a paragraph still wins. */
+@layer base {
+    p {
+        text-wrap: pretty;
+    }
+}
+
 /* Hide the default expand arrow on Safari.  */
 details summary::-webkit-details-marker {
     display: none;
