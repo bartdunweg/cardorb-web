@@ -16,12 +16,13 @@ const LISTS = [
  * link and the list's remembered filters work as they did, and the collection's counts still leave
  * the wishlist out (R-DATA-002).
  */
-export function CollectionSwitch({ current }: { current: (typeof LISTS)[number]["id"] }) {
+export function CollectionSwitch({ current, slides = true }: { current: (typeof LISTS)[number]["id"]; slides?: boolean }) {
     return (
         // The kit's underline tabs, as a set's page has them over its cards, each half of the line, under
         // the row of filters and over the list, 44 px high where the kit's is 30 (Bart's call, 2026-09-19).
-        // `data-my-cards-tabs`: its line slides to the other tab across the page change (globals.css).
-        <Tabs selectedKey={current} data-my-cards-tabs>
+        // `data-my-cards-tabs`: its line slides to the other tab across the page change (globals.css). Off
+        // for a copy on another page (the design page), whose line would fly from there to My cards.
+        <Tabs selectedKey={current} data-my-cards-tabs={slides || undefined}>
             <TabList aria-label="My cards" type="underline" size="sm" fullWidth>
                 {LISTS.map((list) => (
                     <Tab key={list.id} id={list.id} href={list.href} label={list.label} className="flex-1 justify-center py-3" />

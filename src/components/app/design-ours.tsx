@@ -546,7 +546,7 @@ export const ourSections: SectionSpec[] = [
                 <Group title="States" cols="wide">
                     <Cell label="on the collection" span="full">
                         <div className="w-full max-w-72">
-                            <CollectionSwitch current="owned" />
+                            <CollectionSwitch current="owned" slides={false} />
                         </div>
                     </Cell>
                 </Group>

@@ -61,7 +61,10 @@ export const styles = sortCx({
         },
         secondary: {
             root: [
-                "bg-primary text-secondary ring-1 ring-primary ring-inset hover:bg-primary_hover hover:text-secondary_hover data-loading:bg-primary_hover",
+                // Light grey with its border, where a field is white with its border: the two had the same
+                // fill and ring, and a row of round buttons read as more search fields (Bart, 2026-09-19). Tertiary,
+                // not secondary: neutral-50 on white measured 1.04:1, no grey at all.
+                "bg-tertiary text-secondary ring-1 ring-primary ring-inset hover:bg-quaternary hover:text-secondary_hover data-loading:bg-quaternary",
                 // Icon styles
             ].join(" "),
         },
