@@ -139,14 +139,17 @@ function AcquiredDateSheet({
             <DatePickerTrigger variant="field" isPlaceholder={!value}>
                 {formattedDate}
             </DatePickerTrigger>
-            {/* The sheet's shape is `SheetDialog`'s: bottom-aligned and flush, rising rather than zooming. */}
+            {/* The sheet's shape and curve are `SheetDialog`'s: bottom-aligned and flush, rising on
+                --ease-drawer rather than zooming. This body only draws below `sm`, so max-sm holds. */}
             <ModalOverlay className="items-end p-0">
                 <Modal
                     className={(state) =>
                         cx(
                             "max-h-[85dvh]",
-                            state.isEntering && "slide-in-from-bottom zoom-in-100 motion-reduce:slide-in-from-bottom-0",
-                            state.isExiting && "slide-out-to-bottom zoom-out-100 motion-reduce:slide-out-to-bottom-0",
+                            state.isEntering &&
+                                "slide-in-from-bottom zoom-in-100 motion-reduce:slide-in-from-bottom-0 max-sm:[animation-timing-function:var(--ease-drawer)]",
+                            state.isExiting &&
+                                "slide-out-to-bottom zoom-out-100 motion-reduce:slide-out-to-bottom-0 max-sm:[animation-timing-function:var(--ease-drawer)]",
                         )
                     }
                 >

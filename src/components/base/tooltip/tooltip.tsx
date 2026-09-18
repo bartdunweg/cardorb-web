@@ -66,7 +66,10 @@ export const Tooltip = ({
                 // Card Orb change (motion audit 2026-09-17), keep after `npx untitledui add`: 125 ms in, 100 ms out on
                 // the enter curve rather than ease-in, and no zoom or slide under reduced motion (the fade stays).
                 className={({ isEntering, isExiting }) =>
-                    cx(isEntering && "duration-125 ease-out animate-in", isExiting && "duration-100 animate-out [animation-timing-function:var(--ease-enter)]")
+                    cx(
+                        isEntering && "duration-125 animate-in [animation-timing-function:var(--ease-enter)]",
+                        isExiting && "duration-100 animate-out [animation-timing-function:var(--ease-enter)]",
+                    )
                 }
             >
                 {({ isEntering, isExiting }) => (
@@ -76,7 +79,7 @@ export const Tooltip = ({
                             description ? "py-3" : "py-2",
 
                             isEntering &&
-                                "duration-125 ease-out animate-in fade-in zoom-in-95 in-placement-left:slide-in-from-right-0.5 in-placement-right:slide-in-from-left-0.5 in-placement-top:slide-in-from-bottom-0.5 in-placement-bottom:slide-in-from-top-0.5 motion-reduce:zoom-in-100 motion-reduce:in-placement-left:slide-in-from-right-0 motion-reduce:in-placement-right:slide-in-from-left-0 motion-reduce:in-placement-top:slide-in-from-bottom-0 motion-reduce:in-placement-bottom:slide-in-from-top-0",
+                                "duration-125 animate-in [animation-timing-function:var(--ease-enter)] fade-in zoom-in-95 in-placement-left:slide-in-from-right-0.5 in-placement-right:slide-in-from-left-0.5 in-placement-top:slide-in-from-bottom-0.5 in-placement-bottom:slide-in-from-top-0.5 motion-reduce:zoom-in-100 motion-reduce:in-placement-left:slide-in-from-right-0 motion-reduce:in-placement-right:slide-in-from-left-0 motion-reduce:in-placement-top:slide-in-from-bottom-0 motion-reduce:in-placement-bottom:slide-in-from-top-0",
                             isExiting &&
                                 "duration-100 animate-out [animation-timing-function:var(--ease-enter)] fade-out zoom-out-95 in-placement-left:slide-out-to-right-0.5 in-placement-right:slide-out-to-left-0.5 in-placement-top:slide-out-to-bottom-0.5 in-placement-bottom:slide-out-to-top-0.5 motion-reduce:zoom-out-100 motion-reduce:in-placement-left:slide-out-to-right-0 motion-reduce:in-placement-right:slide-out-to-left-0 motion-reduce:in-placement-top:slide-out-to-bottom-0 motion-reduce:in-placement-bottom:slide-out-to-top-0",
                         )}

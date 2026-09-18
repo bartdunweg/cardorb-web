@@ -10,7 +10,7 @@ import { signOut } from "@/app/(auth)/actions";
 import { FormError } from "@/components/app/form-error";
 import { PricesPublicRow } from "@/components/app/prices-public-row";
 import { PublicProfileRow, publicUrl } from "@/components/app/public-profile-row";
-import { SettingsGroup, SettingsLinkRow, SettingsRow, SettingsTriggerRow, SheetHeader } from "@/components/app/settings-rows";
+import { SettingsGroup, SettingsLinkRow, SettingsRow, SettingsTriggerRow, SheetHeader, settingsLabelClass } from "@/components/app/settings-rows";
 import { SheetDialog } from "@/components/app/sheet-dialog";
 import { notify } from "@/components/app/toast";
 import { Avatar } from "@/components/base/avatar/avatar";
@@ -373,7 +373,7 @@ export function SettingsForm({
                 row that opens a sheet to show them. A row that hides one control is a door in front
                 of a light switch. */}
             <section className="flex flex-col gap-2">
-                <h2 className="px-1 text-sm font-medium text-tertiary">Preferences</h2>
+                <h2 className={settingsLabelClass}>Preferences</h2>
                 <div className="flex flex-col gap-3 rounded-xl bg-page p-4 shadow-lift-xs ring-1 ring-primary ring-inset">
                     <span className="text-md text-primary">Theme</span>
                     <ButtonGroup
