@@ -62,7 +62,8 @@ export function FilterChip({
     };
     const chipClass = cx(
         "flex shrink-0 pressable cursor-pointer items-center gap-1 rounded-full py-1.5 pr-2 pl-3 text-xs font-semibold whitespace-nowrap ring-1 outline-focus-ring ring-inset focus-visible:outline-2",
-        chosen ? "bg-alpha-black/8 text-primary ring-transparent" : "bg-primary text-secondary ring-primary hover:bg-secondary",
+        // Unchosen, the secondary button's grey, so a row of chips does not read as fields (button-styles.ts).
+        chosen ? "bg-alpha-black/8 text-primary ring-transparent" : "bg-tertiary text-secondary ring-primary hover:bg-quaternary",
     );
     const chipContent = (
         <>

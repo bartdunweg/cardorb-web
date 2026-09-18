@@ -54,7 +54,8 @@ export const DatePickerTrigger = ({
                 shape={field ? "rect" : "pill"}
                 iconLeading={CalendarIcon}
                 className={cx(
-                    field && "w-full justify-start font-medium shadow-xs hover:bg-primary",
+                    // A field, so a field's white, where a secondary button is grey (button-styles.ts).
+                    field && "w-full justify-start bg-primary font-medium shadow-xs hover:bg-primary",
                     field && (isPlaceholder ? "text-placeholder hover:text-placeholder" : "text-primary hover:text-primary"),
                 )}
             >

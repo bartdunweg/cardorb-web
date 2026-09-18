@@ -12,6 +12,7 @@ import { cx } from "@/utils/cx";
 import { isReactComponent } from "@/utils/is-react-component";
 
 export const styles = {
+    // White, not the secondary button's grey: its quaternary icon measured 2.37:1 on neutral-100, under 3 (2026-09-19).
     secondary: "bg-primary text-fg-quaternary ring-1 ring-primary ring-inset hover:bg-primary_hover hover:text-fg-quaternary_hover disabled:shadow-xs",
     tertiary: "text-fg-quaternary hover:bg-primary_hover hover:text-fg-quaternary_hover",
 };
