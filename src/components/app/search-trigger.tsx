@@ -5,23 +5,19 @@ import { Button as AriaButton } from "react-aria-components";
 import { cx } from "@/utils/cx";
 
 /**
- * Ours: a button dressed as the search field, for the two places that open a search instead of
- * taking one: the palette's trigger in the desktop sidebar and the bar at the top of Home on a
- * phone. The kit's Input is a field, and a field that answers a tap by opening a dialog is a lie
- * to anything that reads it; this is a button that wears the field's ring, radius and icon.
- *
- * The two sizes are the two places: `sm` sits in the sidebar, `md` is the phone's bar, which is the
- * kit's Input at its lg size and says a placeholder's sentence, so it carries the placeholder's grey.
+ * Ours: a button dressed as the search field, for the palette's trigger in the desktop sidebar,
+ * which opens a search instead of taking one. The kit's Input is a field, and a field that answers
+ * a tap by opening a dialog is a lie to anything that reads it; this is a button that wears the
+ * field's ring, radius and icon. On a phone the palette opens from the round button beside the tab
+ * bar (mobile-nav.tsx).
  */
 export function SearchTrigger({
     label,
-    size = "sm",
     onPress,
     className,
 }: {
-    /** The words in the bar, and the button's name: "Search", "Search a card or a set". */
+    /** The words in the bar, and the button's name: "Search". */
     label: string;
-    size?: "sm" | "md";
     onPress: () => void;
     className?: string;
 }) {
@@ -29,8 +25,7 @@ export function SearchTrigger({
         <AriaButton
             onPress={onPress}
             className={cx(
-                "flex w-full pressable cursor-pointer items-center gap-2 rounded-full bg-primary ring-1 ring-primary outline-focus-ring ring-inset hover:bg-secondary focus-visible:outline-2",
-                size === "sm" ? "px-3 py-2 text-sm text-tertiary" : "px-3.5 py-2.5 text-md text-placeholder",
+                "flex w-full pressable cursor-pointer items-center gap-2 rounded-full bg-primary px-3 py-2 text-sm text-tertiary ring-1 ring-primary outline-focus-ring ring-inset hover:bg-secondary focus-visible:outline-2",
                 className,
             )}
         >

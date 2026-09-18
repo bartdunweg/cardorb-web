@@ -539,18 +539,13 @@ export const ourSections: SectionSpec[] = [
         title: "SearchTrigger",
         from: "components/app/search-trigger",
         ours: true,
-        note: "A button dressed as the search field, for the two places that open a search instead of taking one: the palette's trigger in the desktop sidebar and the bar at the top of Home on a phone. The kit's Input is a field, and a field that answers a tap by opening a dialog is a lie to anything that reads it. The md size is that Input at its lg size, which is why it carries the placeholder's grey.",
+        note: "A button dressed as the search field, for the palette's trigger in the desktop sidebar, which opens a search instead of taking one. The kit's Input is a field, and a field that answers a tap by opening a dialog is a lie to anything that reads it. On a phone the palette opens from the round button beside the tab bar.",
         render: (
             <Panel>
-                <Group title="Sizes" cols="wide">
-                    <Cell label='size="sm", the sidebar' span="full">
+                <Group title="In the sidebar" cols="wide">
+                    <Cell label="the sidebar" span="full">
                         <div className="w-full max-w-72">
                             <SearchTrigger label="Search" onPress={() => notify.done("The palette would open")} />
-                        </div>
-                    </Cell>
-                    <Cell label='size="md", the phone bar' span="full">
-                        <div className="w-full max-w-72">
-                            <SearchTrigger size="md" label="Search a card or a set" onPress={() => notify.done("The sheet would open")} />
                         </div>
                     </Cell>
                 </Group>
