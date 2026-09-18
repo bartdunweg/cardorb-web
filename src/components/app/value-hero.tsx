@@ -1,13 +1,17 @@
 "use client";
 
-import { useTransition } from "react";
-import { ChevronDown } from "@untitledui/icons";
+import { type FC, useState, useTransition } from "react";
+import { ChevronDown, Folder, Heart, Rows01, Star01 } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
+import { Header as AriaHeader, Heading as AriaHeading } from "react-aria-components";
 import { ChartPeriods } from "@/components/app/chart-periods";
+import { FilterChoices } from "@/components/app/filter-chip";
 import { useHomePeriod } from "@/components/app/home-period";
 import { ValueChart } from "@/components/app/value-chart";
+import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
+import { useBreakpoint } from "@/hooks/use-breakpoint";
 import { PERIODS, forChart, isoDaysAgo } from "@/lib/chart-periods";
 import { formatValue } from "@/lib/format";
 import { splitChange } from "@/lib/value-change";
@@ -16,12 +20,16 @@ import { cx } from "@/utils/cx";
 
 // Home's first thing: what the collection is worth, big, with how that has moved over a period
 // and the line behind it. The name beside the amount is a menu: All cards, Favorites, or one of the
-// binders; a choice goes into the URL (`?value=`) and the page reads that list's line. The period
+// binders; a choice goes into the URL (`?value=`) and the page reads that list's line. The menu is
+// the filters' own: a menu under the name from sm, a sheet from the bottom on a phone (FilterChip). The period
 // buttons under the chart cut the same line; the change above it is over the period shown.
 
 export type ValueList = { id: string; name: string };
 
 const first = (keys: "all" | Set<React.Key>) => (keys === "all" ? undefined : [...keys][0]);
+
+// Each list wears the sidebar's icon for it: Owned's rows for the whole collection, the star, a binder's folder, the heart.
+const iconFor = (id: string): FC<{ className?: string }> => (id === "all" ? Rows01 : id === "favorites" ? Star01 : id === "wishlist" ? Heart : Folder);
 
 export function ValueHero({
     lists,
@@ -29,7 +37,7 @@ export function ValueHero({
     value,
     snapshots,
 }: {
-    /** All cards first, then Favorites, the binders, and the wishlist last. */
+    /** The collection and the wishlist, then Favorites and the binders. */
     lists: ValueList[];
     /** The id of the list shown. */
     selected: string;
@@ -47,6 +55,28 @@ export function ValueHero({
     const split = splitChange(shown, value);
     const change = split ? split.change : null;
     const list = lists.find((l) => l.id === selected) ?? lists[0];
+    // Two groups, as the sidebar has them: the collection and the wishlist, then the binders under their heading.
+    const top = lists.filter((l) => l.id === "all" || l.id === "wishlist");
+    const binders = lists.filter((l) => l.id !== "all" && l.id !== "wishlist");
+    const asOptions = (group: ValueList[]) =>
+        group.map((l) => {
+            const Icon = iconFor(l.id);
+            return { value: l.id, label: l.name, icon: <Icon className="size-5 text-fg-quaternary" /> };
+        });
+    const sm = useBreakpoint("sm");
+    // One menu trigger at every width, so the server and a phone draw the same button: a trigger on one
+    // side of the breakpoint only broke hydration. On a phone its press opens the sheet instead.
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [sheetOpen, setSheetOpen] = useState(false);
+    const choose = (key: string) => {
+        if (key === selected) return;
+        startTransition(() => router.replace(key === "all" ? "/dashboard" : `/dashboard?value=${key}`, { scroll: false }));
+    };
+    const trigger = (
+        <Button color="link-gray" size="sm" iconTrailing={ChevronDown} className="hit-area" aria-label={`Value of ${list.name}; choose a list`}>
+            {list.name}
+        </Button>
+    );
 
     // Dims while the next answer is fetched, after 150 ms, so a quick answer never flickers; it
     // lights up again at once.
@@ -63,29 +93,82 @@ export function ValueHero({
                     amount changes; a long binder name wraps it under the amount rather than squeezing it. */}
                 <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                     <p className="text-display-md font-semibold text-primary tabular-nums sm:text-display-lg">{formatValue(value)}</p>
-                    <Dropdown.Root>
-                        <Button color="link-gray" size="sm" iconTrailing={ChevronDown} className="hit-area" aria-label={`Value of ${list.name}; choose a list`}>
-                            {list.name}
-                        </Button>
-                        <Dropdown.Popover placement="bottom start" className="w-56">
+                    <Dropdown.Root
+                        isOpen={menuOpen}
+                        onOpenChange={(next) => {
+                            if (sm) setMenuOpen(next);
+                            else if (next) setSheetOpen(true);
+                        }}
+                    >
+                        {trigger}
+                        <Dropdown.Popover placement="bottom end" className="w-56">
                             <Dropdown.Menu
                                 selectionMode="single"
                                 disallowEmptySelection
                                 selectedKeys={new Set([selected])}
                                 onSelectionChange={(keys) => {
                                     const key = first(keys);
-                                    if (typeof key !== "string" || key === selected) return;
-                                    startTransition(() => router.replace(key === "all" ? "/dashboard" : `/dashboard?value=${key}`, { scroll: false }));
+                                    if (typeof key === "string") choose(key);
                                 }}
                             >
-                                {lists.map((l) => (
-                                    <Dropdown.Item key={l.id} id={l.id}>
-                                        {l.name}
-                                    </Dropdown.Item>
-                                ))}
+                                <Dropdown.Section>
+                                    {top.map((l) => (
+                                        <Dropdown.Item key={l.id} id={l.id} icon={iconFor(l.id)}>
+                                            {l.name}
+                                        </Dropdown.Item>
+                                    ))}
+                                </Dropdown.Section>
+                                <Dropdown.Separator />
+                                <Dropdown.Section>
+                                    <AriaHeader className="px-3 pt-2 pb-1 text-xs font-semibold text-quaternary">Binders</AriaHeader>
+                                    {binders.map((l) => (
+                                        <Dropdown.Item key={l.id} id={l.id} icon={iconFor(l.id)}>
+                                            {l.name}
+                                        </Dropdown.Item>
+                                    ))}
+                                </Dropdown.Section>
                             </Dropdown.Menu>
                         </Dropdown.Popover>
                     </Dropdown.Root>
+                    <SlideoutMenu isDismissable isOpen={sheetOpen} onOpenChange={setSheetOpen} dialogClassName="max-h-[70dvh]">
+                        {({ close }) => (
+                            <>
+                                <SlideoutMenu.Header onClose={close}>
+                                    <AriaHeading slot="title" className="text-lg font-semibold text-primary">
+                                        Show the value of
+                                    </AriaHeading>
+                                </SlideoutMenu.Header>
+                                {/* role="presentation", not the kit's default "main": the page already has a <main>. */}
+                                {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- the rule offers <img alt="">, which this is not: the role is here only to stop the kit's default role="main". */}
+                                <SlideoutMenu.Content role="presentation" className="gap-0 pb-4">
+                                    <FilterChoices
+                                        label="Collection and wishlist"
+                                        focusField={false}
+                                        value={[selected]}
+                                        options={asOptions(top)}
+                                        onChange={(next) => {
+                                            if (next[0]) choose(next[0]);
+                                            close();
+                                        }}
+                                    />
+                                    {/* Seen only: the choices' own legend says "Binders" to a screen reader. */}
+                                    <p aria-hidden="true" className="px-2 pt-3 pb-1 text-xs font-semibold text-quaternary">
+                                        Binders
+                                    </p>
+                                    <FilterChoices
+                                        label="Binders"
+                                        focusField={false}
+                                        value={[selected]}
+                                        options={asOptions(binders)}
+                                        onChange={(next) => {
+                                            if (next[0]) choose(next[0]);
+                                            close();
+                                        }}
+                                    />
+                                </SlideoutMenu.Content>
+                            </>
+                        )}
+                    </SlideoutMenu>
                 </div>
                 {/* The sign carries the direction as well as the colour, for a reader who sees neither. */}
                 <p

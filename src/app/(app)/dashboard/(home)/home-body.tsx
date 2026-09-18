@@ -131,12 +131,12 @@ async function Welcome() {
 // wishlist's is one narrow list read, started with the rest of Home's reads.
 async function ValueSection({ selected, total, reads }: { selected: string; total: number; reads: Promise<ValueReads> }) {
     const { binders, snapshots, current } = await reads;
-    // The wishlist last: its number is what the cards you lack would cost, not what you hold.
+    // As the sidebar has them: the collection and the wishlist, then Favorites and the binders.
     const lists: ValueList[] = [
         { id: "all", name: "Collection" },
+        { id: "wishlist", name: "Wishlist" },
         { id: "favorites", name: "Favorites" },
         ...binders.map((f) => ({ id: f.id, name: f.name })),
-        { id: "wishlist", name: "Wishlist" },
     ];
     // A list whose own value could not be read is shown as the collection, whose number is in hand.
     const known = lists.some((l) => l.id === selected) && (selected === "all" || current !== null);
