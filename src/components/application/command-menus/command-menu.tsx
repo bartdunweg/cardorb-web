@@ -147,10 +147,14 @@ const CommandMenuRoot = ({
                             shortcutKeys={shortcut ? [shortcut] : undefined}
                             placeholder={placeholder}
                             ref={mergeRefs([inputRef, useHotkeysRef])}
-                            // max-sm:rounded-none (ours): the card's overflow-hidden clips the field's corners on
-                            // a desktop; on a phone the palette is the square whole screen, and a rounded field
-                            // at its top read as a sheet's head.
-                            className="relative outline-hidden! after:absolute after:bottom-0 after:left-0 after:h-px after:w-full after:bg-border-secondary max-sm:rounded-none"
+                            // max-sm (ours): on a phone the field is the grey pill an iOS search screen opens with,
+                            // inset from the edges, with Cancel in the room at its right (command-search-menu.tsx),
+                            // and no rule under it: the chips' row draws the one line (Mobbin: Acorns, Bumble,
+                            // IKEA, Mercury, WhatsApp; Bart's call, 2026-09-18). Black at 6%, not bg-secondary:
+                            // that is #FAFAFA on the white screen, a field no one could see; alpha-black turns
+                            // white in dark, so the pill shows on either ground. The placeholder a step darker on
+                            // it: the kit's grey read 4.16:1 on the pill, under the 4.5 text needs.
+                            className="relative outline-hidden! after:absolute after:bottom-0 after:left-0 after:h-px after:w-full after:bg-border-secondary max-sm:my-2 max-sm:mr-22 max-sm:ml-4 max-sm:rounded-full max-sm:bg-alpha-black/6 max-sm:px-3.5 max-sm:py-2.5 max-sm:after:hidden max-sm:[&_input::placeholder]:text-tertiary"
                         />
                     </AriaTextField>
                     {children}

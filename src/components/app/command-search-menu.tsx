@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode, useContext, useRef } from "react";
-import { ChevronLeft, XClose } from "@untitledui/icons";
+import { ChevronLeft } from "@untitledui/icons";
 import { Heading as AriaHeading, ListBoxLoadMoreItem } from "react-aria-components";
 import type { CatalogueFilters, PokemonCard } from "@/app/(app)/dashboard/cards/actions";
 import { CardImage } from "@/components/app/card-image";
@@ -311,16 +311,12 @@ export function CommandSearchMenu({
                 Search cards
             </AriaHeading>
 
-            {/* A phone has no Escape and no scrim beside a full screen to tap: Close, the field's height, at
-                the right end of its row. From sm up the scrim around the card is the way out. */}
-            <Button
-                color="secondary"
-                size="md"
-                iconLeading={XClose}
-                aria-label="Close"
-                className="absolute top-2 right-3 sm:hidden"
-                onClick={() => onOpenChange(false)}
-            />
+            {/* A phone has no Escape and no scrim beside a full screen to tap: Cancel, in words, at the right
+                end of the field's row, as an iOS search screen closes (Mobbin: Acorns, Bumble, IKEA, Mercury,
+                WhatsApp). From sm up the scrim around the card is the way out. */}
+            <Button color="tertiary" size="md" className="absolute top-2 right-2 h-11 sm:hidden" onClick={() => onOpenChange(false)}>
+                Cancel
+            </Button>
 
             {/* The chips that narrow the hits, one row, the kit's filter chips throughout (Bart's call: the
                 language is a filter like the others, not a row of flags). Always there, because the language
