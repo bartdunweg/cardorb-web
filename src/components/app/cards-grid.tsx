@@ -5,9 +5,10 @@ import { Minus, Plus } from "@untitledui/icons";
 import { arriveDelay } from "@/components/app/arrive-stagger";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
+import { CardMarks, CardMarksText } from "@/components/app/card-marks";
 import { warmCard } from "@/components/app/card-memo";
+import { CardPrice } from "@/components/app/card-price";
 import { CardTile } from "@/components/app/card-tile";
-import { FavoriteStar } from "@/components/app/favorite-star";
 import { FlagIcon } from "@/components/app/flag-icon";
 import { useListTotals } from "@/components/app/list-totals";
 import { PriceChangeLine } from "@/components/app/price-change";
@@ -18,7 +19,6 @@ import type { PriceChange } from "@/lib/api-shapes";
 import { cardLine, copyLine } from "@/lib/card-label";
 import type { PublicCard } from "@/lib/cards";
 import { type CardsSize, GRID_COLUMNS, TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
-import { formatPrice } from "@/lib/format";
 import { cx } from "@/utils/cx";
 
 // Presentational grid of card thumbnails. Selection is owned by CardsView. Generic over the card
@@ -200,13 +200,14 @@ const GridCell = memo(function GridCell<T extends GridCard>({ card, arriveDelay:
                             // beside it name the card, as they do for every tile.
                             <CardBack width={TILE_WIDTH[size]} sizes={TILE_SIZES[size]} priority={priority} />
                         )}
+                        <CardMarks favorite={Boolean(card.is_favorite)} wished={card.owned === false} />
                     </div>
                 }
                 words={
                     <div className="flex flex-1 flex-col">
                         <span className="flex items-center gap-1 text-sm font-medium text-primary">
                             <span className="truncate">{card.name}</span>
-                            {card.is_favorite ? <FavoriteStar /> : null}
+                            <CardMarksText favorite={Boolean(card.is_favorite)} wished={card.owned === false} />
                             {/* A copy in another language wears its flag; English, which nearly every card is, stays plain. */}
                             {"language" in card && typeof card.language === "string" && card.language !== "en" ? <FlagIcon language={card.language} /> : null}
                         </span>
@@ -224,12 +225,11 @@ const GridCell = memo(function GridCell<T extends GridCard>({ card, arriveDelay:
                             forty-eight of them is a column of the same character), but a number that appears
                             only sometimes is one you have to notice the absence of, and the owner would
                             rather read it down the column than work it out. */}
-                        {held != null || card.price != null ? (
+                        {held != null || card.price != null || card.listing_price != null ? (
                             <span className="mt-auto flex items-baseline gap-2 pt-0.5 text-sm font-medium tabular-nums">
-                                {card.price != null ? (
+                                {card.price != null || card.listing_price != null ? (
                                     <span className="text-primary">
-                                        <span className="sr-only">Market price </span>
-                                        {formatPrice(card.price)}
+                                        <CardPrice price={card.price} listing={card.listing_price} />
                                     </span>
                                 ) : null}
                                 {/* A wish is not a holding: no count under it, and no "×1" that read as one.

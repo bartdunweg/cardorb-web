@@ -7,6 +7,7 @@ import { addCard } from "@/app/(app)/dashboard/cards/actions";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { warmCard } from "@/components/app/card-memo";
+import { CardPrice } from "@/components/app/card-price";
 import { GotItButton } from "@/components/app/got-it-button";
 import { printingLabel } from "@/components/app/printing-choices";
 import { TileIconButton } from "@/components/app/tile-icon-button";
@@ -184,12 +185,9 @@ export function SetCardTile({
                 <div className="mt-0.5 flex flex-wrap items-end justify-between gap-x-2 gap-y-1">
                     <div className="flex flex-col">
                         <span className="flex items-baseline gap-1.5 text-sm font-medium tabular-nums">
-                            {card.price != null ? (
-                                <span className="text-primary">
-                                    <span className="sr-only">Market price </span>
-                                    {formatPrice(card.price)}
-                                </span>
-                            ) : null}
+                            <span className="text-primary">
+                                <CardPrice price={card.price} listing={card.listingPrice} />
+                            </span>
                             {/* Polite: a press says its new count, with no toast for a change you are looking at. */}
                             <span aria-live="polite" className="text-xs text-tertiary">
                                 {held > 0 ? (

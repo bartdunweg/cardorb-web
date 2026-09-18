@@ -22,6 +22,12 @@ import { cx } from "@/utils/cx";
  */
 
 /**
+ * A group's label, inset the rows' 16 px so it stands over their icons and words. At 4 px it lined
+ * up with neither the card's edge nor the content inside it.
+ */
+export const settingsLabelClass = "px-4 text-sm font-medium text-tertiary";
+
+/**
  * A titled group of rows, drawn as one card.
  *
  * The heading sits above the card rather than inside it, which is what makes a list of these
@@ -31,7 +37,7 @@ import { cx } from "@/utils/cx";
 export function SettingsGroup({ title, children }: { title: string; children: ReactNode }) {
     return (
         <section className="flex flex-col gap-2">
-            <h2 className="px-1 text-sm font-medium text-tertiary">{title}</h2>
+            <h2 className={settingsLabelClass}>{title}</h2>
             <div className="flex flex-col overflow-hidden rounded-xl bg-page shadow-lift-xs ring-1 ring-primary ring-inset">{children}</div>
         </section>
     );

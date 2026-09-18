@@ -2,15 +2,18 @@ import type { Metadata } from "next";
 import { AddCardButton } from "@/components/app/add-card-button";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { BinderPage } from "@/components/app/binder-page";
+import { CollectionSwitch } from "@/components/app/collection-switch";
 import { type CardFilter, getMyCards } from "@/lib/cards";
 import { openAsLeft } from "@/lib/list-memory-server";
-import { type ListSearchParams, changeWindow, isNarrowed, readListQuery } from "@/lib/list-query";
+import { type ListSearchParams, changeWindow, readListQuery } from "@/lib/list-query";
 
 // The tab's name, which the root layout's template finishes as “… · Cardorb”: without it every
 // tab and every history entry read “Cardorb”. The word is the one the navigation uses for this page.
-export const metadata: Metadata = { title: "Collection" };
+export const metadata: Metadata = { title: "Owned" };
 
-// Every card you own: the whole collection as one list, a tab of its own beside Home.
+// Every card you own: the whole collection as one list, a tab of its own beside Home. No Add card
+// in its header: the search beside the tab bar and in the sidebar opens the same palette, so a plus
+// here was a second way to one place (Bart's call, 2026-09-18). The empty list still offers it.
 //
 // The list is not awaited: the title, the actions and the row go to the browser at once, and
 // the first batch of cards, with the count and value under the title, follows when the API
@@ -37,22 +40,21 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
         language,
         duplicates,
     };
-    const narrowed = isNarrowed(query);
     const list = getMyCards(filter);
-    const datapoints = list.then((r) => ({ total: r.total, copies: r.copies ?? undefined, narrowed, value: r.value, unpriced: r.unpriced }));
     // The facets ride with the list's first page: nothing else is read before the first byte.
     const facets = list.then((r) => r.facets);
 
     return (
         <BinderPage
-            title="Collection"
-            datapoints={datapoints}
-            add={(compact) => <AddCardButton compact={compact} />}
+            title="Owned"
+            // No count or value under the title: Home leads with the value, and the title alone says the page (Bart's call, 2026-09-18).
             query={query}
             basePath="/dashboard/cards"
             facets={facets}
             list={list}
             filter={filter}
+            // Owned and Wishlist one tap apart on a phone, where one tab holds both (collection-switch.tsx).
+            views={<CollectionSwitch current="owned" />}
             empty={
                 <AppEmptyState icon="plus" title="No cards yet" description="Add your first card to start your collection">
                     <AddCardButton />

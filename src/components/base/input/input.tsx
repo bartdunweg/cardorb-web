@@ -1,8 +1,10 @@
 "use client";
 
-// Changed from the kit: the password toggle has a 24 px hit area (#57), and the sm size draws its
-// 14 px text the no-zoom way (.field-text-sm, globals.css). A re-fetch through the Untitled UI CLI
-// or MCP overwrites both; re-apply them.
+// Changed from the kit: the password toggle has a 24 px hit area (#57), the sm size draws its
+// 14 px text the no-zoom way (.field-text-sm, globals.css), and the text stops before a trailing
+// icon (the password toggle, and the invalid icon a TextField shows through data-invalid, which
+// the kit padded only when `isInvalid` reached InputBase as a prop). A re-fetch through the
+// Untitled UI CLI or MCP overwrites all three; re-apply them.
 import { type ComponentType, type HTMLAttributes, type ReactNode, type Ref, createContext, useContext, useState } from "react";
 import { Eye, EyeOff, HelpCircle, InfoCircle } from "@untitledui/icons";
 import type { InputProps as AriaInputProps, TextFieldProps as AriaTextFieldProps } from "react-aria-components";
@@ -64,8 +66,11 @@ export const InputBase = ({
 }: InputBaseProps) => {
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
-    // Check if the input has a leading icon or tooltip
-    const hasTrailingIcon = tooltip || isInvalid;
+    // Check if the input has a leading icon or a trailing one. The password toggle is one, and so
+    // is the invalid icon, which shows on data-invalid whether or not `isInvalid` is passed here:
+    // without the room its text ran under the icon.
+    const hasTrailingIcon = tooltip || isInvalid || type === "password";
+    const trailingOnInvalid = !hasTrailingIcon;
     const hasLeadingIcon = Icon;
 
     // If the input is inside a `TextFieldContext`, use its context to simplify applying styles
@@ -79,19 +84,24 @@ export const InputBase = ({
             // globals.css. Its padding is in em and its height in px so the scale there cancels
             // out, and the field stands exactly where it stood. The 12 and the 36 are the px this
             // read before (px-3, pl-9); the 14 is the size they were measured against.
-            root: cx("field-text-sm h-9 px-[calc(12em/14)]", hasLeadingIcon && "pl-[calc(36em/14)]", hasTrailingIcon && "pr-[calc(36em/14)]"),
+            root: cx(
+                "field-text-sm h-9 px-[calc(12em/14)]",
+                hasLeadingIcon && "pl-[calc(36em/14)]",
+                hasTrailingIcon && "pr-[calc(36em/14)]",
+                trailingOnInvalid && "group-invalid/input:pr-[calc(36em/14)]",
+            ),
             iconLeading: "left-3 size-4 stroke-[2.25px]",
             iconTrailing: "right-3",
             shortcut: "pr-1.5",
         },
         md: {
-            root: cx("px-3 py-2 text-md", hasLeadingIcon && "pl-10", hasTrailingIcon && "pr-9"),
+            root: cx("px-3 py-2 text-md", hasLeadingIcon && "pl-10", hasTrailingIcon && "pr-9", trailingOnInvalid && "group-invalid/input:pr-9"),
             iconLeading: "left-3 size-5",
             iconTrailing: "right-3",
             shortcut: "pr-2",
         },
         lg: {
-            root: cx("px-3.5 py-2.5 text-md", hasLeadingIcon && "pl-10.5", hasTrailingIcon && "pr-9.5"),
+            root: cx("px-3.5 py-2.5 text-md", hasLeadingIcon && "pl-10.5", hasTrailingIcon && "pr-9.5", trailingOnInvalid && "group-invalid/input:pr-9.5"),
             iconLeading: "left-3.5 size-5",
             iconTrailing: "right-3.5",
             shortcut: "pr-2.5",

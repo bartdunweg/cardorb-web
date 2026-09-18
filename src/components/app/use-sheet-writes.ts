@@ -148,6 +148,7 @@ export function useSheetWrites({
                   wishlist: false,
                   quantity: 0,
                   price: own.price,
+                  listingPrice: own.listing_price ?? null,
               }
             : null);
 

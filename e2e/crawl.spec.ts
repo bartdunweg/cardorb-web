@@ -77,7 +77,7 @@ let binderPath = "";
 /** Every route, named as the app names the page, with the h1 it must draw. */
 const ROUTES: { name: string; path: () => string; heading: string | RegExp }[] = [
     { name: "Home", path: () => "/dashboard", heading: "Home" },
-    { name: "Collection", path: () => "/dashboard/cards", heading: "Collection" },
+    { name: "Owned", path: () => "/dashboard/cards", heading: "Owned" },
     { name: "Wishlist", path: () => "/dashboard/wishlist", heading: "Wishlist" },
     { name: "Favorites", path: () => "/dashboard/favorites", heading: "Favorites" },
     { name: "Binders", path: () => "/dashboard/collections", heading: "Binders" },
@@ -89,8 +89,8 @@ const ROUTES: { name: string; path: () => string; heading: string | RegExp }[] =
     { name: "Browse", path: () => "/dashboard/sets", heading: "Browse" },
     { name: "a set page", path: () => `/dashboard/sets/${SET_ID}`, heading: "Scarlet & Violet" },
     { name: "Settings", path: () => "/dashboard/settings", heading: "Settings" },
-    // You titles itself with the account's name, which here is the seeded display name.
-    { name: "You", path: () => "/dashboard/you", heading: /^e2e$/i },
+    // You is titled with its own name; the account's is on the card under it (ui-polish.spec.ts).
+    { name: "You", path: () => "/dashboard/you", heading: "You" },
     // Reached by typing the address only, deliberately (CLAUDE.md), which is exactly why nothing
     // else in the suite would notice it breaking.
     { name: "the design system", path: () => "/dashboard/design", heading: "Design system" },

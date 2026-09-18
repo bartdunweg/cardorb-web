@@ -6,7 +6,6 @@ import { warmCardFacts } from "@/components/app/card-memo";
 import { CardsGrid, FIRST_ROW } from "@/components/app/cards-grid";
 import { GotItButton } from "@/components/app/got-it-button";
 import { TableSkeleton } from "@/components/app/skeletons";
-import { WishHeartButton } from "@/components/app/wish-heart-button";
 import { Button } from "@/components/base/buttons/button";
 import type { Card, CardFilter, CardList } from "@/lib/cards";
 import type { CardsSize, CardsViewMode } from "@/lib/cards-view";
@@ -360,13 +359,12 @@ export function CardsList({
     );
 }
 
-/** A wishlist tile's buttons: the pink heart and Got it. One function for the module, so a memoised tile is not drawn again for a new one. */
-const wishActions = (card: Card, leave: () => void) => (
-    <>
-        <WishHeartButton card={card} onGone={leave} />
-        <GotItButton card={card} />
-    </>
-);
+/**
+ * A wishlist tile's button: Got it. The heart is a mark on the picture now (card-marks.tsx), not a
+ * button: the sheet's menu takes a wish off. One function for the module, so a memoised tile is not
+ * drawn again for a new one.
+ */
+const wishActions = (card: Card) => <GotItButton card={card} />;
 
 /**
  * The cards in the runs the list already arrives in, one per set, or the whole list in one

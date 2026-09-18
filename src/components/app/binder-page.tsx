@@ -21,6 +21,7 @@ export function BinderPage({
     barActions,
     settings,
     add,
+    views,
     children,
     ...body
 }: BinderBodyProps & {
@@ -30,7 +31,8 @@ export function BinderPage({
     /** How many lines the count takes: two on a Pokédex ("544 of 1,025 Pokémon", then the count). */
     datapointLines?: 1 | 2;
     back?: { href: string; label: string };
-    datapoints: Datapoints | Promise<Datapoints>;
+    /** The count and value under the title. Left out on Collection, whose value Home already leads with. */
+    datapoints?: Datapoints | Promise<Datapoints>;
     actions?: ReactNode;
     /** A phone's settings button, in the bar across from Back; see PageHeader. */
     barActions?: ReactNode;
@@ -42,6 +44,11 @@ export function BinderPage({
      */
     settings?: (compact: boolean) => ReactNode;
     add?: (compact: boolean) => ReactNode;
+    /**
+     * Sibling lists this page switches between (Owned | Wishlist), on a phone alone: one tab there holds
+     * both, where from lg the sidebar lists each as a page of its own (Bart's call, 2026-09-18).
+     */
+    views?: ReactNode;
     /** Under the data points: a rule's chips, a progress bar. */
     children?: ReactNode;
 }) {
@@ -52,13 +59,17 @@ export function BinderPage({
                 <PageHeader
                     title={title}
                     subtitle={
-                        <>
-                            {subtitle ? <span className="block">{subtitle}</span> : null}
-                            <Suspense fallback={<CountOutline lines={datapointLines} />}>
-                                {/* The outline keeps the line's height, so the row and the cards do not move when the numbers land. */}
-                                <DatapointsText datapoints={datapoints} />
-                            </Suspense>
-                        </>
+                        subtitle || datapoints ? (
+                            <>
+                                {subtitle ? <span className="block">{subtitle}</span> : null}
+                                {datapoints ? (
+                                    <Suspense fallback={<CountOutline lines={datapointLines} />}>
+                                        {/* The outline keeps the line's height, so the row and the cards do not move when the numbers land. */}
+                                        <DatapointsText datapoints={datapoints} />
+                                    </Suspense>
+                                ) : null}
+                            </>
+                        ) : undefined
                     }
                     back={back}
                     actions={
@@ -82,6 +93,8 @@ export function BinderPage({
                         )
                     }
                 >
+                    {/* 12 px more than the header's 4 px gap: the switch is a control of its own, not a line of the title (Bart, 2026-09-18). */}
+                    {views ? <div className="pt-3 lg:hidden">{views}</div> : null}
                     {children}
                 </PageHeader>
                 <BinderBody {...body} />

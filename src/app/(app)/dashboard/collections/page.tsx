@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { AddCardButton } from "@/components/app/add-card-button";
 import { BindersGrid, NewBinderButton } from "@/components/app/binders-grid";
 import { PageHeader } from "@/components/app/page-header";
 import { BindersOutline } from "@/components/app/skeletons";
@@ -15,14 +14,12 @@ export default function BindersPage() {
         <div className="flex flex-1 flex-col gap-6">
             <PageHeader
                 title="Binders"
-                // Add card is the app's main action and opens the one palette, here as everywhere on a
-                // desktop; a new binder is the page's own thing and sits beside it as the secondary. On a
-                // phone the bar carries the new binder alone: this is the list of binders, and a card is
-                // added from inside one, where it has somewhere to go (Bart's call).
+                // The page's own action is a new binder, with the plus. Add card left
+                // this page: the search opens the same palette, and a card is added from inside a binder,
+                // where it has somewhere to go (Bart's call, 2026-09-18).
                 actions={
                     <div className="flex items-center gap-3 max-lg:hidden">
                         <NewBinderButton />
-                        <AddCardButton />
                     </div>
                 }
                 barActions={<NewBinderButton compact />}

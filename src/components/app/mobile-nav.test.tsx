@@ -43,22 +43,29 @@ describe("MobileTabBar pill", () => {
     it("moves to the tapped tab before the page arrives", () => {
         const { container } = bar();
         expect(pill(container).style.transform).toBe("translateX(0%)");
-        fireEvent.click(screen.getByRole("link", { name: /Wishlist/ }));
+        fireEvent.click(screen.getByRole("link", { name: /My cards/ }));
         expect(pill(container).style.transform).toBe("translateX(200%)");
-        expect(screen.getByRole("link", { name: /Wishlist/ })).toHaveAttribute("aria-current", "page");
+        expect(screen.getByRole("link", { name: /My cards/ })).toHaveAttribute("aria-current", "page");
     });
 
     it("stays on the tab once the address matches", () => {
         const { container, rerender } = bar();
-        fireEvent.click(screen.getByRole("link", { name: /Collection/ }));
+        fireEvent.click(screen.getByRole("link", { name: /My cards/ }));
         pathname = "/dashboard/cards";
         rerender(<RoutePendingProvider>{<MobileTabBar />}</RoutePendingProvider>);
-        expect(pill(container).style.transform).toBe("translateX(300%)");
+        expect(pill(container).style.transform).toBe("translateX(200%)");
+    });
+
+    it("keeps My cards lit on the wishlist, the other half of its switch", () => {
+        pathname = "/dashboard/wishlist";
+        const { container } = bar();
+        expect(pill(container).style.transform).toBe("translateX(200%)");
+        expect(screen.getByRole("link", { name: /My cards/ })).toHaveAttribute("aria-current", "page");
     });
 
     it("follows Back after a tap has arrived, with no line running", () => {
         const { container, rerender } = bar();
-        fireEvent.click(screen.getByRole("link", { name: /Wishlist/ }));
+        fireEvent.click(screen.getByRole("link", { name: /My cards/ }));
         pathname = "/dashboard/wishlist";
         rerender(<RoutePendingProvider>{<MobileTabBar />}</RoutePendingProvider>);
         expect(pill(container).style.transform).toBe("translateX(200%)");
@@ -73,7 +80,7 @@ describe("MobileTabBar pill", () => {
         fireEvent.click(screen.getByRole("link", { name: /Browse/ }));
         pathname = "/dashboard/cards";
         rerender(<RoutePendingProvider>{<MobileTabBar />}</RoutePendingProvider>);
-        expect(pill(container).style.transform).toBe("translateX(300%)");
+        expect(pill(container).style.transform).toBe("translateX(200%)");
     });
 
     it("goes back to the current tab when the navigation never lands", () => {

@@ -26,3 +26,18 @@ describe("what a binder's count looks like", () => {
         expect(screen.getByText("5 cards")).toBeTruthy();
     });
 });
+
+/*
+ * The icon is the kit's flat one, a grey disc with no rim or shadow (Bart's call, 2026-09-18): the
+ * lifted, rounded-square one read as a button on every row. A disc has no corner to be concentric
+ * with the tile's, which is what #726 fixed on the square one. e2e/ui-polish.spec.ts reads it live.
+ */
+describe("a binder tile's icon", () => {
+    it("is the kit's flat disc, with no lifted layer", () => {
+        const { container } = render(<BindersGrid binders={[]} favoritesCount={5} />);
+        const icon = container.querySelector("[data-featured-icon]")!;
+        const classes = icon.className.split(" ");
+        expect(classes).toContain("rounded-full");
+        expect(classes.some((c) => c.startsWith("before:shadow"))).toBe(false);
+    });
+});

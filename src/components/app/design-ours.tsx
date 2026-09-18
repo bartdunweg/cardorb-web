@@ -13,6 +13,7 @@ import { AuthEmailField, AuthShell } from "./auth-shell";
 import { CardBack } from "./card-back";
 import { CardImage } from "./card-image";
 import { CardTile } from "./card-tile";
+import { CollectionSwitch } from "./collection-switch";
 import { CopyCard } from "./copy-card";
 import { Cell, Group, Panel, type SectionSpec } from "./design-section";
 import { FilterChip, FilterChipRow } from "./filter-chip";
@@ -502,10 +503,10 @@ export const ourSections: SectionSpec[] = [
                         <RowButton icon={FilterLines} label="Filters" />
                     </Cell>
                     <Cell label="menu">
-                        <RowButton icon={Grid01} label="View" menu />
+                        <RowButton icon={Grid01} label="View" />
                     </Cell>
                     <Cell label="with a badge">
-                        <RowButton icon={FilterLines} label="Filters" menu>
+                        <RowButton icon={FilterLines} label="Filters">
                             <Badge type="pill-color" size="sm" color="gray">
                                 2
                             </Badge>
@@ -535,22 +536,35 @@ export const ourSections: SectionSpec[] = [
         ),
     },
     {
+        id: "collection-switch",
+        title: "CollectionSwitch",
+        from: "components/app/collection-switch",
+        ours: true,
+        note: "The kit's Tabs, minimal and round: Owned and Wishlist under the My cards title. Each tab is a link to its own page, so the wishlist keeps its address; on a phone it is how you reach the wishlist, which has no tab in the bar.",
+        render: (
+            <Panel>
+                <Group title="States" cols="wide">
+                    <Cell label="on the collection" span="full">
+                        <div className="w-full max-w-72">
+                            <CollectionSwitch current="owned" />
+                        </div>
+                    </Cell>
+                </Group>
+            </Panel>
+        ),
+    },
+    {
         id: "search-trigger",
         title: "SearchTrigger",
         from: "components/app/search-trigger",
         ours: true,
-        note: "A button dressed as the search field, for the two places that open a search instead of taking one: the palette's trigger in the desktop sidebar and the bar at the top of Home on a phone. The kit's Input is a field, and a field that answers a tap by opening a dialog is a lie to anything that reads it. The md size is that Input at its lg size, which is why it carries the placeholder's grey.",
+        note: "A button dressed as the search field, for the palette's trigger in the desktop sidebar, which opens a search instead of taking one. The kit's Input is a field, and a field that answers a tap by opening a dialog is a lie to anything that reads it. On a phone the palette opens from the round button beside the tab bar.",
         render: (
             <Panel>
-                <Group title="Sizes" cols="wide">
-                    <Cell label='size="sm", the sidebar' span="full">
+                <Group title="In the sidebar" cols="wide">
+                    <Cell label="the sidebar" span="full">
                         <div className="w-full max-w-72">
                             <SearchTrigger label="Search" onPress={() => notify.done("The palette would open")} />
-                        </div>
-                    </Cell>
-                    <Cell label='size="md", the phone bar' span="full">
-                        <div className="w-full max-w-72">
-                            <SearchTrigger size="md" label="Search a card or a set" onPress={() => notify.done("The sheet would open")} />
                         </div>
                     </Cell>
                 </Group>
@@ -689,8 +703,8 @@ function RowSearchDemo() {
                 <Input aria-label="Search" icon={SearchLg} placeholder="Search" size="sm" value={q} onChange={setQ} wrapperClassName="rounded-full" />
             </RowSearch>
             <RowButton icon={FilterLines} label="Filters" />
-            <RowButton icon={SwitchVertical01} label="Sort" menu />
-            <RowButton icon={Grid01} label="View" menu className="ml-auto" />
+            <RowButton icon={SwitchVertical01} label="Sort" />
+            <RowButton icon={Grid01} label="View" className="ml-auto" />
         </div>
     );
 }
