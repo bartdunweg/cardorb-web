@@ -11,6 +11,7 @@ import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/mod
 import { Button } from "@/components/base/buttons/button";
 import { styles } from "@/components/base/buttons/button-styles";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
+import { useArrived } from "@/hooks/use-arrived";
 import type { BinderKind, BinderRule, PokedexSetting } from "@/lib/binder-rule";
 import type { Facets } from "@/lib/cards";
 import { orFailed } from "@/lib/write-outcome";
@@ -23,16 +24,21 @@ import { cx } from "@/utils/cx";
  */
 export function BinderMenu({
     binder,
-    facets,
+    facets: facetsOnTheWay,
     compact,
 }: {
     binder: { id: string; name: string; kind: BinderKind; rule: BinderRule | null; pokedex: PokedexSetting | null; isPublic: boolean };
-    /** Absent until the page's read is in: the edit form then asks for them itself. */
-    facets?: Facets;
+    /**
+     * The page's read, which may still be on its way: until it is in, the edit form asks for them
+     * itself. A promise rather than a Suspense boundary around the menu, so the menu is never
+     * swapped for a second one while it is open (use-arrived.ts).
+     */
+    facets?: Facets | PromiseLike<Facets | undefined>;
     /** In the phone's bar, the size of Back beside it. */
     compact: boolean;
 }) {
     const router = useRouter();
+    const facets = useArrived<Facets | undefined>(facetsOnTheWay, undefined);
     const [editing, setEditing] = useState(false);
     const [confirming, setConfirming] = useState(false);
     const [deleting, setDeleting] = useState(false);

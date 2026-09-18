@@ -6,9 +6,11 @@ import { type FilterAnswer, type FilterGroup, type FilterOption, type FilterValu
 import { FlagIcon } from "@/components/app/flag-icon";
 import { TypeIcon } from "@/components/app/type-icon";
 import { Dot } from "@/components/foundations/dot-icon";
+import { useArrived } from "@/hooks/use-arrived";
 import { FINISH_LABELS, type Finish } from "@/lib/card-shapes";
 import type { CardFilter } from "@/lib/cards";
 import type { Facets } from "@/lib/cards";
+import { NO_FACETS } from "@/lib/facets";
 import { languageOf } from "@/lib/languages";
 import { type ListQuery, listHref } from "@/lib/list-query";
 import { countCards } from "@/lib/reads";
@@ -92,17 +94,19 @@ const patchOf = (v: FilterValues) => ({
 // only those two rather than filters that would change nothing.
 export function CardsFilters({
     query,
-    facets,
+    facets: facetsOnTheWay,
     offerDuplicates = false,
     countBase,
     readOnly = false,
 }: {
     query: ListQuery;
-    facets: Facets;
+    /** The list's facets, or the promise of them: until they are in, the sheet offers what the query already names (use-arrived.ts). */
+    facets: Facets | PromiseLike<Facets>;
     offerDuplicates?: boolean;
     countBase?: CardFilter;
     readOnly?: boolean;
 }) {
+    const facets = useArrived(facetsOnTheWay, NO_FACETS);
     const router = useRouter();
     const pathname = usePathname();
 

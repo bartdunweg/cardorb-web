@@ -1,4 +1,4 @@
-import { type ComponentProps, Suspense } from "react";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AddCardButton } from "@/components/app/add-card-button";
@@ -96,12 +96,10 @@ async function Binder({ params, searchParams }: { params: Promise<{ id: string }
         // its own page, new or already yours, so its plus asks which; a rule binder fills itself, and
         // its plus is the plain Add card.
         // The menu is there at once; its edit form is handed the facets when they are in, and asks for
-        // them itself when opened before that (binder-dialog.tsx).
-        settings: (compact: boolean) => (
-            <Suspense fallback={<BinderMenu binder={binder} compact={compact} />}>
-                <BinderMenuWithFacets binder={binder} facets={facets} compact={compact} />
-            </Suspense>
-        ),
+        // them itself when opened before that (binder-dialog.tsx). Handed over as the promise, not
+        // behind a Suspense boundary with the menu as its fallback: the fallback menu was swapped
+        // for a new one when the facets came in, and one opened in between closed under the finger.
+        settings: (compact: boolean) => <BinderMenu binder={binder} facets={facets.catch(() => undefined)} compact={compact} />,
         add: binder.rule
             ? (compact: boolean) => <AddCardButton compact={compact} />
             : (compact: boolean) => <BinderAddButton binder={binder} compact={compact} />,
@@ -163,8 +161,4 @@ function RuleChips({ rule, facets }: { rule: BinderRule; facets?: Facets }) {
 // A list that cannot be read shows its own error below; the chips keep the codes rather than join it.
 async function RuleChipsWithTitles({ rule, facets }: { rule: BinderRule; facets: Promise<Facets> }) {
     return <RuleChips rule={rule} facets={await facets.catch(() => undefined)} />;
-}
-
-async function BinderMenuWithFacets({ facets, ...menu }: Omit<ComponentProps<typeof BinderMenu>, "facets"> & { facets: Promise<Facets> }) {
-    return <BinderMenu {...menu} facets={await facets.catch(() => undefined)} />;
 }

@@ -2,6 +2,7 @@ import { readdirSync } from "node:fs";
 import { join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
 import { cspFor, needsNonce } from "./csp";
+import { EARLY_PRESS_SCRIPT_HASH } from "./early-press";
 import { BOOT_SCRIPT_HASH } from "./theme-script";
 
 /** Every page.tsx under a route group, as the URL path it serves, with [id] as a sample segment. */
@@ -58,7 +59,7 @@ describe("needsNonce", () => {
 describe("cspFor", () => {
     it("names the nonce, forbids framing and objects, and allows eval only in development", () => {
         const prod = cspFor("abc", false);
-        expect(prod).toContain(`script-src 'nonce-abc' 'sha256-${BOOT_SCRIPT_HASH}' 'strict-dynamic'`);
+        expect(prod).toContain(`script-src 'nonce-abc' 'sha256-${BOOT_SCRIPT_HASH}' 'sha256-${EARLY_PRESS_SCRIPT_HASH}' 'strict-dynamic'`);
         expect(prod).toContain("frame-ancestors 'none'");
         expect(prod).toContain("object-src 'none'");
         expect(prod).not.toContain("unsafe-eval");
