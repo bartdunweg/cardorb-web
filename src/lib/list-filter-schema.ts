@@ -16,12 +16,14 @@ import { MORE_CEILING } from "@/lib/list-filter";
  * this way, a filter added to `CardFilter` and forgotten here is a type error at build time.
  *
  * `facets` is left out on purpose: a batch on scroll never reads them, and `loadMoreCards` sets
- * it to false itself.
+ * it to false itself. `pictures` likewise: a list draws its cards, so a batch of one always wants
+ * them, and the two reads that do not (Home's Pokémon tile, a Pokédex binder) never come from the
+ * browser.
  */
 /** One value or several, as a filter chosen more than once carries them. */
 const choices = z.union([z.string().max(100), z.array(z.string().max(100)).max(50)]).optional();
 
-const filterShape: { [K in keyof Required<Omit<CardFilter, "facets">>]: z.ZodType<CardFilter[K]> } = {
+const filterShape: { [K in keyof Required<Omit<CardFilter, "facets" | "pictures">>]: z.ZodType<CardFilter[K]> } = {
     q: z.string().max(100).optional(),
     collectionId: z.string().max(64).optional(),
     favoritesOnly: z.boolean().optional(),

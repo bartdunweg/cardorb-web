@@ -73,6 +73,12 @@ describe("getDexCards", () => {
         expect(FORGETS.dexFace).toContain("lists");
     });
 
+    it("asks the API to leave the printings' pictures off: DEX_FIELDS keeps none of them", async () => {
+        api.mockResolvedValueOnce(answer([card(1)]));
+        await getDexCards({ collectionId: "b1" });
+        expect(api).toHaveBeenCalledWith("/cards", expect.objectContaining({ params: expect.objectContaining({ pictures: 0 }) }));
+    });
+
     it("keys on the whole filter: another binder, search or rarity is another entry", () => {
         const base = dexCardsKey({ collectionId: "b1" });
         expect(dexCardsKey({ collectionId: "b2" })).not.toBe(base);
