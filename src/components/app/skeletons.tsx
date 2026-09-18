@@ -177,7 +177,7 @@ export function ValueHeroOutline() {
     return (
         <section className="flex flex-col gap-4">
             <div className="flex flex-col gap-1">
-                <h2 className="text-sm font-semibold text-tertiary">Collection value</h2>
+                <h2 className="text-sm font-semibold text-tertiary">Total value</h2>
                 <Outline className="flex flex-col gap-1">
                     <p className="text-display-md sm:text-display-lg">
                         <Line className="h-[0.8em] w-48" />

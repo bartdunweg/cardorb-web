@@ -15,7 +15,7 @@ import type { ValueSnapshot } from "@/lib/value-history";
 import { cx } from "@/utils/cx";
 
 // Home's first thing: what the collection is worth, big, with how that has moved over a period
-// and the line behind it. The name beside the label is a menu: All cards, Favorites, or one of the
+// and the line behind it. The name beside the amount is a menu: All cards, Favorites, or one of the
 // binders; a choice goes into the URL (`?value=`) and the page reads that list's line. The period
 // buttons under the chart cut the same line; the change above it is over the period shown.
 
@@ -56,10 +56,13 @@ export function ValueHero({
             className={cx("flex flex-col gap-4 transition-opacity duration-(--duration-fast)", pending && "opacity-60 delay-150")}
         >
             <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-between gap-x-2">
-                    <h2 id="value-heading" className="text-sm font-semibold text-tertiary">
-                        {selected === "wishlist" ? "Wishlist cost" : "Collection value"}
-                    </h2>
+                <h2 id="value-heading" className="text-sm font-semibold text-tertiary">
+                    {selected === "wishlist" ? "Wishlist cost" : "Total value"}
+                </h2>
+                {/* The list's menu beside the amount it chose, at the row's far end so the menu stays put while the
+                    amount changes; a long binder name wraps it under the amount rather than squeezing it. */}
+                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                    <p className="text-display-md font-semibold text-primary tabular-nums sm:text-display-lg">{formatValue(value)}</p>
                     <Dropdown.Root>
                         <Button color="link-gray" size="sm" iconTrailing={ChevronDown} className="hit-area" aria-label={`Value of ${list.name}; choose a list`}>
                             {list.name}
@@ -84,7 +87,6 @@ export function ValueHero({
                         </Dropdown.Popover>
                     </Dropdown.Root>
                 </div>
-                <p className="text-display-md font-semibold text-primary tabular-nums sm:text-display-lg">{formatValue(value)}</p>
                 {/* The sign carries the direction as well as the colour, for a reader who sees neither. */}
                 <p
                     className={cx(

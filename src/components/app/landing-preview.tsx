@@ -102,7 +102,7 @@ export function LandingPreview({ className }: { className?: string }) {
             {/* Home's value block: the label, the number, the change over the period, the line. */}
             <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1">
-                    <p className="text-sm font-semibold text-tertiary">Collection value</p>
+                    <p className="text-sm font-semibold text-tertiary">Total value</p>
                     <p className="text-display-md font-semibold text-primary tabular-nums sm:text-display-lg">{formatValue(VALUE)}</p>
                     <p className="text-sm font-medium text-success-primary tabular-nums">+{formatValue(CHANGE)} in the last 30 days</p>
                 </div>
