@@ -8,6 +8,7 @@ import { BinderDialog } from "@/components/app/binder-dialog";
 import { Button } from "@/components/base/buttons/button";
 import { FeaturedIcon } from "@/components/foundations/featured-icon/featured-icon";
 import type { BinderSummary } from "@/lib/binders";
+import { formatCount } from "@/lib/format";
 import { cx } from "@/utils/cx";
 
 // On a phone a row: the icon, the name, the count at the end as a number alone (the sidebar's rows
@@ -18,7 +19,7 @@ import { cx } from "@/utils/cx";
 // Pokédex too, which is what the Pokédex is now. `count` is null only when a count could not be
 // read, and the tile goes without.
 function BinderCard({ href, icon, name, count }: { href: string; icon: FC<{ className?: string }>; name: string; count: number | null }) {
-    const counted = count === null ? null : `${count} card${count === 1 ? "" : "s"}`;
+    const counted = count === null ? null : `${formatCount(count)} card${count === 1 ? "" : "s"}`;
     return (
         <Link
             href={href}
@@ -38,7 +39,7 @@ function BinderCard({ href, icon, name, count }: { href: string; icon: FC<{ clas
             </div>
             {count !== null ? (
                 <span className="shrink-0 text-sm text-tertiary tabular-nums sm:hidden">
-                    {count}
+                    {formatCount(count)}
                     <span className="sr-only"> card{count === 1 ? "" : "s"}</span>
                 </span>
             ) : null}
