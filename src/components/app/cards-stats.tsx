@@ -31,8 +31,12 @@ export const StatCard = ({
     delay?: number;
 }) => {
     const body = (
-        <div className="flex flex-col gap-3 px-3 py-4 sm:gap-4 sm:px-4 sm:py-5 md:gap-5 lg:px-5">
-            <div className="flex flex-col gap-2">
+        // The full height of the tile, the number at its foot: a label that wraps to two lines ("Pokémon
+        // collected" on a 120 px tile) made its tile taller and pushed its number 20 px under the other
+        // three, so the row's figures stood on two lines. The row stretches every tile to the tallest, and
+        // each number now sits on that tile's floor, level with the rest; the labels start at the top.
+        <div className="flex h-full flex-col gap-3 px-3 py-4 sm:gap-4 sm:px-4 sm:py-5 md:gap-5 lg:px-5">
+            <div className="flex flex-1 flex-col justify-between gap-2">
                 <h3 className="text-sm font-semibold text-tertiary">{label}</h3>
                 <p className="text-display-xs font-semibold text-primary tabular-nums sm:text-display-sm">
                     {value}
