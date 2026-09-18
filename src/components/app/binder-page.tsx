@@ -94,7 +94,8 @@ export function BinderPage({
                         )
                     }
                 >
-                    {views ? <div className="lg:hidden">{views}</div> : null}
+                    {/* 12 px more than the header's 4 px gap: the switch is a control of its own, not a line of the title (Bart, 2026-09-18). */}
+                    {views ? <div className="pt-3 lg:hidden">{views}</div> : null}
                     {children}
                 </PageHeader>
                 <BinderBody {...body} />

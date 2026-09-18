@@ -96,10 +96,12 @@ describe("CardsList on the wishlist", () => {
         expect(gotIt.parentElement?.closest("button")).toBeNull();
         expect(gotIt.querySelector("button")).toBeNull();
         expect(document.querySelectorAll("button button")).toHaveLength(0);
-        // Three focus stops: the tile, the heart that takes it off the wishlist, and Got it.
-        expect(screen.getByRole("button", { name: "Remove Pikachu from your wishlist" })).toHaveAttribute("aria-pressed", "true");
+        // Two focus stops: the tile and Got it. The heart is a mark on the picture, not a button
+        // (card-marks.tsx); the tile's name says the card is on the wishlist.
+        expect(screen.queryByRole("button", { name: "Remove Pikachu from your wishlist" })).toBeNull();
+        expect(screen.getByText(", on your wishlist")).toBeInTheDocument();
         const buttons = screen.getAllByRole("button");
-        expect(buttons).toHaveLength(3);
+        expect(buttons).toHaveLength(2);
         expect(buttons.every((b) => b.tabIndex === 0)).toBe(true);
     });
 
