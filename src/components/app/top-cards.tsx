@@ -19,7 +19,10 @@ export async function TopCards({ top: read }: { top: Promise<Card[]> }) {
                 <h2 id="top-cards-heading" className="text-md font-semibold text-primary">
                     Most valuable cards
                 </h2>
-                <Link href="/dashboard/cards?sort=price-desc" className="text-sm font-semibold text-brand-secondary outline-focus-ring focus-visible:outline-2">
+                <Link
+                    href="/dashboard/cards?sort=price-desc"
+                    className="hit-area relative text-sm font-semibold text-brand-secondary outline-focus-ring focus-visible:outline-2"
+                >
                     See all
                 </Link>
             </div>
