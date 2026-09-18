@@ -30,11 +30,13 @@ export type Step = {
  * the step you had already dealt with drew the eye, and the step asking you for
  * something did not. So the brand fill moves to `current`, and `complete`
  * becomes the same quiet outline as `incomplete` with a tick in it, which is
- * all a finished step has to say.
+ * all a finished step has to say. Brand-solid is near-white in dark mode, so
+ * the current step's number goes black there: the kit's white on it measured
+ * 1.04:1, and the Button, Checkbox and Toggle already make the same flip.
  */
 const statuses = {
     incomplete: "bg-primary ring-1 ring-inset ring-secondary text-quaternary",
-    current: "bg-brand-solid text-white",
+    current: "bg-brand-solid text-white dark:text-black",
     complete: "bg-primary ring-1 ring-inset ring-secondary text-tertiary",
 };
 
