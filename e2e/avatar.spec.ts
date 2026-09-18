@@ -10,9 +10,10 @@ import { E2E_USER } from "./support.ts";
  * drawn over 192 device pixels.
  *
  * In this stack the picture comes from the local Supabase, which is not the host the optimizer
- * serves (next.config.mjs), so it arrives as uploaded with no srcset. What picks the file in
- * production is `sizes`, so that is what is held to the drawn width; the file itself is checked
- * too, whichever way it came.
+ * serves (next.config.mjs), so it arrives as uploaded with no srcset and no `sizes`. What picks
+ * the file in production is `sizes`, which is the avatar's width attribute written as pixels, so
+ * the width attribute is what is held to the drawn width here; the file itself is checked too,
+ * whichever way it came.
  */
 test.use({ deviceScaleFactor: 2 });
 
@@ -25,7 +26,10 @@ const avatars = (page: Page) =>
                 const w = new URL(img.currentSrc, location.href).searchParams.get("w");
                 return {
                     drawn: img.getBoundingClientRect().width,
-                    asked: parseFloat(img.sizes),
+                    /* What the avatar asks for: `sizes` where the optimizer serves it, and the width
+                       attribute, which carries the same number, where it is served direct and next/image
+                       writes no `sizes` at all. */
+                    asked: img.sizes ? parseFloat(img.sizes) : Number(img.getAttribute("width")),
                     // The optimizer's width where it served the file, the file's own pixels where not.
                     file: w ? Number(w) : img.naturalWidth,
                     loaded: img.complete && img.naturalWidth > 0,
