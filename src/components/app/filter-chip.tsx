@@ -34,6 +34,13 @@ export function FilterChipRow({ onClear, className, children }: { onClear?: () =
     );
 }
 
+/** A filter chip's own look, for a menu elsewhere that should read as one (Home's list choice): filled once set. */
+export const filterChipClass = (filled: boolean) =>
+    cx(
+        "flex shrink-0 pressable cursor-pointer items-center gap-1 rounded-full py-1.5 pr-2 pl-3 text-xs font-semibold whitespace-nowrap ring-1 outline-focus-ring ring-inset focus-visible:outline-2",
+        filled ? "bg-alpha-black/8 text-primary ring-transparent" : "bg-primary text-secondary ring-primary hover:bg-secondary",
+    );
+
 // One filter as a chip: its name while unset, its choice once set, filled so a narrowed list says
 // why. A tap opens the choices as a sheet from the bottom on a phone and as a menu under the chip
 // from sm; a choice applies at once and closes them. The choices are plain buttons, not a listbox,
@@ -60,10 +67,7 @@ export function FilterChip({
         onChange(next);
         setOpen(false);
     };
-    const chipClass = cx(
-        "flex shrink-0 pressable cursor-pointer items-center gap-1 rounded-full py-1.5 pr-2 pl-3 text-xs font-semibold whitespace-nowrap ring-1 outline-focus-ring ring-inset focus-visible:outline-2",
-        chosen ? "bg-alpha-black/8 text-primary ring-transparent" : "bg-primary text-secondary ring-primary hover:bg-secondary",
-    );
+    const chipClass = filterChipClass(Boolean(chosen));
     const chipContent = (
         <>
             {chosen?.icon ? <span className="flex shrink-0 items-center">{chosen.icon}</span> : null}

@@ -3,13 +3,12 @@
 import { type FC, useState, useSyncExternalStore, useTransition } from "react";
 import { ChevronDown, Folder, Heart, Rows01, Star01 } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
-import { Header as AriaHeader, Heading as AriaHeading } from "react-aria-components";
+import { Button as AriaButton, Header as AriaHeader, Heading as AriaHeading } from "react-aria-components";
 import { ChartPeriods } from "@/components/app/chart-periods";
-import { FilterChoices } from "@/components/app/filter-chip";
+import { FilterChoices, filterChipClass } from "@/components/app/filter-chip";
 import { useHomePeriod } from "@/components/app/home-period";
 import { ValueChart } from "@/components/app/value-chart";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
-import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
 import { PERIODS, forChart, isoDaysAgo } from "@/lib/chart-periods";
@@ -32,6 +31,13 @@ const first = (keys: "all" | Set<React.Key>) => (keys === "all" ? undefined : [.
 
 // Each list wears the sidebar's icon for it: the collection's rows, the star, a binder's folder, the heart.
 const iconFor = (id: string): FC<{ className?: string }> => (id === "all" ? Rows01 : id === "favorites" ? Star01 : id === "wishlist" ? Heart : Folder);
+
+function ListIcon({ id, className }: { id: string; className: string }) {
+    if (id === "all") return <Rows01 aria-hidden="true" className={className} />;
+    if (id === "favorites") return <Star01 aria-hidden="true" className={className} />;
+    if (id === "wishlist") return <Heart aria-hidden="true" className={className} />;
+    return <Folder aria-hidden="true" className={className} />;
+}
 
 export function ValueHero({
     lists,
@@ -61,10 +67,7 @@ export function ValueHero({
     const top = lists.filter((l) => l.id === "all" || l.id === "wishlist");
     const binders = lists.filter((l) => l.id !== "all" && l.id !== "wishlist");
     const asOptions = (group: ValueList[]) =>
-        group.map((l) => {
-            const Icon = iconFor(l.id);
-            return { value: l.id, label: l.name, icon: <Icon className="size-5 text-fg-quaternary" /> };
-        });
+        group.map((l) => ({ value: l.id, label: l.name, icon: <ListIcon id={l.id} className="size-5 text-fg-quaternary" /> }));
     const sm = useBreakpoint("sm");
     // One menu trigger at every width, so the server and a phone draw the same button: a trigger on one
     // side of the breakpoint only broke hydration. On a phone its press opens the sheet instead.
@@ -82,19 +85,19 @@ export function ValueHero({
         if (key === selected) return;
         startTransition(() => router.replace(key === "all" ? "/dashboard" : `/dashboard?value=${key}`, { scroll: false }));
     };
+    // Browse's filter chip, so a choice of list looks like the choices it is: the list's icon, its name, the chevron.
     const trigger = (
-        <Button
-            color="link-gray"
-            size="sm"
-            iconTrailing={ChevronDown}
-            className="hit-area"
+        <AriaButton
+            className={filterChipClass(false)}
             aria-label={`Value of ${list.name}; choose a list`}
             // On a phone the press opens a sheet, a dialog, not the menu the trigger announces.
             aria-haspopup={phone ? "dialog" : undefined}
             aria-expanded={phone ? sheetOpen : undefined}
         >
-            {list.name}
-        </Button>
+            <ListIcon id={list.id} className="size-3.5 shrink-0 text-fg-quaternary" />
+            <span className="max-w-40 truncate">{list.name}</span>
+            <ChevronDown aria-hidden="true" className="size-3.5 shrink-0 text-fg-quaternary" />
+        </AriaButton>
     );
 
     // Dims while the next answer is fetched, after 150 ms, so a quick answer never flickers; it
@@ -208,7 +211,7 @@ export function ValueHero({
             </div>
 
             {/* The change above reads every reading; the line draws Max a week a step (forChart). */}
-            <ValueChart snapshots={forChart(shown, period)} label={`${list.name} value over time`}>
+            <ValueChart snapshots={forChart(shown, period)} label={`${list.name} value over time`} range={false}>
                 <ChartPeriods period={period} onPick={setPeriod} />
             </ValueChart>
         </section>
