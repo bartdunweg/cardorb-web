@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpen01, Folder, Heart, HomeLine, Rows01, SearchLg } from "@untitledui/icons";
+import { BookOpen01, Folder, HomeLine, Rows01, SearchLg } from "@untitledui/icons";
 import Link from "next/link";
 import { useCommandSearch } from "@/components/app/command-search";
 import { useRouteTarget, useStartRoute } from "@/components/app/route-pending";
@@ -12,8 +12,13 @@ import { cx } from "@/utils/cx";
 const tabs = [
     { label: "Home", href: "/dashboard", icon: HomeLine, match: (p: string) => p === "/dashboard" },
     { label: "Browse", href: "/dashboard/sets", icon: BookOpen01, match: (p: string) => p.startsWith("/dashboard/sets") },
-    { label: "Wishlist", href: "/dashboard/wishlist", icon: Heart, match: (p: string) => p.startsWith("/dashboard/wishlist") },
-    { label: "Collection", href: "/dashboard/cards", icon: Rows01, match: (p: string) => p.startsWith("/dashboard/cards") },
+    // The wishlist is the other half of Collection's switch (collection-switch.tsx), so this tab holds it too.
+    {
+        label: "Collection",
+        href: "/dashboard/cards",
+        icon: Rows01,
+        match: (p: string) => ["/dashboard/cards", "/dashboard/wishlist"].some((h) => p.startsWith(h)),
+    },
     {
         label: "Binders",
         href: "/dashboard/collections",
@@ -22,12 +27,12 @@ const tabs = [
     },
 ];
 
-// Labels a size under the body scale, as a native tab bar writes them, so five fit with room.
+// Labels a size under the body scale, as a native tab bar writes them.
 const tabClass = "pressable relative flex flex-1 flex-col items-center gap-1 rounded-full py-1.5 text-3xs font-medium";
 
-// Bottom tab bar for mobile: the sidebar's five pages in the sidebar's order: Home, Browse, the
-// wishlist, the collection, and Binders (Favorites, the Pokédex and the binders you made, one level
-// down). You is the avatar in Home's bar. Browse had no tab while the search at the top of Home
+// Bottom tab bar for mobile: four of the sidebar's pages in the sidebar's order: Home, Browse, the
+// collection (with the wishlist one tap in, on its switch), and Binders (Favorites, the Pokédex and
+// the binders you made, one level down). You is the avatar in Home's bar. Browse had no tab while the search at the top of Home
 // listed every set; that search opens the palette now, as it does everywhere else, so Browse has
 // its tab (Bart's call, 2026-09-11). Search is not a tab: it opens the palette, so it stands beside
 // the bar as a round primary button, on every page, where the bar at the top of Home was the only
@@ -40,7 +45,7 @@ export function MobileTabBar() {
     const start = useStartRoute();
     // A tab opens its list as you left it: the filters, the sort and the search (use-list-memory.ts).
     const memory = useListMemory();
-    // A page outside the five (Settings, You) has no pill.
+    // A page outside the four (Settings, You) has no pill.
     const activeIndex = tabs.findIndex((tab) => tab.match(pathname));
     // The tab a finger or the focus is on: the one link asked for in full.
     const [intent, setIntent] = useState<string | null>(null);
@@ -56,13 +61,13 @@ export function MobileTabBar() {
                     // The same hairline ring as an input, and the lift without the scale's own rim, so it is one line.
                     className="relative flex min-w-0 flex-1 items-stretch justify-around rounded-full glass p-1 shadow-lift-lg ring-1 ring-primary ring-inset"
                 >
-                    {/* The active tab's pill: one element behind the five, a fifth wide, slid to the tab's slot
+                    {/* The active tab's pill: one element behind the four, a quarter wide, slid to the tab's slot
                     on a tap so the change reads as a move and not a jump. Transform only; 200 ms on the
                     on-screen curve; under reduced motion it changes place without moving. */}
                     <div
                         aria-hidden="true"
                         className={cx(
-                            "pointer-events-none absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/5)] rounded-full bg-alpha-black/8 transition-transform duration-200 ease-move motion-reduce:transition-none",
+                            "pointer-events-none absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/4)] rounded-full bg-alpha-black/8 transition-transform duration-200 ease-move motion-reduce:transition-none",
                             activeIndex < 0 && "hidden",
                         )}
                         style={{ transform: `translateX(${Math.max(0, activeIndex) * 100}%)` }}

@@ -13,6 +13,7 @@ import { AuthEmailField, AuthShell } from "./auth-shell";
 import { CardBack } from "./card-back";
 import { CardImage } from "./card-image";
 import { CardTile } from "./card-tile";
+import { CollectionSwitch } from "./collection-switch";
 import { CopyCard } from "./copy-card";
 import { Cell, Group, Panel, type SectionSpec } from "./design-section";
 import { FilterChip, FilterChipRow } from "./filter-chip";
@@ -529,6 +530,24 @@ export const ourSections: SectionSpec[] = [
                 <Group title="In a row" cols="tight">
                     <Cell label="search, Filters, Sort, View">
                         <RowSearchDemo />
+                    </Cell>
+                </Group>
+            </Panel>
+        ),
+    },
+    {
+        id: "collection-switch",
+        title: "CollectionSwitch",
+        from: "components/app/collection-switch",
+        ours: true,
+        note: "The kit's Tabs, minimal and round: Owned and Wishlist at the top of both lists. Each tab is a link to its own page, so the wishlist keeps its address; on a phone it is how you reach the wishlist, which has no tab in the bar.",
+        render: (
+            <Panel>
+                <Group title="States" cols="wide">
+                    <Cell label="on Collection" span="full">
+                        <div className="w-full max-w-72">
+                            <CollectionSwitch current="owned" />
+                        </div>
                     </Cell>
                 </Group>
             </Panel>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { AddCardButton } from "@/components/app/add-card-button";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { BinderPage } from "@/components/app/binder-page";
+import { CollectionSwitch } from "@/components/app/collection-switch";
 import { type CardFilter, getMyCards } from "@/lib/cards";
 import { openAsLeft } from "@/lib/list-memory-server";
 import { type ListSearchParams, changeWindow, isNarrowed, readListQuery } from "@/lib/list-query";
@@ -58,6 +59,9 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
                     <AddCardButton />
                 </AppEmptyState>
             }
-        />
+        >
+            {/* Owned and Wishlist, one tap apart: the wishlist has no tab of its own in the phone's bar (collection-switch.tsx). */}
+            <CollectionSwitch current="owned" />
+        </BinderPage>
     );
 }
