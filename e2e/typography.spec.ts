@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { hydrated } from "./support.ts";
 
 /**
  * A paragraph never ends on a word, or a figure and its unit, alone.
@@ -16,7 +15,6 @@ test("the Import dialog's description wraps without a lone last line", async ({ 
     await page.setViewportSize({ width: 1024, height: 820 });
     await page.goto("/dashboard/settings");
     const row = page.getByRole("main").getByRole("button", { name: "Import a CSV file" });
-    await hydrated(row);
     await row.click();
 
     const description = page.getByRole("dialog").getByText(/A CSV export from Dex/);

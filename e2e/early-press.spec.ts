@@ -8,8 +8,8 @@ import { makeBinder } from "./support.ts";
  * run. The kit's buttons are react-aria's, whose press handlers are React props: until React has
  * taken the page over, a press on one reached nothing and was simply lost. On a phone that is the
  * first second or two of every page, and it is how "New binder does nothing" reached the owner
- * with no binder made since 2026-09-12. The suite never saw it, because every press here waited
- * for hydration first (support.ts's hydrated()).
+ * with no binder made since 2026-09-12. The suite never saw it, because its presses on the page's
+ * shell waited for hydration first (a hydrated() helper in support.ts, gone now: nothing needs it).
  *
  * The early press is made certain, not raced: the page's scripts are held back until the button
  * has been pressed, so React cannot have hydrated it (checked on the node itself: React marks a
@@ -61,4 +61,22 @@ test("a binder's menu, pressed before hydration, opens", async ({ page }) => {
 test("Filters, pressed before hydration, opens the sheet", async ({ page }) => {
     await pressEarly(page, "/dashboard/cards", (p) => p.getByRole("button", { name: /^Filters/ }).filter({ visible: true }));
     await expect(page.getByRole("dialog", { name: "Filters" })).toBeVisible();
+});
+
+// The finger goes down on the server's drawing and comes up once React is in. react-aria answers a
+// click only after it has seen the pointer go down, so this press was lost as well.
+test("New binder, pressed down before hydration and let go after, opens the dialog", async ({ page }) => {
+    const release = await holdScripts(page);
+    await page.goto("/dashboard/collections", { waitUntil: "commit" });
+    const target = page.getByRole("main").getByRole("button", { name: "New binder" }).filter({ visible: true }).first();
+    await expect(target).toBeVisible();
+    const box = await target.boundingBox();
+    if (!box) throw new Error("New binder has no box");
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    expect(await owned(target)).toBe(false);
+    release();
+    await expect.poll(() => owned(target), { timeout: 15000 }).toBe(true);
+    await page.mouse.up();
+    await expect(page.getByRole("dialog", { name: "New binder" })).toBeVisible();
 });

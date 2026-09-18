@@ -263,6 +263,13 @@ body {
     font-kerning: normal;
 }
 
+/* A press is waiting for the page's JavaScript (src/lib/early-press.ts): the pointer says it is on its
+   way. Not a disabled look: the press counts, it lands the moment React is in. */
+html[data-press-waiting],
+html[data-press-waiting] * {
+    cursor: progress !important;
+}
+
 /* No word left alone on a paragraph's last line.
 
    A sentence that wraps with one word under it reads as a slip: the Import dialog's description at
