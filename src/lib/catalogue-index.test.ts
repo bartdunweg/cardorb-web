@@ -164,3 +164,85 @@ describe("searchIndex by Pokémon", () => {
         expect(searchIndex(shelf, "machamp").items.every((c) => !c.group)).toBe(true);
     });
 });
+
+/* A set's printed code, read as the API reads it (cardorb-api migration 20260918130000), so the
+   answer is the same whether the document or the API gives it. */
+describe("searchIndex by a set's printed code", () => {
+    const shelf: CatalogueIndex = {
+        version: "v1",
+        sets: {
+            sv01: { name: "Scarlet & Violet", series: "Scarlet & Violet", date: "2023/03/31", image: null, code: "SVI" },
+            sv02: { name: "Paldea Evolved", series: "Scarlet & Violet", date: "2023/06/09", image: null, code: "PAL" },
+            "sv03.5": { name: "151", series: "Scarlet & Violet", date: "2023/09/22", image: null, code: "MEW" },
+            sv04: { name: "Paradox Rift", series: "Scarlet & Violet", date: "2023/11/03", image: null, code: "PAR" },
+            swsh9: { name: "Brilliant Stars", series: "Sword & Shield", date: "2022/02/25", image: null, code: "BRS" },
+            swsh9tg: { name: "Brilliant Stars Trainer Gallery", series: "Sword & Shield", date: "2022/02/25", image: null, code: "BRS" },
+            ecard1: { name: "Expedition Base Set", series: "E-Card", date: "2002/09/15", image: null, code: "EX" },
+            base1: { name: "Base Set", series: "Base", date: "1999/01/09", image: null, code: "BS" },
+            dp1: { name: "Diamond & Pearl", series: "Diamond & Pearl", date: "2007/05/23", image: null, code: "DP" },
+            dpp: { name: "DP Black Star Promos", series: "Diamond & Pearl", date: "2007/05/01", image: null },
+        },
+        // Newest set first, as the document comes.
+        cards: [
+            ["sv04-123", "sv04", "123", "Palkia", null, []],
+            ["sv04-054", "sv04", "054", "Charizard ex", null, []],
+            ["sv04-199", "sv04", "199", "Mew ex", null, []],
+            ["sv04-091", "sv04", "091", "Absol", null, []],
+            ["sv03.5-001", "sv03.5", "001", "Bulbasaur", null, []],
+            ["sv03.5-006", "sv03.5", "006", "Charizard ex", null, []],
+            ["sv03.5-150", "sv03.5", "150", "Mewtwo", null, []],
+            ["sv03.5-151", "sv03.5", "151", "Mew ex", null, []],
+            ["sv02-010", "sv02", "010", "Charmander", null, []],
+            ["sv02-123", "sv02", "123", "Garganacl", null, []],
+            ["sv02-188", "sv02", "188", "Pal Pad", null, []],
+            ["sv01-001", "sv01", "001", "Pineco", null, []],
+            ["sv01-002", "sv01", "002", "Forretress ex", null, []],
+            ["swsh9-018", "swsh9", "018", "Charizard V", null, []],
+            ["swsh9tg-TG03", "swsh9tg", "TG03", "Charizard", null, []],
+            ["dp1-103", "dp1", "103", "Turtwig", null, []],
+            ["dpp-DP16", "dpp", "DP16", "Pikachu", null, []],
+            ["ecard1-039", "ecard1", "039", "Charizard", null, []],
+            ["base1-4", "base1", "4", "Charizard", null, []],
+            ["base1-58", "base1", "58", "Pikachu", null, []],
+        ],
+    };
+    const ids = (term: string) => searchIndex(shelf, term).items.map((c) => c.id);
+
+    it("reads the code the document carries", () => {
+        expect(catalogueIndexSchema.safeParse(shelf).success).toBe(true);
+    });
+
+    it("narrows to the set beside other words", () => {
+        expect(ids("pal 123")).toEqual(["sv02-123"]);
+        expect(ids("svi 001")).toEqual(["sv01-001"]);
+        expect(ids("mew charizard")).toEqual(["sv03.5-006"]);
+        expect(ids("BS charizard")).toEqual(["base1-4"]);
+    });
+
+    it("answers both sets that share a code", () => {
+        expect(ids("brs charizard")).toEqual(["swsh9-018", "swsh9tg-TG03"]);
+        expect(ids("brs")).toEqual(["swsh9-018", "swsh9tg-TG03"]);
+    });
+
+    it("reads the word as the name where a card's name holds it whole", () => {
+        // As before: Expedition's Charizard is found by its set's name, not narrowed to by the code.
+        expect(ids("charizard ex")).toEqual(["sv04-054", "sv03.5-006", "ecard1-039"]);
+        expect(ids("mew ex")).toEqual(["sv04-199", "sv03.5-151"]);
+        expect(ids("pal pad")).toEqual(["sv02-188"]);
+    });
+
+    it("reads the word as text where the set holds no card the other words find", () => {
+        // Diamond & Pearl has no Pikachu; the DP16 promo stays the answer.
+        expect(ids("dp pikachu")).toEqual(["dpp-DP16"]);
+    });
+
+    it("on its own is the set where no name starts with it, and follows the names where one does", () => {
+        expect(ids("svi")).toEqual(["sv01-001", "sv01-002"]);
+        // Base Set before Absol, which only holds "bs" inside a word.
+        expect(ids("bs")).toEqual(["base1-4", "base1-58", "sv04-091"]);
+        // Mew ex twice and Mewtwo, then the rest of 151.
+        expect(ids("mew")).toEqual(["sv04-199", "sv03.5-150", "sv03.5-151", "sv03.5-001", "sv03.5-006"]);
+        // Palkia and Pal Pad, then Paldea Evolved's other cards.
+        expect(ids("pal")).toEqual(["sv04-123", "sv02-188", "sv02-010", "sv02-123"]);
+    });
+});

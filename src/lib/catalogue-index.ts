@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { PokemonCard } from "@/lib/api-shapes";
 import { type CardGroup, type SpeciesTable, cardGroup } from "@/lib/card-group";
 import { ownImage } from "@/lib/card-shapes";
-import { bestBand, foldDiacritics } from "@/lib/name-rank";
+import { band, bestBand, foldDiacritics } from "@/lib/name-rank";
 
 /**
  * The English catalogue as the browser holds it, and a search over it.
@@ -29,6 +29,8 @@ export const catalogueIndexSchema = z.object({
             date: z.string().nullable(),
             /** The set's scan folder; a card's scan is `${image}/${number}/low.webp`. */
             image: z.string().nullable(),
+            /** The code the set prints ("SVI", "MEW"), only where it has one (cardorb-api #560). */
+            code: z.string().optional(),
         }),
     ),
     cards: z.array(indexCardSchema),
@@ -68,6 +70,31 @@ const haystackOf = (index: CatalogueIndex): string[] => {
     }
     return cached;
 };
+
+/** The sets each printed code names, lowercased: a code two sets share (BRS) names both. */
+const codeSets = new WeakMap<CatalogueIndex, Map<string, Set<string>>>();
+const codesOf = (index: CatalogueIndex): Map<string, Set<string>> => {
+    let cached = codeSets.get(index);
+    if (!cached) {
+        cached = new Map();
+        for (const [id, set] of Object.entries(index.sets)) {
+            if (!set.code) continue;
+            const code = set.code.toLowerCase();
+            cached.set(code, (cached.get(code) ?? new Set()).add(id));
+        }
+        codeSets.set(index, cached);
+    }
+    return cached;
+};
+
+/** Whether a word stands whole in a name, as "ex" does in Charizard ex and "pal" does not in Palkia. */
+const wholeWord = (name: string, word: string) => ` ${folded(name).replace(/[^a-z0-9]+/g, " ")} `.includes(` ${word} `);
+
+/**
+ * How one typed word asks for a card: in its text, in one of the sets its code names, or either
+ * (a code typed on its own).
+ */
+type Reading = { word: string; text: boolean; sets?: Set<string> };
 
 /** Each card's heading, worked out once per catalogue and species list and kept. */
 const groupings = new WeakMap<CatalogueIndex, { table: SpeciesTable; groups: CardGroup[] }>();
@@ -114,37 +141,69 @@ export function searchIndex(
 
     const text = haystackOf(index);
     const setName = filters.set?.trim().toLowerCase();
-    const matched: number[] = [];
+    // The cards the chips allow, before any word.
+    const shelf: number[] = [];
     for (let i = 0; i < index.cards.length; i++) {
         const card = index.cards[i]!;
         if (setName && (index.sets[card[1]]?.name ?? "").toLowerCase() !== setName) continue;
         if (type && !card[5].includes(type)) continue;
-        const hay = text[i]!;
-        let all = true;
-        for (const w of words)
-            if (!hay.includes(w)) {
-                all = false;
-                break;
-            }
-        if (all) matched.push(i);
+        shelf.push(i);
     }
+    const found = (i: number, readings: Reading[]) =>
+        readings.every((r) => (r.text && text[i]!.includes(r.word)) || (r.sets?.has(index.cards[i]![1]) ?? false));
+
+    /* A set's printed code, read as the API reads it (cardorb-api migration 20260918130000). On its
+       own it also takes the set's cards. Beside other words it narrows to the set, unless a card
+       that every word finds holds it whole in its name ("charizard ex", "pal pad") or the set holds
+       no card the other words find ("dp pikachu"): both keep a name search as it was. */
+    const codes = codesOf(index);
+    const readings: Reading[] = words.map((word) => ({ word, text: true }));
+    for (const reading of readings) {
+        const sets = codes.get(reading.word);
+        if (!sets) continue;
+        if (readings.length === 1) {
+            reading.sets = sets;
+            continue;
+        }
+        const asText = readings.map((r) => ({ word: r.word, text: true }));
+        if (shelf.some((i) => found(i, asText) && wholeWord(index.cards[i]![3], reading.word))) continue;
+        const asSet = readings.map((r) => (r === reading ? { word: r.word, text: false, sets } : r));
+        if (!shelf.some((i) => found(i, asSet))) continue;
+        reading.text = false;
+        reading.sets = sets;
+    }
+    // A word that named a set is no part of a name, so it has no say in the order.
+    const ranked = readings.filter((r) => r.text).map((r) => r.word);
+    const bare = readings.length === 1 ? readings[0]!.sets : undefined;
+    /* The bands, and for a code on its own the set's place in them: after the names that start with
+       it or hold a word that does, before a name that holds it inside a word ("bs" in Absol) and
+       before a card it matched anywhere else. */
+    const bandOf = (name: string, setId?: string) => {
+        if (!bare) return bestBand(name, ranked);
+        const b = band(name, ranked[0]!);
+        if (b <= 1) return b;
+        if (setId && bare.has(setId)) return 2;
+        return b === 2 ? 3 : 4;
+    };
+
+    const matched = shelf.filter((i) => found(i, readings));
     // Banded by the name, the document's order kept inside a band. Sorted whole rather than per
     // page, so page two of a search is the next twenty of one order and not a second one.
     const from = (Math.max(1, page) - 1) * INDEX_PAGE_SIZE;
-    if (words.length && species?.size) {
+    if (ranked.length && species?.size) {
         const groups = groupsOf(index, species);
-        const whole = words.join(" ");
+        const whole = ranked.join(" ");
         // Per heading: its best band, where it first appears in the document, and how many it holds.
         const heads = new Map<string, { band: number; first: number; size: number }>();
         for (const i of matched) {
             const group = groups[i]!;
-            const cardBand = bestBand(index.cards[i]![3], words);
+            const cardBand = bandOf(index.cards[i]![3], index.cards[i]![1]);
             const head = heads.get(group.key);
             if (head) {
                 head.band = Math.min(head.band, cardBand);
                 head.size++;
             } else {
-                const titleBand = group.title.toLowerCase() === whole ? -1 : bestBand(group.title, words);
+                const titleBand = group.title.toLowerCase() === whole ? -1 : bandOf(group.title);
                 heads.set(group.key, { band: Math.min(titleBand, cardBand), first: i, size: 1 });
             }
         }
@@ -156,7 +215,7 @@ export function searchIndex(
         }));
         return { items, total: matched.length };
     }
-    if (words.length) matched.sort((a, b) => bestBand(index.cards[a]![3], words) - bestBand(index.cards[b]![3], words) || a - b);
+    if (ranked.length) matched.sort((a, b) => bandOf(index.cards[a]![3], index.cards[a]![1]) - bandOf(index.cards[b]![3], index.cards[b]![1]) || a - b);
 
     return { items: matched.slice(from, from + INDEX_PAGE_SIZE).map((i) => hitOf(index, index.cards[i]!)), total: matched.length };
 }
