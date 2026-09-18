@@ -53,13 +53,16 @@ export function MobileTabBar() {
 
     return (
         <>
-            {/* The ground under the bar: the page fades into it, and Safari's bottom bar reads it as solid. */}
-            <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 bottom-0 z-30 h-32 fade-to-page lg:hidden" />
+            {/* The ground under the bar: the page fades into it, and Safari's bottom bar reads it as solid. It, the bar and
+                Search are each their own view transition layer, or a page change paints the page over them (globals.css).
+                The bar's name sits on the nav itself: a name is a backdrop root, so on a wrapper it cut the glass off from
+                the page behind it and Chrome drew the bar unblurred. */}
+            <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 bottom-0 z-30 h-32 fade-to-page view-transition-tab-bar-ground lg:hidden" />
             <div className="fixed inset-x-4 bottom-[max(1.25rem,calc(env(safe-area-inset-bottom)+0.5rem))] z-40 flex items-stretch gap-1 sm:inset-x-6 lg:hidden">
                 <nav
                     aria-label="Primary"
                     // The same hairline ring as an input, and the lift without the scale's own rim, so it is one line.
-                    className="relative flex min-w-0 flex-1 items-stretch justify-around rounded-full glass p-1 shadow-lift-lg ring-1 ring-primary ring-inset"
+                    className="relative flex min-w-0 flex-1 items-stretch justify-around rounded-full glass p-1 shadow-lift-lg ring-1 ring-primary ring-inset view-transition-tab-bar"
                 >
                     {/* The active tab's pill: one element behind the four, a quarter wide, slid to the tab's slot
                     on a tap so the change reads as a move and not a jump. Transform only; 200 ms on the
@@ -102,7 +105,13 @@ export function MobileTabBar() {
                     })}
                 </nav>
                 {/* A circle the bar's height: 58 px, the tab's icon, label and padding inside the bar's 4 px. */}
-                <Button iconLeading={SearchLg} size="lg" aria-label="Search" onClick={open} className="size-14.5 shrink-0 shadow-lift-lg" />
+                <Button
+                    iconLeading={SearchLg}
+                    size="lg"
+                    aria-label="Search"
+                    onClick={open}
+                    className="size-14.5 shrink-0 shadow-lift-lg view-transition-tab-search"
+                />
             </div>
         </>
     );

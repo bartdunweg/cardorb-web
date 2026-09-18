@@ -431,6 +431,34 @@ input[type="search"]::-webkit-search-cancel-button {
     animation: none;
 }
 
+/* The tab bar, Search beside it and the ground under them. Left in the root, they sat under the page's layer for the
+   length of a change, so the page covered the bar and it came back after (Bart, 2026-09-18). As their
+   own layers, later in paint order than the page, they stay on top; only the new state shows, so the
+   active tab's pill moves as it does outside a change. */
+@utility view-transition-tab-bar {
+    view-transition-name: tab-bar;
+}
+
+@utility view-transition-tab-bar-ground {
+    view-transition-name: tab-bar-ground;
+}
+
+@utility view-transition-tab-search {
+    view-transition-name: tab-search;
+}
+
+::view-transition-old(tab-bar),
+::view-transition-old(tab-bar-ground),
+::view-transition-old(tab-search) {
+    display: none;
+}
+
+::view-transition-new(tab-bar),
+::view-transition-new(tab-bar-ground),
+::view-transition-new(tab-search) {
+    animation: none;
+}
+
 /* A tab, the Owned | Wishlist switch, the browser's Back: a crossfade, the old page out in 100 ms and
    the new one in over 150, on the enter curve. Same place, other content: nothing moves. */
 ::view-transition-group(.page-fade) {
