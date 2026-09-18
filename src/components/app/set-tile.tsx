@@ -66,6 +66,8 @@ export function SetTile({
     return (
         <HoverPrefetchLink
             href={`/dashboard/sets/${encodeURIComponent(set.id)}${language === "en" ? "" : `?language=${language}`}`}
+            // One level in: the set's page comes from the right (page-transition.tsx).
+            transitionTypes={["nav-forward"]}
             className={cx(
                 "flex h-full pressable flex-col gap-2.5 rounded-lg outline-offset-4 outline-focus-ring focus-visible:outline-2",
                 empty && "opacity-70 hover:opacity-100",
