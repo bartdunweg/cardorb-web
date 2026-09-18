@@ -1,6 +1,6 @@
 "use client";
 
-import { type KeyboardEvent, type ReactNode, useEffect, useRef } from "react";
+import { type KeyboardEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/base/buttons/button";
@@ -55,9 +55,25 @@ export function RowSearch({
     const sm = useBreakpoint("sm");
     /* The bar is only found in the browser, and the server draws the row as from sm: the field moves
        into the bar once the page is up, not while React takes over the server's drawing. */
-    const slot = useBarSearchSlot();
+    // Its own page's bar, by the path it was drawn at: a page Next keeps hidden for Back still hears
+    // the new path, and its field went into the new page's bar beside that page's own.
+    const [own] = useState(page);
+    const slot = useBarSearchSlot(own);
     // Only a field that can be emptied goes into the bar: the loading row's stand-in has nothing for Cancel to do.
-    const inBar = place !== "row" && onClear !== undefined && !sm && slot !== null;
+    /* Whether this copy is the one on the page. react-aria's Tabs draw their children once more,
+       hidden, to count the tabs (the set page's row sits inside its Tabs), and that copy drew its
+       field into the bar beside the real one. A mark drawn in place tells them apart: the hidden
+       copy's lands in react-aria's own document, not the page's. */
+    const [onPage, setOnPage] = useState(false);
+    const mark = useCallback((el: HTMLSpanElement | null) => setOnPage(el !== null && el.ownerDocument === document && el.isConnected), []);
+    // Always first and always there, whatever follows it, so moving the field never remounts the mark.
+    const withMark = (content: ReactNode) => (
+        <>
+            <span ref={mark} hidden />
+            {content}
+        </>
+    );
+    const inBar = place !== "row" && onClear !== undefined && !sm && slot !== null && onPage;
     // Leaving the page puts its search away: coming back opens the bar as a bar, unless a term is in force.
     useEffect(() => () => closeRowSearch(), []);
 
@@ -71,7 +87,7 @@ export function RowSearch({
     }, [asked, open, inBar]);
 
     if (inBar && place === "bar") {
-        return createPortal(
+        const portal = createPortal(
             <>
                 <div ref={field} className={cx(FIELD, "flex-1")}>
                     {children}
@@ -92,10 +108,11 @@ export function RowSearch({
             </>,
             slot,
         );
+        return withMark(portal);
     }
 
     if (inBar) {
-        if (!open && !filled) return null;
+        if (!open && !filled) return withMark(null);
         const putAway = () => {
             closeRowSearch();
             // Back to the button that opened it, now that the bar is back.
@@ -105,7 +122,7 @@ export function RowSearch({
         const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
             if (event.key === "Escape" && event.target instanceof HTMLInputElement && event.target.value === "") putAway();
         };
-        return createPortal(
+        const portal = createPortal(
             <>
                 {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- a key listener on the box, for the field inside it; the box itself is not a control. */}
                 <div ref={field} className={cx(FIELD, "flex-1")} onKeyDown={onKeyDown}>
@@ -125,9 +142,10 @@ export function RowSearch({
             </>,
             slot,
         );
+        return withMark(portal);
     }
 
-    return (
+    return withMark(
         <div
             ref={field}
             className={cx(
@@ -137,6 +155,6 @@ export function RowSearch({
             )}
         >
             {children}
-        </div>
+        </div>,
     );
 }
