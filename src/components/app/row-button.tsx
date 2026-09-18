@@ -38,7 +38,7 @@ export function RowButton({
             // between icon and word from sm, and does not touch the icon.
             noTextPadding
             className={cx(
-                "max-sm:gap-0 max-sm:p-2 [&>[data-text]]:flex [&>[data-text]]:h-5 [&>[data-text]]:items-center [&>[data-text]]:gap-1.5 sm:[&>[data-text]]:px-0.5 max-sm:[&>[data-text]>*+*]:ml-1.5",
+                "hit-area max-sm:gap-0 max-sm:p-2 [&>[data-text]]:flex [&>[data-text]]:h-5 [&>[data-text]]:items-center [&>[data-text]]:gap-1.5 sm:[&>[data-text]]:px-0.5 max-sm:[&>[data-text]>*+*]:ml-1.5",
                 className,
             )}
             {...props}

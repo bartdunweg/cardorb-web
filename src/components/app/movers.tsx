@@ -174,7 +174,11 @@ function MoverList({
         <div className={cx(TILE, "flex flex-col gap-3")}>
             <div className="flex items-baseline justify-between gap-4">
                 <h3 className="text-sm font-semibold text-tertiary">{title}</h3>
-                <Link href={href} aria-label={linkLabel} className="text-sm font-semibold text-brand-secondary outline-focus-ring focus-visible:outline-2">
+                <Link
+                    href={href}
+                    aria-label={linkLabel}
+                    className="hit-area relative text-sm font-semibold text-brand-secondary outline-focus-ring focus-visible:outline-2"
+                >
                     See all
                 </Link>
             </div>

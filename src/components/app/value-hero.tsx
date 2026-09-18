@@ -61,7 +61,7 @@ export function ValueHero({
                         {selected === "wishlist" ? "Wishlist cost" : "Collection value"}
                     </h2>
                     <Dropdown.Root>
-                        <Button color="link-gray" size="sm" iconTrailing={ChevronDown} aria-label={`Value of ${list.name}; choose a list`}>
+                        <Button color="link-gray" size="sm" iconTrailing={ChevronDown} className="hit-area" aria-label={`Value of ${list.name}; choose a list`}>
                             {list.name}
                         </Button>
                         <Dropdown.Popover placement="bottom start" className="w-56">
