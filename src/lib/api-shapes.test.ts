@@ -14,6 +14,7 @@ import {
     pokemonCardFromSetCard,
     priceForCopy,
     publicCardFromItem,
+    publicItemSchema,
     seriesFromSets,
     setCardFromBrowse,
 } from "./api-shapes";
@@ -109,6 +110,40 @@ describe("cardFromItem", () => {
         });
         expect(cardFromItem({ ...item, printImage: "https://tcgplayer-cdn.tcgplayer.com/product/42382_in_1000x1000.jpg" }).print_image_url).toBeNull();
         expect(cardFromItem({ ...item, printImage: undefined }).print_image_url).toBeNull();
+    });
+
+    /* cardorb-api#561: the stamped run's figure beside the copy's question; a run listed and never
+       sold has its lowest listing there, never as its price. */
+    it("carries the stamped run's lowest listing where it has no market figure", () => {
+        const item = cardItemSchema.parse({
+            id: "row",
+            name: "Charizard",
+            number: "4",
+            set: "base1",
+            setTitle: "Base Set",
+            rarity: null,
+            gen: null,
+            type: null,
+            image: null,
+            imageHigh: null,
+            speciesId: 6,
+            tcgId: "base1-4",
+            owned: true,
+            quantity: 1,
+            condition: null,
+            grade: null,
+            language: null,
+            purchasePrice: null,
+            purchaseDate: null,
+            notes: null,
+            isFavorite: false,
+            acquiredAt: null,
+            collectionId: null,
+            price: { market: 400, basis: "market" },
+            priceFirstEd: { market: null, lowestListing: 9000, basis: "lowest-listing" },
+        });
+        expect(cardFromItem(item)).toMatchObject({ price: 400, price_first_ed: null, listing_first_ed: 9000 });
+        expect(cardFromItem({ ...item, priceFirstEd: { market: 900 } })).toMatchObject({ price_first_ed: 900, listing_first_ed: null });
     });
 
     it("reads which card leads its Pokédex slot, and says false where an older API is silent", () => {
@@ -244,6 +279,35 @@ describe("publicCardFromItem", () => {
             tcg_id: "base1-58",
         });
         expect(card.image_url).toBe("https://images.cardorb.com/x.png");
+    });
+});
+
+/* cardorb-api#561: the public list sends a card's lowest listing where no copy has a market figure,
+   only for an owner who shows prices; the tile then shows it the way the owner's own list does. */
+describe("publicCardFromItem: prices", () => {
+    const item = {
+        key: "Mew",
+        name: "Mew",
+        number: "1",
+        set: "cel25",
+        setTitle: "30th Celebration",
+        rarity: null,
+        gen: null,
+        type: null,
+        image: null,
+        imageHigh: null,
+        speciesId: 151,
+        tcgId: null,
+        copies: 1,
+    };
+    it("carries the lowest listing beside a null price", () => {
+        const parsed = publicItemSchema.parse({ ...item, price: null, listingPrice: 5771.49 });
+        expect(publicCardFromItem(parsed)).toMatchObject({ price: null, listing_price: 5771.49 });
+    });
+    it("carries no price of either kind where the owner keeps prices private", () => {
+        const card = publicCardFromItem(publicItemSchema.parse({ ...item, listingPrice: 5771.49 }));
+        expect(card).not.toHaveProperty("price");
+        expect(card).not.toHaveProperty("listing_price");
     });
 });
 

@@ -234,6 +234,7 @@ const DEX_FIELDS = [
     "set_name",
     "quantity",
     "price",
+    "listing_price",
     "dex_face",
 ] as const;
 
@@ -247,7 +248,8 @@ export const dexFields = (card: Card): DexCardLike => {
 };
 
 /** The key a Pokédex binder's cards are kept under: the filter the page asked with, whole. */
-export const dexCardsKey = (filter: CardFilter) => `dex-cards:v1:${JSON.stringify(filter)}`;
+// v2: a card carries its lowest listing (listing_price), which a v1 entry kept without.
+export const dexCardsKey = (filter: CardFilter) => `dex-cards:v2:${JSON.stringify(filter)}`;
 
 /**
  * Every card of a binder shown as a Pokédex, kept per person in the lists scope, which a card write

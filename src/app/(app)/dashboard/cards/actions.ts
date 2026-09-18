@@ -390,16 +390,22 @@ export async function setDexFace(cardId: string, previousId: string | null): Pro
 /** One reading of a card's price, from GET /v1/cards/{tcgId}/prices. Euros; null where the market published nothing. */
 export type PricePoint = { date: string; market: number | null; holo: number | null; printings?: Record<string, number> };
 
+/**
+ * A card's line, and beside it today's lowest listing of each printing TCGplayer lists and has no
+ * market figure for, keyed as `printings` is: such a printing has no line (cardorb-api#561).
+ */
+export type PriceHistory = { points: PricePoint[]; listings: Record<string, number> };
+
 // A card's price day by day over the last ninety days, for the sheet. Empty, not an error, for a
 // card with no readings yet; and empty when the API cannot answer, since the sheet is open for
 // the card, not for its line.
-export async function cardPriceHistory(tcgId: string): Promise<PricePoint[]> {
+export async function cardPriceHistory(tcgId: string): Promise<PriceHistory> {
     try {
-        const { points } = await api(`/cards/${encodeURIComponent(tcgId)}/prices`, { schema: pricePointsAnswer });
-        return points;
+        const { points, listings } = await api(`/cards/${encodeURIComponent(tcgId)}/prices`, { schema: pricePointsAnswer });
+        return { points, listings: listings ?? {} };
     } catch (err) {
         console.error("Price history unavailable:", err instanceof Error ? err.message : err);
-        return [];
+        return { points: [], listings: {} };
     }
 }
 

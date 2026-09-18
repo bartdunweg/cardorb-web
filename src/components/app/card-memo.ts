@@ -23,7 +23,7 @@ const FACTS_ASKED = new Map<string, Promise<CardFacts | null>>();
 /** A card whose page of facts is out (warmCardFacts): its answer, or undefined where the page had none for it. */
 const FACTS_PAGED = new Map<string, Promise<CardFacts | undefined>>();
 /** A price line with the moment it was read: the facts never change, the line gains a day every night. */
-const PRICES_SEEN = new Map<string, { points: PricePoint[]; at: number }>();
+const PRICES_SEEN = new Map<string, { points: PricePoint[]; listings: Record<string, number>; at: number }>();
 const PRICES_ASKED = new Map<string, Promise<PricePoint[]>>();
 
 /**
@@ -112,15 +112,23 @@ export function preloadPriceHistory(tcgId: string): Promise<PricePoint[]> {
     if (known && Date.now() - known.at < PRICES_FRESH_MS) return Promise.resolve(known.points);
     const open = PRICES_ASKED.get(tcgId);
     if (open) return open;
-    const p = cardPriceHistory(tcgId).then((points) => {
+    const p = cardPriceHistory(tcgId).then(({ points, listings }) => {
         PRICES_ASKED.delete(tcgId);
         const before = PRICES_SEEN.get(tcgId);
         if (!points.length && before?.points.length) return before.points;
-        PRICES_SEEN.set(tcgId, { points, at: Date.now() });
+        PRICES_SEEN.set(tcgId, { points, listings, at: Date.now() });
         return points;
     });
     PRICES_ASKED.set(tcgId, p);
     return p;
+}
+
+/**
+ * Today's lowest listing of each printing the card's line has no figure for, as the line's read
+ * answered it (cardorb-api#561): what a sheet shows for a pressed printing listed and never sold.
+ */
+export function knownPriceListings(tcgId: string): Record<string, number> | undefined {
+    return PRICES_SEEN.get(tcgId)?.listings;
 }
 
 /** The line already read, fresh or not, without asking: what a sheet draws while it asks again. */

@@ -47,6 +47,16 @@ describe("DexGrid", () => {
         expect(screen.getByText("#025 · 2 cards")).toBeInTheDocument();
     });
 
+    /* cardorb-api#561: the Pokédex drew market figures only, so a card listed and never sold showed
+       no price at all where every other tile shows its lowest listing. */
+    it("writes a card's lowest listing as every tile does, labelled, where it has no market figure", () => {
+        const { container } = render(
+            <DexGrid generations={[generation([slot(151, [dexCard("m", { name: "Mew", listingPrice: 5771.49 })], "Mew")])]} linked={false} />,
+        );
+        const shown = container.querySelector("[title='Lowest listing on TCGplayer, no sales yet']");
+        expect(shown?.textContent).toBe("Lowest listing on TCGplayer, no sales yet: From €5,771.49");
+    });
+
     it("says a slot is missing, and writes no price under it", () => {
         render(<DexGrid generations={[generation([slot(1, [], "Bulbasaur")])]} linked={false} />);
         expect(screen.getByText("Missing")).toBeInTheDocument();

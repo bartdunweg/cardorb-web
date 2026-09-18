@@ -50,14 +50,23 @@ export const getPublicProfile = cache(async (username: string): Promise<PublicPr
 export const PUBLIC_PAGE_SIZE = 100;
 
 /** `value` and `unpriced` only where the owner shows prices: euros over the whole list, and the copies without one. */
-export type PublicCardsPage = { cards: PublicCard[]; total: number; copies?: number; facets: Facets; value?: number; unpriced?: number };
+export type PublicCardsPage = {
+    cards: PublicCard[];
+    total: number;
+    copies?: number;
+    facets: Facets;
+    value?: number;
+    unpriced?: number;
+    /** Of the unpriced copies, those shown at a lowest listing and left out of `value` (cardorb-api#561). */
+    listed?: number;
+};
 
 // One page of the owned cards behind a public profile, narrowed and sorted as the URL says, with
 // the totals and the facets over the whole collection behind it. The paged route rather than the
 // whole collection: a hundred tiles need thirty kilobytes, not nine hundred. The API publishes
 // nothing personal on it (R-API-002 there), so nothing here has to be hidden.
 export async function getPublicCards(username: string, { page, q, set, rarity, sort, order, folder, list }: ListQuery): Promise<PublicCardsPage> {
-    const { cards, total, copies, facets, value, unpriced } = await api(`/public/${encodeURIComponent(username)}/cards`, {
+    const { cards, total, copies, facets, value, unpriced, listed } = await api(`/public/${encodeURIComponent(username)}/cards`, {
         auth: false,
         tags: [publicTag(username)],
         params: { q, set, rarity, sort, order, collection: folder, list, limit: PUBLIC_PAGE_SIZE, offset: (page - 1) * PUBLIC_PAGE_SIZE },
@@ -70,6 +79,7 @@ export async function getPublicCards(username: string, { page, q, set, rarity, s
         facets: facetsFrom(facets),
         value,
         unpriced,
+        listed,
     };
 }
 
@@ -101,6 +111,7 @@ export function readAllPublicCards(username: string, query: ListQuery): { facets
             facets: facetsFrom(first.facets),
             value: first.value,
             unpriced: first.unpriced,
+            listed: first.listed,
         };
     });
     // A failure still reaches whoever awaits `all`; this only keeps it from counting as unhandled
@@ -141,14 +152,14 @@ export const getPublicBinders = cache(async (username: string): Promise<PublicBi
 // for, the numbers read off it. For the line under the name, which counts the collection and the
 // wishlist whatever list is open. Copies (the list as a person counts it) where the API says them;
 // the rows from one before it did. The value only where the owner shows prices, null otherwise.
-export async function countPublicCards(username: string, list?: "wishlist" | "favorites"): Promise<{ count: number; value: number | null }> {
-    const { total, copies, value } = await api(`/public/${encodeURIComponent(username)}/cards`, {
+export async function countPublicCards(username: string, list?: "wishlist" | "favorites"): Promise<{ count: number; value: number | null; listed?: number }> {
+    const { total, copies, value, listed } = await api(`/public/${encodeURIComponent(username)}/cards`, {
         auth: false,
         tags: [publicTag(username)],
         params: { list, limit: 1 },
         schema: publicTotalAnswer,
     });
-    return { count: copies ?? total, value: value ?? null };
+    return { count: copies ?? total, value: value ?? null, listed };
 }
 
 export type PublicCount = Awaited<ReturnType<typeof countPublicCards>>;
@@ -184,7 +195,7 @@ export async function readPublicList(username: string, query: ListQuery, { wishl
     const pageRead = binderRead.then((binder) => (binder?.pokedex ? null : getPublicCards(username, query)));
     const whole = !isNarrowed(query) && !query.folder && !query.list;
     const ownedRead: Promise<PublicCount> = whole
-        ? pageRead.then((page) => (page ? { count: page.copies ?? page.total, value: page.value ?? null } : countPublicCards(username)))
+        ? pageRead.then((page) => (page ? { count: page.copies ?? page.total, value: page.value ?? null, listed: page.listed } : countPublicCards(username)))
         : countPublicCards(username);
     const [binders, binder, page, dex, owned, wishes] = await Promise.all([
         bindersRead,
