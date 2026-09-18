@@ -53,9 +53,10 @@ export function MobileTabBar() {
 
     return (
         <>
-            {/* The ground under the bar: the page fades into it, and Safari's bottom bar reads it as solid. */}
-            <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 bottom-0 z-30 h-32 fade-to-page lg:hidden" />
-            <div className="fixed inset-x-4 bottom-[max(1.25rem,calc(env(safe-area-inset-bottom)+0.5rem))] z-40 flex items-stretch gap-1 sm:inset-x-6 lg:hidden">
+            {/* The ground under the bar: the page fades into it, and Safari's bottom bar reads it as solid. Both it and
+                the bar are their own view transition layer, or a page change paints the page over them (globals.css). */}
+            <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 bottom-0 z-30 h-32 fade-to-page view-transition-tab-bar-ground lg:hidden" />
+            <div className="fixed inset-x-4 bottom-[max(1.25rem,calc(env(safe-area-inset-bottom)+0.5rem))] z-40 flex items-stretch gap-1 view-transition-tab-bar sm:inset-x-6 lg:hidden">
                 <nav
                     aria-label="Primary"
                     // The same hairline ring as an input, and the lift without the scale's own rim, so it is one line.
