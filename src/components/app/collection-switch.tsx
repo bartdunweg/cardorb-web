@@ -8,7 +8,7 @@ const LISTS = [
 ] as const;
 
 /**
- * Ours, from the kit's Tabs: Collection | Wishlist under the title on a phone, the cards you have and the
+ * Ours, from the kit's underline Tabs: Collection | Wishlist under the title on a phone, the cards you have and the
  * ones you want. One tab in the phone's bar holds both, named My cards rather than Collection,
  * because the wishlist is not part of the collection; each page keeps its own title. From lg the
  * sidebar lists the two as pages of their own, so the switch is not drawn there (Bart's call,
@@ -18,12 +18,12 @@ const LISTS = [
  */
 export function CollectionSwitch({ current }: { current: (typeof LISTS)[number]["id"] }) {
     return (
-        // Two halves of the column on a phone, as wide as their words from sm (beside the title from lg). Round, as every button in
-        // the app is (button.tsx), where the kit's minimal tabs have its 8 px corner.
-        <Tabs selectedKey={current} className="sm:w-max">
-            <TabList aria-label="My cards" type="button-minimal" size="sm" fullWidth className="rounded-full">
+        // The kit's underline tabs, as a set's page has them over its cards, each half of the line, under
+        // the row of filters and over the list, 44 px high where the kit's is 30 (Bart's call, 2026-09-19).
+        <Tabs selectedKey={current}>
+            <TabList aria-label="My cards" type="underline" size="sm" fullWidth>
                 {LISTS.map((list) => (
-                    <Tab key={list.id} id={list.id} href={list.href} label={list.label} className="justify-center rounded-full" />
+                    <Tab key={list.id} id={list.id} href={list.href} label={list.label} className="flex-1 justify-center py-3" />
                 ))}
             </TabList>
         </Tabs>

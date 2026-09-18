@@ -27,12 +27,10 @@ test("a binder is made, a card goes in it, and the binder is on the card's sheet
     const path = await makeBinder(page, name);
     const binderId = path.split("/").pop() ?? "";
 
-    // The plus on a hand-filled binder's page is a menu of two (binder-add-button.tsx): the palette
-    // for a card you may not own, and this one for the cards you hold. An empty binder draws that
-    // plus three times, so the one pressed here is named rather than guessed at: the bar's copy is
-    // out of the way above `lg`, and of the two that are left it is the one in the middle of the
-    // empty page, under "No cards in this binder", which is the plus this page points at and the
-    // last of the three in the document.
+    // The plus in an empty hand-filled binder is a menu of two (binder-add-button.tsx): the palette
+    // for a card you may not own, and this one for the cards you hold. The header has none since
+    // 2026-09-19, so the one under "No cards in this binder" is the only one; `last()` stays in case
+    // another comes back.
     await page.goto(path);
     await expect(page.getByRole("heading", { name: "No cards in this binder" })).toBeVisible();
     await page.getByRole("main").getByRole("button", { name: "Add card" }).filter({ visible: true }).last().click();

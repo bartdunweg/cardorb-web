@@ -100,3 +100,20 @@ test("a filter's button opens its choices as a sheet from the bottom", async ({ 
     await page.keyboard.press("Escape");
     await expect(sheet).toBeHidden();
 });
+
+test("Collection and Wishlist are tabs of half the line each, under the filters", async ({ page }) => {
+    await page.goto("/dashboard/cards");
+    const tabs = page.getByRole("main").getByRole("tablist", { name: "My cards" });
+    const filters = page.getByRole("main").getByRole("button", { name: /^Filters/ });
+    await expect(tabs).toBeVisible();
+    const [list, row] = await Promise.all([tabs.boundingBox(), filters.boundingBox()]);
+    expect(list!.y).toBeGreaterThan(row!.y + row!.height - 1);
+    const [owned, wished] = await Promise.all([
+        tabs.getByRole("tab", { name: "Collection" }).boundingBox(),
+        tabs.getByRole("tab", { name: "Wishlist" }).boundingBox(),
+    ]);
+    expect(Math.abs(owned!.width - wished!.width)).toBeLessThanOrEqual(1);
+    expect(owned!.width + wished!.width).toBeGreaterThan(list!.width * 0.9);
+    // A finger high, where the kit's underline tab is 30 px.
+    expect(owned!.height).toBeGreaterThanOrEqual(43);
+});

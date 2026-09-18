@@ -35,6 +35,7 @@ export function CardsView({
     empty,
     period,
     viewInBar = false,
+    views,
 }: {
     list: Promise<CardList>;
     filter: CardFilter;
@@ -59,6 +60,8 @@ export function CardsView({
     empty: ReactNode;
     /** The page puts View in its bar on a phone (`BarViewMenu`), so the row does not. */
     viewInBar?: boolean;
+    /** Collection | Wishlist, under the row with the filters and over the list, below lg (Bart's call, 2026-09-19). */
+    views?: ReactNode;
     /**
      * The period a list sorted by price change is read over, where it is one of the chart's: a card
      * opened from it shows its price line and its figure over those same days. Left out for every
@@ -113,6 +116,7 @@ export function CardsView({
                 <div className="contents">{toolbar}</div>
                 <ViewMenu view={view} size={size} group={sortedBySet ? group : undefined} className={viewInBar ? "max-sm:hidden" : undefined} />
             </div>
+            {views ? <div className="lg:hidden">{views}</div> : null}
 
             <Suspense fallback={<CardsSkeleton />}>
                 <CardsList

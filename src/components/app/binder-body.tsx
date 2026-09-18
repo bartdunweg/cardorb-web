@@ -29,6 +29,8 @@ type Common = {
     searchLabel?: string;
     /** The page's own "nothing here at all" state, with its way out. */
     empty: ReactNode;
+    /** Sibling lists this page switches between (Collection | Wishlist), under the row, below lg. */
+    views?: ReactNode;
 };
 
 /** A public profile: the cards came with the page, and it pages by URL. */
@@ -207,6 +209,7 @@ export async function BinderBody(props: BinderBodyProps) {
                 noHits={noHits}
                 empty={empty}
                 viewInBar
+                views={props.views}
             />
         </div>
     );

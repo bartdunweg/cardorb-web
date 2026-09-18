@@ -120,13 +120,11 @@ export async function BinderPage({
                             </>
                         )
                     }
-                    // 16 px under the title, the header's own gap: the switch is a control of its own, not a line of the title (Bart, 2026-09-18).
-                    below={views ? <div className="lg:hidden">{views}</div> : null}
                 >
                     {children}
                 </PageHeader>
                 {/* The field says which list it searches: "Search in Wishlist", "Search in Kanto". */}
-                <BinderBody searchLabel={`Search in ${title}`} {...body} />
+                <BinderBody searchLabel={`Search in ${title}`} {...body} views={views} />
             </div>
         </ListTotalsProvider>
     );
