@@ -39,7 +39,7 @@ export type CardFilter = {
     wishlist?: boolean;
     sort?: "name" | "price" | "added" | "dex" | "change";
     order?: "asc" | "desc";
-    /** `sort: "change"` only: the window's first and last day, yyyy-mm-dd. */
+    /** `sort: "change"`: the window's first and last day, yyyy-mm-dd. Any other sort asks seven days back itself. */
     from?: string;
     to?: string;
     set?: string | string[];
@@ -71,6 +71,9 @@ export const LIST_BATCH = 48;
 
 /** What one read of a list answers: a batch of cards and the numbers about the whole of it. */
 export type CardList = Awaited<ReturnType<typeof getMyCards>>;
+
+/** Seven days back, as the API's date: the window a tile's price line covers. */
+const weekAgo = () => new Date(Date.now() - 7 * 86_400_000).toISOString().slice(0, 10);
 
 // One batch of the signed-in person's cards, from the API (R-DATA-003). `wishlist` picks the
 // wishlist (`owned=false`) over the collection; the API sorts by set, then number.
@@ -129,9 +132,13 @@ export async function getMyCards({
     // The first batch of a list is the read every list page waits on; per person and five
     // minutes it is a cache read instead of a round trip, and a write drops it with the rest
     // (forgetMine). Further batches and the odd sizes (a count, a whole Pokédex) go straight.
+    /* What each card's price did, for the line under it on a tile (Bart's call, 2026-09-18): the last
+       seven days, where the list is not sorted by change over a window of its own. Not for a read that
+       counts rather than draws. The day is in the key, so yesterday's week is not served today. */
+    const week = sort === "change" || wantPictures === false ? undefined : weekAgo();
     const key =
         offset === 0 && limit === LIST_BATCH
-            ? `cards:${JSON.stringify([q, collectionId, favoritesOnly, wishlist, sort, order, from, to, set, rarity, fullArt, gen, type, condition, finish, language, number, duplicates, wantFacets, wantPictures])}`
+            ? `cards:${JSON.stringify([q, collectionId, favoritesOnly, wishlist, sort, order, from, to, week, set, rarity, fullArt, gen, type, condition, finish, language, number, duplicates, wantFacets, wantPictures])}`
             : null;
     const read = async (token?: string) => {
         const { cards, total, copies, facets, value, unpriced, listed, catalogueUnavailable, counts } = await api("/cards", {
@@ -144,7 +151,7 @@ export async function getMyCards({
                 collection: collectionId,
                 sort,
                 order,
-                ...(sort === "change" ? { from, to } : {}),
+                ...(sort === "change" ? { from, to } : week ? { from: week } : {}),
                 set,
                 rarity,
                 fullArt: fullArt ? 1 : undefined,

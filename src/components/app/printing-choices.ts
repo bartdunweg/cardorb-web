@@ -93,6 +93,11 @@ export function printingLabel(key: string | null | undefined): string | null {
     return isPattern(pattern) ? `${FOIL_PATTERN_LABELS[pattern]} ${short.toLowerCase()}` : short;
 }
 
+/** A print run's name from its key ("1st-edition"), as its button in the sheet says it; null for one this app does not know. */
+export function editionLabel(key: string | null | undefined): string | null {
+    return key && key in EDITION_LABELS ? EDITION_LABELS[key as Edition] : null;
+}
+
 /** The print runs to choose between, or null where a card has one run or no answer. */
 export function editionChoices(editions: Edition[] | null | undefined, pictures?: Record<string, string> | null): EditionChoice[] | null {
     return editions && editions.length > 1 ? editions.map((key) => ({ key, label: EDITION_LABELS[key], image: pictures?.[key] ?? null })) : null;

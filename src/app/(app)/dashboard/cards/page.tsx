@@ -3,9 +3,11 @@ import { AddCardButton } from "@/components/app/add-card-button";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { BinderPage } from "@/components/app/binder-page";
 import { CollectionSwitch } from "@/components/app/collection-switch";
+import { ListSettingsDialog } from "@/components/app/list-settings-dialog";
 import { type CardFilter, getMyCards } from "@/lib/cards";
 import { openAsLeft } from "@/lib/list-memory-server";
 import { type ListSearchParams, changeWindow, readListQuery } from "@/lib/list-query";
+import { getMyProfile } from "@/lib/profile";
 
 // The tab's name, which the root layout's template finishes as “… · Cardorb”: without it every
 // tab and every history entry read “Cardorb”. The word is the one the navigation uses for this page.
@@ -41,12 +43,16 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
         duplicates,
     };
     const list = getMyCards(filter);
+    const { profile } = await getMyProfile();
     // The facets ride with the list's first page: nothing else is read before the first byte.
     const facets = list.then((r) => r.facets);
 
     return (
         <BinderPage
             title="Owned"
+            /* The same header as the wishlist's: its settings, here whether the profile is public, since the
+               public page is the owned collection (list-settings-dialog.tsx). */
+            settings={(compact) => <ListSettingsDialog list="collection" title="Owned" isPublic={profile?.is_public ?? false} compact={compact} />}
             // No count or value under the title: Home leads with the value, and the title alone says the page (Bart's call, 2026-09-18).
             query={query}
             basePath="/dashboard/cards"
