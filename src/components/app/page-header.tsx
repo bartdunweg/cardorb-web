@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChevronLeft } from "@untitledui/icons";
 import { Button } from "@/components/base/buttons/button";
 import { cx } from "@/utils/cx";
@@ -100,7 +100,12 @@ export function PageHeader({
     const buttons = useRef<HTMLDivElement>(null);
     const head = useRef<HTMLDivElement>(null);
     const [drop, setDrop] = useState(0);
-    useEffect(() => {
+    /* Moving only once the first place is set: measured after the first paint, the buttons drew at the
+       bar's top and slid down to the title on every page load (Bart, 2026-09-18). Measured before the
+       paint (a layout effect) and with the slide switched on a frame later, they are drawn where they
+       belong, and slide only when the bar takes the title over or gives it back. */
+    const [placed, setPlaced] = useState(false);
+    useLayoutEffect(() => {
         const block = head.current;
         const group = buttons.current;
         if (!beside || !block || !group || typeof ResizeObserver === "undefined") return;
@@ -112,10 +117,12 @@ export function PageHeader({
             setDrop(Math.max(0, Math.round(wordsMiddle - buttonsMiddle)));
         };
         measure();
+        const frame = requestAnimationFrame(() => setPlaced(true));
         const observer = new ResizeObserver(measure);
         observer.observe(block);
         window.addEventListener("resize", measure);
         return () => {
+            cancelAnimationFrame(frame);
             observer.disconnect();
             window.removeEventListener("resize", measure);
         };
@@ -163,7 +170,10 @@ export function PageHeader({
                 </span>
                 <div
                     ref={buttons}
-                    className="flex items-center justify-end gap-3 transition-transform duration-150 ease-enter motion-reduce:transition-none"
+                    className={cx(
+                        "flex items-center justify-end gap-3",
+                        placed && "transition-transform duration-150 ease-enter motion-reduce:transition-none",
+                    )}
                     style={barDrop ? { transform: `translateY(${barDrop}px)` } : undefined}
                 >
                     {barActions}
