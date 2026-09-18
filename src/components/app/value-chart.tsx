@@ -41,10 +41,17 @@ export const CHART_HEIGHT = HEIGHT;
 export const STROKE = 2;
 const PEN = STROKE / 2;
 const FRAME: Omit<Frame, "width"> = { height: HEIGHT, top: 26, right: PEN, bottom: 44, left: PEN };
+// Without the written range: room for the pen at the top and for the dates under the line, no more.
+const BARE_FRAME: Omit<Frame, "width"> = { ...FRAME, top: 8, bottom: 24 };
 
 const day = new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short" });
 const dayYear = new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short", year: "numeric" });
 const dateOf = (s: ValueSnapshot) => new Date(`${s.date}T00:00:00`);
+/**
+ * The axis's dates: "Aug 19" while all of them fall in this year; once one falls in another, every one
+ * carries its year, the latest too, so the row reads as one scale (Bart, 2026-09-18).
+ */
+const axisFormat = (dates: Date[]) => (dates.every((d) => d.getFullYear() === new Date().getFullYear()) ? day : dayYear);
 /** A reading's day, or its week where the chart shows one a week: "Jun 7 – 13, 2025". */
 const whenOf = (s: ValueSnapshot) => (s.weekFrom ? dayYear.formatRange(new Date(`${s.weekFrom}T00:00:00`), dateOf(s)) : dayYear.format(dateOf(s)));
 
@@ -54,6 +61,7 @@ export function ValueChart({
     countLabel = "cards",
     children,
     drawKey,
+    range = true,
 }: {
     snapshots: ValueSnapshot[];
     label?: string;
@@ -72,6 +80,11 @@ export function ValueChart({
      * in from the left each time (Bart, 2026-09-15: the switch felt heavy).
      */
     drawKey?: string;
+    /**
+     * The highest and lowest figure written on the chart and the hairline under it. Home leaves them off
+     * (Bart, 2026-09-18): the amount and the change over the chart already say it; a card's price keeps them.
+     */
+    range?: boolean;
 }) {
     const container = useRef<HTMLDivElement>(null);
     const [width, setWidth] = useState(0);
@@ -108,7 +121,7 @@ export function ValueChart({
         );
     }
 
-    const frame: Frame = { ...FRAME, width };
+    const frame: Frame = { ...(range ? FRAME : BARE_FRAME), width };
     const values = snapshots.map((s) => s.value);
     const [yMin, yMax] = fullRange(Math.min(...values), Math.max(...values));
     const days = snapshots.map((s) => s.date);
@@ -151,6 +164,7 @@ export function ValueChart({
 
     // Three date labels: first, middle, last. More would collide on a phone.
     const labelled = new Set([0, Math.floor((snapshots.length - 1) / 2), snapshots.length - 1]);
+    const axisDay = axisFormat([...labelled].map((i) => dateOf(snapshots[i])));
 
     const pick = (clientX: number) => {
         const el = container.current;
@@ -209,7 +223,7 @@ export function ValueChart({
                     >
                         <title id={svgTitleId}>{label}. Use the arrow keys to step through the readings.</title>
                         {/* One hairline where the line lands: the baseline the dates hang from. */}
-                        <line x1={0} x2={width} y1={baseline} y2={baseline} className="stroke-border-secondary" strokeWidth={1} />
+                        {range ? <line x1={0} x2={width} y1={baseline} y2={baseline} className="stroke-border-secondary" strokeWidth={1} /> : null}
 
                         {snapshots.map((s, i) =>
                             labelled.has(i) ? (
@@ -220,7 +234,7 @@ export function ValueChart({
                                     textAnchor={i === 0 ? "start" : i === snapshots.length - 1 ? "end" : "middle"}
                                     className="fill-text-quaternary text-2xs"
                                 >
-                                    {day.format(dateOf(s))}
+                                    {axisDay.format(dateOf(s))}
                                 </text>
                             ) : null,
                         )}
@@ -246,7 +260,7 @@ export function ValueChart({
                         {/* The highest figure over the line's top, the lowest under its foot, both at the left edge:
                             the same place on every chart, so the scale reads at a glance. Hidden from a screen
                             reader, which has them in the description. */}
-                        {points.length
+                        {range && points.length
                             ? extremes.map(({ i, kind }) => (
                                   <text
                                       key={kind}

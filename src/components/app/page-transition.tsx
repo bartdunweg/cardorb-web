@@ -11,7 +11,7 @@ import { usePathname } from "next/navigation";
  * moves, while the tab bar, the sidebar and the frame, outside it, stand still (globals.css turns the
  * root's own crossfade off). What it does depends on how it was reached:
  *
- * - a tab, the Owned | Wishlist switch, the browser's Back: a crossfade, 150 ms. Same place, other
+ * - a tab, the Collection | Wishlist switch, the browser's Back: a crossfade, 150 ms. Same place, other
  *   content, tapped tens of times a day, so nothing moves.
  * - a link one level in (`nav-forward`: a binder, a set): the page comes 24 px from the right.
  * - the page's own Back (`nav-back`): the same, mirrored.

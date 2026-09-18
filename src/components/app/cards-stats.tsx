@@ -59,7 +59,7 @@ export const StatCard = ({
     );
 };
 
-// Owned, Wishlist, Favorites, and the Pokémon count in the fourth place; the value itself is the
+// Collection, Wishlist, Favorites, and the Pokémon count in the fourth place; the value itself is the
 // big number above the chart. The fourth tile arrives as a node so the page can stream it.
 export function CardsStats({ stats, fourth }: { stats: CardStats; fourth: ReactNode }) {
     return (
@@ -68,7 +68,7 @@ export function CardsStats({ stats, fourth }: { stats: CardStats; fourth: ReactN
             {/* Every card held, a duplicate counting twice: the number of cards in the boxes, which is
                 what "owned" means to the person who owns them. The lists count printings instead (a
                 card you hold twice is one row there), so All cards can read one lower. */}
-            <StatCard label="Owned" value={formatCount(stats.copies)} href="/dashboard/cards" delay={0} />
+            <StatCard label="Collection" value={formatCount(stats.copies)} href="/dashboard/cards" delay={0} />
             <StatCard label="Wishlist" value={formatCount(stats.wishlist)} href="/dashboard/wishlist" delay={40} />
             <StatCard label="Favorites" value={formatCount(stats.favorites)} href="/dashboard/favorites" delay={80} />
             {fourth}

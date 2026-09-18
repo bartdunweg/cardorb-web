@@ -102,7 +102,7 @@ test("a cleared search stays cleared after a reload, Back and a bare address", a
 
 test("a rarity filter chosen in the Filters sheet survives a reload and Back", async ({ page }) => {
     await page.goto("/dashboard/cards");
-    await expect(page.getByRole("heading", { name: "Owned", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Collection", exact: true })).toBeVisible();
 
     await page.getByRole("button", { name: /^Filters/ }).click();
     const sheet = page.getByRole("dialog", { name: "Filters" });

@@ -396,7 +396,7 @@ export const displaySections: SectionSpec[] = [
                     <Cell label="with a panel" span="full">
                         <Tabs defaultSelectedKey="a" className="gap-4">
                             <TabList aria-label="With a panel" type="button-border" size="sm">
-                                <Tab id="a" label="Owned" />
+                                <Tab id="a" label="Collection" />
                                 <Tab id="b" label="Wishlist" />
                             </TabList>
                             <TabPanel id="a" className="text-sm text-tertiary">
@@ -516,7 +516,7 @@ function TabsSample({ type, size = "sm" }: { type: "button-brand" | "button-gray
     return (
         <Tabs defaultSelectedKey="owned">
             <TabList aria-label={`Tabs, ${type}, ${size}`} type={type} size={size}>
-                <Tab id="owned" label="Owned" />
+                <Tab id="owned" label="Collection" />
                 <Tab id="wishlist" label="Wishlist" />
                 <Tab id="all" label="All cards" />
             </TabList>

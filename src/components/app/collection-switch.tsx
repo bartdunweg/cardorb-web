@@ -3,12 +3,12 @@
 import { Tab, TabList, Tabs } from "@/components/application/tabs/tabs";
 
 const LISTS = [
-    { id: "owned", label: "Owned", href: "/dashboard/cards" },
+    { id: "owned", label: "Collection", href: "/dashboard/cards" },
     { id: "wishlist", label: "Wishlist", href: "/dashboard/wishlist" },
 ] as const;
 
 /**
- * Ours, from the kit's Tabs: Owned | Wishlist under the title on a phone, the cards you have and the
+ * Ours, from the kit's Tabs: Collection | Wishlist under the title on a phone, the cards you have and the
  * ones you want. One tab in the phone's bar holds both, named My cards rather than Collection,
  * because the wishlist is not part of the collection; each page keeps its own title. From lg the
  * sidebar lists the two as pages of their own, so the switch is not drawn there (Bart's call,

@@ -459,7 +459,7 @@ input[type="search"]::-webkit-search-cancel-button {
     animation: none;
 }
 
-/* A tab, the Owned | Wishlist switch, the browser's Back: a crossfade, the old page out in 100 ms and
+/* A tab, the Collection | Wishlist switch, the browser's Back: a crossfade, the old page out in 100 ms and
    the new one in over 150, on the enter curve. Same place, other content: nothing moves. */
 ::view-transition-group(.page-fade) {
     animation-duration: var(--duration-fast);

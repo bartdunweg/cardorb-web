@@ -56,14 +56,14 @@ export const cacheCleared = (page: Page) => page.waitForResponse((r) => r.reques
  */
 export const writesLanded = (page: Page) => expect(page.locator("html")).not.toHaveAttribute("data-unsent-writes", { timeout: 15000 });
 
-/** Home's Owned figure: all copies. A new account shows the welcome instead, which is zero. */
+/** Home's Collection figure: all copies. A new account shows the welcome instead, which is zero. */
 export const ownedCount = async (page: Page): Promise<number> => {
     await page.goto("/dashboard");
     await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
     if (await page.getByText("Welcome to Cardorb").isVisible()) return 0;
     const text = await page
         .getByRole("link")
-        .filter({ has: page.getByRole("heading", { name: "Owned" }) })
+        .filter({ has: page.getByRole("heading", { name: "Collection", exact: true }) })
         .innerText();
     return Number(text.replace(/[^0-9]/g, ""));
 };
