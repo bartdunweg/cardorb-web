@@ -58,7 +58,8 @@ export function MobileTabBar() {
                 The bar's name sits on the nav itself: a name is a backdrop root, so on a wrapper it cut the glass off from
                 the page behind it and Chrome drew the bar unblurred. */}
             <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 bottom-0 z-30 h-32 fade-to-page view-transition-tab-bar-ground lg:hidden" />
-            <div className="fixed inset-x-4 bottom-[max(1.25rem,calc(env(safe-area-inset-bottom)+0.5rem))] z-40 flex items-stretch gap-1 sm:inset-x-6 lg:hidden">
+            {/* 12 px between the bar and Search: at 4 the two read as one shape (Bart, 2026-09-19). */}
+            <div className="fixed inset-x-4 bottom-[max(1.25rem,calc(env(safe-area-inset-bottom)+0.5rem))] z-40 flex items-stretch gap-3 sm:inset-x-6 lg:hidden">
                 <nav
                     aria-label="Primary"
                     // The same hairline ring as an input, and the lift without the scale's own rim, so it is one line.

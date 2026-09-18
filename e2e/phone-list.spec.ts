@@ -33,8 +33,11 @@ test.beforeAll(async ({ browser }) => {
 const hydrated = (page: Page, name: string) =>
     page.waitForFunction(
         (label) =>
-            [...document.querySelectorAll(`button[aria-label], button`)].some(
-                (b) => b.textContent?.includes(label) && Object.keys(b).some((k) => k.startsWith("__reactFiber$")),
+            [...document.querySelectorAll("button")].some(
+                // By its words or its label: the dots say "Collection settings" only to a screen reader.
+                (b) =>
+                    (b.textContent?.includes(label) || b.getAttribute("aria-label")?.includes(label)) &&
+                    Object.keys(b).some((k) => k.startsWith("__reactFiber$")),
             ),
         name,
     );
@@ -61,17 +64,17 @@ test("My cards has its field in the bar, in the title's place, beside View and t
     await expect(collectionTile(page, toedscruel)).toBeVisible();
     await expect(collectionTile(page, toedscool)).toBeHidden();
 
-    await page.getByRole("button", { name: "Cancel" }).click();
+    await page.getByRole("button", { name: "Clear" }).click();
     await expect(page).not.toHaveURL(/[?&]q=/);
     await expect(field).toHaveValue("");
     await expect(field).toBeFocused();
-    await expect(page.getByRole("button", { name: "Cancel" })).toBeHidden();
+    await expect(page.getByRole("button", { name: "Clear" })).toBeHidden();
 });
 
 test("a page opened with a term shows the field in the bar", async ({ page }) => {
     await page.goto("/dashboard/cards?q=Toeds");
     await expect(page.getByRole("combobox", { name: "Search in Collection" })).toHaveValue("Toeds");
-    await expect(page.getByRole("button", { name: "Cancel" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Clear" })).toBeVisible();
 });
 
 test("View is in the bar and the filters are one line under the title", async ({ page }) => {
@@ -154,8 +157,12 @@ test("a set page's search is a button beside Back; Escape in an empty field and 
 
     await button.click();
     await expect(field).toBeFocused();
-    // Back stays beside the field.
-    await expect(page.getByRole("link", { name: "Back to Browse" }).first()).toBeVisible();
+    // Back stays beside the field, and the field starts right after it on the same line.
+    const back = page.getByRole("link", { name: "Back to Browse" }).first();
+    await expect(back).toBeVisible();
+    const [b, f] = await Promise.all([back.boundingBox(), field.boundingBox()]);
+    expect(f!.x).toBeLessThan(b!.x + b!.width + 16);
+    expect(Math.abs(f!.y + f!.height / 2 - (b!.y + b!.height / 2))).toBeLessThanOrEqual(2);
     await page.keyboard.press("Escape");
     await expect(field).toBeHidden();
     await expect(button).toBeFocused();

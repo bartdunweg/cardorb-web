@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { AppEmptyState } from "@/components/app/app-empty-state";
-import { BrowseToolbar } from "@/components/app/browse-toolbar";
+import { BrowseToolbar, SetsViewMenu } from "@/components/app/browse-toolbar";
 import { PageHeader } from "@/components/app/page-header";
 import { SetsShelf } from "@/components/app/sets-shelf";
 import { SetsOutline } from "@/components/app/skeletons";
@@ -26,7 +26,7 @@ export default async function SetsPage({ searchParams }: { searchParams: Promise
         <div className="flex flex-1 flex-col gap-6">
             {/* The title alone: how far the shelf is comes per set, on its tile, not as one number over all of them. */}
             {/* On a phone the search field stands in the title's place: the tab bar already says Browse (`RowSearch` place "bar"). */}
-            <PageHeader title="Browse" searchField />
+            <PageHeader title="Browse" searchField barActions={<SetsViewMenu initialView={view} className="sm:hidden" />} />
             {/* The shelf is not awaited: the title and the row go out first, the sets when the catalogue answers. */}
             <BrowseToolbar query={query} view={view} />
             {/* Keyed by what reads another shelf, not by the search: a new term keeps the sets on screen

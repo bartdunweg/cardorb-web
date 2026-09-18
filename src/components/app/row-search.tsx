@@ -35,7 +35,7 @@ const FIELD = "flex min-w-0 items-center [&_input]:text-ellipsis max-sm:[&_input
  * "button": in the bar, out on the bar's search press (`BarSearchButton`) or while it holds a term,
  * so a narrowed list always says why; Cancel empties it and puts the bar back (a binder, a set).
  * "bar": always in the bar, in the title's place, on a page the tab bar reaches (My cards, Browse);
- * Cancel shows while it holds a term. `onClear` empties the term.
+ * Clear shows while it holds a term: the field stays, so nothing is cancelled. `onClear` empties the term.
  */
 export type SearchPlace = "row" | "button" | "bar";
 
@@ -86,7 +86,7 @@ export function RowSearch({
                             field.current?.querySelector("input")?.focus();
                         }}
                     >
-                        Cancel
+                        Clear
                     </Button>
                 ) : null}
             </>,
@@ -128,7 +128,14 @@ export function RowSearch({
     }
 
     return (
-        <div ref={field} className={cx(FIELD, "basis-full sm:max-w-52 sm:flex-1 sm:basis-auto", place !== "row" && !filled && "max-sm:hidden")}>
+        <div
+            ref={field}
+            className={cx(
+                FIELD,
+                "basis-full sm:max-w-52 sm:flex-1 sm:basis-auto",
+                place === "bar" ? "max-sm:hidden" : place === "button" && !filled && "max-sm:hidden",
+            )}
+        >
             {children}
         </div>
     );

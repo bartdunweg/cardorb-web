@@ -37,7 +37,6 @@ const first = (keys: "all" | Set<React.Key>) => (keys === "all" ? undefined : [.
  * redraws the sets already there.
  */
 export function BrowseToolbar({ query, view: initialView }: { query: BrowseQuery; view: SetsViewMode }) {
-    const view = useSetsView(initialView);
     const router = useRouter();
     const [pending, startTransition] = useTransition();
     // Per choice, the sets it would leave (the search as typed); the button's total with it.
@@ -80,7 +79,7 @@ export function BrowseToolbar({ query, view: initialView }: { query: BrowseQuery
             {/* In the bar on a phone once its search is pressed, a short field from sm (`RowSearch`), as in a binder's row. */}
             {/* The shelf it filters is the shelf it offers: its set names, in the language chosen. */}
             <CardsSearch size="sm" initialValue={query.q ?? ""} label="Search in Browse" shelf={query.language} place="bar" />
-            {/* On a phone the line under the title, scrolling sideways, with View beside it. */}
+            {/* On a phone the line under the search, scrolling sideways. */}
             <div className={FILTER_BAR}>
                 <FiltersSheet
                     inline
@@ -118,29 +117,41 @@ export function BrowseToolbar({ query, view: initialView }: { query: BrowseQuery
                 />
                 <div className="contents max-sm:hidden">{sortMenu}</div>
             </div>
-            <Dropdown.Root>
-                <RowButton icon={view === "grid" ? Grid01 : Rows01} label="View" className="ml-auto shrink-0" />
-                <Dropdown.Popover placement="bottom end" className="w-40">
-                    <Dropdown.Menu
-                        selectionMode="single"
-                        disallowEmptySelection
-                        selectedKeys={new Set([view])}
-                        onSelectionChange={(keys) => {
-                            const key = first(keys);
-                            if (key !== "grid" && key !== "list") return;
-                            // The shelf redraws from the sets it holds; the cookie is for the next load (use-sets-view.ts).
-                            setSetsView(key);
-                        }}
-                    >
-                        <Dropdown.Item id="grid" icon={Grid01}>
-                            Grid
-                        </Dropdown.Item>
-                        <Dropdown.Item id="list" icon={Rows01}>
-                            List
-                        </Dropdown.Item>
-                    </Dropdown.Menu>
-                </Dropdown.Popover>
-            </Dropdown.Root>
+            {/* On a phone in the bar beside the search field (`SetsViewMenu` in the page's header). */}
+            <SetsViewMenu initialView={initialView} className="max-sm:hidden" />
         </div>
+    );
+}
+
+/**
+ * The shelf's View: tiles or rows. In the row from sm, and on a phone in the bar beside the search
+ * field, as My cards has its View (Bart's call, 2026-09-19). Both read one choice (`useSetsView`).
+ */
+export function SetsViewMenu({ initialView, className }: { initialView: SetsViewMode; className?: string }) {
+    const view = useSetsView(initialView);
+    return (
+        <Dropdown.Root>
+            <RowButton icon={view === "grid" ? Grid01 : Rows01} label="View" className={cx("ml-auto shrink-0", className)} />
+            <Dropdown.Popover placement="bottom end" className="w-40">
+                <Dropdown.Menu
+                    selectionMode="single"
+                    disallowEmptySelection
+                    selectedKeys={new Set([view])}
+                    onSelectionChange={(keys) => {
+                        const key = first(keys);
+                        if (key !== "grid" && key !== "list") return;
+                        // The shelf redraws from the sets it holds; the cookie is for the next load (use-sets-view.ts).
+                        setSetsView(key);
+                    }}
+                >
+                    <Dropdown.Item id="grid" icon={Grid01}>
+                        Grid
+                    </Dropdown.Item>
+                    <Dropdown.Item id="list" icon={Rows01}>
+                        List
+                    </Dropdown.Item>
+                </Dropdown.Menu>
+            </Dropdown.Popover>
+        </Dropdown.Root>
     );
 }

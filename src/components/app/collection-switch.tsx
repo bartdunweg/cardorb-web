@@ -20,7 +20,8 @@ export function CollectionSwitch({ current }: { current: (typeof LISTS)[number][
     return (
         // The kit's underline tabs, as a set's page has them over its cards, each half of the line, under
         // the row of filters and over the list, 44 px high where the kit's is 30 (Bart's call, 2026-09-19).
-        <Tabs selectedKey={current}>
+        // `data-my-cards-tabs`: its line slides to the other tab across the page change (globals.css).
+        <Tabs selectedKey={current} data-my-cards-tabs>
             <TabList aria-label="My cards" type="underline" size="sm" fullWidth>
                 {LISTS.map((list) => (
                     <Tab key={list.id} id={list.id} href={list.href} label={list.label} className="flex-1 justify-center py-3" />

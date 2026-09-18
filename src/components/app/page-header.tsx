@@ -167,16 +167,20 @@ export function PageHeader({
                         ? "[&:has(>[data-bar-search]:not(:empty))>:nth-child(2)]:hidden"
                         : "[&:has(>[data-bar-search]:not(:empty))>:is(:nth-child(2),:nth-child(3))]:invisible",
                     // Nothing to tap until Back, a button or the collapsed title is there: taps go through to the page.
-                    !back && !barActions && !collapsed && "pointer-events-none",
+                    !back && !barActions && !searchField && !collapsed && "pointer-events-none",
                     // The fade comes with the collapse: at rest the buttons sit on the page and the large title
                     // sits on its line; once content scrolls under, the page's ground fades in behind the bar.
                     // The ground reaches 28 px past the bar's bottom: the glass thins over its whole height
                     // and runs out there.
                     "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:-bottom-7 before:-z-10 before:glass-fade before:transition-opacity before:duration-150 before:ease-enter",
                     collapsed ? "before:opacity-100" : "before:opacity-0",
+                    // A bar that is the search field on a phone always has content under it: its ground stays.
+                    searchField && "max-sm:before:opacity-100",
                 )}
             >
-                <div className="flex justify-start">
+                {/* Every child in its own cell: the field and the buttons are placed, and a child left to
+                    auto-placement went to a second row and widened the first column. */}
+                <div className="col-start-1 row-start-1 flex justify-start">
                     {back ? (
                         <Button
                             href={back.href}
@@ -194,7 +198,7 @@ export function PageHeader({
                     aria-hidden="true"
                     className={cx(
                         // The same size as the card sheet's bar gives its name: one bar, two places.
-                        "truncate px-2 text-center text-md font-semibold text-primary transition-opacity duration-150 ease-enter",
+                        "col-start-2 row-start-1 truncate px-2 text-center text-md font-semibold text-primary transition-opacity duration-150 ease-enter",
                         collapsed ? "opacity-100" : "opacity-0",
                     )}
                 >
@@ -266,7 +270,7 @@ export function PageHeader({
                         "flex flex-row flex-wrap items-center justify-between gap-3",
                         !titleOnPhone && "max-lg:sr-only",
                         // On the bar's line, the buttons keep its right end.
-                        beside && "max-lg:pr-42",
+                        beside && "max-lg:pr-28",
                     )}
                 >
                     {/* The words take what the actions leave, so a long subtitle wraps rather than pushing them under the title. */}

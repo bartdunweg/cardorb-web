@@ -459,6 +459,33 @@ input[type="search"]::-webkit-search-cancel-button {
     animation: none;
 }
 
+/* The Collection | Wishlist line slides from the tab left to the tab chosen across the page change,
+   as a set's tabs slide theirs within a page (tabs.tsx): the two are pages of their own, so the line
+   is drawn anew on each and only the change can carry it over. The move alone, 200 ms on the move
+   curve as in tabs.tsx; the old line is not drawn. No move under reduced motion (Bart, 2026-09-19). */
+[data-my-cards-tabs] [role="tablist"] + span {
+    view-transition-name: my-cards-line;
+}
+
+::view-transition-group(my-cards-line) {
+    animation-duration: 200ms;
+    animation-timing-function: var(--ease-move);
+}
+
+::view-transition-old(my-cards-line) {
+    display: none;
+}
+
+::view-transition-new(my-cards-line) {
+    animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(my-cards-line) {
+        animation: none;
+    }
+}
+
 /* A tab, the Collection | Wishlist switch, the browser's Back: a crossfade, the old page out in 100 ms and
    the new one in over 150, on the enter curve. Same place, other content: nothing moves. */
 ::view-transition-group(.page-fade) {
