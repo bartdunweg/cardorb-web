@@ -178,9 +178,10 @@ export async function updateEmail(email: string): Promise<ActionResult> {
 
 // A list's one setting, from its own page: whether it shows on the public profile. The wishlist
 // and the favorites have the flag; a binder carries its own, the Pokédex among them since it
-// became one.
-const listSchema = z.object({ list: z.enum(["wishlist", "favorites"]), shown: z.boolean() });
-const FLAG = { wishlist: "wishlistPublic", favorites: "favoritesPublic" } as const;
+// became one. The collection's is the profile's own: the public page is the owned collection, so
+// showing it is making the profile public (the same flag as the settings page's row).
+const listSchema = z.object({ list: z.enum(["collection", "wishlist", "favorites"]), shown: z.boolean() });
+const FLAG = { collection: "isPublic", wishlist: "wishlistPublic", favorites: "favoritesPublic" } as const;
 
 // `reread: false` on this and the two flags below: the caller drops the cache itself and refreshes
 // once, rather than waiting for the page to be drawn again inside this answer.

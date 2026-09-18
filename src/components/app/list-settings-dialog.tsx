@@ -21,7 +21,7 @@ export function ListSettingsDialog({
     isPublic,
     compact,
 }: {
-    list: "wishlist" | "favorites";
+    list: "collection" | "wishlist" | "favorites";
     title: string;
     isPublic: boolean;
     compact?: boolean;
@@ -44,8 +44,24 @@ export function ListSettingsDialog({
         close();
         // The whole of this setting lands on /user/[username]; this page looks the same either
         // way, so the toast is the only place the new state is ever said.
-        notify.done(next ? `${title} shows on your public profile now` : `${title} no longer shows on your public profile`);
-        const still = next ? `${title} still does not show on your public profile` : `${title} still shows on your public profile`;
+        const what = list === "collection" ? "Your profile" : title;
+        notify.done(
+            list === "collection"
+                ? next
+                    ? "Your profile is public now"
+                    : "Your profile is private now"
+                : next
+                  ? `${title} shows on your public profile now`
+                  : `${title} no longer shows on your public profile`,
+        );
+        const still =
+            list === "collection"
+                ? next
+                    ? `${what} is still private`
+                    : `${what} is still public`
+                : next
+                  ? `${title} still does not show on your public profile`
+                  : `${title} still shows on your public profile`;
         void updateListPublic({ list, shown: next }, { reread: false }).then(
             (res) => {
                 if (!res.ok) {
@@ -84,9 +100,14 @@ export function ListSettingsDialog({
                                 <AriaHeading slot="title" className="text-lg font-semibold text-primary">
                                     {title} settings
                                 </AriaHeading>
+                                {/* The collection is the public page itself, so its switch is the profile's. */}
                                 <Toggle
-                                    label="Show on my public profile"
-                                    hint="As a chip beside your binders on your page. Only while your profile is public."
+                                    label={list === "collection" ? "Public profile" : "Show on my public profile"}
+                                    hint={
+                                        list === "collection"
+                                            ? "Anyone with your link sees the cards you own, without prices or notes."
+                                            : "As a chip beside your binders on your page. Only while your profile is public."
+                                    }
                                     isSelected={shown}
                                     onChange={setShown}
                                 />

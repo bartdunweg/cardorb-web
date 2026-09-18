@@ -653,6 +653,8 @@ export type SetCard = {
     fullArt?: boolean;
     /** Which printing `price` is, as the sheet keys its printings; null where the API did not say. */
     printing?: string | null;
+    /** The print run `price` is, for a card sold in runs; null for one sold in one run. */
+    edition?: string | null;
     /** What that price did over the last seven days; null without two readings or an API that does not say. */
     priceChange?: { was: number; now: number; change: number } | null;
 };
@@ -681,6 +683,7 @@ export const setCardFromBrowse = (c: BrowseCard, setAbbr: string | null = null):
     printedNumber: c.printedNumber ?? c.number,
     ...(c.fullArt === undefined ? {} : { fullArt: c.fullArt }),
     printing: c.printing ?? null,
+    edition: c.edition ?? null,
     priceChange: c.priceChange ? { was: c.priceChange.was, now: c.priceChange.now, change: c.priceChange.change } : null,
 });
 
@@ -725,6 +728,10 @@ export const browseCardSchema = z.object({
        and the sheet it opens show one printing. Only on the set page; absent from an API before it
        named it, and null where no printing has a price. */
     printing: nullable(z.string()).optional(),
+    /* The print run that price is, for a card sold in runs ("unlimited", "1st-edition"): the choice its
+       sheet offers, so the tile names it rather than the finish. Only on the set page; null for a
+       card sold in one run, absent from an API before cardorb-api#566. */
+    edition: nullable(z.string()).optional(),
     /* What that printing's price did since the `from` the set page asked with: its first and last
        reading in the window. Absent where not asked for, null with fewer than two readings. */
     priceChange: nullable(z.object({ was: z.number(), now: z.number(), change: z.number(), from: z.string(), to: z.string() })).optional(),

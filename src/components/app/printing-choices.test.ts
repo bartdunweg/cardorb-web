@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { editionChoices, openingChoice, pressedPrinting, priceSeriesOf, printingChoices, printingLabel } from "./printing-choices";
+import { editionChoices, editionLabel, openingChoice, pressedPrinting, priceSeriesOf, printingChoices, printingLabel } from "./printing-choices";
 
 const POKE = "https://images.cardorb.com/tcgplayer/566553.jpg";
 
@@ -161,5 +161,18 @@ describe("printingLabel", () => {
         expect(printingLabel(null)).toBeNull();
         expect(printingLabel("")).toBeNull();
         expect(printingLabel("gold-star")).toBeNull();
+    });
+});
+
+describe("editionLabel", () => {
+    it("names a print run as its button in the sheet does", () => {
+        expect(editionLabel("unlimited")).toBe("Unlimited");
+        expect(editionLabel("1st-edition")).toBe("1st Edition");
+        expect(editionLabel("shadowless")).toBe("Shadowless");
+    });
+
+    it("says nothing for no run or one it does not know", () => {
+        expect(editionLabel(null)).toBeNull();
+        expect(editionLabel("holo")).toBeNull();
     });
 });
