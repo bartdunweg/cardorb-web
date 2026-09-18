@@ -11,9 +11,13 @@ const DRAWER = "cubic-bezier(0.32, 0.72, 0, 1)";
 
 type Enter = { tf: string; ty: string; cls: string };
 
-/** Every `enter` animation from here on, with the timing function and the rise it ran with. */
+/**
+ * Every `enter` animation on every page this test opens, with the timing function and the rise it
+ * ran with. An init script, so it is listening before the page's own scripts: a press that lands
+ * before hydration is replayed once React is in, and a listener added after `goto` could miss it.
+ */
 const recordEnters = (page: Page) =>
-    page.evaluate(() => {
+    page.addInitScript(() => {
         const w = window as unknown as { __enters: Enter[] };
         w.__enters = [];
         document.addEventListener(
@@ -27,6 +31,11 @@ const recordEnters = (page: Page) =>
         );
     });
 const enters = (page: Page) => page.evaluate(() => (window as unknown as { __enters: Enter[] }).__enters);
+/** The first recorded entry whose classes say it is `marker`, waited for rather than read once. */
+const entered = async (page: Page, marker: string): Promise<Enter> => {
+    await expect.poll(async () => (await enters(page)).some((a) => a.cls.includes(marker))).toBe(true);
+    return (await enters(page)).find((a) => a.cls.includes(marker))!;
+};
 
 test("a long password stops before the show/hide button", async ({ browser }) => {
     // Signed out: the login page is where a password is typed most.
@@ -99,19 +108,19 @@ test("a settings label starts where its rows' content starts", async ({ page }) 
 
 test("a phone's bottom sheet rises on the drawer curve, and not at all under reduced motion", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
+    await recordEnters(page);
     for (const reducedMotion of ["no-preference", "reduce"] as const) {
         await page.emulateMedia({ reducedMotion });
         await page.goto("/dashboard/you");
         const manage = page.getByRole("main").getByRole("button", { name: "Manage" });
         await expect(manage).toBeVisible();
-        await recordEnters(page);
         await manage.click();
         await expect(page.getByRole("dialog")).toBeVisible();
-        const sheet = (await enters(page)).find((a) => a.cls.includes("max-sm:slide-in-from-bottom"));
+        const sheet = await entered(page, "max-sm:slide-in-from-bottom");
         // Measured before: cubic-bezier(0.23, 1, 0.32, 1), the kit modal's --ease-enter.
-        expect(sheet?.tf).toBe(DRAWER);
-        if (reducedMotion === "reduce") expect(parseFloat(sheet?.ty ?? "1")).toBe(0);
-        else expect(sheet?.ty).toBe("100%");
+        expect(sheet.tf).toBe(DRAWER);
+        if (reducedMotion === "reduce") expect(parseFloat(sheet.ty)).toBe(0);
+        else expect(sheet.ty).toBe("100%");
         await page.keyboard.press("Escape");
         await expect(page.getByRole("dialog")).toBeHidden();
     }
@@ -119,14 +128,14 @@ test("a phone's bottom sheet rises on the drawer curve, and not at all under red
 
 test("a popover enters on the enter curve its exit already uses", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
+    await recordEnters(page);
     await page.goto("/dashboard/design");
     const trigger = page.getByRole("main").locator('[aria-label="Acquired"]').first().getByRole("button").first();
     await trigger.scrollIntoViewIfNeeded();
-    await recordEnters(page);
     await trigger.click();
     await expect(page.getByRole("dialog")).toBeVisible();
-    const popover = (await enters(page)).find((a) => a.cls.includes("origin-(--trigger-anchor-point)"));
+    const popover = await entered(page, "origin-(--trigger-anchor-point)");
     // Measured before: cubic-bezier(0, 0, 0.2, 1), Tailwind's ease-out.
-    expect(popover?.tf).toBe(ENTER);
+    expect(popover.tf).toBe(ENTER);
     await page.keyboard.press("Escape");
 });

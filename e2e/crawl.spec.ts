@@ -89,8 +89,8 @@ const ROUTES: { name: string; path: () => string; heading: string | RegExp }[] =
     { name: "Browse", path: () => "/dashboard/sets", heading: "Browse" },
     { name: "a set page", path: () => `/dashboard/sets/${SET_ID}`, heading: "Scarlet & Violet" },
     { name: "Settings", path: () => "/dashboard/settings", heading: "Settings" },
-    // You titles itself with the account's name, which here is the seeded display name.
-    { name: "You", path: () => "/dashboard/you", heading: /^e2e$/i },
+    // You is titled with its own name; the account's is on the card under it (ui-polish.spec.ts).
+    { name: "You", path: () => "/dashboard/you", heading: "You" },
     // Reached by typing the address only, deliberately (CLAUDE.md), which is exactly why nothing
     // else in the suite would notice it breaking.
     { name: "the design system", path: () => "/dashboard/design", heading: "Design system" },
