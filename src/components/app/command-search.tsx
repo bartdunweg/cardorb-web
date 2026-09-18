@@ -29,6 +29,21 @@ const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-sl
 // The catalogue in the browser and the search over it, with the zod schemas that read them, load when the palette is first wanted.
 const catalogueClient = () => import("@/lib/catalogue-client");
 
+/**
+ * The palette's chips: the API's filters, with one more language, both catalogues at once. That
+ * one never reaches the API, which reads one catalogue a question: the palette asks each and puts
+ * the two answers under their own headings (Bart's call, 2026-09-18).
+ */
+export type PaletteLanguage = BrowseLanguage | "both";
+export type PaletteFilters = Omit<CatalogueFilters, "language"> & { language?: PaletteLanguage };
+
+/** The Set chip's list with both catalogues: one array, so the effect below does not rerun on every render. */
+const NO_SETS: FilterOption[] = [];
+
+/** Both answers under one heading each, the English first; a heading counts its whole answer. */
+const underLanguage = (items: PokemonCard[], key: BrowseLanguage, total: number | undefined) =>
+    items.map((item) => ({ ...item, group: { key: `lang:${key}`, title: key === "en" ? "English" : "Japanese", size: total ?? items.length } }));
+
 const CommandSearchContext = createContext<{ open: () => void }>({ open: () => {} });
 export const useCommandSearch = () => useContext(CommandSearchContext);
 
@@ -50,12 +65,13 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
     // The chips under the field: a language, a set of that language's shelf and an energy type. All
     // go to the API's fielded search beside the term. Each shelf's sets are asked for once, the
     // first time that language is chosen (English on the first open), and kept.
-    const [filters, setFilters] = useState<CatalogueFilters>({});
-    const language: BrowseLanguage = filters.language ?? "en";
+    const [filters, setFilters] = useState<PaletteFilters>({});
+    const language: PaletteLanguage = filters.language ?? "en";
     const [shelves, setShelves] = useState<Partial<Record<BrowseLanguage, FilterOption[]>>>({});
-    const sets = shelves[language];
+    // Both catalogues at once have no Set chip: a set belongs to one of them.
+    const sets = language === "both" ? NO_SETS : shelves[language];
     useEffect(() => {
-        if (!wanted || sets) return;
+        if (!wanted || sets || language === "both") return;
         let live = true;
         listSetsShelf(language).then(({ series }) => {
             if (live)
@@ -85,22 +101,32 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
             })
             .catch(() => setInBrowser(false));
     }, [wanted]);
-    const search = async (term: string, params: CatalogueFilters, page: number) => {
+    const search = async (term: string, params: PaletteFilters, page: number): Promise<{ items: PokemonCard[]; total?: number }> => {
+        if (params.language === "both") {
+            // Each catalogue asked as it would be alone. One that does not answer leaves the other's
+            // hits on screen; only both failing is a search that failed.
+            const [en, ja] = await Promise.allSettled([search(term, {}, page), search(term, { language: "ja" }, page)]);
+            if (en.status === "rejected" && ja.status === "rejected") throw en.reason;
+            const answer = (a: typeof en, key: BrowseLanguage) => (a.status === "fulfilled" ? underLanguage(a.value.items, key, a.value.total) : []);
+            const total = (a: typeof en) => (a.status === "fulfilled" ? (a.value.total ?? a.value.items.length) : 0);
+            return { items: [...answer(en, "en"), ...answer(ja, "ja")], total: total(en) + total(ja) };
+        }
+        const one: CatalogueFilters = { ...params, language: params.language };
         /* Full art goes to the API whatever the browser holds: the document carries a rarity and
            not the kind of card, and which cards are full art is worked out per set and kept in
            the catalogue's copy behind the API (`@/lib/full-art` says why the rarity will not do). */
-        if (!params.fullArt && (params.language ?? "en") === "en") {
+        if (!one.fullArt && (one.language ?? "en") === "en") {
             /* The same chunks can fail to load here; the API answers the same question, so it is asked
                instead of the search failing. */
             const inMemory = await Promise.all([catalogueClient(), import("@/lib/catalogue-index")])
                 .then(async ([{ loadCatalogueIndex, loadSpecies }, { searchIndex }]) => {
                     const [index, species] = await Promise.all([loadCatalogueIndex(), loadSpecies()]);
-                    return index ? searchIndex(index, term, { set: params.set, type: params.type }, page, species) : null;
+                    return index ? searchIndex(index, term, { set: one.set, type: one.type }, page, species) : null;
                 })
                 .catch(() => null);
             if (inMemory) return inMemory;
         }
-        return searchPokemon(term, params, page);
+        return searchPokemon(term, one, page);
     };
     const {
         results: hits,
@@ -112,7 +138,7 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
         loadMore,
         total,
         update,
-    } = useDebouncedSearch<PokemonCard, CatalogueFilters>(inputValue, search, {
+    } = useDebouncedSearch<PokemonCard, PaletteFilters>(inputValue, search, {
         minLength: 2,
         // A search in memory can follow the typing closely; one that leaves waits for the pause.
         delay: inBrowser && language === "en" ? 80 : 300,
@@ -125,8 +151,9 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
        hits as they are, unmarked, which is what a search result without them has always been. */
     const lookedUp = useRef<Set<string>>(new Set());
     useEffect(() => {
-        if (!inBrowser || language !== "en" || loading) return;
-        const ids = hits.filter((h) => !lookedUp.current.has(h.id)).map((h) => h.id);
+        if (!inBrowser || language === "ja" || loading) return;
+        // The English hits alone: a Japanese one came from the API with its marks and price on it.
+        const ids = hits.filter((h) => !h.language && !lookedUp.current.has(h.id)).map((h) => h.id);
         if (!ids.length) return;
         for (const id of ids) lookedUp.current.add(id);
         catalogueClient()
