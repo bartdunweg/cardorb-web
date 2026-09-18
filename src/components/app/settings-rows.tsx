@@ -77,10 +77,24 @@ export function SettingsRow({
              * its child, and a bare <button> never receives it: the row looked right and did
              * nothing. app-sidebar.tsx reaches for AriaButton for its own row for this reason.
              */}
-            <AriaButton className={cx(rowClass, "cursor-pointer")}>
-                <RowBody icon={icon} label={label} value={value} />
-            </AriaButton>
+            <SettingsTriggerRow icon={icon} label={label} value={value} />
         </SheetDialog>
+    );
+}
+
+/**
+ * The row as a press for a dialog of its own: the trigger a component like `ImportDialog` wraps,
+ * which already brings its own dialog, so it is handed the row rather than the content.
+ *
+ * It was the row drawn again by hand in the settings form, every class copied but the divider, so
+ * Import and Export touched with no line between them while every other group's rows had one.
+ * One class for every row, so a group reads the same whatever its rows open.
+ */
+export function SettingsTriggerRow({ icon, label, value }: { icon: FC<{ className?: string }>; label: string; value?: string | null }) {
+    return (
+        <AriaButton className={cx(rowClass, "cursor-pointer")}>
+            <RowBody icon={icon} label={label} value={value} />
+        </AriaButton>
     );
 }
 
