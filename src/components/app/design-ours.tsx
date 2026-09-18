@@ -540,11 +540,11 @@ export const ourSections: SectionSpec[] = [
         title: "CollectionSwitch",
         from: "components/app/collection-switch",
         ours: true,
-        note: "The kit's Tabs, minimal and round: Owned and Wishlist at the top of both lists. Each tab is a link to its own page, so the wishlist keeps its address; on a phone it is how you reach the wishlist, which has no tab in the bar.",
+        note: "The kit's Tabs, minimal and round: Owned and Wishlist under the My cards title. Each tab is a link to its own page, so the wishlist keeps its address; on a phone it is how you reach the wishlist, which has no tab in the bar.",
         render: (
             <Panel>
                 <Group title="States" cols="wide">
-                    <Cell label="on Collection" span="full">
+                    <Cell label="on the collection" span="full">
                         <div className="w-full max-w-72">
                             <CollectionSwitch current="owned" />
                         </div>

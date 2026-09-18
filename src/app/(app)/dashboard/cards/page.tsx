@@ -46,14 +46,14 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
 
     return (
         <BinderPage
-            title="Collection"
+            title="My cards"
             // No count or value under the title: Home leads with the value, and the title alone says the page (Bart's call, 2026-09-18).
             query={query}
             basePath="/dashboard/cards"
             facets={facets}
             list={list}
             filter={filter}
-            // Owned and Wishlist, one tap apart: the wishlist has no tab of its own in the phone's bar (collection-switch.tsx).
+            // Owned and Wishlist under one title, My cards, one tap apart (collection-switch.tsx).
             views={<CollectionSwitch current="owned" />}
             empty={
                 <AppEmptyState icon="plus" title="No cards yet" description="Add your first card to start your collection">
