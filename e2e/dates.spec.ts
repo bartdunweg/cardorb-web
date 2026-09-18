@@ -28,7 +28,7 @@ test("a date picker writes English on a Dutch phone", async ({ page }) => {
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
     // The month and the weekdays in English, the week still starting on Monday.
-    await expect(dialog.getByText("July 2026")).toBeVisible();
+    await expect(dialog.getByRole("heading", { name: "July 2026" })).toBeVisible();
     await expect(dialog.locator("th").first()).toHaveText("Mo");
     await page.keyboard.press("Escape");
 });
