@@ -47,8 +47,11 @@ const BARE_FRAME: Omit<Frame, "width"> = { ...FRAME, top: 8, bottom: 24 };
 const day = new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short" });
 const dayYear = new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short", year: "numeric" });
 const dateOf = (s: ValueSnapshot) => new Date(`${s.date}T00:00:00`);
-/** An axis date: "Aug 19" this year, "Aug 19, 2025" in another, so a stretch across New Year says so (Bart, 2026-09-18). */
-const axisDay = (d: Date) => (d.getFullYear() === new Date().getFullYear() ? day : dayYear).format(d);
+/**
+ * The axis's dates: "Aug 19" while all of them fall in this year; once one falls in another, every one
+ * carries its year, the latest too, so the row reads as one scale (Bart, 2026-09-18).
+ */
+const axisFormat = (dates: Date[]) => (dates.every((d) => d.getFullYear() === new Date().getFullYear()) ? day : dayYear);
 /** A reading's day, or its week where the chart shows one a week: "Jun 7 – 13, 2025". */
 const whenOf = (s: ValueSnapshot) => (s.weekFrom ? dayYear.formatRange(new Date(`${s.weekFrom}T00:00:00`), dateOf(s)) : dayYear.format(dateOf(s)));
 
@@ -161,6 +164,7 @@ export function ValueChart({
 
     // Three date labels: first, middle, last. More would collide on a phone.
     const labelled = new Set([0, Math.floor((snapshots.length - 1) / 2), snapshots.length - 1]);
+    const axisDay = axisFormat([...labelled].map((i) => dateOf(snapshots[i])));
 
     const pick = (clientX: number) => {
         const el = container.current;
@@ -230,7 +234,7 @@ export function ValueChart({
                                     textAnchor={i === 0 ? "start" : i === snapshots.length - 1 ? "end" : "middle"}
                                     className="fill-text-quaternary text-2xs"
                                 >
-                                    {axisDay(dateOf(s))}
+                                    {axisDay.format(dateOf(s))}
                                 </text>
                             ) : null,
                         )}

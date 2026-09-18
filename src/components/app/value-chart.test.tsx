@@ -35,6 +35,34 @@ describe("ValueChart", () => {
         expect(container.querySelector("svg[tabindex]")).not.toBeNull();
     });
 
+    // Bart, 2026-09-18: Home leaves off the written high and low and the hairline under the line.
+    it("writes no range and no baseline with range off, and both by default", () => {
+        const spread = [two[0], { ...two[1], value: 3.1 }];
+        const bare = render(<ValueChart snapshots={spread} range={false} />).container;
+        expect(bare.querySelectorAll("text[data-extreme]").length).toBe(0);
+        expect(bare.querySelectorAll("svg line").length).toBe(0);
+        const full = render(<ValueChart snapshots={spread} />).container;
+        expect(full.querySelectorAll("text[data-extreme]").length).toBe(2);
+    });
+
+    // Bart, 2026-09-18: a stretch across New Year says which year its dates are in.
+    it("gives every axis date its year once one falls outside this year", () => {
+        vi.useFakeTimers({ toFake: ["Date"] });
+        vi.setSystemTime(new Date("2026-09-18T12:00:00"));
+        const across = [
+            { date: "2025-12-20", value: 1, cards: 1, priced: 1, unpriced: 0 },
+            { date: "2026-01-05", value: 2, cards: 1, priced: 1, unpriced: 0 },
+            { date: "2026-01-20", value: 3, cards: 1, priced: 1, unpriced: 0 },
+        ];
+        const { container } = render(<ValueChart snapshots={across} range={false} />);
+        const dates = [...container.querySelectorAll("svg text")].map((t) => t.textContent);
+        const thisYear = render(<ValueChart snapshots={across.slice(1)} range={false} />).container;
+        const plain = [...thisYear.querySelectorAll("svg text")].map((t) => t.textContent);
+        vi.useRealTimers();
+        expect(plain).toEqual(["Jan 5", "Jan 20"]);
+        expect(dates).toEqual(["Dec 20, 2025", "Jan 5, 2026", "Jan 20, 2026"]);
+    });
+
     it("draws the line when the readings arrive after the empty state", () => {
         const { container, rerender } = render(<ValueChart snapshots={[]} />);
         expect(container.querySelector("svg[tabindex]")).toBeNull();

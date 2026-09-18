@@ -1,14 +1,15 @@
 "use client";
 
-import { type FC, useState, useSyncExternalStore, useTransition } from "react";
+import { type FC, createElement, useState, useSyncExternalStore, useTransition } from "react";
 import { ChevronDown, Folder, Heart, Rows01, Star01 } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
-import { Button as AriaButton, Header as AriaHeader, Heading as AriaHeading } from "react-aria-components";
+import { Header as AriaHeader, Heading as AriaHeading } from "react-aria-components";
 import { ChartPeriods } from "@/components/app/chart-periods";
-import { FilterChoices, filterChipClass } from "@/components/app/filter-chip";
+import { FilterChoices } from "@/components/app/filter-chip";
 import { useHomePeriod } from "@/components/app/home-period";
 import { ValueChart } from "@/components/app/value-chart";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
+import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
 import { PERIODS, forChart, isoDaysAgo } from "@/lib/chart-periods";
@@ -32,11 +33,9 @@ const first = (keys: "all" | Set<React.Key>) => (keys === "all" ? undefined : [.
 // Each list wears the sidebar's icon for it: the collection's rows, the star, a binder's folder, the heart.
 const iconFor = (id: string): FC<{ className?: string }> => (id === "all" ? Rows01 : id === "favorites" ? Star01 : id === "wishlist" ? Heart : Folder);
 
+// The same mapping drawn as an element, for the chip and the sheet; the menu takes `iconFor` itself.
 function ListIcon({ id, className }: { id: string; className: string }) {
-    if (id === "all") return <Rows01 aria-hidden="true" className={className} />;
-    if (id === "favorites") return <Star01 aria-hidden="true" className={className} />;
-    if (id === "wishlist") return <Heart aria-hidden="true" className={className} />;
-    return <Folder aria-hidden="true" className={className} />;
+    return createElement(iconFor(id), { "aria-hidden": true, className } as { className: string });
 }
 
 export function ValueHero({
@@ -85,19 +84,23 @@ export function ValueHero({
         if (key === selected) return;
         startTransition(() => router.replace(key === "all" ? "/dashboard" : `/dashboard?value=${key}`, { scroll: false }));
     };
-    // Browse's filter chip, so a choice of list looks like the choices it is: the list's icon, its name, the chevron.
+    // Browse's filter menus' own button (filters-sheet.tsx, FilterMenu): the list's icon, its name, the chevron.
     const trigger = (
-        <AriaButton
-            className={filterChipClass(false)}
+        <Button
+            color="secondary"
+            size="sm"
+            iconTrailing={ChevronDown}
             aria-label={`Value of ${list.name}; choose a list`}
             // On a phone the press opens a sheet, a dialog, not the menu the trigger announces.
             aria-haspopup={phone ? "dialog" : undefined}
             aria-expanded={phone ? sheetOpen : undefined}
         >
-            <ListIcon id={list.id} className="size-3.5 shrink-0 text-fg-quaternary" />
-            <span className="max-w-40 truncate">{list.name}</span>
-            <ChevronDown aria-hidden="true" className="size-3.5 shrink-0 text-fg-quaternary" />
-        </AriaButton>
+            {/* One box: the kit wraps the children in an inline span, where an icon and a word break onto two lines. */}
+            <span className="inline-flex items-center gap-1.5">
+                <ListIcon id={list.id} className="size-4 shrink-0 text-fg-quaternary" />
+                <span className="max-w-40 truncate">{list.name}</span>
+            </span>
+        </Button>
     );
 
     // Dims while the next answer is fetched, after 150 ms, so a quick answer never flickers; it
