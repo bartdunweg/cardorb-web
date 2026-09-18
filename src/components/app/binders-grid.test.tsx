@@ -26,3 +26,20 @@ describe("what a binder's count looks like", () => {
         expect(screen.getByText("5 cards")).toBeTruthy();
     });
 });
+
+/*
+ * The tile is 12 px round with 16 px of padding and its icon was 12 px round too: two corners side
+ * by side that did not share a centre. Concentric is 12 less 16, nothing, so the icon takes lg
+ * (8 px) and its inner layer, inset 4 px, sm (4 px). e2e/ui-polish.spec.ts reads the computed radii.
+ */
+describe("a binder tile's icon", () => {
+    it("takes a corner concentric with the tile's rather than the kit's 12 px", () => {
+        const { container } = render(<BindersGrid binders={[]} favoritesCount={5} />);
+        const icon = container.querySelector("[data-featured-icon]")!;
+        const classes = icon.className.split(" ");
+        expect(classes).toContain("rounded-lg");
+        expect(classes).toContain("before:rounded-sm");
+        expect(classes).not.toContain("rounded-[12px]");
+        expect(classes).not.toContain("before:rounded-[8px]");
+    });
+});

@@ -47,9 +47,12 @@ export function SheetDialog({
                         cx(
                             "max-sm:max-h-[85dvh]",
                             // The kit zooms a modal in. A sheet rises, which is what the app's
-                            // other sheets do (slideout-menu.tsx) and what a phone expects.
-                            state.isEntering && "max-sm:slide-in-from-bottom max-sm:zoom-in-100 max-sm:motion-reduce:slide-in-from-bottom-0",
-                            state.isExiting && "max-sm:slide-out-to-bottom max-sm:zoom-out-100 max-sm:motion-reduce:slide-out-to-bottom-0",
+                            // other sheets do (slideout-menu.tsx) and what a phone expects, on
+                            // their curve too: the kit's modal enters on --ease-enter.
+                            state.isEntering &&
+                                "max-sm:[animation-timing-function:var(--ease-drawer)] max-sm:slide-in-from-bottom max-sm:zoom-in-100 max-sm:motion-reduce:slide-in-from-bottom-0",
+                            state.isExiting &&
+                                "max-sm:[animation-timing-function:var(--ease-drawer)] max-sm:slide-out-to-bottom max-sm:zoom-out-100 max-sm:motion-reduce:slide-out-to-bottom-0",
                             className,
                         )
                     }

@@ -31,3 +31,20 @@ describe("a settings group's rows", () => {
         expect(new Set(`${link.className} cursor-pointer`.split(" "))).toEqual(new Set(trigger.className.split(" ")));
     });
 });
+
+/*
+ * A group's label ("Collection") stood 4 px in from the card, lined up with neither the card's edge
+ * (0) nor the rows' icons and words (16). e2e/ui-polish.spec.ts reads the two rectangles.
+ */
+describe("a settings group's label", () => {
+    it("is inset the rows' 16 px", () => {
+        render(
+            <SettingsGroup title="Collection">
+                <SettingsLinkRow icon={Download01} label="Export a CSV file" href="/export" download />
+            </SettingsGroup>,
+        );
+        const label = screen.getByRole("heading", { level: 2, name: "Collection" });
+        expect(label.className.split(" ")).toContain("px-4");
+        expect(label.className.split(" ")).not.toContain("px-1");
+    });
+});

@@ -21,10 +21,11 @@ export const Popover = (props: PopoverProps) => {
                     "w-(--trigger-width) origin-(--trigger-anchor-point) overflow-x-hidden overflow-y-auto rounded-lg bg-primary py-1 shadow-lg ring-1 ring-secondary_alt outline-hidden will-change-transform",
 
                     state.isEntering &&
-                        "duration-150 ease-out animate-in fade-in placement-right:slide-in-from-left-0.5 placement-top:slide-in-from-bottom-0.5 placement-bottom:slide-in-from-top-0.5",
-                    // Card Orb change (motion audit 2026-09-17), keep after `npx untitledui add`: the exit on the enter curve, not ease-in.
+                        "duration-150 animate-in [animation-timing-function:var(--ease-enter)] fade-in placement-right:slide-in-from-left-0.5 motion-reduce:placement-right:slide-in-from-left-0 placement-top:slide-in-from-bottom-0.5 motion-reduce:placement-top:slide-in-from-bottom-0 placement-bottom:slide-in-from-top-0.5 motion-reduce:placement-bottom:slide-in-from-top-0",
+                    // Card Orb change (motion audit 2026-09-17 and 2026-09-18), keep after `npx untitledui add`: entry and
+                    // exit both on the enter curve (not ease-out in, ease-in out), and no slide under reduced motion.
                     state.isExiting &&
-                        "duration-100 animate-out [animation-timing-function:var(--ease-enter)] fade-out placement-right:slide-out-to-left-0.5 placement-top:slide-out-to-bottom-0.5 placement-bottom:slide-out-to-top-0.5",
+                        "duration-100 animate-out [animation-timing-function:var(--ease-enter)] fade-out placement-right:slide-out-to-left-0.5 motion-reduce:placement-right:slide-out-to-left-0 placement-top:slide-out-to-bottom-0.5 motion-reduce:placement-top:slide-out-to-bottom-0 placement-bottom:slide-out-to-top-0.5 motion-reduce:placement-bottom:slide-out-to-top-0",
 
                     props.size === "sm" && "max-h-56!",
                     props.size === "md" && "max-h-64!",

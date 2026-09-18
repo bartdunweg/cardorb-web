@@ -31,7 +31,11 @@ function BinderCard({ href, icon, name, count }: { href: string; icon: FC<{ clas
                 "sm:flex-col sm:items-start sm:rounded-xl sm:bg-page sm:p-4 sm:shadow-lift-xs sm:ring-1 sm:ring-primary sm:ring-inset sm:hover:bg-alpha-black/4",
             )}
         >
-            <FeaturedIcon color="gray" theme="modern-neue" size="lg" icon={icon} className="shrink-0" />
+            {/* Concentric with the tile: its corner (xl, 12 px) less its padding (16 px) leaves nothing,
+                so the icon takes the smallest radius that still reads as a rounded square, lg (8 px),
+                and its inner layer, inset 4 px, lg less 4: sm. The kit's 12 px on a 12 px tile at 16 px
+                in drew two parallel corners that did not share a centre. */}
+            <FeaturedIcon color="gray" theme="modern-neue" size="lg" icon={icon} className="shrink-0 rounded-lg before:rounded-sm" />
             <div className="flex min-w-0 flex-1 flex-col">
                 <span className="truncate text-sm font-semibold text-primary">{name}</span>
                 {/* Under the name on a tile; at the row's end on a phone. */}
