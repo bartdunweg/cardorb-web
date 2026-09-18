@@ -7,6 +7,7 @@ import { Tab as AriaTab, TabList as AriaTabList, TabPanel as AriaTabPanel, Tabs 
 import { Badge } from "@/components/base/badges/badges";
 import { cx } from "@/utils/cx";
 import { isReactComponent } from "@/utils/is-react-component";
+import { underlinePlace } from "@/utils/tab-underline";
 
 type Orientation = "horizontal" | "vertical";
 
@@ -105,6 +106,8 @@ const TabListContext = createContext<Omit<TabListComponentProps<TabComponentProp
  */
 const useSelectedTabRect = (enabled: boolean) => {
     const listRef = useRef<HTMLDivElement>(null);
+    const boxRef = useRef<HTMLDivElement>(null);
+    const placed = useRef<{ left: number; width: number } | null>(null);
     const [rect, setRect] = useState<{ left: number; width: number } | null>(null);
     const [ready, setReady] = useState(false);
 
@@ -113,13 +116,25 @@ const useSelectedTabRect = (enabled: boolean) => {
         const selected = list?.querySelector<HTMLElement>('[role="tab"][data-selected]');
 
         if (!list || !selected || selected.offsetWidth === 0) {
+            placed.current = null;
             setRect(null);
             return;
         }
 
-        // From the boxes on screen rather than offsetLeft, which counts from whichever ancestor is
-        // positioned at that moment, and that changes once the line's wrapper takes its box.
-        setRect({ left: selected.getBoundingClientRect().left - list.getBoundingClientRect().left, width: selected.offsetWidth });
+        // Against the box the line is placed in, not the list: the card sheet's printings list runs
+        // 24px wider than that box on either side (`-mx-6 px-6`, and it scrolls itself), which stood
+        // the line 24px to the right of its tab. Until there is a line the box is `display: contents`
+        // and has no rect of its own, so the list stands in for that one reading and the pass right
+        // after this render, once the box is there, puts it right before anything is painted.
+        const box = boxRef.current;
+        const against = box && box.getClientRects().length > 0 ? box : list;
+        const next = underlinePlace(selected.getBoundingClientRect(), against.getBoundingClientRect(), window.devicePixelRatio || 1);
+
+        const now = placed.current;
+        if (now && now.left === next.left && now.width === next.width) return;
+
+        placed.current = next;
+        setRect(next);
     }, []);
 
     useLayoutEffect(() => {
@@ -129,8 +144,6 @@ const useSelectedTabRect = (enabled: boolean) => {
         if (!list) return;
 
         measure();
-        // The first placement is where the line already was, so it must not travel there.
-        setReady(true);
 
         const mutations = new MutationObserver(measure);
         mutations.observe(list, { attributes: true, attributeFilter: ["data-selected"], subtree: true, childList: true });
@@ -150,14 +163,30 @@ const useSelectedTabRect = (enabled: boolean) => {
         });
         tabsChanged.observe(list, { childList: true });
 
+        // A list that scrolls sideways itself moves its tabs under a line that does not scroll with
+        // them, and a scroll tells neither observer.
+        list.addEventListener("scroll", measure, { passive: true });
+
         return () => {
             mutations.disconnect();
             tabsChanged.disconnect();
             resizes.disconnect();
+            list.removeEventListener("scroll", measure);
         };
     }, [enabled, measure]);
 
-    return { listRef, rect, ready };
+    // Every render, so the reading taken while the line had no box of its own is corrected in the
+    // same frame. The line only starts travelling once a reading changes nothing any more, so that
+    // correction is a placement and not a slide from a place the line was never in.
+    useLayoutEffect(() => {
+        if (!enabled) return;
+
+        const before = placed.current;
+        measure();
+        if (placed.current && placed.current === before) setReady(true);
+    });
+
+    return { listRef, boxRef, rect, ready };
 };
 
 export const TabList = <T extends Orientation>({
@@ -173,12 +202,12 @@ export const TabList = <T extends Orientation>({
 
     const orientation = orientationProp ?? context?.orientation ?? "horizontal";
     const hasSlidingLine = orientation === "horizontal" && type === "underline";
-    const { listRef, rect, ready } = useSelectedTabRect(hasSlidingLine);
+    const { listRef, boxRef, rect, ready } = useSelectedTabRect(hasSlidingLine);
 
     return (
         <TabListContext.Provider value={{ size, type, orientation, fullWidth, hasSlidingLine }}>
             {/* No box of its own while there is no line to place, so a hidden tab list keeps costing nothing. */}
-            <div className={cx("relative", (!hasSlidingLine || !rect) && "contents", fullWidth && "w-full")}>
+            <div ref={boxRef} className={cx("relative", (!hasSlidingLine || !rect) && "contents", fullWidth && "w-full")}>
                 <AriaTabList
                     ref={hasSlidingLine ? listRef : undefined}
                     {...otherProps}
