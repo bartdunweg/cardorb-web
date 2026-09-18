@@ -53,14 +53,23 @@ test("a hyphen reads as a space, and a space as a hyphen", async ({ request }) =
     }
 });
 
-/* The set's id, not its printed code: "mew" is 151's code and 152 English cards have Mew in the
-   name, so a code in the one box answers a Pokémon with a set. The chip and the set field are
-   how a set is named exactly. */
 test("a set's id names the set, and the word beside it still names the card", async ({ request }) => {
     const { items } = await search(request, { q: "sv01 pineco" });
     expect(items.map((c) => c.name)).toContain("Pineco");
     const alone = await search(request, { q: "sv01" });
     expect(alone.items.length).toBeGreaterThan(0);
+});
+
+/* The set's printed code as well (cardorb-api #560): beside another word it narrows to the set,
+   on its own it is the set. The fixture is one set, Scarlet & Violet, whose code is SVI. */
+test("a set's printed code names the set, beside a number or a name and on its own", async ({ request }) => {
+    const numbered = await search(request, { q: "svi 001" });
+    expect(numbered.items.map((c) => c.id)).toEqual(["sv01-001"]);
+    const named = await search(request, { q: "SVI pineco" });
+    expect(named.items.map((c) => c.name)).toEqual(["Pineco"]);
+    const alone = await search(request, { q: "svi" });
+    expect(alone.items.length).toBeGreaterThan(0);
+    expect(alone.items.every((c) => c.id.startsWith("sv01-"))).toBe(true);
 });
 
 test("the count is of the whole search, not of the page shown", async ({ request }) => {
