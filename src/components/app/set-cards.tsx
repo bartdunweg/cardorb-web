@@ -298,8 +298,11 @@ export function SetCards({
                 selectedKey={holding ?? "all"}
                 onSelectionChange={(key) => write({ holding: key === "all" ? undefined : (key as SetHolding) })}
             >
-                {/* The kit's underline tabs, as the card sheet has them; scrolls sideways on a phone too narrow for four. */}
-                <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+                {/* The kit's underline tabs, as the card sheet has them; scrolls sideways on a phone too narrow for four.
+                    `overflow-x` alone makes the other way `auto` as well, which cut the top pixel off every count
+                    badge (they carry `-my-px`, so they stand a pixel outside the tab and their ring read as sliced).
+                    The pixel back as padding, and off again as margin, so nothing else moves. */}
+                <div className="-mx-4 -mt-px overflow-x-auto px-4 pt-px sm:mx-0 sm:px-0">
                     <TabList aria-label="Cards in this set" type="underline" size="sm" className="min-w-max">
                         {HOLDINGS.map((h) => (
                             <Tab key={h.value} id={h.value} label={h.label} badge={String(tabCounts[h.value] ?? 0)} />
