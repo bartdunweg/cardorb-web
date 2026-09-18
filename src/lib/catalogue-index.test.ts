@@ -19,6 +19,8 @@ const index: CatalogueIndex = {
         ["svp-085", "svp", "085", "Pikachu with Grey Felt Hat", "Promo", ["Lightning"], "https://images.cardorb.com/pokemontcg/svp/85.png"],
         // The same, through the API's cover proxy, which is a path on the API's own origin.
         ["svp-102", "svp", "102", "Mew with Grey Felt Hat", "Promo", ["Psychic"], "/api/cover?url=https%3A%2F%2Flimitless%2FSVP_102.png"],
+        // A name with a diacritic: nobody types the accent.
+        ["sv03.5-196", "sv03.5", "196", "Poké Ball", "Uncommon", []],
     ],
 };
 
@@ -30,6 +32,14 @@ describe("catalogueIndexSchema", () => {
 });
 
 describe("searchIndex", () => {
+    /* The API's copy is indexed on the folded text (cardorb-api migration 20260918090000) and this
+       document is searched the same way, or a term answers in the browser and not through the API
+       the moment the document fails to load. */
+    it("does not make anybody type a diacritic", () => {
+        expect(searchIndex(index, "poke ball").items.map((c) => c.id)).toEqual(["sv03.5-196"]);
+        expect(searchIndex(index, "poké ball").items.map((c) => c.id)).toEqual(["sv03.5-196"]);
+    });
+
     it("matches every word against name, number and set name", () => {
         const { items, total } = searchIndex(index, "charizard");
         expect(items.map((c) => c.id)).toEqual(["sv03.5-006", "base1-4"]);

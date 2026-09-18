@@ -7,13 +7,32 @@
  * bands by where the term sits in the name, and the order inside a band is left alone.
  */
 
+/**
+ * Latin letters with a diacritic, and the letter each folds to.
+ *
+ * The same pair the API's copy of the catalogue is indexed by (cardorb-api, `search_fold()`,
+ * migration 20260918090000) and the same one `catalogue-index.ts` folds the browser's copy with.
+ * Written out rather than taken from NFD normalisation, so the three fold the same characters the
+ * same way: a name found through one and ranked by the other would otherwise sit at the bottom of
+ * its own search.
+ */
+const ACCENTED = "áàâäãåéèêëíìîïóòôöõúùûüýÿñç";
+const PLAIN = "aaaaaaeeeeiiiiooooouuuuyync";
+
+/** Lowercase, and a Latin diacritic dropped: "poke" is how anybody types Poké Ball. */
+export const foldDiacritics = (s: string): string =>
+    s.toLowerCase().replace(/[^\u0000-\u007F]/g, (c) => {
+        const at = ACCENTED.indexOf(c);
+        return at < 0 ? c : PLAIN[at]!;
+    });
+
 /** 0 the name starts with the term, 1 a word inside it does, 2 it is in there somewhere, 3 it is not. */
 export function band(name: string, term: string): number {
-    const where = name.toLowerCase().indexOf(term.toLowerCase());
+    const where = foldDiacritics(name).indexOf(foldDiacritics(term));
     if (where < 0) return 3;
     if (where === 0) return 0;
     // A word starts after a space or a punctuation mark: "Giovanni's Charisma" starts a word at C.
-    return /[\s'’\-.:(]/.test(name[where - 1]) ? 1 : 2;
+    return /[\s'’\-.:(]/.test(name[where - 1]!) ? 1 : 2;
 }
 
 /** The best band any of these words reaches in the name: "base charizard" is a Charizard, by its name. */

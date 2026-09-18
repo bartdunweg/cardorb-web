@@ -831,6 +831,99 @@
                     "type": "reverse"
                 }
             ]
+        },
+        {
+            "category": "Trainer",
+            "evolve_from": null,
+            "first_edition": false,
+            "full_art": false,
+            "hp": null,
+            "id": "sv01-251",
+            "illustrator": "Shigenori Negishi",
+            "image": null,
+            "language": "en",
+            "languages": ["en", "de", "fr", "it", "es", "pt"],
+            "local_id": "251",
+            "local_name": null,
+            "name": "Poké Ball",
+            "rarity": "Common",
+            "regulation_mark": "G",
+            "release_date": "2023/03/31",
+            "series": "Scarlet & Violet",
+            "set_id": "sv01",
+            "set_name": "Scarlet & Violet",
+            "stage": null,
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
+            "tcgplayer_product_id": null,
+            "trainer_type": "Item",
+            "types": [],
+            "variants": [
+                {
+                    "type": "normal"
+                }
+            ]
+        },
+        {
+            "category": "Pokemon",
+            "evolve_from": null,
+            "first_edition": false,
+            "full_art": false,
+            "hp": null,
+            "id": "sv01-252",
+            "illustrator": "Shigenori Negishi",
+            "image": null,
+            "language": "en",
+            "languages": ["en", "de", "fr", "it", "es", "pt"],
+            "local_id": "252",
+            "local_name": null,
+            "name": "Ho-Oh ex",
+            "rarity": "Double Rare",
+            "regulation_mark": "G",
+            "release_date": "2023/03/31",
+            "series": "Scarlet & Violet",
+            "set_id": "sv01",
+            "set_name": "Scarlet & Violet",
+            "stage": null,
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
+            "tcgplayer_product_id": null,
+            "trainer_type": null,
+            "types": ["Fire"],
+            "variants": [
+                {
+                    "type": "normal"
+                }
+            ]
+        },
+        {
+            "category": "Pokemon",
+            "evolve_from": null,
+            "first_edition": false,
+            "full_art": false,
+            "hp": null,
+            "id": "sv01-253",
+            "illustrator": "Shigenori Negishi",
+            "image": null,
+            "language": "en",
+            "languages": ["en", "de", "fr", "it", "es", "pt"],
+            "local_id": "253",
+            "local_name": null,
+            "name": "Dark Tarountula",
+            "rarity": "Common",
+            "regulation_mark": "G",
+            "release_date": "2023/03/31",
+            "series": "Scarlet & Violet",
+            "set_id": "sv01",
+            "set_name": "Scarlet & Violet",
+            "stage": null,
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
+            "tcgplayer_product_id": null,
+            "trainer_type": null,
+            "types": ["Grass"],
+            "variants": [
+                {
+                    "type": "normal"
+                }
+            ]
         }
     ],
     "prices": [
