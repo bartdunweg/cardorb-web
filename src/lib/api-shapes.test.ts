@@ -438,7 +438,33 @@ describe("setCardFromBrowse", () => {
             listingPrice: null,
             tcgId: null,
             printedNumber: "1",
+            printing: null,
+            priceChange: null,
         });
+    });
+
+    it("keeps which printing the price is and its week, for the tile and the sheet it opens", () => {
+        const card = setCardFromBrowse({
+            id: "sv1-2",
+            number: "2",
+            name: "Floragato",
+            setName: "Scarlet & Violet",
+            image: null,
+            imageHigh: null,
+            rarity: "Rare",
+            types: [],
+            series: "Scarlet & Violet",
+            owned: false,
+            wishlist: false,
+            quantity: 0,
+            itemIds: [],
+            price: { market: 1.2 },
+            tcgId: "sv01-002",
+            printing: "reverse-holo",
+            priceChange: { was: 1, now: 1.2, change: 0.2, from: "2026-09-11", to: "2026-09-18" },
+        });
+        expect(card.printing).toBe("reverse-holo");
+        expect(card.priceChange).toEqual({ was: 1, now: 1.2, change: 0.2 });
     });
 
     it("keeps the number the card prints beside the catalogue's, the one a label reads", () => {
