@@ -116,3 +116,25 @@ describe("the wave a grid's tiles arrive in", () => {
         expect(delays(container)).toEqual(["0ms", "0ms", "calc(2 * var(--stagger-step))"]);
     });
 });
+
+/*
+ * The last line of a tile is the price on the left and the count against the right edge. With no
+ * price to hold the left (a public page with prices private, a card the API prices at nothing) the
+ * count kept its ml-auto and hung alone at the right, under three lines that all start at the left.
+ * It goes where the price would have been instead.
+ */
+describe("where the count sits on a tile", () => {
+    /** The count on the tile's last line: the innermost span whose words end in it. */
+    const count = (c: unknown) => {
+        const { container } = render(<CardsGrid cards={[c] as never} onSelect={() => {}} />);
+        return [...container.querySelectorAll("span")].filter((el) => /\u00d71$/.test(el.textContent ?? "")).at(-1)!;
+    };
+
+    it("pushes the count to the right edge where a price holds the left", () => {
+        expect(count(card("a")).className).toContain("ml-auto");
+    });
+
+    it("leaves the count at the left where there is no price", () => {
+        expect(count({ id: "b", name: "Card b", quantity: 1, price: null, owned: true }).className).not.toContain("ml-auto");
+    });
+});

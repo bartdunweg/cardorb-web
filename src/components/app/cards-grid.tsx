@@ -236,7 +236,15 @@ const GridCell = memo(function GridCell<T extends GridCard>({ card, arriveDelay:
                                     On a visitor's screen the count is the owner's, and says so; a screen
                                     reader used to be told "You hold" about somebody else's binder. Polite, so
                                     a press on the plus says the new count. */}
-                                <span aria-live={steps ? "polite" : undefined} className="ml-auto text-tertiary">
+                                <span
+                                    aria-live={steps ? "polite" : undefined}
+                                    /* Against the right edge only where the price holds the left. Without a
+                                       price (a public page with prices private, a card the API prices at
+                                       nothing) ml-auto left the count hanging alone at the right, under three
+                                       lines that all start at the left: it read as a number belonging to
+                                       nothing. It goes where the price would have been instead. */
+                                    className={cx(card.price != null && "ml-auto", "text-tertiary")}
+                                >
                                     {held != null && card.owned !== false ? (
                                         <>
                                             <span className="sr-only">{holder === "owner" ? "Holds " : "You hold "}</span>×{held}
