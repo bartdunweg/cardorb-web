@@ -24,6 +24,7 @@ import type { Card } from "@/lib/cards";
 import { type CardsSize, GRID_COLUMNS } from "@/lib/cards-view";
 import { FULL_ART, setFullArt } from "@/lib/full-art";
 import { listRows } from "@/lib/reads";
+import { type Sent, heard, wrote } from "@/lib/search-echo";
 import { holdingKey } from "@/lib/set-holding";
 import { SET_SORTS, type SetHolding, type SetQuery, readSetQuery, writeSetQuery } from "@/lib/set-query";
 
@@ -122,21 +123,18 @@ export function SetCards({
        and the one a binder's field (cards-search.tsx) already uses. */
     /* The URL coming back with a term the field wrote itself is not news: taking it put that older
        term back over what was typed since, as it did in a binder's field (cards-search.tsx). */
-    const [sent, setSent] = useState<string[]>([]);
+    const [sent, setSent] = useState<Sent>([]);
     const [fromUrl, setFromUrl] = useState(query.q);
     if (fromUrl !== query.q) {
         setFromUrl(query.q);
-        const echo = sent.indexOf(query.q.trim());
-        if (echo >= 0) setSent(sent.slice(echo + 1));
-        else {
-            setSent([]);
-            setQ(query.q);
-        }
+        const next = heard(sent, query.q);
+        setSent(next.sent);
+        if (next.take) setQ(query.q);
     }
     useEffect(() => {
         if (q.trim() === query.q.trim()) return;
         const id = setTimeout(() => {
-            setSent((terms) => [...terms, q.trim()]);
+            setSent((terms) => wrote(terms, q.trim()));
             write({ q });
         }, 250);
         return () => clearTimeout(id);

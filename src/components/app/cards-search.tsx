@@ -11,6 +11,7 @@ import { MAX_RECENT_TERMS, rememberTerm, useRecentTerms } from "@/hooks/use-rece
 import { type CardTitle, type TitleSet, matchSets, matchTitles } from "@/lib/card-titles";
 import type { BrowseLanguage } from "@/lib/languages";
 import { collectionIndex, listSetsShelf, suggestCardTitles } from "@/lib/reads";
+import { type Sent, heard, wrote as wroteTerm } from "@/lib/search-echo";
 import { cx } from "@/utils/cx";
 
 /** What one binder's field knows about that binder, kept for as long as the tab lives. */
@@ -77,7 +78,7 @@ export function CardsSearch({
     const wrote = useRef(false);
     const [value, setValue] = useState(initialValue);
     /** The terms this field wrote to the URL that the page has not come back with yet, oldest first. */
-    const [sent, setSent] = useState<string[]>([]);
+    const [sent, setSent] = useState<Sent>([]);
     /** The list behind is being drawn again for a term: the field says so, or a pause reads as nothing happening. */
     const [pending, startTransition] = useTransition();
     /* The field used to keep up with the URL by being rebuilt: its whole view carried the URL as a
@@ -93,12 +94,9 @@ export function CardsSearch({
     const [fromUrl, setFromUrl] = useState(initialValue);
     if (fromUrl !== initialValue) {
         setFromUrl(initialValue);
-        const echo = sent.indexOf(initialValue.trim());
-        if (echo >= 0) setSent(sent.slice(echo + 1));
-        else {
-            setSent([]);
-            setValue(initialValue);
-        }
+        const next = heard(sent, initialValue);
+        setSent(next.sent);
+        if (next.take) setValue(initialValue);
     }
 
     useEffect(() => {
@@ -119,12 +117,14 @@ export function CardsSearch({
             // A new term is a new result set; page 3 of the old one is nowhere in it.
             params.delete("page");
             const qs = params.toString();
-            setSent((terms) => [...terms, value.trim()]);
+            setSent((terms) => wroteTerm(terms, value.trim()));
             startTransition(() => router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false }));
         }, 250);
         return () => clearTimeout(id);
+        /* The URL too: an echo that lands after the box moved on (typed back to the old term, or
+           emptied) is where the box and the list part, so what the box holds is written again. */
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [value]);
+    }, [value, initialValue]);
 
     const listId = useId();
     const term = value.trim();
