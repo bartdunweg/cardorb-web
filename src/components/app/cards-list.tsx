@@ -45,6 +45,7 @@ export function CardsList({
     onSelect,
     noHits,
     empty,
+    gone,
 }: {
     list: Promise<CardList>;
     /** The list's own URL, what `cards-view` keys this on; for telling a change from an arrival. */
@@ -60,6 +61,13 @@ export function CardsList({
     noHits: ReactNode;
     /** When the binder holds nothing at all. */
     empty: ReactNode;
+    /**
+     * Cards the reader has just written off this very list (a star turned off on Favorites), gone
+     * from it at once rather than when the page has been read again. Held by the view above, which
+     * is where the sheet's writes land; the list only leaves them out, of what it draws and of what
+     * it says it is showing.
+     */
+    gone?: ReadonlySet<string>;
 }) {
     const first = use(list);
     /* The server's first page, and whatever scrolling has appended to it: two things, not one
@@ -103,10 +111,20 @@ export function CardsList({
        the first page holds is not drawn again from the appended span: a batch that lands between a new
        first page and its re-read was cut against the old one, and one card twice is one key twice. */
     const cards = useMemo(() => {
-        if (!appended.length) return first.cards;
-        const onFirst = new Set(first.cards.map((c) => c.id));
-        return [...first.cards, ...appended.filter((c) => !onFirst.has(c.id))];
-    }, [first.cards, appended]);
+        let whole = first.cards;
+        if (appended.length) {
+            const onFirst = new Set(first.cards.map((c) => c.id));
+            whole = [...first.cards, ...appended.filter((c) => !onFirst.has(c.id))];
+        }
+        return gone?.size ? whole.filter((c) => !gone.has(c.id)) : whole;
+    }, [first.cards, appended, gone]);
+    /* How many of the cards read are ones the reader took off this list, so the count says what is on
+       screen: the first page's own total still counts them, and it is read from the store, which the
+       write may not have reached yet. */
+    const dropped = useMemo(
+        () => (gone?.size ? first.cards.filter((c) => gone.has(c.id)).length + appended.filter((c) => gone.has(c.id)).length : 0),
+        [first.cards, appended, gone],
+    );
     const groups = useMemo(() => setGroups(cards, groupedBySet), [cards, groupedBySet]);
     /* The ids of the first page, for the arrival wave: a set's grid that a scroll batch starts is new,
        and its own first draw is not the page's. One reference per first page, so no tile redraws. */
@@ -131,7 +149,7 @@ export function CardsList({
        added to the list while it is read again. */
     const busy = pending || rechecking || recheck !== null;
     // Once the list has run out, what it holds is the count, whatever the first page said.
-    const total = end ? cards.length : first.total;
+    const total = end ? cards.length : Math.max(0, first.total - dropped);
 
     /* The appended span read again after the first page was, as far as the reader had scrolled. Its
        own transition, so the button at the end does not spin and a screen reader is not told more
@@ -230,13 +248,7 @@ export function CardsList({
        returned rather than the last: it used to sit after the list, behind the early return that a
        search to nothing takes, so the region that would have said "no cards" was the one thing the
        empty list unmounted. */
-    const announcement = pending
-        ? "Loading more cards…"
-        : first.total === 0
-          ? narrowed
-              ? "No cards found."
-              : ""
-          : `Showing ${cards.length} of ${total} cards`;
+    const announcement = pending ? "Loading more cards…" : total === 0 ? (narrowed ? "No cards found." : "") : `Showing ${cards.length} of ${total} cards`;
 
     /* Moving it above the early return is not enough on its own. `binder-body.tsx` keys the whole
        view on the list's URL, so a search does not update this component, it replaces it, and a
@@ -271,7 +283,7 @@ export function CardsList({
             <p aria-live="polite" className="sr-only">
                 {changed && !ready ? "" : announcement}
             </p>
-            {first.total === 0 ? (
+            {total === 0 ? (
                 <div className="flex flex-1 flex-col">{narrowed ? noHits : empty}</div>
             ) : (
                 <>

@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { PokemonCard } from "@/lib/api-shapes";
 import { type CardGroup, type SpeciesTable, cardGroup } from "@/lib/card-group";
 import { ownImage } from "@/lib/card-shapes";
-import { bestBand } from "@/lib/name-rank";
+import { bestBand, foldDiacritics } from "@/lib/name-rank";
 
 /**
  * The English catalogue as the browser holds it, and a search over it.
@@ -47,11 +47,16 @@ const MAX_WORDS = 6;
 const energyType = (word: string) => ENERGY_TYPES.find((t) => t.toLowerCase() === word.toLowerCase());
 
 /**
- * Text folded the way the API's search folds it (cardorb-api migration 20260915100000): lowercase, a
- * gold star also read as the word ("Mewtwo ☆" is found by "mewtwo star"), and a hyphen as a space
- * ("Shaymin-EX" by "shaymin ex", "shaymin-ex" by "Shaymin EX").
+ * Text folded the way the API's search folds it (cardorb-api migration 20260918090000): lowercase,
+ * a Latin diacritic dropped ("poke ball" finds Poké Ball), a gold star also read as the word
+ * ("Mewtwo ☆" is found by "mewtwo star"), and a hyphen as a space ("Shaymin-EX" by "shaymin ex",
+ * "shaymin-ex" by "Shaymin EX").
+ *
+ * The hyphen and the diacritic were both claimed here before they were true on the other side: the
+ * API held the accent and matched the letters as typed, and read a hyphen as a hyphen. Whoever
+ * changes one of the three (this, `name-rank.ts`, `search_fold()`) changes all three.
  */
-const folded = (s: string) => s.toLowerCase().replace(/[☆★]/g, " ☆ star ").replace(/-/g, " ");
+const folded = (s: string) => foldDiacritics(s).replace(/[☆★]/g, " ☆ star ").replace(/-/g, " ");
 
 /** The text a word is matched against: name, number and set name, folded, built once per card and kept. */
 const haystacks = new WeakMap<CatalogueIndex, string[]>();

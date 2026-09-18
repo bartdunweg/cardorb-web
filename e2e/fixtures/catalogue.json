@@ -13,8 +13,8 @@
             "serie_id": "sv",
             "series": "Scarlet & Violet",
             "sort_order": null,
-            "symbol": null,
-            "synced_at": "2026-09-16T03:30:25.092+00:00",
+            "symbol": "https://assets.tcgdex.net/univ/sv/sv01/symbol.webp",
+            "synced_at": "2026-09-17T17:29:14.851+00:00",
             "total": 258
         }
     ],
@@ -40,7 +40,7 @@
             "set_id": "sv01",
             "set_name": "Scarlet & Violet",
             "stage": "Basic",
-            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
             "tcgplayer_product_id": null,
             "trainer_type": null,
             "types": ["Grass"],
@@ -74,7 +74,7 @@
             "set_id": "sv01",
             "set_name": "Scarlet & Violet",
             "stage": "Basic",
-            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
             "tcgplayer_product_id": null,
             "trainer_type": null,
             "types": ["Grass"],
@@ -108,7 +108,7 @@
             "set_id": "sv01",
             "set_name": "Scarlet & Violet",
             "stage": "Basic",
-            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
             "tcgplayer_product_id": null,
             "trainer_type": null,
             "types": ["Grass"],
@@ -142,7 +142,7 @@
             "set_id": "sv01",
             "set_name": "Scarlet & Violet",
             "stage": "Stage1",
-            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
             "tcgplayer_product_id": null,
             "trainer_type": null,
             "types": ["Grass"],
@@ -176,7 +176,7 @@
             "set_id": "sv01",
             "set_name": "Scarlet & Violet",
             "stage": "Basic",
-            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
             "tcgplayer_product_id": null,
             "trainer_type": null,
             "types": ["Grass"],
@@ -210,7 +210,7 @@
             "set_id": "sv01",
             "set_name": "Scarlet & Violet",
             "stage": "Stage1",
-            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
             "tcgplayer_product_id": null,
             "trainer_type": null,
             "types": ["Grass"],
@@ -244,7 +244,7 @@
             "set_id": "sv01",
             "set_name": "Scarlet & Violet",
             "stage": "Basic",
-            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
             "tcgplayer_product_id": null,
             "trainer_type": null,
             "types": ["Grass"],
@@ -278,7 +278,7 @@
             "set_id": "sv01",
             "set_name": "Scarlet & Violet",
             "stage": "Basic",
-            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
             "tcgplayer_product_id": null,
             "trainer_type": null,
             "types": ["Grass"],
@@ -312,7 +312,7 @@
             "set_id": "sv01",
             "set_name": "Scarlet & Violet",
             "stage": "Stage1",
-            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
             "tcgplayer_product_id": null,
             "trainer_type": null,
             "types": ["Grass"],
@@ -346,7 +346,7 @@
             "set_id": "sv01",
             "set_name": "Scarlet & Violet",
             "stage": "Stage2",
-            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
             "tcgplayer_product_id": null,
             "trainer_type": null,
             "types": ["Grass"],
@@ -380,7 +380,7 @@
             "set_id": "sv01",
             "set_name": "Scarlet & Violet",
             "stage": "Basic",
-            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
             "tcgplayer_product_id": null,
             "trainer_type": null,
             "types": ["Grass"],
@@ -414,7 +414,7 @@
             "set_id": "sv01",
             "set_name": "Scarlet & Violet",
             "stage": "Stage1",
-            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
             "tcgplayer_product_id": null,
             "trainer_type": null,
             "types": ["Grass"],
@@ -448,7 +448,7 @@
             "set_id": "sv01",
             "set_name": "Scarlet & Violet",
             "stage": "Basic",
-            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
             "tcgplayer_product_id": null,
             "trainer_type": null,
             "types": ["Grass"],
@@ -482,7 +482,7 @@
             "set_id": "sv01",
             "set_name": "Scarlet & Violet",
             "stage": "Stage1",
-            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
             "tcgplayer_product_id": null,
             "trainer_type": null,
             "types": ["Grass"],
@@ -516,7 +516,7 @@
             "set_id": "sv01",
             "set_name": "Scarlet & Violet",
             "stage": "Stage2",
-            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
             "tcgplayer_product_id": null,
             "trainer_type": null,
             "types": ["Grass"],
@@ -550,7 +550,7 @@
             "set_id": "sv01",
             "set_name": "Scarlet & Violet",
             "stage": "Basic",
-            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
             "tcgplayer_product_id": null,
             "trainer_type": null,
             "types": ["Grass"],
@@ -584,7 +584,7 @@
             "set_id": "sv01",
             "set_name": "Scarlet & Violet",
             "stage": "Basic",
-            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
             "tcgplayer_product_id": null,
             "trainer_type": null,
             "types": ["Grass"],
@@ -618,7 +618,7 @@
             "set_id": "sv01",
             "set_name": "Scarlet & Violet",
             "stage": "Basic",
-            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
             "tcgplayer_product_id": null,
             "trainer_type": null,
             "types": ["Grass"],
@@ -652,7 +652,7 @@
             "set_id": "sv01",
             "set_name": "Scarlet & Violet",
             "stage": "Stage1",
-            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
             "tcgplayer_product_id": null,
             "trainer_type": null,
             "types": ["Grass"],
@@ -683,7 +683,7 @@
             "set_id": "sv01",
             "set_name": "Scarlet & Violet",
             "stage": "Basic",
-            "synced_at": "2026-09-16T03:30:25.117+00:00",
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
             "tcgplayer_product_id": null,
             "trainer_type": null,
             "types": ["Grass"],
@@ -695,242 +695,519 @@
                     "type": "normal"
                 }
             ]
+        },
+        {
+            "category": "Pokemon",
+            "evolve_from": "Smoliv",
+            "first_edition": false,
+            "full_art": false,
+            "hp": 90,
+            "id": "sv01-022",
+            "illustrator": "Mina Nakai",
+            "image": "https://images.cardorb.com/en/sv/sv01/022",
+            "language": "en",
+            "languages": ["en", "de", "fr", "it", "es", "pt"],
+            "local_id": "022",
+            "local_name": null,
+            "name": "Dolliv",
+            "rarity": "Common",
+            "regulation_mark": "G",
+            "release_date": "2023/03/31",
+            "series": "Scarlet & Violet",
+            "set_id": "sv01",
+            "set_name": "Scarlet & Violet",
+            "stage": "Stage1",
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
+            "tcgplayer_product_id": null,
+            "trainer_type": null,
+            "types": ["Grass"],
+            "variants": [
+                {
+                    "type": "reverse"
+                },
+                {
+                    "type": "normal"
+                }
+            ]
+        },
+        {
+            "category": "Pokemon",
+            "evolve_from": "Dolliv",
+            "first_edition": false,
+            "full_art": false,
+            "hp": 150,
+            "id": "sv01-023",
+            "illustrator": "Kouki Saitou",
+            "image": "https://images.cardorb.com/en/sv/sv01/023",
+            "language": "en",
+            "languages": ["en", "de", "fr", "it", "es", "pt"],
+            "local_id": "023",
+            "local_name": null,
+            "name": "Arboliva",
+            "rarity": "Rare",
+            "regulation_mark": "G",
+            "release_date": "2023/03/31",
+            "series": "Scarlet & Violet",
+            "set_id": "sv01",
+            "set_name": "Scarlet & Violet",
+            "stage": "Stage2",
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
+            "tcgplayer_product_id": null,
+            "trainer_type": null,
+            "types": ["Grass"],
+            "variants": [
+                {
+                    "type": "holo"
+                },
+                {
+                    "type": "reverse"
+                }
+            ]
+        },
+        {
+            "category": "Pokemon",
+            "evolve_from": null,
+            "first_edition": false,
+            "full_art": false,
+            "hp": 50,
+            "id": "sv01-024",
+            "illustrator": "Shin Nagasawa",
+            "image": "https://images.cardorb.com/en/sv/sv01/024",
+            "language": "en",
+            "languages": ["en", "de", "fr", "it", "es", "pt"],
+            "local_id": "024",
+            "local_name": null,
+            "name": "Toedscool",
+            "rarity": "Common",
+            "regulation_mark": "G",
+            "release_date": "2023/03/31",
+            "series": "Scarlet & Violet",
+            "set_id": "sv01",
+            "set_name": "Scarlet & Violet",
+            "stage": "Basic",
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
+            "tcgplayer_product_id": null,
+            "trainer_type": null,
+            "types": ["Grass"],
+            "variants": [
+                {
+                    "type": "normal"
+                },
+                {
+                    "type": "reverse"
+                }
+            ]
+        },
+        {
+            "category": "Pokemon",
+            "evolve_from": "Toedscool",
+            "first_edition": false,
+            "full_art": false,
+            "hp": 120,
+            "id": "sv01-026",
+            "illustrator": "nagimiso",
+            "image": "https://images.cardorb.com/en/sv/sv01/026",
+            "language": "en",
+            "languages": ["en", "de", "fr", "it", "es", "pt"],
+            "local_id": "026",
+            "local_name": null,
+            "name": "Toedscruel",
+            "rarity": "Uncommon",
+            "regulation_mark": "G",
+            "release_date": "2023/03/31",
+            "series": "Scarlet & Violet",
+            "set_id": "sv01",
+            "set_name": "Scarlet & Violet",
+            "stage": "Stage1",
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
+            "tcgplayer_product_id": null,
+            "trainer_type": null,
+            "types": ["Grass"],
+            "variants": [
+                {
+                    "type": "normal"
+                },
+                {
+                    "type": "reverse"
+                }
+            ]
+        },
+        {
+            "category": "Trainer",
+            "evolve_from": null,
+            "first_edition": false,
+            "full_art": false,
+            "hp": null,
+            "id": "sv01-251",
+            "illustrator": "Shigenori Negishi",
+            "image": null,
+            "language": "en",
+            "languages": ["en", "de", "fr", "it", "es", "pt"],
+            "local_id": "251",
+            "local_name": null,
+            "name": "Poké Ball",
+            "rarity": "Common",
+            "regulation_mark": "G",
+            "release_date": "2023/03/31",
+            "series": "Scarlet & Violet",
+            "set_id": "sv01",
+            "set_name": "Scarlet & Violet",
+            "stage": null,
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
+            "tcgplayer_product_id": null,
+            "trainer_type": "Item",
+            "types": [],
+            "variants": [
+                {
+                    "type": "normal"
+                }
+            ]
+        },
+        {
+            "category": "Pokemon",
+            "evolve_from": null,
+            "first_edition": false,
+            "full_art": false,
+            "hp": null,
+            "id": "sv01-252",
+            "illustrator": "Shigenori Negishi",
+            "image": null,
+            "language": "en",
+            "languages": ["en", "de", "fr", "it", "es", "pt"],
+            "local_id": "252",
+            "local_name": null,
+            "name": "Ho-Oh ex",
+            "rarity": "Double Rare",
+            "regulation_mark": "G",
+            "release_date": "2023/03/31",
+            "series": "Scarlet & Violet",
+            "set_id": "sv01",
+            "set_name": "Scarlet & Violet",
+            "stage": null,
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
+            "tcgplayer_product_id": null,
+            "trainer_type": null,
+            "types": ["Fire"],
+            "variants": [
+                {
+                    "type": "normal"
+                }
+            ]
+        },
+        {
+            "category": "Pokemon",
+            "evolve_from": null,
+            "first_edition": false,
+            "full_art": false,
+            "hp": null,
+            "id": "sv01-253",
+            "illustrator": "Shigenori Negishi",
+            "image": null,
+            "language": "en",
+            "languages": ["en", "de", "fr", "it", "es", "pt"],
+            "local_id": "253",
+            "local_name": null,
+            "name": "Dark Tarountula",
+            "rarity": "Common",
+            "regulation_mark": "G",
+            "release_date": "2023/03/31",
+            "series": "Scarlet & Violet",
+            "set_id": "sv01",
+            "set_name": "Scarlet & Violet",
+            "stage": null,
+            "synced_at": "2026-09-17T17:29:14.907+00:00",
+            "tcgplayer_product_id": null,
+            "trainer_type": null,
+            "types": ["Grass"],
+            "variants": [
+                {
+                    "type": "normal"
+                }
+            ]
         }
     ],
     "prices": [
         {
-            "market": 0.23,
+            "market": 0.24,
             "printing": "normal",
             "product_id": 475417,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
-            "market": 0.32,
+            "market": 0.31,
             "printing": "reverse-holofoil",
             "product_id": 475417,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
             "market": 0.11,
             "printing": "normal",
             "product_id": 487053,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
-            "market": 0.14,
+            "market": 0.15,
             "printing": "reverse-holofoil",
             "product_id": 487053,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
             "market": 0.12,
             "printing": "normal",
             "product_id": 487828,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
             "market": 0.21,
             "printing": "reverse-holofoil",
             "product_id": 487828,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
             "market": 0.1,
             "printing": "normal",
             "product_id": 487831,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
             "market": 0.23,
             "printing": "reverse-holofoil",
             "product_id": 487831,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
             "market": 0.11,
             "printing": "normal",
             "product_id": 487832,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
-            "market": 0.18,
+            "market": 0.17,
             "printing": "reverse-holofoil",
             "product_id": 487832,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
-            "market": 0.15,
+            "market": 0.12,
             "printing": "normal",
             "product_id": 487833,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
-            "market": 0.27,
+            "market": 0.26,
             "printing": "reverse-holofoil",
             "product_id": 487833,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
-            "market": 0.18,
+            "market": 0.17,
             "printing": "normal",
             "product_id": 487834,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
             "market": 0.24,
             "printing": "reverse-holofoil",
             "product_id": 487834,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
             "market": 0.08,
             "printing": "normal",
             "product_id": 487836,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
             "market": 0.29,
             "printing": "reverse-holofoil",
             "product_id": 487836,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
-            "market": 0.12,
+            "market": 0.1,
             "printing": "normal",
             "product_id": 487838,
-            "updated_on": "2026-09-16"
-        },
-        {
-            "market": 0.17,
-            "printing": "reverse-holofoil",
-            "product_id": 487838,
-            "updated_on": "2026-09-16"
-        },
-        {
-            "market": 0.12,
-            "printing": "normal",
-            "product_id": 487839,
-            "updated_on": "2026-09-16"
-        },
-        {
-            "market": 0.17,
-            "printing": "reverse-holofoil",
-            "product_id": 487839,
-            "updated_on": "2026-09-16"
-        },
-        {
-            "market": 0.12,
-            "printing": "normal",
-            "product_id": 487840,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
             "market": 0.15,
             "printing": "reverse-holofoil",
+            "product_id": 487838,
+            "updated_on": "2026-09-17"
+        },
+        {
+            "market": 0.12,
+            "printing": "normal",
+            "product_id": 487839,
+            "updated_on": "2026-09-17"
+        },
+        {
+            "market": 0.17,
+            "printing": "reverse-holofoil",
+            "product_id": 487839,
+            "updated_on": "2026-09-17"
+        },
+        {
+            "market": 0.12,
+            "printing": "normal",
             "product_id": 487840,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
+        },
+        {
+            "market": 0.14,
+            "printing": "reverse-holofoil",
+            "product_id": 487840,
+            "updated_on": "2026-09-17"
         },
         {
             "market": 0.12,
             "printing": "normal",
             "product_id": 487842,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
             "market": 0.32,
             "printing": "reverse-holofoil",
             "product_id": 487842,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
-            "market": 0.15,
+            "market": 0.16,
             "printing": "normal",
             "product_id": 487843,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
-            "market": 0.2,
+            "market": 0.21,
             "printing": "reverse-holofoil",
             "product_id": 487843,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
-            "market": 0.14,
+            "market": 0.13,
             "printing": "normal",
             "product_id": 487846,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
             "market": 0.25,
             "printing": "reverse-holofoil",
             "product_id": 487846,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
             "market": 0.27,
             "printing": "holofoil",
             "product_id": 487848,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
             "market": 0.32,
             "printing": "reverse-holofoil",
             "product_id": 487848,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
             "market": 0.15,
             "printing": "normal",
             "product_id": 487851,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
             "market": 0.22,
             "printing": "reverse-holofoil",
             "product_id": 487851,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
             "market": 0.08,
             "printing": "normal",
             "product_id": 487854,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
             "market": 0.21,
             "printing": "reverse-holofoil",
             "product_id": 487854,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
             "market": 0.11,
             "printing": "normal",
             "product_id": 487855,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
-            "market": 0.23,
+            "market": 0.24,
             "printing": "reverse-holofoil",
             "product_id": 487855,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
-            "market": 0.77,
+            "market": 0.81,
             "printing": "holofoil",
             "product_id": 487856,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
             "market": 0.16,
             "printing": "normal",
             "product_id": 487857,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
         },
         {
             "market": 0.21,
             "printing": "reverse-holofoil",
             "product_id": 487857,
-            "updated_on": "2026-09-16"
+            "updated_on": "2026-09-17"
+        },
+        {
+            "market": 0.1,
+            "printing": "normal",
+            "product_id": 487859,
+            "updated_on": "2026-09-17"
+        },
+        {
+            "market": 0.17,
+            "printing": "reverse-holofoil",
+            "product_id": 487859,
+            "updated_on": "2026-09-17"
+        },
+        {
+            "market": 0.18,
+            "printing": "holofoil",
+            "product_id": 487860,
+            "updated_on": "2026-09-17"
+        },
+        {
+            "market": 0.23,
+            "printing": "reverse-holofoil",
+            "product_id": 487860,
+            "updated_on": "2026-09-17"
+        },
+        {
+            "market": 0.11,
+            "printing": "normal",
+            "product_id": 487861,
+            "updated_on": "2026-09-17"
+        },
+        {
+            "market": 0.22,
+            "printing": "reverse-holofoil",
+            "product_id": 487861,
+            "updated_on": "2026-09-17"
+        },
+        {
+            "market": 0.09,
+            "printing": "normal",
+            "product_id": 487864,
+            "updated_on": "2026-09-17"
+        },
+        {
+            "market": 0.22,
+            "printing": "reverse-holofoil",
+            "product_id": 487864,
+            "updated_on": "2026-09-17"
         }
     ]
 }

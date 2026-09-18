@@ -72,6 +72,30 @@ export function CardsView({
     const [selected, setSelected] = useState<{ card: Card; siblings: Card[] } | null>(null);
     // One identity for the life of the view, so the list's memoised tiles are not drawn again when the sheet opens.
     const select = useCallback((card: Card, siblings: Card[]) => setSelected({ card, siblings }), []);
+    /*
+     * The cards the sheet has written off this list, gone from it at once.
+     *
+     * The list is read again after a write (the sheet's refresh), and until that read lands, or where
+     * it never lands, an unstarred card sat on Favorites as if it were still starred: the chain is
+     * the write, then the cache forgotten, then the refresh, and a page read from a cache that had
+     * not caught up is the page from before the write. A card the reader has just taken off this very
+     * list does not wait for any of that.
+     *
+     * Kept for the life of this list, which is keyed on its URL and so is mounted afresh for another
+     * search or another binder: a read from before the write cannot bring the row back. Starred again
+     * (the save failed and the star went back) takes it out of here, so the card returns.
+     */
+    const [gone, setGone] = useState<ReadonlySet<string>>(() => new Set());
+    const starChanged = useCallback((cardId: string, starred: boolean) => {
+        setGone((have) => {
+            if (starred === !have.has(cardId)) return have;
+            const next = new Set(have);
+            if (starred) next.delete(cardId);
+            else next.add(cardId);
+            return next;
+        });
+    }, []);
+
     const at = selected ? selected.siblings.findIndex((c) => c.id === selected.card.id) : -1;
     const step = (by: number) => {
         const next = at >= 0 ? selected?.siblings[at + by] : undefined;
@@ -100,10 +124,20 @@ export function CardsView({
                     onSelect={select}
                     noHits={noHits}
                     empty={empty}
+                    gone={gone}
                 />
             </Suspense>
 
-            <CardDetailSlideout card={selected?.card ?? null} onClose={() => setSelected(null)} onPrev={step(-1)} onNext={step(1)} period={period} />
+            {/* Only where the star is what puts a card on this list: elsewhere a star is a mark on a row
+                that belongs here whichever way it is set. */}
+            <CardDetailSlideout
+                card={selected?.card ?? null}
+                onClose={() => setSelected(null)}
+                onPrev={step(-1)}
+                onNext={step(1)}
+                period={period}
+                onStarChanged={filter.favoritesOnly ? starChanged : undefined}
+            />
         </div>
     );
 }

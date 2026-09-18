@@ -75,10 +75,18 @@ type Addable = {
  */
 type Period = { period?: PeriodKey };
 
+/**
+ * The star was turned on or off, told on the press and again if the save fails and it goes back.
+ * A list of starred cards takes the row off itself here, so an unstarred card leaves Favorites on
+ * the press rather than when the page has been read again.
+ */
+type Starred = { onStarChanged?: (cardId: string, starred: boolean) => void };
+
 type Props = ({ card: Card | null; onClose: () => void; readOnly?: false } | { card: PublicCard | null; onClose: () => void; readOnly: true }) &
     Neighbours &
     Addable &
-    Period;
+    Period &
+    Starred;
 
 export function CardDetailSlideout({
     card,
@@ -92,6 +100,7 @@ export function CardDetailSlideout({
     onRemoved,
     rowPending = false,
     period: opensOn = "1m",
+    onStarChanged,
 }: Props) {
     const { mine, copies, setViewing, showRows, pressedRef, reloadCopies } = useSheetCopies({ card, readOnly });
     const { binders, setBinders, facets, binder, binderPending } = useSheetBinders({ card, readOnly });
@@ -117,7 +126,7 @@ export function CardDetailSlideout({
         onTaking,
         onRemoved,
     });
-    const { isStarred, toggleStar } = useSheetStar({ card, mine, scheduleRefresh });
+    const { isStarred, toggleStar } = useSheetStar({ card, mine, scheduleRefresh, onStarChanged });
     const cardArt = useCardArt({
         card,
         pressedImage,
