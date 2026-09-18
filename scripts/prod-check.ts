@@ -28,18 +28,25 @@ const AGENT = "CardorbProdCheck/1.0 (+https://github.com/bartdunweg/cardorb-web/
 const RETRY_AFTER_MS = 20_000;
 
 /**
- * Time budgets in milliseconds, from measured values plus headroom, never a guess. See MEASURED
- * below for the readings they come from.
+ * Time budgets in milliseconds: the worst of eight passes from the GitHub runner (run 35336962938,
+ * 2026-09-18, the workflow's own machine type, a pass every 45 s), doubled and rounded up to the
+ * next half second. A single reading over budget is read again before it counts (RETRY_AFTER_MS).
  *
- * `document` is the navigation from its start to the last byte of the HTML (responseEnd),
- * `paint` is first contentful paint, `api` is one public route read end to end.
+ * `document` is the navigation from its start to the last byte of the HTML (responseEnd), `paint`
+ * is first contentful paint, `api` is one public route read end to end.
+ *
+ *   static pages (landing, privacy, terms, docs)  document worst 1059, paint worst 1196
+ *   rendered per request (login, signup)          document worst  780, paint worst  860
+ *   profile and binder (render and ask the API)   document worst 1983, paint worst 1484
+ *   API, small answers (health, profile, ...)     worst 1492 (the profile; health 734)
+ *   API, first 100 cards (58 KB) and species      worst 1904 (the cards; species 222)
  */
 const BUDGETS = {
-    static: { document: 1_500, paint: 2_500 },
-    rendered: { document: 3_000, paint: 3_500 },
-    profile: { document: 5_000, paint: 5_500 },
-    api: 2_000,
-    apiLarge: 3_000,
+    static: { document: 2_500, paint: 2_500 },
+    rendered: { document: 2_000, paint: 2_000 },
+    profile: { document: 4_000, paint: 3_000 },
+    api: 3_000,
+    apiLarge: 4_000,
 } as const;
 
 /**

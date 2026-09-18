@@ -12,7 +12,8 @@
         "format": "prettier --write .",
         "test": "vitest run",
         "e2e": "playwright test",
-        "emails:render": "tsx scripts/render-emails.tsx"
+        "emails:render": "tsx scripts/render-emails.tsx",
+        "prod-check": "tsx scripts/prod-check.ts"
     },
     "dependencies": {
         "@internationalized/date": "^3.12.3",

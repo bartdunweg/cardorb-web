@@ -44,7 +44,7 @@ jobs:
                   # Actions runs a step as bash -e, which would end it at the first failed check with no summary.
                   set +e
                   set -uo pipefail
-                  pnpm exec tsx scripts/prod-check.ts > report.md
+                  pnpm --silent prod-check > report.md
                   status=$?
                   cat report.md
                   cat report.md >> "$GITHUB_STEP_SUMMARY"
