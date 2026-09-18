@@ -503,10 +503,10 @@ export const ourSections: SectionSpec[] = [
                         <RowButton icon={FilterLines} label="Filters" />
                     </Cell>
                     <Cell label="menu">
-                        <RowButton icon={Grid01} label="View" menu />
+                        <RowButton icon={Grid01} label="View" />
                     </Cell>
                     <Cell label="with a badge">
-                        <RowButton icon={FilterLines} label="Filters" menu>
+                        <RowButton icon={FilterLines} label="Filters">
                             <Badge type="pill-color" size="sm" color="gray">
                                 2
                             </Badge>
@@ -703,8 +703,8 @@ function RowSearchDemo() {
                 <Input aria-label="Search" icon={SearchLg} placeholder="Search" size="sm" value={q} onChange={setQ} wrapperClassName="rounded-full" />
             </RowSearch>
             <RowButton icon={FilterLines} label="Filters" />
-            <RowButton icon={SwitchVertical01} label="Sort" menu />
-            <RowButton icon={Grid01} label="View" menu className="ml-auto" />
+            <RowButton icon={SwitchVertical01} label="Sort" />
+            <RowButton icon={Grid01} label="View" className="ml-auto" />
         </div>
     );
 }

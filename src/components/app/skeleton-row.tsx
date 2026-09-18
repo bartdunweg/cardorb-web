@@ -13,8 +13,8 @@ export function ListRow() {
                 <Input aria-label="Search" icon={SearchLg} placeholder="Search" size="sm" isDisabled wrapperClassName="rounded-full" />
             </RowSearch>
             <RowButton icon={FilterLines} label="Filters" isDisabled />
-            <RowButton icon={SwitchVertical01} label="Sort" menu isDisabled />
-            <RowButton icon={Grid01} label="View" menu isDisabled className="ml-auto" />
+            <RowButton icon={SwitchVertical01} label="Sort" isDisabled />
+            <RowButton icon={Grid01} label="View" isDisabled className="ml-auto" />
         </div>
     );
 }

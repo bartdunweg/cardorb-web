@@ -91,7 +91,7 @@ export function BrowseToolbar({ query, view: initialView }: { query: BrowseQuery
                 }}
             />
             <Dropdown.Root>
-                <RowButton icon={SwitchVertical01} label="Sort" menu />
+                <RowButton icon={SwitchVertical01} label="Sort" />
                 <Dropdown.Popover placement="bottom start" className="w-48">
                     <Dropdown.Menu
                         selectionMode="single"
@@ -111,7 +111,7 @@ export function BrowseToolbar({ query, view: initialView }: { query: BrowseQuery
                 </Dropdown.Popover>
             </Dropdown.Root>
             <Dropdown.Root>
-                <RowButton icon={view === "grid" ? Grid01 : Rows01} label="View" menu className="ml-auto" />
+                <RowButton icon={view === "grid" ? Grid01 : Rows01} label="View" className="ml-auto" />
                 <Dropdown.Popover placement="bottom end" className="w-40">
                     <Dropdown.Menu
                         selectionMode="single"
