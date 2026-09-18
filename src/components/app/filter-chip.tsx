@@ -62,8 +62,6 @@ export function FilterChip({
     };
     const chipClass = cx(
         "flex shrink-0 pressable cursor-pointer items-center gap-1 rounded-full py-1.5 pr-2 pl-3 text-xs font-semibold whitespace-nowrap ring-1 outline-focus-ring ring-inset focus-visible:outline-2",
-        // White while unset, not the secondary button's grey: a chip's fill is what says it is set, and a
-        // grey unset chip read as a chosen one; its chevron fell to 2.3:1 on the grey (2026-09-19).
         chosen ? "bg-alpha-black/8 text-primary ring-transparent" : "bg-primary text-secondary ring-primary hover:bg-secondary",
     );
     const chipContent = (

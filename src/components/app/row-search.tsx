@@ -26,7 +26,9 @@ export const LIST_ROW = "flex flex-wrap items-center gap-2";
  * stand in the row as before.
  */
 // The 4 px around the line is room for a button's focus ring, which a box that scrolls one way clips both ways; the margin takes it back.
-export const FILTER_BAR = "scrollbar-hide -m-1 flex min-w-0 flex-1 flex-nowrap items-center gap-2 overflow-x-auto p-1 sm:contents";
+// Its round buttons are 40 px on a phone, a step under the bar's 44 above them (Bart, 2026-09-19); `hit-area` keeps them pressed as 44.
+export const FILTER_BAR =
+    "scrollbar-hide -m-1 flex min-w-0 flex-1 flex-nowrap items-center gap-2 overflow-x-auto p-1 sm:contents max-sm:[&_[data-row-button]]:p-2.5";
 
 const FIELD = "flex min-w-0 items-center [&_input]:text-ellipsis max-sm:[&_input]:h-11";
 

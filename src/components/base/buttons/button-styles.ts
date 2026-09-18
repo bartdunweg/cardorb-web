@@ -61,11 +61,7 @@ export const styles = sortCx({
         },
         secondary: {
             root: [
-                // Light grey with its border, where a field is white with its border: the two had the same
-                // fill and ring, and a row of round buttons read as more search fields (Bart, 2026-09-19). Tertiary,
-                // not secondary: neutral-50 on white measured 1.04:1, no grey at all. In dark the ring
-                // and the fill are both neutral-700, so there the fill is the edge against the page.
-                "bg-tertiary text-secondary ring-1 ring-primary ring-inset hover:bg-quaternary hover:text-secondary_hover data-loading:bg-quaternary",
+                "bg-primary text-secondary ring-1 ring-primary ring-inset hover:bg-primary_hover hover:text-secondary_hover data-loading:bg-primary_hover",
                 // Icon styles
             ].join(" "),
         },
@@ -103,8 +99,6 @@ export const styles = sortCx({
                 // a shape you recognise before you read it, and a second border colour made the
                 // shape itself carry the warning — so a delete button shouted from across the page
                 // while the word on it was doing that job already. The red is the label's.
-                // White, not `secondary`'s grey: the red label measured 4.38:1 on neutral-100 and
-                // 3.59:1 on dark neutral-700, under 4.5; on white it is 4.77 (2026-09-19).
                 "bg-primary text-error-primary ring-1 ring-primary outline-error ring-inset hover:bg-error-primary hover:text-error-primary_hover data-loading:bg-error-primary",
                 // Icon styles
             ].join(" "),

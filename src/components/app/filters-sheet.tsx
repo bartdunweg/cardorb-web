@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode, useEffect, useId, useState } from "react";
-import { ArrowLeft, Check, ChevronDown, ChevronRight, FilterLines } from "@untitledui/icons";
+import { ArrowLeft, Check, ChevronRight, FilterLines } from "@untitledui/icons";
 import { Button as AriaButton, Dialog as AriaDialog, DialogTrigger as AriaDialogTrigger, Heading as AriaHeading } from "react-aria-components";
 import { FilterChoices, type FilterOption, OptionCount } from "@/components/app/filter-chip";
 import { RowButton } from "@/components/app/row-button";
@@ -532,15 +532,16 @@ function FilterMenu({
     if (sheet) {
         return (
             <>
-                {/* 44 px, as the Filters and Sort buttons it follows in the bar. It opens the sheet itself, so it says so itself. */}
+                {/* 40 px, as the Filters and Sort buttons it follows in the line, a step under the bar's 44
+                    above it, and pressed as 44 (`hit-area`). No chevron, as no row button has one (row-button.tsx).
+                    It opens the sheet itself, so it says so itself. */}
                 <Button
                     color="secondary"
                     size="sm"
-                    iconTrailing={ChevronDown}
                     aria-label={name}
                     aria-haspopup="dialog"
                     aria-expanded={open}
-                    className="h-11 shrink-0"
+                    className="hit-area h-10 shrink-0"
                     onClick={() => toggle(true)}
                 >
                     {face}
@@ -568,7 +569,8 @@ function FilterMenu({
 
     return (
         <AriaDialogTrigger isOpen={open} onOpenChange={toggle}>
-            <Button color="secondary" size="sm" iconTrailing={ChevronDown} aria-label={name}>
+            {/* No chevron, as no row button has one (row-button.tsx). */}
+            <Button color="secondary" size="sm" aria-label={name}>
                 {face}
             </Button>
             <Dropdown.Popover placement="bottom start" className="w-72">

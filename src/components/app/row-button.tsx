@@ -22,6 +22,8 @@ export function RowButton({
 }) {
     return (
         <Button
+            // Found by the phone's filter line, which draws its row buttons a step smaller (FILTER_BAR).
+            data-row-button
             color="secondary"
             size="sm"
             iconLeading={icon}

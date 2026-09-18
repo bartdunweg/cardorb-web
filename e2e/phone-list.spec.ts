@@ -20,6 +20,8 @@ test.beforeAll(async ({ browser }) => {
     await page.goto(`/dashboard/sets/${SET_ID}`);
     for (const c of [toedscool, toedscruel]) {
         // search-field.spec.ts may have added them already; a card in the collection is left as it is.
+        // Wait for the tile either way first: `isVisible` does not wait, and read before the grid was in it said no.
+        await expect(setTile(page, c, "in your collection").or(addButton(page, c))).toBeVisible();
         if (await setTile(page, c, "in your collection").isVisible()) continue;
         const settled = cacheCleared(page);
         await addButton(page, c).click();
@@ -85,12 +87,13 @@ test("View is in the bar and the filters are one line under the title", async ({
     const rarity = page.getByRole("main").getByRole("button", { name: /^Rarity/ });
     for (const b of [filters, sort, rarity]) await expect(b).toBeVisible();
     const [f, s, r] = await Promise.all([filters.boundingBox(), sort.boundingBox(), rarity.boundingBox()]);
-    // One line, in this order, each a finger high.
+    // One line, in this order.
     expect(Math.round(f!.y)).toBe(Math.round(s!.y));
     expect(Math.round(s!.y)).toBe(Math.round(r!.y));
     expect(f!.x).toBeLessThan(s!.x);
     expect(s!.x).toBeLessThan(r!.x);
-    for (const box of [f, s, r]) expect(box!.height).toBeGreaterThanOrEqual(44);
+    // 40 px, a step under the bar's 44 (hit-areas.spec.ts measures the 44 they are pressed as).
+    for (const box of [f, s, r]) expect(Math.round(box!.height)).toBe(40);
     // The line scrolls sideways; the page does not.
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
 });

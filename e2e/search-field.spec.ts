@@ -19,6 +19,8 @@ test.beforeAll(async ({ browser }) => {
     await page.goto(`/dashboard/sets/${SET_ID}`);
     for (const c of [toedscool, toedscruel]) {
         // phone-list.spec.ts may have added them already; a card in the collection is left as it is.
+        // Wait for the tile either way first: `isVisible` does not wait, and read before the grid was in it said no.
+        await expect(setTile(page, c, "in your collection").or(addButton(page, c))).toBeVisible();
         if (await setTile(page, c, "in your collection").isVisible()) continue;
         const settled = cacheCleared(page);
         await addButton(page, c).click();
