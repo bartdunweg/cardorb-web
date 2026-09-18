@@ -1,6 +1,6 @@
 import { fireEvent, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ValueChart } from "./value-chart";
+import { STROKE, ValueChart } from "./value-chart";
 
 /*
  * The card sheet's price line arrives after the chart has already drawn its empty state, since
@@ -116,6 +116,24 @@ describe("ValueChart", () => {
     it("writes one figure where the line never moves", () => {
         const { container } = render(<ValueChart snapshots={two.map((s) => ({ ...s, value: 2 }))} countLabel={null} />);
         expect(container.querySelectorAll("text[data-extreme]")).toHaveLength(1);
+    });
+
+    /*
+     * The line's stroke is centred on the reading, so half of it falls either side. On x = 0 and
+     * x = width that outer half fell outside the SVG's viewport, which clips, and both ends of
+     * every chart finished in a flat chop instead of their round cap. Half the pen's width in from
+     * each edge, so the whole stroke is inside the box that is drawn.
+     */
+    it("keeps the whole stroke inside the frame, so the line's ends are not cut off", () => {
+        const { container } = render(<ValueChart snapshots={two} countLabel={null} />);
+        const line = container.querySelector('path[fill="none"]')!;
+        const xs = line
+            .getAttribute("d")!
+            .match(/[-\d.]+ [-\d.]+/g)!
+            .map((pair) => Number(pair.split(" ")[0]));
+        const pen = STROKE / 2;
+        expect(Math.min(...xs)).toBeGreaterThanOrEqual(pen);
+        expect(Math.max(...xs)).toBeLessThanOrEqual(FakeResizeObserver.width - pen);
     });
 
     // Bart, 2026-09-15: "cards", not "copies", and "+1 card added".

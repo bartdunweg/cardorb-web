@@ -30,7 +30,17 @@ export const CHART_HEIGHT = HEIGHT;
 // stand at the top left and the bottom left, always there, as a stocks app writes its range (Bart,
 // 2026-09-15). The tooltip says any point and the description says them all. The three dates sit
 // under the lowest figure.
-const FRAME: Omit<Frame, "width"> = { height: HEIGHT, top: 26, right: 0, bottom: 44, left: 0 };
+/**
+ * How thick the line is drawn, and half of that.
+ *
+ * The stroke sits centred on the reading, so half of it falls either side. With the frame flush to
+ * the edges the first and last readings stood on x = 0 and x = width, and that outer half fell
+ * outside the SVG's own viewport, which clips: both ends lost a pixel of their round cap and
+ * finished in a flat chop. The frame keeps the pen's width inside, so a line ends the way it runs.
+ */
+export const STROKE = 2;
+const PEN = STROKE / 2;
+const FRAME: Omit<Frame, "width"> = { height: HEIGHT, top: 26, right: PEN, bottom: 44, left: PEN };
 
 const day = new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short" });
 const dayYear = new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short", year: "numeric" });
@@ -230,7 +240,7 @@ export function ValueChart({
                             {/* One unbroken line through every stretch, readings or none (Bart, 2026-09-15: the
                                 dotted stretch said nothing a flat line does not). */}
                             <path d={areaPath(points, baseline)} fill={`url(#${fadeId})`} className="text-fg-primary" />
-                            <path d={linePath(points)} className={strokeTone} strokeWidth={2} fill="none" strokeLinejoin="round" strokeLinecap="round" />
+                            <path d={linePath(points)} className={strokeTone} strokeWidth={STROKE} fill="none" strokeLinejoin="round" strokeLinecap="round" />
                         </g>
 
                         {/* The highest figure over the line's top, the lowest under its foot, both at the left edge:
