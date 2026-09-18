@@ -122,9 +122,11 @@ export function CardsSearch({
         }, 250);
         return () => clearTimeout(id);
         /* The URL too: an echo that lands after the box moved on (typed back to the old term, or
-           emptied) is where the box and the list part, so what the box holds is written again. */
+           emptied), or a filter picked while a term was on its way (its link carries the page's
+           older term, and the term's own navigation is dropped for it), is where the box and the
+           list part, so what the box holds is written again. */
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [value, initialValue]);
+    }, [value, initialValue, searchParams]);
 
     const listId = useId();
     const term = value.trim();
@@ -263,6 +265,8 @@ export function CardsSearch({
         // A set is not a term but a filter: the list narrows to it, the Filters button says so,
         // and the term that led here goes, because the set is the whole of what was meant.
         wrote.current = true;
+        // A term still on its way is not the search any more: its late answer is news, not an echo to write past.
+        setSent([]);
         setTaken("");
         setValue("");
         close();
