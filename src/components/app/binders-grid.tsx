@@ -23,6 +23,8 @@ function BinderCard({ href, icon, name, count }: { href: string; icon: FC<{ clas
     return (
         <Link
             href={href}
+            // One level in: the binder's page comes from the right (page-transition.tsx).
+            transitionTypes={["nav-forward"]}
             className={cx(
                 "flex pressable items-center gap-3 outline-focus-ring focus-visible:outline-2",
                 // The row: no surface of its own, the page's. The line under it starts where the name does, not

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { AppSidebar } from "@/components/app/app-sidebar";
 import { CommandSearchProvider } from "@/components/app/command-search";
 import { MobileTabBar } from "@/components/app/mobile-nav";
+import { PageTransition } from "@/components/app/page-transition";
 import { RoutePendingProvider } from "@/components/app/route-pending";
 import { RouteProgress } from "@/components/app/route-progress";
 import { MAIN_ID, SkipToContent } from "@/components/app/skip-to-content";
@@ -70,7 +71,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                             <main id={MAIN_ID} tabIndex={-1} className="flex min-w-0 flex-1 flex-col outline-none">
                                 {/* pb-28 is the room the tab bar takes, until lg where it is gone. sm:py-8 set the bottom to 32 px
                                     from 640 px, so on a tablet the tab bar stood over the end of every page (2026-09-14). */}
-                                <div className="mx-auto flex w-full max-w-container flex-1 flex-col px-4 pt-4 pb-28 sm:px-6 sm:pt-8 lg:pb-8">{children}</div>
+                                {/* The page, and only the page, changes with a view transition: the frame round it stays (page-transition.tsx). */}
+                                <PageTransition>
+                                    <div className="mx-auto flex w-full max-w-container flex-1 flex-col px-4 pt-4 pb-28 sm:px-6 sm:pt-8 lg:pb-8">
+                                        {children}
+                                    </div>
+                                </PageTransition>
                             </main>
                         </div>
                         <MobileTabBar />

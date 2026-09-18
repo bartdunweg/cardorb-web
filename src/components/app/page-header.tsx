@@ -149,7 +149,17 @@ export function PageHeader({
                 )}
             >
                 <div className="flex justify-start">
-                    {back ? <Button href={back.href} color="secondary" size="lg" iconLeading={ChevronLeft} aria-label={`Back to ${back.label}`} /> : null}
+                    {back ? (
+                        <Button
+                            href={back.href}
+                            // Back out a level: the parent comes from the left (page-transition.tsx).
+                            routerOptions={{ transitionTypes: ["nav-back"] }}
+                            color="secondary"
+                            size="lg"
+                            iconLeading={ChevronLeft}
+                            aria-label={`Back to ${back.label}`}
+                        />
+                    ) : null}
                 </div>
                 {/* The same words as the h1 below, so a screen reader hears the title once. */}
                 <span
@@ -223,6 +233,7 @@ function DesktopBack({ back, className }: { back: { href: string; label: string 
     return (
         <Button
             href={back.href}
+            routerOptions={{ transitionTypes: ["nav-back"] }}
             color="secondary"
             size="lg"
             iconLeading={ChevronLeft}
