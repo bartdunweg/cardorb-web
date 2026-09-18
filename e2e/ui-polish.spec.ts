@@ -54,7 +54,7 @@ test("a long password stops before the show/hide button", async ({ browser }) =>
     expect(contentEnd).toBeLessThanOrEqual(buttonStart);
 });
 
-test("a binder tile's icon has a corner concentric with the tile's", async ({ page }) => {
+test("a binder tile's icon is a flat disc", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto("/dashboard/collections");
     const icon = page
@@ -63,20 +63,18 @@ test("a binder tile's icon has a corner concentric with the tile's", async ({ pa
         .locator("[data-featured-icon]");
     await expect(icon).toBeVisible();
     const r = await icon.evaluate((el) => {
-        const tile = getComputedStyle(el.closest("a")!);
-        const layer = getComputedStyle(el, "::before");
+        const style = getComputedStyle(el);
         return {
-            tile: parseFloat(tile.borderTopLeftRadius),
-            pad: parseFloat(tile.paddingTop),
-            icon: parseFloat(getComputedStyle(el).borderTopLeftRadius),
-            layer: parseFloat(layer.borderTopLeftRadius),
-            inset: parseFloat(layer.top),
+            radius: parseFloat(style.borderTopLeftRadius),
+            width: el.getBoundingClientRect().width,
+            shadow: style.boxShadow,
+            layerShadow: getComputedStyle(el, "::before").boxShadow,
         };
     });
-    // 12 less 16 is nothing, so the smallest rounded square, 8; the icon's own layer inset 4 in it.
-    // Measured before: 12 on the icon, 8 on its layer.
-    expect(r.icon).toBe(Math.max(r.tile - r.pad, 8));
-    expect(r.layer).toBe(r.icon - r.inset);
+    // Round, and nothing lifting it: the kit's light FeaturedIcon (Bart's call, 2026-09-18).
+    expect(r.radius).toBeGreaterThanOrEqual(r.width / 2);
+    expect(r.shadow).toBe("none");
+    expect(["none", ""]).toContain(r.layerShadow);
 });
 
 test("You says the name once, under a title of its own", async ({ page }) => {

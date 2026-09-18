@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { HomeBody } from "@/app/(app)/dashboard/(home)/home-body";
-import { PhoneSearchTrigger } from "@/components/app/command-search";
 import { PageHeader } from "@/components/app/page-header";
 import { HomeBodyOutline } from "@/components/app/skeletons";
 import { YouLink } from "@/components/app/you-link";
@@ -18,16 +17,10 @@ export default function DashboardPage({ searchParams }: { searchParams: Promise<
         <div className="flex flex-1 flex-col gap-6">
             <PageHeader
                 title="Home"
-                titleOnPhone={false}
-                // On a phone the search runs the width of the page, the avatar at its right end: the row Home starts with.
-                above={
-                    <div className="flex items-center gap-3 lg:hidden">
-                        <PhoneSearchTrigger className="min-w-0 flex-1" />
-                        <YouLink />
-                    </div>
-                }
+                // On a phone the avatar stands across from the title; the search is the round button beside the tab bar.
+                actions={<YouLink />}
             />
-            {/* The search row and the title are on screen before the stats are read, and the outline
+            {/* The title is on screen before the stats are read, and the outline
                 stands where the value and the tiles go. */}
             <Suspense fallback={<HomeBodyOutline />}>
                 <HomeBody searchParams={searchParams} />

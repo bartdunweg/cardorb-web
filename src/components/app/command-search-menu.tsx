@@ -1,12 +1,13 @@
 "use client";
 
 import { type ReactNode, useContext, useRef } from "react";
-import { ChevronLeft, XClose } from "@untitledui/icons";
+import { ChevronLeft } from "@untitledui/icons";
 import { Heading as AriaHeading, ListBoxLoadMoreItem } from "react-aria-components";
-import type { CatalogueFilters, PokemonCard } from "@/app/(app)/dashboard/cards/actions";
+import type { PokemonCard } from "@/app/(app)/dashboard/cards/actions";
 import { CardImage } from "@/components/app/card-image";
+import type { PaletteFilters } from "@/components/app/command-search";
 import { FilterChip, FilterChipRow, type FilterOption } from "@/components/app/filter-chip";
-import { LanguageFilterChip } from "@/components/app/language-filter-chip";
+import { LanguageSwitch } from "@/components/app/language-switch";
 import { CommandMenu, CommandMenuContext, type CommandMenuGroupType } from "@/components/application/command-menus/command-menu";
 import { LoadingIndicator } from "@/components/application/loading-indicator/loading-indicator";
 import { Button } from "@/components/base/buttons/button";
@@ -174,7 +175,9 @@ function hitGroups(hits: PokemonCard[], total: number | null): CommandMenuGroupT
     const sections = new Map<string, CommandMenuGroupType>();
     for (const hit of hits) {
         const { key, title, size } = hit.group!;
-        const section = sections.get(key) ?? { id: `group:${key}`, title: `${title} · ${cardsLabel(size)}`, items: [] };
+        // The API counts to 250 and stops, so a heading over its answer says "250+ cards" there.
+        const counted = size >= SEARCH_WINDOW ? `${SEARCH_WINDOW}+ cards` : cardsLabel(size);
+        const section = sections.get(key) ?? { id: `group:${key}`, title: `${title} · ${counted}`, items: [] };
         section.items.push(item(hit));
         sections.set(key, section);
     }
@@ -211,8 +214,8 @@ export function CommandSearchMenu({
     onOpenChange: (open: boolean) => void;
     inputValue: string;
     onInputChange: (value: string) => void;
-    filters: CatalogueFilters;
-    onFiltersChange: (next: CatalogueFilters) => void;
+    filters: PaletteFilters;
+    onFiltersChange: (next: PaletteFilters) => void;
     /** Every set the catalogue knows, for the Set chip; empty until the list lands. */
     sets: FilterOption[];
     hits: PokemonCard[];
@@ -311,25 +314,24 @@ export function CommandSearchMenu({
                 Search cards
             </AriaHeading>
 
-            {/* A phone has no Escape and no scrim beside a full screen to tap: Close, the field's height, at
-                the right end of its row. From sm up the scrim around the card is the way out. */}
-            <Button
-                color="secondary"
-                size="md"
-                iconLeading={XClose}
-                aria-label="Close"
-                className="absolute top-2 right-3 sm:hidden"
-                onClick={() => onOpenChange(false)}
-            />
+            {/* A phone has no Escape and no scrim beside a full screen to tap: Cancel, in words, at the right
+                end of the field's row, as an iOS search screen closes (Mobbin: Acorns, Bumble, IKEA, Mercury,
+                WhatsApp). From sm up the scrim around the card is the way out. */}
+            <Button color="tertiary" size="md" className="absolute top-2 right-2 h-11 sm:hidden" onClick={() => onOpenChange(false)}>
+                Cancel
+            </Button>
 
-            {/* The chips that narrow the hits, one row, the kit's filter chips throughout (Bart's call: the
-                language is a filter like the others, not a row of flags). Always there, because the language
-                is chosen before the name is typed. English is the default and needs no chip value. The set
-                list is the chosen shelf's; the type is the English catalogue's alone, since TCGdex publishes
-                none for the other shelves, so that chip goes with them. */}
+            {/* The row that narrows the hits. First the catalogue, three words in one tap each (English,
+                Japanese, both): two catalogues and their sum are too few for a menu (Bart's call, 2026-09-18).
+                Always there, because the language is chosen before the name is typed. Then the kit's filter
+                chips: the set list is the chosen shelf's; the type and full art are the English catalogue's
+                alone, since TCGdex publishes none for the other shelves, so those chips go with them. */}
             <FilterChipRow className="border-b border-secondary px-4 py-2" onClear={filtering ? () => onFiltersChange({}) : undefined}>
-                <LanguageFilterChip value={language} onChange={(next) => onFiltersChange(next === "en" ? {} : { language: next })} />
-                <FilterChip label="Set" value={filters.set} options={sets} onChange={(set) => onFiltersChange({ ...filters, set })} />
+                <LanguageSwitch value={language} onChange={(next) => onFiltersChange(next === "en" ? {} : { language: next })} />
+                {/* A set is one catalogue's, so with both there is no Set to choose. */}
+                {language !== "both" ? (
+                    <FilterChip label="Set" value={filters.set} options={sets} onChange={(set) => onFiltersChange({ ...filters, set })} />
+                ) : null}
                 {language === "en" ? (
                     <FilterChip
                         label="Type"

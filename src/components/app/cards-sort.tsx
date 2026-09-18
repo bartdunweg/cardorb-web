@@ -23,7 +23,7 @@ export function CardsSort({
     const pathname = usePathname();
     return (
         <Dropdown.Root>
-            <RowButton icon={SwitchVertical01} label="Sort" menu />
+            <RowButton icon={SwitchVertical01} label="Sort" />
             <Dropdown.Popover placement="bottom start" className="w-56">
                 <Dropdown.Menu
                     selectionMode="single"

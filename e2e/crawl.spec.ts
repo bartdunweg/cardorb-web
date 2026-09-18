@@ -77,7 +77,7 @@ let binderPath = "";
 /** Every route, named as the app names the page, with the h1 it must draw. */
 const ROUTES: { name: string; path: () => string; heading: string | RegExp }[] = [
     { name: "Home", path: () => "/dashboard", heading: "Home" },
-    { name: "Collection", path: () => "/dashboard/cards", heading: "Collection" },
+    { name: "Owned", path: () => "/dashboard/cards", heading: "Owned" },
     { name: "Wishlist", path: () => "/dashboard/wishlist", heading: "Wishlist" },
     { name: "Favorites", path: () => "/dashboard/favorites", heading: "Favorites" },
     { name: "Binders", path: () => "/dashboard/collections", heading: "Binders" },

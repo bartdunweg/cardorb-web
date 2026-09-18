@@ -5,10 +5,10 @@ import { Minus, Plus } from "@untitledui/icons";
 import { arriveDelay } from "@/components/app/arrive-stagger";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
+import { CardMarks, CardMarksText } from "@/components/app/card-marks";
 import { warmCard } from "@/components/app/card-memo";
 import { CardPrice } from "@/components/app/card-price";
 import { CardTile } from "@/components/app/card-tile";
-import { FavoriteStar } from "@/components/app/favorite-star";
 import { FlagIcon } from "@/components/app/flag-icon";
 import { useListTotals } from "@/components/app/list-totals";
 import { PriceChangeLine } from "@/components/app/price-change";
@@ -200,13 +200,14 @@ const GridCell = memo(function GridCell<T extends GridCard>({ card, arriveDelay:
                             // beside it name the card, as they do for every tile.
                             <CardBack width={TILE_WIDTH[size]} sizes={TILE_SIZES[size]} priority={priority} />
                         )}
+                        <CardMarks favorite={Boolean(card.is_favorite)} wished={card.owned === false} />
                     </div>
                 }
                 words={
                     <div className="flex flex-1 flex-col">
                         <span className="flex items-center gap-1 text-sm font-medium text-primary">
                             <span className="truncate">{card.name}</span>
-                            {card.is_favorite ? <FavoriteStar /> : null}
+                            <CardMarksText favorite={Boolean(card.is_favorite)} wished={card.owned === false} />
                             {/* A copy in another language wears its flag; English, which nearly every card is, stays plain. */}
                             {"language" in card && typeof card.language === "string" && card.language !== "en" ? <FlagIcon language={card.language} /> : null}
                         </span>

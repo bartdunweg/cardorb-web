@@ -59,7 +59,7 @@ export function CardsPeriod({ query, defaultSortKey = "set" }: { query: ListQuer
     return (
         <>
             <Dropdown.Root>
-                <RowButton icon={Calendar} label={label} menu />
+                <RowButton icon={Calendar} label={label} />
                 <Dropdown.Popover placement="bottom start" className="w-48">
                     <Dropdown.Menu
                         selectionMode="single"

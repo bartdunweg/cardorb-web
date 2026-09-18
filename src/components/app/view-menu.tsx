@@ -19,7 +19,7 @@ export function ViewMenu({ view, size, layouts = true, group }: { view: CardsVie
     const page = memoryKey(usePathname());
     return (
         <Dropdown.Root>
-            <RowButton icon={view === "grid" ? Grid01 : Rows01} label="View" menu className="ml-auto" />
+            <RowButton icon={view === "grid" ? Grid01 : Rows01} label="View" className="ml-auto" />
             <Dropdown.Popover placement="bottom end" className="w-48">
                 <Dropdown.Menu>
                     {layouts ? (

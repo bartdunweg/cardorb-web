@@ -196,7 +196,8 @@ export function PageHeader({
                     {/* The words take what the actions leave, so a long subtitle wraps rather than pushing them under the title. */}
                     <div ref={words} className="flex min-w-0 flex-1 basis-48 flex-col gap-1">
                         {eyebrow ? <p className="text-sm font-semibold text-tertiary">{eyebrow}</p> : null}
-                        <h1 ref={sentinel} className="text-display-xs font-semibold text-primary">
+                        {/* A step up from display-xs, 30 px (Bart's call, 2026-09-18): the page's name, the largest words on it. */}
+                        <h1 ref={sentinel} className="text-display-sm font-semibold text-primary">
                             {title}
                         </h1>
                         {subtitle ? <p className="text-md text-tertiary">{subtitle}</p> : null}

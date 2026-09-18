@@ -342,7 +342,7 @@ export function SetCards({
                         }}
                     />
                     <Dropdown.Root>
-                        <RowButton icon={SwitchVertical01} label="Sort" menu />
+                        <RowButton icon={SwitchVertical01} label="Sort" />
                         <Dropdown.Popover placement="bottom end" className="w-56">
                             <Dropdown.Menu
                                 selectionMode="single"
