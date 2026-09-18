@@ -206,7 +206,7 @@ export type ApiStats = { cards: number; copies: number; wishlist: number; favori
 // Kept five minutes per person: the layout and a page both ask, and every write drops the cache.
 export const getStats = () => perUser("stats", "stats", async (token) => (await api("/stats", { token, schema: statsAnswer })).stats);
 
-// The dashboard's numbers. "Owned" counts cards (rows), as the page always has.
+// The dashboard's numbers. "Collection" counts cards (rows), as the page always has.
 export async function getCardStats(): Promise<CardStats> {
     const stats = await getStats();
     return { owned: stats.cards, copies: stats.copies, wishlist: stats.wishlist, favorites: stats.favorites, value: stats.value, unpriced: stats.unpriced };

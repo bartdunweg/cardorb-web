@@ -396,7 +396,7 @@ export const displaySections: SectionSpec[] = [
                     <Cell label="with a panel" span="full">
                         <Tabs defaultSelectedKey="a" className="gap-4">
                             <TabList aria-label="With a panel" type="button-border" size="sm">
-                                <Tab id="a" label="Owned" />
+                                <Tab id="a" label="Collection" />
                                 <Tab id="b" label="Wishlist" />
                             </TabList>
                             <TabPanel id="a" className="text-sm text-tertiary">

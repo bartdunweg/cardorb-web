@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 /**
  * Collection | Wishlist is one control on two pages, so it stands in one place at one size on both:
  * a press from one to the other should not make it jump. Measured on 2026-09-18 at 390 px: 358 px
- * wide on Owned and 234 on Wishlist, whose page has the settings dots in the bar beside its title,
+ * wide on Collection and 234 on Wishlist, whose page has the settings dots in the bar beside its title,
  * and the switch sat in the title's column, which gives those dots 112 px. Read-only.
  */
 

@@ -45,14 +45,14 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
         <BinderPage
             title="Wishlist"
             phoneTitle="My cards"
-            // No count or value under the title, as on Owned: the two halves of My cards have one header (Bart's call, 2026-09-18).
+            // No count or value under the title, as on Collection: the two halves of My cards have one header (Bart's call, 2026-09-18).
             settings={(compact) => <ListSettingsDialog list="wishlist" title="Wishlist" isPublic={profile?.wishlist_public ?? false} compact={compact} />}
             query={query}
             basePath="/dashboard/wishlist"
             facets={facets}
             list={list}
             filter={filter}
-            // Owned and Wishlist one tap apart on a phone, where one tab holds both (collection-switch.tsx).
+            // Collection and Wishlist one tap apart on a phone, where one tab holds both (collection-switch.tsx).
             views={<CollectionSwitch current="wishlist" />}
             empty={
                 <AppEmptyState

@@ -1,6 +1,6 @@
 "use client";
 
-import { type FC, useState, useTransition } from "react";
+import { type FC, useState, useSyncExternalStore, useTransition } from "react";
 import { ChevronDown, Folder, Heart, Rows01, Star01 } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Header as AriaHeader, Heading as AriaHeading } from "react-aria-components";
@@ -26,9 +26,11 @@ import { cx } from "@/utils/cx";
 
 export type ValueList = { id: string; name: string };
 
+const noSubscribe = () => () => {};
+
 const first = (keys: "all" | Set<React.Key>) => (keys === "all" ? undefined : [...keys][0]);
 
-// Each list wears the sidebar's icon for it: Owned's rows for the whole collection, the star, a binder's folder, the heart.
+// Each list wears the sidebar's icon for it: the collection's rows, the star, a binder's folder, the heart.
 const iconFor = (id: string): FC<{ className?: string }> => (id === "all" ? Rows01 : id === "favorites" ? Star01 : id === "wishlist" ? Heart : Folder);
 
 export function ValueHero({
@@ -68,12 +70,29 @@ export function ValueHero({
     // side of the breakpoint only broke hydration. On a phone its press opens the sheet instead.
     const [menuOpen, setMenuOpen] = useState(false);
     const [sheetOpen, setSheetOpen] = useState(false);
+    // The breakpoint is `sm` on the server, so the phone's own attributes wait for the browser: before that
+    // they would differ from the server's button and break hydration.
+    const hydrated = useSyncExternalStore(
+        noSubscribe,
+        () => true,
+        () => false,
+    );
+    const phone = hydrated && !sm;
     const choose = (key: string) => {
         if (key === selected) return;
         startTransition(() => router.replace(key === "all" ? "/dashboard" : `/dashboard?value=${key}`, { scroll: false }));
     };
     const trigger = (
-        <Button color="link-gray" size="sm" iconTrailing={ChevronDown} className="hit-area" aria-label={`Value of ${list.name}; choose a list`}>
+        <Button
+            color="link-gray"
+            size="sm"
+            iconTrailing={ChevronDown}
+            className="hit-area"
+            aria-label={`Value of ${list.name}; choose a list`}
+            // On a phone the press opens a sheet, a dialog, not the menu the trigger announces.
+            aria-haspopup={phone ? "dialog" : undefined}
+            aria-expanded={phone ? sheetOpen : undefined}
+        >
             {list.name}
         </Button>
     );
@@ -96,8 +115,10 @@ export function ValueHero({
                     <Dropdown.Root
                         isOpen={menuOpen}
                         onOpenChange={(next) => {
-                            if (sm) setMenuOpen(next);
-                            else if (next) setSheetOpen(true);
+                            // Closing always closes: a menu opened wide and then narrowed past sm must still shut.
+                            if (!next) setMenuOpen(false);
+                            else if (sm) setMenuOpen(true);
+                            else setSheetOpen(true);
                         }}
                     >
                         {trigger}
@@ -135,7 +156,7 @@ export function ValueHero({
                             <>
                                 <SlideoutMenu.Header onClose={close}>
                                     <AriaHeading slot="title" className="text-lg font-semibold text-primary">
-                                        Show the value of
+                                        Choose a list
                                     </AriaHeading>
                                 </SlideoutMenu.Header>
                                 {/* role="presentation", not the kit's default "main": the page already has a <main>. */}

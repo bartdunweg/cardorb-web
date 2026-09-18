@@ -66,7 +66,7 @@ export function PageHeader({
     children?: ReactNode;
     /**
      * Under the title's row at the column's full width: a switch between views. Not in `children`,
-     * which share the row with the actions and, on a phone, give up the bar's buttons' 112 px: Owned
+     * which share the row with the actions and, on a phone, give up the bar's buttons' 112 px: Collection
      * and Wishlist were 342 px wide on one page and 234 on the other (390 px, 2026-09-18).
      */
     below?: ReactNode;

@@ -61,7 +61,7 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
             facets={facets}
             list={list}
             filter={filter}
-            // Owned and Wishlist one tap apart on a phone, where one tab holds both (collection-switch.tsx).
+            // Collection and Wishlist one tap apart on a phone, where one tab holds both (collection-switch.tsx).
             views={<CollectionSwitch current="owned" />}
             empty={
                 <AppEmptyState icon="plus" title="No cards yet" description="Add your first card to start your collection">

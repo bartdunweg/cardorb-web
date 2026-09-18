@@ -59,7 +59,7 @@ export const StatCard = ({
     );
 };
 
-// Owned, Wishlist, Favorites, and the Pokémon count in the fourth place; the value itself is the
+// Collection, Wishlist, Favorites, and the Pokémon count in the fourth place; the value itself is the
 // big number above the chart. The fourth tile arrives as a node so the page can stream it.
 export function CardsStats({ stats, fourth }: { stats: CardStats; fourth: ReactNode }) {
     return (
