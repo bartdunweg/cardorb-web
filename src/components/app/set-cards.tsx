@@ -348,7 +348,7 @@ export function SetCards({
                 {/* The whole first line on a phone, a short field from sm (`RowSearch`), as in a binder's row. */}
                 <div className={LIST_ROW}>
                     {/* On a phone behind the search button in the bar across from Back (`BarSearchButton`). */}
-                    <RowSearch collapsible filled={q !== ""} onClear={() => setQ("")}>
+                    <RowSearch place="button" filled={q !== ""} onClear={() => setQ("")}>
                         <Input
                             size="sm"
                             icon={SearchLg}

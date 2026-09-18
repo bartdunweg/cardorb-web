@@ -5,7 +5,7 @@ import { useEffect, useId, useMemo, useRef, useState, useTransition } from "reac
 import { Loading02, SearchLg } from "@untitledui/icons";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { TitleScope } from "@/app/(app)/dashboard/cards/actions";
-import { RowSearch } from "@/components/app/row-search";
+import { RowSearch, type SearchPlace } from "@/components/app/row-search";
 import { InputBase } from "@/components/base/input/input";
 import { MAX_RECENT_TERMS, rememberTerm, useRecentTerms } from "@/hooks/use-recent-terms";
 import { type CardTitle, type TitleSet, matchSets, matchTitles } from "@/lib/card-titles";
@@ -60,7 +60,7 @@ export function CardsSearch({
     size = "md",
     scope,
     shelf,
-    collapsible = false,
+    place = "row",
 }: {
     initialValue?: string;
     label?: string;
@@ -71,8 +71,8 @@ export function CardsSearch({
     scope?: TitleScope;
     /** Browse instead: the field filters a shelf of sets, so the shelf's own set names are what it offers. */
     shelf?: BrowseLanguage;
-    /** A page with a bar keeps the phone's field off the row until its search button is pressed (`RowSearch`). */
-    collapsible?: boolean;
+    /** Where the field is on a phone: its own line, behind the bar's search button, or always in the bar (`RowSearch`). */
+    place?: SearchPlace;
 }) {
     const router = useRouter();
     const pathname = usePathname();
@@ -284,6 +284,8 @@ export function CardsSearch({
         if (event.key === "Escape") {
             // Once to put the list away, again to empty the field: what a search field does everywhere.
             event.preventDefault();
+            // Only an Escape this did nothing with goes on, to the bar's search (`RowSearch`), which then puts the bar back.
+            if (isOpen || value) event.stopPropagation();
             if (isOpen) close();
             else if (value) setValue("");
             return;
@@ -374,7 +376,7 @@ export function CardsSearch({
     );
 
     return (
-        <RowSearch collapsible={collapsible} filled={value !== ""} onClear={() => setValue("")}>
+        <RowSearch place={place} filled={value !== ""} onClear={() => setValue("")}>
             <div className="relative w-full">
                 {/* The ARIA combobox: a text field that offers a list, which is exactly what this is
                 (WAI-ARIA APG). The rule wants a native datalist or a dropdown instead, and a

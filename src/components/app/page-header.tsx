@@ -35,6 +35,7 @@ export function PageHeader({
     children,
     below,
     titleOnPhone = true,
+    searchField = false,
     phoneTitle,
 }: {
     title: string;
@@ -73,6 +74,12 @@ export function PageHeader({
     below?: ReactNode;
     /** Off on a page whose title says nothing on a phone (Browse): the h1 stays for a screen reader. */
     titleOnPhone?: boolean;
+    /**
+     * On a phone the list's search field is the bar's first line, in the title's place, with the bar's
+     * buttons beside it (`RowSearch` place "bar"): a page the tab bar reaches (My cards, Browse), where
+     * the tab already says the name (Bart's call, 2026-09-19). The h1 stays for a screen reader.
+     */
+    searchField?: boolean;
 }) {
     const sentinel = useRef<HTMLHeadingElement>(null);
     const [collapsed, setCollapsed] = useState(false);
@@ -155,7 +162,10 @@ export function PageHeader({
                     // dots on the right, equal side columns ran the buttons over a collapsed title at 375 px.
                     "fixed inset-x-0 top-0 z-30 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-4 pt-4 pb-2 sm:px-6 lg:hidden",
                     // Searching, the field is the bar: the title and the buttons step away until Cancel; Back stays.
-                    "[&:has(>[data-bar-search]:not(:empty))>:is(:nth-child(2),:nth-child(3))]:invisible",
+                    // A page whose field always stands there gives up the title alone.
+                    searchField
+                        ? "[&:has(>[data-bar-search]:not(:empty))>:nth-child(2)]:hidden"
+                        : "[&:has(>[data-bar-search]:not(:empty))>:is(:nth-child(2),:nth-child(3))]:invisible",
                     // Nothing to tap until Back, a button or the collapsed title is there: taps go through to the page.
                     !back && !barActions && !collapsed && "pointer-events-none",
                     // The fade comes with the collapse: at rest the buttons sit on the page and the large title
@@ -193,8 +203,11 @@ export function PageHeader({
                 <div
                     ref={buttons}
                     className={cx(
-                        "flex items-center justify-end gap-3",
+                        // Their own cell, always: with the field over the first two, auto-placement put them on a line of their own.
+                        "col-start-3 row-start-1 flex items-center justify-end gap-3",
                         placed && "transition-transform duration-150 ease-enter motion-reduce:transition-none",
+                        // Beside the field on a phone, level with it: nothing to line up with a title that is not drawn there.
+                        searchField && "max-sm:transform-none!",
                     )}
                     style={barDrop ? { transform: `translateY(${barDrop}px)` } : undefined}
                 >
@@ -206,16 +219,30 @@ export function PageHeader({
                     ref={barSearchSlot}
                     data-bar-search
                     className={cx(
-                        "absolute top-4 right-4 flex items-center gap-3 empty:hidden sm:right-6",
-                        // Back stays, as Gojek and Keeta keep it beside the field: the field starts after it.
-                        back ? "left-[calc(1rem+2.75rem+0.75rem)] sm:left-[calc(1.5rem+2.75rem+0.75rem)]" : "left-4 sm:left-6",
+                        "flex items-center gap-3 empty:hidden",
+                        "row-start-1",
+                        searchField
+                            ? // Over Back's place and the title's, the buttons beside it.
+                              "col-start-1 col-end-3"
+                            : // Over the title and the buttons, which step away; Back stays beside it, as Gojek and Keeta keep it.
+                              back
+                              ? "col-start-2 col-end-4"
+                              : "col-start-1 col-end-4",
                     )}
                 />
             </div>
             {/* The room the bar takes in the flow, on top of the page's own 16 px (32 from `sm`). With Back the
                 title starts at 76: under the 44 px button with 16 above and under it. Beside the buttons it
                 starts at 22, its 32 px line centred on them. With nothing in the bar, at 24. */}
-            <div aria-hidden="true" className={cx("lg:hidden", back ? "mb-4 h-11 sm:h-7" : beside ? "h-1.5 sm:h-0" : "h-2 sm:h-0")} />
+            <div
+                aria-hidden="true"
+                className={cx(
+                    "lg:hidden",
+                    back ? "mb-4 h-11 sm:h-7" : beside ? "h-1.5 sm:h-0" : "h-2 sm:h-0",
+                    // The field's 44 px line on a phone, as Back's, with 16 under it.
+                    searchField && "max-sm:mb-4 max-sm:h-11",
+                )}
+            />
             {hero ? (
                 // A grid of one cell, not `relative`: the wash inside the band is positioned by the app frame, and a positioned box here would cut it to the column.
                 <div className="mb-6 grid *:col-start-1 *:row-start-1 lg:-mt-8">
@@ -239,7 +266,7 @@ export function PageHeader({
                         "flex flex-row flex-wrap items-center justify-between gap-3",
                         !titleOnPhone && "max-lg:sr-only",
                         // On the bar's line, the buttons keep its right end.
-                        beside && "max-lg:pr-28",
+                        beside && "max-lg:pr-42",
                     )}
                 >
                     {/* The words take what the actions leave, so a long subtitle wraps rather than pushing them under the title. */}
@@ -250,7 +277,7 @@ export function PageHeader({
                         <div ref={head} className="flex flex-col gap-1">
                             {/* A step up from display-xs, 30 px, and bold (Bart's calls, 2026-09-18): the page's name, the largest words on it.
                                 Set a little tighter, as large bold type wants (Bart, 2026-09-18). */}
-                            <h1 ref={sentinel} className="text-display-sm font-bold tracking-tight text-primary">
+                            <h1 ref={sentinel} className={cx("text-display-sm font-bold tracking-tight text-primary", searchField && "max-sm:sr-only")}>
                                 {/* Hidden, not just unseen: a name a screen reader reads is the one on screen. */}
                                 {phoneTitle ? (
                                     <>

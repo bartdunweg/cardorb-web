@@ -79,7 +79,7 @@ export function BrowseToolbar({ query, view: initialView }: { query: BrowseQuery
         <div className={cx(LIST_ROW, "transition-opacity duration-(--duration-fast)", pending && "opacity-60 delay-150")}>
             {/* In the bar on a phone once its search is pressed, a short field from sm (`RowSearch`), as in a binder's row. */}
             {/* The shelf it filters is the shelf it offers: its set names, in the language chosen. */}
-            <CardsSearch size="sm" initialValue={query.q ?? ""} label="Search in Browse" shelf={query.language} collapsible />
+            <CardsSearch size="sm" initialValue={query.q ?? ""} label="Search in Browse" shelf={query.language} place="bar" />
             {/* On a phone the line under the title, scrolling sideways, with View beside it. */}
             <div className={FILTER_BAR}>
                 <FiltersSheet

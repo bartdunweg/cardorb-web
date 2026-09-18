@@ -9,7 +9,7 @@ import { CardsSort } from "@/components/app/cards-sort";
 import { CardsView } from "@/components/app/cards-view";
 import { DexView } from "@/components/app/dex-grid";
 import { PublicCardsView } from "@/components/app/public-cards-view";
-import { FILTER_BAR } from "@/components/app/row-search";
+import { FILTER_BAR, type SearchPlace } from "@/components/app/row-search";
 import type { CardFilter, CardList, PublicCard } from "@/lib/cards";
 import type { DexList } from "@/lib/dex-groups";
 import type { Facets } from "@/lib/facets";
@@ -31,6 +31,8 @@ type Common = {
     empty: ReactNode;
     /** Sibling lists this page switches between (Collection | Wishlist), under the row, below lg. */
     views?: ReactNode;
+    /** Where the phone's search is (`RowSearch`): always in the bar on a page the tab bar reaches, behind a button on one with Back. */
+    searchPlace?: SearchPlace;
 };
 
 /** A public profile: the cards came with the page, and it pages by URL. */
@@ -80,8 +82,8 @@ export async function BinderBody(props: BinderBodyProps) {
                 size="sm"
                 initialValue={q ?? ""}
                 label={searchLabel}
-                // Your own lists have a bar on a phone, and the search is a button there; a public profile has none.
-                collapsible={!props.readOnly}
+                // Your own lists have a bar on a phone: the field in it, or a button there on a page with Back. A public profile has none.
+                place={props.readOnly ? "row" : (props.searchPlace ?? "button")}
                 // The titles it offers are the ones in this very list, filters and all. A public
                 // profile gets none: the suggestion would be read from the reader's own cards.
                 scope={

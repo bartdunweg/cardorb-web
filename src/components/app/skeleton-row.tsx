@@ -10,7 +10,7 @@ export function ListRow() {
     return (
         <div className={LIST_ROW} aria-hidden="true">
             {/* Off the row on a phone, as the field it stands in for is until the bar's search is pressed. */}
-            <RowSearch collapsible>
+            <RowSearch place="button">
                 <Input aria-label="Search" icon={SearchLg} placeholder="Search" size="sm" isDisabled wrapperClassName="rounded-full" />
             </RowSearch>
             <RowButton icon={FilterLines} label="Filters" isDisabled />

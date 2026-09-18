@@ -64,8 +64,9 @@ export async function BinderPage({
     const remembered = await rememberedView(body.basePath);
     const view = body.readOnly ? null : (
         <>
-            {/* The search beside View and the dots: the field comes out above the filters on a press. */}
-            <BarSearchButton label={body.searchLabel ?? `Search in ${title}`} />
+            {/* With Back, the search is a button beside View and the dots, and a press turns the bar into the
+                field; without (My cards, which the tab bar reaches), the field itself stands in the title's place. */}
+            {back ? <BarSearchButton label={body.searchLabel ?? `Search in ${title}`} /> : null}
             <BarViewMenu
                 initialView={remembered.view}
                 initialSize={remembered.size}
@@ -96,6 +97,7 @@ export async function BinderPage({
                         ) : undefined
                     }
                     back={back}
+                    searchField={!back && !body.readOnly}
                     actions={
                         settings || add ? (
                             <div className="flex items-center gap-3 max-lg:hidden">
@@ -125,7 +127,7 @@ export async function BinderPage({
                     {children}
                 </PageHeader>
                 {/* The field says which list it searches: "Search in Wishlist", "Search in Kanto". */}
-                <BinderBody searchLabel={`Search in ${title}`} {...body} views={views} />
+                <BinderBody searchLabel={`Search in ${title}`} {...body} views={views} searchPlace={back ? "button" : "bar"} />
             </div>
         </ListTotalsProvider>
     );

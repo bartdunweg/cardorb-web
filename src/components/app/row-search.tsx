@@ -31,18 +31,22 @@ export const FILTER_BAR = "scrollbar-hide -m-1 flex min-w-0 flex-1 flex-nowrap i
 const FIELD = "flex min-w-0 items-center [&_input]:text-ellipsis max-sm:[&_input]:h-11";
 
 /**
- * `collapsible`: the page has a bar, and on a phone the field lives in it: out on the bar's search
- * press, or while it holds a term, so a narrowed list always says why. `onClear` empties the term,
- * for Cancel, which also puts the bar back.
+ * Where the field is on a phone. "row": its own line in the row (a public profile, which has no bar).
+ * "button": in the bar, out on the bar's search press (`BarSearchButton`) or while it holds a term,
+ * so a narrowed list always says why; Cancel empties it and puts the bar back (a binder, a set).
+ * "bar": always in the bar, in the title's place, on a page the tab bar reaches (My cards, Browse);
+ * Cancel shows while it holds a term. `onClear` empties the term.
  */
+export type SearchPlace = "row" | "button" | "bar";
+
 export function RowSearch({
     children,
-    collapsible = false,
+    place = "row",
     filled = false,
     onClear,
 }: {
     children: ReactNode;
-    collapsible?: boolean;
+    place?: SearchPlace;
     filled?: boolean;
     onClear?: () => void;
 }) {
@@ -53,7 +57,7 @@ export function RowSearch({
        into the bar once the page is up, not while React takes over the server's drawing. */
     const slot = useBarSearchSlot();
     // Only a field that can be emptied goes into the bar: the loading row's stand-in has nothing for Cancel to do.
-    const inBar = collapsible && onClear !== undefined && !sm && slot !== null;
+    const inBar = place !== "row" && onClear !== undefined && !sm && slot !== null;
     // Leaving the page puts its search away: coming back opens the bar as a bar, unless a term is in force.
     useEffect(() => () => closeRowSearch(), []);
 
@@ -65,6 +69,30 @@ export function RowSearch({
         seen.current = asked;
         if (open) field.current?.querySelector("input")?.focus();
     }, [asked, open, inBar]);
+
+    if (inBar && place === "bar") {
+        return createPortal(
+            <>
+                <div ref={field} className={cx(FIELD, "flex-1")}>
+                    {children}
+                </div>
+                {filled ? (
+                    <Button
+                        color="link-gray"
+                        size="sm"
+                        className="hit-area shrink-0"
+                        onClick={() => {
+                            onClear?.();
+                            field.current?.querySelector("input")?.focus();
+                        }}
+                    >
+                        Cancel
+                    </Button>
+                ) : null}
+            </>,
+            slot,
+        );
+    }
 
     if (inBar) {
         if (!open && !filled) return null;
@@ -100,7 +128,7 @@ export function RowSearch({
     }
 
     return (
-        <div ref={field} className={cx(FIELD, "basis-full sm:max-w-52 sm:flex-1 sm:basis-auto", collapsible && !filled && "max-sm:hidden")}>
+        <div ref={field} className={cx(FIELD, "basis-full sm:max-w-52 sm:flex-1 sm:basis-auto", place !== "row" && !filled && "max-sm:hidden")}>
             {children}
         </div>
     );

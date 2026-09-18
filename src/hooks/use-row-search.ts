@@ -51,12 +51,20 @@ const subscribeSlot = (listener: () => void) => {
     return () => slotListeners.delete(listener);
 };
 
-/** The bar's slot, as a ref: set as it mounts, and cleared only if it is still the one held. */
-export const barSearchSlot = (el: HTMLElement | null) => {
-    if (el) slot = el;
-    else if (slot && !slot.isConnected) slot = null;
-    else return;
+const notifySlot = () => {
     for (const listener of slotListeners) listener();
+};
+
+/** The bar's slot, as a ref: set as it mounts, and let go as it unmounts only if it is still the one held (a new bar may have come first). */
+export const barSearchSlot = (el: HTMLElement | null) => {
+    if (!el) return;
+    slot = el;
+    notifySlot();
+    return () => {
+        if (slot !== el) return;
+        slot = null;
+        notifySlot();
+    };
 };
 
 export function useBarSearchSlot() {
