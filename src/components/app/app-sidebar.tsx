@@ -99,7 +99,7 @@ export function AppSidebar({
         { label: "Home", href: "/dashboard", icon: HomeLine },
         { label: "Browse", href: "/dashboard/sets", icon: BookOpen01 },
         // Owned and Wishlist, the names the pages carry and the order of the phone's switch (collection-switch.tsx).
-        { label: "Owned", href: "/dashboard/cards", icon: Rows01 },
+        { label: "Collection", href: "/dashboard/cards", icon: Rows01 },
         { label: "Wishlist", href: "/dashboard/wishlist", icon: Heart },
     ];
 

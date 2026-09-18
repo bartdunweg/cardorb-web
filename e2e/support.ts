@@ -63,7 +63,7 @@ export const ownedCount = async (page: Page): Promise<number> => {
     if (await page.getByText("Welcome to Cardorb").isVisible()) return 0;
     const text = await page
         .getByRole("link")
-        .filter({ has: page.getByRole("heading", { name: "Owned" }) })
+        .filter({ has: page.getByRole("heading", { name: "Collection", exact: true }) })
         .innerText();
     return Number(text.replace(/[^0-9]/g, ""));
 };

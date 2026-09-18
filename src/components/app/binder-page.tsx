@@ -48,7 +48,7 @@ export function BinderPage({
     settings?: (compact: boolean) => ReactNode;
     add?: (compact: boolean) => ReactNode;
     /**
-     * Sibling lists this page switches between (Owned | Wishlist), on a phone alone: one tab there holds
+     * Sibling lists this page switches between (Collection | Wishlist), on a phone alone: one tab there holds
      * both, where from lg the sidebar lists each as a page of its own (Bart's call, 2026-09-18).
      */
     views?: ReactNode;

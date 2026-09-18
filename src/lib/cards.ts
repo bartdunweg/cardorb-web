@@ -191,7 +191,7 @@ export async function getMyCards({
 export type CardStats = {
     /** Printings held: a card held twice is one of these, and one row in every list. */
     owned: number;
-    /** Cards held, a duplicate counting twice: what the Owned tile says. */
+    /** Cards held, a duplicate counting twice: what the Collection tile says. */
     copies: number;
     wishlist: number;
     favorites: number;

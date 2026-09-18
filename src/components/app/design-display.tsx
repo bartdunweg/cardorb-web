@@ -516,7 +516,7 @@ function TabsSample({ type, size = "sm" }: { type: "button-brand" | "button-gray
     return (
         <Tabs defaultSelectedKey="owned">
             <TabList aria-label={`Tabs, ${type}, ${size}`} type={type} size={size}>
-                <Tab id="owned" label="Owned" />
+                <Tab id="owned" label="Collection" />
                 <Tab id="wishlist" label="Wishlist" />
                 <Tab id="all" label="All cards" />
             </TabList>

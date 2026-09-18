@@ -38,7 +38,7 @@ export function PageHeader({
 }: {
     title: string;
     /**
-     * The title below `lg`, where it differs: Owned and Wishlist are one tab on a phone, My cards,
+     * The title below `lg`, where it differs: Collection and Wishlist are one tab on a phone, My cards,
      * and its title says so while the switch under it says which half (Bart's call, 2026-09-18).
      */
     phoneTitle?: string;
