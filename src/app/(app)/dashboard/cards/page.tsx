@@ -50,6 +50,8 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
     return (
         <BinderPage
             title="Owned"
+            // My cards on a phone, the tab both halves share; the switch under it says which (collection-switch.tsx).
+            phoneTitle="My cards"
             /* The same header as the wishlist's: its settings, here whether the profile is public, since the
                public page is the owned collection (list-settings-dialog.tsx). */
             settings={(compact) => <ListSettingsDialog list="collection" title="Owned" isPublic={profile?.is_public ?? false} compact={compact} />}

@@ -44,6 +44,7 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
     return (
         <BinderPage
             title="Wishlist"
+            phoneTitle="My cards"
             // No count or value under the title, as on Owned: the two halves of My cards have one header (Bart's call, 2026-09-18).
             settings={(compact) => <ListSettingsDialog list="wishlist" title="Wishlist" isPublic={profile?.wishlist_public ?? false} compact={compact} />}
             query={query}

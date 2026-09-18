@@ -33,8 +33,14 @@ export function PageHeader({
     barActions,
     children,
     titleOnPhone = true,
+    phoneTitle,
 }: {
     title: string;
+    /**
+     * The title below `lg`, where it differs: Owned and Wishlist are one tab on a phone, My cards,
+     * and its title says so while the switch under it says which half (Bart's call, 2026-09-18).
+     */
+    phoneTitle?: string;
     /** A short line over the title, in the small size: what the page belongs to (a set's era). */
     eyebrow?: string;
     /** The line under the title: a description or a count. */
@@ -153,7 +159,7 @@ export function PageHeader({
                         collapsed ? "opacity-100" : "opacity-0",
                     )}
                 >
-                    {title}
+                    {phoneTitle ?? title}
                 </span>
                 <div
                     ref={buttons}
@@ -198,7 +204,15 @@ export function PageHeader({
                         {eyebrow ? <p className="text-sm font-semibold text-tertiary">{eyebrow}</p> : null}
                         {/* A step up from display-xs, 30 px (Bart's call, 2026-09-18): the page's name, the largest words on it. */}
                         <h1 ref={sentinel} className="text-display-sm font-semibold text-primary">
-                            {title}
+                            {/* Hidden, not just unseen: a name a screen reader reads is the one on screen. */}
+                            {phoneTitle ? (
+                                <>
+                                    <span className="lg:hidden">{phoneTitle}</span>
+                                    <span className="max-lg:hidden">{title}</span>
+                                </>
+                            ) : (
+                                title
+                            )}
                         </h1>
                         {subtitle ? <p className="text-md text-tertiary">{subtitle}</p> : null}
                         {children}
