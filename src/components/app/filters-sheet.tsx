@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { type ReactNode, useEffect, useId, useState } from "react";
 import { ArrowLeft, Check, ChevronDown, ChevronRight, FilterLines } from "@untitledui/icons";
 import { Button as AriaButton, Dialog as AriaDialog, DialogTrigger as AriaDialogTrigger, Heading as AriaHeading } from "react-aria-components";
 import { FilterChoices, type FilterOption, OptionCount } from "@/components/app/filter-chip";
@@ -71,6 +71,7 @@ export function FiltersSheet({
     count,
     noun = ["result", "results"],
     inline = false,
+    lead,
 }: {
     groups: FilterGroup[];
     values: FilterValues;
@@ -79,6 +80,8 @@ export function FiltersSheet({
     /** What the list holds, one and several, for the button's words. */
     noun?: [string, string];
     inline?: boolean;
+    /** On a phone, between the Filters button and the filters: the page's Sort, so the bar reads Filters, Sort, then each filter. */
+    lead?: ReactNode;
 }) {
     const [open, setOpen] = useState(false);
     const [draft, setDraft] = useState<FilterValues>(values);
@@ -97,9 +100,12 @@ export function FiltersSheet({
 
     const drilled = shown.find((g) => g.id === drill);
     const lg = useBreakpoint("lg");
+    const sm = useBreakpoint("sm");
+    /* A phone's bar asks for its numbers once one of its menus is opened, not on every page load. */
+    const [barAsked, setBarAsked] = useState(false);
     // Two askings: the sheet's follows the draft; the row's menus, which apply at once, follow the list.
     const sheet = useFilterAnswer(count, draft, open);
-    const row = useFilterAnswer(count, values, inline && lg);
+    const row = useFilterAnswer(count, values, (inline && lg) || (!sm && barAsked));
 
     return (
         <>
@@ -209,6 +215,32 @@ export function FiltersSheet({
                     )}
                 </SlideoutMenu>
             </div>
+            {/* On a phone each filter as a button of its own after Filters, in the bar that scrolls
+                sideways (`FILTER_BAR`): what is chosen is on its button, so the chips under the row go. */}
+            <div className="contents sm:hidden">
+                {lead}
+                {shown.map((g) => (
+                    <FilterMenu
+                        key={g.id}
+                        group={g}
+                        value={values[g.id] ?? []}
+                        counts={row.answer?.options?.[g.id]}
+                        onChange={(next) => onApply({ ...values, [g.id]: next })}
+                        onOpen={() => setBarAsked(true)}
+                        sheet
+                    />
+                ))}
+                {active > 0 ? (
+                    <Button
+                        color="link-gray"
+                        size="sm"
+                        className="hit-area shrink-0"
+                        onClick={() => onApply(Object.fromEntries(groups.map((g) => [g.id, []])))}
+                    >
+                        Clear
+                    </Button>
+                ) : null}
+            </div>
             {/* After the button in the tab order, the way the chips belong to it; drawn under the row. */}
             <ActiveFilters groups={groups} values={values} onApply={onApply} inline={inline} />
         </>
@@ -254,7 +286,12 @@ function ActiveFilters({
     };
 
     return (
-        <div className={cx("order-last scrollbar-hide flex min-w-0 basis-full items-center gap-2 overflow-x-auto sm:flex-wrap", inline && "lg:hidden")}>
+        <div
+            className={cx(
+                "order-last scrollbar-hide flex min-w-0 basis-full items-center gap-2 overflow-x-auto max-sm:hidden sm:flex-wrap",
+                inline && "lg:hidden",
+            )}
+        >
             <TagGroup label="Filters on" size="md" onRemove={(keys) => remove(new Set(keys))}>
                 <TagList className="flex flex-nowrap gap-1.5 sm:flex-wrap">
                     {chips.map(({ key, group, option }) => (
@@ -435,53 +472,109 @@ function FilterMenu({
     value,
     counts,
     onChange,
+    onOpen,
+    sheet = false,
 }: {
     group: FilterGroup;
     value: string[];
     counts?: Record<string, number>;
     onChange: (next: string[]) => void;
+    /** Told when the menu opens: a phone's bar asks for its numbers then. */
+    onOpen?: () => void;
+    /** A phone's: the choices come up as a sheet from the bottom, as the Filters sheet does, not as a menu under a button in a row that scrolls. */
+    sheet?: boolean;
 }) {
     const [open, setOpen] = useState(false);
     const chosen = group.options.filter((o) => value.includes(o.value));
     const single = !group.multiple ? chosen[0] : undefined;
     const name = chosen.length ? `${group.label}: ${chosen.map((o) => o.label).join(", ")}` : group.label;
+    const toggle = (next: boolean) => {
+        setOpen(next);
+        if (next) onOpen?.();
+    };
+
+    const face = (
+        /* One box: the kit wraps the children in an inline span, where a dot and a word broke onto two lines. */
+        <span className="inline-flex items-center gap-1.5">
+            {single?.icon ? <span className="flex shrink-0 items-center">{single.icon}</span> : null}
+            <span aria-hidden="true">{single ? single.label : group.label}</span>
+            {group.multiple && chosen.length > 0 ? (
+                <Badge size="sm" color="gray" type="pill-color">
+                    {chosen.length}
+                </Badge>
+            ) : null}
+        </span>
+    );
+    const choices = (inSheet: boolean) => (
+        <FilterChoices
+            label={group.label}
+            multiple={group.multiple}
+            any={group.multiple ? undefined : group.all?.label}
+            anyIcon={group.all?.icon}
+            value={value}
+            counts={counts}
+            options={group.options}
+            // In a sheet the caret would raise the keyboard over the list it narrows.
+            focusField={!inSheet}
+            onChange={(next) => {
+                onChange(next);
+                if (!group.multiple) setOpen(false);
+            }}
+        />
+    );
+    const clear =
+        group.multiple && value.length > 0 ? (
+            <Button color="link-gray" size="sm" className="w-full" onClick={() => onChange([])}>
+                Clear {group.label.toLowerCase()}
+            </Button>
+        ) : null;
+
+    if (sheet) {
+        return (
+            <>
+                {/* 44 px, as the Filters and Sort buttons it follows in the bar. It opens the sheet itself, so it says so itself. */}
+                <Button
+                    color="secondary"
+                    size="sm"
+                    iconTrailing={ChevronDown}
+                    aria-label={name}
+                    aria-haspopup="dialog"
+                    aria-expanded={open}
+                    className="h-11 shrink-0"
+                    onClick={() => toggle(true)}
+                >
+                    {face}
+                </Button>
+                <SlideoutMenu isDismissable isOpen={open} onOpenChange={toggle} dialogClassName="max-h-[70dvh]">
+                    {({ close }) => (
+                        <>
+                            <SlideoutMenu.Header onClose={close}>
+                                <AriaHeading slot="title" className="text-lg font-semibold text-primary">
+                                    {group.label}
+                                </AriaHeading>
+                            </SlideoutMenu.Header>
+                            {/* role="presentation", not the kit's default "main": the page already has a <main>. */}
+                            {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- the rule offers <img alt="">, which this is not: the role is here only to stop the kit's default role="main". */}
+                            <SlideoutMenu.Content role="presentation" className="pb-4">
+                                {choices(true)}
+                            </SlideoutMenu.Content>
+                            {clear ? <SlideoutMenu.Footer>{clear}</SlideoutMenu.Footer> : null}
+                        </>
+                    )}
+                </SlideoutMenu>
+            </>
+        );
+    }
 
     return (
-        <AriaDialogTrigger isOpen={open} onOpenChange={setOpen}>
+        <AriaDialogTrigger isOpen={open} onOpenChange={toggle}>
             <Button color="secondary" size="sm" iconTrailing={ChevronDown} aria-label={name}>
-                {/* One box: the kit wraps the children in an inline span, where a dot and a word broke onto two lines. */}
-                <span className="inline-flex items-center gap-1.5">
-                    {single?.icon ? <span className="flex shrink-0 items-center">{single.icon}</span> : null}
-                    <span aria-hidden="true">{single ? single.label : group.label}</span>
-                    {group.multiple && chosen.length > 0 ? (
-                        <Badge size="sm" color="gray" type="pill-color">
-                            {chosen.length}
-                        </Badge>
-                    ) : null}
-                </span>
+                {face}
             </Button>
             <Dropdown.Popover placement="bottom start" className="w-72">
                 <AriaDialog aria-label={group.label} className="flex max-h-96 flex-col outline-hidden">
-                    <FilterChoices
-                        label={group.label}
-                        multiple={group.multiple}
-                        any={group.multiple ? undefined : group.all?.label}
-                        anyIcon={group.all?.icon}
-                        value={value}
-                        counts={counts}
-                        options={group.options}
-                        onChange={(next) => {
-                            onChange(next);
-                            if (!group.multiple) setOpen(false);
-                        }}
-                    />
-                    {group.multiple && value.length > 0 ? (
-                        <div className="shrink-0 border-t border-secondary p-1.5">
-                            <Button color="link-gray" size="sm" className="w-full" onClick={() => onChange([])}>
-                                Clear {group.label.toLowerCase()}
-                            </Button>
-                        </div>
-                    ) : null}
+                    {choices(false)}
+                    {clear ? <div className="shrink-0 border-t border-secondary p-1.5">{clear}</div> : null}
                 </AriaDialog>
             </Dropdown.Popover>
         </AriaDialogTrigger>

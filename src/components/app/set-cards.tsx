@@ -9,7 +9,7 @@ import { arriveDelay } from "@/components/app/arrive-stagger";
 import { awaitRows, knownRows, warmCardFacts, warmSetRows } from "@/components/app/card-memo";
 import { type FilterAnswer, type FilterValues, FiltersSheet } from "@/components/app/filters-sheet";
 import { RowButton } from "@/components/app/row-button";
-import { LIST_ROW, RowSearch } from "@/components/app/row-search";
+import { FILTER_BAR, LIST_ROW, RowSearch } from "@/components/app/row-search";
 import { SetCardTile } from "@/components/app/set-card-tile";
 import { useSetLive } from "@/components/app/set-live";
 import { ViewMenu } from "@/components/app/view-menu";
@@ -304,6 +304,29 @@ export function SetCards({
         return next ? () => void open(next) : null;
     };
 
+    // Sort, twice over: in the row from sm, and on a phone between Filters and the filters (`FiltersSheet`'s lead).
+    const sortMenu = (
+        <Dropdown.Root>
+            <RowButton icon={SwitchVertical01} label="Sort" />
+            <Dropdown.Popover placement="bottom end" className="w-56">
+                <Dropdown.Menu
+                    selectionMode="single"
+                    disallowEmptySelection
+                    selectedKeys={new Set([sort])}
+                    onSelectionChange={(keys) => {
+                        const key = keys === "all" ? undefined : [...keys][0];
+                        write({ sort: SET_SORTS.find((o) => o.value === key)?.value ?? "set" });
+                    }}
+                >
+                    {SET_SORTS.map((o) => (
+                        <Dropdown.Item key={o.value} id={o.value}>
+                            {o.label}
+                        </Dropdown.Item>
+                    ))}
+                </Dropdown.Menu>
+            </Dropdown.Popover>
+        </Dropdown.Root>
+    );
     return (
         <>
             <Tabs
@@ -324,7 +347,8 @@ export function SetCards({
                 </div>
                 {/* The whole first line on a phone, a short field from sm (`RowSearch`), as in a binder's row. */}
                 <div className={LIST_ROW}>
-                    <RowSearch>
+                    {/* On a phone behind the search button in the bar across from Back (`BarSearchButton`). */}
+                    <RowSearch collapsible filled={q !== ""} onClear={() => setQ("")}>
                         <Input
                             size="sm"
                             icon={SearchLg}
@@ -337,44 +361,30 @@ export function SetCards({
                             wrapperClassName="rounded-full"
                         />
                     </RowSearch>
-                    <FiltersSheet
-                        inline
-                        noun={["card", "cards"]}
-                        groups={[
-                            ...(rarities.length > 1 ? [{ id: "rarity", label: "Rarity", multiple: true, options: rarities }] : []),
-                            // Full art cuts across the rarities, so it is its own yes-or-no, not one of them.
-                            ...(fullArt.size > 0
-                                ? [{ id: "only", label: "Show only", multiple: true, options: [{ value: FULL_ART, label: "Full art" }] }]
-                                : []),
-                        ]}
-                        values={{ rarity, only: art ? [FULL_ART] : [] }}
-                        count={countDraft}
-                        onApply={(v) => {
-                            const next = filtersOf(v);
-                            write({ rarity: next.rarity, fullArt: next.art });
-                        }}
-                    />
-                    <Dropdown.Root>
-                        <RowButton icon={SwitchVertical01} label="Sort" />
-                        <Dropdown.Popover placement="bottom end" className="w-56">
-                            <Dropdown.Menu
-                                selectionMode="single"
-                                disallowEmptySelection
-                                selectedKeys={new Set([sort])}
-                                onSelectionChange={(keys) => {
-                                    const key = keys === "all" ? undefined : [...keys][0];
-                                    write({ sort: SET_SORTS.find((o) => o.value === key)?.value ?? "set" });
-                                }}
-                            >
-                                {SET_SORTS.map((o) => (
-                                    <Dropdown.Item key={o.value} id={o.value}>
-                                        {o.label}
-                                    </Dropdown.Item>
-                                ))}
-                            </Dropdown.Menu>
-                        </Dropdown.Popover>
-                    </Dropdown.Root>
-                    <ViewMenu view="grid" size={size} layouts={false} />
+                    {/* On a phone the line under the search, scrolling sideways; from sm its buttons stand in the row. */}
+                    <div className={FILTER_BAR}>
+                        <FiltersSheet
+                            inline
+                            lead={sortMenu}
+                            noun={["card", "cards"]}
+                            groups={[
+                                ...(rarities.length > 1 ? [{ id: "rarity", label: "Rarity", multiple: true, options: rarities }] : []),
+                                // Full art cuts across the rarities, so it is its own yes-or-no, not one of them.
+                                ...(fullArt.size > 0
+                                    ? [{ id: "only", label: "Show only", multiple: true, options: [{ value: FULL_ART, label: "Full art" }] }]
+                                    : []),
+                            ]}
+                            values={{ rarity, only: art ? [FULL_ART] : [] }}
+                            count={countDraft}
+                            onApply={(v) => {
+                                const next = filtersOf(v);
+                                write({ rarity: next.rarity, fullArt: next.art });
+                            }}
+                        />
+                        <div className="contents max-sm:hidden">{sortMenu}</div>
+                    </div>
+                    {/* On a phone in the bar across from Back (`BarViewMenu`). */}
+                    <ViewMenu view="grid" size={size} layouts={false} className="max-sm:hidden" />
                 </div>
                 {/* One panel, named after the tab chosen: the grid is the same list filtered, not four lists. */}
                 <TabPanel id={holding ?? "all"} className="flex flex-col gap-6">

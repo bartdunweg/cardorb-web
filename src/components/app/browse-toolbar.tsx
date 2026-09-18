@@ -7,7 +7,7 @@ import { CardsSearch } from "@/components/app/cards-search";
 import { type FilterAnswer, type FilterValues, FiltersSheet } from "@/components/app/filters-sheet";
 import { FlagIcon } from "@/components/app/flag-icon";
 import { RowButton } from "@/components/app/row-button";
-import { LIST_ROW } from "@/components/app/row-search";
+import { FILTER_BAR, LIST_ROW } from "@/components/app/row-search";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Dot } from "@/components/foundations/dot-icon";
 import { setSetsView, useSetsView } from "@/hooks/use-sets-view";
@@ -50,6 +50,29 @@ export function BrowseToolbar({ query, view: initialView }: { query: BrowseQuery
     );
     const go = (patch: Partial<BrowseQuery>) => startTransition(() => router.replace(browseHref(query, patch), { scroll: false }));
 
+    // Sort, twice over: in the row from sm, and on a phone between Filters and the filters (`FiltersSheet`'s lead).
+    const sortMenu = (
+        <Dropdown.Root>
+            <RowButton icon={SwitchVertical01} label="Sort" />
+            <Dropdown.Popover placement="bottom start" className="w-48">
+                <Dropdown.Menu
+                    selectionMode="single"
+                    disallowEmptySelection
+                    selectedKeys={new Set([query.sort])}
+                    onSelectionChange={(keys) => {
+                        const key = first(keys);
+                        go({ sort: isBrowseSort(key) ? key : "newest" });
+                    }}
+                >
+                    {BROWSE_SORT_OPTIONS.map((o) => (
+                        <Dropdown.Item key={o.value} id={o.value}>
+                            {o.label}
+                        </Dropdown.Item>
+                    ))}
+                </Dropdown.Menu>
+            </Dropdown.Popover>
+        </Dropdown.Root>
+    );
     // Dims while the next answer is fetched, after 150 ms, so a quick answer never flickers; it
     // lights up again at once.
     return (
@@ -57,61 +80,46 @@ export function BrowseToolbar({ query, view: initialView }: { query: BrowseQuery
             {/* The whole first line on a phone, a short field from sm (`RowSearch`), as in a binder's row. */}
             {/* The shelf it filters is the shelf it offers: its set names, in the language chosen. */}
             <CardsSearch size="sm" initialValue={query.q ?? ""} label="Search in Browse" shelf={query.language} />
-            <FiltersSheet
-                inline
-                noun={["set", "sets"]}
-                groups={[
-                    {
-                        id: "language",
-                        label: "Language",
-                        all: { value: "en", label: "English", icon: <FlagIcon language="en" labelled /> },
-                        options: BROWSE_LANGUAGES.filter((l) => l.code !== "en").map((l) => ({
-                            value: l.code,
-                            label: l.label,
-                            icon: <FlagIcon language={l.code} labelled />,
-                        })),
-                    },
-                    {
-                        id: "progress",
-                        label: "Progress",
-                        all: { value: "all", label: "All sets" },
-                        options: BROWSE_PROGRESS_OPTIONS.filter((o) => o.value !== "all").map((o) => ({
-                            value: o.value,
-                            label: o.label,
-                            icon: <Dot size="md" aria-hidden="true" className={PROGRESS_DOT[o.value]} />,
-                        })),
-                    },
-                ]}
-                values={{ language: query.language === "en" ? [] : [query.language], progress: query.progress === "all" ? [] : [query.progress] }}
-                count={count}
-                onApply={(next) => {
-                    const language = next.language?.[0];
-                    const progress = next.progress?.[0];
-                    go({ language: isBrowseLanguage(language) ? language : "en", progress: isBrowseProgress(progress) ? progress : "all" });
-                }}
-            />
+            {/* On a phone the line under the search, scrolling sideways, with View beside it: Browse has no bar to put View in. */}
+            <div className={FILTER_BAR}>
+                <FiltersSheet
+                    inline
+                    lead={sortMenu}
+                    noun={["set", "sets"]}
+                    groups={[
+                        {
+                            id: "language",
+                            label: "Language",
+                            all: { value: "en", label: "English", icon: <FlagIcon language="en" labelled /> },
+                            options: BROWSE_LANGUAGES.filter((l) => l.code !== "en").map((l) => ({
+                                value: l.code,
+                                label: l.label,
+                                icon: <FlagIcon language={l.code} labelled />,
+                            })),
+                        },
+                        {
+                            id: "progress",
+                            label: "Progress",
+                            all: { value: "all", label: "All sets" },
+                            options: BROWSE_PROGRESS_OPTIONS.filter((o) => o.value !== "all").map((o) => ({
+                                value: o.value,
+                                label: o.label,
+                                icon: <Dot size="md" aria-hidden="true" className={PROGRESS_DOT[o.value]} />,
+                            })),
+                        },
+                    ]}
+                    values={{ language: query.language === "en" ? [] : [query.language], progress: query.progress === "all" ? [] : [query.progress] }}
+                    count={count}
+                    onApply={(next) => {
+                        const language = next.language?.[0];
+                        const progress = next.progress?.[0];
+                        go({ language: isBrowseLanguage(language) ? language : "en", progress: isBrowseProgress(progress) ? progress : "all" });
+                    }}
+                />
+                <div className="contents max-sm:hidden">{sortMenu}</div>
+            </div>
             <Dropdown.Root>
-                <RowButton icon={SwitchVertical01} label="Sort" />
-                <Dropdown.Popover placement="bottom start" className="w-48">
-                    <Dropdown.Menu
-                        selectionMode="single"
-                        disallowEmptySelection
-                        selectedKeys={new Set([query.sort])}
-                        onSelectionChange={(keys) => {
-                            const key = first(keys);
-                            go({ sort: isBrowseSort(key) ? key : "newest" });
-                        }}
-                    >
-                        {BROWSE_SORT_OPTIONS.map((o) => (
-                            <Dropdown.Item key={o.value} id={o.value}>
-                                {o.label}
-                            </Dropdown.Item>
-                        ))}
-                    </Dropdown.Menu>
-                </Dropdown.Popover>
-            </Dropdown.Root>
-            <Dropdown.Root>
-                <RowButton icon={view === "grid" ? Grid01 : Rows01} label="View" className="ml-auto" />
+                <RowButton icon={view === "grid" ? Grid01 : Rows01} label="View" className="ml-auto shrink-0" />
                 <Dropdown.Popover placement="bottom end" className="w-40">
                     <Dropdown.Menu
                         selectionMode="single"

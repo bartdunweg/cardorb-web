@@ -151,6 +151,8 @@ export function PageHeader({
             <div
                 className={cx(
                     "fixed inset-x-0 top-0 z-30 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-4 pt-4 pb-2 sm:px-6 lg:hidden",
+                    // Searching, the field is the bar: Back, the title and the buttons step away until Cancel.
+                    "[&:has(>[data-bar-search]:not(:empty))>:not([data-bar-search])]:invisible",
                     // Nothing to tap until Back, a button or the collapsed title is there: taps go through to the page.
                     !back && !barActions && !collapsed && "pointer-events-none",
                     // The fade comes with the collapse: at rest the buttons sit on the page and the large title
@@ -195,6 +197,9 @@ export function PageHeader({
                 >
                     {barActions}
                 </div>
+                {/* Where a list's search field comes when the bar's search is pressed (`RowSearch`), over the
+                    whole bar, as Gojek and Keeta turn their bar into the field (Mobbin, 2026-09-19). */}
+                <div data-bar-search className="absolute inset-x-4 top-4 flex items-center gap-3 empty:hidden sm:inset-x-6" />
             </div>
             {/* The room the bar takes in the flow, on top of the page's own 16 px (32 from `sm`). With Back the
                 title starts at 76: under the 44 px button with 16 above and under it. Beside the buttons it

@@ -292,8 +292,11 @@ export function DexView({
     noHits,
     empty,
     linked = true,
+    viewInBar = false,
 }: {
     dex: Promise<DexList>;
+    /** The page puts View in its bar on a phone (`BarViewMenu`), so the row does not. */
+    viewInBar?: boolean;
     narrowed: boolean;
     initialSize?: CardsSize;
     /** The list's URL, keying the slots and nothing above them. See `CardsView`. */
@@ -311,7 +314,7 @@ export function DexView({
         <div className="flex flex-1 flex-col gap-4">
             <div className="flex flex-wrap items-center gap-2">
                 <div className="contents">{toolbar}</div>
-                <ViewMenu view="grid" size={size} layouts={false} />
+                <ViewMenu view="grid" size={size} layouts={false} className={viewInBar ? "max-sm:hidden" : undefined} />
             </div>
             <Suspense fallback={<CardsSkeleton heading />}>
                 <DexSlots key={listKey} dex={dex} size={size} narrowed={narrowed} noHits={noHits} empty={empty} linked={linked} />

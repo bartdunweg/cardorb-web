@@ -34,6 +34,7 @@ export function CardsView({
     noHits,
     empty,
     period,
+    viewInBar = false,
 }: {
     list: Promise<CardList>;
     filter: CardFilter;
@@ -56,6 +57,8 @@ export function CardsView({
     noHits: ReactNode;
     /** Drawn in the list's place when the binder holds nothing at all. */
     empty: ReactNode;
+    /** The page puts View in its bar on a phone (`BarViewMenu`), so the row does not. */
+    viewInBar?: boolean;
     /**
      * The period a list sorted by price change is read over, where it is one of the chart's: a card
      * opened from it shows its price line and its figure over those same days. Left out for every
@@ -108,7 +111,7 @@ export function CardsView({
             <div className={LIST_ROW}>
                 {/* In its own box: an element that crossed the server boundary, in a list with local ones, trips the key check. */}
                 <div className="contents">{toolbar}</div>
-                <ViewMenu view={view} size={size} group={sortedBySet ? group : undefined} />
+                <ViewMenu view={view} size={size} group={sortedBySet ? group : undefined} className={viewInBar ? "max-sm:hidden" : undefined} />
             </div>
 
             <Suspense fallback={<CardsSkeleton />}>

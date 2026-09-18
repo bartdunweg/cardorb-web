@@ -60,6 +60,7 @@ export function CardsSearch({
     size = "md",
     scope,
     shelf,
+    collapsible = false,
 }: {
     initialValue?: string;
     label?: string;
@@ -70,6 +71,8 @@ export function CardsSearch({
     scope?: TitleScope;
     /** Browse instead: the field filters a shelf of sets, so the shelf's own set names are what it offers. */
     shelf?: BrowseLanguage;
+    /** A page with a bar keeps the phone's field off the row until its search button is pressed (`RowSearch`). */
+    collapsible?: boolean;
 }) {
     const router = useRouter();
     const pathname = usePathname();
@@ -371,7 +374,7 @@ export function CardsSearch({
     );
 
     return (
-        <RowSearch>
+        <RowSearch collapsible={collapsible} filled={value !== ""} onClear={() => setValue("")}>
             <div className="relative w-full">
                 {/* The ARIA combobox: a text field that offers a list, which is exactly what this is
                 (WAI-ARIA APG). The rule wants a native datalist or a dropdown instead, and a

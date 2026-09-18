@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { type ReactNode, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { type FilterAnswer, type FilterGroup, type FilterOption, type FilterValues, FiltersSheet } from "@/components/app/filters-sheet";
 import { FlagIcon } from "@/components/app/flag-icon";
@@ -98,6 +98,7 @@ export function CardsFilters({
     offerDuplicates = false,
     countBase,
     readOnly = false,
+    lead,
 }: {
     query: ListQuery;
     /** The list's facets, or the promise of them: until they are in, the sheet offers what the query already names (use-arrived.ts). */
@@ -105,6 +106,8 @@ export function CardsFilters({
     offerDuplicates?: boolean;
     countBase?: CardFilter;
     readOnly?: boolean;
+    /** On a phone, after the Filters button and before the filters: the Sort (`FiltersSheet`). */
+    lead?: ReactNode;
 }) {
     const facets = useArrived(facetsOnTheWay, NO_FACETS);
     const router = useRouter();
@@ -183,6 +186,7 @@ export function CardsFilters({
             values={values}
             count={countBase ? count : undefined}
             noun={["card", "cards"]}
+            lead={lead}
             onApply={(next) => router.replace(listHref(pathname, query, { ...patchOf(next), page: 1 }), { scroll: false })}
         />
     );
