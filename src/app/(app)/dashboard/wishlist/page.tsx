@@ -6,7 +6,7 @@ import { CollectionSwitch } from "@/components/app/collection-switch";
 import { ListSettingsDialog } from "@/components/app/list-settings-dialog";
 import { type CardFilter, getMyCards } from "@/lib/cards";
 import { openAsLeft } from "@/lib/list-memory-server";
-import { type ListSearchParams, changeWindow, isNarrowed, readListQuery } from "@/lib/list-query";
+import { type ListSearchParams, changeWindow, readListQuery } from "@/lib/list-query";
 import { getMyProfile } from "@/lib/profile";
 
 // The tab's name, which the root layout's template finishes as “… · Cardorb”: without it every
@@ -37,17 +37,15 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
         finish,
         language,
     };
-    // Duplicates is not a wishlist filter: an address carrying it narrows nothing here.
-    const narrowed = isNarrowed({ ...query, duplicates: false });
     const list = getMyCards(filter);
-    const datapoints = list.then((r) => ({ total: r.total, copies: r.copies ?? undefined, narrowed, value: r.value, unpriced: r.unpriced, listed: r.listed }));
     const { profile } = await getMyProfile();
     const facets = list.then((r) => r.facets);
 
     return (
         <BinderPage
             title="Wishlist"
-            datapoints={datapoints}
+            phoneTitle="My cards"
+            // No count or value under the title, as on Owned: the two halves of My cards have one header (Bart's call, 2026-09-18).
             settings={(compact) => <ListSettingsDialog list="wishlist" title="Wishlist" isPublic={profile?.wishlist_public ?? false} compact={compact} />}
             query={query}
             basePath="/dashboard/wishlist"

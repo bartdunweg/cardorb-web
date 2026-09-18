@@ -4,7 +4,7 @@ import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { CardPrice } from "@/components/app/card-price";
 import { FavoriteStar } from "@/components/app/favorite-star";
-import { PriceChangeLine } from "@/components/app/price-change";
+import { PriceMove, changeSince } from "@/components/app/price-change";
 import { Table, TableCard } from "@/components/application/table/table";
 import { copyLine } from "@/lib/card-label";
 import type { Card } from "@/lib/cards";
@@ -68,7 +68,7 @@ export function CardsTable({ cards, onSelect }: { cards: Card[]; onSelect: (card
                                 ) : (
                                     <span className="text-tertiary">{"—"}</span>
                                 )}
-                                {card.price_change !== undefined ? <PriceChangeLine change={card.price_change} className="block" /> : null}
+                                <PriceMove change={card.price_change} over={changeSince(card.price_change?.from)} className="block" />
                             </Table.Cell>
                             <Table.Cell className="text-right text-primary tabular-nums">{card.quantity ?? 1}</Table.Cell>
                         </Table.Row>

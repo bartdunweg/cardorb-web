@@ -85,12 +85,7 @@ export function useSheetPrinting({ card, mine, readOnly, tcgId, known, points, l
      * card's history, or a pattern print's own figure. `undefined` is "the copy's price", null is
      * "that printing has none".
      */
-    /* A card with no copy, opened from a set tile on the printing the tile priced, reads that printing's
-       own figure too: the card's headline price is the API's older pick (holo before reverse) and
-       the sheet said a different price than the tile under the same printing's name. Until the
-       history is in, the headline stands, rather than "No price" for a moment. */
-    const tileLine = !mine && !!tilePrinting && !!printing && printingKey === openingPrinting && printingKey === tilePrinting && points.length > 0;
-    const pressedAway = (printing && printingKey !== openingPrinting) || (editionKey && editionKey !== openingEdition) || tileLine;
+    const pressedAway = (printing && printingKey !== openingPrinting) || (editionKey && editionKey !== openingEdition);
     const patternPrint = printing?.foilPattern
         ? known?.patternPrints?.prints.find((p) => p.finish === printing.finish && p.foilPattern === printing.foilPattern)
         : undefined;

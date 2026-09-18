@@ -503,6 +503,7 @@ describe("setCardFromBrowse", () => {
             tcgId: null,
             printedNumber: "1",
             printing: null,
+            edition: null,
             priceChange: null,
         });
     });

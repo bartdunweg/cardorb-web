@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChevronLeft } from "@untitledui/icons";
 import { Button } from "@/components/base/buttons/button";
 import { cx } from "@/utils/cx";
@@ -34,8 +34,14 @@ export function PageHeader({
     children,
     below,
     titleOnPhone = true,
+    phoneTitle,
 }: {
     title: string;
+    /**
+     * The title below `lg`, where it differs: Owned and Wishlist are one tab on a phone, My cards,
+     * and its title says so while the switch under it says which half (Bart's call, 2026-09-18).
+     */
+    phoneTitle?: string;
     /** A short line over the title, in the small size: what the page belongs to (a set's era). */
     eyebrow?: string;
     /** The line under the title: a description or a count. */
@@ -68,7 +74,6 @@ export function PageHeader({
     titleOnPhone?: boolean;
 }) {
     const sentinel = useRef<HTMLHeadingElement>(null);
-    const words = useRef<HTMLDivElement>(null);
     const [collapsed, setCollapsed] = useState(false);
 
     // The bar takes the title over exactly when the large one has left the screen. IntersectionObserver
@@ -100,9 +105,15 @@ export function PageHeader({
        third, and from `sm` the title starts 10 px lower while the bar does not move (Binders on a
        tablet, 2026-09-14). Back at the bar's own place once the bar has taken the title over. */
     const buttons = useRef<HTMLDivElement>(null);
+    const head = useRef<HTMLDivElement>(null);
     const [drop, setDrop] = useState(0);
-    useEffect(() => {
-        const block = words.current;
+    /* Moving only once the first place is set: measured after the first paint, the buttons drew at the
+       bar's top and slid down to the title on every page load (Bart, 2026-09-18). Measured before the
+       paint (a layout effect) and with the slide switched on a frame later, they are drawn where they
+       belong, and slide only when the bar takes the title over or gives it back. */
+    const [placed, setPlaced] = useState(false);
+    useLayoutEffect(() => {
+        const block = head.current;
         const group = buttons.current;
         if (!beside || !block || !group || typeof ResizeObserver === "undefined") return;
         const measure = () => {
@@ -113,10 +124,12 @@ export function PageHeader({
             setDrop(Math.max(0, Math.round(wordsMiddle - buttonsMiddle)));
         };
         measure();
+        const frame = requestAnimationFrame(() => setPlaced(true));
         const observer = new ResizeObserver(measure);
         observer.observe(block);
         window.addEventListener("resize", measure);
         return () => {
+            cancelAnimationFrame(frame);
             observer.disconnect();
             window.removeEventListener("resize", measure);
         };
@@ -160,11 +173,14 @@ export function PageHeader({
                         collapsed ? "opacity-100" : "opacity-0",
                     )}
                 >
-                    {title}
+                    {phoneTitle ?? title}
                 </span>
                 <div
                     ref={buttons}
-                    className="flex items-center justify-end gap-3 transition-transform duration-150 ease-enter motion-reduce:transition-none"
+                    className={cx(
+                        "flex items-center justify-end gap-3",
+                        placed && "transition-transform duration-150 ease-enter motion-reduce:transition-none",
+                    )}
                     style={barDrop ? { transform: `translateY(${barDrop}px)` } : undefined}
                 >
                     {barActions}
@@ -201,13 +217,25 @@ export function PageHeader({
                     )}
                 >
                     {/* The words take what the actions leave, so a long subtitle wraps rather than pushing them under the title. */}
-                    <div ref={words} className="flex min-w-0 flex-1 basis-48 flex-col gap-1">
+                    <div className="flex min-w-0 flex-1 basis-48 flex-col gap-1">
                         {eyebrow ? <p className="text-sm font-semibold text-tertiary">{eyebrow}</p> : null}
-                        {/* A step up from display-xs, 30 px (Bart's call, 2026-09-18): the page's name, the largest words on it. */}
-                        <h1 ref={sentinel} className="text-display-sm font-semibold text-primary">
-                            {title}
-                        </h1>
-                        {subtitle ? <p className="text-md text-tertiary">{subtitle}</p> : null}
+                        {/* The title and its line, measured apart from what follows them (a switch): the buttons
+                            beside stand level with these, not with the whole block (Bart, 2026-09-18). */}
+                        <div ref={head} className="flex flex-col gap-1">
+                            {/* A step up from display-xs, 30 px, and bold (Bart's calls, 2026-09-18): the page's name, the largest words on it. */}
+                            <h1 ref={sentinel} className="text-display-sm font-bold text-primary">
+                                {/* Hidden, not just unseen: a name a screen reader reads is the one on screen. */}
+                                {phoneTitle ? (
+                                    <>
+                                        <span className="lg:hidden">{phoneTitle}</span>
+                                        <span className="max-lg:hidden">{title}</span>
+                                    </>
+                                ) : (
+                                    title
+                                )}
+                            </h1>
+                            {subtitle ? <p className="text-md text-tertiary">{subtitle}</p> : null}
+                        </div>
                         {children}
                     </div>
                     {actions ? <div className="flex items-center gap-3 self-stretch">{actions}</div> : null}

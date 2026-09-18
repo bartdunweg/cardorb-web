@@ -11,7 +11,7 @@ import { CardPrice } from "@/components/app/card-price";
 import { CardTile } from "@/components/app/card-tile";
 import { FlagIcon } from "@/components/app/flag-icon";
 import { useListTotals } from "@/components/app/list-totals";
-import { PriceChangeLine } from "@/components/app/price-change";
+import { PriceMove, changeSince } from "@/components/app/price-change";
 import { TileIconButton } from "@/components/app/tile-icon-button";
 import { useCopySteps } from "@/components/app/use-copy-steps";
 import { useTileExit } from "@/components/app/use-tile-exit";
@@ -169,7 +169,7 @@ const GridCell = memo(function GridCell<T extends GridCard>({ card, arriveDelay:
         // everything after them, and every batch appended on scroll, comes in at once.
         // A column that fills its grid row, so the price and the buttons sit at one height across the row
         // whether or not a tile has the printing's line above them (Bart, 2026-09-16).
-        <div ref={cellRef} className="flex arrive flex-col" style={{ "--arrive-delay": delay } as React.CSSProperties}>
+        <div ref={cellRef} className="@container flex arrive flex-col" style={{ "--arrive-delay": delay } as React.CSSProperties}>
             <CardTile
                 onSelect={() => onSelect(card)}
                 // The buttons have a row of their own in the cell, so the tile must not fill the cell: h-full
@@ -226,7 +226,14 @@ const GridCell = memo(function GridCell<T extends GridCard>({ card, arriveDelay:
                             only sometimes is one you have to notice the absence of, and the owner would
                             rather read it down the column than work it out. */}
                         {held != null || card.price != null || card.listing_price != null ? (
-                            <span className="mt-auto flex items-baseline gap-2 pt-0.5 text-sm font-medium tabular-nums">
+                            <span
+                                className={cx(
+                                    "mt-auto flex flex-wrap items-baseline gap-x-2 pt-0.5 text-sm font-medium tabular-nums",
+                                    // The buttons' room at the right, where they stand beside it (below): a long
+                                    // price wraps its count under it rather than running under them.
+                                    buttons && "@min-[9rem]:pr-17",
+                                )}
+                            >
                                 {card.price != null || card.listing_price != null ? (
                                     <span className="text-primary">
                                         <CardPrice price={card.price} listing={card.listing_price} />
@@ -236,15 +243,9 @@ const GridCell = memo(function GridCell<T extends GridCard>({ card, arriveDelay:
                                     On a visitor's screen the count is the owner's, and says so; a screen
                                     reader used to be told "You hold" about somebody else's binder. Polite, so
                                     a press on the plus says the new count. */}
-                                <span
-                                    aria-live={steps ? "polite" : undefined}
-                                    /* Against the right edge only where the price holds the left. Without a
-                                       price (a public page with prices private, a card the API prices at
-                                       nothing) ml-auto left the count hanging alone at the right, under three
-                                       lines that all start at the left: it read as a number belonging to
-                                       nothing. It goes where the price would have been instead. */
-                                    className={cx(card.price != null && "ml-auto", "text-tertiary")}
-                                >
+                                {/* After the price, smaller: the right end is the buttons' where the tile is
+                                    wide enough to have them beside the price (the cell below). */}
+                                <span aria-live={steps ? "polite" : undefined} className="text-xs text-tertiary">
                                     {held != null && card.owned !== false ? (
                                         <>
                                             <span className="sr-only">{holder === "owner" ? "Holds " : "You hold "}</span>×{held}
@@ -253,13 +254,22 @@ const GridCell = memo(function GridCell<T extends GridCard>({ card, arriveDelay:
                                 </span>
                             </span>
                         ) : null}
-                        {/* On a list sorted by price change: the move over its period, under the price. */}
-                        <PriceChangeLine change={card.price_change} />
+                        {/* What one card's price did, under it: over the last seven days, or over a list's period where
+                            it is sorted by change (Bart's call, 2026-09-18, as a set page's tile). A line's height
+                            is kept where the tile has buttons, so the buttons beside the price never reach the
+                            printing's line above it. */}
+                        <span className={cx("flex", buttons && "min-h-4 @min-[9rem]:pr-17")}>
+                            <PriceMove change={card.price_change} over={changeSince(card.price_change?.from)} />
+                        </span>
                     </div>
                 }
             />
             {buttons ? (
-                <div ref={buttonsRef} className="mt-1 flex justify-end gap-1">
+                /* Beside the price where the cell is wide enough for both (9rem: a price, its count and two
+                   32 px buttons, measured on a 146 px desktop tile), under it where it is not, as a set page's tile has them. The tile is a
+                   button, so these cannot be inside it: they are pulled up over its last two lines, which
+                   leave the right end free, and stand above it. */
+                <div ref={buttonsRef} className="relative z-10 mt-1 flex justify-end gap-1 @min-[9rem]:-mt-9">
                     {steps ? (
                         <>
                             <TileIconButton

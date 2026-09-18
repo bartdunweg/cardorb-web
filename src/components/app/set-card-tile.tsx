@@ -9,7 +9,8 @@ import { CardImage } from "@/components/app/card-image";
 import { warmCard } from "@/components/app/card-memo";
 import { CardPrice } from "@/components/app/card-price";
 import { GotItButton } from "@/components/app/got-it-button";
-import { printingLabel } from "@/components/app/printing-choices";
+import { PriceMove } from "@/components/app/price-change";
+import { editionLabel, printingLabel } from "@/components/app/printing-choices";
 import { TileIconButton } from "@/components/app/tile-icon-button";
 import { useCopySteps } from "@/components/app/use-copy-steps";
 import { useWarm } from "@/components/app/use-warm";
@@ -18,9 +19,7 @@ import type { SetCard } from "@/lib/api-shapes";
 import { cardLine } from "@/lib/card-label";
 import { pokemonCardFromSetCard } from "@/lib/card-shapes";
 import { type CardsSize, TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
-import { formatPrice } from "@/lib/format";
 import type { Holding } from "@/lib/set-holding";
-import { cx } from "@/utils/cx";
 
 /**
  * One card of a set, and what you can do with it from here. A card you do not hold has two round
@@ -107,7 +106,9 @@ export function SetCardTile({
     const state = held > 0 ? "owned" : wish.wished ? "wishlist" : "missing";
     // One wish row, or none yet (a wish pressed a moment ago): two rows are managed in Cards.
     const wishHere = state === "wishlist" && (oneRow || !base.wishlist);
-    const printed = printingLabel(card.printing);
+    // A card sold in runs is chosen between by its run in the sheet (Base Set Charizard: Unlimited,
+    // 1st Edition), so its tile names the run; any other card names its printing.
+    const printed = editionLabel(card.edition) ?? printingLabel(card.printing);
     // A copy more or less from here: a card you do not hold, or one you hold as one row.
     const stepping = state === "missing" || (state === "owned" && (oneRow || !base.owned));
     const stateLabel = {
@@ -197,7 +198,7 @@ export function SetCardTile({
                                 ) : null}
                             </span>
                         </span>
-                        <WeekChange change={card.priceChange} />
+                        <PriceMove change={card.priceChange} over="in the last 7 days" />
                     </div>
                     <div ref={buttons} className="ml-auto flex gap-1">
                         {wishHere ? (
@@ -278,24 +279,5 @@ export function SetCardTile({
                 </p>
             ) : null}
         </div>
-    );
-}
-
-/**
- * What the price did over the last seven days, under it: smaller, green up and red down, with its
- * sign so the colour is never the only thing that says which (Bart's call, 2026-09-18). Nothing
- * where the API had fewer than two readings or the price did not move: a line of "€0.00" under half
- * a set would say nothing a hundred times.
- */
-function WeekChange({ change }: { change: SetCard["priceChange"] }) {
-    if (!change || change.change === 0) return null;
-    const up = change.change > 0;
-    return (
-        <span className={cx("text-xs font-medium tabular-nums", up ? "text-success-primary" : "text-error-primary")}>
-            <span className="sr-only">{up ? "Up " : "Down "}</span>
-            {up ? "+" : "−"}
-            {formatPrice(Math.abs(change.change))}
-            <span className="sr-only"> in the last 7 days</span>
-        </span>
     );
 }
