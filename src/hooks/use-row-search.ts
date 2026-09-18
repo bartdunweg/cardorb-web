@@ -43,15 +43,8 @@ export function useRowSearch(page: string) {
  * than the field looking for it: during a client navigation the page being left is still in the
  * document, and a lookup found its slot, which was gone a moment later with the term in it.
  */
-/*
- * Per page, by its path: Next keeps a page it has left mounted and hidden, for Back, and a field on
- * that page held on to whichever bar had come in last and drew itself into it, beside the new page's
- * own field (Browse's empty field in a set's bar, 2026-09-19). A field only goes into its own page's bar.
- */
-const slots = new Map<string, HTMLElement>();
+let slot: HTMLElement | null = null;
 const slotListeners = new Set<() => void>();
-/** One ref per path, kept, so React does not detach and attach the slot on every render. */
-const slotRefs = new Map<string, (el: HTMLElement | null) => (() => void) | undefined>();
 
 const subscribeSlot = (listener: () => void) => {
     slotListeners.add(listener);
@@ -62,30 +55,22 @@ const notifySlot = () => {
     for (const listener of slotListeners) listener();
 };
 
-/** The bar's slot for the page at `page`, as a ref: set as it mounts, let go as it unmounts if still the one held. */
-export function barSearchSlot(page: string) {
-    let ref = slotRefs.get(page);
-    if (!ref) {
-        ref = (el: HTMLElement | null) => {
-            if (!el) return;
-            slots.set(page, el);
-            notifySlot();
-            return () => {
-                if (slots.get(page) !== el) return;
-                slots.delete(page);
-                notifySlot();
-            };
-        };
-        slotRefs.set(page, ref);
-    }
-    return ref;
-}
+/** The bar's slot, as a ref: set as it mounts, and let go as it unmounts only if it is still the one held (a new bar may have come first). */
+export const barSearchSlot = (el: HTMLElement | null) => {
+    if (!el) return;
+    slot = el;
+    notifySlot();
+    return () => {
+        if (slot !== el) return;
+        slot = null;
+        notifySlot();
+    };
+};
 
-/** The bar of the page at `page`, once it is drawn. */
-export function useBarSearchSlot(page: string) {
+export function useBarSearchSlot() {
     return useSyncExternalStore(
         subscribeSlot,
-        () => slots.get(page) ?? null,
+        () => slot,
         () => null,
     );
 }

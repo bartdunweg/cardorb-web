@@ -55,10 +55,7 @@ export function RowSearch({
     const sm = useBreakpoint("sm");
     /* The bar is only found in the browser, and the server draws the row as from sm: the field moves
        into the bar once the page is up, not while React takes over the server's drawing. */
-    // Its own page's bar, by the path it was drawn at: a page Next keeps hidden for Back still hears
-    // the new path, and its field went into the new page's bar beside that page's own.
-    const [own] = useState(page);
-    const slot = useBarSearchSlot(own);
+    const slot = useBarSearchSlot();
     // Only a field that can be emptied goes into the bar: the loading row's stand-in has nothing for Cancel to do.
     /* Whether this copy is the one on the page. react-aria's Tabs draw their children once more,
        hidden, to count the tabs (the set page's row sits inside its Tabs), and that copy drew its

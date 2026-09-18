@@ -2,7 +2,6 @@
 
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChevronLeft } from "@untitledui/icons";
-import { usePathname } from "next/navigation";
 import { Button } from "@/components/base/buttons/button";
 import { barSearchSlot } from "@/hooks/use-row-search";
 import { cx } from "@/utils/cx";
@@ -82,9 +81,6 @@ export function PageHeader({
      */
     searchField?: boolean;
 }) {
-    // Whose bar this is: a list's search field goes only into its own page's bar (use-row-search.ts).
-    // The path it was drawn at, kept: a page Next keeps hidden for Back still hears the new path.
-    const [pathname] = useState(usePathname());
     const sentinel = useRef<HTMLHeadingElement>(null);
     const [collapsed, setCollapsed] = useState(false);
 
@@ -224,7 +220,7 @@ export function PageHeader({
                 {/* Where a list's search field comes when the bar's search is pressed (`RowSearch`), over the
                     whole bar, as Gojek and Keeta turn their bar into the field (Mobbin, 2026-09-19). */}
                 <div
-                    ref={barSearchSlot(pathname)}
+                    ref={barSearchSlot}
                     data-bar-search
                     className={cx(
                         "flex items-center gap-3 empty:hidden",
