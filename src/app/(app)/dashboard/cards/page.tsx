@@ -5,7 +5,7 @@ import { BinderPage } from "@/components/app/binder-page";
 import { CollectionSwitch } from "@/components/app/collection-switch";
 import { type CardFilter, getMyCards } from "@/lib/cards";
 import { openAsLeft } from "@/lib/list-memory-server";
-import { type ListSearchParams, changeWindow, isNarrowed, readListQuery } from "@/lib/list-query";
+import { type ListSearchParams, changeWindow, readListQuery } from "@/lib/list-query";
 
 // The tab's name, which the root layout's template finishes as “… · Cardorb”: without it every
 // tab and every history entry read “Cardorb”. The word is the one the navigation uses for this page.
@@ -40,16 +40,14 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
         language,
         duplicates,
     };
-    const narrowed = isNarrowed(query);
     const list = getMyCards(filter);
-    const datapoints = list.then((r) => ({ total: r.total, copies: r.copies ?? undefined, narrowed, value: r.value, unpriced: r.unpriced }));
     // The facets ride with the list's first page: nothing else is read before the first byte.
     const facets = list.then((r) => r.facets);
 
     return (
         <BinderPage
             title="Collection"
-            datapoints={datapoints}
+            // No count or value under the title: Home leads with the value, and the title alone says the page (Bart's call, 2026-09-18).
             query={query}
             basePath="/dashboard/cards"
             facets={facets}

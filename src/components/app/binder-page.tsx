@@ -31,7 +31,8 @@ export function BinderPage({
     /** How many lines the count takes: two on a Pokédex ("544 of 1,025 Pokémon", then the count). */
     datapointLines?: 1 | 2;
     back?: { href: string; label: string };
-    datapoints: Datapoints | Promise<Datapoints>;
+    /** The count and value under the title. Left out on Collection, whose value Home already leads with. */
+    datapoints?: Datapoints | Promise<Datapoints>;
     actions?: ReactNode;
     /** A phone's settings button, in the bar across from Back; see PageHeader. */
     barActions?: ReactNode;
@@ -58,13 +59,17 @@ export function BinderPage({
                 <PageHeader
                     title={title}
                     subtitle={
-                        <>
-                            {subtitle ? <span className="block">{subtitle}</span> : null}
-                            <Suspense fallback={<CountOutline lines={datapointLines} />}>
-                                {/* The outline keeps the line's height, so the row and the cards do not move when the numbers land. */}
-                                <DatapointsText datapoints={datapoints} />
-                            </Suspense>
-                        </>
+                        subtitle || datapoints ? (
+                            <>
+                                {subtitle ? <span className="block">{subtitle}</span> : null}
+                                {datapoints ? (
+                                    <Suspense fallback={<CountOutline lines={datapointLines} />}>
+                                        {/* The outline keeps the line's height, so the row and the cards do not move when the numbers land. */}
+                                        <DatapointsText datapoints={datapoints} />
+                                    </Suspense>
+                                ) : null}
+                            </>
+                        ) : undefined
                     }
                     back={back}
                     actions={
