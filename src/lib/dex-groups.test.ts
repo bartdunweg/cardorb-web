@@ -73,6 +73,16 @@ describe("groupByDex", () => {
         const out = groupByDex([held], names, { missing: false });
         expect(out.slots[0].cards[0].price).toBe(12.5);
     });
+    /* cardorb-api#561: a card listed and never sold is shown at its lowest listing on its tile, and
+       left out of the value, which says how many it leaves out. */
+    it("hands a slot's card its lowest listing, and counts it as listed, never in the value", () => {
+        const listed = { ...card("mew", 151), price: null, listing_price: 5771.49, quantity: 2 } as Card;
+        const held = { ...card("p", 25), price: 12.5 } as Card;
+        const out = groupByDex([listed, held], names, { missing: false });
+        expect(out.slots.find((s) => s.number === 151)?.cards[0]).toMatchObject({ price: null, listingPrice: 5771.49 });
+        expect(out.slots.find((s) => s.number === 25)?.cards[0]).not.toHaveProperty("listingPrice");
+        expect(out).toMatchObject({ value: 12.5, unpriced: 2, listed: 2 });
+    });
     it("says no value for cards that carry no price at all, as a public profile's", () => {
         const out = groupByDex([card("b", 1)], names, { missing: false });
         expect(out.copies).toBe(1);

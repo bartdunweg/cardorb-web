@@ -5,7 +5,7 @@ import type {
     CatalogueFilters,
     MyCardsFilters,
     PokemonCard,
-    PricePoint,
+    PriceHistory,
     TitleScope,
     TitleSet,
 } from "@/app/(app)/dashboard/cards/actions";
@@ -70,7 +70,7 @@ export const cardFactsMany = (tcgIds: string[], language?: string | null): Promi
         ? read("facts-many", [...[...new Set(tcgIds)].map((id): [string, string] => ["id", id]), ["language", catalogue(language)]], {})
         : Promise.resolve({});
 
-export const cardPriceHistory = (tcgId: string): Promise<PricePoint[]> => read("prices", [["id", tcgId]], []);
+export const cardPriceHistory = (tcgId: string): Promise<PriceHistory> => read("prices", [["id", tcgId]], { points: [], listings: {} });
 
 export const seriesLogo = (series: string): Promise<string | null> => read<string | null>("series-logo", [["series", series]], null);
 

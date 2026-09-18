@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from "react";
 import type { CardFacts, PricePoint } from "@/app/(app)/dashboard/cards/actions";
-import { knownCardFacts, knownPriceHistory, preloadCardFacts, preloadPriceHistory } from "@/components/app/card-memo";
+import { knownCardFacts, knownPriceHistory, knownPriceListings, preloadCardFacts, preloadPriceHistory } from "@/components/app/card-memo";
 import { PERIODS, type PeriodKey } from "@/components/app/chart-periods";
 import type { PokemonCard } from "@/lib/api-shapes";
 import { isReverseFinish } from "@/lib/card-shapes";
 import type { Card, PublicCard } from "@/lib/cards";
 import { periodChange } from "@/lib/price-change";
 import { seriesLogo } from "@/lib/reads";
+
+const NO_LISTINGS: Record<string, number> = {};
 
 type Params = {
     card: Card | PublicCard | null;
@@ -87,6 +89,8 @@ export function useSheetFacts({ card, mine, addable, opensOn }: Params) {
     // chart under it is drawing, out of the card's own history. The period lives here rather than
     // in the chart, so pressing 7D moves the number and the line together.
     const points = tcgId ? (history?.tcgId === tcgId ? history.points : (knownPriceHistory(tcgId) ?? [])) : [];
+    // Read with the line: the lowest listing of each printing that has none (cardorb-api#561).
+    const listings = (tcgId ? knownPriceListings(tcgId) : undefined) ?? NO_LISTINGS;
     const [periodState, setPeriodState] = useState<{ opensOn: PeriodKey; period: PeriodKey }>({ opensOn, period: opensOn });
     // A list with a period of its own (Home's movers) opens every card it hands over on that one.
     if (periodState.opensOn !== opensOn) setPeriodState({ opensOn, period: opensOn });
@@ -95,5 +99,5 @@ export function useSheetFacts({ card, mine, addable, opensOn }: Params) {
     const chosen = PERIODS.find((p) => p.key === period) ?? PERIODS[1];
     const change = mine ? periodChange(points, period, isReverseFinish(mine.finish), mine.price_printing ?? null, chosen.said) : null;
 
-    return { tcgId, genLogo, formFacts, known, points, period, setPeriod, said: chosen.said, change };
+    return { tcgId, genLogo, formFacts, known, points, listings, period, setPeriod, said: chosen.said, change };
 }

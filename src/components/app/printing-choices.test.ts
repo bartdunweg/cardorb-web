@@ -127,6 +127,23 @@ describe("pressedPrinting", () => {
     it("has no price for a printing the history does not have", () => {
         expect(pressedPrinting({ ...base, pressedAway: true, finish: "master-ball" })).toEqual({ series: null, price: null });
     });
+
+    /* cardorb-api#561: pressing a printing listed and never sold said "No price for this printing";
+       it has no line, and its lowest listing comes beside the history. */
+    it("gives a printing with no line its lowest listing, and never over a market figure", () => {
+        const listings = { "master-ball-reverse-holofoil": 5771.49, holofoil: 1 };
+        expect(pressedPrinting({ ...base, pressedAway: true, finish: "master-ball", listings })).toEqual({
+            series: null,
+            price: null,
+            listing: 5771.49,
+        });
+        expect(pressedPrinting({ ...base, pressedAway: true, listings })).toEqual({ series: "holofoil", price: 752 });
+        expect(pressedPrinting({ ...base, pressedAway: true, foilPattern: "cracked-ice", patternListing: 3.2 })).toEqual({
+            series: null,
+            price: null,
+            listing: 3.2,
+        });
+    });
 });
 
 describe("printingLabel", () => {

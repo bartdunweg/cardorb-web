@@ -6,6 +6,7 @@ import { setDexFace } from "@/app/(app)/dashboard/cards/actions";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
+import { CardPrice } from "@/components/app/card-price";
 import { CardTile } from "@/components/app/card-tile";
 import { DexSlider } from "@/components/app/dex-slider";
 import { CardsSkeleton } from "@/components/app/skeletons";
@@ -198,7 +199,10 @@ function DexTile({ slot, onSelect, remembers }: { slot: NamedDexSlot; onSelect?:
         ) : (
             <div className="flex items-baseline justify-between gap-2">
                 <span className="truncate text-xs text-tertiary">{shown?.set ?? ""}</span>
-                <span className="shrink-0 text-xs text-tertiary tabular-nums">{formatPrice(shown?.price)}</span>
+                <span className="shrink-0 text-xs text-tertiary tabular-nums">
+                    {/* A card listed and never sold says its lowest listing, "From €…", as every tile does. */}
+                    {shown?.price != null ? formatPrice(shown.price) : <CardPrice price={null} listing={shown?.listingPrice} />}
+                </span>
             </div>
         );
 
