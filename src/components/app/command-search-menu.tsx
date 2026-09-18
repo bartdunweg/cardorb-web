@@ -11,7 +11,7 @@ import { CommandMenu, CommandMenuContext, type CommandMenuGroupType } from "@/co
 import { LoadingIndicator } from "@/components/application/loading-indicator/loading-indicator";
 import { Button } from "@/components/base/buttons/button";
 import { CARD_TYPES } from "@/lib/card-types";
-import { formatDate, formatPrice } from "@/lib/format";
+import { formatCount, formatDate, formatPrice } from "@/lib/format";
 import { FULL_ART } from "@/lib/full-art";
 import { searchHitDescription } from "@/lib/search-hit";
 import { cx } from "@/utils/cx";
@@ -148,7 +148,7 @@ const focusField = () => document.activeElement?.closest('[role="dialog"]')?.que
 /** The most the API counts: it reads that many and stops, so that figure means "at least". */
 const SEARCH_WINDOW = 250;
 
-const cardsLabel = (n: number) => `${n} ${n === 1 ? "card" : "cards"}`;
+const cardsLabel = (n: number) => `${formatCount(n)} ${n === 1 ? "card" : "cards"}`;
 
 /**
  * The hits as the list's sections. A hit the browser's catalogue answered carries its heading

@@ -10,6 +10,7 @@ import { WishHeartButton } from "@/components/app/wish-heart-button";
 import { Button } from "@/components/base/buttons/button";
 import type { Card, CardFilter, CardList } from "@/lib/cards";
 import type { CardsSize, CardsViewMode } from "@/lib/cards-view";
+import { formatCount } from "@/lib/format";
 import { MORE_CEILING } from "@/lib/list-filter";
 import { loadMoreCards } from "@/lib/reads";
 
@@ -248,7 +249,13 @@ export function CardsList({
        returned rather than the last: it used to sit after the list, behind the early return that a
        search to nothing takes, so the region that would have said "no cards" was the one thing the
        empty list unmounted. */
-    const announcement = pending ? "Loading more cards…" : total === 0 ? (narrowed ? "No cards found." : "") : `Showing ${cards.length} of ${total} cards`;
+    const announcement = pending
+        ? "Loading more cards…"
+        : total === 0
+          ? narrowed
+              ? "No cards found."
+              : ""
+          : `Showing ${formatCount(cards.length)} of ${formatCount(total)} cards`;
 
     /* Moving it above the early return is not enough on its own. `binder-body.tsx` keys the whole
        view on the list's URL, so a search does not update this component, it replaces it, and a

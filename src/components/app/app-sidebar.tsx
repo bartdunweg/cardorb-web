@@ -15,6 +15,7 @@ import type { NavItemDividerType, NavItemType } from "@/components/application/a
 import { SidebarNavigationSectionDividers } from "@/components/application/app-navigation/sidebar-navigation/sidebar-section-dividers";
 import { useArriveOnce } from "@/hooks/use-arrive-once";
 import { CARDS_CHANGED } from "@/lib/forget-mine";
+import { formatCount } from "@/lib/format";
 import { SIDEBAR_COOKIE } from "@/lib/sidebar-cookie";
 import { cx } from "@/utils/cx";
 
@@ -204,7 +205,7 @@ function BinderRows({ binders, fresh, activeUrl }: { binders: Promise<BinderLink
 function Count({ count }: { count: number }) {
     return (
         <span className="ml-3 shrink-0 text-sm text-tertiary tabular-nums">
-            {count}
+            {formatCount(count)}
             <span className="sr-only"> card{count === 1 ? "" : "s"}</span>
         </span>
     );

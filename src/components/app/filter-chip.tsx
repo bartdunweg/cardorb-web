@@ -7,6 +7,7 @@ import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-m
 import { CheckboxBase } from "@/components/base/checkbox/checkbox";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
+import { formatCount } from "@/lib/format";
 import { cx } from "@/utils/cx";
 
 /** One choice. `icon` goes before the word: a language's flag, a type's disc, a state's dot. */
@@ -273,7 +274,7 @@ export function OptionCount({ n }: { n: number | undefined }) {
     return (
         <span className="text-tertiary tabular-nums">
             <span className="sr-only">, </span>
-            {n.toLocaleString("en")}
+            {formatCount(n)}
         </span>
     );
 }

@@ -20,6 +20,7 @@ import { Input } from "@/components/base/input/input";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import { cardLine } from "@/lib/card-label";
 import { forgetMineThenRefresh } from "@/lib/forget-then-refresh";
+import { formatCount } from "@/lib/format";
 import { searchMyCards } from "@/lib/reads";
 import { cx } from "@/utils/cx";
 
@@ -76,7 +77,7 @@ export function BinderAddButton({ binder, compact }: { binder: { id: string; nam
 }
 
 // The words for a count: "1 card", "3 cards".
-const cards = (n: number) => `${n} ${n === 1 ? "card" : "cards"}`;
+const cards = (n: number) => `${formatCount(n)} ${n === 1 ? "card" : "cards"}`;
 
 /**
  * Your own cards into this binder, several at a time: search, tick, one press. The form mounts
