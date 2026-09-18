@@ -1,7 +1,6 @@
 "use client";
 
 import type { PaletteLanguage } from "@/components/app/command-search";
-import { SEGMENT_SELECTED } from "@/components/app/segment-selected";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 
 const CHOICES: { id: PaletteLanguage; label: string }[] = [
@@ -31,11 +30,7 @@ export function LanguageSwitch({ value, onChange }: { value: PaletteLanguage; on
             }}
         >
             {CHOICES.map((choice) => (
-                <ButtonGroupItem
-                    key={choice.id}
-                    id={choice.id}
-                    className={`px-3 py-1.5 text-xs not-last:pr-3 first:rounded-l-full last:rounded-r-full ${SEGMENT_SELECTED}`}
-                >
+                <ButtonGroupItem key={choice.id} id={choice.id} className="px-3 py-1.5 text-xs not-last:pr-3 first:rounded-l-full last:rounded-r-full">
                     {choice.label}
                 </ButtonGroupItem>
             ))}

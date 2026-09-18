@@ -11,7 +11,6 @@ import { defaultFinishOf, editionOptions, finishOptions, patternOptions, soleOpt
 import { FlagIcon } from "@/components/app/flag-icon";
 import { GRADERS, GRADES, gradeLabel, gradeUnder, gradesFor, splitGrade } from "@/components/app/graded";
 import { LanguageSelect } from "@/components/app/language-select";
-import { SEGMENT_SELECTED } from "@/components/app/segment-selected";
 import { notify } from "@/components/app/toast";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Button } from "@/components/base/buttons/button";
@@ -224,12 +223,8 @@ export function CopyCard({
                         void save(next ? { grade: gradeLabel(GRADERS[0], GRADES[0]), condition: null } : { grade: null }, "The condition did not change");
                     }}
                 >
-                    <ButtonGroupItem id="raw" className={SEGMENT_SELECTED}>
-                        Raw
-                    </ButtonGroupItem>
-                    <ButtonGroupItem id="graded" className={SEGMENT_SELECTED}>
-                        Graded
-                    </ButtonGroupItem>
+                    <ButtonGroupItem id="raw">Raw</ButtonGroupItem>
+                    <ButtonGroupItem id="graded">Graded</ButtonGroupItem>
                 </ButtonGroup>
             </div>
 
