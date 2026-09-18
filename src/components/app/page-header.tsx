@@ -232,8 +232,9 @@ export function PageHeader({
                         {/* The title and its line, measured apart from what follows them (a switch): the buttons
                             beside stand level with these, not with the whole block (Bart, 2026-09-18). */}
                         <div ref={head} className="flex flex-col gap-1">
-                            {/* A step up from display-xs, 30 px, and bold (Bart's calls, 2026-09-18): the page's name, the largest words on it. */}
-                            <h1 ref={sentinel} className="text-display-sm font-bold text-primary">
+                            {/* A step up from display-xs, 30 px, and bold (Bart's calls, 2026-09-18): the page's name, the largest words on it.
+                                Set a little tighter, as large bold type wants (Bart, 2026-09-18). */}
+                            <h1 ref={sentinel} className="text-display-sm font-bold tracking-tight text-primary">
                                 {/* Hidden, not just unseen: a name a screen reader reads is the one on screen. */}
                                 {phoneTitle ? (
                                     <>

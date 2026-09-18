@@ -148,7 +148,7 @@ async function Profile({
                 <div className="flex flex-col items-center gap-3 text-center">
                     <Avatar size="2xl" pixels={96} src={profile.avatar_url ?? undefined} alt="" className="size-24" />
                     <div className="flex flex-col items-center gap-1">
-                        <h1 className="text-display-sm font-semibold text-primary">{name}</h1>
+                        <h1 className="text-display-sm font-semibold tracking-tight text-primary">{name}</h1>
                         {handle ? <p className="text-md text-tertiary">{handle}</p> : null}
                         <p className="text-md font-medium text-secondary tabular-nums">
                             {typeof counts === "string" ? (
