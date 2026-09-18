@@ -7,7 +7,7 @@ import { SetCards } from "@/components/app/set-cards";
 import { SetHero } from "@/components/app/set-hero";
 import { LiveSetStats, SetLive } from "@/components/app/set-live";
 import { SetSkeleton } from "@/components/app/skeletons";
-import { formatCount } from "@/lib/format";
+import { formatCount, formatDate } from "@/lib/format";
 import { isBrowseLanguage } from "@/lib/languages";
 import { rememberedView } from "@/lib/list-memory-server";
 import { logoPalette } from "@/lib/logo-color";
@@ -41,12 +41,10 @@ export async function generateMetadata({
     return { title: "Set" };
 }
 
-/** "2024/01/26" as the catalogue writes it, read out as "26 Jan 2024": short, under the title. */
+/** "2024/01/26" as the catalogue writes it, read out as "Jan 26, 2024", the way Browse writes it. */
 function releaseLabel(date: string | null): string | null {
-    if (!date) return null;
-    const [y, m, d] = date.split("/").map(Number);
-    if (!y || !m || !d) return null;
-    return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+    if (!date || !/^\d{4}[-/]\d{2}[-/]\d{2}$/.test(date)) return null;
+    return formatDate(date);
 }
 
 export default function SetPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ language?: string }> }) {

@@ -344,6 +344,7 @@ export function CardsList({
                             <Button
                                 color={failed ? "secondary" : "tertiary"}
                                 size="sm"
+                                className="hit-area"
                                 onClick={loadMore}
                                 aria-disabled={busy || undefined}
                                 isLoading={busy}

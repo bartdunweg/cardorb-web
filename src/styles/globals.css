@@ -143,6 +143,20 @@
     }
 }
 
+/* Hit area: a control drawn smaller than a finger is pressed as a 44 by 44 square around its middle,
+   and one drawn larger keeps its own edges. A transparent ::after, so nothing is seen and the
+   layout does not move; `min(0px, …)` only ever grows the box. The element must be positioned
+   (relative, or absolute where it already is), or the square hangs off an ancestor. Measure the
+   gap to a neighbour first: two squares that overlap give the overlap to the later control. */
+@utility hit-area {
+    &::after {
+        content: "";
+        position: absolute;
+        inset-block: min(0px, calc((100% - 2.75rem) / 2));
+        inset-inline: min(0px, calc((100% - 2.75rem) / 2));
+    }
+}
+
 /* Chart draw: a line that is new to the screen — the Price tab just opened, or a period just
    showed another stretch of it — is revealed left to right in 400 ms on the enter curve, as if
    drawn, with the ground under it following. A wipe rather than a dash along the path, so the

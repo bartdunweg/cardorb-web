@@ -122,7 +122,7 @@ export function DexGrid({ generations, size = "md", linked = true }: { generatio
                 <div ref={sentinel} className="flex justify-center py-2">
                     {/* The way on when the sentinel is never seen: a keyboard, or an observer the
                         browser does not have. The kit's quietest button: the same grey word it was. */}
-                    <Button color="link-gray" size="sm" onClick={() => setShown((n) => n + DEX_BATCH)}>
+                    <Button color="link-gray" size="sm" className="hit-area" onClick={() => setShown((n) => n + DEX_BATCH)}>
                         Show more
                     </Button>
                 </div>
