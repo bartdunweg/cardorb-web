@@ -1,5 +1,11 @@
 "use client";
 
+// Changed from the kit: the pressed button is marked by a 2 px ring in the text colour on the
+// secondary fill. The kit marked it with a fill one step off the others (#FAFAFA on #FFFFFF,
+// 1.04:1; #262626 on #171717 in the dark, 1.18:1), which is no state anyone can see; the ring
+// carries it at the 3:1 a state indicator needs (WCAG 1.4.11). Every segmented control in the app
+// is this one, so it lives here rather than in a class each caller has to remember. A re-fetch
+// through the Untitled UI CLI or MCP overwrites it; re-apply it.
 import { type FC, type PropsWithChildren, type ReactNode, type RefAttributes, createContext, isValidElement, useContext } from "react";
 import {
     ToggleButton as AriaToggleButton,
@@ -19,7 +25,7 @@ export const styles = sortCx({
             // Disabled styles
             "disabled:cursor-not-allowed disabled:text-secondary/50 disabled:*:opacity-50",
             // Selected styles
-            "selected:bg-primary_hover selected:text-secondary_hover",
+            "selected:z-10 selected:bg-secondary selected:text-primary selected:ring-2 selected:ring-fg-primary",
         ].join(" "),
         icon: "pointer-events-none transition-[inherit]",
     },
