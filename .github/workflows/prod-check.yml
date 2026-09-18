@@ -1,0 +1,62 @@
+# Reads production once an hour the way a signed-out visitor does, and files an issue per check
+# that fails (scripts/prod-check.ts says what each check is and why; scripts/prod-check-issues.mjs
+# files them). It tests cardorb.com, not a branch, so it never runs on a pull request.
+#
+# Read-only: nothing signs in and nothing but GETs reach the sites. The only write is the issue.
+name: prod-check
+
+on:
+    schedule:
+        # Twelve past, off the hour, when every other scheduled job on GitHub starts.
+        - cron: "12 * * * *"
+    workflow_dispatch:
+        inputs:
+            dry_run:
+                description: "Print what it would file instead of filing it"
+                type: boolean
+                default: false
+
+permissions:
+    contents: read
+    issues: write
+
+# Two runs at once would both see no open issue and both open one.
+concurrency:
+    group: prod-check
+    cancel-in-progress: false
+
+jobs:
+    check:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - uses: actions/checkout@v4
+            - uses: pnpm/action-setup@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version-file: .nvmrc
+                  cache: pnpm
+            - run: pnpm install --frozen-lockfile
+            - run: pnpm exec playwright install --with-deps chromium
+
+            - name: Read production
+              run: |
+                  # Actions runs a step as bash -e, which would end it at the first failed check with no summary.
+                  set +e
+                  set -uo pipefail
+                  pnpm exec tsx scripts/prod-check.ts > report.md
+                  status=$?
+                  cat report.md
+                  cat report.md >> "$GITHUB_STEP_SUMMARY"
+                  # 1 is a failed check, which the issues say (the run stays green, as data-health's does);
+                  # anything else is the script broken, and the run goes red for that.
+                  [ "$status" -le 1 ]
+
+            - name: File, update or close the issues
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  DRY_RUN: ${{ inputs.dry_run || false }}
+              run: |
+                  gh label create prod-check -R "$GITHUB_REPOSITORY" --color B60205 \
+                      --description "Filed by the hourly production check" 2>/dev/null || true
+                  node scripts/prod-check-issues.mjs

@@ -1,0 +1,26 @@
+# TEMPORARY, removed before merge: eight passes from the runner to set the time budgets.
+name: prod-check-measure
+on:
+    push:
+        branches: [claude/prod-check]
+permissions:
+    contents: read
+jobs:
+    measure:
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+        steps:
+            - uses: actions/checkout@v4
+            - uses: pnpm/action-setup@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version-file: .nvmrc
+                  cache: pnpm
+            - run: pnpm install --frozen-lockfile
+            - run: pnpm exec playwright install --with-deps chromium
+            - run: |
+                  for i in 1 2 3 4 5 6 7 8; do
+                      pnpm exec tsx scripts/prod-check.ts > report.md; echo "pass $i exit $?"
+                      node -e 'const {results}=require("./prod-check.json"); for (const r of results) console.log("READING", r.id, r.ok, JSON.stringify(r.evidence), JSON.stringify(r.failures))'
+                      sleep 45
+                  done
