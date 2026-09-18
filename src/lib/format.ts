@@ -23,6 +23,18 @@ export function formatPrice(value: number | null | undefined): string {
     return value == null ? "" : euros.format(value);
 }
 
+/** What a lowest listing is, wherever one stands in for a market price. */
+export const LISTING_NOTE = "Lowest listing on TCGplayer, no sales yet";
+
+/**
+ * A card's price as words: "€12.50" for a market figure, "From €12.50" for a lowest listing where
+ * there is no market figure (never summed), nothing where neither is known. The text of CardPrice.
+ */
+export function formatCardPrice(price: number | null | undefined, listing?: number | null): string {
+    if (price != null) return formatPrice(price);
+    return listing == null ? "" : `From ${formatPrice(listing)}`;
+}
+
 const wholeEuros = new Intl.NumberFormat("en-US", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
 
 // Formats what a collection or a binder is worth as "€45,240": a sum of hundreds of prices is

@@ -17,6 +17,8 @@ export type Datapoints = {
     value?: number | null;
     /** Copies without a price, among those shown. */
     unpriced?: number;
+    /** Of those, the copies shown at a lowest listing, which `value` leaves out (cardorb-api#561). */
+    listed?: number;
     /** A binder shown as a Pokédex: slots filled, of the range. */
     caught?: { of: number; total: number };
 };
@@ -35,7 +37,11 @@ export function datapointsLines(d: Datapoints): string[] {
     const cards = d.copies ?? d.total;
     const count = d.narrowed ? `${formatCount(d.total)} match${d.total === 1 ? "" : "es"}` : `${formatCount(cards)} card${cards === 1 ? "" : "s"}`;
     const parts = [count];
-    if (d.value != null && d.total > 0) parts.push(formatValue(d.value));
+    if (d.value != null && d.total > 0) {
+        parts.push(formatValue(d.value));
+        // A card shown "From €…" is on the page at a price the total does not add: said, not hidden.
+        if (d.listed) parts.push(`${formatCount(d.listed)} at lowest listing, not counted`);
+    }
     const line = parts.join(" · ");
     return d.caught ? [`${formatCount(d.caught.of)} of ${formatCount(d.caught.total)} Pokémon`, line] : [line];
 }

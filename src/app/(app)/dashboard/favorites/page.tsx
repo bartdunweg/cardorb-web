@@ -39,7 +39,7 @@ export default async function FavoritesPage({ searchParams }: { searchParams: Pr
     };
     const narrowed = isNarrowed(query);
     const list = getMyCards(filter);
-    const datapoints = list.then((r) => ({ total: r.total, copies: r.copies ?? undefined, narrowed, value: r.value, unpriced: r.unpriced }));
+    const datapoints = list.then((r) => ({ total: r.total, copies: r.copies ?? undefined, narrowed, value: r.value, unpriced: r.unpriced, listed: r.listed }));
     const { profile } = await getMyProfile();
     const facets = list.then((r) => r.facets);
 

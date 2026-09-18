@@ -66,12 +66,15 @@ export const API_ORIGIN = new URL(process.env.CARDORB_API_URL ?? "https://api.ca
 // ── GET /v1/cards ─────────────────────────────────────────────────────────────────────────
 
 /**
- * One card's price, in euros: TCGplayer's market figure, the one number the app shows. The lowest
- * listing, Cardmarket's thirty-day average and the Near Mint band left the API (Bart, 2026-09-14);
- * an API still sending them is read the same, because zod drops what the schema does not name.
+ * One card's price, in euros: TCGplayer's market figure, the number the app sums and ranks by.
+ * Where TCGplayer has no market figure for the printing (listed, never sold), the API sends its
+ * lowest listing instead, `market` null and `basis` "lowest-listing" (cardorb-api#561, Bart
+ * 2026-09-18): shown as "From €…" everywhere, never summed. Absent from an API before it.
  */
 export const apiPriceSchema = z.object({
     market: nullable(z.number()),
+    lowestListing: nullable(z.number()).optional(),
+    basis: z.enum(["market", "lowest-listing"]).nullish(),
 });
 export type ApiPrice = z.infer<typeof apiPriceSchema>;
 
@@ -229,6 +232,11 @@ export type Card = {
     notes: string | null;
     /** What one copy trades at today, in euros; null when TCGplayer has no number. */
     price: number | null;
+    /**
+     * TCGplayer's lowest listing, in euros, where it has no market figure for this copy's printing
+     * (`price` is null then). Shown as "From €…", never summed. Absent where nothing said.
+     */
+    listing_price?: number | null;
     image_url: string | null;
     /** The larger scan (600 px), for a tile a phone draws at two pixels per point; null where the catalogue has one size. */
     image_high_url: string | null;
@@ -252,6 +260,9 @@ export type Card = {
 /** One figure out of a price: the market figure. The Near Mint midpoint it used to prefer is gone. */
 export const shownPrice = (p: ApiPrice | null | undefined): number | null => p?.market ?? null;
 
+/** A price's lowest listing, where it is one: no market figure, and a listing in its place. */
+export const listingOf = (p: ApiPrice | null | undefined): number | null => (p && p.market == null ? (p.lowestListing ?? null) : null);
+
 /**
  * The one number a copy is worth: the TCGplayer printing it is, where the API priced it, then the
  * stamped run's figure for a 1st Edition copy, then the card's own. The API's rule, copyPriceOf()
@@ -269,9 +280,32 @@ export function priceForCopy({
     priceFirstEd,
     printingPrice,
 }: Pick<CardItem, "price"> & Partial<Pick<CardItem, "edition" | "finish" | "priceFirstEd" | "printingPrice">>): number | null {
-    if (isReverseFinish(finish)) return shownPrice(printingPrice);
-    return shownPrice(printingPrice ?? (edition === "1st-edition" ? priceFirstEd : null) ?? price);
+    for (const p of copyChain({ edition, finish, price, priceFirstEd, printingPrice })) if (shownPrice(p) != null) return shownPrice(p);
+    return null;
 }
+
+/**
+ * The lowest listing a copy is shown at, where nothing it reads has a market figure: the API's
+ * copyPriceOf() reads a market figure anywhere on the chain before any listing, and so does this.
+ * Null wherever priceForCopy() has a figure. Shown as "From €…", never summed.
+ */
+export function listingForCopy(
+    item: Pick<CardItem, "price"> & Partial<Pick<CardItem, "edition" | "finish" | "priceFirstEd" | "printingPrice">>,
+): number | null {
+    if (priceForCopy(item) != null) return null;
+    for (const p of copyChain(item)) if (listingOf(p) != null) return listingOf(p);
+    return null;
+}
+
+/** The prices a copy reads, in order: a reverse its own printing's alone. */
+const copyChain = ({
+    edition,
+    finish,
+    price,
+    priceFirstEd,
+    printingPrice,
+}: Pick<CardItem, "price"> & Partial<Pick<CardItem, "edition" | "finish" | "priceFirstEd" | "printingPrice">>) =>
+    isReverseFinish(finish) ? [printingPrice] : [printingPrice, edition === "1st-edition" ? priceFirstEd : null, price];
 
 /**
  * A binder as `GET /v1/folders` sends it. `kind` and `rule` are optional on the wire: an API from
@@ -347,6 +381,7 @@ export const cardFromItem = (item: CardItem): Card => ({
     acquired_at: item.acquiredAt,
     notes: item.notes,
     price: priceForCopy(item),
+    listing_price: listingForCopy(item),
     image_url: ownImage(item.image),
     image_high_url: ownImage(item.imageHigh),
     print_image_url: ownImage(item.printImage),
@@ -387,7 +422,7 @@ export type PublicCard = Pick<
     | "species_ids"
 > &
     /** Only where the owner shows prices: a tile and the sheet draw it when it is there. */
-    Partial<Pick<Card, "price">>;
+    Partial<Pick<Card, "price" | "listing_price">>;
 
 /** One card on a public profile with how many copies the owner holds. Nothing private (R-API-002 there). */
 /**
@@ -596,8 +631,10 @@ export type SetCard = {
     quantity: number;
     /** Every collection row this card matched: owned copies and wishes alike. */
     itemIds: string[];
-    /** One number, the way a tile shows it: null where Cardmarket does not price the card. */
+    /** One number, the way a tile shows it: null where TCGplayer has no market figure for the card. */
     price: number | null;
+    /** TCGplayer's lowest listing where it has no market figure; shown as "From €…". */
+    listingPrice?: number | null;
     /** The catalogue id everything priced is keyed by; null where the two catalogues never met. */
     tcgId: string | null;
     /** Full art as the API decides it; absent where the answer did not say (`@/lib/full-art`). */
@@ -623,6 +660,7 @@ export const setCardFromBrowse = (c: BrowseCard, setAbbr: string | null = null):
     itemIds: c.itemIds,
     // The same rule the collection uses, so one card does not carry two prices across two screens.
     price: priceForCopy({ price: c.price }),
+    listingPrice: listingForCopy({ price: c.price }),
     tcgId: c.tcgId,
     printedNumber: c.printedNumber ?? c.number,
     ...(c.fullArt === undefined ? {} : { fullArt: c.fullArt }),
@@ -706,6 +744,8 @@ export type PokemonCard = {
     quantity: number;
     /** One number, the way a tile shows it: null where the guide does not price the card, or the route did not ask. */
     price: number | null;
+    /** TCGplayer's lowest listing where it has no market figure; shown as "From €…". */
+    listingPrice?: number | null;
     /**
      * The heading a search puts it under (`@/lib/card-group`): its Pokémon, or its own name, and
      * how many hits of the whole search share it. Only on hits the browser's catalogue answered.
@@ -746,6 +786,7 @@ export const pokemonCardFromBrowse = (c: BrowseCard, language?: string | null): 
     wishlist: c.wishlist,
     quantity: c.quantity ?? 0,
     price: priceForCopy({ price: c.price }),
+    listingPrice: listingForCopy({ price: c.price }),
 });
 
 // ── GET /v1/profile ───────────────────────────────────────────────────────────────────────
@@ -837,6 +878,8 @@ export const cardsAnswer = z.object({
     facets: facetsSchema.optional(),
     value: z.number().optional(),
     unpriced: z.number().optional(),
+    /** Of the unpriced copies, those shown at a lowest listing and left out of `value`. Absent from an API before #561. */
+    listed: z.number().optional(),
     /** The catalogue is not answering, so pictures and prices are missing rather than absent. */
     catalogueUnavailable: z.boolean().optional(),
     counts: filterCountsSchema.optional(),

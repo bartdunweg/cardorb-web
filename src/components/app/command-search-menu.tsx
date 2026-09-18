@@ -11,7 +11,7 @@ import { CommandMenu, CommandMenuContext, type CommandMenuGroupType } from "@/co
 import { LoadingIndicator } from "@/components/application/loading-indicator/loading-indicator";
 import { Button } from "@/components/base/buttons/button";
 import { CARD_TYPES } from "@/lib/card-types";
-import { formatCount, formatDate, formatPrice } from "@/lib/format";
+import { formatCardPrice, formatCount, formatDate } from "@/lib/format";
 import { FULL_ART } from "@/lib/full-art";
 import { searchHitDescription } from "@/lib/search-hit";
 import { cx } from "@/utils/cx";
@@ -106,7 +106,7 @@ function CardPreview({ card, onAdd, onView }: { card: PokemonCard; onAdd: (targe
             </div>
 
             <dl className="flex flex-col divide-y divide-secondary">
-                <DetailRow label="Price" value={formatPrice(card.price)} />
+                <DetailRow label="Price" value={formatCardPrice(card.price, card.listingPrice)} />
                 <DetailRow label="Set" value={card.set || null} />
                 <DetailRow label="Series" value={card.series} />
                 {/* As the card prints it: a Classic Collection card prints its original number with its total (4/102). */}
