@@ -54,9 +54,9 @@ export function BrowseToolbar({ query, view: initialView }: { query: BrowseQuery
     // lights up again at once.
     return (
         <div className={cx(LIST_ROW, "transition-opacity duration-(--duration-fast)", pending && "opacity-60 delay-150")}>
-            {/* A round button on a phone, a short field from sm (`RowSearch`), as in a binder's row. */}
+            {/* The whole first line on a phone, a short field from sm (`RowSearch`), as in a binder's row. */}
             {/* The shelf it filters is the shelf it offers: its set names, in the language chosen. */}
-            <CardsSearch size="sm" initialValue={query.q ?? ""} label="Search sets" placeholder="Search sets" shelf={query.language} />
+            <CardsSearch size="sm" initialValue={query.q ?? ""} label="Search in Browse" shelf={query.language} />
             <FiltersSheet
                 inline
                 noun={["set", "sets"]}

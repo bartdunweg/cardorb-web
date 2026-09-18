@@ -495,7 +495,7 @@ export const ourSections: SectionSpec[] = [
         title: "RowButton",
         from: "components/app/row-button",
         ours: true,
-        note: "Filters, Sort and View above a list. From sm it is icon, word and, for a menu, a chevron; on a phone the word is read out only and the button is a 36 px circle, as the search beside it is (RowSearch). Narrow the window to see it change.",
+        note: "Filters, Sort and View above a list. From sm it is icon, word and, for a menu, a chevron; on a phone the word is read out only and the button is a 36 px circle, on the line under the search (RowSearch). Narrow the window to see it change.",
         render: (
             <Panel>
                 <Group title="Variants" cols="tight">
@@ -524,7 +524,7 @@ export const ourSections: SectionSpec[] = [
         title: "RowSearch",
         from: "components/app/row-search",
         ours: true,
-        note: "The search in a list row, and LIST_ROW, the row itself. From sm a field of 208 px at most; on a phone a round search button that opens the field across the row, hides the row's other buttons and puts them back with the close button beside it. Closing keeps the term, and a term in force puts a dot on the search button. Narrow the window to a phone to try it.",
+        note: "The search in a list row, and LIST_ROW, the row itself. From sm a field of 208 px at most; on a phone the field is always there, across the whole first line, with the row's buttons on the line under it. Narrow the window to a phone to see it.",
         render: (
             <Panel>
                 <Group title="In a row" cols="tight">
@@ -694,12 +694,12 @@ function FilterChipSample() {
     );
 }
 
-/** A list row with a search that works, so the phone's open and close can be tried here. */
+/** A list row with a search that works, so the phone's two lines can be seen here. */
 function RowSearchDemo() {
     const [q, setQ] = useState("");
     return (
         <div className={`${LIST_ROW} w-full`}>
-            <RowSearch label="Search" filled={q !== ""}>
+            <RowSearch>
                 <Input aria-label="Search" icon={SearchLg} placeholder="Search" size="sm" value={q} onChange={setQ} wrapperClassName="rounded-full" />
             </RowSearch>
             <RowButton icon={FilterLines} label="Filters" />

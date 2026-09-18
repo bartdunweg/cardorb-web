@@ -9,7 +9,7 @@ import { Input } from "@/components/base/input/input";
 export function ListRow() {
     return (
         <div className={LIST_ROW} aria-hidden="true">
-            <RowSearch label="Search" filled={false} disabled>
+            <RowSearch>
                 <Input aria-label="Search" icon={SearchLg} placeholder="Search" size="sm" isDisabled wrapperClassName="rounded-full" />
             </RowSearch>
             <RowButton icon={FilterLines} label="Filters" isDisabled />

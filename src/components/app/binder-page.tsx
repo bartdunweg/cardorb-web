@@ -101,7 +101,8 @@ export function BinderPage({
                 >
                     {children}
                 </PageHeader>
-                <BinderBody {...body} />
+                {/* The field says which list it searches: "Search in Wishlist", "Search in Kanto". */}
+                <BinderBody searchLabel={`Search in ${title}`} {...body} />
             </div>
         </ListTotalsProvider>
     );

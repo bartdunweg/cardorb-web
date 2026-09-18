@@ -161,6 +161,7 @@ export function SetCards({
        catalogue's card with the rows read after the tap (card-memo.ts). Only a set you have a row in;
        the cards are the drawing, so a refresh asks again and a second run of the effect does not. */
     const setName = drawnCards[0]?.setName;
+    const searchLabel = setName ? `Search in ${setName}` : "Search this set";
     useEffect(() => {
         if (setName && drawnCards.some((c) => c.owned || c.wishlist)) warmSetRows(setName, drawnCards);
     }, [drawnCards, setName]);
@@ -321,14 +322,14 @@ export function SetCards({
                         ))}
                     </TabList>
                 </div>
-                {/* A round button on a phone, a short field from sm (`RowSearch`), as in a binder's row. */}
+                {/* The whole first line on a phone, a short field from sm (`RowSearch`), as in a binder's row. */}
                 <div className={LIST_ROW}>
-                    <RowSearch label="Search this set" filled={q !== ""}>
+                    <RowSearch>
                         <Input
                             size="sm"
                             icon={SearchLg}
-                            aria-label="Search this set"
-                            placeholder="Search this set"
+                            aria-label={searchLabel}
+                            placeholder={searchLabel}
                             value={q}
                             onChange={setQ}
                             // What the URL keeps (readSetQuery); longer, the two would disagree for good.

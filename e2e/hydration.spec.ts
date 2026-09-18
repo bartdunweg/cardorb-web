@@ -18,7 +18,7 @@ import { SET_ID } from "./support.ts";
 // one to appear) and is the one that ends up on screen, hydrated. React marks a node it owns with a
 // `__reactFiber$` key, which is how "hydrated" is told apart from "still the server's". Ten loads,
 // because the reveal wins the race on some loads on its own.
-const LABEL = "Search this set";
+const LABEL = "Search in Scarlet & Violet";
 
 test("the set page hydrates the server's drawing instead of drawing it again", async ({ page }) => {
     await page.addInitScript((label) => {

@@ -118,8 +118,8 @@ async function Profile({
         facets,
         sortOptions: PUBLIC_SORT_OPTIONS,
         defaultSortKey: PUBLIC_DEFAULT_SORT,
-        searchLabel: "Search this collection",
-        searchPlaceholder: "Search this collection",
+        // The list on screen by its own name, as a chip above says it.
+        searchLabel: `Search in ${query.list === "wishlist" ? "Wishlist" : query.list === "favorites" ? "Favorites" : (binder?.name ?? "Collection")}`,
         empty: emptyState,
     };
     // With a search or a filter on, the count is what matched; otherwise the collection and the wishlist.

@@ -55,8 +55,8 @@ type Suggestion = { kind: "title"; title: CardTitle } | { kind: "set"; set: Titl
 // still filters, so the list is a shortcut to the usual answer and not a gate in front of it.
 export function CardsSearch({
     initialValue = "",
-    label = "Search your cards",
-    placeholder = "Search",
+    label = "Search",
+    placeholder = label,
     size = "md",
     scope,
     shelf,
@@ -371,7 +371,7 @@ export function CardsSearch({
     );
 
     return (
-        <RowSearch label={label} filled={value !== ""}>
+        <RowSearch>
             <div className="relative w-full">
                 {/* The ARIA combobox: a text field that offers a list, which is exactly what this is
                 (WAI-ARIA APG). The rule wants a native datalist or a dropdown instead, and a

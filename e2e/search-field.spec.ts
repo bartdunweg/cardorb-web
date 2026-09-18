@@ -58,7 +58,7 @@ const answerFor = (page: Page, term: string) =>
 test("Collection keeps the letters typed while the last answer is on its way", async ({ page }) => {
     await slowAnswers(page);
     await page.goto("/dashboard/cards");
-    const search = await field(page, "Search your cards");
+    const search = await field(page, "Search in Collection");
     await search.click();
     /* "Toeds" is written after 250 ms and held 1.5 s; "cruel" is still being typed when it lands.
        A smoke test: the old field only lost letters when the answer landed in the 250 ms after the
@@ -77,7 +77,7 @@ test("Collection keeps the letters typed while the last answer is on its way", a
 test("typing back to the term the list already has leaves both saying it", async ({ page }) => {
     await slowAnswers(page);
     await page.goto("/dashboard/cards?q=Toeds");
-    const search = await field(page, "Search your cards");
+    const search = await field(page, "Search in Collection");
     await search.click();
     await page.keyboard.press("End");
     const late = answerFor(page, "Toedsc");
@@ -95,7 +95,7 @@ test("typing back to the term the list already has leaves both saying it", async
 test("emptying the field while an answer is on its way empties the search", async ({ page }) => {
     await slowAnswers(page);
     await page.goto("/dashboard/cards");
-    const search = await field(page, "Search your cards");
+    const search = await field(page, "Search in Collection");
     await search.click();
     const late = answerFor(page, "Toedscr");
     await typeWithPauses(page, ["Toedscr", 600]);
@@ -110,7 +110,7 @@ test("emptying the field while an answer is on its way empties the search", asyn
 test("a filter picked while a term is on its way keeps both", async ({ page }) => {
     await slowAnswers(page);
     await page.goto("/dashboard/cards?q=Toeds");
-    const search = await field(page, "Search your cards");
+    const search = await field(page, "Search in Collection");
     await search.click();
     await page.keyboard.press("End");
     await typeWithPauses(page, ["cruel", 400]);
@@ -128,7 +128,7 @@ test("a filter picked while a term is on its way keeps both", async ({ page }) =
 
 test("a binder's field offers the titles it holds, and a title chosen is the search", async ({ page }) => {
     await page.goto("/dashboard/cards");
-    const search = await field(page, "Search your cards");
+    const search = await field(page, "Search in Collection");
     await search.click();
     await page.keyboard.type("Toed", { delay: 40 });
     const offered = page.getByRole("listbox");
@@ -143,7 +143,7 @@ test("a binder's field offers the titles it holds, and a title chosen is the sea
 // A smoke test: the set page writes with the history API, so no answer comes back to race.
 test("a set page keeps the letters typed and narrows its grid", async ({ page }) => {
     await page.goto(`/dashboard/sets/${SET_ID}`);
-    const search = await field(page, "Search this set");
+    const search = await field(page, "Search in Scarlet & Violet");
     await search.click();
     await typeWithPauses(page, ["Toeds", 400, "cr", 400, "uel"]);
 
@@ -156,7 +156,7 @@ test("a set page keeps the letters typed and narrows its grid", async ({ page })
 test("Browse keeps the letters typed and its sets on screen while it narrows", async ({ page }) => {
     await slowAnswers(page);
     await page.goto("/dashboard/sets");
-    const search = await field(page, "Search sets");
+    const search = await field(page, "Search in Browse");
     const shelf = page
         .getByRole("main")
         .getByRole("link", { name: /Scarlet & Violet/ })

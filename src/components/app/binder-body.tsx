@@ -24,8 +24,8 @@ type Common = {
     /** The sets and rarities for the Filters sheet; a promise when they come with the list itself. */
     facets: Facets | Promise<Facets>;
     sortOptions?: readonly SortOption[];
+    /** The field's name and placeholder: "Search in" and the list's own name. */
     searchLabel?: string;
-    searchPlaceholder?: string;
     /** The page's own "nothing here at all" state, with its way out. */
     empty: ReactNode;
 };
@@ -51,7 +51,7 @@ export type BinderBodyProps = PublicBody | OwnBody;
 // and the View menu, then the list, or an empty state. The same on All cards, a binder, the
 // favorites, the wishlist and a public profile, so a person learns the row once.
 export async function BinderBody(props: BinderBodyProps) {
-    const { query, basePath, facets, sortOptions = SORT_OPTIONS, defaultSortKey = "set", searchLabel, searchPlaceholder, empty } = props;
+    const { query, basePath, facets, sortOptions = SORT_OPTIONS, defaultSortKey = "set", searchLabel, empty } = props;
     const narrowed = isNarrowed(query);
     const { q } = query;
     // Your own cards, not wishes: the only lists with a second copy of anything.
@@ -64,14 +64,12 @@ export async function BinderBody(props: BinderBodyProps) {
     // thing you type, so it stays in the row; the set and rarity filters are a sheet.
     const toolbar = (
         <>
-            {/* The field is a round button on a phone and a short field from sm (`RowSearch`), so the row
-                is one line at every width with room between the field and the buttons. */}
+            {/* The whole first line on a phone, the buttons under it; a short field from sm (`RowSearch`). */}
             <CardsSearch
                 key="search"
                 size="sm"
                 initialValue={q ?? ""}
                 label={searchLabel}
-                placeholder={searchPlaceholder}
                 // The titles it offers are the ones in this very list, filters and all. A public
                 // profile gets none: the suggestion would be read from the reader's own cards.
                 scope={
