@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
 # Copies the end-to-end fixture set out of production, read-only: the set row, its first twenty
-# English cards and the TCGplayer prices for whichever of those cards TCGplayer has a product for.
-# Run by hand from a machine linked to the project; the result is committed as
-# e2e/fixtures/catalogue.json.
+# English cards, four more with names none of those twenty carry, and the TCGplayer prices for
+# whichever of those cards TCGplayer has a product for. Run by hand from a machine linked to the
+# project; the result is committed as e2e/fixtures/catalogue.json.
+#
+# The first twenty are verbatim and their order never changes: e2e/support.ts's card(index) is
+# this list, and every spec names its cards by index. The four after them skip a name already in
+# the fixture, because the suite's locators read a card off the set page by its name and its
+# number ("Smoliv #021, not in your collection"), and a second Smoliv would make e2e/sheet.spec.ts's
+# card 19 match two tiles. Inside the first twenty three cards do share a name (the Tarountulas at
+# 15 to 17): those are load-bearing as they are, so the rule starts after them.
 #
 # English catalogue_cards never carries tcgplayer_product_id (checked 2026-09-17: 16,376 rows
 # have it and every one is language 'ja'). The live app looks an English card's TCGplayer product
@@ -25,19 +32,33 @@ select json_build_object(
   'sets', (select json_agg(s) from catalogue_sets s where s.id = '$SET' and s.language = 'en'),
   'cards', (select json_agg(c order by c.number_order, c.local_id) from (
       select * from catalogue_cards where set_id = '$SET' and language = 'en'
-      order by number_order nulls last, local_id limit 20) c)
+      order by number_order nulls last, local_id limit 60) c)
 ) as fixture")"
 
-# The CLI wraps the row in {boundary, rows: [{fixture: {...}}], warning}; unwrap it and drop the
+# The CLI wraps the row in {boundary, rows: [{fixture: {...}}], warning}; unwrap it, cut the window
+# down to the first KEEP cards plus EXTRA more with names none of those carry, and drop the
 # generated "search" and "number_order" columns from each card (inserting either fails: neither
 # is a real column, both are `generated always as (...) stored`).
-CARDS_ONLY="$(node -e '
+CARDS_ONLY="$(KEEP=20 EXTRA=4 node -e '
 const raw = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const fixture = raw.rows[0].fixture;
-for (const c of fixture.cards ?? []) {
+const keep = Number(process.env.KEEP);
+const extra = Number(process.env.EXTRA);
+const all = fixture.cards ?? [];
+const chosen = all.slice(0, keep);
+const names = new Set(chosen.map((c) => c.name));
+for (const c of all.slice(keep)) {
+    if (chosen.length >= keep + extra) break;
+    if (names.has(c.name)) continue;
+    names.add(c.name);
+    chosen.push(c);
+}
+if (chosen.length < keep + extra) throw new Error(`only ${chosen.length} cards with distinct enough names; widen the query`);
+for (const c of chosen) {
     delete c.search;
     delete c.number_order;
 }
+fixture.cards = chosen;
 process.stdout.write(JSON.stringify(fixture));
 ' <<<"$CARDS_JSON")"
 
