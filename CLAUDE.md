@@ -25,6 +25,7 @@ exist so other collectors can join later.
 | `pnpm test` | Vitest |
 | `pnpm e2e` | Playwright smoke tests against a local stack; CI only (`scripts/e2e-stack.sh` needs Docker) |
 | `pnpm emails:render` | The auth emails (`src/emails`) to static HTML for `cardorb-api/supabase/templates` |
+| `pnpm prod-check` | Reads production once, signed out and read-only: pages, public API, headers (hourly in `prod-check.yml`, which files issues) |
 
 ## Structure
 

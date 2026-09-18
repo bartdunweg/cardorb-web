@@ -28,6 +28,8 @@ export type DexCardLike = Pick<Card, "id" | "name" | "number" | "species_id" | "
     quantity?: number | null;
     /** What one copy is worth in euros; a public card carries none, and the value is then unknown. */
     price?: number | null;
+    /** TCGplayer's lowest listing where it has no market figure: shown "From €…", never summed (cardorb-api#561). */
+    listing_price?: number | null;
     /** True for the card its slot shows: the one the owner left standing on the slider. */
     dex_face?: boolean | null;
 };
@@ -39,7 +41,14 @@ export type DexCardLike = Pick<Card, "id" | "name" | "number" | "species_id" | "
  * cards the rule leaves out (a trainer, a common when only the rares are kept) are not in these.
  * `value` is null when no card carries a price, as on a public profile.
  */
-export type DexCount = { cards: number; copies: number; value: number | null; unpriced: number };
+export type DexCount = {
+    cards: number;
+    copies: number;
+    value: number | null;
+    unpriced: number;
+    /** Of the unpriced copies, those shown at a lowest listing, which `value` leaves out (cardorb-api#561). */
+    listed: number;
+};
 
 /**
  * The card a slot shows first: the one its owner left standing on the slider, then the rest in the
@@ -61,7 +70,7 @@ export function groupByDex(
     // Only the rarities the setting names, compared without case: the catalogue spells some two ways.
     const kept = setting.rarities ?? null;
     const bySlot = new Map<number, DexCardLike[]>();
-    const count: DexCount = { cards: 0, copies: 0, value: null, unpriced: 0 };
+    const count: DexCount = { cards: 0, copies: 0, value: null, unpriced: 0, listed: 0 };
     for (const card of cards) {
         // A tag team is a card of each Pokémon on it, so it fills each of their slots; it is still
         // one card in the numbers above the grid.
@@ -75,8 +84,11 @@ export function groupByDex(
         count.cards += 1;
         count.copies += copies;
         // A public card carries no price at all: nothing to sum, and no value to say.
-        if (card.price === null) count.unpriced += copies;
-        else if (card.price !== undefined) count.value = (count.value ?? 0) + card.price * copies;
+        if (card.price === null) {
+            count.unpriced += copies;
+            // Shown "From €…" on its tile, and not in the value: the line says so.
+            if (card.listing_price != null) count.listed += copies;
+        } else if (card.price !== undefined) count.value = (count.value ?? 0) + card.price * copies;
         // The slots are the other question: a card in a rarity that does not count leaves its
         // Pokémon grey, so it is not one of the slot's cards either.
         if (kept && !rarityKept(kept, card.rarity, card.name)) continue;
@@ -103,6 +115,7 @@ export function groupByDex(
                 imageUrl: c.image_url,
                 imageHighUrl: c.image_high_url,
                 price: c.price ?? null,
+                ...(c.price == null && c.listing_price != null ? { listingPrice: c.listing_price } : {}),
                 isFace: !!c.dex_face,
             })),
         });

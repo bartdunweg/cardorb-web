@@ -11,7 +11,9 @@ import { CardPriceChart } from "./card-price-chart";
  */
 
 const history = vi.fn();
-vi.mock("@/lib/reads", () => ({ cardPriceHistory: (id: string) => history(id) }));
+vi.mock("@/lib/reads", () => ({
+    cardPriceHistory: (id: string) => Promise.resolve(history(id)).then((points: unknown) => ({ points, listings: {} })),
+}));
 
 class FakeResizeObserver {
     constructor(private cb: ResizeObserverCallback) {}

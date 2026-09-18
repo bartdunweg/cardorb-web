@@ -44,6 +44,14 @@ each read in the sheet, on the tile and after a reload. The cache scenario now c
 as an add, and list state now covers a rarity filter chosen and cleared in the Filters sheet
 (reload, Back and a bare address), beside search, sort, view and the set page's own address.
 
+Production itself is read once an hour (`.github/workflows/prod-check.yml`, `scripts/prod-check.ts`),
+signed out and read-only, since there is no test account: the landing, sign in, sign up, privacy,
+terms and API docs pages, the public profile and one public binder (status, an `h1`, no uncaught
+error or console error, every picture drawn, the CSP and frame headers, document and first paint
+inside a measured budget), and the public API routes against the zod shapes in `api-shapes.ts`.
+A failing check opens one issue labelled `prod-check`, is commented on while it fails and is
+closed by the first run it passes. A private profile is not a finding: those checks stand down.
+
 ## Last session
 
 **2026-09-17 evening, a second round on today's work (#684 to #698).** A Pokédex binder caches

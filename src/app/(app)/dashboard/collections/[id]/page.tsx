@@ -124,6 +124,7 @@ async function Binder({ params, searchParams }: { params: Promise<{ id: string }
             narrowed,
             value: d.value,
             unpriced: d.unpriced,
+            listed: d.listed,
             caught: { of: d.caught, total: d.range.to - d.range.from + 1 },
         }));
         return (

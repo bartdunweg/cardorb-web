@@ -129,9 +129,12 @@ async function Profile({
     // then and none otherwise, and the line draws only what it was given.
     const counts = narrowed
         ? dex
-            ? dex.then((d) => datapointsLine({ total: d.cards, value: d.value, narrowed })).catch(() => "")
-            : datapointsLine({ total, value, narrowed })
-        : [datapointsLine({ total: owned.count, value: owned.value, narrowed: false }), wishes != null ? `${formatCount(wishes.count)} on the wishlist` : null]
+            ? dex.then((d) => datapointsLine({ total: d.cards, value: d.value, listed: d.listed, narrowed })).catch(() => "")
+            : datapointsLine({ total, value, listed: page?.listed, narrowed })
+        : [
+              datapointsLine({ total: owned.count, value: owned.value, listed: owned.listed, narrowed: false }),
+              wishes != null ? `${formatCount(wishes.count)} on the wishlist` : null,
+          ]
               .filter(Boolean)
               .join(" · ");
 

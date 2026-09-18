@@ -6,6 +6,7 @@ import {
     forgetCards,
     knownCardFacts,
     knownPriceHistory,
+    knownPriceListings,
     knownRows,
     preloadCardFacts,
     preloadPriceHistory,
@@ -28,7 +29,8 @@ const setRows = vi.fn();
 vi.mock("@/lib/reads", () => ({
     cardFacts: (id: string, language?: string | null) => facts(id, language),
     cardFactsMany: (ids: string[], language?: string | null) => many(ids, language),
-    cardPriceHistory: (id: string) => history(id),
+    // A bare list is a line with no listings beside it; an object is the whole answer.
+    cardPriceHistory: (id: string) => Promise.resolve(history(id)).then((a: unknown) => (Array.isArray(a) ? { points: a, listings: {} } : a)),
     listSetRows: (set: string) => setRows(set),
 }));
 vi.mock("@/components/app/card-detail-slideout", () => ({}));
@@ -94,6 +96,16 @@ describe("card memo", () => {
         } finally {
             vi.useRealTimers();
         }
+    });
+
+    /* cardorb-api#561: a printing listed and never sold has no line, and its lowest listing comes
+       beside the line, so a sheet pressing it can say it. */
+    it("keeps the listings the line's read answered, for the sheet to read", async () => {
+        const line = [{ date: "2026-09-14", market: 2, holo: null }];
+        history.mockResolvedValueOnce({ points: line, listings: { "reverse-holofoil": 5771.49 } });
+        expect(await preloadPriceHistory("sv1-5")).toBe(line);
+        expect(knownPriceListings("sv1-5")).toEqual({ "reverse-holofoil": 5771.49 });
+        expect(knownPriceListings("sv1-6")).toBeUndefined();
     });
 
     it("keeps a line with readings when a later read comes back empty", async () => {

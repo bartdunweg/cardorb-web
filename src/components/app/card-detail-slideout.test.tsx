@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { editCopies, removeCard, restoreCard, setCopies, setFavorite } from "@/app/(app)/dashboard/cards/actions";
+import { knownCardFacts, knownPriceHistory, knownPriceListings } from "@/components/app/card-memo";
 import type { Card } from "@/lib/api-shapes";
 import { listBinders, listCopies } from "@/lib/reads";
 import {
@@ -38,6 +39,7 @@ vi.mock("@/lib/reads", () => ({
 vi.mock("@/components/app/card-memo", () => ({
     knownCardFacts: vi.fn(() => null),
     knownPriceHistory: vi.fn(() => []),
+    knownPriceListings: vi.fn(() => undefined),
     knownRows: vi.fn(() => undefined),
     preloadCardFacts: vi.fn(async () => null),
     preloadPriceHistory: vi.fn(async () => []),
@@ -81,6 +83,43 @@ afterEach(async () => {
     await act(answerLeftovers);
     vi.useRealTimers();
     vi.unstubAllGlobals();
+});
+
+describe("CardDetailSlideout: the price of a pressed printing", () => {
+    /* cardorb-api#561: pressing a printing TCGplayer lists and has never sold said "No price for this
+       printing". It has no line; its lowest listing comes beside the history and is said as one. */
+    // Back to the memo's empty answers: a known card here would open every later test's sheet on it.
+    afterEach(() => {
+        vi.mocked(knownCardFacts).mockReset();
+        vi.mocked(knownPriceHistory).mockReset();
+        vi.mocked(knownPriceListings).mockReset();
+    });
+
+    const pressReverse = async (listings: Record<string, number> | undefined) => {
+        vi.mocked(knownCardFacts).mockReturnValue({
+            printings: [
+                { finish: "normal", foilPattern: null },
+                { finish: "reverse-holo", foilPattern: null },
+            ],
+        } as never);
+        vi.mocked(knownPriceHistory).mockReturnValue([{ date: "2026-09-18", market: 5, holo: null, printings: { normal: 5 } }]);
+        vi.mocked(knownPriceListings).mockReturnValue(listings);
+        await open(makeCard({ id: "p1", tcg_id: "sv1-1", finish: "normal", price: 5 }));
+        await tap(screen.getByRole("tab", { name: "Reverse" }));
+    };
+
+    it("shows the pressed printing's lowest listing, labelled, where it has no market figure", async () => {
+        await pressReverse({ "reverse-holofoil": 5771.49 });
+        const dialog = screen.getByRole("dialog");
+        expect(dialog).toHaveTextContent("From €5,771.49");
+        expect(dialog).toHaveTextContent("Lowest listing on TCGplayer, no sales yet");
+        expect(dialog).not.toHaveTextContent("No price for this printing");
+    });
+
+    it("still says no price for a printing with neither", async () => {
+        await pressReverse(undefined);
+        expect(screen.getByRole("dialog")).toHaveTextContent("No price for this printing");
+    });
 });
 
 describe("CardDetailSlideout: smoke", () => {
