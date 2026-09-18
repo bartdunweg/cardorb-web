@@ -1,5 +1,9 @@
 "use client";
 
+// Changed from the kit: the selected day's number goes black in dark mode. Brand-solid is
+// near-white there (#FAFAFA), and the kit's white number on it measured 1.04:1, the same flip the
+// Button, Checkbox and Toggle already make. A re-fetch through the Untitled UI CLI or MCP
+// overwrites it; re-apply it.
 import { getDayOfWeek, getLocalTimeZone, isToday } from "@internationalized/date";
 import type { CalendarCellProps as AriaCalendarCellProps } from "react-aria-components";
 import { CalendarCell as AriaCalendarCell, RangeCalendarContext, useLocale, useSlottedContext } from "react-aria-components";
@@ -85,7 +89,8 @@ export const CalendarCell = ({ date, isHighlighted, showOutOfRangeDates = false,
                             isFocusVisible ? "outline-2 outline-offset-2 outline-focus-ring" : "",
                             // Hover state for cells in the middle of the range.
                             isSelected && !isDisabled && isRangeCalendar ? "font-medium" : "",
-                            markedAsSelected && "bg-brand-solid font-medium text-white hover:bg-brand-solid_hover hover:text-white",
+                            markedAsSelected &&
+                                "bg-brand-solid font-medium text-white hover:bg-brand-solid_hover hover:text-white dark:text-black dark:hover:text-black",
                             // Hover state for non-selected cells.
                             !isSelected && !isDisabled ? "hover:bg-primary_hover hover:font-medium!" : "",
                             !isSelected && isTodayDate ? "bg-secondary font-medium hover:bg-secondary_hover" : "",

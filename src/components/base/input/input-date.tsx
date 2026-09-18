@@ -1,5 +1,9 @@
 "use client";
 
+// Changed from the kit: a focused segment's digits go black in dark mode. Brand-solid is
+// near-white there (#FAFAFA), and the kit's white digits on it measured 1.04:1, the same flip the
+// Button, Checkbox and Toggle already make. A re-fetch through the Untitled UI CLI or MCP
+// overwrites it; re-apply it.
 import { type ComponentType, type HTMLAttributes, type ReactNode, type Ref, createContext, useContext } from "react";
 import { HelpCircle, InfoCircle } from "@untitledui/icons";
 import type { DateInputProps as AriaDateInputProps } from "react-aria-components";
@@ -131,7 +135,7 @@ export const InputDateBase = ({
                     <AriaDateSegment
                         segment={segment}
                         className={cx(
-                            "rounded px-0.5 text-primary tabular-nums caret-transparent focus:bg-brand-solid focus:font-medium focus:text-white focus:outline-hidden",
+                            "rounded px-0.5 text-primary tabular-nums caret-transparent focus:bg-brand-solid focus:font-medium focus:text-white focus:outline-hidden dark:focus:text-black",
                             // The placeholder segment.
                             segment.isPlaceholder && "text-placeholder uppercase",
                             // The separator "/" segment.
