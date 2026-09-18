@@ -3,6 +3,7 @@
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChevronLeft } from "@untitledui/icons";
 import { Button } from "@/components/base/buttons/button";
+import { barSearchSlot } from "@/hooks/use-row-search";
 import { cx } from "@/utils/cx";
 
 /**
@@ -150,9 +151,11 @@ export function PageHeader({
                 the way it runs out under the tab bar. */}
             <div
                 className={cx(
-                    "fixed inset-x-0 top-0 z-30 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-4 pt-4 pb-2 sm:px-6 lg:hidden",
-                    // Searching, the field is the bar: Back, the title and the buttons step away until Cancel.
-                    "[&:has(>[data-bar-search]:not(:empty))>:not([data-bar-search])]:invisible",
+                    // Back and the buttons as wide as they are, the title the room between: with search, View and the
+                    // dots on the right, equal side columns ran the buttons over a collapsed title at 375 px.
+                    "fixed inset-x-0 top-0 z-30 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-4 pt-4 pb-2 sm:px-6 lg:hidden",
+                    // Searching, the field is the bar: the title and the buttons step away until Cancel; Back stays.
+                    "[&:has(>[data-bar-search]:not(:empty))>:is(:nth-child(2),:nth-child(3))]:invisible",
                     // Nothing to tap until Back, a button or the collapsed title is there: taps go through to the page.
                     !back && !barActions && !collapsed && "pointer-events-none",
                     // The fade comes with the collapse: at rest the buttons sit on the page and the large title
@@ -181,7 +184,7 @@ export function PageHeader({
                     aria-hidden="true"
                     className={cx(
                         // The same size as the card sheet's bar gives its name: one bar, two places.
-                        "truncate px-2 text-md font-semibold text-primary transition-opacity duration-150 ease-enter",
+                        "truncate px-2 text-center text-md font-semibold text-primary transition-opacity duration-150 ease-enter",
                         collapsed ? "opacity-100" : "opacity-0",
                     )}
                 >
@@ -199,7 +202,15 @@ export function PageHeader({
                 </div>
                 {/* Where a list's search field comes when the bar's search is pressed (`RowSearch`), over the
                     whole bar, as Gojek and Keeta turn their bar into the field (Mobbin, 2026-09-19). */}
-                <div data-bar-search className="absolute inset-x-4 top-4 flex items-center gap-3 empty:hidden sm:inset-x-6" />
+                <div
+                    ref={barSearchSlot}
+                    data-bar-search
+                    className={cx(
+                        "absolute top-4 right-4 flex items-center gap-3 empty:hidden sm:right-6",
+                        // Back stays, as Gojek and Keeta keep it beside the field: the field starts after it.
+                        back ? "left-[calc(1rem+2.75rem+0.75rem)] sm:left-[calc(1.5rem+2.75rem+0.75rem)]" : "left-4 sm:left-6",
+                    )}
+                />
             </div>
             {/* The room the bar takes in the flow, on top of the page's own 16 px (32 from `sm`). With Back the
                 title starts at 76: under the 44 px button with 16 above and under it. Beside the buttons it

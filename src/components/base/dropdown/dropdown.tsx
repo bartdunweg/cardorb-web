@@ -1,7 +1,7 @@
 "use client";
 
 import { type FC, type RefAttributes, useCallback } from "react";
-import { Check, ChevronRight, DotsHorizontal } from "@untitledui/icons";
+import { Check, ChevronRight, DotsVertical } from "@untitledui/icons";
 import type {
     ButtonProps as AriaButtonProps,
     MenuItemProps as AriaMenuItemProps,
@@ -178,8 +178,7 @@ const DropdownDotsButton = (props: AriaButtonProps & RefAttributes<HTMLButtonEle
                 )
             }
         >
-            {/* Across, as every other "more" in the app is (the bar's settings, the card sheet): one direction, not two (Bart, 2026-09-18). */}
-            <DotsHorizontal className="size-5 transition-inherit-all" />
+            <DotsVertical className="size-5 transition-inherit-all" />
         </AriaButton>
     );
 };

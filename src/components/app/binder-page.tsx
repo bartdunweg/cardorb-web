@@ -113,12 +113,13 @@ export async function BinderPage({
                                 {settings?.(true)}
                                 {add?.(true)}
                             </>
-                        ) : (
+                        ) : view || barActions ? (
+                            // Nothing at all when there is nothing: an empty bar lets taps through to the page.
                             <>
                                 {view}
                                 {barActions}
                             </>
-                        )
+                        ) : undefined
                     }
                 >
                     {children}

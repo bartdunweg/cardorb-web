@@ -37,3 +37,32 @@ export function useRowSearch(page: string) {
     );
     return { open: now.page === page, asked: now.asked };
 }
+
+/*
+ * Where the field goes in the bar. The bar hands its slot in as it mounts (a callback ref) rather
+ * than the field looking for it: during a client navigation the page being left is still in the
+ * document, and a lookup found its slot, which was gone a moment later with the term in it.
+ */
+let slot: HTMLElement | null = null;
+const slotListeners = new Set<() => void>();
+
+const subscribeSlot = (listener: () => void) => {
+    slotListeners.add(listener);
+    return () => slotListeners.delete(listener);
+};
+
+/** The bar's slot, as a ref: set as it mounts, and cleared only if it is still the one held. */
+export const barSearchSlot = (el: HTMLElement | null) => {
+    if (el) slot = el;
+    else if (slot && !slot.isConnected) slot = null;
+    else return;
+    for (const listener of slotListeners) listener();
+};
+
+export function useBarSearchSlot() {
+    return useSyncExternalStore(
+        subscribeSlot,
+        () => slot,
+        () => null,
+    );
+}

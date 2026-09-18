@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Edit03, Trash01 } from "@untitledui/icons";
+import { DotsHorizontal, Edit03, Trash01 } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
-import { Heading as AriaHeading } from "react-aria-components";
+import { Button as AriaButton, Heading as AriaHeading } from "react-aria-components";
 import { deleteBinder } from "@/app/(app)/dashboard/collections/actions";
 import { BinderModal } from "@/components/app/binder-dialog";
 import { notify } from "@/components/app/toast";
@@ -58,18 +58,23 @@ export function BinderMenu({
     return (
         <>
             <Dropdown.Root>
-                {/* The kit's own trigger, as the design page's menu uses it: the menu opens from it by
-                    mouse and by keyboard alike, which a kit Button standing in for it did not. It wears
-                    the secondary pill's own classes, so it sits beside the plus as the same button. */}
-                <Dropdown.DotsButton
+                {/* A react-aria button, as the kit's DotsButton is: the menu opens from it by mouse and
+                    by keyboard alike, which a kit Button standing in for it did not. Its own rather than
+                    the kit's, whose dots stand upright where every other "more" in the app lies across
+                    (the list settings, the card sheet; Bart, 2026-09-19). It wears the secondary pill's
+                    own classes, so it sits beside the other bar buttons as the same button. */}
+                <AriaButton
+                    aria-label="Open menu"
                     className={cx(
                         styles.common.root,
                         styles.sizes[compact ? "lg" : "md"].root,
                         styles.colors.secondary.root,
-                        "rounded-full before:rounded-full",
+                        "cursor-pointer rounded-full outline-focus-ring before:rounded-full focus-visible:outline-2 focus-visible:outline-offset-2",
                         compact ? "p-3" : "p-2.5",
                     )}
-                />
+                >
+                    <DotsHorizontal aria-hidden="true" className="size-5 shrink-0" />
+                </AriaButton>
                 <Dropdown.Popover className="w-56">
                     <Dropdown.Menu>
                         <Dropdown.Item icon={Edit03} onAction={() => setEditing(true)}>

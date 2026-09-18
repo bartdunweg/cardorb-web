@@ -99,6 +99,8 @@ test("a filter's button opens its choices as a sheet from the bottom", async ({ 
     expect(Math.round(box!.y + box!.height)).toBeGreaterThanOrEqual(812 - 2);
     await page.keyboard.press("Escape");
     await expect(sheet).toBeHidden();
+    // Back on the button that opened it, so a keyboard carries on from where it was.
+    await expect(rarity).toBeFocused();
 });
 
 test("Collection and Wishlist are tabs of half the line each, under the filters", async ({ page }) => {
@@ -116,4 +118,50 @@ test("Collection and Wishlist are tabs of half the line each, under the filters"
     expect(owned!.width + wished!.width).toBeGreaterThan(list!.width * 0.9);
     // A finger high, where the kit's underline tab is 30 px.
     expect(owned!.height).toBeGreaterThanOrEqual(43);
+});
+
+test("a term survives a client navigation away and Back, in the bar of the page it belongs to", async ({ page }) => {
+    await page.goto("/dashboard/cards");
+    await hydrated(page, "Search in Collection");
+    await page.getByRole("button", { name: "Search in Collection" }).click();
+    await page.keyboard.type("Toedscr", { delay: 60 });
+    await expect(page).toHaveURL(/[?&]q=Toedscr(&|$)/);
+
+    // A link inside the app, not a load: the page being left is still in the document for a moment.
+    await page.getByRole("main").getByRole("tab", { name: "Wishlist" }).click();
+    await expect(page).toHaveURL(/\/dashboard\/wishlist/);
+    await expect(page.getByRole("button", { name: "Search in Wishlist" })).toBeVisible();
+    await expect(page.getByRole("combobox", { name: "Search in Wishlist" })).toBeHidden();
+
+    await page.goBack();
+    await expect(page).toHaveURL(/[?&]q=Toedscr(&|$)/);
+    await expect(page.getByRole("combobox", { name: "Search in Collection" })).toHaveValue("Toedscr");
+    await expect(collectionTile(page, toedscool)).toBeHidden();
+});
+
+test("Escape in an empty field puts the bar back", async ({ page }) => {
+    await page.goto("/dashboard/cards");
+    await hydrated(page, "Search in Collection");
+    const button = page.getByRole("button", { name: "Search in Collection" });
+    await button.click();
+    await expect(page.getByRole("combobox", { name: "Search in Collection" })).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("combobox", { name: "Search in Collection" })).toBeHidden();
+    await expect(button).toBeFocused();
+});
+
+test("Browse searches from its bar too", async ({ page }) => {
+    await page.goto("/dashboard/sets");
+    await hydrated(page, "Search in Browse");
+    await page.getByRole("button", { name: "Search in Browse" }).click();
+    const field = page.getByRole("combobox", { name: "Search in Browse" });
+    await expect(field).toBeFocused();
+    await page.keyboard.type("Scarlet", { delay: 60 });
+    await expect(page).toHaveURL(/[?&]q=Scarlet(&|$)/);
+    await expect(
+        page
+            .getByRole("main")
+            .getByRole("link", { name: /Scarlet & Violet/ })
+            .first(),
+    ).toBeVisible();
 });
