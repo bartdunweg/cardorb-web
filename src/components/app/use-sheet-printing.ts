@@ -22,13 +22,15 @@ type Params = {
     said: string;
     change: PriceChange | null;
     stepFromRef: RefObject<StepFrom>;
+    /** Where the card has no copy: the printing the tile that opened it showed, else the first. */
+    tilePrinting?: string | null;
 };
 
 /**
  * The printing or print run on show in the card sheet, the one pressed under the card, and the
  * picture and price that follow it.
  */
-export function useSheetPrinting({ card, mine, readOnly, tcgId, known, points, period, said, change, stepFromRef }: Params) {
+export function useSheetPrinting({ card, mine, readOnly, tcgId, known, points, period, said, change, stepFromRef, tilePrinting }: Params) {
     /*
      * The printing on show, under the card (printing-choices.ts): the copy's own to begin with,
      * and whichever button was pressed after that, until the sheet moves to another card. A
@@ -60,7 +62,7 @@ export function useSheetPrinting({ card, mine, readOnly, tcgId, known, points, p
         edition: null,
     });
     const pickedHere = picked.tcgId === tcgId ? picked : null;
-    const openingPrinting = openingChoice(printings, ownPrinting);
+    const openingPrinting = openingChoice(printings, ownPrinting, tilePrinting ?? undefined);
     // A card you do not hold opens on its unlimited run, not on the 1st Edition's price.
     const openingEdition = openingChoice(editions, mine?.edition, "unlimited");
     const printingKey = pickedHere?.printing ?? openingPrinting;

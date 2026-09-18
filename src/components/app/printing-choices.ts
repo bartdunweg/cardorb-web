@@ -81,6 +81,18 @@ export function printingChoices(
     return out.size > 1 ? [...out.values()] : null;
 }
 
+/**
+ * A printing's name from its key ("reverse-holo", "holo/cosmos"), the words its button in the sheet
+ * carries, for a tile that says which printing its price is. Null for a key this app does not know.
+ */
+export function printingLabel(key: string | null | undefined): string | null {
+    if (!key) return null;
+    const [finish, pattern] = key.split("/");
+    if (!finish || !(finish in SHORT)) return null;
+    const short = SHORT[finish as Finish];
+    return isPattern(pattern) ? `${FOIL_PATTERN_LABELS[pattern]} ${short.toLowerCase()}` : short;
+}
+
 /** The print runs to choose between, or null where a card has one run or no answer. */
 export function editionChoices(editions: Edition[] | null | undefined, pictures?: Record<string, string> | null): EditionChoice[] | null {
     return editions && editions.length > 1 ? editions.map((key) => ({ key, label: EDITION_LABELS[key], image: pictures?.[key] ?? null })) : null;

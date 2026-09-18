@@ -602,6 +602,10 @@ export type SetCard = {
     tcgId: string | null;
     /** Full art as the API decides it; absent where the answer did not say (`@/lib/full-art`). */
     fullArt?: boolean;
+    /** Which printing `price` is, as the sheet keys its printings; null where the API did not say. */
+    printing?: string | null;
+    /** What that price did over the last seven days; null without two readings or an API that does not say. */
+    priceChange?: { was: number; now: number; change: number } | null;
 };
 
 export const setCardFromBrowse = (c: BrowseCard, setAbbr: string | null = null): SetCard => ({
@@ -626,6 +630,8 @@ export const setCardFromBrowse = (c: BrowseCard, setAbbr: string | null = null):
     tcgId: c.tcgId,
     printedNumber: c.printedNumber ?? c.number,
     ...(c.fullArt === undefined ? {} : { fullArt: c.fullArt }),
+    printing: c.printing ?? null,
+    priceChange: c.priceChange ? { was: c.priceChange.was, now: c.priceChange.now, change: c.priceChange.change } : null,
 });
 
 // ── GET /v1/catalog/search ────────────────────────────────────────────────────────────────
@@ -664,6 +670,14 @@ export const browseCardSchema = z.object({
     /* What the card costs, on the routes that price it, the set page. Absent from search, where
        the answer is a name to pick rather than a shelf to read. */
     price: nullable(apiPriceSchema),
+    /* Which printing `price` is, keyed as the card sheet keys its printing buttons ("normal",
+       "reverse-holo", "holo/cosmos"): the first of the sheet's order that has a price, so the tile
+       and the sheet it opens show one printing. Only on the set page; absent from an API before it
+       named it, and null where no printing has a price. */
+    printing: nullable(z.string()).optional(),
+    /* What that printing's price did since the `from` the set page asked with: its first and last
+       reading in the window. Absent where not asked for, null with fewer than two readings. */
+    priceChange: nullable(z.object({ was: z.number(), now: z.number(), change: z.number(), from: z.string(), to: z.string() })).optional(),
     /* Whether the illustration covers the whole card, as the API's catalogue copy decides it
        (cardorb-api#450). Only on the set page, and absent for a set the API read live; the set
        page falls back to `@/lib/full-art`'s own rule for a card without it. */
