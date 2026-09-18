@@ -35,7 +35,7 @@ const tabClass = "pressable relative flex flex-1 flex-col items-center gap-1 rou
 // the binders you made, one level down). You is the avatar in Home's bar. Browse had no tab while the search at the top of Home
 // listed every set; that search opens the palette now, as it does everywhere else, so Browse has
 // its tab (Bart's call, 2026-09-11). Search is not a tab: it opens the palette, so it stands beside
-// the bar as a round primary button, on every page, where the bar at the top of Home was the only
+// the bar as a round primary button, 4 px from it (Bart, 2026-09-18), on every page, where the bar at the top of Home was the only
 // way in on a phone (Bart's call, 2026-09-18). The row's side inset matches the content's padding,
 // so bar and page share an edge.
 export function MobileTabBar() {
@@ -55,7 +55,7 @@ export function MobileTabBar() {
         <>
             {/* The ground under the bar: the page fades into it, and Safari's bottom bar reads it as solid. */}
             <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 bottom-0 z-30 h-32 fade-to-page lg:hidden" />
-            <div className="fixed inset-x-4 bottom-[max(1.25rem,calc(env(safe-area-inset-bottom)+0.5rem))] z-40 flex items-stretch gap-3 sm:inset-x-6 lg:hidden">
+            <div className="fixed inset-x-4 bottom-[max(1.25rem,calc(env(safe-area-inset-bottom)+0.5rem))] z-40 flex items-stretch gap-1 sm:inset-x-6 lg:hidden">
                 <nav
                     aria-label="Primary"
                     // The same hairline ring as an input, and the lift without the scale's own rim, so it is one line.
