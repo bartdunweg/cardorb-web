@@ -1,7 +1,7 @@
 "use client";
 
 import type { FC } from "react";
-import { Folder, FolderPlus, Star01 } from "@untitledui/icons";
+import { Folder, Plus, Star01 } from "@untitledui/icons";
 import Link from "next/link";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { BinderDialog } from "@/components/app/binder-dialog";
@@ -53,12 +53,12 @@ function BinderCard({ href, icon, name, count }: { href: string; icon: FC<{ clas
 export function NewBinderButton({ compact }: { compact?: boolean }) {
     return (
         <BinderDialog mode="create">
-            {/* A binder, not a plus: Add card stands beside it with the plus, and two pluses in one bar
-                were two guesses. Secondary for the same reason: adding a card is the app's main action. */}
+            {/* The Binders page's main action, so the primary with the plus: Add card no longer stands
+                beside it with a plus of its own (the search opens that palette). */}
             {compact ? (
-                <Button iconLeading={FolderPlus} color="secondary" size="lg" aria-label="New binder" />
+                <Button iconLeading={Plus} size="lg" aria-label="New binder" />
             ) : (
-                <Button iconLeading={FolderPlus} color="secondary" size="md">
+                <Button iconLeading={Plus} size="md">
                     New binder
                 </Button>
             )}
@@ -98,7 +98,7 @@ export function BindersGrid({ binders, favoritesCount }: { binders: BinderSummar
                 <div className="hidden lg:contents">
                     <AppEmptyState icon="folder" title="No binders yet" description="Group your cards into binders you can jump to from the sidebar.">
                         <BinderDialog mode="create">
-                            <Button iconLeading={FolderPlus}>New binder</Button>
+                            <Button iconLeading={Plus}>New binder</Button>
                         </BinderDialog>
                     </AppEmptyState>
                 </div>

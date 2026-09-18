@@ -14,7 +14,7 @@ import { getMyProfile } from "@/lib/profile";
 export const metadata: Metadata = { title: "Wishlist" };
 
 // Cards you want but do not own. Outside the collection, so the API is asked for the wishes only.
-// The list itself is not awaited: see cards/page.tsx.
+// The list itself is not awaited, and its header has no Add card: see cards/page.tsx.
 export default async function WishlistPage({ searchParams }: { searchParams: Promise<ListSearchParams> }) {
     const params = await searchParams;
     // A bare address opens the list as it was left (list-memory-server.ts).
@@ -49,7 +49,6 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
             title="Wishlist"
             datapoints={datapoints}
             settings={(compact) => <ListSettingsDialog list="wishlist" title="Wishlist" isPublic={profile?.wishlist_public ?? false} compact={compact} />}
-            add={(compact) => <AddCardButton compact={compact} />}
             query={query}
             basePath="/dashboard/wishlist"
             facets={facets}
