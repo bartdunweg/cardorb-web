@@ -36,10 +36,12 @@ const ALLOWED: { pattern: RegExp; why: string }[] = [
         // image optimizer (card-image.tsx, next.config.mjs). On the CI runner that hostname
         // resolves to 0.0.0.0, so Next refuses to fetch it and answers /_next/image with 400:
         // "upstream image ... hostname resolved to private IP [\"0.0.0.0\"]", once per picture, in
-        // e2e-web.log. The same addresses answer 200 from here and through the optimizer on
+        // e2e-web.log. Where the browser asks for the file itself rather than through the
+        // optimizer, the same DNS answers it net::ERR_CONNECTION_REFUSED (CI run 35289483169, the
+        // public profile). The same addresses answer 200 from here and through the optimizer on
         // cardorb.com (checked 2026-09-18), so this is the runner's DNS and not the app. It means
         // no picture draws anywhere in this stack, which is why no test in the suite reads one.
-        pattern: /\/_next\/image\?/,
+        pattern: /\/_next\/image\?|https:\/\/images\.cardorb\.com\//,
         why: "images.cardorb.com resolves to 0.0.0.0 on the CI runner, so the optimizer refuses every picture",
     },
 ];
