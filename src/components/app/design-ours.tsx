@@ -495,7 +495,7 @@ export const ourSections: SectionSpec[] = [
         title: "RowButton",
         from: "components/app/row-button",
         ours: true,
-        note: "Filters, Sort and View above a list. From sm it is icon, word and, for a menu, a chevron; on a phone the word is read out only and the button is a 36 px circle, on the line under the search (RowSearch). Narrow the window to see it change.",
+        note: "Filters, Sort and View above a list. From sm it is icon, word and, for a menu, a chevron; on a phone the word is read out only and the button is a 44 px circle, on the line under the search (RowSearch). Narrow the window to see it change.",
         render: (
             <Panel>
                 <Group title="Variants" cols="tight">
@@ -524,7 +524,7 @@ export const ourSections: SectionSpec[] = [
         title: "RowSearch",
         from: "components/app/row-search",
         ours: true,
-        note: "The search in a list row, and LIST_ROW, the row itself. From sm a field of 208 px at most; on a phone the field is always there, across the whole first line, with the row's buttons on the line under it. Narrow the window to a phone to see it.",
+        note: "The search in a list row, and LIST_ROW, the row itself. From sm a field of 208 px at most; on a phone the field is always there, 44 px high across the whole first line, with the row's buttons on the line under it. Narrow the window to a phone to see it.",
         render: (
             <Panel>
                 <Group title="In a row" cols="tight">
