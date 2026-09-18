@@ -28,7 +28,7 @@ test("search, sort and view survive a reload, Back and Forward", async ({ page }
     // The field is a plain textbox, not role="searchbox": no field in this app sets type="search"
     // (checked src/components/app/cards-search.tsx and src/components/base/input/input.tsx), so it
     // is matched by its label rather than by role.
-    await page.getByLabel("Search your cards").fill(target.name);
+    await page.getByLabel("Search in Collection").fill(target.name);
     await expect(page).toHaveURL(/[?&]q=/);
 
     await page.getByRole("button", { name: /^Sort/ }).click();
@@ -46,7 +46,7 @@ test("search, sort and view survive a reload, Back and Forward", async ({ page }
     await expect(page.getByRole("grid", { name: "Cards" })).toBeVisible();
 
     const holds = async () => {
-        await expect(page.getByLabel("Search your cards")).toHaveValue(target.name);
+        await expect(page.getByLabel("Search in Collection")).toHaveValue(target.name);
         await expect(page).toHaveURL(/[?&]sort=name/);
         await expect(page.getByRole("grid", { name: "Cards" })).toBeVisible();
         await expect(page.getByRole("grid", { name: "Cards" }).getByRole("rowheader", { name: target.name })).toBeVisible();
@@ -66,14 +66,14 @@ test("search, sort and view survive a reload, Back and Forward", async ({ page }
 test("a cleared search stays cleared after a reload, Back and a bare address", async ({ page }) => {
     const [target] = cards;
     await page.goto(`/dashboard/cards?q=${encodeURIComponent(target.name)}`);
-    const search = page.getByLabel("Search your cards");
+    const search = page.getByLabel("Search in Collection");
     await expect(search).toHaveValue(target.name);
 
     await search.fill("");
     await expect(page).not.toHaveURL(/[?&]q=/);
 
     const cleared = async () => {
-        await expect(page.getByLabel("Search your cards")).toHaveValue("");
+        await expect(page.getByLabel("Search in Collection")).toHaveValue("");
         for (const c of cards) {
             await expect(page.getByRole("main").getByText(c.name, { exact: true }).first()).toBeVisible();
         }
@@ -156,7 +156,7 @@ test("a filter cleared in the Filters sheet stays cleared after a reload, Back a
 test("the set page keeps its search and tab in its address", async ({ page }) => {
     const [target] = cards;
     await page.goto(`/dashboard/sets/${SET_ID}`);
-    await page.getByLabel("Search this set").fill(target.name);
+    await page.getByLabel("Search in Scarlet & Violet").fill(target.name);
     await page
         .getByRole("tablist", { name: "Cards in this set" })
         .getByRole("tab", { name: /^Owned/ })
@@ -165,7 +165,7 @@ test("the set page keeps its search and tab in its address", async ({ page }) =>
     await expect(page).toHaveURL(/[?&]q=/);
 
     await page.reload();
-    await expect(page.getByLabel("Search this set")).toHaveValue(target.name);
+    await expect(page.getByLabel("Search in Scarlet & Violet")).toHaveValue(target.name);
     await expect(page.getByRole("tab", { name: /^Owned/ })).toHaveAttribute("aria-selected", "true");
     await expect(setTile(page, target, "in your collection")).toBeVisible();
 });

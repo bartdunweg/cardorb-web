@@ -1,8 +1,8 @@
 "use client";
 
 import type { KeyboardEvent, ReactNode } from "react";
-import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { SearchLg } from "@untitledui/icons";
+import { useEffect, useId, useMemo, useRef, useState, useTransition } from "react";
+import { Loading02, SearchLg } from "@untitledui/icons";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { TitleScope } from "@/app/(app)/dashboard/cards/actions";
 import { RowSearch } from "@/components/app/row-search";
@@ -11,6 +11,7 @@ import { MAX_RECENT_TERMS, rememberTerm, useRecentTerms } from "@/hooks/use-rece
 import { type CardTitle, type TitleSet, matchSets, matchTitles } from "@/lib/card-titles";
 import type { BrowseLanguage } from "@/lib/languages";
 import { collectionIndex, listSetsShelf, suggestCardTitles } from "@/lib/reads";
+import { type Sent, heard, wrote as wroteTerm } from "@/lib/search-echo";
 import { cx } from "@/utils/cx";
 
 /** What one binder's field knows about that binder, kept for as long as the tab lives. */
@@ -54,8 +55,8 @@ type Suggestion = { kind: "title"; title: CardTitle } | { kind: "set"; set: Titl
 // still filters, so the list is a shortcut to the usual answer and not a gate in front of it.
 export function CardsSearch({
     initialValue = "",
-    label = "Search your cards",
-    placeholder = "Search",
+    label = "Search",
+    placeholder = label,
     size = "md",
     scope,
     shelf,
@@ -76,16 +77,26 @@ export function CardsSearch({
     /** Set where a press on a suggestion has already written the URL, so the field does not. */
     const wrote = useRef(false);
     const [value, setValue] = useState(initialValue);
+    /** The terms this field wrote to the URL that the page has not come back with yet, oldest first. */
+    const [sent, setSent] = useState<Sent>([]);
+    /** The list behind is being drawn again for a term: the field says so, or a pause reads as nothing happening. */
+    const [pending, startTransition] = useTransition();
     /* The field used to keep up with the URL by being rebuilt: its whole view carried the URL as a
        key. That rebuild is gone (it took the caret out of the box on every committed keystroke),
        so the field follows the URL itself. Without this, the browser's Back button moved the list
        and left the old term sitting in the box.
        Reset during render rather than in an effect, the shape React asks for and the one
-       `cards-list.tsx` already uses. */
+       `cards-list.tsx` already uses.
+       The page coming back with the term this field wrote is not news, though: it answers a
+       keystroke from a moment ago, and taking it put that older term back over whatever was typed
+       while the page was on its way ("char" pause "izard" ended as "char"). Only a URL the field
+       did not write (Back, a set chosen, a filter cleared) replaces what is in the box. */
     const [fromUrl, setFromUrl] = useState(initialValue);
     if (fromUrl !== initialValue) {
         setFromUrl(initialValue);
-        setValue(initialValue);
+        const next = heard(sent, initialValue);
+        setSent(next.sent);
+        if (next.take) setValue(initialValue);
     }
 
     useEffect(() => {
@@ -96,7 +107,7 @@ export function CardsSearch({
             return;
         }
         // Only what was typed: on mount the URL already says what the field shows, and a shared page 2 must stay page 2.
-        if (value === initialValue) return;
+        if (value.trim() === initialValue.trim()) return;
         const id = setTimeout(() => {
             /* The URL as it is now, not as it was when the term changed: a sort or filter picked
                inside these 250 ms would otherwise be written back out. */
@@ -106,11 +117,16 @@ export function CardsSearch({
             // A new term is a new result set; page 3 of the old one is nowhere in it.
             params.delete("page");
             const qs = params.toString();
-            router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+            setSent((terms) => wroteTerm(terms, value.trim()));
+            startTransition(() => router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false }));
         }, 250);
         return () => clearTimeout(id);
+        /* The URL too: an echo that lands after the box moved on (typed back to the old term, or
+           emptied), or a filter picked while a term was on its way (its link carries the page's
+           older term, and the term's own navigation is dropped for it), is where the box and the
+           list part, so what the box holds is written again. */
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [value]);
+    }, [value, initialValue, searchParams]);
 
     const listId = useId();
     const term = value.trim();
@@ -249,6 +265,8 @@ export function CardsSearch({
         // A set is not a term but a filter: the list narrows to it, the Filters button says so,
         // and the term that led here goes, because the set is the whole of what was meant.
         wrote.current = true;
+        // A term still on its way is not the search any more: its late answer is news, not an echo to write past.
+        setSent([]);
         setTaken("");
         setValue("");
         close();
@@ -353,7 +371,7 @@ export function CardsSearch({
     );
 
     return (
-        <RowSearch label={label} filled={value !== ""}>
+        <RowSearch>
             <div className="relative w-full">
                 {/* The ARIA combobox: a text field that offers a list, which is exactly what this is
                 (WAI-ARIA APG). The rule wants a native datalist or a dropdown instead, and a
@@ -361,7 +379,8 @@ export function CardsSearch({
                 {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- see above: a native datalist cannot render these options. */}
                 <InputBase
                     aria-label={label}
-                    icon={SearchLg}
+                    icon={pending ? Loading02 : SearchLg}
+                    iconClassName={pending ? "motion-safe:animate-spin" : undefined}
                     placeholder={placeholder}
                     value={value}
                     onChange={(event) => {

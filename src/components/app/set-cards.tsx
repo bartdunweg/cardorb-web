@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { SearchLg, SwitchVertical01 } from "@untitledui/icons";
 import dynamic from "next/dynamic";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -24,6 +24,7 @@ import type { Card } from "@/lib/cards";
 import { type CardsSize, GRID_COLUMNS } from "@/lib/cards-view";
 import { FULL_ART, setFullArt } from "@/lib/full-art";
 import { listRows } from "@/lib/reads";
+import { type Sent, heard, wrote } from "@/lib/search-echo";
 import { holdingKey } from "@/lib/set-holding";
 import { SET_SORTS, type SetHolding, type SetQuery, readSetQuery, writeSetQuery } from "@/lib/set-query";
 
@@ -120,14 +121,22 @@ export function SetCards({
     /* And the field follows the URL: Back moved the list and left the old term in the box, and the
        effect under this wrote it back a moment later. Reset during render, the shape React asks for
        and the one a binder's field (cards-search.tsx) already uses. */
+    /* The URL coming back with a term the field wrote itself is not news: taking it put that older
+       term back over what was typed since, as it did in a binder's field (cards-search.tsx). */
+    const [sent, setSent] = useState<Sent>([]);
     const [fromUrl, setFromUrl] = useState(query.q);
     if (fromUrl !== query.q) {
         setFromUrl(query.q);
-        setQ(query.q);
+        const next = heard(sent, query.q);
+        setSent(next.sent);
+        if (next.take) setQ(query.q);
     }
     useEffect(() => {
         if (q.trim() === query.q.trim()) return;
-        const id = setTimeout(() => write({ q }), 250);
+        const id = setTimeout(() => {
+            setSent((terms) => wrote(terms, q.trim()));
+            write({ q });
+        }, 250);
         return () => clearTimeout(id);
     }, [q, query.q, write]);
     /* Which of this set's cards are full art: the API's own flag where the answer carries it, which
@@ -152,6 +161,7 @@ export function SetCards({
        catalogue's card with the rows read after the tap (card-memo.ts). Only a set you have a row in;
        the cards are the drawing, so a refresh asks again and a second run of the effect does not. */
     const setName = drawnCards[0]?.setName;
+    const searchLabel = setName ? `Search in ${setName}` : "Search this set";
     useEffect(() => {
         if (setName && drawnCards.some((c) => c.owned || c.wishlist)) warmSetRows(setName, drawnCards);
     }, [drawnCards, setName]);
@@ -159,10 +169,13 @@ export function SetCards({
         () => [...new Set(drawnCards.map((c) => c.rarity).filter((r): r is string => Boolean(r)))].sort().map((r) => ({ value: r, label: r })),
         [drawnCards],
     );
+    /* The grid follows the field when React has a moment: a keystroke draws the letter first, then
+       the tiles, rather than waiting on a grid and its counts to be worked out again. */
+    const needle = useDeferredValue(q);
     /* One test for the grid and for the sheet's count, so "Show 12 cards" is the twelve it shows. */
     const matching = useCallback(
         (f: { holding?: SetHolding; rarity: string[]; art: boolean }, keep?: ReadonlySet<string>) => {
-            const term = q.trim().toLowerCase();
+            const term = needle.trim().toLowerCase();
             return cards.filter(
                 (c) =>
                     (!term ||
@@ -174,9 +187,9 @@ export function SetCards({
                     (!f.art || fullArt.has(c.number)),
             );
         },
-        [cards, q, fullArt],
+        [cards, needle, fullArt],
     );
-    const view = `${q}\u0000${holding ?? ""}\u0000${rarity.join(",")}\u0000${art}\u0000${sort}`;
+    const view = `${needle}\u0000${holding ?? ""}\u0000${rarity.join(",")}\u0000${art}\u0000${sort}`;
     /* The cards pressed on in this view stay in it: a plus under Missing would otherwise take the
        tile away under the thumb that is about to press it again. A new view sorts them where they go. */
     const [touched, setTouched] = useState<{ view: string; ids: ReadonlySet<string> }>({ view, ids: new Set() });
@@ -189,7 +202,7 @@ export function SetCards({
         const price = (c: SetCard) => c.price ?? (sort === "price-desc" ? -1 : Number.POSITIVE_INFINITY);
         return [...kept].sort((a, b) => (sort === "name" ? a.name.localeCompare(b.name) : sort === "price-desc" ? price(b) - price(a) : price(a) - price(b)));
     }, [matching, holding, rarity, art, sort, keep]);
-    const narrowed = Boolean(q.trim() || holding || rarity.length || art);
+    const narrowed = Boolean(needle.trim() || holding || rarity.length || art);
     /* How many of `shown` are drawn. Kept with the view it was counted for, so a new search, filter
        or sort starts again at one batch without an effect to reset it. */
     const [drawn, setDrawn] = useState({ view, count: CARD_BATCH });
@@ -309,14 +322,14 @@ export function SetCards({
                         ))}
                     </TabList>
                 </div>
-                {/* A round button on a phone, a short field from sm (`RowSearch`), as in a binder's row. */}
+                {/* The whole first line on a phone, a short field from sm (`RowSearch`), as in a binder's row. */}
                 <div className={LIST_ROW}>
-                    <RowSearch label="Search this set" filled={q !== ""}>
+                    <RowSearch>
                         <Input
                             size="sm"
                             icon={SearchLg}
-                            aria-label="Search this set"
-                            placeholder="Search this set"
+                            aria-label={searchLabel}
+                            placeholder={searchLabel}
                             value={q}
                             onChange={setQ}
                             // What the URL keeps (readSetQuery); longer, the two would disagree for good.
@@ -370,7 +383,9 @@ export function SetCards({
                             icon="search"
                             title="No cards found"
                             description={
-                                q.trim() ? `No cards in this set match “${q.trim()}”.` : "Nothing in this set with those filters. Clear one to widen the list."
+                                needle.trim()
+                                    ? `No cards in this set match “${needle.trim()}”.`
+                                    : "Nothing in this set with those filters. Clear one to widen the list."
                             }
                         />
                     ) : (
