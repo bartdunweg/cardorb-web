@@ -32,6 +32,7 @@ export function PageHeader({
     hero,
     barActions,
     children,
+    below,
     titleOnPhone = true,
 }: {
     title: string;
@@ -57,6 +58,12 @@ export function PageHeader({
     barActions?: ReactNode;
     /** Anything else that belongs with the title, like a progress bar. */
     children?: ReactNode;
+    /**
+     * Under the title's row at the column's full width: a switch between views. Not in `children`,
+     * which share the row with the actions and, on a phone, give up the bar's buttons' 112 px: Owned
+     * and Wishlist were 342 px wide on one page and 234 on the other (390 px, 2026-09-18).
+     */
+    below?: ReactNode;
     /** Off on a page whose title says nothing on a phone (Browse): the h1 stays for a screen reader. */
     titleOnPhone?: boolean;
 }) {
@@ -205,6 +212,7 @@ export function PageHeader({
                     </div>
                     {actions ? <div className="flex items-center gap-3 self-stretch">{actions}</div> : null}
                 </div>
+                {below}
             </div>
         </div>
     );
