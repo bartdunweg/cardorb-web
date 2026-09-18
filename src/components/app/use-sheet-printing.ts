@@ -24,13 +24,15 @@ type Params = {
     said: string;
     change: PriceChange | null;
     stepFromRef: RefObject<StepFrom>;
+    /** Where the card has no copy: the printing the tile that opened it showed, else the first. */
+    tilePrinting?: string | null;
 };
 
 /**
  * The printing or print run on show in the card sheet, the one pressed under the card, and the
  * picture and price that follow it.
  */
-export function useSheetPrinting({ card, mine, readOnly, tcgId, known, points, listings, period, said, change, stepFromRef }: Params) {
+export function useSheetPrinting({ card, mine, readOnly, tcgId, known, points, listings, period, said, change, stepFromRef, tilePrinting }: Params) {
     /*
      * The printing on show, under the card (printing-choices.ts): the copy's own to begin with,
      * and whichever button was pressed after that, until the sheet moves to another card. A
@@ -62,7 +64,7 @@ export function useSheetPrinting({ card, mine, readOnly, tcgId, known, points, l
         edition: null,
     });
     const pickedHere = picked.tcgId === tcgId ? picked : null;
-    const openingPrinting = openingChoice(printings, ownPrinting);
+    const openingPrinting = openingChoice(printings, ownPrinting, tilePrinting ?? undefined);
     // A card you do not hold opens on its unlimited run, not on the 1st Edition's price.
     const openingEdition = openingChoice(editions, mine?.edition, "unlimited");
     const printingKey = pickedHere?.printing ?? openingPrinting;
@@ -83,7 +85,12 @@ export function useSheetPrinting({ card, mine, readOnly, tcgId, known, points, l
      * card's history, or a pattern print's own figure. `undefined` is "the copy's price", null is
      * "that printing has none".
      */
-    const pressedAway = (printing && printingKey !== openingPrinting) || (editionKey && editionKey !== openingEdition);
+    /* A card with no copy, opened from a set tile on the printing the tile priced, reads that printing's
+       own figure too: the card's headline price is the API's older pick (holo before reverse) and
+       the sheet said a different price than the tile under the same printing's name. Until the
+       history is in, the headline stands, rather than "No price" for a moment. */
+    const tileLine = !mine && !!tilePrinting && !!printing && printingKey === openingPrinting && printingKey === tilePrinting && points.length > 0;
+    const pressedAway = (printing && printingKey !== openingPrinting) || (editionKey && editionKey !== openingEdition) || tileLine;
     const patternPrint = printing?.foilPattern
         ? known?.patternPrints?.prints.find((p) => p.finish === printing.finish && p.foilPattern === printing.foilPattern)
         : undefined;

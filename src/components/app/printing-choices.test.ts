@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { editionChoices, openingChoice, pressedPrinting, priceSeriesOf, printingChoices } from "./printing-choices";
+import { editionChoices, openingChoice, pressedPrinting, priceSeriesOf, printingChoices, printingLabel } from "./printing-choices";
 
 const POKE = "https://images.cardorb.com/tcgplayer/566553.jpg";
 
@@ -143,5 +143,23 @@ describe("pressedPrinting", () => {
             price: null,
             listing: 3.2,
         });
+    });
+});
+
+describe("printingLabel", () => {
+    it("names a printing as its button in the sheet does", () => {
+        expect(printingLabel("normal")).toBe("Normal");
+        expect(printingLabel("reverse-holo")).toBe("Reverse");
+        expect(printingLabel("holo")).toBe("Holo");
+    });
+
+    it("puts a pattern before its finish", () => {
+        expect(printingLabel("holo/cosmos")).toBe("Cosmos holo");
+    });
+
+    it("says nothing for no key or one it does not know", () => {
+        expect(printingLabel(null)).toBeNull();
+        expect(printingLabel("")).toBeNull();
+        expect(printingLabel("gold-star")).toBeNull();
     });
 });

@@ -430,6 +430,8 @@ export function SetCards({
                     setOpenId(null);
                 }}
                 addable={addable ? pokemonCardFromSetCard(addable, language) : null}
+                /* The printing the tile showed, so a card you do not hold opens on it (printing-choices.ts). */
+                printing={addable?.printing ?? null}
                 /* The sheet writes without drawing the page again; the tile and the counts are told here. */
                 onTaking={(taken, list) => {
                     const drawnCard = drawnById.get(taken.id);

@@ -80,11 +80,13 @@ export type SetDetail = {
 // Five minutes per person (user-cache.ts), like the shelf: the marks and counts change on a write,
 // and every write drops the person's entries. It was read fresh on every visit, and opening a set
 // a second time waited on the API as long as the first (2.2 s measured on Scarlet & Violet). A 404
-// or a refusal throws inside the cache and is never kept. The "v1" is for when SetDetail's shape
-// changes: an entry survives a deploy (#206).
+// or a refusal throws inside the cache and is never kept. The "v2" is for when SetDetail's shape
+// changes: an entry survives a deploy (#206). The day the change is read from is in the key too, so
+// yesterday's entry does not answer with yesterday's week (a price day in every price key).
 export async function getSet(id: string, language: BrowseLanguage = "en"): Promise<SetDetail | null> {
+    const from = weekAgo();
     try {
-        return await perUser("sets", `set:v1:${language}:${id}`, (token) => readSet(id, language, token));
+        return await perUser("sets", `set:v2:${language}:${from}:${id}`, (token) => readSet(id, language, from, token));
     } catch (err) {
         if (err instanceof ApiError && err.status === 404) return null;
         if (catalogueDown(err)) throw new CatalogueUnavailable();
@@ -92,11 +94,14 @@ export async function getSet(id: string, language: BrowseLanguage = "en"): Promi
     }
 }
 
-async function readSet(id: string, language: BrowseLanguage, token: string): Promise<SetDetail> {
+/** Seven days back, the window a set tile's price change covers (Bart's call, 2026-09-18), as the API's date. */
+const weekAgo = () => new Date(Date.now() - 7 * 86_400_000).toISOString().slice(0, 10);
+
+async function readSet(id: string, language: BrowseLanguage, from: string, token: string): Promise<SetDetail> {
     const read = (page: number) =>
         api(`/catalog/sets/${encodeURIComponent(id)}`, {
             token,
-            params: { pageSize: PAGE, ...(page > 1 ? { page } : {}), ...(language === "en" ? {} : { language }) },
+            params: { pageSize: PAGE, from, ...(page > 1 ? { page } : {}), ...(language === "en" ? {} : { language }) },
             schema: setPageAnswer,
         });
     // The ones that do not fit one page (a Scarlet & Violet set with its secrets, when the ceiling

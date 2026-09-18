@@ -76,6 +76,12 @@ type Addable = {
 type Period = { period?: PeriodKey };
 
 /**
+ * The printing a set tile showed the price of: a card with no copy opens on it, so the sheet shows
+ * the printing and the price the tile did (Bart, 2026-09-18). A copy's own printing still wins.
+ */
+type Opening = { printing?: string | null };
+
+/**
  * The star was turned on or off, told on the press and again if the save fails and it goes back.
  * A list of starred cards takes the row off itself here, so an unstarred card leaves Favorites on
  * the press rather than when the page has been read again.
@@ -86,6 +92,7 @@ type Props = ({ card: Card | null; onClose: () => void; readOnly?: false } | { c
     Neighbours &
     Addable &
     Period &
+    Opening &
     Starred;
 
 export function CardDetailSlideout({
@@ -100,6 +107,7 @@ export function CardDetailSlideout({
     onRemoved,
     rowPending = false,
     period: opensOn = "1m",
+    printing: tilePrinting = null,
     onStarChanged,
 }: Props) {
     const { mine, copies, setViewing, showRows, pressedRef, reloadCopies } = useSheetCopies({ card, readOnly });
@@ -120,7 +128,7 @@ export function CardDetailSlideout({
         shownListing,
         shownChange,
         publicPrice,
-    } = useSheetPrinting({ card, mine, readOnly, tcgId, known, points, listings, period, said, change, stepFromRef });
+    } = useSheetPrinting({ card, mine, readOnly, tcgId, known, points, listings, period, said, change, stepFromRef, tilePrinting });
     const { takeable, emptied, busy, scheduleRefresh, add, fileInBinder, dropCopies, stepUp, stepDown, closeSheet, removeAndOffer } = useSheetWrites({
         card,
         readOnly,
