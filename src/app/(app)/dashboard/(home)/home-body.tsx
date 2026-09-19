@@ -223,6 +223,15 @@ function ListStatsOutline({ wishlist }: { wishlist: boolean }) {
  * address asks for. Nothing for an account that holds nothing yet: Home is then its welcome, which
  * has no list to be about.
  */
+/** The chosen list's name alone, for the phone's bar once the title has scrolled under it. */
+export async function HomeListName({ searchParams }: { searchParams: Promise<{ value?: string }> }) {
+    const { value } = await searchParams;
+    const [stats, binders] = await Promise.all([getCardStats(), sideRead("binders", getMyBinders, null)]);
+    if (stats.owned === 0) return "Home";
+    const selected = chosenList(askedList(value), binders);
+    return homeLists(binders ?? []).find((l) => l.id === selected)?.name ?? "Collection";
+}
+
 export async function HomeListMenu({ searchParams }: { searchParams: Promise<{ value?: string }> }) {
     const { value } = await searchParams;
     const [stats, binders] = await Promise.all([getCardStats(), sideRead("binders", getMyBinders, null)]);

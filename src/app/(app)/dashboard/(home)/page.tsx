@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { HomeBody, HomeListMenu } from "@/app/(app)/dashboard/(home)/home-body";
+import { HomeBody, HomeListMenu, HomeListName } from "@/app/(app)/dashboard/(home)/home-body";
 import { PageHeader } from "@/components/app/page-header";
 import { HomeBodyOutline } from "@/components/app/skeletons";
 import { YouLink } from "@/components/app/you-link";
@@ -39,6 +39,12 @@ export default function DashboardPage({ searchParams }: { searchParams: Promise<
                         }
                     >
                         <HomeListMenu searchParams={searchParams} />
+                    </Suspense>
+                }
+                // The bar says the same list once the title has scrolled under it, not the page's name.
+                barTitle={
+                    <Suspense fallback={null}>
+                        <HomeListName searchParams={searchParams} />
                     </Suspense>
                 }
                 actions={<YouLink />}

@@ -39,6 +39,7 @@ export function PageHeader({
     sticky = true,
     phoneTitle,
     heading,
+    barTitle,
 }: {
     title: string;
     /**
@@ -46,6 +47,8 @@ export function PageHeader({
      * chevron. `title` stays the words, for the bar's small title once the page scrolls.
      */
     heading?: ReactNode;
+    /** What the phone's bar says once the title has scrolled under it, where `heading` is not plain words (Home's list). */
+    barTitle?: ReactNode;
     /**
      * The title below `lg`, where it differs: Collection and Wishlist are one tab on a phone, My cards,
      * and its title says so while the switch under it says which half (Bart's call, 2026-09-18).
@@ -256,7 +259,7 @@ export function PageHeader({
                     ) : null}
                 </div>
                 {/* The same words as the h1 below, so a screen reader hears the title once. Home's h1 is the
-                    list it is about and its bar says Home, the page's name, as the tab does. */}
+                    list it is about, and so is its bar (`barTitle`). */}
                 <span
                     aria-hidden="true"
                     className={cx(
@@ -265,7 +268,7 @@ export function PageHeader({
                         "col-start-2 row-start-1 truncate px-2 text-center text-md font-semibold text-primary opacity-(--bar)",
                     )}
                 >
-                    {phoneTitle ?? title}
+                    {barTitle ?? phoneTitle ?? title}
                 </span>
                 <div
                     ref={buttons}
