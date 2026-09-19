@@ -34,6 +34,11 @@ export async function getBinderOverview(): Promise<{
  * keeping, not that the first stopped counting. Null where there is none, which is a person who
  * deleted theirs, and nothing about the Pokédex is then drawn.
  */
+/** Whether this binder is shown as a Pokédex: any binder can be, not only the first (getDexBinder). */
+export async function isPokedexBinder(id: string): Promise<boolean> {
+    return (await binders()).some((f) => f.id === id && f.pokedex != null);
+}
+
 export async function getDexBinder(): Promise<{ id: string; name: string; pokedex: PokedexSetting } | null> {
     const found = (await binders()).find((f) => f.pokedex);
     return found?.pokedex ? { id: found.id, name: found.name, pokedex: found.pokedex } : null;

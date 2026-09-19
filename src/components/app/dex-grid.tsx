@@ -2,6 +2,7 @@
 
 import { type ReactNode, Suspense, use, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import { setDexFace } from "@/app/(app)/dashboard/cards/actions";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CardBack } from "@/components/app/card-back";
@@ -52,6 +53,7 @@ const ART_SIZES = "(min-width: 1280px) 128px, 20vw";
 const DEX_BATCH = 96;
 
 export function DexGrid({ generations, size = "md", linked = true }: { generations: DexGeneration[]; size?: CardsSize; linked?: boolean }) {
+    const router = useRouter();
     // A thousand slots is seven hundred pictures' markup, most of it below the fold: drawn a
     // batch at a time, a screen ahead of the sentinel, the way a list of cards is. The slots are
     // all in hand already, so a batch is a render and not a request. The count runs on across
@@ -74,10 +76,14 @@ export function DexGrid({ generations, size = "md", linked = true }: { generatio
             const rows = await listCopies({ set: card.set, number: card.number, name: card.name });
             const row = rows.find((r) => r.id === card.id) ?? rows[0] ?? null;
             if (row) setSelected(row);
-            // A tap that finds no row says so, rather than looking as if it did nothing.
-            else notify.failed(`${card.name} could not be opened`, { description: "Its row could not be read. Try again in a moment." });
-        } catch {
-            notify.failed(`${card.name} could not be opened`, { description: "Its row could not be read. Try again in a moment." });
+            else {
+                /* A tap that finds no row says so, rather than looking as if it did nothing. The read gives
+                   no row both when the card is not held any more (removed, or moved to the wishlist,
+                   elsewhere) and when it could not be read; the list is read again, so a card that is
+                   gone leaves its slot. */
+                notify.failed(`${card.name} could not be opened`, { description: "It may not be in your collection any more." });
+                router.refresh();
+            }
         } finally {
             opening.current = null;
         }
