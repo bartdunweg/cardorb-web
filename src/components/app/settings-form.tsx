@@ -3,11 +3,11 @@
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { Code01, Download01, File02, Lock01, Monitor04, Moon01, Sun, UploadCloud01 } from "@untitledui/icons";
-import dynamic from "next/dynamic";
 import { Button as AriaButton } from "react-aria-components";
 import { checkUsername, removeAvatar, updateEmail, updatePassword, updateProfile, uploadAvatar } from "@/app/(app)/dashboard/settings/actions";
 import { signOut } from "@/app/(auth)/actions";
 import { FormError } from "@/components/app/form-error";
+import { ImportDialog } from "@/components/app/import-trigger";
 import { PricesPublicRow } from "@/components/app/prices-public-row";
 import { PublicProfileRow, publicUrl } from "@/components/app/public-profile-row";
 import { SettingsGroup, SettingsLinkRow, SettingsRow, SettingsTriggerRow, SheetHeader, settingsLabelClass } from "@/components/app/settings-rows";
@@ -22,12 +22,6 @@ import type { Profile } from "@/lib/profile";
 import { isTheme } from "@/lib/theme-script";
 import { orFailed } from "@/lib/write-outcome";
 import { useTheme } from "@/providers/theme";
-
-// The import form is opened rarely and brings the CSV reading with it: its code loads apart, the row still drawn on the server.
-// While it loads on a client navigation, a blank of the row's height (py-3.5 around a 24 px line) holds its place.
-const ImportDialog = dynamic(() => import("@/components/app/import-dialog").then((m) => m.ImportDialog), {
-    loading: () => <div aria-hidden="true" className="h-13" />,
-});
 
 type Msg = { type: "ok" | "err"; text: string } | null;
 

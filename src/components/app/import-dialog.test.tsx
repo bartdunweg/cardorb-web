@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Button } from "@/components/base/buttons/button";
-import { ImportDialog } from "./import-dialog";
+import { ImportDialog } from "./import-trigger";
 
 /*
  * What the dialog does when the action itself throws: not when it answers
@@ -34,7 +34,13 @@ const dropFile = async () => {
         </ImportDialog>,
     );
     fireEvent.click(screen.getByRole("button", { name: "Import" }));
-    const input = (await screen.findByRole("dialog")).querySelector("input[type=file]")!;
+    // The dialog opens at once; its form's code loads apart (import-trigger.tsx), so wait for its field.
+    const dialog = await screen.findByRole("dialog");
+    const input = await waitFor(() => {
+        const found = dialog.querySelector("input[type=file]");
+        if (!found) throw new Error("the form is not in yet");
+        return found;
+    });
     fireEvent.change(input, { target: { files: [new File(["Name,Set\nPikachu,Base"], "cards.csv", { type: "text/csv" })] } });
 };
 
