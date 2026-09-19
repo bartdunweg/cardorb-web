@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { HomeBody } from "@/app/(app)/dashboard/(home)/home-body";
+import { HomeBody, HomeListMenu } from "@/app/(app)/dashboard/(home)/home-body";
 import { PageHeader } from "@/components/app/page-header";
 import { HomeBodyOutline } from "@/components/app/skeletons";
 import { YouLink } from "@/components/app/you-link";
@@ -17,8 +17,17 @@ export default function DashboardPage({ searchParams }: { searchParams: Promise<
         <div className="flex flex-1 flex-col gap-6">
             <PageHeader
                 title="Home"
-                // On a phone the avatar stands across from the title; the search is the round button beside the tab bar.
-                actions={<YouLink />}
+                shortTitle
+                // Which list Home is about, beside the avatar across from the title (Bart's call, 2026-09-19); the
+                // search is the round button beside the tab bar. The choice waits on the binders, the avatar does not.
+                actions={
+                    <>
+                        <Suspense fallback={null}>
+                            <HomeListMenu searchParams={searchParams} />
+                        </Suspense>
+                        <YouLink />
+                    </>
+                }
             />
             {/* The title is on screen before the stats are read, and the outline
                 stands where the value and the tiles go. */}

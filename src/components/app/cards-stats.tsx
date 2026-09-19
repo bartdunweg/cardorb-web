@@ -75,3 +75,19 @@ export function CardsStats({ stats, fourth }: { stats: CardStats; fourth: ReactN
         </div>
     );
 }
+
+/**
+ * Home's four counts when a list other than the collection is chosen (Bart's call, 2026-09-19): its
+ * cards (a duplicate counting twice), the printings among them, the sets they come from, and the
+ * Pokémon on them. Each leads to the list, the last two sorted to say it.
+ */
+export function ListStats({ copies, unique, sets, href, pokemon }: { copies: number; unique: number; sets: number; href: string; pokemon: ReactNode }) {
+    return (
+        <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-4">
+            <StatCard label="Cards" value={formatCount(copies)} href={href} delay={0} />
+            <StatCard label="Unique" value={formatCount(unique)} href={href} delay={40} />
+            <StatCard label="Sets" value={formatCount(sets)} href={`${href}?sort=set`} delay={80} />
+            {pokemon}
+        </div>
+    );
+}

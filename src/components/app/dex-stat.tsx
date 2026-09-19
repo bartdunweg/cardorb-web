@@ -4,6 +4,7 @@ import { getDexBinder } from "@/lib/binders";
 import { getAllMyCards } from "@/lib/cards";
 import { groupByDex } from "@/lib/dex-groups";
 import { formatCount } from "@/lib/format";
+import { type HomeList, listFilter } from "@/lib/home-list";
 import { getDexNames } from "@/lib/pokedex";
 import { sideRead } from "@/lib/side-read";
 import { perUser } from "@/lib/user-cache";
@@ -49,4 +50,28 @@ function caughtCount(setting: PokedexSetting): Promise<number> {
         const [all, names] = await Promise.all([getAllMyCards({ facets: false, pictures: false }, token), getDexNames()]);
         return groupByDex(all.cards, names, setting).caught;
     });
+}
+
+/**
+ * How many Pokémon a list holds, for Home's counts when a list other than the collection is chosen:
+ * every species on its cards, in every rarity and the whole National Dex, as a list has no Pokédex
+ * setting of its own. Null for no tile. Kept per person and list like the collection's count.
+ */
+export async function readListCaught(list: HomeList): Promise<number | null> {
+    return sideRead(
+        "list caught",
+        () =>
+            perUser("stats", `list-caught:v1:${list}`, async (token) => {
+                const [all, names] = await Promise.all([getAllMyCards({ ...listFilter(list), facets: false, pictures: false }, token), getDexNames()]);
+                return groupByDex(all.cards, names, { missing: true }).caught;
+            }),
+        null,
+    );
+}
+
+/** The Pokémon tile for a chosen list: its species, leading to the list in Pokédex order. */
+export async function ListDexStat({ caught: read, href }: { caught: Promise<number | null>; href: string }) {
+    const caught = await read;
+    if (caught === null) return null;
+    return <StatCard label="Pokémon" value={formatCount(caught)} href={`${href}?sort=dex`} delay={120} />;
 }

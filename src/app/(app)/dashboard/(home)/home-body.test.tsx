@@ -36,6 +36,10 @@ const { calls, stats, reads } = vi.hoisted(() => {
             calls.push("dex caught");
             return 151;
         }),
+        readListCaught: vi.fn(async () => {
+            calls.push("list caught");
+            return 12;
+        }),
     };
     return { calls, stats, reads };
 });
@@ -50,7 +54,13 @@ vi.mock("@/lib/cards", () => ({
 vi.mock("@/lib/binders", () => ({ getMyBinders: reads.getMyBinders }));
 vi.mock("@/lib/value-history", () => ({ getValueHistory: reads.getValueHistory }));
 vi.mock("@/components/app/top-cards", () => ({ TopCards: () => null, readTopCards: reads.readTopCards }));
-vi.mock("@/components/app/dex-stat", () => ({ DexStat: () => null, readDexCaught: reads.readDexCaught }));
+vi.mock("@/components/app/dex-stat", () => ({
+    DexStat: () => null,
+    ListDexStat: () => null,
+    readDexCaught: reads.readDexCaught,
+    readListCaught: reads.readListCaught,
+}));
+vi.mock("@/components/app/home-list-choice", () => ({ HomeListChoice: () => null }));
 vi.mock("@/components/app/movers", () => ({ Movers: () => null }));
 vi.mock("@/components/app/value-hero", () => ({ ValueHero: () => null }));
 vi.mock("@/lib/profile", () => ({ getMyProfile: vi.fn() }));
@@ -82,7 +92,8 @@ describe("HomeBody", () => {
         const body = HomeBody({ searchParams: Promise.resolve({ value: id }) });
         await settle();
         expect(reads.getValueHistory).toHaveBeenCalledWith(id);
-        expect(reads.getMyCards).toHaveBeenCalledWith({ collectionId: id, limit: 1, facets: false });
+        // With its facets: the sets a list spans are one of its four counts on Home.
+        expect(reads.getMyCards).toHaveBeenCalledWith({ collectionId: id, limit: 1 });
         stats.release({ owned: 3, value: 40 });
         await body;
     });
