@@ -22,7 +22,8 @@ export default function DashboardPage({ searchParams }: { searchParams: Promise<
                 // search is the round button beside the tab bar. The choice waits on the binders, the avatar does not.
                 actions={
                     <>
-                        <Suspense fallback={null}>
+                        {/* The button's room while the binders are read, so the avatar does not move when it comes. */}
+                        <Suspense fallback={<div aria-hidden="true" className="h-9 w-32 rounded-full ring-1 ring-primary ring-inset" />}>
                             <HomeListMenu searchParams={searchParams} />
                         </Suspense>
                         <YouLink />

@@ -9,6 +9,7 @@ import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-m
 import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
+import { cx } from "@/utils/cx";
 
 /*
  * Which list Home is about, in the page's header beside the avatar (Bart's call, 2026-09-19): the
@@ -70,16 +71,18 @@ export function HomeListChoice({ lists, selected }: { lists: HomeListOption[]; s
                     else setSheetOpen(true);
                 }}
             >
-                {/* The list's icon, its name, the chevron; a spinner's worth of dimming while the page answers. */}
+                {/* The list's icon, its name, the chevron. */}
                 <Button
                     color="secondary"
                     size="sm"
                     iconTrailing={ChevronDown}
-                    aria-label={`Home shows ${list.name}; choose a list`}
+                    // The words on the button first, as voice control says them.
+                    aria-label={`${list.name}: choose Home's list`}
                     // On a phone the press opens a sheet, a dialog, not the menu the trigger announces.
                     aria-haspopup={phone ? "dialog" : undefined}
                     aria-expanded={phone ? sheetOpen : undefined}
-                    className={pending ? "opacity-60" : undefined}
+                    // Dims after 150 ms while the page answers, so a quick answer never flickers.
+                    className={cx("transition-opacity duration-(--duration-fast)", pending && "opacity-60 delay-150")}
                 >
                     {/* One box: the kit wraps the children in an inline span, where an icon and a word break onto two lines. */}
                     <span className="inline-flex items-center gap-1.5">

@@ -36,9 +36,9 @@ const { calls, stats, reads } = vi.hoisted(() => {
             calls.push("dex caught");
             return 151;
         }),
-        readListCaught: vi.fn(async () => {
-            calls.push("list caught");
-            return 12;
+        readListNumbers: vi.fn(async () => {
+            calls.push("list numbers");
+            return { sets: 3, caught: 12 };
         }),
     };
     return { calls, stats, reads };
@@ -58,7 +58,7 @@ vi.mock("@/components/app/dex-stat", () => ({
     DexStat: () => null,
     ListDexStat: () => null,
     readDexCaught: reads.readDexCaught,
-    readListCaught: reads.readListCaught,
+    readListNumbers: reads.readListNumbers,
 }));
 vi.mock("@/components/app/home-list-choice", () => ({ HomeListChoice: () => null }));
 vi.mock("@/components/app/movers", () => ({ Movers: () => null }));
@@ -92,8 +92,7 @@ describe("HomeBody", () => {
         const body = HomeBody({ searchParams: Promise.resolve({ value: id }) });
         await settle();
         expect(reads.getValueHistory).toHaveBeenCalledWith(id);
-        // With its facets: the sets a list spans are one of its four counts on Home.
-        expect(reads.getMyCards).toHaveBeenCalledWith({ collectionId: id, limit: 1 });
+        expect(reads.getMyCards).toHaveBeenCalledWith({ collectionId: id, limit: 1, facets: false });
         stats.release({ owned: 3, value: 40 });
         await body;
     });

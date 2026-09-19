@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { AddCardButton } from "@/components/app/add-card-button";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CardsStats, ListStats, StatCard } from "@/components/app/cards-stats";
-import { DexStat, ListDexStat, readDexCaught, readListCaught } from "@/components/app/dex-stat";
+import { DexStat, ListDexStat, readDexCaught, readListNumbers } from "@/components/app/dex-stat";
 import { HomeListChoice } from "@/components/app/home-list-choice";
 import { HomePeriodProvider } from "@/components/app/home-period";
 import { Movers } from "@/components/app/movers";
@@ -29,8 +29,7 @@ type ValueReads = { binders: Awaited<ReturnType<typeof getMyBinders>>; snapshots
  */
 function startReads(asked: string) {
     const binders = sideRead("binders", getMyBinders, null);
-    // A binder deleted since the address was kept is the collection, movers and line included.
-    const selected = UUID.test(asked) ? binders.then((f) => (f && !f.some((binder) => binder.id === asked) ? "all" : asked)) : Promise.resolve(asked);
+    const selected = binders.then((f) => chosenList(asked, f));
     /* Each of these is a side read: one that fails leaves the chart without its line, the menu
        without the binders, or the collection's own number in place of a list's, never Home as an
        error page. */
@@ -43,18 +42,19 @@ function startReads(asked: string) {
                 : sideRead(
                       "list value",
                       () =>
-                          // With its facets: the sets it spans are one of the four counts for a list.
-                          getMyCards({ ...listFilter(list), limit: 1 }),
+                          // No facets: the API's are the whole collection's; a list's sets are counted in readListNumbers.
+                          getMyCards({ ...listFilter(list), limit: 1, facets: false }),
                       null,
                   ),
         ]).then(([f, snapshots, current]) => ({ binders: f, snapshots, current })),
     );
-    // The dearest cards and the Pokémon count are the chosen list's too; the collection's count is the Pokédex's own.
+    // The dearest cards and the counts are the chosen list's too; the collection's Pokémon count is the Pokédex's own.
     return {
         selected,
         value,
         top: selected.then((list) => readTopCards(list)),
-        caught: selected.then((list) => (list === "all" ? readDexCaught() : readListCaught(list))),
+        caught: selected.then((list) => (list === "all" ? readDexCaught() : null)),
+        numbers: selected.then((list) => (list === "all" ? null : readListNumbers(list))),
     };
 }
 
@@ -172,20 +172,17 @@ async function ListCounts({
     stats: Awaited<ReturnType<typeof getCardStats>>;
     reads: ReturnType<typeof startReads>;
 }) {
-    const { current } = await reads.value;
+    const [{ current }, numbers] = await Promise.all([reads.value, reads.numbers]);
     if (!current) return <CardsStats stats={stats} fourth={null} />;
     const href = listPath(selected);
     return (
         <ListStats
             copies={current.copies ?? current.total}
-            unique={current.total}
-            sets={current.facets.sets.length}
+            // A wish is one card: the wishlist's two counts would say the same number twice.
+            unique={selected === "wishlist" ? undefined : current.total}
+            sets={numbers?.sets ?? null}
             href={href}
-            pokemon={
-                <Suspense fallback={<StatCard label="Pokémon" value=" " href={`${href}?sort=dex`} delay={120} />}>
-                    <ListDexStat caught={reads.caught} href={href} />
-                </Suspense>
-            }
+            pokemon={<ListDexStat numbers={Promise.resolve(numbers)} href={href} />}
         />
     );
 }
@@ -207,11 +204,17 @@ function ListStatsOutline() {
  */
 export async function HomeListMenu({ searchParams }: { searchParams: Promise<{ value?: string }> }) {
     const { value } = await searchParams;
-    const asked = askedList(value);
     const [stats, binders] = await Promise.all([getCardStats(), sideRead("binders", getMyBinders, null)]);
     if (stats.owned === 0) return null;
-    const lists = homeLists(binders ?? []);
-    // A binder deleted since the address was kept is the collection, as the page reads it.
-    const selected = lists.some((l) => l.id === asked) ? asked : "all";
-    return <HomeListChoice lists={lists} selected={selected} />;
+    return <HomeListChoice lists={homeLists(binders ?? [])} selected={chosenList(askedList(value), binders)} />;
+}
+
+/**
+ * The list Home is about, decided once for the header and the body alike: a binder only while the
+ * binders are read and still hold it (deleted since the address was kept, or unreadable, it is the
+ * collection), so the button, the value and the counts never name two different lists.
+ */
+function chosenList(asked: string, binders: { id: string }[] | null): string {
+    if (!UUID.test(asked)) return asked;
+    return binders?.some((b) => b.id === asked) ? asked : "all";
 }

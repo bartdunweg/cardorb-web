@@ -42,7 +42,9 @@ export function ValueHero({
         <section aria-labelledby="value-heading" className="flex flex-col gap-4">
             <div className="flex flex-col gap-1">
                 <h2 id="value-heading" className="text-sm font-semibold text-tertiary">
-                    {selected === "wishlist" ? "Wishlist cost" : "Total value"}
+                    {/* The list by name here too: the choice is across the page, beside the avatar, and a heading
+                        is what a screen reader moving from heading to heading hears. */}
+                    {selected === "wishlist" ? "Wishlist cost" : selected === "all" ? "Total value" : `${name} value`}
                 </h2>
                 <p className="text-display-md font-semibold text-primary tabular-nums sm:text-display-lg">{formatValue(value)}</p>
                 {/* The sign carries the direction as well as the colour, for a reader who sees neither. */}
