@@ -42,6 +42,8 @@ export function Movers({ list = "all", seeAll = true }: { list?: HomeList; seeAl
     const said = (PERIODS.find((p) => p.key === period) ?? PERIODS[1]).said;
     const [answers, setAnswers] = useState<Partial<Record<PeriodKey, Answer>>>({});
     const [fresh, setFresh] = useState(0);
+    // The last period answered: shown dimmed while another is asked, rather than the outline again.
+    const [lastAnswered, setLastAnswered] = useState<PeriodKey | null>(null);
     const known = period in answers;
     // A period whose read failed is asked again when it is chosen again, not remembered as failed.
     const failed = answers[period] === null;
@@ -49,7 +51,9 @@ export function Movers({ list = "all", seeAll = true }: { list?: HomeList; seeAl
         if (known && !failed) return;
         let current = true;
         void moversFor(period, list).then((answer) => {
-            if (current) setAnswers((a) => ({ ...a, [period]: answer }));
+            if (!current) return;
+            setAnswers((a) => ({ ...a, [period]: answer }));
+            setLastAnswered(period);
         });
         return () => {
             current = false;
@@ -67,9 +71,15 @@ export function Movers({ list = "all", seeAll = true }: { list?: HomeList; seeAl
         window.addEventListener(CARDS_CHANGED, drop);
         return () => window.removeEventListener(CARDS_CHANGED, drop);
     }, []);
-    const answer = answers[period];
+    const shownKey = known ? period : lastAnswered !== null && lastAnswered in answers ? lastAnswered : null;
+    const answer = shownKey === null ? undefined : answers[shownKey];
+    const stale = shownKey !== null && shownKey !== period;
     /* Each tile leads to the whole list sorted its way, over the same period (list-query.ts). */
-    const listOf = (sort: "change-desc" | "change-asc") => `${listPath(list)}?sort=${sort}${period === "1m" ? "" : `&period=${period}`}`;
+    // The period of the list on screen: while the next one is asked, the dimmed tiles are still the last one's.
+    const listOf = (sort: "change-desc" | "change-asc") => {
+        const p = shownKey ?? period;
+        return `${listPath(list)}?sort=${sort}${p === "1m" ? "" : `&period=${p}`}`;
+    };
 
     /* A row opens the card's sheet on your own row of it, read by set, number and name the way the set
        page opens a card, and the arrows step through Up and then Down. `at` is where in that list the
@@ -117,7 +127,7 @@ export function Movers({ list = "all", seeAll = true }: { list?: HomeList; seeAl
                     <p className="text-sm text-tertiary">{said[0]!.toUpperCase() + said.slice(1)}</p>
                 </div>
             </div>
-            {!known ? (
+            {shownKey === null ? (
                 <div className="grid gap-3 sm:grid-cols-2 sm:gap-4" aria-hidden="true">
                     {[0, 1].map((col) => (
                         <div key={col} className={cx(TILE, "flex flex-col gap-3")}>
@@ -128,28 +138,39 @@ export function Movers({ list = "all", seeAll = true }: { list?: HomeList; seeAl
                         </div>
                     ))}
                 </div>
-            ) : answer === null || answer === undefined ? (
-                <p className="text-sm text-tertiary">Price moves could not be read right now.</p>
-            ) : answer.up.length === 0 && answer.down.length === 0 ? (
-                <p className="text-sm text-tertiary">No card moved more than ten cents in this period.</p>
             ) : (
-                <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
-                    <MoverList
-                        title="Up"
-                        movers={answer.up}
-                        empty="No card went up."
-                        onOpen={(i) => void show(i)}
-                        href={seeAll ? listOf("change-desc") : null}
-                        linkLabel="See all gains"
-                    />
-                    <MoverList
-                        title="Down"
-                        movers={answer.down}
-                        empty="No card went down."
-                        onOpen={(i) => void show(answer.up.length + i)}
-                        href={seeAll ? listOf("change-asc") : null}
-                        linkLabel="See all losses"
-                    />
+                /* An answer fades up into the outline's place, as the lists' cards arrive; the previous
+                   period's stays, dimmed after 150 ms, until the next one is in. */
+                <div
+                    aria-busy={stale || undefined}
+                    className={cx("transition-opacity duration-(--duration-fast) ease-enter", stale && "opacity-60 delay-(--duration-fast)")}
+                >
+                    <div key={shownKey} className="arrive">
+                        {answer === null || answer === undefined ? (
+                            <p className="text-sm text-tertiary">Price moves could not be read right now.</p>
+                        ) : answer.up.length === 0 && answer.down.length === 0 ? (
+                            <p className="text-sm text-tertiary">No card moved more than ten cents in this period.</p>
+                        ) : (
+                            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+                                <MoverList
+                                    title="Up"
+                                    movers={answer.up}
+                                    empty="No card went up."
+                                    onOpen={(i) => void show(i)}
+                                    href={seeAll ? listOf("change-desc") : null}
+                                    linkLabel="See all gains"
+                                />
+                                <MoverList
+                                    title="Down"
+                                    movers={answer.down}
+                                    empty="No card went down."
+                                    onOpen={(i) => void show(answer.up.length + i)}
+                                    href={seeAll ? listOf("change-asc") : null}
+                                    linkLabel="See all losses"
+                                />
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
             {/* On this list's own period, so the card's price line and the figure beside it answer the
@@ -159,7 +180,7 @@ export function Movers({ list = "all", seeAll = true }: { list?: HomeList; seeAl
                 onClose={close}
                 onPrev={hasPrev ? () => stepBy(-1) : null}
                 onNext={hasNext ? () => stepBy(1) : null}
-                period={period}
+                period={shownKey ?? period}
             />
         </section>
     );

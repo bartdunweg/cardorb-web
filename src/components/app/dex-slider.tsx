@@ -116,7 +116,7 @@ export function DexSlider({
                 tooltip="Previous card"
                 tooltipPlacement="left"
                 onClick={() => scroll(-1)}
-                className="absolute top-1/2 left-1 hidden -translate-y-1/2 bg-alpha-black/60 text-alpha-white transition-none hover:bg-alpha-black/60 hover:text-alpha-white focus-visible:outline-offset-0 lg:group-focus-within:inline-flex lg:group-hover:inline-flex pointer-coarse:inline-flex"
+                className="absolute top-1/2 left-1 hidden -translate-y-1/2 bg-alpha-black/60 text-alpha-white hover:bg-alpha-black/60 hover:text-alpha-white focus-visible:outline-offset-0 lg:group-focus-within:inline-flex lg:group-hover:inline-flex pointer-coarse:inline-flex"
             />
             <ButtonUtility
                 size="xs"
@@ -125,7 +125,7 @@ export function DexSlider({
                 tooltip="Next card"
                 tooltipPlacement="right"
                 onClick={() => scroll(1)}
-                className="absolute top-1/2 right-1 hidden -translate-y-1/2 bg-alpha-black/60 text-alpha-white transition-none hover:bg-alpha-black/60 hover:text-alpha-white focus-visible:outline-offset-0 lg:group-focus-within:inline-flex lg:group-hover:inline-flex pointer-coarse:inline-flex"
+                className="absolute top-1/2 right-1 hidden -translate-y-1/2 bg-alpha-black/60 text-alpha-white hover:bg-alpha-black/60 hover:text-alpha-white focus-visible:outline-offset-0 lg:group-focus-within:inline-flex lg:group-hover:inline-flex pointer-coarse:inline-flex"
             />
         </div>
     );

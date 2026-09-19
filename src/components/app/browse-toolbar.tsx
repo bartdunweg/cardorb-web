@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useTransition } from "react";
+import { useCallback, useOptimistic, useTransition } from "react";
 import { Grid01, Rows01, SwitchVertical01 } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { CardsSearch } from "@/components/app/cards-search";
@@ -77,7 +77,15 @@ export function BrowseToolbar({
         },
         [query.q, query.language],
     );
-    const go = (patch: Partial<BrowseQuery>) => startTransition(() => router.replace(browseHref(query, patch), { scroll: false }));
+    // The catalogue tab follows the tap at once and the line slides then, as the set page's and My cards' do;
+    // the address and the shelf follow when the page answers.
+    const [language, showLanguage] = useOptimistic(query.language);
+    const go = (patch: Partial<BrowseQuery>) =>
+        startTransition(() => {
+            if (patch.language) showLanguage(patch.language);
+            // From the catalogue shown: a sort or a filter picked while a switch is on its way keeps it.
+            router.replace(browseHref({ ...query, language }, patch), { scroll: false });
+        });
 
     // Sort, twice over: in the row from sm, and on a phone between Filters and the filters (`FiltersSheet`'s lead).
     const sortMenu = (
@@ -102,12 +110,12 @@ export function BrowseToolbar({
             </Dropdown.Popover>
         </Dropdown.Root>
     );
-    // Dims while the next answer is fetched, after 150 ms, so a quick answer never flickers; it
-    // lights up again at once.
     return (
         // The row, then the language as tabs under it, 16 px apart as on My cards.
-        <div className={cx("flex flex-col gap-4 transition-opacity duration-(--duration-fast)", pending && "opacity-60 delay-150")}>
-            <div className={LIST_ROW}>
+        <div className="flex flex-col gap-4">
+            {/* The row dims while the next answer is fetched, after 150 ms, so a quick answer never flickers;
+                it lights up again at once. The tabs under it do not: their line has already moved. */}
+            <div className={cx(LIST_ROW, "transition-opacity duration-(--duration-fast) ease-enter", pending && "opacity-60 delay-(--duration-fast)")}>
                 {/* In the bar on a phone once its search is pressed, a short field from sm (`RowSearch`), as in a binder's row. */}
                 {/* The shelf it filters is the shelf it offers: its set names, in the language chosen. */}
                 <CardsSearch size="sm" initialValue={query.q ?? ""} label="Search in Browse" shelf={query.language} place="bar" />
@@ -151,9 +159,9 @@ export function BrowseToolbar({
                 just become the Japanese one. The series and years belong to one catalogue, so a switch
                 leaves them behind. */}
             <Tabs
-                selectedKey={query.language}
+                selectedKey={language}
                 onSelectionChange={(key) => {
-                    if (isBrowseLanguage(key) && key !== query.language) go({ language: key, series: [], year: [] });
+                    if (isBrowseLanguage(key) && key !== language) go({ language: key, series: [], year: [] });
                 }}
             >
                 <TabList aria-label="Catalogue" type="underline" size="sm" fullWidth>

@@ -91,7 +91,7 @@ const DropdownItem = ({ label, children, addon, icon: Icon, avatarUrl, unstyled,
             {(state) => (
                 <div
                     className={cx(
-                        "relative flex items-center rounded-md px-2.5 py-2 outline-focus-ring transition duration-100 ease-linear",
+                        "relative flex items-center rounded-md px-2.5 py-2 outline-focus-ring transition-colors duration-(--duration-instant)",
                         !state.isDisabled && "group-hover:bg-primary_hover",
                         state.isFocused && "bg-primary_hover",
                         state.isFocusVisible && "outline-2 -outline-offset-2",
@@ -147,10 +147,12 @@ const DropdownPopover = (props: DropdownPopoverProps) => {
                 cx(
                     "w-62 origin-(--trigger-anchor-point) overflow-auto rounded-lg glass-thick shadow-lg will-change-transform",
                     // The enter curve both ways; an exit that eases in starts slow on the frame the menu should be gone.
+                    // Card Orb change (motion round 2026-09-19), keep after `npx untitledui add`: no slide under
+                    // reduced motion, as select/popover.tsx, and the durations on the app's scale.
                     state.isEntering &&
-                        "duration-150 animate-in [animation-timing-function:var(--ease-enter)] fade-in placement-right:slide-in-from-left-0.5 placement-top:slide-in-from-bottom-0.5 placement-bottom:slide-in-from-top-0.5",
+                        "duration-(--duration-fast) animate-in [animation-timing-function:var(--ease-enter)] fade-in placement-right:slide-in-from-left-0.5 motion-reduce:placement-right:slide-in-from-left-0 placement-top:slide-in-from-bottom-0.5 motion-reduce:placement-top:slide-in-from-bottom-0 placement-bottom:slide-in-from-top-0.5 motion-reduce:placement-bottom:slide-in-from-top-0",
                     state.isExiting &&
-                        "duration-100 animate-out [animation-timing-function:var(--ease-enter)] fade-out placement-right:slide-out-to-left-0.5 placement-top:slide-out-to-bottom-0.5 placement-bottom:slide-out-to-top-0.5",
+                        "duration-(--duration-instant) animate-out [animation-timing-function:var(--ease-enter)] fade-out placement-right:slide-out-to-left-0.5 motion-reduce:placement-right:slide-out-to-left-0 placement-top:slide-out-to-bottom-0.5 motion-reduce:placement-top:slide-out-to-bottom-0 placement-bottom:slide-out-to-top-0.5 motion-reduce:placement-bottom:slide-out-to-top-0",
                     typeof props.className === "function" ? props.className(state) : props.className,
                 )
             }
@@ -171,7 +173,7 @@ const DropdownDotsButton = (props: AriaButtonProps & RefAttributes<HTMLButtonEle
             aria-label="Open menu"
             className={(state) =>
                 cx(
-                    "cursor-pointer rounded-md text-fg-quaternary outline-focus-ring transition duration-100 ease-linear",
+                    "cursor-pointer rounded-md text-fg-quaternary outline-focus-ring transition-colors duration-(--duration-instant)",
                     (state.isPressed || state.isHovered) && "text-fg-quaternary_hover",
                     (state.isPressed || state.isFocusVisible) && "outline-2 outline-offset-2",
                     typeof props.className === "function" ? props.className(state) : props.className,

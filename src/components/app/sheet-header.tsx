@@ -292,7 +292,10 @@ export function SheetHeader({
                                                 src={art.shown.blur}
                                                 alt=""
                                                 width={64}
-                                                className={cx("scale-105 object-cover blur-sm transition-opacity duration-200", !blurLoaded && "opacity-0")}
+                                                className={cx(
+                                                    "scale-105 object-cover blur-sm transition-opacity duration-(--duration-base)",
+                                                    !blurLoaded && "opacity-0",
+                                                )}
                                                 priority
                                             />
                                         </div>

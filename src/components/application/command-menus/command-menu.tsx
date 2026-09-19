@@ -177,8 +177,9 @@ export const CommandDialog = ({ className, dialogClassName, children, ...combobo
                 cx(
                     // Centred on the screen, not hung from the top: the palette is the page's focus while it is open.
                     "fixed inset-0 z-50 flex min-h-full items-center justify-center overflow-y-auto bg-overlay/70 p-4 text-center backdrop-blur",
-                    state.isEntering && "duration-300 ease-out animate-in fade-in",
-                    state.isExiting && "duration-200 ease-in animate-out fade-out",
+                    // Card Orb change (motion round 2026-09-19), keep after `npx untitledui add`: durations on the app's scale (--duration-*), the enter curve.
+                    state.isEntering && "duration-(--duration-sheet) animate-in [animation-timing-function:var(--ease-enter)] fade-in",
+                    state.isExiting && "duration-(--duration-base) animate-out [animation-timing-function:var(--ease-enter)] fade-out",
                     typeof className === "function" ? className(state) : className,
                 )
             }
@@ -188,8 +189,10 @@ export const CommandDialog = ({ className, dialogClassName, children, ...combobo
                     className={(state) =>
                         cx(
                             "flex max-h-full w-160 flex-col overflow-hidden rounded-xl glass-thick text-left align-middle shadow-xl",
-                            state.isEntering && "duration-300 ease-out animate-in zoom-in-95",
-                            state.isExiting && "duration-200 ease-in animate-out zoom-out-95",
+                            state.isEntering &&
+                                "duration-(--duration-sheet) animate-in [animation-timing-function:var(--ease-enter)] zoom-in-95 motion-reduce:zoom-in-100",
+                            state.isExiting &&
+                                "duration-(--duration-base) animate-out [animation-timing-function:var(--ease-enter)] zoom-out-95 motion-reduce:zoom-out-100",
                             typeof dialogClassName === "function" ? dialogClassName(state) : dialogClassName,
                         )
                     }

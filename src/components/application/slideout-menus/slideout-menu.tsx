@@ -31,8 +31,8 @@ export const ModalOverlay = (props: ModalOverlayProps) => {
                     // and the two halves of one gesture pulled apart over the last third. Measured in
                     // the browser rather than read off the class list, which is why it stood so long.
                     "fixed inset-0 z-50 flex min-h-dvh w-full items-end justify-center bg-overlay/70 outline-hidden sm:items-center sm:justify-end sm:pl-6 md:pl-10",
-                    state.isEntering && "duration-300 animate-in [animation-timing-function:var(--ease-enter)] fade-in",
-                    state.isExiting && "duration-200 animate-out [animation-timing-function:var(--ease-enter)] fade-out",
+                    state.isEntering && "duration-(--duration-sheet) animate-in [animation-timing-function:var(--ease-enter)] fade-in",
+                    state.isExiting && "duration-(--duration-base) animate-out [animation-timing-function:var(--ease-enter)] fade-out",
                     typeof props.className === "function" ? props.className(state) : props.className,
                 )
             }
@@ -61,10 +61,10 @@ export const Modal = (props: ModalProps) => (
                 // The sheet enters and leaves through the bottom edge, the drawer through the right one, on
                 // the drawer curve: fast off the edge, long to settle. Reduced motion keeps only the fade.
                 state.isEntering &&
-                    "duration-300 animate-in [animation-timing-function:var(--ease-drawer)] fade-in slide-in-from-bottom motion-reduce:slide-in-from-bottom-0 sm:slide-in-from-bottom-0 sm:slide-in-from-right motion-reduce:sm:slide-in-from-right-0",
+                    "duration-(--duration-sheet) animate-in [animation-timing-function:var(--ease-drawer)] fade-in slide-in-from-bottom motion-reduce:slide-in-from-bottom-0 sm:slide-in-from-bottom-0 sm:slide-in-from-right motion-reduce:sm:slide-in-from-right-0",
                 // Out faster than in: the user has decided; the interface answers.
                 state.isExiting &&
-                    "duration-200 animate-out [animation-timing-function:var(--ease-drawer)] fade-out slide-out-to-bottom motion-reduce:slide-out-to-bottom-0 sm:slide-out-to-bottom-0 sm:slide-out-to-right motion-reduce:sm:slide-out-to-right-0",
+                    "duration-(--duration-base) animate-out [animation-timing-function:var(--ease-drawer)] fade-out slide-out-to-bottom motion-reduce:slide-out-to-bottom-0 sm:slide-out-to-bottom-0 sm:slide-out-to-right motion-reduce:sm:slide-out-to-right-0",
                 typeof props.className === "function" ? props.className(state) : props.className,
             )
         }

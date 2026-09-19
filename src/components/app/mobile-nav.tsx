@@ -71,7 +71,7 @@ export function MobileTabBar() {
                     <div
                         aria-hidden="true"
                         className={cx(
-                            "pointer-events-none absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/4)] rounded-full bg-alpha-black/8 transition-transform duration-200 ease-move motion-reduce:transition-none",
+                            "pointer-events-none absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/4)] rounded-full bg-alpha-black/8 transition-transform duration-(--duration-base) ease-move motion-reduce:transition-none",
                             activeIndex < 0 && "hidden",
                         )}
                         style={{ transform: `translateX(${Math.max(0, activeIndex) * 100}%)` }}
