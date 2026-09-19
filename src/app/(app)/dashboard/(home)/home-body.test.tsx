@@ -56,7 +56,7 @@ vi.mock("@/lib/value-history", () => ({ getValueHistory: reads.getValueHistory }
 vi.mock("@/components/app/top-cards", () => ({ TopCards: () => null, readTopCards: reads.readTopCards }));
 vi.mock("@/components/app/dex-stat", () => ({
     DexStat: () => null,
-    ListDexStat: () => null,
+    ListNumberStats: () => null,
     readDexCaught: reads.readDexCaught,
     readListNumbers: reads.readListNumbers,
 }));
@@ -93,6 +93,21 @@ describe("HomeBody", () => {
         await settle();
         expect(reads.getValueHistory).toHaveBeenCalledWith(id);
         expect(reads.getMyCards).toHaveBeenCalledWith({ collectionId: id, limit: 1, facets: false });
+        // Its dearest cards, sets and Pokémon are the binder's own, not the collection's Pokédex count.
+        expect(reads.readTopCards).toHaveBeenCalledWith(id);
+        expect(reads.readListNumbers).toHaveBeenCalledWith(id);
+        expect(reads.readDexCaught).not.toHaveBeenCalled();
+        stats.release({ owned: 3, value: 40 });
+        await body;
+    });
+
+    it("reads a binder no longer there as the collection, everywhere at once", async () => {
+        const gone = "22222222-2222-4222-8222-222222222222";
+        const body = HomeBody({ searchParams: Promise.resolve({ value: gone }) });
+        await settle();
+        expect(reads.getValueHistory).toHaveBeenCalledWith(undefined);
+        expect(reads.readTopCards).toHaveBeenCalledWith("all");
+        expect(reads.readListNumbers).not.toHaveBeenCalled();
         stats.release({ owned: 3, value: 40 });
         await body;
     });

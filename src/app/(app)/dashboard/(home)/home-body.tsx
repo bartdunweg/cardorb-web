@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { AddCardButton } from "@/components/app/add-card-button";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { CardsStats, ListStats, StatCard } from "@/components/app/cards-stats";
-import { DexStat, ListDexStat, readDexCaught, readListNumbers } from "@/components/app/dex-stat";
+import { DexStat, ListNumberStats, readDexCaught, readListNumbers } from "@/components/app/dex-stat";
 import { HomeListChoice } from "@/components/app/home-list-choice";
 import { HomePeriodProvider } from "@/components/app/home-period";
 import { Movers } from "@/components/app/movers";
@@ -89,7 +89,7 @@ export async function HomeBody({ searchParams }: { searchParams: Promise<{ value
                         />
                     ) : (
                         // A list's own four counts, from the same read as its value.
-                        <Suspense fallback={<ListStatsOutline />}>
+                        <Suspense fallback={<ListStatsOutline wishlist={selected === "wishlist"} />}>
                             <ListCounts selected={selected} stats={stats} reads={reads} />
                         </Suspense>
                     )}
@@ -161,8 +161,9 @@ function homeLists(binders: { id: string; name: string }[]): ValueList[] {
     ];
 }
 
-// The four counts of a chosen list: its cards, the printings among them, the sets they come from and
-// the Pokémon on them. A list whose read failed shows the collection's counts, as its value does.
+// The counts of a chosen list: its cards and the printings among them, from the small read its value
+// came with, then its sets and Pokémon, which wait on a read of the whole list. A list whose read
+// failed shows the collection's counts, as its value does.
 async function ListCounts({
     selected,
     stats,
@@ -172,7 +173,7 @@ async function ListCounts({
     stats: Awaited<ReturnType<typeof getCardStats>>;
     reads: ReturnType<typeof startReads>;
 }) {
-    const [{ current }, numbers] = await Promise.all([reads.value, reads.numbers]);
+    const { current } = await reads.value;
     if (!current) return <CardsStats stats={stats} fourth={null} />;
     const href = listPath(selected);
     return (
@@ -180,19 +181,28 @@ async function ListCounts({
             copies={current.copies ?? current.total}
             // A wish is one card: the wishlist's two counts would say the same number twice.
             unique={selected === "wishlist" ? undefined : current.total}
-            sets={numbers?.sets ?? null}
             href={href}
-            pokemon={<ListDexStat numbers={Promise.resolve(numbers)} href={href} />}
+            later={
+                <Suspense fallback={<OutlineTiles labels={["Sets", "Pokémon"]} from={2} />}>
+                    <ListNumberStats numbers={reads.numbers} href={href} />
+                </Suspense>
+            }
         />
     );
 }
 
-function ListStatsOutline() {
+/** Empty tiles in a counts row's place, their labels already there. */
+function OutlineTiles({ labels, from = 0 }: { labels: string[]; from?: number }) {
+    return labels.map((label, i) => <StatCard key={label} label={label} value=" " delay={(from + i) * 40} />);
+}
+
+function ListStatsOutline({ wishlist }: { wishlist: boolean }) {
     return (
-        <div aria-hidden="true" className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-4">
-            {["Cards", "Unique", "Sets", "Pokémon"].map((label, i) => (
-                <StatCard key={label} label={label} value=" " delay={i * 40} />
-            ))}
+        <div
+            aria-hidden="true"
+            className="grid grid-cols-2 gap-3 sm:gap-5 md:auto-cols-fr md:grid-flow-col md:grid-cols-none max-md:[&>*:last-child:nth-child(odd)]:col-span-2"
+        >
+            <OutlineTiles labels={wishlist ? ["Cards", "Sets", "Pokémon"] : ["Cards", "Unique", "Sets", "Pokémon"]} />
         </div>
     );
 }

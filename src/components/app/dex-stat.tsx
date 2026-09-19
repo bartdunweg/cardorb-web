@@ -78,9 +78,14 @@ export async function readListNumbers(list: HomeList): Promise<ListNumbers | nul
     );
 }
 
-/** The Pokémon tile for a chosen list: its species, leading to the list in Pokédex order. */
-export async function ListDexStat({ numbers: read, href }: { numbers: Promise<ListNumbers | null>; href: string }) {
-    const caught = (await read)?.caught ?? null;
-    if (caught === null) return null;
-    return <StatCard label="Pokémon" value={formatCount(caught)} href={`${href}?sort=dex`} delay={120} />;
+/** A chosen list's Sets and Pokémon tiles, once its whole read is in; nothing when it could not be read. */
+export async function ListNumberStats({ numbers: read, href }: { numbers: Promise<ListNumbers | null>; href: string }) {
+    const numbers = await read;
+    if (!numbers) return null;
+    return (
+        <>
+            <StatCard label="Sets" value={formatCount(numbers.sets)} href={`${href}?sort=set`} delay={80} />
+            <StatCard label="Pokémon" value={formatCount(numbers.caught)} href={`${href}?sort=dex`} delay={120} />
+        </>
+    );
 }
