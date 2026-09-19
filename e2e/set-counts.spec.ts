@@ -4,9 +4,10 @@ import { SET_ID, addButton, cacheCleared, card, setTile, writesLanded } from "./
 /**
  * A set's heading counts what is on screen. A tile taken to nought by its own minus leaves the grid at
  * once, and the heading over it said the old number until the list was read again (bug hunt
- * 2026-09-19). This card is this spec's own: nothing else adds or removes it.
+ * 2026-09-19). This card is this spec's own: nothing else adds or removes it, and its name is the
+ * fixture's only one (Tarountula, 15 to 17, is three cards, and its buttons matched all three).
  */
-const own = card(15);
+const own = card(25);
 
 test("a set's heading drops by one when a tile's last copy is taken", async ({ page }) => {
     await page.goto(`/dashboard/sets/${SET_ID}`);

@@ -91,7 +91,7 @@ export function CardsGrid<T extends GridCard>({
      */
     firstPage?: ReadonlySet<string>;
     /**
-     * Said when a tile has left the grid (its last copy taken, a wish got) and when it comes back (the
+     * Said when a tile has left the grid (its last copy taken) and when it comes back (the
      * toast's undo), so the list's counts follow what is on screen. Pass a stable reference.
      */
     onGone?: (id: string, gone: boolean) => void;

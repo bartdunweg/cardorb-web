@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, Suspense, useCallback, useLayoutEffect, useRef, useState } from "react";
+import { type ReactNode, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { CardsList } from "@/components/app/cards-list";
 import type { PeriodKey } from "@/components/app/chart-periods";
@@ -78,7 +78,14 @@ export function CardsView({
      */
     const [selected, setSelected] = useState<{ card: Card; siblings: Card[] } | null>(null);
     // One identity for the life of the view, so the list's memoised tiles are not drawn again when the sheet opens.
-    const select = useCallback((card: Card, siblings: Card[]) => setSelected({ card, siblings }), []);
+    // The focus a close puts back, after the sheet has gone: cleared by the next open, the next close, and leaving.
+    const refocus = useRef<number | undefined>(undefined);
+    useEffect(() => () => window.clearTimeout(refocus.current), []);
+    const select = useCallback((card: Card, siblings: Card[]) => {
+        // A card opened before the last close's focus landed: that focus is no longer wanted.
+        window.clearTimeout(refocus.current);
+        setSelected({ card, siblings });
+    }, []);
     /*
      * The cards the sheet has written off this list, gone from it at once.
      *
@@ -102,6 +109,9 @@ export function CardsView({
     useLayoutEffect(() => {
         sheetCard.current = selected?.card ?? null;
     });
+    // What each unstar took off the line, so a star put back (a save that failed, after the arrows or a
+    // close moved the sheet on) returns exactly that, whichever card the sheet is on by then.
+    const taken = useRef(new Map<string, { rows: number; copies: number; value: number }>());
     const starChanged = useCallback(
         (cardId: string, starred: boolean) => {
             if (starred === !goneNow.current.has(cardId)) return;
@@ -110,12 +120,18 @@ export function CardsView({
             else next.add(cardId);
             goneNow.current = next;
             setGone(next);
-            const card = sheetCard.current;
-            if (card?.id === cardId) {
-                const sign = starred ? 1 : -1;
-                const copies = card.quantity ?? 1;
-                totals?.({ rows: sign, copies: sign * copies, value: sign * copies * (card.price ?? 0) });
+            if (starred) {
+                const back = taken.current.get(cardId);
+                taken.current.delete(cardId);
+                if (back) totals?.(back);
+                return;
             }
+            const card = sheetCard.current;
+            if (card?.id !== cardId) return;
+            const copies = card.quantity ?? 1;
+            const change = { rows: 1, copies, value: copies * (card.price ?? 0) };
+            taken.current.set(cardId, change);
+            totals?.({ rows: -change.rows, copies: -change.copies, value: -change.value });
         },
         [totals],
     );
@@ -127,18 +143,25 @@ export function CardsView({
     const close = () => {
         const last = selected;
         setSelected(null);
+        window.clearTimeout(refocus.current);
         if (!last) return;
         const from = last.siblings.findIndex((c) => c.id === last.card.id);
         const order = [last.card, ...last.siblings.slice(from + 1), ...last.siblings.slice(0, Math.max(0, from)).reverse()];
-        window.setTimeout(() => {
+        // After the sheet's own exit (--duration-base, and a frame to spare).
+        const wait = (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--duration-base")) || 200) + 120;
+        refocus.current = window.setTimeout(() => {
+            // Only where the dialog's return left it (the page, another tile) or still in the closing sheet. Focus the reader has
+            // moved since (the toast's Put back, the search field) stays where it is.
+            const now = document.activeElement;
+            if (now && now !== document.body && !now.closest("[data-card-id]") && !now.closest("[role=dialog]")) return;
             for (const c of order) {
                 const tile = document.querySelector<HTMLElement>(`[data-card-id="${CSS.escape(c.id)}"] button`);
-                if (tile) {
-                    tile.focus();
-                    return;
-                }
+                if (!tile) continue;
+                const box = tile.getBoundingClientRect();
+                tile.focus({ preventScroll: box.bottom > 0 && box.top < window.innerHeight });
+                return;
             }
-        }, 320);
+        }, wait);
     };
 
     const at = selected ? selected.siblings.findIndex((c) => c.id === selected.card.id) : -1;

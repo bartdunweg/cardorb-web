@@ -126,7 +126,7 @@ export function CardsList({
         [first.cards, appended, gone],
     );
     const groups = useMemo(() => setGroups(cards, groupedBySet), [cards, groupedBySet]);
-    /* Tiles that have left the grid by their own buttons (the last copy taken, a wish got): still in
+    /* Tiles that have left the grid by their own buttons (the last copy taken): still in
        `cards` until the list is read again, and back if the toast's undo brings them. The set headings
        and the count a screen reader hears leave them out, as the grid does (bug hunt 2026-09-19). */
     const [left, setLeft] = useState<ReadonlySet<string>>(() => new Set());
@@ -139,7 +139,8 @@ export function CardsList({
             return next;
         });
     }, []);
-    const leftShown = left.size ? cards.filter((c) => left.has(c.id)).length : 0;
+    // In the grid only: the table draws every row, a tile's leaving is the grid's.
+    const leftShown = left.size && view === "grid" ? cards.filter((c) => left.has(c.id)).length : 0;
     const shownIn = (group: Card[]) => (left.size ? group.filter((c) => !left.has(c.id)).length : group.length);
     /* The ids of the first page, for the arrival wave: a set's grid that a scroll batch starts is new,
        and its own first draw is not the page's. One reference per first page, so no tile redraws. */
@@ -164,7 +165,11 @@ export function CardsList({
        added to the list while it is read again. */
     const busy = pending || rechecking || recheck !== null;
     // Once the list has run out, what it holds is the count, whatever the first page said.
-    const total = Math.max(0, (end ? cards.length : first.total - dropped) - leftShown);
+    const total = end ? cards.length : Math.max(0, first.total - dropped);
+    /* What the count a screen reader hears says. The list's own `total` keeps the tiles still leaving,
+       so the grid stays mounted until the list is read again: a removal whose write fails brings its
+       tile back with the error on it, which an empty state in its place could not. */
+    const shownTotal = Math.max(0, total - leftShown);
 
     /* The appended span read again after the first page was, as far as the reader had scrolled. Its
        own transition, so the button at the end does not spin and a screen reader is not told more
@@ -269,7 +274,7 @@ export function CardsList({
           ? narrowed
               ? "No cards found."
               : ""
-          : `Showing ${formatCount(cards.length - leftShown)} of ${formatCount(total)} cards`;
+          : `Showing ${formatCount(cards.length - leftShown)} of ${formatCount(shownTotal)} cards`;
 
     /* Moving it above the early return is not enough on its own. `binder-body.tsx` keys the whole
        view on the list's URL, so a search does not update this component, it replaces it, and a
@@ -315,9 +320,14 @@ export function CardsList({
                                    English and a Japanese one) and come apart in the list, which gave two sections one key.
                                    Place alone moved every section after a set that emptied (its last card removed from the
                                    sheet) to another key, and each tile under it was drawn anew, its arrival played again. */
-                                <section key={runKey(groups, i)} aria-labelledby={group.name ? headingId(group.name, i) : undefined}>
-                                    {/* A set whose last tile has left keeps no heading over nothing. */}
-                                    {group.name && shownIn(group.cards) > 0 ? (
+                                <section
+                                    key={runKey(groups, i)}
+                                    aria-labelledby={group.name && shownIn(group.cards) > 0 ? headingId(group.name, i) : undefined}
+                                    // Every tile left: out of the flow (no blank band between its neighbours), its cells still
+                                    // mounted so an undo or a failed write can bring them back.
+                                    hidden={shownIn(group.cards) === 0}
+                                >
+                                    {group.name ? (
                                         /* Sticky, so the set a tile belongs to is still readable halfway down a
                                            long one. Against the page's own scroll: this list has no scroller of
                                            its own; under the phone's bar below `lg`, where `top-0` stuck it behind
