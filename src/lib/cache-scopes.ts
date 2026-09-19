@@ -12,7 +12,8 @@ import { z } from "zod";
  *
  * - `profile`: the profile, its public flags and the picture.
  * - `binders`: the binder list, with each binder's count and rule.
- * - `lists`: every list's first batch (the collection, the wishlist, a binder, Favorites).
+ * - `lists`: every list's first batch (the collection, the wishlist, a binder, Favorites), and Home's
+ *   numbers for a chosen list (its dearest cards, its sets and Pokémon), which a binder edit must forget too.
  * - `stats`: whole-collection numbers: the stats, the facets, Home's top cards and Pokémon count.
  * - `sets`: Browse's shelf and every set page, with the marks and counts of what you hold.
  * - `value`: the value line and the movers, for the collection and per list.

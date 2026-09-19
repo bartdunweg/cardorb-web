@@ -1,8 +1,9 @@
 import { Suspense } from "react";
 import { AddCardButton } from "@/components/app/add-card-button";
 import { AppEmptyState } from "@/components/app/app-empty-state";
-import { CardsStats, StatCard } from "@/components/app/cards-stats";
-import { DexStat, readDexCaught } from "@/components/app/dex-stat";
+import { CardsStats, ListStats, StatCard } from "@/components/app/cards-stats";
+import { DexStat, ListNumberStats, readDexCaught, readListNumbers } from "@/components/app/dex-stat";
+import { HomeListChoice } from "@/components/app/home-list-choice";
 import { HomePeriodProvider } from "@/components/app/home-period";
 import { Movers } from "@/components/app/movers";
 import { ValueHeroOutline } from "@/components/app/skeletons";
@@ -11,11 +12,10 @@ import { ValueHero, type ValueList } from "@/components/app/value-hero";
 import { Button } from "@/components/base/buttons/button";
 import { getMyBinders } from "@/lib/binders";
 import { type CardList, getCardStats, getMyCards } from "@/lib/cards";
+import { UUID, askedList, listFilter, listPath } from "@/lib/home-list";
 import { getMyProfile } from "@/lib/profile";
 import { sideRead } from "@/lib/side-read";
 import { type ValueSnapshot, getValueHistory } from "@/lib/value-history";
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type ValueReads = { binders: Awaited<ReturnType<typeof getMyBinders>>; snapshots: ValueSnapshot[]; current: CardList | null };
 
@@ -29,8 +29,7 @@ type ValueReads = { binders: Awaited<ReturnType<typeof getMyBinders>>; snapshots
  */
 function startReads(asked: string) {
     const binders = sideRead("binders", getMyBinders, null);
-    // A binder deleted since the address was kept is the collection, movers and line included.
-    const selected = UUID.test(asked) ? binders.then((f) => (f && !f.some((binder) => binder.id === asked) ? "all" : asked)) : Promise.resolve(asked);
+    const selected = binders.then((f) => chosenList(asked, f));
     /* Each of these is a side read: one that fails leaves the chart without its line, the menu
        without the binders, or the collection's own number in place of a list's, never Home as an
        error page. */
@@ -43,26 +42,27 @@ function startReads(asked: string) {
                 : sideRead(
                       "list value",
                       () =>
-                          getMyCards(
-                              list === "favorites"
-                                  ? { favoritesOnly: true, limit: 1, facets: false }
-                                  : list === "wishlist"
-                                    ? { wishlist: true, limit: 1, facets: false }
-                                    : { collectionId: list, limit: 1, facets: false },
-                          ),
+                          // No facets: the API's are the whole collection's; a list's sets are counted in readListNumbers.
+                          getMyCards({ ...listFilter(list), limit: 1, facets: false }),
                       null,
                   ),
         ]).then(([f, snapshots, current]) => ({ binders: f, snapshots, current })),
     );
-    return { selected, value, top: readTopCards(), caught: readDexCaught() };
+    // The dearest cards and the counts are the chosen list's too; the collection's Pokémon count is the Pokédex's own.
+    return {
+        selected,
+        value,
+        top: selected.then((list) => readTopCards(list)),
+        caught: selected.then((list) => (list === "all" ? readDexCaught() : null)),
+        numbers: selected.then((list) => (list === "all" ? null : readListNumbers(list))),
+    };
 }
 
 // Everything on Home that needs a number: the value with its line, the counts, and the top cards.
 // The stats are the page's own read: one that fails is Home's error screen (error.tsx).
 export async function HomeBody({ searchParams }: { searchParams: Promise<{ value?: string }> }) {
     const { value } = await searchParams;
-    const asked = value === "favorites" || value === "wishlist" || (value && UUID.test(value)) ? value : "all";
-    const reads = startReads(asked);
+    const reads = startReads(askedList(value));
     const [stats, selected] = await Promise.all([getCardStats(), reads.selected]);
     // Nothing held: the first visits after signing up. A value of €0 with an empty chart and four
     // zeros said the account was empty and not what to do about it, and one wished-for card is
@@ -78,17 +78,24 @@ export async function HomeBody({ searchParams }: { searchParams: Promise<{ value
                     <Suspense fallback={<ValueHeroOutline />}>
                         <ValueSection selected={selected} total={stats.value} reads={reads.value} />
                     </Suspense>
-                    <CardsStats
-                        stats={stats}
-                        fourth={
-                            <Suspense fallback={<StatCard label="Pokémon collected" value=" " href="/dashboard/cards?sort=dex" delay={120} />}>
-                                <DexStat caught={reads.caught} />
-                            </Suspense>
-                        }
-                    />
+                    {selected === "all" ? (
+                        <CardsStats
+                            stats={stats}
+                            fourth={
+                                <Suspense fallback={<StatCard label="Pokémon collected" value=" " href="/dashboard/cards?sort=dex" delay={120} />}>
+                                    <DexStat caught={reads.caught} />
+                                </Suspense>
+                            }
+                        />
+                    ) : (
+                        // A list's own four counts, from the same read as its value.
+                        <Suspense fallback={<ListStatsOutline wishlist={selected === "wishlist"} />}>
+                            <ListCounts selected={selected} stats={stats} reads={reads} />
+                        </Suspense>
+                    )}
                     {/* The dearest cards first, then what moved the value (Bart, 2026-09-15). */}
                     <Suspense fallback={null}>
-                        <TopCards top={reads.top} />
+                        <TopCards top={reads.top} href={listPath(selected)} />
                     </Suspense>
                     {/* Over the chart's period. The collection's alone: the movers are read over every card held,
                         so under a binder's line they would answer another question. */}
@@ -131,21 +138,93 @@ async function Welcome() {
 // wishlist's is one narrow list read, started with the rest of Home's reads.
 async function ValueSection({ selected, total, reads }: { selected: string; total: number; reads: Promise<ValueReads> }) {
     const { binders, snapshots, current } = await reads;
-    // As the sidebar has them: the collection and the wishlist, then Favorites and the binders.
-    const lists: ValueList[] = [
-        { id: "all", name: "Collection" },
-        { id: "wishlist", name: "Wishlist" },
-        { id: "favorites", name: "Favorites" },
-        ...binders.map((f) => ({ id: f.id, name: f.name })),
-    ];
+    const lists = homeLists(binders);
     // A list whose own value could not be read is shown as the collection, whose number is in hand.
     const known = lists.some((l) => l.id === selected) && (selected === "all" || current !== null);
     return (
         <ValueHero
-            lists={lists}
+            name={(known ? lists.find((l) => l.id === selected)?.name : undefined) ?? "Collection"}
             selected={known ? selected : "all"}
             value={current && known ? (current.value ?? 0) : total}
             snapshots={known ? snapshots : []}
         />
     );
+}
+
+/** As the sidebar has them: the collection and the wishlist, then Favorites and the binders. */
+function homeLists(binders: { id: string; name: string }[]): ValueList[] {
+    return [
+        { id: "all", name: "Collection" },
+        { id: "wishlist", name: "Wishlist" },
+        { id: "favorites", name: "Favorites" },
+        ...binders.map((f) => ({ id: f.id, name: f.name })),
+    ];
+}
+
+// The counts of a chosen list: its cards and the printings among them, from the small read its value
+// came with, then its sets and Pokémon, which wait on a read of the whole list. A list whose read
+// failed shows the collection's counts, as its value does.
+async function ListCounts({
+    selected,
+    stats,
+    reads,
+}: {
+    selected: string;
+    stats: Awaited<ReturnType<typeof getCardStats>>;
+    reads: ReturnType<typeof startReads>;
+}) {
+    const { current } = await reads.value;
+    if (!current) return <CardsStats stats={stats} fourth={null} />;
+    const href = listPath(selected);
+    return (
+        <ListStats
+            copies={current.copies ?? current.total}
+            // A wish is one card: the wishlist's two counts would say the same number twice.
+            unique={selected === "wishlist" ? undefined : current.total}
+            href={href}
+            later={
+                <Suspense fallback={<OutlineTiles labels={["Sets", "Pokémon"]} from={2} />}>
+                    <ListNumberStats numbers={reads.numbers} href={href} />
+                </Suspense>
+            }
+        />
+    );
+}
+
+/** Empty tiles in a counts row's place, their labels already there. */
+function OutlineTiles({ labels, from = 0 }: { labels: string[]; from?: number }) {
+    return labels.map((label, i) => <StatCard key={label} label={label} value=" " delay={(from + i) * 40} />);
+}
+
+function ListStatsOutline({ wishlist }: { wishlist: boolean }) {
+    return (
+        <div
+            aria-hidden="true"
+            className="grid grid-cols-2 gap-3 sm:gap-5 md:auto-cols-fr md:grid-flow-col md:grid-cols-none max-md:[&>*:last-child:nth-child(odd)]:col-span-2"
+        >
+            <OutlineTiles labels={wishlist ? ["Cards", "Sets", "Pokémon"] : ["Cards", "Unique", "Sets", "Pokémon"]} />
+        </div>
+    );
+}
+
+/**
+ * The list choice in Home's header, beside the avatar: every list Home can be about, and the one the
+ * address asks for. Nothing for an account that holds nothing yet: Home is then its welcome, which
+ * has no list to be about.
+ */
+export async function HomeListMenu({ searchParams }: { searchParams: Promise<{ value?: string }> }) {
+    const { value } = await searchParams;
+    const [stats, binders] = await Promise.all([getCardStats(), sideRead("binders", getMyBinders, null)]);
+    if (stats.owned === 0) return null;
+    return <HomeListChoice lists={homeLists(binders ?? [])} selected={chosenList(askedList(value), binders)} />;
+}
+
+/**
+ * The list Home is about, decided once for the header and the body alike: a binder only while the
+ * binders are read and still hold it (deleted since the address was kept, or unreadable, it is the
+ * collection), so the button, the value and the counts never name two different lists.
+ */
+function chosenList(asked: string, binders: { id: string }[] | null): string {
+    if (!UUID.test(asked)) return asked;
+    return binders?.some((b) => b.id === asked) ? asked : "all";
 }

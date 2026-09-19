@@ -75,3 +75,21 @@ export function CardsStats({ stats, fourth }: { stats: CardStats; fourth: ReactN
         </div>
     );
 }
+
+/**
+ * Home's counts when a list other than the collection is chosen (Bart's call, 2026-09-19): its cards
+ * (a duplicate counting twice), the printings among them, and then, as `later`, the sets they come
+ * from and the Pokémon on them, which wait on a read of the whole list. Every tile that is drawn
+ * takes a column from md, so a missing one leaves no hole; on a phone two columns, and an odd last
+ * tile the whole row: three narrow tiles could not hold a four-digit count at 320 px.
+ */
+export function ListStats({ copies, unique, href, later }: { copies: number; unique?: number; href: string; later: ReactNode }) {
+    return (
+        <div className="grid grid-cols-2 gap-3 sm:gap-5 md:auto-cols-fr md:grid-flow-col md:grid-cols-none max-md:[&>*:last-child:nth-child(odd)]:col-span-2">
+            <StatCard label="Cards" value={formatCount(copies)} href={href} delay={0} />
+            {/* Left out for the wishlist, where every wish is one card and the two counts are the same. */}
+            {unique !== undefined ? <StatCard label="Unique" value={formatCount(unique)} href={href} delay={40} /> : null}
+            {later}
+        </div>
+    );
+}

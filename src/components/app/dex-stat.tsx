@@ -1,9 +1,10 @@
 import { StatCard } from "@/components/app/cards-stats";
 import type { PokedexSetting } from "@/lib/binder-rule";
-import { getDexBinder } from "@/lib/binders";
+import { getBinder, getDexBinder } from "@/lib/binders";
 import { getAllMyCards } from "@/lib/cards";
 import { groupByDex } from "@/lib/dex-groups";
 import { formatCount } from "@/lib/format";
+import { type HomeList, UUID, listFilter } from "@/lib/home-list";
 import { getDexNames } from "@/lib/pokedex";
 import { sideRead } from "@/lib/side-read";
 import { perUser } from "@/lib/user-cache";
@@ -49,4 +50,42 @@ function caughtCount(setting: PokedexSetting): Promise<number> {
         const [all, names] = await Promise.all([getAllMyCards({ facets: false, pictures: false }, token), getDexNames()]);
         return groupByDex(all.cards, names, setting).caught;
     });
+}
+
+/**
+ * A chosen list's sets and Pokémon, for Home's counts, from one read of every card in it: the API's
+ * facets are the whole collection's whatever the filter, so a list's sets are counted here. Its
+ * Pokémon are counted as its own Pokédex counts them where the binder is shown as one (its rarities
+ * and range), and every species on its cards otherwise. Null for no tiles. Kept per person and list
+ * in the `lists` scope, which a card write, a star and a binder edit all forget, so the two numbers
+ * never stand beside a fresher value.
+ */
+export type ListNumbers = { sets: number; caught: number };
+
+export async function readListNumbers(list: HomeList): Promise<ListNumbers | null> {
+    return sideRead(
+        "list numbers",
+        async () => {
+            const binder = UUID.test(list) ? await getBinder(list) : null;
+            const setting: PokedexSetting = binder?.pokedex ?? { missing: false };
+            return perUser("lists", `list-numbers:v1:${list}:${JSON.stringify(setting)}`, async (token) => {
+                const [all, names] = await Promise.all([getAllMyCards({ ...listFilter(list), facets: false, pictures: false }, token), getDexNames()]);
+                const sets = new Set(all.cards.map((c) => c.set_name ?? c.set).filter(Boolean)).size;
+                return { sets, caught: groupByDex(all.cards, names, setting).caught };
+            });
+        },
+        null,
+    );
+}
+
+/** A chosen list's Sets and Pokémon tiles, once its whole read is in; nothing when it could not be read. */
+export async function ListNumberStats({ numbers: read, href }: { numbers: Promise<ListNumbers | null>; href: string }) {
+    const numbers = await read;
+    if (!numbers) return null;
+    return (
+        <>
+            <StatCard label="Sets" value={formatCount(numbers.sets)} href={`${href}?sort=set`} delay={80} />
+            <StatCard label="Pokémon" value={formatCount(numbers.caught)} href={`${href}?sort=dex`} delay={120} />
+        </>
+    );
 }
