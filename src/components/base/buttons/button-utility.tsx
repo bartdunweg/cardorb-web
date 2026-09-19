@@ -1,7 +1,8 @@
 "use client";
 
-// Changed from the kit: round, like every Button since shape="pill" became the default. A re-fetch
-// through the Untitled UI CLI or MCP overwrites this; re-apply it.
+// Changed from the kit: round, like every Button since shape="pill" became the default; and `pressable`
+// in place of the kit's `transition duration-100 ease-linear`, so it presses like its neighbours (motion
+// round 2026-09-19). A re-fetch through the Untitled UI CLI or MCP overwrites this; re-apply it.
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, DetailedHTMLProps, FC, ReactNode } from "react";
 import { isValidElement } from "react";
 import type { Placement } from "react-aria";

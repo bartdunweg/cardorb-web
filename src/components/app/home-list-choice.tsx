@@ -80,8 +80,9 @@ export function HomeListChoice({ lists, selected }: { lists: HomeListOption[]; s
                     className={cx(
                         "group -mx-1 flex min-w-0 cursor-pointer items-center gap-1 rounded-md px-1 text-left outline-focus-ring hover:bg-alpha-black/4 focus-visible:outline-2 focus-visible:outline-offset-2",
                         // Dims after 150 ms while the page answers, so a quick answer never flickers.
-                        // Opacity and the hover tint together: `transition-opacity` alone made the tint snap.
-                        "transition-[opacity,background-color] duration-(--duration-fast) ease-enter",
+                        // Opacity and the hover tint together: `transition-opacity` alone made the tint snap. Linear-ish
+                        // default easing, not the enter curve, which theme.css keeps off hovers.
+                        "transition-[opacity,background-color] duration-(--duration-fast)",
                         pending && "opacity-60 delay-(--duration-fast)",
                     )}
                 >

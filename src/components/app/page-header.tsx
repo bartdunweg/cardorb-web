@@ -231,8 +231,9 @@ export function PageHeader({
                     className={cx(
                         // Their own cell, always: with the field over the first two, auto-placement put them on a line of their own.
                         "col-start-3 row-start-1 flex items-center justify-end gap-3",
-                        "transition-opacity duration-(--duration-fast) ease-enter",
-                        placed && "transition-[opacity,transform] motion-reduce:transition-opacity",
+                        // One transition list, so the slide onto the title's line is not lost to the fade's.
+                        "duration-(--duration-fast) ease-enter",
+                        placed ? "transition-[opacity,transform] motion-reduce:transition-opacity" : "transition-opacity",
                         // Beside the field on a phone, level with it: nothing to line up with a title that is not drawn there.
                         searchField && "max-sm:transform-none!",
                     )}

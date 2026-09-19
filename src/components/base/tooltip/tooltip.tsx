@@ -63,7 +63,7 @@ export const Tooltip = ({
                 offset={offset}
                 placement={placement}
                 crossOffset={crossOffset ?? calculatedCrossOffset}
-                // Card Orb change (motion audit 2026-09-17), keep after `npx untitledui add`: 125 ms in, 100 ms out on
+                // Card Orb change (motion audit 2026-09-17), keep after `npx untitledui add`: 150 ms in (--duration-fast), 100 ms out (--duration-instant) on
                 // the enter curve rather than ease-in, and no zoom or slide under reduced motion (the fade stays).
                 className={({ isEntering, isExiting }) =>
                     cx(

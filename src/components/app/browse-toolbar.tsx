@@ -83,7 +83,8 @@ export function BrowseToolbar({
     const go = (patch: Partial<BrowseQuery>) =>
         startTransition(() => {
             if (patch.language) showLanguage(patch.language);
-            router.replace(browseHref(query, patch), { scroll: false });
+            // From the catalogue shown: a sort or a filter picked while a switch is on its way keeps it.
+            router.replace(browseHref({ ...query, language }, patch), { scroll: false });
         });
 
     // Sort, twice over: in the row from sm, and on a phone between Filters and the filters (`FiltersSheet`'s lead).

@@ -239,6 +239,7 @@ export const TabList = <T extends Orientation>({
                         aria-hidden="true"
                         className={cx(
                             "pointer-events-none absolute bottom-0 left-0 h-0.5 rounded-full bg-fg-brand-primary_alt",
+                            // Card Orb change (motion round 2026-09-19), keep after `npx untitledui add`: the line's 200 ms as --duration-base.
                             ready && "transition-[transform,width] duration-(--duration-base) ease-move motion-reduce:transition-none",
                         )}
                         style={{ width: rect.width, transform: `translateX(${rect.left}px)` }}

@@ -177,6 +177,7 @@ export const CommandDialog = ({ className, dialogClassName, children, ...combobo
                 cx(
                     // Centred on the screen, not hung from the top: the palette is the page's focus while it is open.
                     "fixed inset-0 z-50 flex min-h-full items-center justify-center overflow-y-auto bg-overlay/70 p-4 text-center backdrop-blur",
+                    // Card Orb change (motion round 2026-09-19), keep after `npx untitledui add`: durations on the app's scale (--duration-*), the enter curve.
                     state.isEntering && "duration-(--duration-sheet) animate-in [animation-timing-function:var(--ease-enter)] fade-in",
                     state.isExiting && "duration-(--duration-base) animate-out [animation-timing-function:var(--ease-enter)] fade-out",
                     typeof className === "function" ? className(state) : className,

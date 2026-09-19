@@ -128,17 +128,20 @@ export function RowSearch({
                 <div ref={field} className={cx(FIELD, "flex-1 arrive")} onKeyDown={onKeyDown}>
                     {children}
                 </div>
-                <Button
-                    color="link-gray"
-                    size="sm"
-                    className="hit-area shrink-0 arrive"
-                    onClick={() => {
-                        onClear?.();
-                        putAway();
-                    }}
-                >
-                    Cancel
-                </Button>
+                {/* On a wrapper: the Button's own `pressable` transition would replace `arrive`'s. */}
+                <div className="shrink-0 arrive">
+                    <Button
+                        color="link-gray"
+                        size="sm"
+                        className="hit-area"
+                        onClick={() => {
+                            onClear?.();
+                            putAway();
+                        }}
+                    >
+                        Cancel
+                    </Button>
+                </div>
             </>,
             slot,
         );

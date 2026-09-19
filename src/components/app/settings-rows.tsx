@@ -44,7 +44,7 @@ export function SettingsGroup({ title, children }: { title: string; children: Re
 }
 
 const rowClass =
-    "flex w-full items-center gap-3 px-4 py-3.5 text-left outline-focus-ring transition duration-(--duration-instant) ease-enter not-last:border-b not-last:border-secondary hover:bg-primary_hover focus-visible:z-10 focus-visible:outline-2 focus-visible:-outline-offset-2";
+    "flex w-full items-center gap-3 px-4 py-3.5 text-left outline-focus-ring transition-colors duration-(--duration-instant) not-last:border-b not-last:border-secondary hover:bg-primary_hover focus-visible:z-10 focus-visible:outline-2 focus-visible:-outline-offset-2";
 
 /** The label, whatever it currently says, and the mark that there is more behind it. */
 function RowBody({ icon: Icon, label, value }: { icon: FC<{ className?: string }>; label: string; value?: string | null }) {

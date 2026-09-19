@@ -75,7 +75,11 @@ export function Movers({ list = "all", seeAll = true }: { list?: HomeList; seeAl
     const answer = shownKey === null ? undefined : answers[shownKey];
     const stale = shownKey !== null && shownKey !== period;
     /* Each tile leads to the whole list sorted its way, over the same period (list-query.ts). */
-    const listOf = (sort: "change-desc" | "change-asc") => `${listPath(list)}?sort=${sort}${period === "1m" ? "" : `&period=${period}`}`;
+    // The period of the list on screen: while the next one is asked, the dimmed tiles are still the last one's.
+    const listOf = (sort: "change-desc" | "change-asc") => {
+        const p = shownKey ?? period;
+        return `${listPath(list)}?sort=${sort}${p === "1m" ? "" : `&period=${p}`}`;
+    };
 
     /* A row opens the card's sheet on your own row of it, read by set, number and name the way the set
        page opens a card, and the arrows step through Up and then Down. `at` is where in that list the
@@ -176,7 +180,7 @@ export function Movers({ list = "all", seeAll = true }: { list?: HomeList; seeAl
                 onClose={close}
                 onPrev={hasPrev ? () => stepBy(-1) : null}
                 onNext={hasNext ? () => stepBy(1) : null}
-                period={period}
+                period={shownKey ?? period}
             />
         </section>
     );

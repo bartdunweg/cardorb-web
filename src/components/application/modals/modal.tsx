@@ -17,6 +17,7 @@ export const ModalOverlay = (props: AriaModalOverlayProps) => {
                     "fixed inset-0 z-50 flex min-h-dvh w-full items-center justify-center overflow-y-auto bg-overlay/70 p-4 outline-hidden backdrop-blur-[6px] sm:p-8",
                     // The enter curve both ways: an exit that eases in starts slow, on the very frame
                     // the person is waiting for it to be gone.
+                    // Card Orb change (motion round 2026-09-19), keep after `npx untitledui add`: durations on the app's scale (--duration-*), the enter curve.
                     state.isEntering && "duration-(--duration-sheet) animate-in [animation-timing-function:var(--ease-enter)] fade-in",
                     state.isExiting && "duration-(--duration-base) animate-out [animation-timing-function:var(--ease-enter)] fade-out",
                     typeof props.className === "function" ? props.className(state) : props.className,
