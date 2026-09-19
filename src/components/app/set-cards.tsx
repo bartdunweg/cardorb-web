@@ -330,21 +330,11 @@ export function SetCards({
     return (
         <>
             <Tabs
-                className="flex flex-1 flex-col gap-6"
+                // 16 px between the row, the tabs and the grid on a phone, as on My cards; 24 from sm.
+                className="flex flex-1 flex-col gap-4 sm:gap-6"
                 selectedKey={holding ?? "all"}
                 onSelectionChange={(key) => write({ holding: key === "all" ? undefined : (key as SetHolding) })}
             >
-                {/* The kit's underline tabs, as the card sheet has them; scrolls sideways on a phone too narrow for four.
-                    `overflow-x` alone makes the other way `auto` as well, which cut the top pixel off every count
-                    badge (they carry `-my-px`, so they stand a pixel outside the tab and their ring read as sliced).
-                    The pixel back as padding, and off again as margin, so nothing else moves. */}
-                <div className="-mx-4 -mt-px overflow-x-auto px-4 pt-px sm:mx-0 sm:px-0">
-                    <TabList aria-label="Cards in this set" type="underline" size="sm" className="min-w-max">
-                        {HOLDINGS.map((h) => (
-                            <Tab key={h.value} id={h.value} label={h.label} badge={String(tabCounts[h.value] ?? 0)} />
-                        ))}
-                    </TabList>
-                </div>
                 {/* The whole first line on a phone, a short field from sm (`RowSearch`), as in a binder's row. */}
                 <div className={LIST_ROW}>
                     {/* On a phone behind the search button in the bar across from Back (`BarSearchButton`). */}
@@ -385,6 +375,18 @@ export function SetCards({
                     </div>
                     {/* On a phone in the bar across from Back (`BarViewMenu`). */}
                     <ViewMenu view="grid" size={size} layouts={false} className="max-sm:hidden" />
+                </div>
+                {/* Under the row of filters, as My cards has its Collection | Wishlist (Bart's call, 2026-09-19).
+                    The kit's underline tabs, as the card sheet has them; scrolls sideways on a phone too narrow for four.
+                    `overflow-x` alone makes the other way `auto` as well, which cut the top pixel off every count
+                    badge (they carry `-my-px`, so they stand a pixel outside the tab and their ring read as sliced).
+                    The pixel back as padding, and off again as margin, so nothing else moves. */}
+                <div className="-mx-4 -mt-px overflow-x-auto px-4 pt-px sm:mx-0 sm:px-0">
+                    <TabList aria-label="Cards in this set" type="underline" size="sm" className="min-w-max">
+                        {HOLDINGS.map((h) => (
+                            <Tab key={h.value} id={h.value} label={h.label} badge={String(tabCounts[h.value] ?? 0)} />
+                        ))}
+                    </TabList>
                 </div>
                 {/* One panel, named after the tab chosen: the grid is the same list filtered, not four lists. */}
                 <TabPanel id={holding ?? "all"} className="flex flex-col gap-6">

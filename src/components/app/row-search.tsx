@@ -13,7 +13,7 @@ import { cx } from "@/utils/cx";
 // profile), it takes the whole first line with the row's buttons under it; on a page with a bar
 // (a binder, a set, Browse) it is a button there (`BarSearchButton`), and a press turns the bar into the field with
 // Cancel beside it, the way Gojek and Keeta search a list (Mobbin, 2026-09-19). 44 px high on a
-// phone, as the buttons around it; 36 from sm. A long list name ends in an ellipsis in the 208 px
+// phone, as the bar's buttons beside it (the filter line under it is 40); 36 from sm. A long list name ends in an ellipsis in the 208 px
 // field rather than being cut mid-letter.
 
 /** A list row: the search, then Filters, Sort and View. One class for every page that has one, so the gaps match. */

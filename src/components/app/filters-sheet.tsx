@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode, useEffect, useId, useState } from "react";
-import { ArrowLeft, Check, ChevronRight, FilterLines } from "@untitledui/icons";
+import { ArrowLeft, Check, ChevronDown, ChevronRight, FilterLines } from "@untitledui/icons";
 import { Button as AriaButton, Dialog as AriaDialog, DialogTrigger as AriaDialogTrigger, Heading as AriaHeading } from "react-aria-components";
 import { FilterChoices, type FilterOption, OptionCount } from "@/components/app/filter-chip";
 import { RowButton } from "@/components/app/row-button";
@@ -533,7 +533,7 @@ function FilterMenu({
         return (
             <>
                 {/* 40 px, as the Filters and Sort buttons it follows in the line, a step under the bar's 44
-                    above it, and pressed as 44 (`hit-area`). No chevron, as no row button has one (row-button.tsx).
+                    above it, and pressed as 44 (`hit-area`). No chevron on the phone's line (Bart, 2026-09-19).
                     It opens the sheet itself, so it says so itself. */}
                 <Button
                     color="secondary"
@@ -569,8 +569,8 @@ function FilterMenu({
 
     return (
         <AriaDialogTrigger isOpen={open} onOpenChange={toggle}>
-            {/* No chevron, as no row button has one (row-button.tsx). */}
-            <Button color="secondary" size="sm" aria-label={name}>
+            {/* With its chevron here, where it has no icon of its own to say it opens (Bart dropped it on the phone's line only). */}
+            <Button color="secondary" size="sm" iconTrailing={ChevronDown} aria-label={name}>
                 {face}
             </Button>
             <Dropdown.Popover placement="bottom start" className="w-72">
