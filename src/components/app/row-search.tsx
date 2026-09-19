@@ -123,14 +123,15 @@ export function RowSearch({
         };
         const portal = createPortal(
             <>
+                {/* Fades up into the bar as the title and the buttons fade out (page-header.tsx), not in one frame. */}
                 {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- a key listener on the box, for the field inside it; the box itself is not a control. */}
-                <div ref={field} className={cx(FIELD, "flex-1")} onKeyDown={onKeyDown}>
+                <div ref={field} className={cx(FIELD, "flex-1 arrive")} onKeyDown={onKeyDown}>
                     {children}
                 </div>
                 <Button
                     color="link-gray"
                     size="sm"
-                    className="hit-area shrink-0"
+                    className="hit-area shrink-0 arrive"
                     onClick={() => {
                         onClear?.();
                         putAway();

@@ -239,7 +239,7 @@ export const TabList = <T extends Orientation>({
                         aria-hidden="true"
                         className={cx(
                             "pointer-events-none absolute bottom-0 left-0 h-0.5 rounded-full bg-fg-brand-primary_alt",
-                            ready && "transition-[transform,width] duration-200 ease-move motion-reduce:transition-none",
+                            ready && "transition-[transform,width] duration-(--duration-base) ease-move motion-reduce:transition-none",
                         )}
                         style={{ width: rect.width, transform: `translateX(${rect.left}px)` }}
                     />

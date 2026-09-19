@@ -82,7 +82,12 @@ function Index({ active }: { active: string }) {
                 color="secondary"
                 size="sm"
                 className="xl:hidden"
-                iconTrailing={<ChevronDown data-icon="trailing" className={cx("size-5 shrink-0 transition-transform duration-150", open && "-scale-y-100")} />}
+                iconTrailing={
+                    <ChevronDown
+                        data-icon="trailing"
+                        className={cx("size-5 shrink-0 transition-transform duration-(--duration-fast)", open && "-scale-y-100")}
+                    />
+                }
                 aria-expanded={open}
                 aria-controls="design-index"
                 onClick={() => setOpen(!open)}
@@ -121,7 +126,7 @@ function IndexLink({ id, title, active, onGo }: { id: string; title: string; act
             aria-current={active ? "true" : undefined}
             onClick={onGo}
             className={cx(
-                "block truncate rounded-md px-2 py-1 text-sm outline-focus-ring transition-colors duration-100 hover:bg-secondary hover:text-secondary focus-visible:outline-2",
+                "block truncate rounded-md px-2 py-1 text-sm outline-focus-ring transition-colors duration-(--duration-instant) hover:bg-secondary hover:text-secondary focus-visible:outline-2",
                 active ? "bg-secondary font-semibold text-primary" : "text-tertiary",
             )}
         >

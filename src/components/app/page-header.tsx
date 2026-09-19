@@ -184,14 +184,16 @@ export function PageHeader({
                     // A page whose field always stands there gives up the title alone.
                     searchField
                         ? "[&:has(>[data-bar-search]:not(:empty))>:nth-child(2)]:hidden"
-                        : "[&:has(>[data-bar-search]:not(:empty))>:is(:nth-child(2),:nth-child(3))]:invisible",
+                        : // Faded out, then out of reach: visibility flips when the fade ends, so a screen reader and a tap lose
+                          // them too. Only on the way out: back, they are visible on the first frame, where Cancel puts focus.
+                          "[&:has(>[data-bar-search]:not(:empty))>:is(:nth-child(2),:nth-child(3))]:invisible [&:has(>[data-bar-search]:not(:empty))>:is(:nth-child(2),:nth-child(3))]:opacity-0 [&:has(>[data-bar-search]:not(:empty))>:is(:nth-child(2),:nth-child(3))]:transition-[opacity,visibility]",
                     // Nothing to tap until Back, a button or the collapsed title is there: taps go through to the page.
                     !back && !barActions && !searchField && !collapsed && "pointer-events-none",
                     // The fade comes with the collapse: at rest the buttons sit on the page and the large title
                     // sits on its line; once content scrolls under, the page's ground fades in behind the bar.
                     // The ground reaches 28 px past the bar's bottom: the glass thins over its whole height
                     // and runs out there.
-                    "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:-bottom-7 before:-z-10 before:glass-fade before:transition-opacity before:duration-150 before:ease-enter",
+                    "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:-bottom-7 before:-z-10 before:glass-fade before:transition-opacity before:duration-(--duration-fast) before:ease-enter",
                     collapsed ? "before:opacity-100" : "before:opacity-0",
                     // A bar that is the search field on a phone always has content under it: its ground stays.
                     searchField && sticky && "max-sm:before:opacity-100",
@@ -218,7 +220,7 @@ export function PageHeader({
                     aria-hidden="true"
                     className={cx(
                         // The same size as the card sheet's bar gives its name: one bar, two places.
-                        "col-start-2 row-start-1 truncate px-2 text-center text-md font-semibold text-primary transition-opacity duration-150 ease-enter",
+                        "col-start-2 row-start-1 truncate px-2 text-center text-md font-semibold text-primary transition-opacity duration-(--duration-fast) ease-enter",
                         collapsed ? "opacity-100" : "opacity-0",
                     )}
                 >
@@ -229,7 +231,8 @@ export function PageHeader({
                     className={cx(
                         // Their own cell, always: with the field over the first two, auto-placement put them on a line of their own.
                         "col-start-3 row-start-1 flex items-center justify-end gap-3",
-                        placed && "transition-transform duration-150 ease-enter motion-reduce:transition-none",
+                        "transition-opacity duration-(--duration-fast) ease-enter",
+                        placed && "transition-[opacity,transform] motion-reduce:transition-opacity",
                         // Beside the field on a phone, level with it: nothing to line up with a title that is not drawn there.
                         searchField && "max-sm:transform-none!",
                     )}

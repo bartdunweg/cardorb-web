@@ -225,7 +225,7 @@
    all, and one that lands just after it (a warm page, 170 ms) is a tenth of a line rather than a
    flash. */
 @utility route-progress-track {
-    animation: route-progress-appear 120ms linear 150ms both;
+    animation: route-progress-appear 120ms linear var(--duration-fast) both;
 }
 
 @keyframes route-progress-appear {
@@ -468,7 +468,7 @@ input[type="search"]::-webkit-search-cancel-button {
 }
 
 ::view-transition-group(my-cards-line) {
-    animation-duration: 200ms;
+    animation-duration: var(--duration-base);
     animation-timing-function: var(--ease-move);
 }
 
