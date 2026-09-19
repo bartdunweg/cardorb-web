@@ -67,7 +67,10 @@ export function useSheetWrites({
        is one change to it, and a re-read per press had every one of them competing with the next
        write for the same connection. Closing the sheet takes whatever is still waiting with it. */
     const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    /** Still on its page: a forget that lands after the page went must not set a timer nothing clears. */
+    const alive = useRef(true);
     const scheduleRefresh = () => {
+        if (!alive.current) return;
         if (refreshTimer.current) clearTimeout(refreshTimer.current);
         refreshTimer.current = setTimeout(() => {
             refreshTimer.current = null;
@@ -76,12 +79,13 @@ export function useSheetWrites({
     };
     /* Gone with the page it was on: a re-read still waiting would refresh the page that came next, and
        in a test file it fired in the test after the one that asked for it (the rapid-star test, CI). */
-    useEffect(
-        () => () => {
+    useEffect(() => {
+        alive.current = true;
+        return () => {
+            alive.current = false;
             if (refreshTimer.current) clearTimeout(refreshTimer.current);
-        },
-        [],
-    );
+        };
+    }, []);
     const flushRefresh = () => {
         if (!refreshTimer.current) return;
         clearTimeout(refreshTimer.current);

@@ -195,3 +195,21 @@ test("Browse has its field in the bar, in the title's place", async ({ page }) =
             .first(),
     ).toBeVisible();
 });
+
+test("Browse switches its catalogue with tabs of half the line each, under the filters", async ({ page }) => {
+    await page.goto("/dashboard/sets");
+    const tabs = page.getByRole("main").getByRole("tablist", { name: "Catalogue" });
+    const filters = page.getByRole("main").getByRole("button", { name: /^Filters/ });
+    await expect(tabs).toBeVisible();
+    const [list, row] = await Promise.all([tabs.boundingBox(), filters.boundingBox()]);
+    expect(list!.y).toBeGreaterThan(row!.y + row!.height - 1);
+    // The language is the tabs' now, not a filter of its own.
+    await expect(page.getByRole("main").getByRole("button", { name: /^Language/ })).toHaveCount(0);
+
+    await hydrated(page, "Filters");
+    await tabs.getByRole("tab", { name: "Japanese" }).click();
+    await expect(page).toHaveURL(/[?&]language=ja(&|$)/);
+    await expect(tabs.getByRole("tab", { name: "Japanese" })).toHaveAttribute("aria-selected", "true");
+    await tabs.getByRole("tab", { name: "English" }).click();
+    await expect(page).not.toHaveURL(/language=/);
+});

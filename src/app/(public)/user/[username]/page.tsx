@@ -50,7 +50,7 @@ export default async function PublicProfilePage({ params, searchParams }: Params
        cached call; the slow reads wait behind the boundary below, on the same frame as before. */
     if (!profile) notFound();
     return (
-        <Suspense fallback={<ListSkeleton tiles={12} />}>
+        <Suspense fallback={<ListSkeleton tiles={12} readOnly />}>
             <Profile username={username} profile={profile} searchParams={searchParams} />
         </Suspense>
     );
