@@ -1,7 +1,7 @@
 "use client";
 
 import type { RefObject } from "react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { addCard, editCopies, removeCard, restoreCard, setCopies } from "@/app/(app)/dashboard/cards/actions";
 import type { EditionChoice, PrintingChoice } from "@/components/app/printing-choices";
@@ -74,6 +74,14 @@ export function useSheetWrites({
             router.refresh();
         }, 500);
     };
+    /* Gone with the page it was on: a re-read still waiting would refresh the page that came next, and
+       in a test file it fired in the test after the one that asked for it (the rapid-star test, CI). */
+    useEffect(
+        () => () => {
+            if (refreshTimer.current) clearTimeout(refreshTimer.current);
+        },
+        [],
+    );
     const flushRefresh = () => {
         if (!refreshTimer.current) return;
         clearTimeout(refreshTimer.current);
