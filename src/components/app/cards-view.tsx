@@ -1,9 +1,10 @@
 "use client";
 
-import { type ReactNode, Suspense, useCallback, useState } from "react";
+import { type ReactNode, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { CardsList } from "@/components/app/cards-list";
 import type { PeriodKey } from "@/components/app/chart-periods";
+import { useListTotals } from "@/components/app/list-totals";
 import { LIST_ROW } from "@/components/app/row-search";
 import { CardsSkeleton } from "@/components/app/skeletons";
 import { ViewMenu } from "@/components/app/view-menu";
@@ -77,7 +78,14 @@ export function CardsView({
      */
     const [selected, setSelected] = useState<{ card: Card; siblings: Card[] } | null>(null);
     // One identity for the life of the view, so the list's memoised tiles are not drawn again when the sheet opens.
-    const select = useCallback((card: Card, siblings: Card[]) => setSelected({ card, siblings }), []);
+    // The focus a close puts back, after the sheet has gone: cleared by the next open, the next close, and leaving.
+    const refocus = useRef<number | undefined>(undefined);
+    useEffect(() => () => window.clearTimeout(refocus.current), []);
+    const select = useCallback((card: Card, siblings: Card[]) => {
+        // A card opened before the last close's focus landed: that focus is no longer wanted.
+        window.clearTimeout(refocus.current);
+        setSelected({ card, siblings });
+    }, []);
     /*
      * The cards the sheet has written off this list, gone from it at once.
      *
@@ -92,15 +100,69 @@ export function CardsView({
      * (the save failed and the star went back) takes it out of here, so the card returns.
      */
     const [gone, setGone] = useState<ReadonlySet<string>>(() => new Set());
-    const starChanged = useCallback((cardId: string, starred: boolean) => {
-        setGone((have) => {
-            if (starred === !have.has(cardId)) return have;
-            const next = new Set(have);
+    /* The line under the title moves with it, as a tile's own buttons move it: the row left, and its
+       copies and their worth with it (bug hunt 2026-09-19: Favorites said the old count until the page
+       was read again). The card is the sheet's, the one whose star was turned. */
+    const totals = useListTotals();
+    const goneNow = useRef(gone);
+    const sheetCard = useRef<Card | null>(null);
+    useLayoutEffect(() => {
+        sheetCard.current = selected?.card ?? null;
+    });
+    // What each unstar took off the line, so a star put back (a save that failed, after the arrows or a
+    // close moved the sheet on) returns exactly that, whichever card the sheet is on by then.
+    const taken = useRef(new Map<string, { rows: number; copies: number; value: number }>());
+    const starChanged = useCallback(
+        (cardId: string, starred: boolean) => {
+            if (starred === !goneNow.current.has(cardId)) return;
+            const next = new Set(goneNow.current);
             if (starred) next.delete(cardId);
             else next.add(cardId);
-            return next;
-        });
-    }, []);
+            goneNow.current = next;
+            setGone(next);
+            if (starred) {
+                const back = taken.current.get(cardId);
+                taken.current.delete(cardId);
+                if (back) totals?.(back);
+                return;
+            }
+            const card = sheetCard.current;
+            if (card?.id !== cardId) return;
+            const copies = card.quantity ?? 1;
+            const change = { rows: 1, copies, value: copies * (card.price ?? 0) };
+            taken.current.set(cardId, change);
+            totals?.({ rows: -change.rows, copies: -change.copies, value: -change.value });
+        },
+        [totals],
+    );
+
+    /* Focus back on the card the sheet was last on once it has closed, where the dialog's own return
+       went to the tile it was opened from (another card, after Next) or to the page (a card that left
+       the list meanwhile); a card no longer on the list gives its place to the nearest one still there.
+       After the sheet's exit, so the dialog's own restore does not move it again (bug hunt 2026-09-19). */
+    const close = () => {
+        const last = selected;
+        setSelected(null);
+        window.clearTimeout(refocus.current);
+        if (!last) return;
+        const from = last.siblings.findIndex((c) => c.id === last.card.id);
+        const order = [last.card, ...last.siblings.slice(from + 1), ...last.siblings.slice(0, Math.max(0, from)).reverse()];
+        // After the sheet's own exit (--duration-base, and a frame to spare).
+        const wait = (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--duration-base")) || 200) + 120;
+        refocus.current = window.setTimeout(() => {
+            // Only where the dialog's return left it (the page, another tile) or still in the closing sheet. Focus the reader has
+            // moved since (the toast's Put back, the search field) stays where it is.
+            const now = document.activeElement;
+            if (now && now !== document.body && !now.closest("[data-card-id]") && !now.closest("[role=dialog]")) return;
+            for (const c of order) {
+                const tile = document.querySelector<HTMLElement>(`[data-card-id="${CSS.escape(c.id)}"] button`);
+                if (!tile) continue;
+                const box = tile.getBoundingClientRect();
+                tile.focus({ preventScroll: box.bottom > 0 && box.top < window.innerHeight });
+                return;
+            }
+        }, wait);
+    };
 
     const at = selected ? selected.siblings.findIndex((c) => c.id === selected.card.id) : -1;
     const step = (by: number) => {
@@ -144,7 +206,7 @@ export function CardsView({
                 that belongs here whichever way it is set. */}
             <CardDetailSlideout
                 card={selected?.card ?? null}
-                onClose={() => setSelected(null)}
+                onClose={close}
                 onPrev={step(-1)}
                 onNext={step(1)}
                 period={period}
