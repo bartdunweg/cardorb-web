@@ -30,7 +30,7 @@ export function SetRow({ set, language }: { set: SetSummary; language: BrowseLan
                 {set.logoUrl ? (
                     <CardImage src={set.logoUrl} alt="" width={LOGO_WIDTH} ratio="square" className="object-contain" />
                 ) : (
-                    <span aria-hidden="true" className="truncate text-xs font-semibold text-tertiary">
+                    <span aria-hidden="true" className="max-w-full min-w-0 truncate text-xs font-semibold text-tertiary">
                         {firstWord(set.name)}
                     </span>
                 )}

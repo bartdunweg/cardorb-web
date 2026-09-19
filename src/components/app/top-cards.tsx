@@ -11,8 +11,17 @@ import { perUser } from "@/lib/user-cache";
 // under Suspense so the page does not wait for it.
 //
 // `top` is the read, started by the page before it waits on the stats (readTopCards).
-export async function TopCards({ top: read, href = "/dashboard/cards" }: { top: Promise<Card[]>; href?: string }) {
-    const top = await read;
+export async function TopCards({
+    top: read,
+    href = "/dashboard/cards",
+    sortable = true,
+}: {
+    top: Promise<Card[]>;
+    href?: string;
+    /** False for a binder shown as a Pokédex: its page draws dex order, so a price sort there cannot be seen. */
+    sortable?: boolean | Promise<boolean>;
+}) {
+    const [top, sorts] = await Promise.all([read, sortable]);
     if (top.length === 0) return null;
     return (
         <section aria-labelledby="top-cards-heading" className="flex flex-col gap-4">
@@ -20,12 +29,14 @@ export async function TopCards({ top: read, href = "/dashboard/cards" }: { top: 
                 <h2 id="top-cards-heading" className="text-md font-semibold text-primary">
                     Most valuable cards
                 </h2>
-                <Link
-                    href={`${href}?sort=price-desc`}
-                    className="hit-area relative text-sm font-semibold text-brand-secondary outline-focus-ring focus-visible:outline-2"
-                >
-                    See all
-                </Link>
+                {sorts ? (
+                    <Link
+                        href={`${href}?sort=price-desc`}
+                        className="hit-area relative text-sm font-semibold text-brand-secondary outline-focus-ring focus-visible:outline-2"
+                    >
+                        See all
+                    </Link>
+                ) : null}
             </div>
             {/* In a tile like the movers above it: the row scrolls inside it. */}
             <div className={`${TILE_SURFACE} p-4 sm:p-5`}>

@@ -10,7 +10,7 @@ import { ValueHeroOutline } from "@/components/app/skeletons";
 import { TopCards, readTopCards } from "@/components/app/top-cards";
 import { ValueHero, type ValueList } from "@/components/app/value-hero";
 import { Button } from "@/components/base/buttons/button";
-import { getDexBinder, getMyBinders } from "@/lib/binders";
+import { getMyBinders, isPokedexBinder } from "@/lib/binders";
 import { type CardList, getCardStats, getMyCards } from "@/lib/cards";
 import { UUID, askedList, listFilter, listPath } from "@/lib/home-list";
 import { getMyProfile } from "@/lib/profile";
@@ -56,7 +56,7 @@ function startReads(asked: string) {
         caught: selected.then((list) => (list === "all" ? readDexCaught() : null)),
         numbers: selected.then((list) => (list === "all" ? null : readListNumbers(list))),
         // A binder shown as a Pokédex draws its slots in dex order, where a sort by change cannot be seen.
-        dex: selected.then((list) => (UUID.test(list) ? sideRead("dex binder", getDexBinder, null).then((d) => d?.id === list) : false)),
+        dex: selected.then((list) => (UUID.test(list) ? sideRead("dex binder", () => isPokedexBinder(list), false) : false)),
     };
 }
 
@@ -97,7 +97,7 @@ export async function HomeBody({ searchParams }: { searchParams: Promise<{ value
                     )}
                     {/* The dearest cards first, then what moved the value (Bart, 2026-09-15). */}
                     <Suspense fallback={null}>
-                        <TopCards top={reads.top} href={listPath(selected)} />
+                        <TopCards top={reads.top} href={listPath(selected)} sortable={reads.dex.then((dex) => !dex)} />
                     </Suspense>
                     {/* Over the chart's period and the chosen list's cards (api#568), like everything above them.
                         Where the list's value could not be read the value above falls back to the collection's
@@ -195,7 +195,7 @@ async function ListCounts({
             href={href}
             later={
                 <Suspense fallback={<OutlineTiles labels={["Sets", "Pokémon"]} from={2} />}>
-                    <ListNumberStats numbers={reads.numbers} href={href} />
+                    <ListNumberStats numbers={reads.numbers} href={href} dex={reads.dex} />
                 </Suspense>
             }
         />

@@ -79,12 +79,21 @@ export async function readListNumbers(list: HomeList): Promise<ListNumbers | nul
 }
 
 /** A chosen list's Sets and Pokémon tiles, once its whole read is in; nothing when it could not be read. */
-export async function ListNumberStats({ numbers: read, href }: { numbers: Promise<ListNumbers | null>; href: string }) {
-    const numbers = await read;
+export async function ListNumberStats({
+    numbers: read,
+    href,
+    dex = false,
+}: {
+    numbers: Promise<ListNumbers | null>;
+    href: string;
+    /** A binder shown as a Pokédex: its page draws dex order whatever the sort, so Sets leads to the page itself. */
+    dex?: boolean | Promise<boolean>;
+}) {
+    const [numbers, pokedex] = await Promise.all([read, dex]);
     if (!numbers) return null;
     return (
         <>
-            <StatCard label="Sets" value={formatCount(numbers.sets)} href={`${href}?sort=set`} delay={80} />
+            <StatCard label="Sets" value={formatCount(numbers.sets)} href={pokedex ? href : `${href}?sort=set`} delay={80} />
             <StatCard label="Pokémon" value={formatCount(numbers.caught)} href={`${href}?sort=dex`} delay={120} />
         </>
     );

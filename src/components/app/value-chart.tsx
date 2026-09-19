@@ -89,6 +89,9 @@ export function ValueChart({
     const container = useRef<HTMLDivElement>(null);
     const [width, setWidth] = useState(0);
     const [active, setActive] = useState<number | null>(null);
+    // Read aloud only when the keys step the line: a pointer's every move re-announced the day, the
+    // value and the counts (bug hunt 2026-09-19).
+    const [stepped, setStepped] = useState(false);
     const titleId = useId();
     const descId = useId();
     const svgTitleId = useId();
@@ -169,10 +172,12 @@ export function ValueChart({
     const pick = (clientX: number) => {
         const el = container.current;
         if (!el || points.length === 0) return;
+        setStepped(false);
         setActive(nearestIndex(points, clientX - el.getBoundingClientRect().left));
     };
 
     const onKeyDown = (e: React.KeyboardEvent) => {
+        setStepped(true);
         if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
             e.preventDefault();
             const step = e.key === "ArrowRight" ? 1 : -1;
@@ -287,7 +292,8 @@ export function ValueChart({
 
                 {current ? (
                     <output
-                        aria-live="polite"
+                        // Seen only: the live region under it is what a screen reader hears.
+                        aria-hidden="true"
                         className="pointer-events-none absolute top-2 flex flex-col gap-0.5 rounded-lg bg-primary px-3 py-2 text-xs shadow-lg"
                         style={{ left: tooltipLeft, right: tooltipRight }}
                     >
@@ -310,6 +316,15 @@ export function ValueChart({
                         ) : null}
                     </output>
                 ) : null}
+                {/* Always there, so its first words are heard; filled only when the keys step the line, so a
+                    pointer's every move is not read out (bug hunt 2026-09-19). */}
+                <p aria-live="polite" className="sr-only">
+                    {stepped && current
+                        ? `${whenOf(current)}: ${formatPrice(current.value)}${current.weekFrom ? " average" : ""}${
+                              countLabel ? `, ${formatCount(current.cards)} ${counted(current.cards)}` : ""
+                          }`
+                        : ""}
+                </p>
             </div>
 
             {children}

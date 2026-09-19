@@ -1,8 +1,11 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { DexCard } from "@/lib/api-shapes";
 import type { DexGeneration, NamedDexSlot } from "@/lib/dex-groups";
 import { DexGrid } from "./dex-grid";
+
+// A tap that finds no row reads the page again; nothing here taps.
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 /*
  * A slot says two things, and they are about two different subjects: above the picture the

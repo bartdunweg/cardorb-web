@@ -66,10 +66,12 @@ async function Shelf({ shelf: reading, query, view }: { shelf: ReturnType<typeof
         return <AppEmptyState icon="book" title="No sets found" description="No set in this language matches these filters. Clear one to widen the shelf." />;
     }
     if (series.length === 0 && query.progress !== "all") {
+        // Named as the filter names them (In progress), and about the sets the search left, where there is one.
+        const which = query.q ? `No set in this language matching “${query.q}”` : "No set in this language";
         const why = {
-            started: "No set in this language is half done.",
-            complete: "No set in this language is complete yet.",
-            new: "You have cards from every set in this language.",
+            started: `${which} is in progress.`,
+            complete: `${which} is complete yet.`,
+            new: query.q ? `You have cards from every set in this language matching “${query.q}”.` : "You have cards from every set in this language.",
         }[query.progress];
         return <AppEmptyState icon="book" title="No sets found" description={`${why} Choose All sets to see the whole shelf.`} />;
     }

@@ -114,7 +114,12 @@ export function CardsView({
             <div className={LIST_ROW}>
                 {/* In its own box: an element that crossed the server boundary, in a list with local ones, trips the key check. */}
                 <div className="contents">{toolbar}</div>
-                <ViewMenu view={view} size={size} group={sortedBySet ? group : undefined} className={viewInBar ? "max-sm:hidden" : undefined} />
+                <ViewMenu
+                    view={view}
+                    size={size}
+                    group={sortedBySet && view === "grid" ? group : undefined}
+                    className={viewInBar ? "max-sm:hidden" : undefined}
+                />
             </div>
             {views ? <div className="lg:hidden">{views}</div> : null}
 

@@ -26,5 +26,7 @@ export function BarViewMenu({
     grouped?: boolean;
 }) {
     const { view, size, group } = useCardsView(layouts ? initialView : "grid", initialSize, initialGroup);
-    return <ViewMenu view={layouts ? view : "grid"} size={size} layouts={layouts} group={grouped ? group : undefined} className="sm:hidden" />;
+    return (
+        <ViewMenu view={layouts ? view : "grid"} size={size} layouts={layouts} group={grouped && view === "grid" ? group : undefined} className="sm:hidden" />
+    );
 }
