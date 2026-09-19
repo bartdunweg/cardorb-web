@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { type CSSProperties, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChevronLeft } from "@untitledui/icons";
 import { Button } from "@/components/base/buttons/button";
 import { barSearchSlot } from "@/hooks/use-row-search";
@@ -18,9 +18,9 @@ import { cx } from "@/utils/cx";
  * From the `lg` breakpoint up there is a sidebar, so the bar is gone and only the large title and
  * the actions remain, laid out as the pages always had them.
  *
- * The one moving part is the small title's opacity, which is state indication seen tens of times a
- * day, so it is near-imperceptible: a 150 ms fade, no movement. Reduced motion keeps the fade. The
- * large title does not animate; it just scrolls, which is what a title on a page does.
+ * The one moving part is the small title's opacity and the ground behind it, which follow the scroll
+ * position itself (`--bar`, `--ground`), as the card sheet's bar does: no animation, so nothing to
+ * reduce. The large title does not animate; it just scrolls, which is what a title on a page does.
  */
 export function PageHeader({
     title,
@@ -96,11 +96,51 @@ export function PageHeader({
     const sentinel = useRef<HTMLHeadingElement>(null);
     const [collapsed, setCollapsed] = useState(false);
 
-    // The bar takes the title over exactly when the large one has left the screen. IntersectionObserver
-    // rather than a scroll listener: it costs nothing between changes and needs no layout reads.
+    // Whether the bar has taken the title over, for what switches rather than fades (the buttons' place,
+    // whether the bar takes taps). IntersectionObserver: it costs nothing between changes.
     // Without Back but with buttons in the bar (All cards, a binder, Collection) the large title starts level
     // with those buttons, on their line, rather than on a line of its own under them.
     const beside = Boolean(!back && barActions && titleOnPhone);
+    /* The small title and the ground follow the scroll position itself, as the card sheet's bar does
+       (sheet-bar.tsx): the ground in over the first 24 px, the title in as the large one slides its own
+       height under the bar. No timed fade, so a slow scroll is a slow change and nothing is left to
+       reduce (motion audit 2026-09-19). `collapsed` below still says when the bar has the title, for
+       what switches rather than fades: the buttons' place and whether the bar takes taps. */
+    const bar = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        const el = bar.current;
+        const heading = sentinel.current;
+        if (!el || !heading || !titleOnPhone || !sticky) return;
+        // From `lg` the bar is not drawn: nothing to follow.
+        const wide = window.matchMedia("(min-width: 64rem)");
+        let frame = 0;
+        const update = () => {
+            frame = 0;
+            if (wide.matches) return;
+            // From where the title stands at rest: under Back it starts under the bar (76 px), beside the
+            // buttons on the bar's own line (16 px); from `sm` the page's padding puts it lower. Read
+            // before anything is written, so the frame lays out once.
+            const box = heading.getBoundingClientRect();
+            const top = box.top + window.scrollY - (back ? 76 : 16);
+            const shown = (window.scrollY - Math.max(0, top)) / Math.max(1, box.height);
+            el.style.setProperty("--ground", String(Math.min(1, window.scrollY / 24)));
+            el.style.setProperty("--bar", String(Math.min(1, Math.max(0, shown))));
+        };
+        const ask = () => {
+            if (!frame) frame = requestAnimationFrame(update);
+        };
+        update();
+        window.addEventListener("scroll", ask, { passive: true });
+        window.addEventListener("resize", ask);
+        wide.addEventListener("change", ask);
+        return () => {
+            wide.removeEventListener("change", ask);
+            cancelAnimationFrame(frame);
+            window.removeEventListener("scroll", ask);
+            window.removeEventListener("resize", ask);
+        };
+    }, [back, titleOnPhone, sticky]);
+
     useEffect(() => {
         const el = sentinel.current;
         // A title hidden on the phone has nothing to collapse into the bar: the bar stays out of the way.
@@ -168,11 +208,13 @@ export function PageHeader({
                 `lg` it goes up to the page's top, cancelling the layout's padding (sm:pt-8). The wash the
                 band draws is positioned by the app frame, so it needs no room here. */}
             {/* The bar is fixed to the top of the screen, like the tab bar to its bottom, so it stays through
-                the whole page and not only while the header is in view. Collapsed, it stands on the tab bar's
-                glass, running out under its bottom (the same ground as the card sheet's bar), so the buttons
+                the whole page and not only while the header is in view. As content scrolls under, it stands on the tab
+                bar's glass (in over the first 24 px), running out under its bottom (the same ground as the card sheet's bar), so the buttons
                 and the small title stay readable over whatever scrolls under; content runs out under the bar
                 the way it runs out under the tab bar. */}
             <div
+                ref={bar}
+                style={{ "--bar": 0, "--ground": 0 } as CSSProperties}
                 className={cx(
                     // Back and the buttons as wide as they are, the title the room between: with search, View and the
                     // dots on the right, equal side columns ran the buttons over a collapsed title at 375 px.
@@ -189,12 +231,11 @@ export function PageHeader({
                           "[&:has(>[data-bar-search]:not(:empty))>:is(:nth-child(2),:nth-child(3))]:invisible [&:has(>[data-bar-search]:not(:empty))>:is(:nth-child(2),:nth-child(3))]:opacity-0 [&:has(>[data-bar-search]:not(:empty))>:is(:nth-child(2),:nth-child(3))]:transition-[opacity,visibility]",
                     // Nothing to tap until Back, a button or the collapsed title is there: taps go through to the page.
                     !back && !barActions && !searchField && !collapsed && "pointer-events-none",
-                    // The fade comes with the collapse: at rest the buttons sit on the page and the large title
-                    // sits on its line; once content scrolls under, the page's ground fades in behind the bar.
+                    // The ground comes in with the scroll: at rest the buttons sit on the page and the large title
+                    // sits on its line; as content scrolls under, the page's ground comes in behind the bar.
                     // The ground reaches 28 px past the bar's bottom: the glass thins over its whole height
                     // and runs out there.
-                    "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:-bottom-7 before:-z-10 before:glass-fade before:transition-opacity before:duration-(--duration-fast) before:ease-enter",
-                    collapsed ? "before:opacity-100" : "before:opacity-0",
+                    "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:-bottom-7 before:-z-10 before:glass-fade before:opacity-(--ground)",
                     // A bar that is the search field on a phone always has content under it: its ground stays.
                     searchField && sticky && "max-sm:before:opacity-100",
                 )}
@@ -220,8 +261,8 @@ export function PageHeader({
                     aria-hidden="true"
                     className={cx(
                         // The same size as the card sheet's bar gives its name: one bar, two places.
-                        "col-start-2 row-start-1 truncate px-2 text-center text-md font-semibold text-primary transition-opacity duration-(--duration-fast) ease-enter",
-                        collapsed ? "opacity-100" : "opacity-0",
+                        // In as far as the large title has slid under the bar (`--bar`).
+                        "col-start-2 row-start-1 truncate px-2 text-center text-md font-semibold text-primary opacity-(--bar)",
                     )}
                 >
                     {phoneTitle ?? title}

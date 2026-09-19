@@ -9,6 +9,7 @@ import { useBreakpoint } from "@/hooks/use-breakpoint";
 import { setCardsGroup, setCardsSize, setCardsView } from "@/hooks/use-cards-view";
 import type { CardsGroup, CardsSize, CardsViewMode } from "@/lib/cards-view";
 import { memoryKey } from "@/lib/list-memory";
+import { changeView } from "@/lib/view-change";
 import { cx } from "@/utils/cx";
 
 const first = (keys: "all" | Set<React.Key>) => (keys === "all" ? undefined : [...keys][0]);
@@ -48,7 +49,7 @@ export function ViewMenu({
                                 onSelectionChange={(keys) => {
                                     const key = first(keys);
                                     if (key === "grid" || key === "table") {
-                                        setCardsView(page, key);
+                                        changeView(() => setCardsView(page, key));
                                     }
                                 }}
                             >
@@ -70,7 +71,8 @@ export function ViewMenu({
                         onSelectionChange={(keys) => {
                             const key = first(keys);
                             if (key === "sm" || key === "md" || key === "lg") {
-                                setCardsSize(page, key);
+                                // Crossfaded: a reflow of every tile in one frame read as a jump (motion audit 2026-09-19).
+                                changeView(() => setCardsSize(page, key));
                             }
                         }}
                     >

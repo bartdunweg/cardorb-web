@@ -467,6 +467,11 @@ input[type="search"]::-webkit-search-cancel-button {
     view-transition-name: my-cards-line;
 }
 
+/* Inside a list's own change of drawing (view-change.ts) the line fades with the page it is on. */
+main[data-view-change] [data-my-cards-tabs] [role="tablist"] + span {
+    view-transition-name: none;
+}
+
 ::view-transition-group(my-cards-line) {
     animation-duration: var(--duration-base);
     animation-timing-function: var(--ease-move);
@@ -497,6 +502,28 @@ input[type="search"]::-webkit-search-cancel-button {
 }
 
 ::view-transition-new(.page-fade) {
+    animation: page-in var(--duration-fast) var(--ease-enter) both;
+}
+
+/* A list drawn another way (its size, grid or list, view-change.ts): the page's content crossfades as
+   one layer, as a tab does. The group does not stretch between the two heights: the new height is
+   taken at once and both drawings hang from the top at their own size. */
+::view-transition-group(cards-view) {
+    animation: none;
+}
+
+::view-transition-old(cards-view),
+::view-transition-new(cards-view) {
+    height: auto;
+    object-fit: none;
+    object-position: top;
+}
+
+::view-transition-old(cards-view) {
+    animation: page-out var(--duration-instant) var(--ease-enter) both;
+}
+
+::view-transition-new(cards-view) {
     animation: page-in var(--duration-fast) var(--ease-enter) both;
 }
 

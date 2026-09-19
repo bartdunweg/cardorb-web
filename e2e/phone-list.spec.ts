@@ -163,9 +163,13 @@ test("a set page's search is a button beside Back; Escape in an empty field and 
     // Back stays beside the field, and the field starts right after it on the same line.
     const back = page.getByRole("link", { name: "Back to Browse" }).first();
     await expect(back).toBeVisible();
-    const [b, f] = await Promise.all([back.boundingBox(), field.boundingBox()]);
-    expect(f!.x).toBeLessThan(b!.x + b!.width + 16);
-    expect(Math.abs(f!.y + f!.height / 2 - (b!.y + b!.height / 2))).toBeLessThanOrEqual(2);
+    // Measured once the field has come up into the bar (it arrives 4 px low, over --duration-base).
+    const offset = async () => {
+        const [b, f] = await Promise.all([back.boundingBox(), field.boundingBox()]);
+        expect(f!.x).toBeLessThan(b!.x + b!.width + 16);
+        return Math.abs(f!.y + f!.height / 2 - (b!.y + b!.height / 2));
+    };
+    await expect.poll(offset).toBeLessThanOrEqual(2);
     await page.keyboard.press("Escape");
     await expect(field).toBeHidden();
     await expect(button).toBeFocused();
