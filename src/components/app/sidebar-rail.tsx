@@ -20,8 +20,9 @@ type RailItem = { label: string; href: string; icon: FC<{ className?: string }> 
  * shapes. Top to bottom the rows are the open sidebar's rows: the mark where the wordmark stands,
  * search where the search pill stands, then the four pages, then the binders, so nothing on the
  * rail sits at a different height from the row it replaces and folding moves no icon up or down.
- * The binders stand as they do open, one row each (Favorites, the ones you made, New binder), each
- * named by its tooltip, so a binder is one click away folded too (Bart's call, 2026-09-14).
+ * The binders stand as they do open, one row each (Favorites, the ones you made), each named by its
+ * tooltip, so a binder is one click away folded too (Bart's call, 2026-09-14). New binder is a row
+ * after them: the open sidebar has it as the plus on the Binders heading, which the rail does not draw.
  * At the foot the button that unfolds it and the account's avatar, which opens the card's menu.
  */
 export function SidebarRail({
@@ -117,7 +118,7 @@ function BinderRows({ activeUrl, binders }: { activeUrl: string; binders: Promis
     );
 }
 
-// The open sidebar's New binder row, as an icon: it opens the same dialog.
+// New binder, as an icon: the open sidebar's plus on the Binders heading, a row here where there is no heading.
 function NewBinder() {
     const [creating, setCreating] = useState(false);
     return (

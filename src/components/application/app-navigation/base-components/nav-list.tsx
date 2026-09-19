@@ -53,7 +53,7 @@ const NavCollapsibleWithLink = ({ item, activeUrl }: { item: NavItemType; active
 interface NavListProps {
     /** URL of the currently active item. */
     activeUrl?: string;
-    /** More `<li>`s at the list's end, in the same list: the folders that stream in, and New folder. */
+    /** More `<li>`s at the list's end, in the same list: the binders that stream in. */
     children?: ReactNode;
     /** Additional CSS classes to apply to the list. */
     className?: string;

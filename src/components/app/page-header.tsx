@@ -133,8 +133,13 @@ export function PageHeader({
         const group = buttons.current;
         if (!beside || !block || !group || typeof ResizeObserver === "undefined") return;
         const measure = () => {
+            // The title's line box, or its first line where a long name wraps: the buttons stay on that line.
             const box = block.getBoundingClientRect();
-            const wordsMiddle = box.top + window.scrollY + box.height / 2;
+            const words = document.createRange();
+            words.selectNodeContents(block);
+            const first = [...words.getClientRects()].find((r) => r.height > 0);
+            const line = box.height > parseFloat(getComputedStyle(block).minHeight) && first ? first : box;
+            const wordsMiddle = line.top + window.scrollY + line.height / 2;
             // offsetTop is the group's place in the fixed bar, which a transform does not move.
             const buttonsMiddle = group.offsetTop + group.offsetHeight / 2;
             setDrop(Math.max(0, Math.round(wordsMiddle - buttonsMiddle)));

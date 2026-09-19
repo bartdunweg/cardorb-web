@@ -166,7 +166,18 @@ function NewBinderButton() {
     const [creating, setCreating] = useState(false);
     return (
         <>
-            <ButtonUtility size="xs" color="secondary" icon={Plus} tooltip="New binder" onClick={() => setCreating(true)} />
+            {/* The icon a step darker than the kit's secondary (fg-quaternary, 2.6:1 on white): alone on the
+                button, it carries the meaning and needs 3:1. */}
+            <ButtonUtility
+                size="xs"
+                color="secondary"
+                icon={Plus}
+                tooltip="New binder"
+                aria-haspopup="dialog"
+                aria-expanded={creating}
+                onClick={() => setCreating(true)}
+                className="text-fg-tertiary hover:text-fg-tertiary_hover"
+            />
             <BinderModal mode="create" isOpen={creating} onOpenChange={setCreating} />
         </>
     );
