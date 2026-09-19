@@ -303,10 +303,14 @@ export function CardsList({
                                 <section key={runKey(groups, i)} aria-labelledby={group.name ? headingId(group.name, i) : undefined}>
                                     {group.name ? (
                                         /* Sticky, so the set a tile belongs to is still readable halfway down a
-                                           long one. `top-0` against the page's own scroll: this list has no
-                                           scroller of its own, and `bg-page` because the band passes over the
-                                           page's ground, which is the neutral tint and not white. */
-                                        <h2 id={headingId(group.name, i)} className="sticky top-0 z-10 mb-3 bg-page py-2 text-sm font-semibold text-primary">
+                                           long one. Against the page's own scroll: this list has no scroller of
+                                           its own; under the phone's bar below `lg`, where `top-0` stuck it behind
+                                           the bar, never seen (bug hunt 2026-09-19). `bg-page` because the band
+                                           passes over the page's ground, which is the neutral tint and not white. */
+                                        <h2
+                                            id={headingId(group.name, i)}
+                                            className="sticky top-0 z-10 mb-3 bg-page py-2 text-sm font-semibold text-primary max-lg:top-(--phone-bar)"
+                                        >
                                             {group.name} {/* The last set drawn may go on in the next batch: its count waits until it is whole. */}
                                             {more && i === groups.length - 1 ? null : (
                                                 <span className="font-normal text-tertiary">

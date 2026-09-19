@@ -25,9 +25,11 @@ export function CardsTable({ cards, onSelect }: { cards: Card[]; onSelect: (card
             >
                 <Table.Header>
                     <Table.Head id="name" label="Name" isRowHeader />
-                    <Table.Head id="set" label="Set" />
-                    <Table.Head id="number" label="Number" />
-                    <Table.Head id="rarity" label="Rarity" />
+                    {/* On a phone three columns less: six were about 550 px, so the table scrolled sideways and the
+                        price and quantity started off screen (bug hunt 2026-09-19). Set and number go under the name. */}
+                    <Table.Head id="set" label="Set" className="max-sm:hidden" />
+                    <Table.Head id="number" label="Number" className="max-sm:hidden" />
+                    <Table.Head id="rarity" label="Rarity" className="max-sm:hidden" />
                     <Table.Head id="price" label="Market price" className="text-right" />
                     <Table.Head id="quantity" label="Quantity" className="text-right" />
                 </Table.Header>
@@ -55,13 +57,17 @@ export function CardsTable({ cards, onSelect }: { cards: Card[]; onSelect: (card
                                             the state belongs to the printing, and the table is already six columns
                                             wide on a laptop. A wish, which records neither, keeps the name alone. */}
                                         {copyLine(card) ? <span className="truncate text-xs font-normal text-tertiary">{copyLine(card)}</span> : null}
+                                        {/* The set and number the phone has no columns for. */}
+                                        <span className="truncate text-xs font-normal text-tertiary sm:hidden">
+                                            {[card.set_name, card.printed_number ?? card.number].filter(Boolean).join(" · ")}
+                                        </span>
                                     </span>
                                 </div>
                             </Table.Cell>
-                            <Table.Cell>{card.set_name ?? "—"}</Table.Cell>
+                            <Table.Cell className="max-sm:hidden">{card.set_name ?? "—"}</Table.Cell>
                             {/* As the card prints it (001, SWSH179), as the grid's label reads; the row's own spelling where nothing matched. */}
-                            <Table.Cell>{card.printed_number ?? card.number ?? "—"}</Table.Cell>
-                            <Table.Cell>{card.rarity ?? "—"}</Table.Cell>
+                            <Table.Cell className="max-sm:hidden">{card.printed_number ?? card.number ?? "—"}</Table.Cell>
+                            <Table.Cell className="max-sm:hidden">{card.rarity ?? "—"}</Table.Cell>
                             <Table.Cell className="text-right font-medium text-primary tabular-nums">
                                 {card.price != null || card.listing_price != null ? (
                                     <CardPrice price={card.price} listing={card.listing_price} />
