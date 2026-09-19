@@ -71,7 +71,7 @@ export function HomeListChoice({ lists, selected }: { lists: HomeListOption[]; s
                     else setSheetOpen(true);
                 }}
             >
-                {/* The list's icon, its name, the chevron. */}
+                {/* Its name and the chevron; no icon on the button (Bart, 2026-09-19), the menu keeps them. */}
                 <Button
                     color="secondary"
                     size="sm"
@@ -84,11 +84,7 @@ export function HomeListChoice({ lists, selected }: { lists: HomeListOption[]; s
                     // Dims after 150 ms while the page answers, so a quick answer never flickers.
                     className={cx("transition-opacity duration-(--duration-fast)", pending && "opacity-60 delay-150")}
                 >
-                    {/* One box: the kit wraps the children in an inline span, where an icon and a word break onto two lines. */}
-                    <span className="inline-flex items-center gap-1.5">
-                        <ListIcon id={list.id} className="size-4 shrink-0 text-fg-quaternary" />
-                        <span className="max-w-32 truncate sm:max-w-40">{list.name}</span>
-                    </span>
+                    <span className="block max-w-32 truncate sm:max-w-40">{list.name}</span>
                 </Button>
                 <Dropdown.Popover placement="bottom end" className="w-56">
                     <Dropdown.Menu
