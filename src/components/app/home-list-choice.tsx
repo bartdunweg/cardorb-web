@@ -2,7 +2,7 @@
 
 import { type FC, createElement, useState, useSyncExternalStore, useTransition } from "react";
 import { ChevronDown, Folder, Heart, Rows01, Star01 } from "@untitledui/icons";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button as AriaButton, Header as AriaHeader, Heading as AriaHeading } from "react-aria-components";
 import { FilterChoices } from "@/components/app/filter-chip";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
@@ -55,8 +55,11 @@ export function HomeListChoice({ lists, selected }: { lists: HomeListOption[]; s
         () => false,
     );
     const phone = hydrated && !sm;
+    // What the address asks for, which is not `selected` where a deleted binder fell back to the collection:
+    // choosing Collection there still writes the address, so the deleted id does not stay in it.
+    const asked = useSearchParams().get("value");
     const choose = (key: string) => {
-        if (key === selected) return;
+        if (key === selected && (key === "all" ? !asked : asked === key)) return;
         startTransition(() => router.replace(key === "all" ? "/dashboard" : `/dashboard?value=${key}`, { scroll: false }));
     };
 

@@ -29,7 +29,7 @@ import { loadFacets } from "@/lib/reads";
 
 export function BinderForm({ mode, binder, facets: given, onSaved, close }: FormProps & { close: () => void }) {
     const router = useRouter();
-    const [name, setName] = useState(binder?.name ?? "");
+    const [typed, setTyped] = useState(binder?.name ?? "");
     const [kind, setKind] = useState<BinderKind>(binder?.kind ?? "manual");
     const [dex, setDex] = useState(dexDraft(binder?.rule?.dex));
     // Shown as a Pokédex: any binder may be; the setting has its own range, which may differ from a rule's.
@@ -74,6 +74,8 @@ export function BinderForm({ mode, binder, facets: given, onSaved, close }: Form
        the action's answer, and the refresh after it drew the page a second time. Now the write
        forgets nothing itself, the cache is dropped quietly and the page is drawn once. */
     const save = async (close: () => void) => {
+        // As it is kept: "  Kanto " is saved and named as "Kanto", in the toasts too.
+        const name = typed.trim();
         setSaving(true);
         setError(null);
         const res =
@@ -126,7 +128,7 @@ export function BinderForm({ mode, binder, facets: given, onSaved, close }: Form
             <AriaHeading slot="title" className="text-lg font-semibold text-primary">
                 {title}
             </AriaHeading>
-            <Input label="Name" value={name} onChange={setName} placeholder={kind === "rule" ? "e.g. Kanto" : "e.g. Charizards"} />
+            <Input label="Name" value={typed} onChange={setTyped} placeholder={kind === "rule" ? "e.g. Kanto" : "e.g. Charizards"} />
 
             {mode === "create" ? (
                 <div className="flex flex-col gap-1.5">

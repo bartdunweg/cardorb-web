@@ -126,7 +126,12 @@ export async function BinderBody(props: BinderBodyProps) {
         <AppEmptyState
             icon="search"
             title="No cards found"
-            description={q ? `No cards match “${q}”. Try a different name or set.` : "Nothing in that set or rarity. Clear a filter to widen the list."}
+            // Any filter, not only a set or a rarity: duplicates, full art, type and the rest empty a list too.
+            description={
+                q
+                    ? `No cards match “${q}” with these filters. Try a different name, or clear a filter.`
+                    : "Nothing matches these filters. Clear a filter to see more."
+            }
         />
     );
 

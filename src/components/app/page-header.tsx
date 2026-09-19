@@ -234,6 +234,9 @@ export function PageHeader({
                           "[&:has(>[data-bar-search]:not(:empty))>:is(:nth-child(2),:nth-child(3))]:invisible [&:has(>[data-bar-search]:not(:empty))>:is(:nth-child(2),:nth-child(3))]:opacity-0 [&:has(>[data-bar-search]:not(:empty))>:is(:nth-child(2),:nth-child(3))]:transition-[opacity,visibility]",
                     // Nothing to tap until Back, a button or the collapsed title is there: taps go through to the page.
                     !back && !barActions && !searchField && !collapsed && "pointer-events-none",
+                    // A bar that scrolls away and holds only the phone's field and View is empty from `sm` (both
+                    // go back to the row there): not drawn, so it does not lie over the title's top (Browse).
+                    searchField && !sticky && "sm:hidden",
                     // The ground comes in with the scroll: at rest the buttons sit on the page and the large title
                     // sits on its line; as content scrolls under, the page's ground comes in behind the bar.
                     // The ground reaches 28 px past the bar's bottom: the glass thins over its whole height

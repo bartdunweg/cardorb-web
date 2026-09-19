@@ -74,6 +74,10 @@ export function DexGrid({ generations, size = "md", linked = true }: { generatio
             const rows = await listCopies({ set: card.set, number: card.number, name: card.name });
             const row = rows.find((r) => r.id === card.id) ?? rows[0] ?? null;
             if (row) setSelected(row);
+            // A tap that finds no row says so, rather than looking as if it did nothing.
+            else notify.failed(`${card.name} could not be opened`, { description: "Its row could not be read. Try again in a moment." });
+        } catch {
+            notify.failed(`${card.name} could not be opened`, { description: "Its row could not be read. Try again in a moment." });
         } finally {
             opening.current = null;
         }

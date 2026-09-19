@@ -60,7 +60,7 @@ export function SetHero({ name, logoUrl, colors }: { name: string; logoUrl: stri
                         <SetLogo src={logoUrl} width={LOGO_WIDTH} priority boxRatio={3} area={0.55} />
                     </div>
                 ) : (
-                    <span className="truncate px-6 text-display-xs font-semibold text-tertiary">{firstWord(name)}</span>
+                    <span className="max-w-full min-w-0 truncate px-6 text-display-xs font-semibold text-tertiary">{firstWord(name)}</span>
                 )}
             </div>
         </>

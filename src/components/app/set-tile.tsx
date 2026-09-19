@@ -85,7 +85,7 @@ export function SetTile({
                 ) : (
                     // No logo: the name's first word, large and quiet, so the box says something
                     // rather than sitting grey. aria-hidden: the name is under it.
-                    <span aria-hidden="true" className="truncate text-display-xs font-semibold text-tertiary">
+                    <span aria-hidden="true" className="max-w-full min-w-0 truncate text-display-xs font-semibold text-tertiary">
                         {firstWord(set.name)}
                     </span>
                 )}

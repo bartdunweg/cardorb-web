@@ -97,7 +97,7 @@ export async function HomeBody({ searchParams }: { searchParams: Promise<{ value
                     )}
                     {/* The dearest cards first, then what moved the value (Bart, 2026-09-15). */}
                     <Suspense fallback={null}>
-                        <TopCards top={reads.top} href={listPath(selected)} />
+                        <TopCards top={reads.top} href={listPath(selected)} sortable={reads.dex.then((dex) => !dex)} />
                     </Suspense>
                     {/* Over the chart's period and the chosen list's cards (api#568), like everything above them.
                         Where the list's value could not be read the value above falls back to the collection's
@@ -195,7 +195,7 @@ async function ListCounts({
             href={href}
             later={
                 <Suspense fallback={<OutlineTiles labels={["Sets", "Pokémon"]} from={2} />}>
-                    <ListNumberStats numbers={reads.numbers} href={href} />
+                    <ListNumberStats numbers={reads.numbers} href={href} dex={reads.dex} />
                 </Suspense>
             }
         />

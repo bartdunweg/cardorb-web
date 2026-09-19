@@ -168,7 +168,9 @@ export function FilterChoices({
     return (
         <div className="flex min-h-0 flex-col gap-2">
             {searchable ? (
-                <div className="relative shrink-0 px-1 pt-1 sm:p-2 sm:pb-0">
+                <div className="relative shrink-0 overflow-x-clip px-1 pt-1 sm:p-2 sm:pb-0">
+                    {/* Clipped across: on a touch screen the field is drawn wider and scaled down (field-text-sm, so
+                        iOS does not zoom), and the unscaled width scrolled the whole sheet sideways (bug hunt 2026-09-19). */}
                     <SearchLg
                         aria-hidden="true"
                         className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-fg-quaternary sm:left-4.5"
