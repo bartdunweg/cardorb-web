@@ -51,8 +51,10 @@ function RowBody({ icon: Icon, label, value }: { icon: FC<{ className?: string }
     return (
         <>
             <Icon aria-hidden="true" className="size-5 shrink-0 text-fg-quaternary" />
-            <span className="flex-1 truncate text-md text-primary">{label}</span>
-            {value ? <span className="shrink-0 truncate text-sm text-tertiary">{value}</span> : null}
+            {/* The label keeps its words and the value gives way: "Export a CSV file" was cut to "Export a…" on a
+                phone beside "Collection and wishlist" (bug hunt 2026-09-19). */}
+            <span className="shrink-0 grow text-md text-primary">{label}</span>
+            {value ? <span className="min-w-0 truncate text-right text-sm text-tertiary">{value}</span> : null}
             <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-fg-quaternary" />
         </>
     );

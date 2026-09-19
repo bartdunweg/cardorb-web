@@ -366,7 +366,8 @@ export function CopyCard({
                             <NativeSelect
                                 aria-label="Binder"
                                 size="sm"
-                                className="w-full"
+                                // Shrinks beside New binder: a long binder name held the row wider than the sheet.
+                                className="w-full min-w-0 flex-1"
                                 disabled={disabled}
                                 value={binder}
                                 onChange={(e) => void save({ collectionId: e.target.value || null }, "That copy was not filed")}

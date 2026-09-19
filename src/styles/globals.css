@@ -383,6 +383,9 @@ input[type="search"]::-webkit-search-cancel-button {
    ring-1, divide-y and the 1px layer in every shadow read it. */
 :root {
     --hairline: 1px;
+    /* The phone's bar (page-header.tsx): 16 above a 44 px button and 8 under it. What sticks to the
+       page's top under `lg` sticks under it, not behind it. */
+    --phone-bar: 4.25rem;
 }
 @media (min-resolution: 2dppx) {
     :root {

@@ -82,7 +82,8 @@ export function SettingSwitchRow({
                 <span id={labelId} className="truncate text-md text-primary">
                     {label}
                 </span>
-                <span id={lineId} className="truncate text-sm text-tertiary">
+                {/* Wrapped, not cut: the public profile's address has to be readable whole on a phone. */}
+                <span id={lineId} className="text-sm wrap-anywhere text-tertiary">
                     {line}
                 </span>
             </div>

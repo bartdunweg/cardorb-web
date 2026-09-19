@@ -235,3 +235,35 @@ test("Browse narrows its shelf by series and year from buttons of their own", as
     await main.getByRole("button", { name: "Clear" }).click();
     await expect(page).not.toHaveURL(/series=/);
 });
+
+test("a list's set heading sticks under the phone's bar, not behind it", async ({ page }) => {
+    await page.goto("/dashboard/cards");
+    const heading = page.getByRole("main").getByRole("heading", { level: 2 }).first();
+    await expect(heading).toBeVisible();
+    // The bar is 68 px (--phone-bar): a heading stuck at 0 sat behind it, never seen (bug hunt 2026-09-19).
+    await expect(heading).toHaveCSS("top", "68px");
+});
+
+test("the list view fits a phone: three columns, nothing to scroll sideways", async ({ page }) => {
+    await page.goto("/dashboard/cards");
+    await hydrated(page, "Collection settings");
+    const chooseLayout = async (name: "List" | "Grid") => {
+        await page.getByRole("button", { name: /^View/ }).filter({ visible: true }).first().click();
+        await page.getByRole("menuitemradio", { name, exact: true }).click();
+    };
+    await chooseLayout("List");
+    try {
+        const table = page.getByRole("grid", { name: "Cards" });
+        await expect(table).toBeVisible();
+        // Set, Number and Rarity leave the table on a phone, out of the keyboard's way too.
+        await expect(table.getByRole("columnheader")).toHaveCount(3);
+        const fits = await table.evaluate((el) => {
+            const box = el.closest("[class*=overflow-x-auto]") ?? el.parentElement!;
+            return box.scrollWidth <= box.clientWidth + 1;
+        });
+        expect(fits).toBe(true);
+    } finally {
+        // The layout is remembered: the tests after this one expect the grid.
+        await chooseLayout("Grid");
+    }
+});
