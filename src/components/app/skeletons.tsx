@@ -263,7 +263,7 @@ export function SetSkeleton() {
                 // The room the band takes (set-hero.tsx), so the title does not move when it lands.
                 hero={<div className="h-28 sm:h-32" />}
             />
-            <Outline className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
+            <Outline className={`grid gap-4 ${GRID_COLUMNS.md}`}>
                 {Array.from({ length: 40 }, (_, i) => (
                     <div key={i} className="aspect-card rounded-card bg-skeleton" />
                 ))}

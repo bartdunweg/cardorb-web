@@ -424,7 +424,7 @@ export function SetCards({
                                         }}
                                         language={language}
                                         size={size}
-                                        priority={i < firstRow}
+                                        priority={i < (size === "lg" ? Math.min(firstRow, 2) : firstRow)}
                                         onOpen={open}
                                     />
                                 </li>

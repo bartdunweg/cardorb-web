@@ -44,7 +44,8 @@ export const parseCardsGroup = (raw: string | undefined): CardsGroup => (raw ===
  * 50 KB where a 192 px tile needs 384 px and 24 KB. Forty-eight tiles carried an extra 1.25 MB
  * nobody's screen could show, and the Pokédex's ninety-six carried 2.5 MB.
  *
- * `lg` genuinely wants 640: it draws at 296. The other two are thumbnails and take quality 60
+ * `lg` genuinely wants 640: it draws at 296. On a phone One a row draws `lg` at the column's full
+ * width, wider than this; `TILE_SIZES` is what tells the browser so. The other two are thumbnails and take quality 60
  * for the same reason, which is what `set-card-tile` was already doing alone.
  */
 export const TILE_WIDTH: Record<CardsSize, number> = { sm: 128, md: 192, lg: 256 };
@@ -52,7 +53,7 @@ export const TILE_WIDTH: Record<CardsSize, number> = { sm: 128, md: 192, lg: 256
 /**
  * How wide a tile actually is, as the browser must be told it.
  *
- * `TILE_WIDTH` above is the widest a tile is ever drawn, on a desktop. Handed to `next/image`
+ * `TILE_WIDTH` above is the widest a tile is drawn on a desktop (a phone's One a row is wider). Handed to `next/image`
  * as `width` with no `sizes`, it is not a width at all: the browser gets 1x and 2x candidates
  * and picks by pixel density alone, so a phone drawing a 104 px tile asked for 384 px. Measured
  * on a public profile at 375 px: 20.4 KB a tile where 256 px costs 10.3 KB, across a hundred
