@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Tab, TabList, Tabs } from "@/components/application/tabs/tabs";
 
 const LISTS = [
@@ -17,18 +18,38 @@ const LISTS = [
  * the wishlist out (R-DATA-002).
  */
 export function CollectionSwitch({ current, slides = true }: { current: (typeof LISTS)[number]["id"]; slides?: boolean }) {
+    /* The tab pressed, at once: its line slides then, as every other underline tab's does within its
+       page, instead of waiting for the other list's page to arrive (Bart, 2026-09-19). The page's own
+       answer takes over when it comes, and Back puts the line where the address is. */
+    const [shown, setShown] = useState<string>(current);
+    const [was, setWas] = useState(current);
+    if (current !== was) {
+        setWas(current);
+        setShown(current);
+    }
     return (
         // The kit's underline tabs, as a set's page has them over its cards, each half of the line, under
         // the row of filters and over the list, 44 px high where the kit's is 30 (Bart's call, 2026-09-19).
         // `data-my-cards-tabs`: its line slides to the other tab across the page change (globals.css). Off
         // for a copy on another page (the design page), whose line would fly from there to My cards.
-        <Tabs selectedKey={current} data-my-cards-tabs={slides || undefined}>
-            {/* The kit's always-there line runs out to the screen's edges, past the page's padding (Bart, 2026-09-19). */}
-            <TabList aria-label="My cards" type="underline" size="sm" fullWidth className="before:-inset-x-4 sm:before:-inset-x-6">
-                {LISTS.map((list) => (
-                    <Tab key={list.id} id={list.id} href={list.href} label={list.label} className="flex-1 justify-center py-3" />
-                ))}
-            </TabList>
-        </Tabs>
+        // The press on a tab, caught before its link navigates: a link tab tells the tabs no selection
+        // change of its own, so the line would otherwise wait for the page.
+        // A listener around the tabs, which are links: Enter on a link clicks it, so the keyboard is heard too.
+        <div
+            className="contents"
+            onClickCapture={(e) => {
+                const key = (e.target as HTMLElement).closest("[role=tab]")?.getAttribute("data-key");
+                if (key) setShown(key);
+            }}
+        >
+            <Tabs selectedKey={shown} data-my-cards-tabs={slides || undefined}>
+                {/* The kit's always-there line runs out to the screen's edges, past the page's padding (Bart, 2026-09-19). */}
+                <TabList aria-label="My cards" type="underline" size="sm" fullWidth className="before:-inset-x-4 sm:before:-inset-x-6">
+                    {LISTS.map((list) => (
+                        <Tab key={list.id} id={list.id} href={list.href} label={list.label} className="flex-1 justify-center py-3" />
+                    ))}
+                </TabList>
+            </Tabs>
+        </div>
     );
 }
