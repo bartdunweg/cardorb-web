@@ -18,6 +18,8 @@ export type NavItemType = {
 export type NavItemDividerType = Omit<NavItemType, "icon" | "label" | "divider"> & {
     /** Label text for the divider. */
     label?: string;
+    /** Changed from the kit: a button at the heading's end, on its line (New binder beside Binders). */
+    action?: ReactNode;
     /** Whether this nav item is a divider. */
     divider: true;
 };

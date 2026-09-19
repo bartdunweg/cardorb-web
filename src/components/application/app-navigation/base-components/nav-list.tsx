@@ -53,7 +53,7 @@ const NavCollapsibleWithLink = ({ item, activeUrl }: { item: NavItemType; active
 interface NavListProps {
     /** URL of the currently active item. */
     activeUrl?: string;
-    /** More `<li>`s at the list's end, in the same list: the folders that stream in, and New folder. */
+    /** More `<li>`s at the list's end, in the same list: the binders that stream in. */
     children?: ReactNode;
     /** Additional CSS classes to apply to the list. */
     className?: string;
@@ -71,7 +71,7 @@ export const NavList = ({ activeUrl, items, className, children }: NavListProps)
                     // the desktop had no road to): the same small caps, a link on hover and focus, no
                     // chevron, since a chevron on a section head says collapse everywhere else.
                     return item.label ? (
-                        <li key={index} className="pt-5 pb-1">
+                        <li key={index} className="relative pt-5 pb-1">
                             {item.href ? (
                                 <AriaLink
                                     href={item.href}
@@ -83,6 +83,9 @@ export const NavList = ({ activeUrl, items, className, children }: NavListProps)
                             ) : (
                                 <span className="block px-3 py-0.5 text-xs font-semibold text-quaternary">{item.label}</span>
                             )}
+                            {/* Changed from the kit: the heading's button, centred on its line and laid over the
+                                padding, so the rows under it stay where the folded rail's are. */}
+                            {"action" in item && item.action ? <div className="absolute top-5 right-0 bottom-1 flex items-center">{item.action}</div> : null}
                         </li>
                     ) : (
                         <li key={index} className="w-full px-0.5 py-2">

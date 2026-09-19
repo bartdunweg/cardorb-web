@@ -95,7 +95,6 @@ export function PageHeader({
 
     // The bar takes the title over exactly when the large one has left the screen. IntersectionObserver
     // rather than a scroll listener: it costs nothing between changes and needs no layout reads.
-    const tall = Boolean(back || barActions);
     // Without Back but with buttons in the bar (All cards, a binder, Collection) the large title starts level
     // with those buttons, on their line, rather than on a line of its own under them.
     const beside = Boolean(!back && barActions && titleOnPhone);
@@ -104,26 +103,25 @@ export function PageHeader({
         // A title hidden on the phone has nothing to collapse into the bar: the bar stays out of the way.
         // A bar that scrolls away with the page has nothing to collapse into: it is gone before the title is.
         if (!titleOnPhone || !sticky || !el || typeof IntersectionObserver === "undefined") return;
-        const observer = new IntersectionObserver(([entry]) => setCollapsed(tall && !beside ? entry.intersectionRatio < 1 : !entry.isIntersecting), {
+        const observer = new IntersectionObserver(([entry]) => setCollapsed(back ? entry.intersectionRatio < 1 : !entry.isIntersecting), {
             // The title counts as gone once it is under the bar, not once it has left the screen: with Back
             // the bar is 76 px (a 44 px button, the avatar's and the search's size, with 16 above and under) and
             // the title starts right under it, so any part of it under the bar is enough; without one the
-            // bar is 48 px over a title that starts at 24, so all of it must be. A title beside the buttons
-            // starts at 22, level with them, and counts as gone once it has scrolled past its own top.
-            threshold: tall && !beside ? 1 : 0,
-            rootMargin: `${beside ? -22 : tall ? -76 : -48}px 0px 0px 0px`,
+            // title's line is the bar's own (16 px down, 44 tall, level with the buttons) and counts as gone
+            // once it has scrolled past the bar's top.
+            threshold: back ? 1 : 0,
+            rootMargin: `${back ? -76 : -16}px 0px 0px 0px`,
         });
         observer.observe(el);
         return () => observer.disconnect();
-    }, [tall, beside, titleOnPhone, sticky]);
+    }, [back, titleOnPhone, sticky]);
 
-    /* Beside the buttons, the buttons stand in the middle of the title and the line under it, not level
-       with the title alone. Measured from where both really are, the words on the page and the buttons
-       in the bar at rest, because a subtitle is one line on one page, two on another and none on a
-       third, and from `sm` the title starts 10 px lower while the bar does not move (Binders on a
-       tablet, 2026-09-14). Back at the bar's own place once the bar has taken the title over. */
+    /* Beside the buttons, the buttons stand level with the title's line, not with the title and the
+       line under it: the title keeps one place on every page, whatever is under it (Bart, 2026-09-19).
+       Measured from where both really are, because from `sm` the title starts 16 px lower while the
+       bar does not move (Binders on a tablet, 2026-09-14). Back at the bar's own place once the bar
+       has taken the title over. */
     const buttons = useRef<HTMLDivElement>(null);
-    const head = useRef<HTMLDivElement>(null);
     const [drop, setDrop] = useState(0);
     /* Moving only once the first place is set: measured after the first paint, the buttons drew at the
        bar's top and slid down to the title on every page load (Bart, 2026-09-18). Measured before the
@@ -131,12 +129,17 @@ export function PageHeader({
        belong, and slide only when the bar takes the title over or gives it back. */
     const [placed, setPlaced] = useState(false);
     useLayoutEffect(() => {
-        const block = head.current;
+        const block = sentinel.current;
         const group = buttons.current;
         if (!beside || !block || !group || typeof ResizeObserver === "undefined") return;
         const measure = () => {
+            // The title's line box, or its first line where a long name wraps: the buttons stay on that line.
             const box = block.getBoundingClientRect();
-            const wordsMiddle = box.top + window.scrollY + box.height / 2;
+            const words = document.createRange();
+            words.selectNodeContents(block);
+            const first = [...words.getClientRects()].find((r) => r.height > 0);
+            const line = box.height > parseFloat(getComputedStyle(block).minHeight) && first ? first : box;
+            const wordsMiddle = line.top + window.scrollY + line.height / 2;
             // offsetTop is the group's place in the fixed bar, which a transform does not move.
             const buttonsMiddle = group.offsetTop + group.offsetHeight / 2;
             setDrop(Math.max(0, Math.round(wordsMiddle - buttonsMiddle)));
@@ -249,13 +252,13 @@ export function PageHeader({
                 />
             </div>
             {/* The room the bar takes in the flow, on top of the page's own 16 px (32 from `sm`). With Back the
-                title starts at 76: under the 44 px button with 16 above and under it. Beside the buttons it
-                starts at 22, its 32 px line centred on them. With nothing in the bar, at 24. */}
+                title starts at 76: under the 44 px button with 16 above and under it. Without, the title's line
+                is the bar's: 16 px down and 44 tall, the buttons on it, on every page alike (Bart, 2026-09-19). */}
             <div
                 aria-hidden="true"
                 className={cx(
                     "lg:hidden",
-                    back ? "mb-4 h-11 sm:h-7" : beside ? "h-1.5 sm:h-0" : "h-2 sm:h-0",
+                    back ? "mb-4 h-11 sm:h-7" : "h-0",
                     // The field's 44 px line on a phone, and 16 px from it to what comes next: the page's own
                     // 24 px gap, 8 taken back, the gap the filters keep to the tabs under them (Bart, 2026-09-19).
                     searchField && "max-sm:-mb-2 max-sm:h-11",
@@ -279,9 +282,10 @@ export function PageHeader({
                 {/* Actions sit beside the title when they fit (a plus on a phone) and wrap under it when they do not. */}
                 <div
                     className={cx(
-                        // Centred on each other, whichever is taller: the buttons (40 px) against a title alone (32 px)
-                        // hung 4 px low when the row started at the top (Binders, 2026-09-14).
-                        "flex flex-row flex-wrap items-center justify-between gap-3",
+                        // From the top: the title's line is as tall as the buttons and centred in it, so the title
+                        // stands at one height on every page, with or without buttons or a line under it
+                        // (32 or 33 px on desktop, 22 or 27 on a phone, before 2026-09-19).
+                        "flex flex-row flex-wrap items-start justify-between gap-3",
                         !titleOnPhone && "max-lg:sr-only",
                         // On the bar's line, the buttons keep its right end.
                         beside && "max-lg:pr-28",
@@ -290,12 +294,18 @@ export function PageHeader({
                     {/* The words take what the actions leave, so a long subtitle wraps rather than pushing them under the title. */}
                     <div className={cx("flex min-w-0 flex-1 flex-col gap-1", shortTitle ? "basis-auto" : "basis-48")}>
                         {eyebrow ? <p className="text-sm font-semibold text-tertiary">{eyebrow}</p> : null}
-                        {/* The title and its line, measured apart from what follows them (a switch): the buttons
-                            beside stand level with these, not with the whole block (Bart, 2026-09-18). */}
-                        <div ref={head} className="flex flex-col gap-1">
+                        {/* The title and its line, apart from what follows them (a switch). */}
+                        <div className="flex flex-col gap-1">
                             {/* A step up from display-xs, 30 px, and bold (Bart's calls, 2026-09-18): the page's name, the largest words on it.
                                 Set a little tighter, as large bold type wants (Bart, 2026-09-18). */}
-                            <h1 ref={sentinel} className={cx("text-display-sm font-bold tracking-tight text-primary", searchField && "max-sm:sr-only")}>
+                            <h1
+                                ref={sentinel}
+                                className={cx(
+                                    // A line as tall as the buttons beside it: 44 px where the bar is, 40 from `lg`.
+                                    "flex min-h-11 items-center text-display-sm font-bold tracking-tight text-primary lg:min-h-10",
+                                    searchField && "max-sm:sr-only",
+                                )}
+                            >
                                 {/* Hidden, not just unseen: a name a screen reader reads is the one on screen. */}
                                 {phoneTitle ? (
                                     <>
@@ -310,7 +320,7 @@ export function PageHeader({
                         </div>
                         {children}
                     </div>
-                    {actions ? <div className="flex items-center gap-3 self-stretch">{actions}</div> : null}
+                    {actions ? <div className="flex items-center gap-3">{actions}</div> : null}
                 </div>
                 {below}
             </div>
