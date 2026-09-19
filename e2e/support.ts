@@ -59,7 +59,8 @@ export const writesLanded = (page: Page) => expect(page.locator("html")).not.toH
 /** Home's Collection figure: all copies. A new account shows the welcome instead, which is zero. */
 export const ownedCount = async (page: Page): Promise<number> => {
     await page.goto("/dashboard");
-    await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
+    // Home's h1 is the list it is about: Collection, or Home while nothing is held.
+    await expect(page.getByRole("heading", { level: 1, name: /^(Collection|Home)$/ })).toBeVisible();
     if (await page.getByText("Welcome to Cardorb").isVisible()) return 0;
     const text = await page
         .getByRole("link")
