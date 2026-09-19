@@ -2,7 +2,7 @@ import type { CardFilter } from "@/lib/cards";
 
 /*
  * The list Home is about: the collection ("all"), the wishlist, the favorites or one binder by its id.
- * The choice beside the avatar puts it in the address (`?value=`), and every part of Home that can
+ * The title's list choice puts it in the address (`?value=`), and every part of Home that can
  * follows it: the value and its line, the four counts, the dearest cards.
  */
 

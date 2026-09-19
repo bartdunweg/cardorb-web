@@ -35,7 +35,6 @@ export function PageHeader({
     children,
     below,
     titleOnPhone = true,
-    shortTitle = false,
     searchField = false,
     sticky = true,
     phoneTitle,
@@ -82,8 +81,6 @@ export function PageHeader({
     below?: ReactNode;
     /** Off on a page whose title says nothing on a phone (Browse): the h1 stays for a screen reader. */
     titleOnPhone?: boolean;
-    /** A title of one short word (Home): it takes its own width, so the actions stay on its line on a phone rather than wrapping under it. */
-    shortTitle?: boolean;
     /**
      * On a phone the list's search field is the bar's first line, in the title's place, with the bar's
      * buttons beside it (`RowSearch` place "bar"): a page the tab bar reaches (My cards, Browse), where
@@ -215,7 +212,8 @@ export function PageHeader({
                         />
                     ) : null}
                 </div>
-                {/* The same words as the h1 below, so a screen reader hears the title once. */}
+                {/* The same words as the h1 below, so a screen reader hears the title once. Home's h1 is the
+                    list it is about and its bar says Home, the page's name, as the tab does. */}
                 <span
                     aria-hidden="true"
                     className={cx(
@@ -298,7 +296,7 @@ export function PageHeader({
                     )}
                 >
                     {/* The words take what the actions leave, so a long subtitle wraps rather than pushing them under the title. */}
-                    <div className={cx("flex min-w-0 flex-1 flex-col gap-1", shortTitle ? "basis-auto" : "basis-48")}>
+                    <div className={"flex min-w-0 flex-1 basis-48 flex-col gap-1"}>
                         {eyebrow ? <p className="text-sm font-semibold text-tertiary">{eyebrow}</p> : null}
                         {/* The title and its line, apart from what follows them (a switch). */}
                         <div className="flex flex-col gap-1">

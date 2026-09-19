@@ -60,7 +60,7 @@ test("search, sort and view survive a reload, Back and Forward", async ({ page }
     await holds();
 
     await page.goForward();
-    await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: /^(Collection|Home)$/ })).toBeVisible();
 });
 
 test("a cleared search stays cleared after a reload, Back and a bare address", async ({ page }) => {

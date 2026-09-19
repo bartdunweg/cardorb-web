@@ -74,8 +74,6 @@ export function HomeListChoice({ lists, selected }: { lists: HomeListOption[]; s
                 {/* The title's own words and a chevron after them, in the title's size and weight: inside the
                     h1, so the page's heading is the list's name. No icon (Bart, 2026-09-19), the menu keeps them. */}
                 <AriaButton
-                    // The words on the button first, as voice control says them.
-                    aria-label={`${list.name}: choose Home's list`}
                     // On a phone the press opens a sheet, a dialog, not the menu the trigger announces.
                     aria-haspopup={phone ? "dialog" : undefined}
                     aria-expanded={phone ? sheetOpen : undefined}
