@@ -16,6 +16,7 @@ import type { Card } from "@/lib/cards";
 import type { PeriodKey } from "@/lib/chart-periods";
 import type { CardName } from "@/lib/copies";
 import { type Facets, NO_FACETS } from "@/lib/facets";
+import type { HomeList } from "@/lib/home-list";
 import type { BrowseLanguage } from "@/lib/languages";
 import type { SetSeries } from "@/lib/sets";
 
@@ -100,8 +101,15 @@ export const loadFacets = (): Promise<Facets> => read("facets", [], NO_FACETS);
 
 export const warmList = (list: "collection" | "wishlist" | "favorites"): Promise<void> => read("warm-list", [["list", list]], null).then(() => undefined);
 
-export const moversFor = (period: PeriodKey): Promise<{ up: Mover[]; down: Mover[] } | null> =>
-    read<{ up: Mover[]; down: Mover[] } | null>("movers", [["period", period]], null);
+export const moversFor = (period: PeriodKey, list: HomeList = "all"): Promise<{ up: Mover[]; down: Mover[] } | null> =>
+    read<{ up: Mover[]; down: Mover[] } | null>(
+        "movers",
+        [
+            ["period", period],
+            ["list", list],
+        ],
+        null,
+    );
 
 /** The next batch of a list on scroll, with the count as of that batch. Throws when the API does not answer, so the list can offer to try again. */
 export const loadMoreCards = (filter: unknown): Promise<{ cards: Card[]; total: number }> => ask("more", [input(filter)], { cards: [], total: 0 });

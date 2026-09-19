@@ -19,6 +19,7 @@ import { session } from "@/lib/api";
 import { CARD_FACTS_BATCH } from "@/lib/api-shapes";
 import { getBinderChoices } from "@/lib/binders";
 import { PERIODS } from "@/lib/chart-periods";
+import { askedList } from "@/lib/home-list";
 import { type BrowseLanguage, isBrowseLanguage } from "@/lib/languages";
 import { loadMoreInput, titleScope } from "@/lib/list-filter-schema";
 
@@ -106,8 +107,8 @@ const READS: Record<string, (q: URLSearchParams) => Promise<unknown> | null> = {
     facets: () => loadFacets(),
     "warm-list": (q) => warmList(params(q)).then(() => null),
     movers: (q) => {
-        const p = z.object({ period: z.enum(PERIODS.map((x) => x.key) as [string, ...string[]]) }).safeParse(params(q));
-        return p.success ? moversFor(p.data.period as (typeof PERIODS)[number]["key"]) : null;
+        const p = z.object({ period: z.enum(PERIODS.map((x) => x.key) as [string, ...string[]]), list: text.optional() }).safeParse(params(q));
+        return p.success ? moversFor(p.data.period as (typeof PERIODS)[number]["key"], askedList(p.data.list)) : null;
     },
     /* The reads a list and the search boxes make while you use them: a batch on scroll, the Filters
        sheet's count, the three searches and the shelf beside them. No schema is stricter than the
