@@ -90,7 +90,16 @@ describe("GET /api/read/[what]", () => {
     it("answers null where the action had no answer, so the client falls back as it did", async () => {
         const res = await get("movers", "?period=1m");
         expect(await res.json()).toBeNull();
-        expect(moversFor).toHaveBeenCalledWith("1m");
+        expect(moversFor).toHaveBeenCalledWith("1m", "all");
+    });
+
+    it("reads the movers of the list Home is about, and the collection's for anything else", async () => {
+        await get("movers", "?period=7d&list=wishlist");
+        expect(moversFor).toHaveBeenLastCalledWith("7d", "wishlist");
+        await get("movers", "?period=7d&list=70b334a6-3a53-4ee5-905f-fd13a0d4ed9f");
+        expect(moversFor).toHaveBeenLastCalledWith("7d", "70b334a6-3a53-4ee5-905f-fd13a0d4ed9f");
+        await get("movers", "?period=7d&list=everything");
+        expect(moversFor).toHaveBeenLastCalledWith("7d", "all");
     });
 
     it("reads a card's rows by its names", async () => {

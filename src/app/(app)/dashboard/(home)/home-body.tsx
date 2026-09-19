@@ -97,10 +97,10 @@ export async function HomeBody({ searchParams }: { searchParams: Promise<{ value
                     <Suspense fallback={null}>
                         <TopCards top={reads.top} href={listPath(selected)} />
                     </Suspense>
-                    {/* Over the chart's period. The collection's alone: the movers are read over every card held,
-                        so under a binder's line they would answer another question. */}
-                    {/* Keyed on what you hold: a write redraws Home, and the answers kept per period were read before it. */}
-                    {selected === "all" ? <Movers key={`${stats.owned}:${stats.value}`} /> : null}
+                    {/* Over the chart's period and the chosen list's cards (api#568), like everything above them.
+                        Keyed on the list and on what you hold: a write redraws Home, and the answers kept per
+                        period were read before it. */}
+                    <Movers key={`${selected}:${stats.owned}:${stats.value}`} list={selected} />
                 </HomePeriodProvider>
             )}
         </>

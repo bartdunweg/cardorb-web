@@ -11,6 +11,7 @@ import { notify } from "@/components/app/toast";
 import { cardLine, copyLine } from "@/lib/card-label";
 import type { Card } from "@/lib/cards";
 import { formatPrice } from "@/lib/format";
+import { type HomeList, listPath } from "@/lib/home-list";
 import type { Mover } from "@/lib/movers";
 import { listRows, moversFor } from "@/lib/reads";
 import { TILE_SURFACE } from "@/lib/tile";
@@ -34,7 +35,7 @@ const TILE = `${TILE_SURFACE} p-4 sm:p-5`;
  * first time it is chosen and kept, so switching back is instant. The sign carries the direction as
  * well as the colour.
  */
-export function Movers() {
+export function Movers({ list = "all" }: { list?: HomeList }) {
     const { period } = useHomePeriod();
     const said = (PERIODS.find((p) => p.key === period) ?? PERIODS[1]).said;
     const [answers, setAnswers] = useState<Partial<Record<PeriodKey, Answer>>>({});
@@ -44,7 +45,7 @@ export function Movers() {
     useEffect(() => {
         if (known && !failed) return;
         let current = true;
-        void moversFor(period).then((answer) => {
+        void moversFor(period, list).then((answer) => {
             if (current) setAnswers((a) => ({ ...a, [period]: answer }));
         });
         return () => {
@@ -54,8 +55,8 @@ export function Movers() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [period]);
     const answer = answers[period];
-    /* Each tile leads to the whole collection sorted its way, over the same period (list-query.ts). */
-    const listOf = (sort: "change-desc" | "change-asc") => `/dashboard/cards?sort=${sort}${period === "1m" ? "" : `&period=${period}`}`;
+    /* Each tile leads to the whole list sorted its way, over the same period (list-query.ts). */
+    const listOf = (sort: "change-desc" | "change-asc") => `${listPath(list)}?sort=${sort}${period === "1m" ? "" : `&period=${period}`}`;
 
     /* A row opens the card's sheet on your own row of it, read by set, number and name the way the set
        page opens a card, and the arrows step through Up and then Down. `at` is where in that list the
