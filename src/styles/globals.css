@@ -500,6 +500,28 @@ input[type="search"]::-webkit-search-cancel-button {
     animation: page-in var(--duration-fast) var(--ease-enter) both;
 }
 
+/* A list drawn another way (its size, grid or list, view-change.ts): the page's content crossfades as
+   one layer, as a tab does. The group does not stretch between the two heights: the new height is
+   taken at once and both drawings hang from the top at their own size. */
+::view-transition-group(cards-view) {
+    animation: none;
+}
+
+::view-transition-old(cards-view),
+::view-transition-new(cards-view) {
+    height: auto;
+    object-fit: none;
+    object-position: top;
+}
+
+::view-transition-old(cards-view) {
+    animation: page-out var(--duration-instant) var(--ease-enter) both;
+}
+
+::view-transition-new(cards-view) {
+    animation: page-in var(--duration-fast) var(--ease-enter) both;
+}
+
 /* One level in, and back out: the new page comes 24 px from the side it lies on, the old one leaves
    8 px the other way as it fades, 200 ms on the enter curve. Enough to say which way, not so far that
    the eye has to follow a page across the screen. */
