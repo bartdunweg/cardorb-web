@@ -220,7 +220,9 @@ test("Browse narrows its shelf by series and year from buttons of their own", as
     await hydrated(page, "Series");
     await main.getByRole("button", { name: /^Series/ }).click();
     const sheet = page.getByRole("dialog", { name: "Series" });
-    await sheet.getByRole("checkbox", { name: /^Scarlet & Violet/ }).check();
+    // Space on the box, not a click: the kit's checkbox sits inside the label that draws the row, and the
+    // label takes the pointer (binders.spec.ts ticks its picker the same way).
+    await sheet.getByRole("checkbox", { name: /^Scarlet & Violet/ }).press("Space");
     await expect(page).toHaveURL(/[?&]series=Scarlet(\+|%20)%26(\+|%20)Violet(&|$)/);
     await page.keyboard.press("Escape");
     await expect(main.getByRole("button", { name: "Series: Scarlet & Violet" })).toBeVisible();
