@@ -126,6 +126,21 @@ export function CardsList({
         [first.cards, appended, gone],
     );
     const groups = useMemo(() => setGroups(cards, groupedBySet), [cards, groupedBySet]);
+    /* Tiles that have left the grid by their own buttons (the last copy taken, a wish got): still in
+       `cards` until the list is read again, and back if the toast's undo brings them. The set headings
+       and the count a screen reader hears leave them out, as the grid does (bug hunt 2026-09-19). */
+    const [left, setLeft] = useState<ReadonlySet<string>>(() => new Set());
+    const tileGone = useCallback((id: string, isGone: boolean) => {
+        setLeft((have) => {
+            if (have.has(id) === isGone) return have;
+            const next = new Set(have);
+            if (isGone) next.add(id);
+            else next.delete(id);
+            return next;
+        });
+    }, []);
+    const leftShown = left.size ? cards.filter((c) => left.has(c.id)).length : 0;
+    const shownIn = (group: Card[]) => (left.size ? group.filter((c) => !left.has(c.id)).length : group.length);
     /* The ids of the first page, for the arrival wave: a set's grid that a scroll batch starts is new,
        and its own first draw is not the page's. One reference per first page, so no tile redraws. */
     const firstPageIds = useMemo(() => new Set(first.cards.map((c) => c.id)), [first.cards]);
@@ -149,7 +164,7 @@ export function CardsList({
        added to the list while it is read again. */
     const busy = pending || rechecking || recheck !== null;
     // Once the list has run out, what it holds is the count, whatever the first page said.
-    const total = end ? cards.length : Math.max(0, first.total - dropped);
+    const total = Math.max(0, (end ? cards.length : first.total - dropped) - leftShown);
 
     /* The appended span read again after the first page was, as far as the reader had scrolled. Its
        own transition, so the button at the end does not spin and a screen reader is not told more
@@ -254,7 +269,7 @@ export function CardsList({
           ? narrowed
               ? "No cards found."
               : ""
-          : `Showing ${formatCount(cards.length)} of ${formatCount(total)} cards`;
+          : `Showing ${formatCount(cards.length - leftShown)} of ${formatCount(total)} cards`;
 
     /* Moving it above the early return is not enough on its own. `binder-body.tsx` keys the whole
        view on the list's URL, so a search does not update this component, it replaces it, and a
@@ -301,7 +316,8 @@ export function CardsList({
                                    Place alone moved every section after a set that emptied (its last card removed from the
                                    sheet) to another key, and each tile under it was drawn anew, its arrival played again. */
                                 <section key={runKey(groups, i)} aria-labelledby={group.name ? headingId(group.name, i) : undefined}>
-                                    {group.name ? (
+                                    {/* A set whose last tile has left keeps no heading over nothing. */}
+                                    {group.name && shownIn(group.cards) > 0 ? (
                                         /* Sticky, so the set a tile belongs to is still readable halfway down a
                                            long one. Against the page's own scroll: this list has no scroller of
                                            its own; under the phone's bar below `lg`, where `top-0` stuck it behind
@@ -315,7 +331,7 @@ export function CardsList({
                                             {group.name} {/* The last set drawn may go on in the next batch: its count waits until it is whole. */}
                                             {more && i === groups.length - 1 ? null : (
                                                 <span className="font-normal text-tertiary">
-                                                    {group.cards.length} {group.cards.length === 1 ? "card" : "cards"}
+                                                    {shownIn(group.cards)} {shownIn(group.cards) === 1 ? "card" : "cards"}
                                                 </span>
                                             )}
                                         </h2>
@@ -331,6 +347,7 @@ export function CardsList({
                                         // The first row at load is the first set's; a later set's tiles, and a batch appended on scroll, load as they come in.
                                         priority={i === 0 ? Math.min(FIRST_ROW, first.cards.length) : 0}
                                         firstPage={firstPageIds}
+                                        onGone={tileGone}
                                     />
                                 </section>
                             ))}

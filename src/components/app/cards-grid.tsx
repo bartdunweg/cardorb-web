@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, memo, useCallback, useLayoutEffect, useRef, useState } from "react";
+import { type ReactNode, memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Minus, Plus } from "@untitledui/icons";
 import { arriveDelay } from "@/components/app/arrive-stagger";
 import { CardBack } from "@/components/app/card-back";
@@ -53,6 +53,7 @@ export function CardsGrid<T extends GridCard>({
     steps = false,
     priority = FIRST_ROW,
     firstPage,
+    onGone,
 }: {
     /** Whose cards these are, for the words a screen reader gets under a count: the person looking, or the owner of a public page. */
     holder?: "you" | "owner";
@@ -89,6 +90,11 @@ export function CardsGrid<T extends GridCard>({
      * stable reference, so the memoised tiles are not drawn again for it.
      */
     firstPage?: ReadonlySet<string>;
+    /**
+     * Said when a tile has left the grid (its last copy taken, a wish got) and when it comes back (the
+     * toast's undo), so the list's counts follow what is on screen. Pass a stable reference.
+     */
+    onGone?: (id: string, gone: boolean) => void;
 }) {
     /* One press handler for every tile, whatever the parent hands in on each render: a tile is
        memoised, and a new closure per tile per render drew all of them again. It reads the list and
@@ -116,6 +122,7 @@ export function CardsGrid<T extends GridCard>({
                     onSelect={select}
                     action={action}
                     steps={steps && card.owned !== false && card.quantity != null}
+                    onGone={onGone}
                 />
             ))}
         </div>
@@ -132,10 +139,21 @@ type GridCellProps<T extends GridCard> = {
     onSelect: (card: T) => void;
     action?: (card: T, leave: () => void) => ReactNode;
     steps: boolean;
+    onGone?: (id: string, gone: boolean) => void;
 };
 
 // Memoised: a press, a batch appended on scroll or the sheet opening leaves every other tile as it was.
-const GridCell = memo(function GridCell<T extends GridCard>({ card, arriveDelay: delay, priority, size, holder, onSelect, action, steps }: GridCellProps<T>) {
+const GridCell = memo(function GridCell<T extends GridCard>({
+    card,
+    arriveDelay: delay,
+    priority,
+    size,
+    holder,
+    onSelect,
+    action,
+    steps,
+    onGone,
+}: GridCellProps<T>) {
     /* Quiet: the list is not drawn again after a press, because a redrawn list starts over from its
        first batch and a card pressed two hundred tiles down took the scroll back to the top. The
        tile says its own count; the next screen you open reads fresh. */
@@ -160,6 +178,10 @@ const GridCell = memo(function GridCell<T extends GridCard>({ card, arriveDelay:
        under the title have already moved; the tile fades out first and is taken out once that ends,
        or stays if its count comes back while it is leaving. */
     const { ref: cellRef, removed } = useTileExit(left || (steps && held === 0));
+    // The list's set heading and its count for a screen reader follow the tile out, and back in.
+    useEffect(() => {
+        onGone?.(card.id, removed);
+    }, [onGone, card.id, removed]);
     if (removed) return null;
     const buttons = steps || action;
 
@@ -170,7 +192,7 @@ const GridCell = memo(function GridCell<T extends GridCard>({ card, arriveDelay:
         // everything after them, and every batch appended on scroll, comes in at once.
         // A column that fills its grid row, so the price and the buttons sit at one height across the row
         // whether or not a tile has the printing's line above them (Bart, 2026-09-16).
-        <div ref={cellRef} className="@container flex arrive flex-col" style={{ "--arrive-delay": delay } as React.CSSProperties}>
+        <div ref={cellRef} data-card-id={card.id} className="@container flex arrive flex-col" style={{ "--arrive-delay": delay } as React.CSSProperties}>
             <CardTile
                 onSelect={() => onSelect(card)}
                 // The buttons have a row of their own in the cell, so the tile must not fill the cell: h-full

@@ -1,9 +1,10 @@
 "use client";
 
-import { type ReactNode, Suspense, useCallback, useState } from "react";
+import { type ReactNode, Suspense, useCallback, useLayoutEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { CardsList } from "@/components/app/cards-list";
 import type { PeriodKey } from "@/components/app/chart-periods";
+import { useListTotals } from "@/components/app/list-totals";
 import { LIST_ROW } from "@/components/app/row-search";
 import { CardsSkeleton } from "@/components/app/skeletons";
 import { ViewMenu } from "@/components/app/view-menu";
@@ -92,15 +93,53 @@ export function CardsView({
      * (the save failed and the star went back) takes it out of here, so the card returns.
      */
     const [gone, setGone] = useState<ReadonlySet<string>>(() => new Set());
-    const starChanged = useCallback((cardId: string, starred: boolean) => {
-        setGone((have) => {
-            if (starred === !have.has(cardId)) return have;
-            const next = new Set(have);
+    /* The line under the title moves with it, as a tile's own buttons move it: the row left, and its
+       copies and their worth with it (bug hunt 2026-09-19: Favorites said the old count until the page
+       was read again). The card is the sheet's, the one whose star was turned. */
+    const totals = useListTotals();
+    const goneNow = useRef(gone);
+    const sheetCard = useRef<Card | null>(null);
+    useLayoutEffect(() => {
+        sheetCard.current = selected?.card ?? null;
+    });
+    const starChanged = useCallback(
+        (cardId: string, starred: boolean) => {
+            if (starred === !goneNow.current.has(cardId)) return;
+            const next = new Set(goneNow.current);
             if (starred) next.delete(cardId);
             else next.add(cardId);
-            return next;
-        });
-    }, []);
+            goneNow.current = next;
+            setGone(next);
+            const card = sheetCard.current;
+            if (card?.id === cardId) {
+                const sign = starred ? 1 : -1;
+                const copies = card.quantity ?? 1;
+                totals?.({ rows: sign, copies: sign * copies, value: sign * copies * (card.price ?? 0) });
+            }
+        },
+        [totals],
+    );
+
+    /* Focus back on the card the sheet was last on once it has closed, where the dialog's own return
+       went to the tile it was opened from (another card, after Next) or to the page (a card that left
+       the list meanwhile); a card no longer on the list gives its place to the nearest one still there.
+       After the sheet's exit, so the dialog's own restore does not move it again (bug hunt 2026-09-19). */
+    const close = () => {
+        const last = selected;
+        setSelected(null);
+        if (!last) return;
+        const from = last.siblings.findIndex((c) => c.id === last.card.id);
+        const order = [last.card, ...last.siblings.slice(from + 1), ...last.siblings.slice(0, Math.max(0, from)).reverse()];
+        window.setTimeout(() => {
+            for (const c of order) {
+                const tile = document.querySelector<HTMLElement>(`[data-card-id="${CSS.escape(c.id)}"] button`);
+                if (tile) {
+                    tile.focus();
+                    return;
+                }
+            }
+        }, 320);
+    };
 
     const at = selected ? selected.siblings.findIndex((c) => c.id === selected.card.id) : -1;
     const step = (by: number) => {
@@ -144,7 +183,7 @@ export function CardsView({
                 that belongs here whichever way it is set. */}
             <CardDetailSlideout
                 card={selected?.card ?? null}
-                onClose={() => setSelected(null)}
+                onClose={close}
                 onPrev={step(-1)}
                 onNext={step(1)}
                 period={period}
