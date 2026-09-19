@@ -18,9 +18,9 @@ import { cx } from "@/utils/cx";
  * From the `lg` breakpoint up there is a sidebar, so the bar is gone and only the large title and
  * the actions remain, laid out as the pages always had them.
  *
- * The one moving part is the small title's opacity, which is state indication seen tens of times a
- * day, so it is near-imperceptible: a 150 ms fade, no movement. Reduced motion keeps the fade. The
- * large title does not animate; it just scrolls, which is what a title on a page does.
+ * The one moving part is the small title's opacity and the ground behind it, which follow the scroll
+ * position itself (`--bar`, `--ground`), as the card sheet's bar does: no animation, so nothing to
+ * reduce. The large title does not animate; it just scrolls, which is what a title on a page does.
  */
 export function PageHeader({
     title,
@@ -96,8 +96,8 @@ export function PageHeader({
     const sentinel = useRef<HTMLHeadingElement>(null);
     const [collapsed, setCollapsed] = useState(false);
 
-    // The bar takes the title over exactly when the large one has left the screen. IntersectionObserver
-    // rather than a scroll listener: it costs nothing between changes and needs no layout reads.
+    // Whether the bar has taken the title over, for what switches rather than fades (the buttons' place,
+    // whether the bar takes taps). IntersectionObserver: it costs nothing between changes.
     // Without Back but with buttons in the bar (All cards, a binder, Collection) the large title starts level
     // with those buttons, on their line, rather than on a line of its own under them.
     const beside = Boolean(!back && barActions && titleOnPhone);
@@ -111,14 +111,19 @@ export function PageHeader({
         const el = bar.current;
         const heading = sentinel.current;
         if (!el || !heading || !titleOnPhone || !sticky) return;
+        // From `lg` the bar is not drawn: nothing to follow.
+        const wide = window.matchMedia("(min-width: 64rem)");
         let frame = 0;
         const update = () => {
             frame = 0;
-            el.style.setProperty("--ground", String(Math.min(1, window.scrollY / 24)));
+            if (wide.matches) return;
             // From where the title stands at rest: under Back it starts under the bar (76 px), beside the
-            // buttons on the bar's own line (16 px); from `sm` the page's padding puts it lower.
-            const top = heading.getBoundingClientRect().top + window.scrollY - (back ? 76 : 16);
-            const shown = (window.scrollY - Math.max(0, top)) / Math.max(1, heading.offsetHeight);
+            // buttons on the bar's own line (16 px); from `sm` the page's padding puts it lower. Read
+            // before anything is written, so the frame lays out once.
+            const box = heading.getBoundingClientRect();
+            const top = box.top + window.scrollY - (back ? 76 : 16);
+            const shown = (window.scrollY - Math.max(0, top)) / Math.max(1, box.height);
+            el.style.setProperty("--ground", String(Math.min(1, window.scrollY / 24)));
             el.style.setProperty("--bar", String(Math.min(1, Math.max(0, shown))));
         };
         const ask = () => {
@@ -127,7 +132,9 @@ export function PageHeader({
         update();
         window.addEventListener("scroll", ask, { passive: true });
         window.addEventListener("resize", ask);
+        wide.addEventListener("change", ask);
         return () => {
+            wide.removeEventListener("change", ask);
             cancelAnimationFrame(frame);
             window.removeEventListener("scroll", ask);
             window.removeEventListener("resize", ask);
@@ -201,8 +208,8 @@ export function PageHeader({
                 `lg` it goes up to the page's top, cancelling the layout's padding (sm:pt-8). The wash the
                 band draws is positioned by the app frame, so it needs no room here. */}
             {/* The bar is fixed to the top of the screen, like the tab bar to its bottom, so it stays through
-                the whole page and not only while the header is in view. Collapsed, it stands on the tab bar's
-                glass, running out under its bottom (the same ground as the card sheet's bar), so the buttons
+                the whole page and not only while the header is in view. As content scrolls under, it stands on the tab
+                bar's glass (in over the first 24 px), running out under its bottom (the same ground as the card sheet's bar), so the buttons
                 and the small title stay readable over whatever scrolls under; content runs out under the bar
                 the way it runs out under the tab bar. */}
             <div

@@ -467,6 +467,11 @@ input[type="search"]::-webkit-search-cancel-button {
     view-transition-name: my-cards-line;
 }
 
+/* Inside a list's own change of drawing (view-change.ts) the line fades with the page it is on. */
+main[data-view-change] [data-my-cards-tabs] [role="tablist"] + span {
+    view-transition-name: none;
+}
+
 ::view-transition-group(my-cards-line) {
     animation-duration: var(--duration-base);
     animation-timing-function: var(--ease-move);
