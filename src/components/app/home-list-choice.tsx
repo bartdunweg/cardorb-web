@@ -3,20 +3,20 @@
 import { type FC, createElement, useState, useSyncExternalStore, useTransition } from "react";
 import { ChevronDown, Folder, Heart, Rows01, Star01 } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
-import { Header as AriaHeader, Heading as AriaHeading } from "react-aria-components";
+import { Button as AriaButton, Header as AriaHeader, Heading as AriaHeading } from "react-aria-components";
 import { FilterChoices } from "@/components/app/filter-chip";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
-import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
 import { cx } from "@/utils/cx";
 
 /*
- * Which list Home is about, in the page's header beside the avatar (Bart's call, 2026-09-19): the
+ * Which list Home is about, as Home's title with a chevron (Bart's call, 2026-09-19): the
  * collection, the wishlist, the favorites or a binder. A choice goes into the URL (`?value=`) and the
- * whole of Home follows it: the value and its line, the four counts, the dearest cards. It sat
- * beside the amount before, where it read as a control of the value alone. A menu under the button
- * from sm, a sheet from the bottom on a phone, as the filters open.
+ * whole of Home follows it: the value and its line, the four counts, the dearest cards, the movers.
+ * It sat beside the amount first, where it read as a control of the value alone, then as a button
+ * beside the avatar under a title that said "Home"; the title is the list now, and pressing it
+ * switches. A menu under the title from sm, a sheet from the bottom on a phone, as the filters open.
  */
 
 export type HomeListOption = { id: string; name: string };
@@ -71,23 +71,25 @@ export function HomeListChoice({ lists, selected }: { lists: HomeListOption[]; s
                     else setSheetOpen(true);
                 }}
             >
-                {/* Its name and the chevron; no icon on the button (Bart, 2026-09-19), the menu keeps them. */}
-                <Button
-                    color="secondary"
-                    // The height of every button beside a title: 40 px, 44 where the bar is, as the avatar beside it.
-                    size="md"
-                    iconTrailing={ChevronDown}
+                {/* The title's own words and a chevron after them, in the title's size and weight: inside the
+                    h1, so the page's heading is the list's name. No icon (Bart, 2026-09-19), the menu keeps them. */}
+                <AriaButton
                     // The words on the button first, as voice control says them.
                     aria-label={`${list.name}: choose Home's list`}
                     // On a phone the press opens a sheet, a dialog, not the menu the trigger announces.
                     aria-haspopup={phone ? "dialog" : undefined}
                     aria-expanded={phone ? sheetOpen : undefined}
-                    // Dims after 150 ms while the page answers, so a quick answer never flickers.
-                    className={cx("transition-opacity duration-(--duration-fast) max-lg:py-3", pending && "opacity-60 delay-150")}
+                    className={cx(
+                        "group -mx-1 flex min-w-0 cursor-pointer items-center gap-1 rounded-md px-1 text-left outline-focus-ring hover:bg-alpha-black/4 focus-visible:outline-2 focus-visible:outline-offset-2",
+                        // Dims after 150 ms while the page answers, so a quick answer never flickers.
+                        "transition-opacity duration-(--duration-fast)",
+                        pending && "opacity-60 delay-150",
+                    )}
                 >
-                    <span className="block max-w-32 truncate sm:max-w-40">{list.name}</span>
-                </Button>
-                <Dropdown.Popover placement="bottom end" className="w-56">
+                    <span className="truncate">{list.name}</span>
+                    <ChevronDown aria-hidden="true" className="size-6 shrink-0 text-fg-quaternary group-hover:text-fg-quaternary_hover" />
+                </AriaButton>
+                <Dropdown.Popover placement="bottom start" className="w-56">
                     <Dropdown.Menu
                         selectionMode="single"
                         disallowEmptySelection

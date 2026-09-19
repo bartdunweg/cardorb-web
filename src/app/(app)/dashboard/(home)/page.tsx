@@ -17,18 +17,14 @@ export default function DashboardPage({ searchParams }: { searchParams: Promise<
         <div className="flex flex-1 flex-col gap-6">
             <PageHeader
                 title="Home"
-                shortTitle
-                // Which list Home is about, beside the avatar across from the title (Bart's call, 2026-09-19); the
-                // search is the round button beside the tab bar. The choice waits on the binders, the avatar does not.
-                actions={
-                    <>
-                        {/* The button's room while the binders are read, so the avatar does not move when it comes. */}
-                        <Suspense fallback={<div aria-hidden="true" className="h-11 w-32 rounded-full ring-1 ring-primary ring-inset lg:h-10" />}>
-                            <HomeListMenu searchParams={searchParams} />
-                        </Suspense>
-                        <YouLink />
-                    </>
+                // The title is the list Home is about, and pressing it switches (Bart's call, 2026-09-19). Until
+                // the binders are read it says the collection, what Home shows unless the address asks otherwise.
+                heading={
+                    <Suspense fallback="Collection">
+                        <HomeListMenu searchParams={searchParams} />
+                    </Suspense>
                 }
+                actions={<YouLink />}
             />
             {/* The title is on screen before the stats are read, and the outline
                 stands where the value and the tiles go. */}

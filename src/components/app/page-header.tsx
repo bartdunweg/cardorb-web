@@ -39,8 +39,14 @@ export function PageHeader({
     searchField = false,
     sticky = true,
     phoneTitle,
+    heading,
 }: {
     title: string;
+    /**
+     * What the h1 holds in place of the title's words: Home's list choice, the list's name with a
+     * chevron. `title` stays the words, for the bar's small title once the page scrolls.
+     */
+    heading?: ReactNode;
     /**
      * The title below `lg`, where it differs: Collection and Wishlist are one tab on a phone, My cards,
      * and its title says so while the switch under it says which half (Bart's call, 2026-09-18).
@@ -307,7 +313,9 @@ export function PageHeader({
                                 )}
                             >
                                 {/* Hidden, not just unseen: a name a screen reader reads is the one on screen. */}
-                                {phoneTitle ? (
+                                {heading ? (
+                                    heading
+                                ) : phoneTitle ? (
                                     <>
                                         <span className="lg:hidden">{phoneTitle}</span>
                                         <span className="max-lg:hidden">{title}</span>

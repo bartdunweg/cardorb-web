@@ -215,7 +215,8 @@ function ListStatsOutline({ wishlist }: { wishlist: boolean }) {
 export async function HomeListMenu({ searchParams }: { searchParams: Promise<{ value?: string }> }) {
     const { value } = await searchParams;
     const [stats, binders] = await Promise.all([getCardStats(), sideRead("binders", getMyBinders, null)]);
-    if (stats.owned === 0) return null;
+    // Nothing held yet, nothing to choose between: the page's own name.
+    if (stats.owned === 0) return "Home";
     return <HomeListChoice lists={homeLists(binders ?? [])} selected={chosenList(askedList(value), binders)} />;
 }
 
