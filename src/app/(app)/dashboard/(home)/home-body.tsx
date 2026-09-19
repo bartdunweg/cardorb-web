@@ -219,9 +219,9 @@ function ListStatsOutline({ wishlist }: { wishlist: boolean }) {
 }
 
 /**
- * The list choice in Home's header, beside the avatar: every list Home can be about, and the one the
- * address asks for. Nothing for an account that holds nothing yet: Home is then its welcome, which
- * has no list to be about.
+ * The list choice as Home's title: every list Home can be about, and the one the address asks for.
+ * The page's own name for an account that holds nothing yet: Home is then its welcome, which has no
+ * list to be about.
  */
 export async function HomeListMenu({ searchParams }: { searchParams: Promise<{ value?: string }> }) {
     const { value } = await searchParams;
@@ -229,6 +229,15 @@ export async function HomeListMenu({ searchParams }: { searchParams: Promise<{ v
     // Nothing held yet, nothing to choose between: the page's own name.
     if (stats.owned === 0) return "Home";
     return <HomeListChoice lists={homeLists(binders ?? [])} selected={chosenList(askedList(value), binders)} />;
+}
+
+/** The chosen list's name alone, for the phone's bar once the title has scrolled under it. */
+export async function HomeListName({ searchParams }: { searchParams: Promise<{ value?: string }> }) {
+    const { value } = await searchParams;
+    const [stats, binders] = await Promise.all([getCardStats(), sideRead("binders", getMyBinders, null)]);
+    if (stats.owned === 0) return "Home";
+    const selected = chosenList(askedList(value), binders);
+    return homeLists(binders ?? []).find((l) => l.id === selected)?.name ?? "Collection";
 }
 
 /**

@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { HomeBody, HomeListMenu } from "@/app/(app)/dashboard/(home)/home-body";
+import { HomeBody, HomeListMenu, HomeListName } from "@/app/(app)/dashboard/(home)/home-body";
 import { PageHeader } from "@/components/app/page-header";
 import { HomeBodyOutline } from "@/components/app/skeletons";
 import { YouLink } from "@/components/app/you-link";
@@ -12,11 +12,13 @@ export const metadata: Metadata = { title: "Home" };
 
 /* Until the binders are read, the list the address asks for, so a wishlist is not called Collection
    first. A binder's name needs that read: its room stands there instead. */
-async function AskedTitle({ searchParams }: { searchParams: Promise<{ value?: string }> }) {
+async function AskedTitle({ searchParams, plain = false }: { searchParams: Promise<{ value?: string }>; plain?: boolean }) {
     const list = askedList((await searchParams).value);
     if (list === "all") return "Collection";
     if (list === "wishlist") return "Wishlist";
     if (list === "favorites") return "Favorites";
+    // The bar's words cannot hold an outline: the page's name until the binder's is read.
+    if (plain) return "Home";
     return <span aria-hidden="true" className="inline-block h-8 w-40 rounded-md bg-skeleton motion-safe:animate-pulse" />;
 }
 
@@ -39,6 +41,18 @@ export default function DashboardPage({ searchParams }: { searchParams: Promise<
                         }
                     >
                         <HomeListMenu searchParams={searchParams} />
+                    </Suspense>
+                }
+                // The bar says the same list once the title has scrolled under it, not the page's name.
+                barTitle={
+                    <Suspense
+                        fallback={
+                            <Suspense fallback="Home">
+                                <AskedTitle searchParams={searchParams} plain />
+                            </Suspense>
+                        }
+                    >
+                        <HomeListName searchParams={searchParams} />
                     </Suspense>
                 }
                 actions={<YouLink />}
