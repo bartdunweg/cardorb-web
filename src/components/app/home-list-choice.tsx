@@ -74,7 +74,8 @@ export function HomeListChoice({ lists, selected }: { lists: HomeListOption[]; s
                 {/* Its name and the chevron; no icon on the button (Bart, 2026-09-19), the menu keeps them. */}
                 <Button
                     color="secondary"
-                    size="sm"
+                    // The height of every button beside a title: 40 px, 44 where the bar is, as the avatar beside it.
+                    size="md"
                     iconTrailing={ChevronDown}
                     // The words on the button first, as voice control says them.
                     aria-label={`${list.name}: choose Home's list`}
@@ -82,7 +83,7 @@ export function HomeListChoice({ lists, selected }: { lists: HomeListOption[]; s
                     aria-haspopup={phone ? "dialog" : undefined}
                     aria-expanded={phone ? sheetOpen : undefined}
                     // Dims after 150 ms while the page answers, so a quick answer never flickers.
-                    className={cx("transition-opacity duration-(--duration-fast)", pending && "opacity-60 delay-150")}
+                    className={cx("transition-opacity duration-(--duration-fast) max-lg:py-3", pending && "opacity-60 delay-150")}
                 >
                     <span className="block max-w-32 truncate sm:max-w-40">{list.name}</span>
                 </Button>
