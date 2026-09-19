@@ -249,7 +249,7 @@ test("the list view fits a phone: three columns, nothing to scroll sideways", as
     await hydrated(page, "Collection settings");
     const chooseLayout = async (name: "List" | "Grid") => {
         await page.getByRole("button", { name: /^View/ }).filter({ visible: true }).first().click();
-        await page.getByRole("menuitemradio", { name }).click();
+        await page.getByRole("menuitemradio", { name, exact: true }).click();
     };
     await chooseLayout("List");
     try {
