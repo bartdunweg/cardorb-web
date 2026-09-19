@@ -23,7 +23,8 @@ export function CollectionSwitch({ current, slides = true }: { current: (typeof 
         // `data-my-cards-tabs`: its line slides to the other tab across the page change (globals.css). Off
         // for a copy on another page (the design page), whose line would fly from there to My cards.
         <Tabs selectedKey={current} data-my-cards-tabs={slides || undefined}>
-            <TabList aria-label="My cards" type="underline" size="sm" fullWidth>
+            {/* The kit's always-there line runs out to the screen's edges, past the page's padding (Bart, 2026-09-19). */}
+            <TabList aria-label="My cards" type="underline" size="sm" fullWidth className="before:-inset-x-4 sm:before:-inset-x-6">
                 {LISTS.map((list) => (
                     <Tab key={list.id} id={list.id} href={list.href} label={list.label} className="flex-1 justify-center py-3" />
                 ))}

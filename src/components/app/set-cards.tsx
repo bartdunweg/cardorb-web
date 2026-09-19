@@ -381,8 +381,10 @@ export function SetCards({
                     `overflow-x` alone makes the other way `auto` as well, which cut the top pixel off every count
                     badge (they carry `-my-px`, so they stand a pixel outside the tab and their ring read as sliced).
                     The pixel back as padding, and off again as margin, so nothing else moves. */}
-                <div className="-mx-4 -mt-px overflow-x-auto px-4 pt-px sm:mx-0 sm:px-0">
-                    <TabList aria-label="Cards in this set" type="underline" size="sm" className="min-w-max">
+                <div className="-mx-4 -mt-px overflow-x-auto px-4 pt-px sm:-mx-6 sm:px-6">
+                    {/* At least the row's width, and its line out into the padding on both sides: edge to edge, as My
+                        cards' (Bart, 2026-09-19). Inside the scroller's padding, so it adds nothing to scroll. */}
+                    <TabList aria-label="Cards in this set" type="underline" size="sm" className="w-max min-w-full before:-inset-x-4 sm:before:-inset-x-6">
                         {HOLDINGS.map((h) => (
                             <Tab key={h.value} id={h.value} label={h.label} badge={String(tabCounts[h.value] ?? 0)} />
                         ))}
