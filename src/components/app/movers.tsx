@@ -128,7 +128,7 @@ export function Movers({ list = "all", seeAll = true }: { list?: HomeList; seeAl
                 </div>
             </div>
             {shownKey === null ? (
-                <div className="grid gap-3 sm:grid-cols-2 sm:gap-4" aria-hidden="true">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4" aria-hidden="true">
                     {[0, 1].map((col) => (
                         <div key={col} className={cx(TILE, "flex flex-col gap-3")}>
                             <span className="h-4 w-16 rounded-md bg-skeleton motion-safe:animate-pulse" />
@@ -151,7 +151,7 @@ export function Movers({ list = "all", seeAll = true }: { list?: HomeList; seeAl
                         ) : answer.up.length === 0 && answer.down.length === 0 ? (
                             <p className="text-sm text-tertiary">No card moved more than ten cents in this period.</p>
                         ) : (
-                            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                                 <MoverList
                                     title="Up"
                                     movers={answer.up}

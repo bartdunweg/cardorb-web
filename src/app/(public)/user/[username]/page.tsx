@@ -148,8 +148,9 @@ async function Profile({
                 <div className="flex flex-col items-center gap-3 text-center">
                     <Avatar size="2xl" pixels={96} src={profile.avatar_url ?? undefined} alt="" className="size-24" />
                     <div className="flex flex-col items-center gap-1">
-                        <h1 className="text-display-sm font-semibold tracking-tight text-primary">{name}</h1>
-                        {handle ? <p className="text-md text-tertiary">{handle}</p> : null}
+                        {/* A name of one long word (a username) breaks rather than widening the page on a phone. */}
+                        <h1 className="max-w-full text-display-sm font-semibold tracking-tight wrap-anywhere text-primary">{name}</h1>
+                        {handle ? <p className="max-w-full text-md wrap-anywhere text-tertiary">{handle}</p> : null}
                         <p className="text-md font-medium text-secondary tabular-nums">
                             {typeof counts === "string" ? (
                                 counts
@@ -178,8 +179,10 @@ async function Profile({
                                     size="sm"
                                     color={current ? "primary" : "secondary"}
                                     aria-current={current ? "page" : undefined}
+                                    // The button's own text box is the flex item: it has to be allowed to shrink for the name to truncate.
+                                    className="max-w-full *:data-text:flex *:data-text:min-w-0"
                                 >
-                                    {f.name}
+                                    <span className="min-w-0 truncate">{f.name}</span>
                                     {f.count != null ? <span className="ml-1.5 tabular-nums opacity-70">{formatCount(f.count)}</span> : null}
                                 </LinkButton>
                             );
