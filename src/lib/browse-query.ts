@@ -36,9 +36,22 @@ export type BrowseQuery = {
     progress: BrowseProgress;
     /** What was typed in the row's search field: part of a set's name, or of its local one. */
     q: string | undefined;
+    /** Series to keep (Scarlet & Violet, Sword & Shield); none is every series. */
+    series: string[];
+    /** Release years to keep, as four digits; none is every year. */
+    year: string[];
 };
 
-export type BrowseSearchParams = { language?: string; sort?: string; progress?: string; q?: string };
+export type BrowseSearchParams = { language?: string; sort?: string; progress?: string; q?: string; series?: string | string[]; year?: string | string[] };
+
+const isYear = (v: string) => /^\d{4}$/.test(v);
+
+/** A repeated parameter as a list, trimmed, bounded and without repeats. */
+export const listParam = (value: string | string[] | undefined, keep: (v: string) => boolean = () => true): string[] =>
+    [...new Set((Array.isArray(value) ? value : value ? [value] : []).map((v) => v.trim().slice(0, 100)).filter((v) => v && keep(v)))].slice(0, 50);
+
+/** The year list's own check, for a list read from anywhere else. */
+export const yearParam = (value: string | string[] | undefined) => listParam(value, isYear);
 
 /** Read forgivingly: nonsense means English, newest first, every set, nothing searched. */
 export function readBrowseQuery(params: BrowseSearchParams): BrowseQuery {
@@ -47,17 +60,21 @@ export function readBrowseQuery(params: BrowseSearchParams): BrowseQuery {
         sort: isBrowseSort(params.sort) ? params.sort : "newest",
         progress: isBrowseProgress(params.progress) ? params.progress : "all",
         q: params.q?.trim().slice(0, 100) || undefined,
+        series: listParam(params.series),
+        year: yearParam(params.year),
     };
 }
 
 /** Browse's URL with some of it changed; defaults stay out so the plain path stays plain. */
 export function browseHref(current: BrowseQuery, patch: Partial<BrowseQuery>): string {
-    const { language, sort, progress, q } = { ...current, ...patch };
+    const { language, sort, progress, q, series, year } = { ...current, ...patch };
     const p = new URLSearchParams();
     if (q) p.set("q", q);
     if (language !== "en") p.set("language", language);
     if (sort !== "newest") p.set("sort", sort);
     if (progress !== "all") p.set("progress", progress);
+    for (const name of series) p.append("series", name);
+    for (const y of year) p.append("year", y);
     const s = p.toString();
     return s ? `/dashboard/sets?${s}` : "/dashboard/sets";
 }
@@ -96,13 +113,67 @@ export function sortShelf(series: SetSeries[], sort: BrowseSort): SetSeries[] {
     return series;
 }
 
+/** The shelf narrowed to the chosen series; a series not chosen goes. None chosen is the whole shelf. */
+export function seriesShelf(series: SetSeries[], chosen: string[]): SetSeries[] {
+    if (chosen.length === 0) return series;
+    return series.filter((group) => chosen.includes(group.name));
+}
+
+/** The year a set came out, as four digits; a set with no date has none. */
+export const setYear = (set: SetSeries["sets"][number]): string | null => {
+    const y = set.releaseDate?.slice(0, 4);
+    return y && isYear(y) ? y : null;
+};
+
+/** The shelf narrowed to sets that came out in one of the chosen years; a series with none left goes. */
+export function yearShelf(series: SetSeries[], chosen: string[]): SetSeries[] {
+    if (chosen.length === 0) return series;
+    return series.map((group) => ({ ...group, sets: group.sets.filter((s) => chosen.includes(setYear(s) ?? "")) })).filter((group) => group.sets.length > 0);
+}
+
+/** What the Series and Year filters offer. */
+export type ShelfFacets = { series: string[]; years: string[] };
+
+/** Nothing offered yet: the filters show what the URL already names until the shelf answers. */
+export const NO_SHELF_FACETS: ShelfFacets = { series: [], years: [] };
+
+/** What the Series and Year filters offer for a shelf: its series in the shelf's own order, its years newest first. */
+export function shelfFacets(series: SetSeries[]): ShelfFacets {
+    const years = new Set<string>();
+    for (const group of series)
+        for (const set of group.sets) {
+            const y = setYear(set);
+            if (y) years.add(y);
+        }
+    return { series: series.map((group) => group.name).filter(Boolean), years: [...years].sort((a, b) => b.localeCompare(a)) };
+}
+
+/** Every narrowing Browse's shelf takes after the search, in one place, for the page and for the counts. */
+export function narrowShelf(series: SetSeries[], { progress, series: chosen, year }: Pick<BrowseQuery, "progress" | "series" | "year">): SetSeries[] {
+    return progressShelf(yearShelf(seriesShelf(series, chosen), year), progress);
+}
+
+const countSets = (series: SetSeries[]) => series.reduce((n, group) => n + group.sets.length, 0);
+
 /**
- * How many sets a shelf shows, and per progress how many it would with that one chosen: the
- * numbers beside Browse's filters. Over the shelf after the search, so they answer what is typed.
+ * How many sets a shelf shows, and per option how many it would with that one chosen and the other
+ * filters as they are: the numbers beside Browse's filters. Over the shelf after the search, so
+ * they answer what is typed.
  */
-export function shelfCounts(series: SetSeries[], q: string | undefined, progress: BrowseProgress): { total: number; progress: Record<BrowseProgress, number> } {
-    const searched = searchShelf(series, q);
-    const count = (p: BrowseProgress) => progressShelf(searched, p).reduce((n, group) => n + group.sets.length, 0);
-    const byProgress = Object.fromEntries(BROWSE_PROGRESS_OPTIONS.map((o) => [o.value, count(o.value)])) as Record<BrowseProgress, number>;
-    return { total: byProgress[progress], progress: byProgress };
+export function shelfCounts(
+    series: SetSeries[],
+    query: Pick<BrowseQuery, "q" | "progress" | "series" | "year">,
+): { total: number; progress: Record<BrowseProgress, number>; series: Record<string, number>; year: Record<string, number> } {
+    const searched = searchShelf(series, query.q);
+    const byProgress = Object.fromEntries(
+        BROWSE_PROGRESS_OPTIONS.map((o) => [o.value, countSets(narrowShelf(searched, { ...query, progress: o.value }))]),
+    ) as Record<BrowseProgress, number>;
+    const bySeries = Object.fromEntries(narrowShelf(searched, { ...query, series: [] }).map((group) => [group.name, group.sets.length]));
+    const byYear: Record<string, number> = {};
+    for (const group of narrowShelf(searched, { ...query, year: [] }))
+        for (const set of group.sets) {
+            const y = setYear(set);
+            if (y) byYear[y] = (byYear[y] ?? 0) + 1;
+        }
+    return { total: byProgress[query.progress], progress: byProgress, series: bySeries, year: byYear };
 }

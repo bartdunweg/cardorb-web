@@ -37,6 +37,7 @@ export function PageHeader({
     titleOnPhone = true,
     shortTitle = false,
     searchField = false,
+    sticky = true,
     phoneTitle,
 }: {
     title: string;
@@ -83,6 +84,11 @@ export function PageHeader({
      * the tab already says the name (Bart's call, 2026-09-19). The h1 stays for a screen reader.
      */
     searchField?: boolean;
+    /**
+     * Off, the phone's bar scrolls away with the page instead of staying at the top: Browse, whose
+     * search and View are a way into the shelf, not controls needed at every set (Bart, 2026-09-19).
+     */
+    sticky?: boolean;
 }) {
     const sentinel = useRef<HTMLHeadingElement>(null);
     const [collapsed, setCollapsed] = useState(false);
@@ -96,7 +102,8 @@ export function PageHeader({
     useEffect(() => {
         const el = sentinel.current;
         // A title hidden on the phone has nothing to collapse into the bar: the bar stays out of the way.
-        if (!titleOnPhone || !el || typeof IntersectionObserver === "undefined") return;
+        // A bar that scrolls away with the page has nothing to collapse into: it is gone before the title is.
+        if (!titleOnPhone || !sticky || !el || typeof IntersectionObserver === "undefined") return;
         const observer = new IntersectionObserver(([entry]) => setCollapsed(tall && !beside ? entry.intersectionRatio < 1 : !entry.isIntersecting), {
             // The title counts as gone once it is under the bar, not once it has left the screen: with Back
             // the bar is 76 px (a 44 px button, the avatar's and the search's size, with 16 above and under) and
@@ -108,7 +115,7 @@ export function PageHeader({
         });
         observer.observe(el);
         return () => observer.disconnect();
-    }, [tall, beside, titleOnPhone]);
+    }, [tall, beside, titleOnPhone, sticky]);
 
     /* Beside the buttons, the buttons stand in the middle of the title and the line under it, not level
        with the title alone. Measured from where both really are, the words on the page and the buttons
@@ -150,7 +157,7 @@ export function PageHeader({
     return (
         // One element, so the page's own gap applies once, under it: the distances inside are the spacer's
         // and the 16 px column, whatever the page puts between its sections.
-        <div className="flex flex-col">
+        <div className={cx("flex flex-col", !sticky && "relative")}>
             {/* Where the phone's bar is, the band starts under it and its Back, after the spacer below; from
                 `lg` it goes up to the page's top, cancelling the layout's padding (sm:pt-8). The wash the
                 band draws is positioned by the app frame, so it needs no room here. */}
@@ -164,6 +171,9 @@ export function PageHeader({
                     // Back and the buttons as wide as they are, the title the room between: with search, View and the
                     // dots on the right, equal side columns ran the buttons over a collapsed title at 375 px.
                     "fixed inset-x-0 top-0 z-30 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-4 pt-4 pb-2 sm:px-6 lg:hidden",
+                    // Not sticky: at the page's top, in the header's place, gone as the page scrolls. The
+                    // offsets take back the page's own padding, which `fixed` never had to.
+                    !sticky && "absolute -inset-x-4 -top-4 sm:-inset-x-6 sm:-top-8",
                     // Searching, the field is the bar: the title and the buttons step away until Cancel; Back stays.
                     // A page whose field always stands there gives up the title alone.
                     searchField
@@ -178,7 +188,7 @@ export function PageHeader({
                     "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:-bottom-7 before:-z-10 before:glass-fade before:transition-opacity before:duration-150 before:ease-enter",
                     collapsed ? "before:opacity-100" : "before:opacity-0",
                     // A bar that is the search field on a phone always has content under it: its ground stays.
-                    searchField && "max-sm:before:opacity-100",
+                    searchField && sticky && "max-sm:before:opacity-100",
                 )}
             >
                 {/* Every child in its own cell: the field and the buttons are placed, and a child left to

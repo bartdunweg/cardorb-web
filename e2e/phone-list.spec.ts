@@ -213,3 +213,21 @@ test("Browse switches its catalogue with tabs of half the line each, under the f
     await tabs.getByRole("tab", { name: "English" }).click();
     await expect(page).not.toHaveURL(/language=/);
 });
+
+test("Browse narrows its shelf by series and year from buttons of their own", async ({ page }) => {
+    await page.goto("/dashboard/sets");
+    const main = page.getByRole("main");
+    await hydrated(page, "Series");
+    await main.getByRole("button", { name: /^Series/ }).click();
+    const sheet = page.getByRole("dialog", { name: "Series" });
+    // A choice is a toggle button (aria-pressed) with the box drawn inside it, not a checkbox (filter-chip.tsx).
+    await sheet.getByRole("button", { name: /^Scarlet & Violet/ }).click();
+    await expect(page).toHaveURL(/[?&]series=Scarlet(\+|%20)%26(\+|%20)Violet(&|$)/);
+    await page.keyboard.press("Escape");
+    await expect(main.getByRole("button", { name: "Series: Scarlet & Violet" })).toBeVisible();
+    await expect(main.getByRole("link", { name: /Scarlet & Violet/ }).first()).toBeVisible();
+
+    // Leave the shelf as it was: Browse remembers its filters for the next visit.
+    await main.getByRole("button", { name: "Clear" }).click();
+    await expect(page).not.toHaveURL(/series=/);
+});

@@ -1,6 +1,17 @@
 import { describe, expect, it } from "vitest";
 import type { SetSeries, SetSummary } from "./api-shapes";
-import { browseHref, progressShelf, readBrowseQuery, searchShelf, shelfCounts, sortShelf } from "./browse-query";
+import {
+    type BrowseQuery,
+    browseHref,
+    progressShelf,
+    readBrowseQuery,
+    searchShelf,
+    seriesShelf,
+    shelfCounts,
+    shelfFacets,
+    sortShelf,
+    yearShelf,
+} from "./browse-query";
 
 const set = (name: string): SetSummary => ({
     id: name.toLowerCase(),
@@ -25,25 +36,29 @@ const shelf: SetSeries[] = [
 
 describe("readBrowseQuery", () => {
     it("reads nonsense as English, newest first", () => {
-        expect(readBrowseQuery({})).toEqual({ language: "en", sort: "newest", progress: "all", q: undefined });
+        expect(readBrowseQuery({})).toEqual({ language: "en", sort: "newest", progress: "all", q: undefined, series: [], year: [] });
         expect(readBrowseQuery({ language: "xx", sort: "sideways", progress: "half", q: "  " })).toEqual({
             language: "en",
             sort: "newest",
             progress: "all",
             q: undefined,
+            series: [],
+            year: [],
         });
         expect(readBrowseQuery({ language: "ja", sort: "name", progress: "complete", q: " Jungle " })).toEqual({
             language: "ja",
             sort: "name",
             progress: "complete",
             q: "Jungle",
+            series: [],
+            year: [],
         });
     });
 });
 
 describe("browseHref", () => {
     it("keeps the defaults out of the URL", () => {
-        const en = { language: "en", sort: "newest", progress: "all", q: undefined } as const;
+        const en = { language: "en", sort: "newest", progress: "all", q: undefined, series: [], year: [] } as BrowseQuery;
         expect(browseHref(en, {})).toBe("/dashboard/sets");
         expect(browseHref(en, { sort: "oldest" })).toBe("/dashboard/sets?sort=oldest");
         expect(browseHref(en, { progress: "started" })).toBe("/dashboard/sets?progress=started");
@@ -96,11 +111,17 @@ describe("shelfCounts", () => {
 
     it("counts each progress over the whole shelf, and the total is the one chosen", () => {
         // All keeps the set with no cards recorded; the three states leave it out, so they need not add up to all.
-        expect(shelfCounts(mixed, undefined, "complete")).toEqual({ total: 1, progress: { all: 4, started: 1, complete: 1, new: 1 } });
+        expect(shelfCounts(mixed, { q: undefined, progress: "complete", series: [], year: [] })).toMatchObject({
+            total: 1,
+            progress: { all: 4, started: 1, complete: 1, new: 1 },
+        });
     });
 
     it("counts what the search leaves", () => {
-        expect(shelfCounts(mixed, "flames", "all")).toEqual({ total: 1, progress: { all: 1, started: 1, complete: 0, new: 0 } });
+        expect(shelfCounts(mixed, { q: "flames", progress: "all", series: [], year: [] })).toMatchObject({
+            total: 1,
+            progress: { all: 1, started: 1, complete: 0, new: 0 },
+        });
     });
 });
 
@@ -124,5 +145,43 @@ describe("sortShelf", () => {
         expect(groups.map((g) => g.name)).toEqual([""]);
         expect(groups[0]!.sets.map((s) => s.name)).toEqual(["Base Set", "Jungle", "Obsidian Flames", "Surging Sparks"]);
         expect(sortShelf([], "name")).toEqual([]);
+    });
+});
+
+describe("series and year", () => {
+    const dated = (name: string, releaseDate: string | null, owned = 0, total = 10): SetSummary => ({ ...set(name), releaseDate, owned, total });
+    const years: SetSeries[] = [
+        { name: "Scarlet & Violet", sets: [dated("Surging Sparks", "2024-11-08", 3), dated("Scarlet & Violet", "2023-03-31")] },
+        { name: "Base", sets: [dated("Jungle", "1999-06-16", 10), dated("Base Set", "1999-01-09"), dated("Undated", null)] },
+    ];
+
+    it("reads repeated series and four-digit years, and writes them back", () => {
+        const query = readBrowseQuery({ series: ["Base", " Base ", "Scarlet & Violet"], year: ["1999", "99", "2024"] });
+        expect(query.series).toEqual(["Base", "Scarlet & Violet"]);
+        expect(query.year).toEqual(["1999", "2024"]);
+        expect(browseHref(query, {})).toBe("/dashboard/sets?series=Base&series=Scarlet+%26+Violet&year=1999&year=2024");
+    });
+
+    it("keeps the chosen series, and every series when none is chosen", () => {
+        expect(seriesShelf(years, ["Base"]).map((g) => g.name)).toEqual(["Base"]);
+        expect(seriesShelf(years, [])).toBe(years);
+    });
+
+    it("keeps the sets of the chosen years; a set with no date is in no year", () => {
+        expect(yearShelf(years, ["1999"]).flatMap((g) => g.sets.map((s) => s.name))).toEqual(["Jungle", "Base Set"]);
+        expect(yearShelf(years, ["2023", "2024"]).map((g) => g.name)).toEqual(["Scarlet & Violet"]);
+    });
+
+    it("offers the shelf's series in its order and its years newest first", () => {
+        expect(shelfFacets(years)).toEqual({ series: ["Scarlet & Violet", "Base"], years: ["2024", "2023", "1999"] });
+    });
+
+    it("counts each series and year with the other filters as they are, not itself", () => {
+        const counts = shelfCounts(years, { q: undefined, progress: "started", series: ["Base"], year: [] });
+        // In progress: Surging Sparks (3 of 10). Series counts ignore the Base choice, so Scarlet & Violet still counts 1.
+        expect(counts.series).toEqual({ "Scarlet & Violet": 1 });
+        // Year counts keep the Base choice: nothing in Base is in progress.
+        expect(counts.year).toEqual({});
+        expect(counts.total).toBe(0);
     });
 });
