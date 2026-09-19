@@ -10,6 +10,7 @@ import type {
     TitleSet,
 } from "@/app/(app)/dashboard/cards/actions";
 import type { BinderChoice } from "@/app/(app)/dashboard/collections/actions";
+import type { ShelfCount } from "@/app/(app)/dashboard/sets/actions";
 import type { FilterCounts, Mover } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
 import type { PeriodKey } from "@/lib/chart-periods";
@@ -128,17 +129,5 @@ export const listSetsShelf = (language: BrowseLanguage = "en"): Promise<{ series
     read("sets-shelf", [["language", language]], { series: [], unavailable: true });
 
 /** The numbers beside Browse's filters. Throws when the read does not answer, as the action did; the sheet then shows no numbers. */
-export const countShelf = (input: {
-    language: string;
-    progress: string;
-    q?: string;
-}): Promise<{ total: number | null; progress: Record<string, number>; language?: Record<string, number> }> =>
-    ask(
-        "shelf-count",
-        [
-            ["language", input.language],
-            ["progress", input.progress],
-            ["q", input.q],
-        ],
-        { total: null, progress: {} },
-    );
+export const countShelf = (choices: { language: string; progress: string; q?: string; series: string[]; year: string[] }): Promise<ShelfCount> =>
+    ask("shelf-count", [input(choices)], { total: null, progress: {}, series: {}, year: {} });

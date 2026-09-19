@@ -156,12 +156,20 @@ const READS: Record<string, (q: URLSearchParams) => Promise<unknown> | null> = {
         const p = z.object({ language: z.string().max(8).optional() }).safeParse(params(q));
         return p.success ? listSetsShelf(isBrowseLanguage(p.data.language) ? p.data.language : "en") : null;
     },
-    // Browse's Filters counts. The action reads an unknown language or progress as the default and cuts the term to 100.
+    // Browse's Filters counts, one JSON value: the action reads an unknown language or progress as the
+    // default, cuts the term to 100 and keeps fifty series and years at most.
     "shelf-count": (q) => {
-        const p = z
-            .object({ language: z.string().max(8).default("en"), progress: z.string().max(16).default("all"), q: z.string().max(200).optional() })
-            .safeParse(params(q));
-        return p.success ? countShelf(p.data) : null;
+        const p = json(
+            q,
+            z.object({
+                language: z.string().max(8).default("en"),
+                progress: z.string().max(16).default("all"),
+                q: z.string().max(200).optional(),
+                series: z.array(z.string().max(100)).max(50).default([]),
+                year: z.array(z.string().max(4)).max(50).default([]),
+            }),
+        );
+        return p ? countShelf(p) : null;
     },
 };
 

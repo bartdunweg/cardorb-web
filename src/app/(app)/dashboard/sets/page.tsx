@@ -6,7 +6,7 @@ import { BrowseToolbar, SetsViewMenu } from "@/components/app/browse-toolbar";
 import { PageHeader } from "@/components/app/page-header";
 import { SetsShelf } from "@/components/app/sets-shelf";
 import { SetsOutline } from "@/components/app/skeletons";
-import { type BrowseQuery, type BrowseSearchParams, progressShelf, readBrowseQuery, searchShelf, sortShelf } from "@/lib/browse-query";
+import { type BrowseQuery, type BrowseSearchParams, narrowShelf, readBrowseQuery, searchShelf, shelfFacets, sortShelf } from "@/lib/browse-query";
 import { openAsLeft } from "@/lib/list-memory-server";
 import { CatalogueUnavailable, getSets } from "@/lib/sets";
 import { SETS_VIEW_COOKIE, type SetsViewMode, parseSetsView } from "@/lib/sets-view";
@@ -22,26 +22,30 @@ export default async function SetsPage({ searchParams }: { searchParams: Promise
     await openAsLeft("/dashboard/sets", params);
     const query = readBrowseQuery(params);
     const view = parseSetsView((await cookies()).get(SETS_VIEW_COOKIE)?.value);
+    /* One read of the catalogue for the shelf and for what the Series and Year filters offer. Not
+       awaited: the row goes out first, and its filters take their choices when the shelf answers. */
+    const shelf = getSets(query.language);
+    const facets = shelf.then((s) => shelfFacets(s.series)).catch(() => ({ series: [], years: [] }));
     return (
         <div className="flex flex-1 flex-col gap-6">
             {/* The title alone: how far the shelf is comes per set, on its tile, not as one number over all of them. */}
             {/* On a phone the search field stands in the title's place: the tab bar already says Browse (`RowSearch` place "bar"). */}
-            <PageHeader title="Browse" searchField barActions={<SetsViewMenu initialView={view} className="sm:hidden" />} />
+            <PageHeader title="Browse" searchField sticky={false} barActions={<SetsViewMenu initialView={view} className="sm:hidden" />} />
             {/* The shelf is not awaited: the title and the row go out first, the sets when the catalogue answers. */}
-            <BrowseToolbar query={query} view={view} />
+            <BrowseToolbar query={query} view={view} facets={facets} />
             {/* Keyed by what reads another shelf, not by the search: a new term keeps the sets on screen
                 until the narrower list is in, where a key with it put the skeleton up on every pause. */}
-            <Suspense key={`${query.language}:${query.sort}:${query.progress}`} fallback={<SetsOutline />}>
-                <Shelf query={query} view={view} />
+            <Suspense key={`${query.language}:${query.sort}:${query.progress}:${query.series.join("|")}:${query.year.join("|")}`} fallback={<SetsOutline />}>
+                <Shelf shelf={shelf} query={query} view={view} />
             </Suspense>
         </div>
     );
 }
 
-async function Shelf({ query, view }: { query: BrowseQuery; view: SetsViewMode }) {
+async function Shelf({ shelf: reading, query, view }: { shelf: ReturnType<typeof getSets>; query: BrowseQuery; view: SetsViewMode }) {
     let shelf;
     try {
-        shelf = await getSets(query.language);
+        shelf = await reading;
     } catch (err) {
         if (!(err instanceof CatalogueUnavailable)) throw err;
         return (
@@ -54,9 +58,12 @@ async function Shelf({ query, view }: { query: BrowseQuery; view: SetsViewMode }
     }
     // The name first, on its own: an empty shelf the progress filter made is not a name nobody has.
     const named = searchShelf(shelf.series, query.q);
-    const series = sortShelf(progressShelf(named, query.progress), query.sort);
+    const series = sortShelf(narrowShelf(named, query), query.sort);
     if (named.length === 0 && query.q) {
         return <AppEmptyState icon="search" title="No sets found" description={`No set is called “${query.q}”. Try another name.`} />;
+    }
+    if (series.length === 0 && (query.series.length > 0 || query.year.length > 0)) {
+        return <AppEmptyState icon="book" title="No sets found" description="No set in this language matches these filters. Clear one to widen the shelf." />;
     }
     if (series.length === 0 && query.progress !== "all") {
         const why = {
