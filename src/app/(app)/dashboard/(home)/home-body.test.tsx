@@ -51,7 +51,7 @@ vi.mock("@/lib/cards", () => ({
     }),
     getMyCards: reads.getMyCards,
 }));
-vi.mock("@/lib/binders", () => ({ getMyBinders: reads.getMyBinders }));
+vi.mock("@/lib/binders", () => ({ getMyBinders: reads.getMyBinders, getDexBinder: async () => null }));
 vi.mock("@/lib/value-history", () => ({ getValueHistory: reads.getValueHistory }));
 vi.mock("@/components/app/top-cards", () => ({ TopCards: () => null, readTopCards: reads.readTopCards }));
 vi.mock("@/components/app/dex-stat", () => ({

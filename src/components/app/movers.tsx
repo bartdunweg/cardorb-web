@@ -10,7 +10,9 @@ import { useHomePeriod } from "@/components/app/home-period";
 import { notify } from "@/components/app/toast";
 import { cardLine, copyLine } from "@/lib/card-label";
 import type { Card } from "@/lib/cards";
+import { CARDS_CHANGED } from "@/lib/forget-mine";
 import { formatPrice } from "@/lib/format";
+import { type HomeList, listPath } from "@/lib/home-list";
 import type { Mover } from "@/lib/movers";
 import { listRows, moversFor } from "@/lib/reads";
 import { TILE_SURFACE } from "@/lib/tile";
@@ -28,23 +30,25 @@ const TILE = `${TILE_SURFACE} p-4 sm:p-5`;
  * Ours: the cards whose price moved most over the period the value chart shows, under Home's counts.
  *
  * It says why the number above moved: the change is prices, and these are the prices that made it.
- * Ranked by what the move did to the collection (the change times the copies held), so a Charizard
- * that gained eight euros comes before a common that doubled from four cents. Up and Down are two tiles
+ * Over the list chosen on Home: the collection, the favorites, a binder or the wishlist (api#568).
+ * Ranked by what the move did to that list (the change times the copies held; a wish counts once),
+ * so a Charizard that gained eight euros comes before a common that doubled from four cents. Up and Down are two tiles
  * like the counts above them, side by side from `sm`, one under the other on a phone. The period is the chart's: each is asked for the
  * first time it is chosen and kept, so switching back is instant. The sign carries the direction as
  * well as the colour.
  */
-export function Movers() {
+export function Movers({ list = "all", seeAll = true }: { list?: HomeList; seeAll?: boolean }) {
     const { period } = useHomePeriod();
     const said = (PERIODS.find((p) => p.key === period) ?? PERIODS[1]).said;
     const [answers, setAnswers] = useState<Partial<Record<PeriodKey, Answer>>>({});
+    const [fresh, setFresh] = useState(0);
     const known = period in answers;
     // A period whose read failed is asked again when it is chosen again, not remembered as failed.
     const failed = answers[period] === null;
     useEffect(() => {
         if (known && !failed) return;
         let current = true;
-        void moversFor(period).then((answer) => {
+        void moversFor(period, list).then((answer) => {
             if (current) setAnswers((a) => ({ ...a, [period]: answer }));
         });
         return () => {
@@ -52,10 +56,20 @@ export function Movers() {
         };
         // Not on `failed` itself: that would ask again straight after every failure.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [period]);
+    }, [period, fresh]);
+    /* A write from a sheet (a star, a wish, a card out of a binder) forgets the server's copy and says
+       so on the window: the answers kept here are dropped and the period on screen is asked again. */
+    useEffect(() => {
+        const drop = () => {
+            setAnswers({});
+            setFresh((n) => n + 1);
+        };
+        window.addEventListener(CARDS_CHANGED, drop);
+        return () => window.removeEventListener(CARDS_CHANGED, drop);
+    }, []);
     const answer = answers[period];
-    /* Each tile leads to the whole collection sorted its way, over the same period (list-query.ts). */
-    const listOf = (sort: "change-desc" | "change-asc") => `/dashboard/cards?sort=${sort}${period === "1m" ? "" : `&period=${period}`}`;
+    /* Each tile leads to the whole list sorted its way, over the same period (list-query.ts). */
+    const listOf = (sort: "change-desc" | "change-asc") => `${listPath(list)}?sort=${sort}${period === "1m" ? "" : `&period=${period}`}`;
 
     /* A row opens the card's sheet on your own row of it, read by set, number and name the way the set
        page opens a card, and the arrows step through Up and then Down. `at` is where in that list the
@@ -125,7 +139,7 @@ export function Movers() {
                         movers={answer.up}
                         empty="No card went up."
                         onOpen={(i) => void show(i)}
-                        href={listOf("change-desc")}
+                        href={seeAll ? listOf("change-desc") : null}
                         linkLabel="See all gains"
                     />
                     <MoverList
@@ -133,7 +147,7 @@ export function Movers() {
                         movers={answer.down}
                         empty="No card went down."
                         onOpen={(i) => void show(answer.up.length + i)}
-                        href={listOf("change-asc")}
+                        href={seeAll ? listOf("change-asc") : null}
                         linkLabel="See all losses"
                     />
                 </div>
@@ -166,7 +180,8 @@ function MoverList({
     movers: Mover[];
     empty: string;
     onOpen: (index: number) => void;
-    href: string;
+    /** Null where the list's page cannot show them sorted (a Pokédex binder). */
+    href: string | null;
     /** The link's words for a screen reader; on screen it says See all under its tile's heading. */
     linkLabel: string;
 }) {
@@ -174,13 +189,15 @@ function MoverList({
         <div className={cx(TILE, "flex flex-col gap-3")}>
             <div className="flex items-baseline justify-between gap-4">
                 <h3 className="text-sm font-semibold text-tertiary">{title}</h3>
-                <Link
-                    href={href}
-                    aria-label={linkLabel}
-                    className="hit-area relative text-sm font-semibold text-brand-secondary outline-focus-ring focus-visible:outline-2"
-                >
-                    See all
-                </Link>
+                {href ? (
+                    <Link
+                        href={href}
+                        aria-label={linkLabel}
+                        className="hit-area relative text-sm font-semibold text-brand-secondary outline-focus-ring focus-visible:outline-2"
+                    >
+                        See all
+                    </Link>
+                ) : null}
             </div>
             {movers.length === 0 ? (
                 <p className="text-sm text-tertiary">{empty}</p>
