@@ -26,7 +26,7 @@ const AcquiredDatePicker = dynamic(() => import("@/components/app/acquired-date-
             shape="rect"
             iconLeading={Calendar}
             isDisabled
-            className="w-full justify-start font-medium text-placeholder shadow-xs"
+            className="w-full justify-start bg-secondary font-medium text-placeholder shadow-xs"
         >
             Select date
         </Button>

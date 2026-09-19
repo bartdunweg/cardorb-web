@@ -32,7 +32,8 @@ test.use({ viewport: { width: 375, height: 812 } });
 test("the list row's buttons and the filter sheet's close are a finger wide", async ({ page }) => {
     await page.goto(`/dashboard/sets/${SET_ID}`);
     const main = page.getByRole("main");
-    for (const name of [/^Filters/, /^Sort/]) {
+    // Rarity too: a filter of its own on the phone's line, drawn at 40 and pressed as 44.
+    for (const name of [/^Filters/, /^Sort/, /^Rarity/]) {
         const button = main.getByRole("button", { name }).first();
         await expect(button).toBeVisible();
         const size = await pressed(button);

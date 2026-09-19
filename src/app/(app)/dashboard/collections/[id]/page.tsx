@@ -6,7 +6,6 @@ import { AppEmptyState } from "@/components/app/app-empty-state";
 import { BinderAddButton } from "@/components/app/binder-add-button";
 import { BinderMenu } from "@/components/app/binder-menu";
 import { BinderPage } from "@/components/app/binder-page";
-import { PokedexRarityNote } from "@/components/app/pokedex-rarity-note";
 import { ListSkeleton } from "@/components/app/skeletons";
 import { Badge } from "@/components/base/badges/badges";
 import { type BinderRule, ruleChips } from "@/lib/binder-rule";
@@ -78,8 +77,8 @@ async function Binder({ params, searchParams }: { params: Promise<{ id: string }
             <RuleChipsWithTitles rule={rule} facets={facets} />
         </Suspense>
     ) : null;
-    // The same plus the header has, in the middle of the room: on a phone the header's plus is
-    // in the bar at the bottom, and "press the plus" pointed at nothing in view.
+    // An empty binder's one way in, in the middle of the room: the header has no plus (Bart's call,
+    // 2026-09-19); a binder that holds cards takes more from a card's own sheet.
     const empty = binder.rule ? (
         <AppEmptyState icon="folder" title="Nothing matches yet" description="Cards you own that fit the rule show up here">
             <AddCardButton />
@@ -92,17 +91,12 @@ async function Binder({ params, searchParams }: { params: Promise<{ id: string }
     const common = {
         title: binder.name,
         back: { href: "/dashboard/collections", label: "Binders" },
-        // The dots and the plus, the pair every list has. A binder filled by hand takes a card from
-        // its own page, new or already yours, so its plus asks which; a rule binder fills itself, and
-        // its plus is the plain Add card.
-        // The menu is there at once; its edit form is handed the facets when they are in, and asks for
+        // The dots, and no plus: a binder is filled from a card's sheet, or from its empty state
+        // (Bart's call, 2026-09-19). The menu is there at once; its edit form is handed the facets when they are in, and asks for
         // them itself when opened before that (binder-dialog.tsx). Handed over as the promise, not
         // behind a Suspense boundary with the menu as its fallback: the fallback menu was swapped
         // for a new one when the facets came in, and one opened in between closed under the finger.
         settings: (compact: boolean) => <BinderMenu binder={binder} facets={facets.catch(() => undefined)} compact={compact} />,
-        add: binder.rule
-            ? (compact: boolean) => <AddCardButton compact={compact} />
-            : (compact: boolean) => <BinderAddButton binder={binder} compact={compact} />,
         query,
         basePath: `/dashboard/collections/${id}`,
         facets,
@@ -130,8 +124,6 @@ async function Binder({ params, searchParams }: { params: Promise<{ id: string }
         return (
             <BinderPage {...common} datapoints={datapoints} pokedex={{ dex }}>
                 {chips}
-                {/* Why a slot can be grey for a card you own: the rarities this binder counts. */}
-                <PokedexRarityNote binderId={binder.id} setting={setting} />
             </BinderPage>
         );
     }

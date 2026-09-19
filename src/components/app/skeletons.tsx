@@ -97,6 +97,7 @@ export function ListSkeleton({
     tiles = 12,
     lines = 1,
     heading = false,
+    readOnly = false,
 }: {
     title?: string;
     subtitle?: string;
@@ -106,6 +107,8 @@ export function ListSkeleton({
     lines?: 1 | 2;
     /** A heading's line before the first row: the Pokédex, whose slots stand by generation. */
     heading?: boolean;
+    /** A public profile's: no bar on a phone, so its row keeps the search and View (`ListRow`). */
+    readOnly?: boolean;
 }) {
     return (
         <SkeletonFrame>
@@ -124,7 +127,7 @@ export function ListSkeleton({
                 back={back}
             />
             <div className="flex flex-col gap-4">
-                <ListRow />
+                <ListRow readOnly={readOnly} />
                 <CardsSkeleton count={tiles} heading={heading} />
             </div>
         </SkeletonFrame>

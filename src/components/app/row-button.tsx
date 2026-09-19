@@ -22,6 +22,8 @@ export function RowButton({
 }) {
     return (
         <Button
+            // Found by the phone's filter line, which draws its row buttons a step smaller (FILTER_BAR).
+            data-row-button
             color="secondary"
             size="sm"
             iconLeading={icon}
@@ -32,6 +34,7 @@ export function RowButton({
             // out only, that was 8 px of nothing and a 44 by 36 pill. No text padding and no gap on a
             // phone, the padding back from sm, so the button is a circle until the word shows: 44 px on a
             // phone, the size a thumb is given and the bar's Back and dots already are (Bart, 2026-09-18), 36 from sm.
+            // In the phone's filter line it is drawn at 40, a step under the bar (FILTER_BAR), and pressed as 44 (hit-area).
             // The kit's text span is a block, and the badge inside it is one too, so the badge fell to
             // a second line under the word. A flex row keeps word and badge side by side, held to the
             // word's 20 px line so the 22 px badge sits in the padding and the button keeps its height.

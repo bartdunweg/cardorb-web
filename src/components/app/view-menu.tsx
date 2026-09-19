@@ -8,6 +8,7 @@ import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { setCardsGroup, setCardsSize, setCardsView } from "@/hooks/use-cards-view";
 import type { CardsGroup, CardsSize, CardsViewMode } from "@/lib/cards-view";
 import { memoryKey } from "@/lib/list-memory";
+import { cx } from "@/utils/cx";
 
 const first = (keys: "all" | Set<React.Key>) => (keys === "all" ? undefined : [...keys][0]);
 
@@ -15,11 +16,24 @@ const first = (keys: "all" | Set<React.Key>) => (keys === "all" ? undefined : [.
 // leaves the size alone, for a list that has no table (the public profile). A choice goes to
 // `use-cards-view` as this page's own, which every list reads. `group` is given only
 // where the list is sorted by set: a heading over each set, or one list in set order.
-export function ViewMenu({ view, size, layouts = true, group }: { view: CardsViewMode; size: CardsSize; layouts?: boolean; group?: CardsGroup }) {
+export function ViewMenu({
+    view,
+    size,
+    layouts = true,
+    group,
+    className,
+}: {
+    view: CardsViewMode;
+    size: CardsSize;
+    layouts?: boolean;
+    group?: CardsGroup;
+    /** Where it shows: a page with a bar puts it there on a phone and keeps it off the row (`BarViewMenu`). */
+    className?: string;
+}) {
     const page = memoryKey(usePathname());
     return (
         <Dropdown.Root>
-            <RowButton icon={view === "grid" ? Grid01 : Rows01} label="View" className="ml-auto" />
+            <RowButton icon={view === "grid" ? Grid01 : Rows01} label="View" className={cx("ml-auto shrink-0", className)} />
             <Dropdown.Popover placement="bottom end" className="w-48">
                 <Dropdown.Menu>
                     {layouts ? (

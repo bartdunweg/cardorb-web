@@ -1,8 +1,11 @@
 import { type ReactNode, Suspense } from "react";
+import { BarSearchButton } from "@/components/app/bar-search-button";
+import { BarViewMenu } from "@/components/app/bar-view-menu";
 import { BinderBody, type BinderBodyProps } from "@/components/app/binder-body";
 import { ListTotalsProvider, LiveDatapoints } from "@/components/app/list-totals";
 import { PageHeader } from "@/components/app/page-header";
 import type { Datapoints } from "@/lib/binder-datapoints";
+import { rememberedView } from "@/lib/list-memory-server";
 
 // Every binder page, top to bottom: the title, what it holds (count and value), the binder's
 // actions where it has any, then the row and the list. One shape, so All cards, a binder of
@@ -11,7 +14,7 @@ import type { Datapoints } from "@/lib/binder-datapoints";
 // The title, the actions and the row are drawn at once. The count and the value are a promise
 // the page did not wait for: they come from the same read as the first batch of cards, and
 // take their place under the title when it lands.
-export function BinderPage({
+export async function BinderPage({
     title,
     phoneTitle,
     subtitle,
@@ -55,6 +58,24 @@ export function BinderPage({
     /** Under the data points: a rule's chips, a progress bar. */
     children?: ReactNode;
 }) {
+    /* On a phone View sits in the bar beside the dots, as the list's own row keeps only the filters;
+       started from what the list starts from, so the two agree before either is touched. A public
+       profile has no bar and keeps View in its row. */
+    const remembered = await rememberedView(body.basePath);
+    const view = body.readOnly ? null : (
+        <>
+            {/* With Back, the search is a button beside View and the dots, and a press turns the bar into the
+                field; without (My cards, which the tab bar reaches), the field itself stands in the title's place. */}
+            {back ? <BarSearchButton label={body.searchLabel ?? `Search in ${title}`} /> : null}
+            <BarViewMenu
+                initialView={remembered.view}
+                initialSize={remembered.size}
+                initialGroup={remembered.group}
+                layouts={!body.pokedex}
+                grouped={!body.pokedex && body.query.sortKey === "set"}
+            />
+        </>
+    );
     return (
         // The count under the title follows the presses on the tiles below it (list-totals.tsx).
         <ListTotalsProvider>
@@ -76,6 +97,7 @@ export function BinderPage({
                         ) : undefined
                     }
                     back={back}
+                    searchField={!back && !body.readOnly}
                     actions={
                         settings || add ? (
                             <div className="flex items-center gap-3 max-lg:hidden">
@@ -89,20 +111,23 @@ export function BinderPage({
                     barActions={
                         settings || add ? (
                             <>
+                                {view}
                                 {settings?.(true)}
                                 {add?.(true)}
                             </>
-                        ) : (
-                            barActions
-                        )
+                        ) : view || barActions ? (
+                            // Nothing at all when there is nothing: an empty bar lets taps through to the page.
+                            <>
+                                {view}
+                                {barActions}
+                            </>
+                        ) : undefined
                     }
-                    // 16 px under the title, the header's own gap: the switch is a control of its own, not a line of the title (Bart, 2026-09-18).
-                    below={views ? <div className="lg:hidden">{views}</div> : null}
                 >
                     {children}
                 </PageHeader>
                 {/* The field says which list it searches: "Search in Wishlist", "Search in Kanto". */}
-                <BinderBody searchLabel={`Search in ${title}`} {...body} />
+                <BinderBody searchLabel={`Search in ${title}`} {...body} views={views} searchPlace={back ? "button" : "bar"} />
             </div>
         </ListTotalsProvider>
     );

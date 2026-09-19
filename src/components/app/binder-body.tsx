@@ -9,6 +9,7 @@ import { CardsSort } from "@/components/app/cards-sort";
 import { CardsView } from "@/components/app/cards-view";
 import { DexView } from "@/components/app/dex-grid";
 import { PublicCardsView } from "@/components/app/public-cards-view";
+import { FILTER_BAR, type SearchPlace } from "@/components/app/row-search";
 import type { CardFilter, CardList, PublicCard } from "@/lib/cards";
 import type { DexList } from "@/lib/dex-groups";
 import type { Facets } from "@/lib/facets";
@@ -28,6 +29,10 @@ type Common = {
     searchLabel?: string;
     /** The page's own "nothing here at all" state, with its way out. */
     empty: ReactNode;
+    /** Sibling lists this page switches between (Collection | Wishlist), under the row, below lg. */
+    views?: ReactNode;
+    /** Where the phone's search is (`RowSearch`): always in the bar on a page the tab bar reaches, behind a button on one with Back. */
+    searchPlace?: SearchPlace;
 };
 
 /** A public profile: the cards came with the page, and it pages by URL. */
@@ -62,6 +67,13 @@ export async function BinderBody(props: BinderBodyProps) {
 
     // The row: the search field, then three menu buttons, Filters, Sort and View. Search is the
     // thing you type, so it stays in the row; the set and rarity filters are a sheet.
+    // Sort, and beside it the period a change sort reads over while that sort is on.
+    const sorting = (
+        <>
+            <CardsSort query={query} options={sortOptions} defaultSortKey={defaultSortKey} />
+            {query.sort === "change" ? <CardsPeriod query={query} defaultSortKey={defaultSortKey} /> : null}
+        </>
+    );
     const toolbar = (
         <>
             {/* The whole first line on a phone, the buttons under it; a short field from sm (`RowSearch`). */}
@@ -70,6 +82,8 @@ export async function BinderBody(props: BinderBodyProps) {
                 size="sm"
                 initialValue={q ?? ""}
                 label={searchLabel}
+                // Your own lists have a bar on a phone: the field in it, or a button there on a page with Back. A public profile has none.
+                place={props.readOnly ? "row" : (props.searchPlace ?? "button")}
                 // The titles it offers are the ones in this very list, filters and all. A public
                 // profile gets none: the suggestion would be read from the reader's own cards.
                 scope={
@@ -84,20 +98,25 @@ export async function BinderBody(props: BinderBodyProps) {
                           }
                 }
             />
-            {/* The facets as the promise, not behind a Suspense boundary with Filters as its fallback:
+            {/* On a phone the line under the search, scrolling sideways; from sm its buttons stand in the row.
+                The facets as the promise, not behind a Suspense boundary with Filters as its fallback:
                 the fallback's button and sheet were swapped for new ones when the facets came in, so a
                 sheet opened in between closed under the finger (use-arrived.ts). */}
-            <CardsFilters
-                key="filters"
-                query={query}
-                facets={facets}
-                offerDuplicates={offerDuplicates}
-                readOnly={props.readOnly}
-                countBase={props.readOnly ? undefined : props.filter}
-            />
-            <CardsSort key="sort" query={query} options={sortOptions} defaultSortKey={defaultSortKey} />
-            {/* A change sort reads over a period: its menu stands beside Sort while that sort is on. */}
-            {query.sort === "change" ? <CardsPeriod key="period" query={query} defaultSortKey={defaultSortKey} /> : null}
+            <div key="bar" className={FILTER_BAR}>
+                <CardsFilters
+                    key="filters"
+                    query={query}
+                    facets={facets}
+                    offerDuplicates={offerDuplicates}
+                    readOnly={props.readOnly}
+                    countBase={props.readOnly ? undefined : props.filter}
+                    // A phone's bar reads Filters, Sort, then each filter: Sort goes in between there.
+                    lead={sorting}
+                />
+                <div key="sort" className="contents max-sm:hidden">
+                    {sorting}
+                </div>
+            </div>
         </>
     );
 
@@ -151,7 +170,16 @@ export async function BinderBody(props: BinderBodyProps) {
     if (props.pokedex) {
         return (
             <div className="flex flex-1 flex-col gap-4">
-                <DexView listKey={key} dex={props.pokedex.dex} narrowed={narrowed} initialSize={size} toolbar={toolbar} noHits={noHits} empty={empty} />
+                <DexView
+                    listKey={key}
+                    dex={props.pokedex.dex}
+                    narrowed={narrowed}
+                    initialSize={size}
+                    toolbar={toolbar}
+                    noHits={noHits}
+                    empty={empty}
+                    viewInBar
+                />
             </div>
         );
     }
@@ -182,6 +210,8 @@ export async function BinderBody(props: BinderBodyProps) {
                 toolbar={toolbar}
                 noHits={noHits}
                 empty={empty}
+                viewInBar
+                views={props.views}
             />
         </div>
     );

@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppEmptyState } from "@/components/app/app-empty-state";
+import { BarSearchButton } from "@/components/app/bar-search-button";
+import { BarViewMenu } from "@/components/app/bar-view-menu";
 import { PageHeader } from "@/components/app/page-header";
 import { SetCards } from "@/components/app/set-cards";
 import { SetHero } from "@/components/app/set-hero";
@@ -84,6 +86,8 @@ async function Set({ params, searchParams }: { params: Promise<{ id: string }>; 
     const stats = { ...setStats(set.cards, set.total), owned: set.owned };
     // What you hold of the set, as this render read it: a new one drops what the tiles held since (SetLive).
     const stamp = holdingStamp(set.cards);
+    /* The size as the set pages were left: one memory for all of them (list-memory.ts). */
+    const remembered = await rememberedView(`/dashboard/sets/${id}`);
 
     return (
         <SetLive stamp={stamp}>
@@ -100,6 +104,15 @@ async function Set({ params, searchParams }: { params: Promise<{ id: string }>; 
                     // which set. No progress bar under the title: the owner's call is that the page
                     // shows the cards, not a meter, so the numbers under the title say the count in words.
                     hero={<SetHero name={set.name} logoUrl={set.logoUrl} colors={colors} />}
+                    // On a phone View sits in the bar across from Back; the row under the search is the filters.
+                    barActions={
+                        set.cards.length > 0 ? (
+                            <>
+                                <BarSearchButton label={`Search in ${set.name}`} />
+                                <BarViewMenu initialView="grid" initialSize={remembered.size} initialGroup={remembered.group} layouts={false} />
+                            </>
+                        ) : undefined
+                    }
                 >
                     {set.cards.length > 0 ? <LiveSetStats stats={stats} released={released} gallery={set.gallery} /> : null}
                 </PageHeader>
@@ -119,8 +132,7 @@ async function Set({ params, searchParams }: { params: Promise<{ id: string }>; 
                         }
                     />
                 ) : (
-                    /* The size as the set pages were left: one memory for all of them (list-memory.ts). */
-                    <SetCards cards={set.cards} language={language} initialSize={(await rememberedView(`/dashboard/sets/${id}`)).size} />
+                    <SetCards cards={set.cards} language={language} initialSize={remembered.size} />
                 )}
             </div>
         </SetLive>
