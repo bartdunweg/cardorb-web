@@ -44,7 +44,8 @@ export const parseCardsGroup = (raw: string | undefined): CardsGroup => (raw ===
  * 50 KB where a 192 px tile needs 384 px and 24 KB. Forty-eight tiles carried an extra 1.25 MB
  * nobody's screen could show, and the Pokédex's ninety-six carried 2.5 MB.
  *
- * `lg` genuinely wants 640: it draws at 296. The other two are thumbnails and take quality 60
+ * `lg` genuinely wants 640: it draws at 296. On a phone One a row draws `lg` at the column's full
+ * width, wider than this; `TILE_SIZES` is what tells the browser so. The other two are thumbnails and take quality 60
  * for the same reason, which is what `set-card-tile` was already doing alone.
  */
 export const TILE_WIDTH: Record<CardsSize, number> = { sm: 128, md: 192, lg: 256 };
@@ -52,7 +53,7 @@ export const TILE_WIDTH: Record<CardsSize, number> = { sm: 128, md: 192, lg: 256
 /**
  * How wide a tile actually is, as the browser must be told it.
  *
- * `TILE_WIDTH` above is the widest a tile is ever drawn, on a desktop. Handed to `next/image`
+ * `TILE_WIDTH` above is the widest a tile is drawn on a desktop (a phone's One a row is wider). Handed to `next/image`
  * as `width` with no `sizes`, it is not a width at all: the browser gets 1x and 2x candidates
  * and picks by pixel density alone, so a phone drawing a 104 px tile asked for 384 px. Measured
  * on a public profile at 375 px: 20.4 KB a tile where 256 px costs 10.3 KB, across a hundred
@@ -63,13 +64,17 @@ export const TILE_WIDTH: Record<CardsSize, number> = { sm: 128, md: 192, lg: 256
  * measured at about 10 KB Brotli a page, against the megabyte it saves.
  */
 export const TILE_SIZES: Record<CardsSize, string> = {
-    sm: "(min-width: 1280px) 128px, (min-width: 1024px) 13vw, (min-width: 768px) 15vw, 23vw",
-    md: "(min-width: 1280px) 192px, (min-width: 1024px) 19vw, (min-width: 768px) 23vw, 31vw",
-    lg: "(min-width: 1280px) 256px, (min-width: 768px) 31vw, 47vw",
+    sm: "(min-width: 1280px) 128px, (min-width: 1024px) 13vw, (min-width: 768px) 15vw, (min-width: 640px) 23vw, 47vw",
+    md: "(min-width: 1280px) 192px, (min-width: 1024px) 19vw, (min-width: 768px) 23vw, (min-width: 640px) 31vw, 47vw",
+    lg: "(min-width: 1280px) 256px, (min-width: 768px) 31vw, (min-width: 640px) 47vw, 94vw",
 };
 
+/**
+ * On a phone (under `sm`) two choices, not three: two cards a row or one (Bart, 2026-09-19). Small and
+ * Medium are both two there, Large is one; the View menu offers the two by those names (view-menu.tsx).
+ */
 export const GRID_COLUMNS: Record<CardsSize, string> = {
-    sm: "grid-cols-4 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8",
-    md: "grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6",
-    lg: "grid-cols-2 md:grid-cols-3 xl:grid-cols-4",
+    sm: "grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8",
+    md: "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6",
+    lg: "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4",
 };

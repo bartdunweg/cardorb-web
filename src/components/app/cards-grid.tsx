@@ -109,7 +109,8 @@ export function CardsGrid<T extends GridCard>({
                     key={card.id}
                     card={card}
                     arriveDelay={arriveDelay(i, drawnFirst.has(card.id) && (firstPage?.has(card.id) ?? true))}
-                    priority={i < priority}
+                    // One a row on a phone: a row is one card, so six full-width pictures preloaded were four too many.
+                    priority={i < (size === "lg" ? Math.min(priority, 2) : priority)}
                     size={size}
                     holder={holder}
                     onSelect={select}

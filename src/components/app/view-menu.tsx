@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Header as AriaHeader } from "react-aria-components";
 import { RowButton } from "@/components/app/row-button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
+import { useBreakpoint } from "@/hooks/use-breakpoint";
 import { setCardsGroup, setCardsSize, setCardsView } from "@/hooks/use-cards-view";
 import type { CardsGroup, CardsSize, CardsViewMode } from "@/lib/cards-view";
 import { memoryKey } from "@/lib/list-memory";
@@ -31,6 +32,8 @@ export function ViewMenu({
     className?: string;
 }) {
     const page = memoryKey(usePathname());
+    // On a phone two sizes: two cards a row (Small and Medium both draw that there) or one (cards-view.ts).
+    const phone = !useBreakpoint("sm");
     return (
         <Dropdown.Root>
             <RowButton icon={view === "grid" ? Grid01 : Rows01} label="View" className={cx("ml-auto shrink-0", className)} />
@@ -63,7 +66,7 @@ export function ViewMenu({
                     <Dropdown.Section
                         selectionMode="single"
                         disallowEmptySelection
-                        selectedKeys={new Set([size])}
+                        selectedKeys={new Set([phone && size === "sm" ? "md" : size])}
                         onSelectionChange={(keys) => {
                             const key = first(keys);
                             if (key === "sm" || key === "md" || key === "lg") {
@@ -72,9 +75,18 @@ export function ViewMenu({
                         }}
                     >
                         <AriaHeader className="px-3 pt-2 pb-1 text-xs font-semibold text-quaternary">Size</AriaHeader>
-                        <Dropdown.Item id="sm">Small</Dropdown.Item>
-                        <Dropdown.Item id="md">Medium</Dropdown.Item>
-                        <Dropdown.Item id="lg">Large</Dropdown.Item>
+                        {phone ? (
+                            <>
+                                <Dropdown.Item id="md">Two a row</Dropdown.Item>
+                                <Dropdown.Item id="lg">One a row</Dropdown.Item>
+                            </>
+                        ) : (
+                            <>
+                                <Dropdown.Item id="sm">Small</Dropdown.Item>
+                                <Dropdown.Item id="md">Medium</Dropdown.Item>
+                                <Dropdown.Item id="lg">Large</Dropdown.Item>
+                            </>
+                        )}
                     </Dropdown.Section>
                     {group ? (
                         <>

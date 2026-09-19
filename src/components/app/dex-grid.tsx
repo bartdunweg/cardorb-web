@@ -112,7 +112,7 @@ export function DexGrid({ generations, size = "md", linked = true }: { generatio
                         </div>
                         <div className={cx("grid gap-4", GRID_COLUMNS[size])}>
                             {gen.slots.slice(0, shown - start).map((slot) => (
-                                <DexTile key={slot.number} slot={slot} onSelect={linked ? open : undefined} remembers={linked} />
+                                <DexTile key={slot.number} slot={slot} size={size} onSelect={linked ? open : undefined} remembers={linked} />
                             ))}
                         </div>
                     </section>
@@ -166,7 +166,7 @@ export function settleFace(
 
 // `onSelect`: a card opens its sheet; on a public page there is nowhere to go, so the tile is a plain tile.
 // `remembers`: only the owner's own Pokédex writes down the card a swipe settles on.
-function DexTile({ slot, onSelect, remembers }: { slot: NamedDexSlot; onSelect?: (card: DexCard) => void; remembers: boolean }) {
+function DexTile({ slot, size, onSelect, remembers }: { slot: NamedDexSlot; size: CardsSize; onSelect?: (card: DexCard) => void; remembers: boolean }) {
     const held = slot.cards.length;
     // The card in view. It starts on the slot's first card, which is the one its owner chose
     // (groupByDex hands the face back first), and follows the slider from there.
@@ -247,6 +247,7 @@ function DexTile({ slot, onSelect, remembers }: { slot: NamedDexSlot; onSelect?:
                 picture={
                     <DexSlider
                         cards={slot.cards}
+                        size={size}
                         onSelect={onSelect}
                         onShow={(card) => setShownId(card.id)}
                         // Where a swipe stops is the slot's card. Nothing is written for the card that is
@@ -266,14 +267,14 @@ function DexTile({ slot, onSelect, remembers }: { slot: NamedDexSlot; onSelect?:
                 <CardImage
                     src={card.imageHighUrl ?? card.imageUrl}
                     fallbackSrc={card.imageUrl}
-                    width={TILE_WIDTH.md}
-                    sizes={TILE_SIZES.md}
+                    width={TILE_WIDTH[size]}
+                    sizes={TILE_SIZES[size]}
                     alt=""
                     quality={60}
                     className="object-cover"
                 />
             ) : (
-                <CardBack width={TILE_WIDTH.md} sizes={TILE_SIZES.md} />
+                <CardBack width={TILE_WIDTH[size]} sizes={TILE_SIZES[size]} />
             )}
         </div>
     );

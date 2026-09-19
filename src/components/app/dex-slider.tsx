@@ -7,7 +7,7 @@ import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import type { DexCard } from "@/lib/api-shapes";
-import { TILE_WIDTH } from "@/lib/cards-view";
+import { type CardsSize, TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
 import { cx } from "@/utils/cx";
 
 /** How an arrow pages: a glide, or a jump for someone who asked the system for less motion. */
@@ -27,8 +27,11 @@ export function DexSlider({
     onSelect,
     onShow,
     onSettle,
+    size = "md",
 }: {
     cards: DexCard[];
+    /** The grid's tile size, so the pictures are asked for at the width they are drawn (One a row on a phone). */
+    size?: CardsSize;
     onSelect?: (card: DexCard) => void;
     /** The card now in view, on every step of the scroll: the tile's words follow it. */
     onShow?: (card: DexCard) => void;
@@ -85,7 +88,8 @@ export function DexSlider({
                             <CardImage
                                 src={card.imageHighUrl ?? card.imageUrl}
                                 fallbackSrc={card.imageUrl}
-                                width={TILE_WIDTH.md}
+                                width={TILE_WIDTH[size]}
+                                sizes={TILE_SIZES[size]}
                                 quality={60}
                                 // Named by its set as well, and the slide takes its own name from this: three
                                 // pictures all called "Bulbasaur" are three things a screen reader cannot tell
@@ -95,7 +99,7 @@ export function DexSlider({
                             />
                         ) : (
                             /* Face down, and named the same way: a card with no scan is still this card. */
-                            <CardBack width={TILE_WIDTH.md} alt={named(card)} />
+                            <CardBack width={TILE_WIDTH[size]} sizes={TILE_SIZES[size]} alt={named(card)} />
                         )}
                     </Slide>
                 ))}
