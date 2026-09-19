@@ -10,7 +10,7 @@ import { ValueHeroOutline } from "@/components/app/skeletons";
 import { TopCards, readTopCards } from "@/components/app/top-cards";
 import { ValueHero, type ValueList } from "@/components/app/value-hero";
 import { Button } from "@/components/base/buttons/button";
-import { getMyBinders } from "@/lib/binders";
+import { getDexBinder, getMyBinders } from "@/lib/binders";
 import { type CardList, getCardStats, getMyCards } from "@/lib/cards";
 import { UUID, askedList, listFilter, listPath } from "@/lib/home-list";
 import { getMyProfile } from "@/lib/profile";
@@ -55,6 +55,8 @@ function startReads(asked: string) {
         top: selected.then((list) => readTopCards(list)),
         caught: selected.then((list) => (list === "all" ? readDexCaught() : null)),
         numbers: selected.then((list) => (list === "all" ? null : readListNumbers(list))),
+        // A binder shown as a Pokédex draws its slots in dex order, where a sort by change cannot be seen.
+        dex: selected.then((list) => (UUID.test(list) ? sideRead("dex binder", getDexBinder, null).then((d) => d?.id === list) : false)),
     };
 }
 
@@ -98,13 +100,22 @@ export async function HomeBody({ searchParams }: { searchParams: Promise<{ value
                         <TopCards top={reads.top} href={listPath(selected)} />
                     </Suspense>
                     {/* Over the chart's period and the chosen list's cards (api#568), like everything above them.
-                        Keyed on the list and on what you hold: a write redraws Home, and the answers kept per
-                        period were read before it. */}
-                    <Movers key={`${selected}:${stats.owned}:${stats.value}`} list={selected} />
+                        Where the list's value could not be read the value above falls back to the collection's
+                        and these stay the list's: rare, and a reload puts both right. Keyed on the list; a write
+                        from a sheet is heard through CARDS_CHANGED (movers.tsx), since a card taken out of a
+                        binder moves none of the numbers here. */}
+                    <Suspense fallback={null}>
+                        <ListMovers list={selected} dex={reads.dex} />
+                    </Suspense>
                 </HomePeriodProvider>
             )}
         </>
     );
+}
+
+// The movers, with "See all" only where the list's page can show them sorted.
+async function ListMovers({ list, dex }: { list: string; dex: Promise<boolean> }) {
+    return <Movers key={list} list={list} seeAll={!(await dex)} />;
 }
 
 // The first thing a new account sees: the one action that fills every page, and the name the
