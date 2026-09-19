@@ -2,9 +2,8 @@
 
 import { Suspense, use, useEffect, useRef, useState } from "react";
 import { BookOpen01, Folder, Heart, HomeLine, LayoutLeft, Plus, Rows01, Star01 } from "@untitledui/icons";
-import { Button as AriaButton } from "react-aria-components";
 import { AccountMenu } from "@/components/app/account-menu";
-import { BinderDialog } from "@/components/app/binder-dialog";
+import { BinderModal } from "@/components/app/binder-dialog";
 import { SidebarSearchTrigger } from "@/components/app/command-search";
 import { PrefetchRoutes } from "@/components/app/prefetch-routes";
 import { useRouteTarget } from "@/components/app/route-pending";
@@ -13,6 +12,7 @@ import { NavButton } from "@/components/application/app-navigation/base-componen
 import { NavItemBase } from "@/components/application/app-navigation/base-components/nav-item";
 import type { NavItemDividerType, NavItemType } from "@/components/application/app-navigation/config";
 import { SidebarNavigationSectionDividers } from "@/components/application/app-navigation/sidebar-navigation/sidebar-section-dividers";
+import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { useArriveOnce } from "@/hooks/use-arrive-once";
 import { CARDS_CHANGED } from "@/lib/forget-mine";
 import { formatCount } from "@/lib/format";
@@ -26,7 +26,7 @@ type BinderLink = { id: string; name: string; kind: "manual" | "rule"; count: nu
 // from a Server Component. Home, All cards, the wishlist (cards you do not have, so outside the
 // collection) and Browse (every set there has been, not your collection) at the top, the same
 // three the phone's tab bar carries plus Browse; under the Binders heading the rest, flat:
-// Favorites with its own icon, and the ones you made with a binder's, then New binder. On desktop
+// Favorites with its own icon and the ones you made with a binder's, New binder the plus on the heading. On desktop
 // this list is the overview; the Binders page is the phone's.
 //
 // The binders and the account arrive as promises: the layout hands them over without waiting, so
@@ -107,7 +107,9 @@ export function AppSidebar({
         ...pages,
         // The head is the overview itself: on a phone the Binders tab opens it, on a desktop nothing did
         // but Back from Favorites or a binder.
-        { divider: true, label: "Binders", href: "/dashboard/collections" },
+        // New binder is the plus at the heading's end, on its line (Bart, 2026-09-19): a row at the list's end
+        // stood as far from the heading as the list was long.
+        { divider: true, label: "Binders", href: "/dashboard/collections", action: <NewBinderButton /> },
         {
             label: "Favorites",
             href: "/dashboard/favorites",
@@ -146,20 +148,6 @@ export function AppSidebar({
                             <Suspense fallback={null}>
                                 <BinderRows binders={binders} fresh={override?.binders ?? undefined} activeUrl={pathname} />
                             </Suspense>
-                            {/* An item like the others: the same padding, icon size and type, at the list's end. */}
-                            <li className="py-px">
-                                <BinderDialog mode="create">
-                                    <AriaButton className="group relative flex max-h-9 w-full cursor-pointer items-center rounded-md p-2 outline-focus-ring transition duration-100 ease-linear select-none hover:bg-alpha-black/4 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2">
-                                        <Plus
-                                            aria-hidden="true"
-                                            className="mr-2 size-5 shrink-0 text-fg-quaternary transition-inherit-all group-hover:text-fg-quaternary_hover"
-                                        />
-                                        <span className="flex-1 text-left text-sm font-semibold text-secondary transition-inherit-all group-hover:text-secondary_hover">
-                                            New binder
-                                        </span>
-                                    </AriaButton>
-                                </BinderDialog>
-                            </li>
                         </>
                     }
                     footer={
@@ -169,6 +157,17 @@ export function AppSidebar({
                     }
                 />
             </nav>
+        </>
+    );
+}
+
+// New binder beside the Binders heading: the kit's icon-only button at its smallest, 28 px (Bart, 2026-09-19).
+function NewBinderButton() {
+    const [creating, setCreating] = useState(false);
+    return (
+        <>
+            <ButtonUtility size="xs" color="secondary" icon={Plus} tooltip="New binder" onClick={() => setCreating(true)} />
+            <BinderModal mode="create" isOpen={creating} onOpenChange={setCreating} />
         </>
     );
 }

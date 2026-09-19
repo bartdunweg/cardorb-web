@@ -23,7 +23,7 @@ export default function DashboardPage({ searchParams }: { searchParams: Promise<
                 actions={
                     <>
                         {/* The button's room while the binders are read, so the avatar does not move when it comes. */}
-                        <Suspense fallback={<div aria-hidden="true" className="h-9 w-32 rounded-full ring-1 ring-primary ring-inset" />}>
+                        <Suspense fallback={<div aria-hidden="true" className="h-11 w-32 rounded-full ring-1 ring-primary ring-inset lg:h-10" />}>
                             <HomeListMenu searchParams={searchParams} />
                         </Suspense>
                         <YouLink />
