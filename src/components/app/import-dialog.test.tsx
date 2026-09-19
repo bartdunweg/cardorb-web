@@ -35,7 +35,8 @@ const dropFile = async () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "Import" }));
     // The dialog opens at once; its form's code loads apart (import-trigger.tsx), so wait for its field.
-    const dialog = await screen.findByRole("dialog");
+    // Named by its title from the first frame, while the form's code is still on its way.
+    const dialog = await screen.findByRole("dialog", { name: "Import a collection" });
     const input = await waitFor(() => {
         const found = dialog.querySelector("input[type=file]");
         if (!found) throw new Error("the form is not in yet");

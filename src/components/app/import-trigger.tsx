@@ -2,6 +2,8 @@
 
 import { type ReactNode, useState } from "react";
 import dynamic from "next/dynamic";
+import { Heading as AriaHeading } from "react-aria-components";
+import { LoadingIndicator } from "@/components/application/loading-indicator/loading-indicator";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 
 /*
@@ -13,9 +15,27 @@ import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/applica
  * when its code is in.
  */
 const ImportForm = dynamic(() => import("@/components/app/import-dialog").then((m) => m.ImportForm), {
-    // The dialog's room while the form's code loads, so it opens at its size rather than growing.
-    loading: () => <div aria-busy="true" className="h-96" />,
+    loading: () => <ImportLoading />,
 });
+
+/*
+ * The form's panel and title while its code loads: the press shows a dialog at once, and the dialog has
+ * its title from the moment it mounts. react-aria looks for a dialog's title once, on mount; with an
+ * empty room there the dialog was named by its trigger and the form's heading lost its link.
+ */
+function ImportLoading() {
+    return (
+        <div
+            aria-busy="true"
+            className="flex w-full flex-col gap-5 rounded-xl bg-primary px-5 pt-5 pb-6 shadow-lg ring-1 ring-secondary max-sm:h-dvh max-sm:rounded-none sm:px-6 sm:pt-6"
+        >
+            <AriaHeading slot="title" className="text-lg font-semibold text-primary">
+                Import a collection
+            </AriaHeading>
+            <LoadingIndicator type="line-simple" size="sm" label="Loading" className="h-72 justify-center" />
+        </div>
+    );
+}
 
 export function ImportDialog({ children }: { children: ReactNode }) {
     /*
