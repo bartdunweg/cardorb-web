@@ -18,7 +18,7 @@ export async function listSetsShelf(language: BrowseLanguage = "en"): Promise<{ 
     }
 }
 
-/** What a count answers: the sets the choices show, and per option what that one would show. Empty where the shelf did not answer. */
+/** What a count answers: the sets the choices show, and per option what that one would show. */
 export type ShelfCount = { total: number | null; progress: Record<string, number>; series: Record<string, number>; year: Record<string, number> };
 
 /**
@@ -31,10 +31,8 @@ export async function countShelf(input: { language: string; progress: string; q?
     const language = isBrowseLanguage(input.language) ? input.language : "en";
     const progress = isBrowseProgress(input.progress) ? input.progress : "all";
     const q = typeof input.q === "string" ? input.q.slice(0, 100) : undefined;
-    try {
-        const { series } = await getShelf(language);
-        return shelfCounts(series, { q, progress, series: listParam(input.series), year: yearParam(input.year) });
-    } catch {
-        return { total: null, progress: {}, series: {}, year: {} };
-    }
+    // A shelf that does not answer throws on: an empty answer would read as none left, and the sheet
+    // would grey out every choice; thrown, the read fails and the sheet shows no numbers instead.
+    const { series } = await getShelf(language);
+    return shelfCounts(series, { q, progress, series: listParam(input.series), year: yearParam(input.year) });
 }

@@ -99,7 +99,8 @@ export function PageHeader({
     useEffect(() => {
         const el = sentinel.current;
         // A title hidden on the phone has nothing to collapse into the bar: the bar stays out of the way.
-        if (!titleOnPhone || !el || typeof IntersectionObserver === "undefined") return;
+        // A bar that scrolls away with the page has nothing to collapse into: it is gone before the title is.
+        if (!titleOnPhone || !sticky || !el || typeof IntersectionObserver === "undefined") return;
         const observer = new IntersectionObserver(([entry]) => setCollapsed(tall && !beside ? entry.intersectionRatio < 1 : !entry.isIntersecting), {
             // The title counts as gone once it is under the bar, not once it has left the screen: with Back
             // the bar is 76 px (a 44 px button, the avatar's and the search's size, with 16 above and under) and
@@ -111,7 +112,7 @@ export function PageHeader({
         });
         observer.observe(el);
         return () => observer.disconnect();
-    }, [tall, beside, titleOnPhone]);
+    }, [tall, beside, titleOnPhone, sticky]);
 
     /* Beside the buttons, the buttons stand in the middle of the title and the line under it, not level
        with the title alone. Measured from where both really are, the words on the page and the buttons

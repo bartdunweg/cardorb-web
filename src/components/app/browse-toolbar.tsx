@@ -22,7 +22,7 @@ import {
     isBrowseProgress,
     isBrowseSort,
 } from "@/lib/browse-query";
-import { BROWSE_LANGUAGES } from "@/lib/languages";
+import { BROWSE_LANGUAGES, isBrowseLanguage } from "@/lib/languages";
 import { countShelf } from "@/lib/reads";
 import type { SetsViewMode } from "@/lib/sets-view";
 import { cx } from "@/utils/cx";
@@ -146,18 +146,19 @@ export function BrowseToolbar({
             {/* The catalogue as a switch under the filters, English | Japanese, half the line each, as My cards
             switches Collection | Wishlist (Bart's call, 2026-09-19). Two catalogues are too few to hide in
             the filter sheet, where it was a menu of one choice. */}
-            {/* Links, as My cards' tabs are: Back returns to the other catalogue and each is prefetched.
-                The series and years belong to one catalogue, so a switch leaves them behind. */}
-            <Tabs selectedKey={query.language}>
+            {/* A replace, as Browse's other choices are, not links: the plain address a link to English
+                makes is filled back in with the query last kept for Browse (withListQuery), which had
+                just become the Japanese one. The series and years belong to one catalogue, so a switch
+                leaves them behind. */}
+            <Tabs
+                selectedKey={query.language}
+                onSelectionChange={(key) => {
+                    if (isBrowseLanguage(key) && key !== query.language) go({ language: key, series: [], year: [] });
+                }}
+            >
                 <TabList aria-label="Catalogue" type="underline" size="sm" fullWidth>
                     {BROWSE_LANGUAGES.map((l) => (
-                        <Tab
-                            key={l.code}
-                            id={l.code}
-                            href={browseHref(query, { language: l.code, series: [], year: [] })}
-                            label={l.label}
-                            className="flex-1 justify-center py-3"
-                        />
+                        <Tab key={l.code} id={l.code} label={l.label} className="flex-1 justify-center py-3" />
                     ))}
                 </TabList>
             </Tabs>
