@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { SearchLg } from "@untitledui/icons";
 import { useRouter } from "next/navigation";
 import { Heading as AriaHeading } from "react-aria-components";
@@ -8,7 +8,6 @@ import { type ColumnMap, type ImportPreview, type ImportResult, commitImport, pr
 import { FormError } from "@/components/app/form-error";
 import { LinkButton } from "@/components/app/link-button";
 import { FileUploadDropZone, FileUploadList, FileUploadListItem, type FileUploadStatus } from "@/components/application/file-upload/file-upload-base";
-import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { Progress, type Step } from "@/components/application/progress-steps/progress-steps";
 import { Table, TableCard } from "@/components/application/table/table";
 import { Button } from "@/components/base/buttons/button";
@@ -148,28 +147,7 @@ const steps = (current: StepName): Step[] => {
     return STEPS.map((s, i) => ({ title: s.title, status: i < at ? "complete" : i === at ? "current" : "incomplete" }));
 };
 
-export function ImportDialog({ children }: { children: ReactNode }) {
-    /*
-     * True while the write is out. Escape is the overlay's, not the form's, so
-     * the form reports it up here: closing mid-write unmounted the only screen
-     * that could say what the write did.
-     */
-    const [writing, setWriting] = useState(false);
-
-    return (
-        <DialogTrigger>
-            {children}
-            {/* No padding around it on a phone: the dialog is the screen there. */}
-            <ModalOverlay className="max-sm:p-0" isKeyboardDismissDisabled={writing}>
-                <Modal className="max-w-2xl max-sm:h-dvh max-sm:max-w-none max-sm:overflow-hidden max-sm:rounded-none">
-                    <Dialog className="h-full">{({ close }) => <ImportForm close={close} onWriting={setWriting} />}</Dialog>
-                </Modal>
-            </ModalOverlay>
-        </DialogTrigger>
-    );
-}
-
-function ImportForm({ close, onWriting }: { close: () => void; onWriting: (writing: boolean) => void }) {
+export function ImportForm({ close, onWriting }: { close: () => void; onWriting: (writing: boolean) => void }) {
     const router = useRouter();
 
     const [file, setFile] = useState<{ name: string; size: number } | null>(null);
