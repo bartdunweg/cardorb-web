@@ -164,7 +164,8 @@ export function BrowseToolbar({
                     if (isBrowseLanguage(key) && key !== language) go({ language: key, series: [], year: [] });
                 }}
             >
-                <TabList aria-label="Catalogue" type="underline" size="sm" fullWidth>
+                {/* The line under the tabs runs out to the screen's edges, as My cards' does. */}
+                <TabList aria-label="Catalogue" type="underline" size="sm" fullWidth className="before:-inset-x-4 sm:before:-inset-x-6">
                     {BROWSE_LANGUAGES.map((l) => (
                         <Tab key={l.code} id={l.code} label={l.label} className="flex-1 justify-center py-3" />
                     ))}
