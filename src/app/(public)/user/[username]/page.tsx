@@ -179,9 +179,10 @@ async function Profile({
                                     size="sm"
                                     color={current ? "primary" : "secondary"}
                                     aria-current={current ? "page" : undefined}
-                                    className="max-w-full"
+                                    // The button's own text box is the flex item: it has to be allowed to shrink for the name to truncate.
+                                    className="max-w-full *:data-text:flex *:data-text:min-w-0"
                                 >
-                                    <span className="truncate">{f.name}</span>
+                                    <span className="min-w-0 truncate">{f.name}</span>
                                     {f.count != null ? <span className="ml-1.5 tabular-nums opacity-70">{formatCount(f.count)}</span> : null}
                                 </LinkButton>
                             );
