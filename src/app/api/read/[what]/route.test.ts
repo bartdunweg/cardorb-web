@@ -141,8 +141,11 @@ describe("GET /api/read/[what], the list and search reads", () => {
     it("reads an unknown shelf language as English, as the action did", async () => {
         await get("sets-shelf", "?language=xx");
         expect(listSetsShelf).toHaveBeenCalledWith("en");
-        await get("shelf-count", "?language=ja&progress=complete&q=base");
-        expect(countShelf).toHaveBeenCalledWith({ language: "ja", progress: "complete", q: "base" });
+        await get("shelf-count", input({ language: "ja", progress: "complete", q: "base", series: ["Base"], year: ["1999"] }));
+        expect(countShelf).toHaveBeenCalledWith({ language: "ja", progress: "complete", q: "base", series: ["Base"], year: ["1999"] });
+        // Left out, the lists are empty rather than missing.
+        await get("shelf-count", input({ language: "en" }));
+        expect(countShelf).toHaveBeenLastCalledWith({ language: "en", progress: "all", series: [], year: [] });
     });
 
     it("is a 401 without a session for these too", async () => {

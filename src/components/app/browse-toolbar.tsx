@@ -10,9 +10,19 @@ import { FILTER_BAR, LIST_ROW } from "@/components/app/row-search";
 import { Tab, TabList, Tabs } from "@/components/application/tabs/tabs";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Dot } from "@/components/foundations/dot-icon";
+import { useArrived } from "@/hooks/use-arrived";
 import { setSetsView, useSetsView } from "@/hooks/use-sets-view";
-import { BROWSE_PROGRESS_OPTIONS, BROWSE_SORT_OPTIONS, type BrowseQuery, browseHref, isBrowseProgress, isBrowseSort } from "@/lib/browse-query";
-import { BROWSE_LANGUAGES, isBrowseLanguage } from "@/lib/languages";
+import {
+    BROWSE_PROGRESS_OPTIONS,
+    BROWSE_SORT_OPTIONS,
+    type BrowseQuery,
+    NO_SHELF_FACETS,
+    type ShelfFacets,
+    browseHref,
+    isBrowseProgress,
+    isBrowseSort,
+} from "@/lib/browse-query";
+import { BROWSE_LANGUAGES } from "@/lib/languages";
 import { countShelf } from "@/lib/reads";
 import type { SetsViewMode } from "@/lib/sets-view";
 import { cx } from "@/utils/cx";
@@ -28,22 +38,42 @@ const first = (keys: "all" | Set<React.Key>) => (keys === "all" ? undefined : [.
 
 /**
  * Ours: the row over the Browse shelf, as a binder's: the search field, then Filters, Sort and
- * View. Search narrows the shelf to sets by name; Filters holds the catalogue's language (with its flag) and how far
- * along a set is (as status tags), tags in the sheet on a phone and menus in the row itself from lg; Sort turns the shelf;
- * View draws it as tiles or rows. Search, language, progress and sort go into the URL (`?q=`,
- * `?language=`, `?progress=`, `?sort=`), so the page
+ * View, and the catalogue's language as tabs under it. Search narrows the shelf to sets by name;
+ * Filters holds the series, the release year and how far along a set is, tags in the sheet, a
+ * button each on a phone's line and menus in the row itself from lg; Sort turns the shelf; View
+ * draws it as tiles or rows. Search, language, series, year, progress and sort go into the URL
+ * (`?q=`, `?language=`, `?series=`, `?year=`, `?progress=`, `?sort=`), so the page
  * can be shared and comes back the same; the view is a cookie the server reads, so the chosen
  * layout is in the first paint. The shelf under the row re-reads on each but the view, which only
  * redraws the sets already there.
  */
-export function BrowseToolbar({ query, view: initialView }: { query: BrowseQuery; view: SetsViewMode }) {
+export function BrowseToolbar({
+    query,
+    view: initialView,
+    facets: facetsOnTheWay,
+}: {
+    query: BrowseQuery;
+    view: SetsViewMode;
+    /** The series and years this catalogue's shelf has, or the promise of them: until they are in, the sheet offers what the URL already names. */
+    facets: ShelfFacets | PromiseLike<ShelfFacets>;
+}) {
     const router = useRouter();
     const [pending, startTransition] = useTransition();
-    // Per choice, the sets it would leave (the search as typed); the button's total with it.
+    const arrived = useArrived(facetsOnTheWay, NO_SHELF_FACETS);
+    // A choice in the URL stays offered while the shelf is on its way, or when this shelf lacks it.
+    const seriesNames = [...new Set([...arrived.series, ...query.series])];
+    const yearNames = [...new Set([...arrived.years, ...query.year])];
+    // Per choice, the sets it would leave (the search as typed, the other filters as drafted); the button's total with it.
     const count = useCallback(
         async (v: FilterValues): Promise<FilterAnswer> => {
-            const answer = await countShelf({ language: query.language, progress: v.progress?.[0] ?? "all", q: query.q });
-            return { total: answer.total, options: { progress: answer.progress } };
+            const answer = await countShelf({
+                language: query.language,
+                progress: v.progress?.[0] ?? "all",
+                q: query.q,
+                series: v.series ?? [],
+                year: v.year ?? [],
+            });
+            return { total: answer.total, options: { progress: answer.progress, series: answer.series, year: answer.year } };
         },
         [query.q, query.language],
     );
@@ -88,6 +118,8 @@ export function BrowseToolbar({ query, view: initialView }: { query: BrowseQuery
                         lead={sortMenu}
                         noun={["set", "sets"]}
                         groups={[
+                            { id: "series", label: "Series", multiple: true, options: seriesNames.map((name) => ({ value: name, label: name })) },
+                            { id: "year", label: "Year", multiple: true, options: yearNames.map((y) => ({ value: y, label: y })) },
                             {
                                 id: "progress",
                                 label: "Progress",
@@ -99,11 +131,11 @@ export function BrowseToolbar({ query, view: initialView }: { query: BrowseQuery
                                 })),
                             },
                         ]}
-                        values={{ progress: query.progress === "all" ? [] : [query.progress] }}
+                        values={{ series: query.series, year: query.year, progress: query.progress === "all" ? [] : [query.progress] }}
                         count={count}
                         onApply={(next) => {
                             const progress = next.progress?.[0];
-                            go({ progress: isBrowseProgress(progress) ? progress : "all" });
+                            go({ series: next.series ?? [], year: next.year ?? [], progress: isBrowseProgress(progress) ? progress : "all" });
                         }}
                     />
                     <div className="contents max-sm:hidden">{sortMenu}</div>
@@ -114,10 +146,18 @@ export function BrowseToolbar({ query, view: initialView }: { query: BrowseQuery
             {/* The catalogue as a switch under the filters, English | Japanese, half the line each, as My cards
             switches Collection | Wishlist (Bart's call, 2026-09-19). Two catalogues are too few to hide in
             the filter sheet, where it was a menu of one choice. */}
-            <Tabs selectedKey={query.language} onSelectionChange={(key) => isBrowseLanguage(key) && go({ language: key })}>
+            {/* Links, as My cards' tabs are: Back returns to the other catalogue and each is prefetched.
+                The series and years belong to one catalogue, so a switch leaves them behind. */}
+            <Tabs selectedKey={query.language}>
                 <TabList aria-label="Catalogue" type="underline" size="sm" fullWidth>
                     {BROWSE_LANGUAGES.map((l) => (
-                        <Tab key={l.code} id={l.code} label={l.label} className="flex-1 justify-center py-3" />
+                        <Tab
+                            key={l.code}
+                            id={l.code}
+                            href={browseHref(query, { language: l.code, series: [], year: [] })}
+                            label={l.label}
+                            className="flex-1 justify-center py-3"
+                        />
                     ))}
                 </TabList>
             </Tabs>
