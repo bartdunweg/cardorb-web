@@ -69,7 +69,8 @@ describe("ImportDialog when the action throws", () => {
         previewImport.mockRejectedValue(new Error("Body exceeded 1 MB limit."));
         await dropFile();
 
-        await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("Something went wrong"));
+        // The sentence says which step failed: the file was the thing being read (import-dialog.tsx).
+        await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("That file could not be read."));
         expect(screen.queryByText(/Reading /)).toBeNull();
         expect(screen.getByRole("dialog").querySelector("input[type=file]")).not.toBeDisabled();
     });

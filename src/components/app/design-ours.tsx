@@ -123,7 +123,7 @@ export const ourSections: SectionSpec[] = [
                 <AuthShell
                     title="Sign in"
                     subtitle="Welcome back. Enter your details."
-                    footer={{ question: "Don't have an account?", href: "#auth-shell", label: "Sign up" }}
+                    footer={{ question: "Don’t have an account?", href: "#auth-shell", label: "Sign up" }}
                 >
                     <div className="flex flex-col gap-6">
                         <AuthEmailField />

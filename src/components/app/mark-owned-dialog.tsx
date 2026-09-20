@@ -40,7 +40,7 @@ class FormLoadBoundary extends Component<{ title: string; onRetry: () => void; c
                     <AriaHeading slot="title" className="truncate text-lg font-semibold text-primary">
                         {this.props.title}
                     </AriaHeading>
-                    <p className="text-sm text-tertiary">This form couldn&apos;t load. Check your connection and try again.</p>
+                    <p className="text-sm text-tertiary">This form couldn’t load. Check your connection and try again.</p>
                 </div>
                 <div className="flex justify-end">
                     <Button

@@ -52,7 +52,7 @@ export const AuthEmail = ({ preview, heading, lead, linkType, button, notes, rea
                                 <Button href={href}>{button}</Button>
                             </Section>
                             <Text className="mt-8 text-sm text-tertiary">
-                                If the button doesn&apos;t open, copy this link into your browser:
+                                If the button doesn’t open, copy this link into your browser:
                                 <br />
                                 <Link href={href} className="break-all text-tertiary underline">
                                     {href}

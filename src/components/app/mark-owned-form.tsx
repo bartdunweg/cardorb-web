@@ -187,8 +187,9 @@ export function MarkOwnedForm({ card, binders, languages, facts, onSaved, close 
              * and no condition; a loose card has a condition and no grade.
              */}
             <div className={row}>
-                Condition
+                Raw or graded
                 <ButtonGroup
+                    aria-label="Raw or graded"
                     size="sm"
                     // Its own class is `w-max`, so the row's width has to be given; the halves
                     // then share it. justify-center because the kit's item is `items-center`
@@ -232,7 +233,7 @@ export function MarkOwnedForm({ card, binders, languages, facts, onSaved, close 
                 </div>
             ) : (
                 <div className={row}>
-                    Kept as
+                    Condition
                     <NativeSelect
                         aria-label="Condition"
                         size="sm"
@@ -336,8 +337,8 @@ export function MarkOwnedForm({ card, binders, languages, facts, onSaved, close 
             </div>
 
             <div className={row}>
-                Got it on
-                <AcquiredDatePicker aria-label="Got it on" className="w-full" value={date} onChange={setDate} />
+                Acquired
+                <AcquiredDatePicker aria-label="Acquired" className="w-full" value={date} onChange={setDate} />
             </div>
 
             <FormError error={error} />

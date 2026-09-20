@@ -50,8 +50,6 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
     return (
         <BinderPage
             title="Collection"
-            // My cards on a phone, the tab both halves share; the switch under it says which (collection-switch.tsx).
-            phoneTitle="My cards"
             /* The same header as the wishlist's: its settings, here whether the profile is public, since the
                public page is the owned collection (list-settings-dialog.tsx). */
             settings={(compact) => <ListSettingsDialog list="collection" title="Collection" isPublic={profile?.is_public ?? false} compact={compact} />}
@@ -64,7 +62,7 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
             // Collection and Wishlist one tap apart on a phone, where one tab holds both (collection-switch.tsx).
             views={<CollectionSwitch current="owned" />}
             empty={
-                <AppEmptyState icon="plus" title="No cards yet" description="Add your first card to start your collection">
+                <AppEmptyState icon="plus" title="No cards yet" description="Add your first card to start your collection.">
                     <AddCardButton />
                 </AppEmptyState>
             }

@@ -65,7 +65,7 @@ export async function BinderPage({
     const view = body.readOnly ? null : (
         <>
             {/* With Back, the search is a button beside View and the dots, and a press turns the bar into the
-                field; without (My cards, which the tab bar reaches), the field itself stands in the title's place. */}
+                field; without (the collection, which the tab bar reaches), the field itself stands in the title's place. */}
             {back ? <BarSearchButton label={body.searchLabel ?? `Search in ${title}`} /> : null}
             <BarViewMenu
                 initialView={remembered.view}

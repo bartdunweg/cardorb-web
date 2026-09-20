@@ -15,7 +15,7 @@ export const EmailChange = () => (
         button="Confirm new address"
         notes={[
             "The link works once and expires in an hour. Both addresses get this email, and the change goes through once both have confirmed.",
-            "Didn't ask for this? You can ignore this email. The address on your account stays as it is.",
+            "Didn’t ask for this? You can ignore this email. The address on your account stays as it is.",
         ]}
         reason={<>This email was sent because an address change was requested on the Card Orb account for {EMAIL}.</>}
     />

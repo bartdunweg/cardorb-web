@@ -2,7 +2,7 @@ import { type Page, expect, test } from "@playwright/test";
 import { SET_ID, addButton, cacheCleared, card, collectionTile, setTile } from "./support.ts";
 
 /**
- * A list page on a phone. On a page the tab bar reaches (My cards, Browse) the search field is the
+ * A list page on a phone. On a page the tab bar reaches (Collection, Browse) the search field is the
  * bar's first line, in the title's place, beside View and the dots; on a page with Back (a set, a
  * binder) it is a button there, and a press turns the bar into the field with Cancel (Gojek and
  * Keeta on Mobbin). Under it one line of Filters, Sort and each filter, scrolling sideways, each
@@ -44,7 +44,7 @@ const hydrated = (page: Page, name: string) =>
         name,
     );
 
-test("My cards has its field in the bar, in the title's place, beside View and the dots", async ({ page }) => {
+test("Collection has its field in the bar, in the title's place, beside View and the dots", async ({ page }) => {
     await page.goto("/dashboard/cards");
     const field = page.getByRole("combobox", { name: "Search in Collection" });
     await expect(field).toBeVisible();
@@ -57,7 +57,7 @@ test("My cards has its field in the bar, in the title's place, beside View and t
     expect(f!.x + f!.width).toBeLessThanOrEqual(v!.x);
     expect(v!.x).toBeLessThan(d!.x);
     // The title is for a screen reader only: the tab bar says where you are.
-    await expect(page.getByRole("heading", { level: 1, name: "My cards" })).toHaveCSS("position", "absolute");
+    await expect(page.getByRole("heading", { level: 1, name: "Collection" })).toHaveCSS("position", "absolute");
 
     await hydrated(page, "Collection settings");
     await field.click();
@@ -116,7 +116,7 @@ test("a filter's button opens its choices as a sheet from the bottom", async ({ 
 
 test("Collection and Wishlist are tabs of half the line each, under the filters", async ({ page }) => {
     await page.goto("/dashboard/cards");
-    const tabs = page.getByRole("main").getByRole("tablist", { name: "My cards" });
+    const tabs = page.getByRole("main").getByRole("tablist", { name: "Collection and wishlist" });
     const filters = page.getByRole("main").getByRole("button", { name: /^Filters/ });
     await expect(tabs).toBeVisible();
     const [list, row] = await Promise.all([tabs.boundingBox(), filters.boundingBox()]);

@@ -12,7 +12,7 @@ test.use({ viewport: { width: 390, height: 844 } });
 test("Collection and Wishlist are the same width on both pages", async ({ page }) => {
     const width = async (path: string) => {
         await page.goto(path);
-        const tabs = page.getByRole("main").getByRole("tablist", { name: "My cards" });
+        const tabs = page.getByRole("main").getByRole("tablist", { name: "Collection and wishlist" });
         await expect(tabs).toBeVisible();
         return (await tabs.boundingBox())!.width;
     };

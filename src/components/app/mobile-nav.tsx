@@ -12,9 +12,9 @@ import { cx } from "@/utils/cx";
 const tabs = [
     { label: "Home", href: "/dashboard", icon: HomeLine, match: (p: string) => p === "/dashboard" },
     { label: "Browse", href: "/dashboard/sets", icon: BookOpen01, match: (p: string) => p.startsWith("/dashboard/sets") },
-    // My cards: the collection and the wishlist, the two halves of one switch (collection-switch.tsx).
+    // Collection: the cards you own and the wishlist, the two halves of one switch (collection-switch.tsx).
     {
-        label: "My cards",
+        label: "Collection",
         href: "/dashboard/cards",
         icon: Rows01,
         match: (p: string) => ["/dashboard/cards", "/dashboard/wishlist"].some((h) => p.startsWith(h)),
@@ -31,7 +31,7 @@ const tabs = [
 const tabClass = "pressable relative flex flex-1 flex-col items-center gap-1 rounded-full py-1.5 text-3xs font-medium";
 
 // Bottom tab bar for mobile: four of the sidebar's pages in the sidebar's order: Home, Browse, the
-// My cards (the collection, with the wishlist one tap in on its switch), and Binders (Favorites, the Pokédex and
+// Collection (the cards you own, with the wishlist one tap in on its switch), and Binders (Favorites, the Pokédex and
 // the binders you made, one level down). You is the avatar in Home's bar. Browse had no tab while the search at the top of Home
 // listed every set; that search opens the palette now, as it does everywhere else, so Browse has
 // its tab (Bart's call, 2026-09-11). Search is not a tab: it opens the palette, so it stands beside

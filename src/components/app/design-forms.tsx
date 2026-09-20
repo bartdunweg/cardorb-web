@@ -10,13 +10,16 @@ import { RadioButton, RadioGroup } from "@/components/base/radio-buttons/radio-b
 import { Select, type SelectItemType } from "@/components/base/select/select";
 import { NativeSelect } from "@/components/base/select/select-native";
 import { Toggle } from "@/components/base/toggle/toggle";
+import { CONDITIONS } from "./condition-badge";
 import { Cell, Group, Panel, type SectionSpec } from "./design-section";
 
-const conditions = [
-    { value: "nm", label: "Near Mint" },
-    { value: "lp", label: "Lightly Played" },
-    { value: "mp", label: "Moderately Played" },
-];
+// The conditions a copy can actually carry (condition-badge.ts), so the design page never shows a
+// value the app does not offer: it read "Lightly Played" and "Moderately Played", which are
+// TCGplayer's words and not on this scale.
+const conditions = CONDITIONS.map((c) => ({ value: c, label: c }));
+
+/** The same list as the kit's Select takes it, as rows rather than as data. */
+const conditionItems = CONDITIONS.map((c) => <Select.Item key={c} id={c} label={c} />);
 
 /** For the ComboBox, which takes its rows as data rather than as children. */
 const sets: SelectItemType[] = [
@@ -257,24 +260,18 @@ export const formSections: SectionSpec[] = [
             <Panel>
                 <Group title="Sizes" cols="wide">
                     <Cell label='size="sm"'>
-                        <Select size="sm" label="Condition" defaultSelectedKey="nm">
-                            <Select.Item id="nm" label="Near Mint" />
-                            <Select.Item id="lp" label="Lightly Played" />
-                            <Select.Item id="mp" label="Moderately Played" />
+                        <Select size="sm" label="Condition" defaultSelectedKey="Near Mint">
+                            {conditionItems}
                         </Select>
                     </Cell>
                     <Cell label='size="md"'>
-                        <Select size="md" label="Condition" defaultSelectedKey="nm">
-                            <Select.Item id="nm" label="Near Mint" />
-                            <Select.Item id="lp" label="Lightly Played" />
-                            <Select.Item id="mp" label="Moderately Played" />
+                        <Select size="md" label="Condition" defaultSelectedKey="Near Mint">
+                            {conditionItems}
                         </Select>
                     </Cell>
                     <Cell label='size="lg"'>
-                        <Select size="lg" label="Condition" defaultSelectedKey="nm">
-                            <Select.Item id="nm" label="Near Mint" />
-                            <Select.Item id="lp" label="Lightly Played" />
-                            <Select.Item id="mp" label="Moderately Played" />
+                        <Select size="lg" label="Condition" defaultSelectedKey="Near Mint">
+                            {conditionItems}
                         </Select>
                     </Cell>
                 </Group>
@@ -300,8 +297,8 @@ export const formSections: SectionSpec[] = [
                         </Select>
                     </Cell>
                     <Cell label="isDisabled">
-                        <Select label="Condition" defaultSelectedKey="nm" isDisabled>
-                            <Select.Item id="nm" label="Near Mint" />
+                        <Select label="Condition" defaultSelectedKey="Near Mint" isDisabled>
+                            {conditionItems}
                         </Select>
                     </Cell>
                     <Cell label="isRequired">
@@ -363,7 +360,7 @@ export const formSections: SectionSpec[] = [
                         <NativeSelect label="Condition" options={conditions} disabled />
                     </Cell>
                     <Cell label="defaultValue">
-                        <NativeSelect label="Condition" options={conditions} defaultValue="lp" />
+                        <NativeSelect label="Condition" options={conditions} defaultValue="Light Played" />
                     </Cell>
                     <Cell label="isLoading">
                         <NativeSelect label="Sets" options={[{ label: "Loading sets…", value: "" }]} isLoading />

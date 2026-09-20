@@ -31,7 +31,7 @@ export function PricesPublicRow({
                 !pricesPublic
                     ? "Prices stay private"
                     : isPublic
-                      ? "Card prices and your collection's value are on your public page"
+                      ? "Card prices and your collection’s value are on your public page"
                       : "Shown once your profile is public"
             }
             isSelected={pricesPublic}

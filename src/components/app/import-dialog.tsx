@@ -224,7 +224,9 @@ export function ImportForm({ close, onWriting }: { close: () => void; onWriting:
      * asked again, but a write whose answer never arrived may have landed, and
      * "try again" there is an invitation to double a collection.
      */
-    const guard = async (work: () => Promise<void>, message = "Something went wrong. Try again.") => {
+    // The default says which step failed: both callers are reading the file, and "Something went
+    // wrong" left the person guessing where to look.
+    const guard = async (work: () => Promise<void>, message = "That file could not be read. Try again.") => {
         try {
             await work();
         } catch {
@@ -510,7 +512,7 @@ export function ImportForm({ close, onWriting }: { close: () => void; onWriting:
                             <p className="text-sm text-tertiary">
                                 {preview.source === "dex"
                                     ? "This is an export from Dex. Its columns, copy counts and printings are already understood."
-                                    : "The columns were worked out from the file's first row. Correct any that are wrong."}
+                                    : "The columns were worked out from the file’s first row. Correct any that are wrong."}
                             </p>
                         </div>
 

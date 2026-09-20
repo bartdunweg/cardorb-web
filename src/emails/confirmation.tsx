@@ -9,8 +9,8 @@ export const Confirmation = () => (
         linkType="signup"
         button="Confirm email address"
         notes={[
-            "The link works once and expires in an hour. If it has expired, sign up again with the same address and we'll send a new one.",
-            "Didn't sign up? You can ignore this email. The account can't be used without this confirmation.",
+            "The link works once and expires in an hour. If it has expired, sign up again with the same address and we’ll send a new one.",
+            "Didn’t sign up? You can ignore this email. The account can’t be used without this confirmation.",
         ]}
         reason={<>This email was sent to {EMAIL} because it was used to create a Card Orb account.</>}
     />

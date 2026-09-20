@@ -217,7 +217,8 @@ export function CardDetailSlideout({
           }
         : editions
           ? {
-                label: "Print run",
+                // "Edition" is the word the copy forms, the CSV column and docs/editions.md use for this.
+                label: "Edition",
                 items: editions.map((e) => ({ key: e.key, label: e.label })),
                 selected: editionKey ?? editions[0]!.key,
                 pick: (key: string) => pick({ edition: key }),

@@ -10,7 +10,7 @@ import { LinkButton } from "@/components/app/link-button";
 export default function PublicProfileNotFound() {
     return (
         <main className="flex min-h-screen flex-col bg-primary">
-            <AppEmptyState icon="folder" title="No collection to show" description="This name is not in use, or its owner keeps the collection private">
+            <AppEmptyState icon="folder" title="No collection to show" description="This name is not in use, or its owner keeps the collection private.">
                 <LinkButton href="/" color="secondary">
                     Go to Home
                 </LinkButton>

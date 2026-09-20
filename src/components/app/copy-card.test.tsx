@@ -51,6 +51,23 @@ const draw = (onSaved: () => void) =>
 
 const condition = () => screen.getByRole("combobox", { name: "Condition" }) as HTMLSelectElement;
 
+describe("CopyCard words", () => {
+    /*
+     * The row read "Kept as" while its select answered to "Condition", so a screen reader heard a
+     * name that is not on screen (WCAG 2.5.3 Label in Name), and the app had two words for one thing:
+     * the raw-or-graded switch above it was the one called Condition. The switch says what it picks
+     * now, and the condition is called Condition in both places.
+     */
+    it("names the condition row the same on screen as to a screen reader", () => {
+        draw(() => undefined);
+        expect(screen.queryByText("Kept as")).not.toBeInTheDocument();
+        expect(screen.getByText("Condition")).toBeInTheDocument();
+        expect(condition()).toHaveAccessibleName("Condition");
+        expect(screen.getByLabelText("Raw or graded")).toBeInTheDocument();
+        expect(screen.getByText("Raw or graded")).toBeInTheDocument();
+    });
+});
+
 describe("CopyCard field saves", () => {
     beforeEach(() => {
         editCopies.mockReset();

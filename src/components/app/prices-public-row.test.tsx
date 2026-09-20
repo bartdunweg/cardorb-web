@@ -32,7 +32,7 @@ describe("PricesPublicRow", () => {
 
     it("says what the public page shows while on, and that it waits for the profile while that is private", () => {
         const { rerender } = render(<PricesPublicRow isPublic pricesPublic onChange={vi.fn()} />);
-        expect(screen.getByText("Card prices and your collection's value are on your public page")).toBeInTheDocument();
+        expect(screen.getByText("Card prices and your collection’s value are on your public page")).toBeInTheDocument();
         expect(screen.getByRole("switch", { name: "Show prices" })).toBeChecked();
         rerender(<PricesPublicRow isPublic={false} pricesPublic onChange={vi.fn()} />);
         expect(screen.getByText("Shown once your profile is public")).toBeInTheDocument();

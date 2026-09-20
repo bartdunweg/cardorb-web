@@ -50,7 +50,7 @@ export function PageHeader({
     /** What the phone's bar says once the title has scrolled under it, where `heading` is not plain words (Home's list). */
     barTitle?: ReactNode;
     /**
-     * The title below `lg`, where it differs: Collection and Wishlist are one tab on a phone, My cards,
+     * The title below `lg`, where it differs: Collection and Wishlist are one tab on a phone, Collection,
      * and its title says so while the switch under it says which half (Bart's call, 2026-09-18).
      */
     phoneTitle?: string;
@@ -86,7 +86,7 @@ export function PageHeader({
     titleOnPhone?: boolean;
     /**
      * On a phone the list's search field is the bar's first line, in the title's place, with the bar's
-     * buttons beside it (`RowSearch` place "bar"): a page the tab bar reaches (My cards, Browse), where
+     * buttons beside it (`RowSearch` place "bar"): a page the tab bar reaches (Collection, Browse), where
      * the tab already says the name (Bart's call, 2026-09-19). The h1 stays for a screen reader.
      */
     searchField?: boolean;

@@ -9,7 +9,7 @@ export const Footer = ({ children }: { children: React.ReactNode }) => {
     return (
         <Container align="left" className="max-w-full bg-primary px-6 pt-2 pb-8">
             <Row>
-                <Text className="text-sm text-tertiary">{children} Replies to this address aren&apos;t read.</Text>
+                <Text className="text-sm text-tertiary">{children} Replies to this address aren’t read.</Text>
             </Row>
         </Container>
     );
