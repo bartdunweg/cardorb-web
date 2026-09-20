@@ -136,7 +136,7 @@ async function Set({ params, searchParams }: { params: Promise<{ id: string }>; 
                        cache entry on, and the API answers an old or differently cased id with the
                        canonical set. Handing the tiles the canonical one made a press forget a tag
                        no entry carried, and the page kept its marks for the rest of its five minutes. */
-                    <SetCards cards={set.cards} setId={id} language={language} initialSize={remembered.size} />
+                    <SetCards cards={set.cards} setId={set.id} language={language} initialSize={remembered.size} />
                 )}
             </div>
         </SetLive>
