@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { countCards, loadMoreCards, searchPokemon } from "@/lib/reads";
+import { cardPriceHistory, countCards, isReadFailed, listBinders, loadMoreCards, searchPokemon, tryListBinders } from "@/lib/reads";
 
 /*
  * The reads fail the way their actions did, because the callers were written against that: a
@@ -37,6 +37,33 @@ describe("the list and search reads", () => {
 
     it("fall back softly where the action did: a count that cannot say is null", async () => {
         vi.stubGlobal("fetch", answer(500));
+        expect(await countCards({ q: "pika" })).toBeNull();
+    });
+});
+
+/*
+ * The two reads that have to tell an empty answer from one that never came: a price line drawn as
+ * "no readings yet" and a binder list read as an account with no binders were both a read that
+ * failed, and the screens said something untrue about the collection (error-path audit).
+ */
+describe("a read that did not answer", () => {
+    it("is told apart from an empty answer, where the caller asked to be told", async () => {
+        vi.stubGlobal("fetch", answer(500));
+        expect(isReadFailed(await cardPriceHistory("base1-4"))).toBe(true);
+        expect(isReadFailed(await tryListBinders())).toBe(true);
+    });
+
+    it("is not the empty answer, which stays what it is", async () => {
+        // One Response per stub: its body is read once (the answer helper hands back the same one).
+        vi.stubGlobal("fetch", answer(200, []));
+        expect(await tryListBinders()).toEqual([]);
+        vi.stubGlobal("fetch", answer(200, []));
+        expect(isReadFailed(await tryListBinders())).toBe(false);
+    });
+
+    it("changes nothing for the soft readers beside them", async () => {
+        vi.stubGlobal("fetch", answer(500));
+        expect(await listBinders()).toEqual([]);
         expect(await countCards({ q: "pika" })).toBeNull();
     });
 });

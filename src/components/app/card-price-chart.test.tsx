@@ -11,8 +11,12 @@ import { CardPriceChart } from "./card-price-chart";
  */
 
 const history = vi.fn();
+/** The read that did not answer, as `@/lib/reads` has it; hoisted with the mock that uses it. */
+const FAILED_READ = vi.hoisted(() => Symbol("read failed"));
 vi.mock("@/lib/reads", () => ({
-    cardPriceHistory: (id: string) => Promise.resolve(history(id)).then((points: unknown) => ({ points, listings: {} })),
+    // A line, or the failure where the test says the read did not answer.
+    cardPriceHistory: (id: string) => Promise.resolve(history(id)).then((points: unknown) => (points === FAILED_READ ? FAILED_READ : { points, listings: {} })),
+    isReadFailed: (a: unknown) => a === FAILED_READ,
 }));
 
 class FakeResizeObserver {
@@ -58,6 +62,26 @@ describe("CardPriceChart", () => {
         const { container } = render(<CardPriceChart tcgId="sv1-3" period="1m" onPeriod={() => {}} />);
         expect(container.querySelector("svg[tabindex]")).not.toBeNull();
         expect(container.querySelector("[aria-busy]")).toBeNull();
+    });
+
+    /* A read that did not answer used to reach the chart as an empty line, and the chart told
+       everybody the card had never been priced. It says which of the two it is now, and offers the
+       one thing that can change it (error-path audit). */
+    it("says the line could not be loaded, with a way to ask again, rather than that there are no readings", async () => {
+        history.mockResolvedValue(FAILED_READ);
+        const { container, getByRole } = render(<CardPriceChart tcgId="sv1-9" period="1m" onPeriod={() => {}} />);
+        await waitFor(() => expect(container.textContent).toMatch(/could not be loaded/));
+        expect(container.textContent).not.toMatch(/No readings/);
+
+        history.mockResolvedValue(two);
+        getByRole("button", { name: "Try again" }).click();
+        await waitFor(() => expect(container.querySelector("svg[tabindex]")).not.toBeNull());
+    });
+
+    it("keeps saying there are no readings for a card the API answers about with none", async () => {
+        history.mockResolvedValue([]);
+        const { container } = render(<CardPriceChart tcgId="sv1-10" period="1m" onPeriod={() => {}} />);
+        await waitFor(() => expect(container.textContent).toMatch(/No readings/));
     });
 
     // Bart, 2026-09-15: the printing is chosen above the sheet, and the chart chooses only the period.

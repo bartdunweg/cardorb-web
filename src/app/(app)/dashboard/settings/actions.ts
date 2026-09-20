@@ -1,17 +1,16 @@
 "use server";
 
 import { z } from "zod";
-import { ApiError, api } from "@/lib/api";
+import { api } from "@/lib/api";
 import { avatarAnswer, usernameAnswer } from "@/lib/api-shapes";
 import { createClient } from "@/lib/supabase/server";
 import { forgetMine } from "@/lib/user-cache";
+import { writeFailure } from "@/lib/write-failure";
+import type { FailedWrite } from "@/lib/write-outcome";
 
-export type ActionResult = { ok: true } | { ok: false; error: string };
+export type ActionResult = { ok: true } | FailedWrite;
 
-const failed = (err: unknown): { ok: false; error: string } => ({
-    ok: false,
-    error: err instanceof ApiError ? err.message : "Something went wrong. Try again.",
-});
+const failed = writeFailure;
 
 const profileSchema = z.object({
     display_name: z.string().trim().max(80),

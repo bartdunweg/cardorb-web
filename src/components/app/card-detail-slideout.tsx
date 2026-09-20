@@ -121,7 +121,7 @@ export function CardDetailSlideout({
     setId = null,
 }: Props) {
     const { mine, copies, setViewing, showRows, pressedRef, reloadCopies } = useSheetCopies({ card, readOnly });
-    const { binders, setBinders, facets, binder, binderPending } = useSheetBinders({ card, readOnly });
+    const { binders, setBinders, facets, binder, binderPending, bindersFailed } = useSheetBinders({ card, readOnly });
     const { stepFromRef, step } = useSheetSteps({ onPrev, onNext });
     const { tcgId, genLogo, formFacts, known, points, listings, period, setPeriod, said, change } = useSheetFacts({ card, mine, addable, opensOn });
     const {
@@ -187,6 +187,11 @@ export function CardDetailSlideout({
                 <Button size="md" color="secondary" iconLeading={Heart} className="w-full" isDisabled={busy} onClick={() => add("wishlist")}>
                     Add to wishlist
                 </Button>
+                {/* Only on a binder's page, and only where the list did not answer: the card still
+                    goes into the collection, it just cannot be filed into the binder you are looking at. */}
+                {bindersFailed ? (
+                    <p className="text-sm text-tertiary">Your binders could not be loaded, so this card goes to your collection without one.</p>
+                ) : null}
             </div>
         ) : mine?.wishlist && !emptied ? (
             <MarkOwnedDialog card={mine} binders={binders} languages={known?.languages} facts={formFacts} onSaved={onClose}>

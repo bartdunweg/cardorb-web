@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { editCopies, removeCard, restoreCard, setCopies, setFavorite } from "@/app/(app)/dashboard/cards/actions";
 import { knownCardFacts, knownPriceHistory, knownPriceListings } from "@/components/app/card-memo";
 import type { Card } from "@/lib/api-shapes";
-import { listBinders, listCopies } from "@/lib/reads";
+import { listCopies, tryListBinders } from "@/lib/reads";
 import {
     type Outcome,
     answerLeftovers,
@@ -29,7 +29,11 @@ vi.mock("@/app/(app)/dashboard/cards/actions", async () => (await import("@/test
 vi.mock("@/components/app/toast", async () => (await import("@/test/press-harness")).toastMock());
 vi.mock("@/lib/forget-mine", async () => (await import("@/test/press-harness")).forgetMineMock());
 vi.mock("next/navigation", async () => (await import("@/test/press-harness")).navigationMock());
+/** The read that did not answer, as `@/lib/reads` has it; hoisted with the mock that uses it. */
+const FAILED_READ = vi.hoisted(() => Symbol("read failed"));
 vi.mock("@/lib/reads", () => ({
+    isReadFailed: (a: unknown) => a === FAILED_READ,
+    tryListBinders: vi.fn(async () => []),
     listBinders: vi.fn(async () => []),
     listCopies: vi.fn(async () => []),
     loadFacets: vi.fn(async () => ({})),
@@ -43,6 +47,8 @@ vi.mock("@/components/app/card-memo", () => ({
     knownRows: vi.fn(() => undefined),
     preloadCardFacts: vi.fn(async () => null),
     preloadPriceHistory: vi.fn(async () => []),
+    priceHistoryFailed: vi.fn(() => false),
+    forgetPriceHistory: vi.fn(),
     rememberCopies: vi.fn(),
     warmCard: vi.fn(),
 }));
@@ -70,7 +76,7 @@ beforeEach(() => {
     stubBrowser();
     pathname.current = "/dashboard/cards";
     vi.mocked(listCopies).mockImplementation(async (card) => [card as Card]);
-    vi.mocked(listBinders).mockResolvedValue([]);
+    vi.mocked(tryListBinders).mockResolvedValue([]);
     vi.mocked(setCopies).mockResolvedValue({ ok: true });
     vi.mocked(removeCard).mockResolvedValue({ ok: true });
     vi.mocked(restoreCard).mockResolvedValue({ ok: true });
@@ -206,7 +212,7 @@ describe("CardDetailSlideout: smoke", () => {
         await tap(screen.getByRole("button", { name: "One copy more" }));
         await act(flush);
 
-        expect(notifyMock.failed).toHaveBeenCalledWith("The number of copies did not change", { description: "No" });
+        expect(notifyMock.writeFailed).toHaveBeenCalledWith("The number of copies did not change", { ok: false, error: "No" });
     });
 
     /*
@@ -221,7 +227,7 @@ describe("CardDetailSlideout: smoke", () => {
         await act(flush);
         await act(flush);
 
-        expect(notifyMock.failed).toHaveBeenCalledWith("The number of copies did not change", expect.anything());
+        expect(notifyMock.writeFailed).toHaveBeenCalledWith("The number of copies did not change", expect.anything());
         expect(forgetMine).toHaveBeenCalledWith("cards", null);
     });
 
@@ -258,7 +264,7 @@ describe("CardDetailSlideout: smoke", () => {
 
     it("files a held card into the binder whose page it was opened on, at once, and puts it back on a refusal", async () => {
         pathname.current = "/dashboard/collections/b1";
-        vi.mocked(listBinders).mockResolvedValue([{ id: "b1", name: "Shinies", rule: null }]);
+        vi.mocked(tryListBinders).mockResolvedValue([{ id: "b1", name: "Shinies", rule: null }]);
         const edits = heldAction<[string[], unknown, unknown], Outcome>({ ok: false, error: "left over" });
         vi.mocked(editCopies).mockImplementation(edits.fn as never);
         await open(makeCard({ id: "p1" }));
@@ -273,8 +279,35 @@ describe("CardDetailSlideout: smoke", () => {
 
         await act(async () => edits.calls[0]!.resolve({ ok: false, error: "No" }));
         await act(flush);
-        expect(notifyMock.failed).toHaveBeenCalledWith("Pikachu was not added to Shinies", { description: "No" });
+        expect(notifyMock.writeFailed).toHaveBeenCalledWith("Pikachu was not added to Shinies", { ok: false, error: "No" });
         expect(screen.getByRole("button", { name: "Add to Shinies" })).toBeInTheDocument();
+    });
+
+    /* On a binder's page the take waits for the binder list, so the card is filed where you are
+       looking. A list that never answered is not a wait: Add to collection stayed dead for good
+       while Add to wishlist beside it worked (error-path audit). */
+    it("takes a card into the collection when the binder list did not answer, and says why it has no binder", async () => {
+        pathname.current = "/dashboard/collections/b1";
+        vi.mocked(tryListBinders).mockResolvedValue(FAILED_READ as never);
+        await open(makeCard({ id: "c9", owned: false, wishlist: false }));
+
+        const add = screen.getByRole("button", { name: "Add to collection" });
+        expect(add).not.toBeDisabled();
+        expect(screen.getByText("Your binders could not be loaded, so this card goes to your collection without one.")).toBeInTheDocument();
+    });
+
+    it("keeps Add to collection waiting while the binder list is still on its way", async () => {
+        pathname.current = "/dashboard/collections/b1";
+        let answer: (b: unknown) => void = () => {};
+        vi.mocked(tryListBinders).mockReturnValue(new Promise((r) => (answer = r)) as never);
+        await open(makeCard({ id: "c8", owned: false, wishlist: false }));
+
+        expect(screen.getByRole("button", { name: "Add to collection" })).toBeDisabled();
+        expect(screen.queryByText("Your binders could not be loaded, so this card goes to your collection without one.")).toBeNull();
+        await act(async () => {
+            answer([]);
+            await flush();
+        });
     });
 
     it("opens the Mark as owned dialog over a wish", async () => {

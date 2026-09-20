@@ -124,7 +124,7 @@ export function useSheetWrites({
         const forgotten = forgetMineQuietly("cards", setId);
         const failed = results.find((r) => !r.ok);
         if (failed && !failed.ok) {
-            notify.failed(group.length > 1 ? "Those copies were not removed" : "That copy was not removed", { description: failed.error });
+            notify.writeFailed(group.length > 1 ? "Those copies were not removed" : "That copy was not removed", failed);
             void forgotten.then(() => {
                 scheduleRefresh();
                 void reloadCopies();
@@ -194,7 +194,7 @@ export function useSheetWrites({
             }),
         ).then((res) => {
             if (!res.ok) {
-                notify.failed(`That card was not added to ${where}`, { description: res.error });
+                notify.writeFailed(`That card was not added to ${where}`, res);
                 putBack?.();
                 return;
             }
@@ -228,7 +228,7 @@ export function useSheetWrites({
             if (!res.ok) {
                 pressedRef.current += 1;
                 showRows(mine, before);
-                notify.failed(`${mine.name} was not added to ${into.name}`, { description: res.error });
+                notify.writeFailed(`${mine.name} was not added to ${into.name}`, res);
                 return;
             }
             void forgetMineQuietly("cards", setId).then(() => {
@@ -257,8 +257,8 @@ export function useSheetWrites({
             mine,
             base.map((r) => (r.id === row.id ? { ...r, quantity } : r)),
         );
-        void settleQuantity(row.id, quantity, (error) => {
-            notify.failed("The number of copies did not change", { description: error });
+        void settleQuantity(row.id, quantity, (refusal) => {
+            notify.writeFailed("The number of copies did not change", refusal);
         }).then((landed) => {
             // null is a press folded into one still flying; that one re-reads for both. The
             // writes forget nothing themselves (setCopies, reread: false): the cache is dropped
@@ -307,7 +307,7 @@ export function useSheetWrites({
                     // Forgotten once for the lot, quietly, as the removal was (dropCopies says why).
                     void Promise.all(rows.map((row) => orFailed(restoreCard(row, { reread: false })))).then(async (results) => {
                         const failed = results.find((r) => !r.ok);
-                        if (failed && !failed.ok) notify.failed("That did not go back", { description: failed.error });
+                        if (failed && !failed.ok) notify.writeFailed("That did not go back", failed);
                         else {
                             setRemoved(null);
                             notify.done(rows.length > 1 ? `${rows.length} copies are back` : "It is back");
@@ -330,7 +330,7 @@ export function useSheetWrites({
         onRemoved?.(row);
         void orFailed(removeCard(row.id, { reread: false })).then((res) => {
             if (!res.ok) {
-                notify.failed(wishlist ? "That card is still on your wishlist" : "That card is still in your collection", { description: res.error });
+                notify.writeFailed(wishlist ? "That card is still on your wishlist" : "That card is still in your collection", res);
                 router.refresh();
                 return;
             }

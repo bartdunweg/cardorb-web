@@ -1,8 +1,11 @@
 /** What a write that never answered says: the same words as an action that caught its own throw. */
 export const FAILED_WRITE_MESSAGE = "Something went wrong. Try again.";
 
-/** A write's refusal, in the shape every action answers with. */
-export type FailedWrite = { ok: false; error: string };
+/**
+ * A write's refusal, in the shape every action answers with. `signedOut` is the one refusal a
+ * screen can do something about: the toast then offers the way to /login (write-failure.ts).
+ */
+export type FailedWrite = { ok: false; error: string; signedOut?: boolean };
 
 /**
  * An action's answer, or a refusal when the call itself threw (no signal, a deploy in between).

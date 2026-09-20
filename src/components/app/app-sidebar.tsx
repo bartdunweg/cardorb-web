@@ -212,8 +212,12 @@ function BinderRows({ binders, fresh, activeUrl }: { binders: Promise<BinderLink
 }
 
 // How many cards are in a binder, at the row's end as the Binders page's rows have it: a number
-// alone, not the kit's pill, which would make every row a notification.
-function Count({ count }: { count: number }) {
+// alone, not the kit's pill, which would make every row a notification. Nothing at all for an empty
+// one: a new account read "Favorites 0", and a zero beside a name says less than the name alone
+// (error-path audit). A progress figure like "0 of 191" keeps its zero, since there the zero is half
+// the reading.
+export function Count({ count }: { count: number }) {
+    if (!count) return null;
     return (
         <span className="ml-3 shrink-0 text-sm text-tertiary tabular-nums">
             {formatCount(count)}

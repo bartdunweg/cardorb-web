@@ -19,7 +19,9 @@ import { cx } from "@/utils/cx";
 // Pokédex too, which is what the Pokédex is now. `count` is null only when a count could not be
 // read, and the tile goes without.
 function BinderCard({ href, icon, name, count }: { href: string; icon: FC<{ className?: string }>; name: string; count: number | null }) {
-    const counted = count === null ? null : `${formatCount(count)} card${count === 1 ? "" : "s"}`;
+    // Nothing where there is nothing to count, as in the sidebar: "0 cards" under a name is a line
+    // that says less than the blank it replaces (error-path audit).
+    const counted = !count ? null : `${formatCount(count)} card${count === 1 ? "" : "s"}`;
     return (
         <Link
             href={href}
@@ -43,7 +45,7 @@ function BinderCard({ href, icon, name, count }: { href: string; icon: FC<{ clas
                 {/* Under the name on a tile; at the row's end on a phone. */}
                 {counted ? <span className="text-sm text-tertiary max-sm:hidden">{counted}</span> : null}
             </div>
-            {count !== null ? (
+            {count ? (
                 <span className="shrink-0 text-sm text-tertiary tabular-nums sm:hidden">
                     {formatCount(count)}
                     <span className="sr-only"> card{count === 1 ? "" : "s"}</span>
@@ -100,8 +102,21 @@ export function BindersGrid({ binders, favoritesCount }: { binders: BinderSummar
             </div>
 
             {hasBinders ? null : (
-                // On a phone the hub above is the page and the plus beside the title is the way in; the
-                // empty state would only push the tab bar's worth of nothing under two tiles.
+                /* On a phone, one line and the way in, right under Favorites: the full empty state would
+                   push a tab bar's worth of nothing under a single tile, but hiding it altogether left a
+                   new account looking at "Favorites" and nothing else, with the plus in the title bar
+                   the only clue (error-path audit). */
+                <div className="flex flex-col items-start gap-3 lg:hidden">
+                    <p className="text-sm text-tertiary">No binders yet. Group your cards into binders you can jump to from the tab bar.</p>
+                    <BinderDialog mode="create">
+                        <Button iconLeading={Plus} color="secondary" size="md">
+                            New binder
+                        </Button>
+                    </BinderDialog>
+                </div>
+            )}
+
+            {hasBinders ? null : (
                 <div className="hidden lg:contents">
                     <AppEmptyState icon="folder" title="No binders yet" description="Group your cards into binders you can jump to from the sidebar.">
                         <BinderDialog mode="create">

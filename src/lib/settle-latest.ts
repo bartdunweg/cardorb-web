@@ -1,4 +1,6 @@
-type Outcome = { ok: true } | { ok: false; error: string };
+/** The refusal, whole, not only its sentence: a caller that offers a way out of a 401 needs the flag with it. */
+type Refusal = { ok: false; error: string; signedOut?: boolean };
+type Outcome = { ok: true } | Refusal;
 
 /**
  * Writes that only need to land on the last value asked for.
@@ -8,13 +10,13 @@ type Outcome = { ok: true } | { ok: false; error: string };
  * next one will send, and the presses in between are never sent at all.
  *
  * What comes back is what the flight came to: `true` when every value asked for while it flew has
- * landed, `false` when a write failed (the rest is dropped and the latest ask's `failed` is told
- * why), and `null` when the ask joined a flight already in the air, whose starter gets the answer.
+ * landed, `false` when a write failed (the rest is dropped and the latest ask's `failed` is handed
+ * the refusal), and `null` when the ask joined a flight already in the air, whose starter gets the answer.
  */
 export function settleLatest<T>(write: (key: string, value: T) => Promise<Outcome>) {
-    const wants = new Map<string, { value: T; failed: (error: string) => void }>();
+    const wants = new Map<string, { value: T; failed: (refusal: Refusal) => void }>();
     const flying = new Set<string>();
-    return async (key: string, value: T, failed: (error: string) => void): Promise<boolean | null> => {
+    return async (key: string, value: T, failed: (refusal: Refusal) => void): Promise<boolean | null> => {
         wants.set(key, { value, failed });
         if (flying.has(key)) return null;
         flying.add(key);
@@ -23,7 +25,7 @@ export function settleLatest<T>(write: (key: string, value: T) => Promise<Outcom
                 wants.delete(key);
                 const res = await write(key, want.value);
                 if (!res.ok) {
-                    (wants.get(key) ?? want).failed(res.error);
+                    (wants.get(key) ?? want).failed(res);
                     wants.delete(key);
                     return false;
                 }

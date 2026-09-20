@@ -66,7 +66,7 @@ vi.mock("@/components/app/value-hero", () => ({ ValueHero: () => null }));
 vi.mock("@/lib/profile", () => ({ getMyProfile: vi.fn() }));
 vi.mock("@/components/app/add-card-button", () => ({ AddCardButton: () => null }));
 
-const { HomeBody } = await import("@/app/(app)/dashboard/(home)/home-body");
+const { HomeBody, welcomeLine } = await import("@/app/(app)/dashboard/(home)/home-body");
 
 /** Lets every read that has been started take its next step. */
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -117,5 +117,27 @@ describe("HomeBody", () => {
         await settle();
         stats.fail(new Error("stats down"));
         await expect(body).rejects.toThrow("stats down");
+    });
+});
+
+/*
+ * The first thing a new account reads. It called the username "the address of your public page"
+ * while is_public is off until somebody turns it on, so it promised a page that answers to nobody
+ * (error-path audit). The promise is only made where the page is really there.
+ */
+describe("the welcome's sentence", () => {
+    it("promises no public page while the profile is private", () => {
+        const said = welcomeLine("ash-4f2b", false);
+        expect(said).not.toMatch(/address of your public page/);
+        expect(said).toMatch(/turn on your public page if you want one/);
+        expect(said).toMatch(/ash-4f2b/);
+    });
+
+    it("names the address once the page really is public", () => {
+        expect(welcomeLine("ash-4f2b", true)).toMatch(/address of your public page/);
+    });
+
+    it("says the one thing to do when there is no name to say", () => {
+        expect(welcomeLine(null, false)).toBe("Add your first card to start your collection.");
     });
 });

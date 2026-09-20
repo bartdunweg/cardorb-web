@@ -16,7 +16,12 @@ vi.mock("@/app/(app)/dashboard/cards/actions", () => ({
     rereadMine: vi.fn(),
     markOwnedWith: vi.fn(),
 }));
-vi.mock("@/lib/reads", () => ({ cardFacts: vi.fn().mockResolvedValue(null), listBinders: vi.fn().mockResolvedValue([]) }));
+vi.mock("@/lib/reads", () => ({
+    cardFacts: vi.fn().mockResolvedValue(null),
+    listBinders: vi.fn().mockResolvedValue([]),
+    tryListBinders: vi.fn().mockResolvedValue([]),
+    isReadFailed: () => false,
+}));
 vi.mock("@/components/app/card-memo", () => ({ warmCard: vi.fn() }));
 const refresh = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
