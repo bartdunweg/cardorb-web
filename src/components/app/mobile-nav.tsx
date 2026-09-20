@@ -43,7 +43,7 @@ export function MobileTabBar() {
     // because the page you tapped from stays on screen until the next one is ready (route-pending.tsx).
     const pathname = useRouteTarget();
     const start = useStartRoute();
-    // A tab opens its list as you left it: the filters, the sort and the search (use-list-memory.ts).
+    // A tab opens its list as you left it: the filters and the sort, never the search (use-list-memory.ts).
     const memory = useListMemory();
     // A page outside the four (Settings, You) has no pill.
     const activeIndex = tabs.findIndex((tab) => tab.match(pathname));

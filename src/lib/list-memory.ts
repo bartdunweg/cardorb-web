@@ -1,6 +1,7 @@
 /**
  * What each list page remembers of how you left it: the layout, the tile size, the set headings
- * and the query string (sort, filters, search). One cookie for all of them, keyed by page, so a
+ * and the query string, which is the sort, the filters, the grouping and Browse's catalogue, but
+ * not the search term (`rememberedQuery` below says why). One cookie for all of them, keyed by page, so a
  * choice on the wishlist is the wishlist's and the collection keeps its own (Bart's call,
  * 2026-09-16: per page, not across the app). A cookie rather than localStorage for the reason
  * `cards-view.ts` gives: the server draws the page as it was left, with no swap after hydration.
@@ -25,7 +26,7 @@ export type ListMemoryEntry = {
     view?: (typeof LIST_VIEWS)[number];
     size?: (typeof LIST_SIZES)[number];
     group?: (typeof LIST_GROUPS)[number];
-    /** The page's query string without its `?`, as `use-list-memory` records it. */
+    /** The page's query string without its `?` and without its search term, as `rememberedQuery` leaves it. */
     query?: string;
 };
 
@@ -56,6 +57,32 @@ export const MAX_COOKIE_LENGTH = 3000;
  * set pages are one page, so a size chosen on one set holds on the next.
  */
 export const memoryKey = (pathname: string): string => (/^\/dashboard\/sets\/[^/]+$/.test(pathname) ? "/dashboard/sets/*" : pathname);
+
+/**
+ * The search field's term and the page the pager is on: the two things a list does not remember.
+ * The page goes with the term, as it does in the search field itself (cards-search.tsx): without
+ * the term the pages are other pages, and page 2 of them is a screenful from the middle of the
+ * list with nothing saying why.
+ */
+const FORGOTTEN_PARAMS = ["q", "page"];
+
+/**
+ * A list's query with those two taken out: the sort, the filters, the grouping and Browse's
+ * catalogue are remembered, the term never is (Bart's call, 2026-09-20). A filter is how you keep
+ * a list; a term is a question asked once, and days later Browse still opened on "30th" with
+ * nothing on screen saying where that came from. Within a visit the term still comes back, because
+ * it is in the address the browser holds: Back, Forward, a reload and a shared link all keep it.
+ *
+ * Read as well as written through here, so a cookie written before this still answers without the
+ * term it holds; the next write leaves it out for good.
+ */
+export function rememberedQuery(query: string | undefined | null): string {
+    if (!query) return "";
+    const params = new URLSearchParams(query);
+    if (!FORGOTTEN_PARAMS.some((name) => params.has(name))) return query;
+    for (const name of FORGOTTEN_PARAMS) params.delete(name);
+    return params.toString();
+}
 
 const decode = (raw: string): string => {
     try {
