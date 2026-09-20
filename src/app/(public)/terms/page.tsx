@@ -105,7 +105,10 @@ export default function TermsPage() {
                 We may change or discontinue the service. If we ever shut it down, we will give you reasonable notice and a way to get your collection out
                 first, unless something outside our control makes that impossible.
             </p>
-            <p>Keep your own copy of anything you would mind losing. There is no export yet, so for now your collection lives here and nowhere else.</p>
+            <p>
+                Keep your own copy of anything you would mind losing. Settings has an export that writes your collection and your wishlist to a CSV file, so you
+                can take them elsewhere whenever you want.
+            </p>
 
             <h2>Ending it</h2>
             <p>

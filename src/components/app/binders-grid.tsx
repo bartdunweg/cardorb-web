@@ -119,6 +119,8 @@ export function BindersGrid({ binders, favoritesCount }: { binders: BinderSummar
             )}
 
             {hasBinders ? null : (
+                /* From lg only, which is where the sidebar is (app-sidebar.tsx is `max-lg:hidden`), so the
+                   sentence names it; the phone's own line above names the tab bar instead. */
                 <div className="hidden lg:contents">
                     <AppEmptyState icon="folder" title="No binders yet" description="Group your cards into binders you can jump to from the sidebar.">
                         <BinderDialog mode="create">

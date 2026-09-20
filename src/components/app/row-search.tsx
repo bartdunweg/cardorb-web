@@ -36,7 +36,7 @@ const FIELD = "flex min-w-0 items-center [&_input]:text-ellipsis max-sm:[&_input
  * Where the field is on a phone. "row": its own line in the row (a public profile, which has no bar).
  * "button": in the bar, out on the bar's search press (`BarSearchButton`) or while it holds a term,
  * so a narrowed list always says why; Cancel empties it and puts the bar back (a binder, a set).
- * "bar": always in the bar, in the title's place, on a page the tab bar reaches (My cards, Browse);
+ * "bar": always in the bar, in the title's place, on a page the tab bar reaches (Collection, Browse);
  * Clear shows while it holds a term: the field stays, so nothing is cancelled. `onClear` empties the term.
  */
 export type SearchPlace = "row" | "button" | "bar";

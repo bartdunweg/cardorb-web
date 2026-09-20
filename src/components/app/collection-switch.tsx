@@ -10,8 +10,8 @@ const LISTS = [
 
 /**
  * Ours, from the kit's underline Tabs: Collection | Wishlist under the title on a phone, the cards you have and the
- * ones you want. One tab in the phone's bar holds both, named My cards rather than Collection,
- * because the wishlist is not part of the collection; each page keeps its own title. From lg the
+ * ones you want. One tab in the phone's bar holds both and is named Collection, the word the sidebar,
+ * the page title and the stats already use; each page keeps its own title. From lg the
  * sidebar lists the two as pages of their own, so the switch is not drawn there (Bart's call,
  * 2026-09-18). Each half stays a list at its own address: each tab is a link, so Back, a shared
  * link and the list's remembered filters work as they did, and the collection's counts still leave
@@ -31,7 +31,7 @@ export function CollectionSwitch({ current, slides = true }: { current: (typeof 
         // The kit's underline tabs, as a set's page has them over its cards, each half of the line, under
         // the row of filters and over the list, 44 px high where the kit's is 30 (Bart's call, 2026-09-19).
         // `data-my-cards-tabs`: its line slides to the other tab across the page change (globals.css). Off
-        // for a copy on another page (the design page), whose line would fly from there to My cards.
+        // for a copy on another page (the design page), whose line would fly from there to the collection.
         // The press on a tab, caught before its link navigates: a link tab tells the tabs no selection
         // change of its own, so the line would otherwise wait for the page.
         // A listener around the tabs, which are links: Enter on a link clicks it, so the keyboard is heard too.
@@ -44,7 +44,9 @@ export function CollectionSwitch({ current, slides = true }: { current: (typeof 
         >
             <Tabs selectedKey={shown} data-my-cards-tabs={slides || undefined}>
                 {/* The kit's always-there line runs out to the screen's edges, past the page's padding (Bart, 2026-09-19). */}
-                <TabList aria-label="My cards" type="underline" size="sm" fullWidth className="before:-inset-x-4 sm:before:-inset-x-6">
+                {/* The pair's name, not either half's: the tab named Collection sits inside it, so the list
+                    that holds both says so. */}
+                <TabList aria-label="Collection and wishlist" type="underline" size="sm" fullWidth className="before:-inset-x-4 sm:before:-inset-x-6">
                     {LISTS.map((list) => (
                         <Tab key={list.id} id={list.id} href={list.href} label={list.label} className="flex-1 justify-center py-3" />
                     ))}

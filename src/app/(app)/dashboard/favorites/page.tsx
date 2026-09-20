@@ -56,7 +56,7 @@ export default async function FavoritesPage({ searchParams }: { searchParams: Pr
             filter={filter}
             empty={
                 // The star is on a card you own, so the way here runs through the collection.
-                <AppEmptyState icon="star" title="No favorites yet" description="Star a card you own to keep it here">
+                <AppEmptyState icon="star" title="No favorites yet" description="Star a card you own to keep it here.">
                     <LinkButton href="/dashboard/cards" color="secondary">
                         Go to Collection
                     </LinkButton>

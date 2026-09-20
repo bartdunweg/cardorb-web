@@ -71,7 +71,7 @@ async function Set({ params, searchParams }: { params: Promise<{ id: string }>; 
         return (
             <AppEmptyState
                 icon="book"
-                title="The catalogue is not answering"
+                title="The card catalogue is not answering"
                 description="This set comes from the card catalogue, which is not reachable right now. Try again in a minute."
             />
         );

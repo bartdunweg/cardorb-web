@@ -2,6 +2,7 @@ import { ApiError, api } from "@/lib/api";
 import { type SetCard, catalogueSetsAnswer, ownImage, seriesFromSets, setCardFromBrowse, setPageAnswer } from "@/lib/api-shapes";
 import type { BrowseLanguage } from "@/lib/languages";
 import { logoPaletteMap } from "@/lib/logo-color";
+import { CATALOGUE_NOT_ANSWERING } from "@/lib/read-failure";
 import { perUser } from "@/lib/user-cache";
 
 export type { SetCard, SetSeries, SetSummary } from "@/lib/api-shapes";
@@ -9,7 +10,7 @@ export type { SetCard, SetSeries, SetSummary } from "@/lib/api-shapes";
 /** The catalogue is down (the API answers 502): a page shows that rather than an empty shelf. */
 export class CatalogueUnavailable extends Error {
     constructor() {
-        super("The catalogue is not answering.");
+        super(CATALOGUE_NOT_ANSWERING);
         this.name = "CatalogueUnavailable";
     }
 }

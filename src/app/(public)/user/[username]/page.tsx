@@ -38,7 +38,7 @@ export async function generateMetadata({ params, searchParams }: Params): Promis
         // `type` and `siteName` are repeated here rather than inherited: a page-level `openGraph`
         // replaces the root's wholesale, so without these two the one page people actually
         // paste into a chat was the only one shipping neither.
-        openGraph: { type: "profile", siteName: "Cardorb", title: `${name}'s collection`, description, url: canonical, images: ["/opengraph-image"] },
+        openGraph: { type: "profile", siteName: "Cardorb", title: `${name}’s collection`, description, url: canonical, images: ["/opengraph-image"] },
     };
 }
 
@@ -101,11 +101,11 @@ async function Profile({
     // What an empty list says, by which list it is: the words are the visitor's, not the owner's.
     const emptyState =
         list === "wishlist" ? (
-            <AppEmptyState icon="heart" title="Nothing on the wishlist" description="No cards are being looked for right now" />
+            <AppEmptyState icon="heart" title="Nothing on the wishlist" description="No cards are being looked for right now." />
         ) : list === "favorites" ? (
-            <AppEmptyState icon="star" title="No favorites yet" description="No card has been starred" />
+            <AppEmptyState icon="star" title="No favorites yet" description="No card has been starred." />
         ) : (
-            <AppEmptyState icon="folder" title="This collection is empty" description="Nothing has been added to it yet" />
+            <AppEmptyState icon="folder" title="This collection is empty" description="Nothing has been added to it yet." />
         );
     // The handle sits under a display name, as a profile page does; with no display name it is the name.
     const handle = profile.display_name && profile.username ? `@${profile.username}` : null;

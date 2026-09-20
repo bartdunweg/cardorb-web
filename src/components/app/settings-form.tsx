@@ -3,7 +3,6 @@
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { Code01, Download01, File02, Lock01, Monitor04, Moon01, Sun, UploadCloud01 } from "@untitledui/icons";
-import { Button as AriaButton } from "react-aria-components";
 import { checkUsername, removeAvatar, updateEmail, updatePassword, updateProfile, uploadAvatar } from "@/app/(app)/dashboard/settings/actions";
 import { signOut } from "@/app/(auth)/actions";
 import { FormError } from "@/components/app/form-error";
@@ -220,7 +219,7 @@ export function SettingsForm({
 
     const savePassword = async () => {
         if (pw !== pw2) {
-            setPwMsg({ type: "err", text: "Passwords don't match." });
+            setPwMsg({ type: "err", text: "Passwords don’t match." });
             return;
         }
         setSavingPw(true);

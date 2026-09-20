@@ -333,7 +333,7 @@ export function SetCards({
     return (
         <>
             <Tabs
-                // 16 px between the row, the tabs and the grid on a phone, as on My cards; 24 from sm.
+                // 16 px between the row, the tabs and the grid on a phone, as on the collection; 24 from sm.
                 className="flex flex-1 flex-col gap-4 sm:gap-6"
                 selectedKey={holding ?? "all"}
                 onSelectionChange={(key) => write({ holding: key === "all" ? undefined : (key as SetHolding) })}
@@ -379,7 +379,7 @@ export function SetCards({
                     {/* On a phone in the bar across from Back (`BarViewMenu`). */}
                     <ViewMenu view="grid" size={size} layouts={false} className="max-sm:hidden" />
                 </div>
-                {/* Under the row of filters, as My cards has its Collection | Wishlist (Bart's call, 2026-09-19).
+                {/* Under the row of filters, as the collection has its Collection | Wishlist (Bart's call, 2026-09-19).
                     The kit's underline tabs, as the card sheet has them; scrolls sideways on a phone too narrow for four.
                     `overflow-x` alone makes the other way `auto` as well, which cut the top pixel off every count
                     badge (they carry `-my-px`, so they stand a pixel outside the tab and their ring read as sliced).

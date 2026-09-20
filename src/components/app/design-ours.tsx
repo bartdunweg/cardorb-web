@@ -7,6 +7,7 @@ import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import type { Card } from "@/lib/api-shapes";
+import { CATALOGUE_NOT_ANSWERING } from "@/lib/read-failure";
 import { AcquiredDatePicker } from "./acquired-date-picker";
 import { AppEmptyState } from "./app-empty-state";
 import { AuthEmailField, AuthShell } from "./auth-shell";
@@ -123,7 +124,7 @@ export const ourSections: SectionSpec[] = [
                 <AuthShell
                     title="Sign in"
                     subtitle="Welcome back. Enter your details."
-                    footer={{ question: "Don't have an account?", href: "#auth-shell", label: "Sign up" }}
+                    footer={{ question: "Don’t have an account?", href: "#auth-shell", label: "Sign up" }}
                 >
                     <div className="flex flex-col gap-6">
                         <AuthEmailField />
@@ -433,7 +434,7 @@ export const ourSections: SectionSpec[] = [
                         <FormError error="That email and password do not match an account." />
                     </Cell>
                     <Cell label="arrive" span="full">
-                        <FormError error="The catalogue is not answering. Your collection is unchanged." arrive />
+                        <FormError error={`${CATALOGUE_NOT_ANSWERING} Your collection is unchanged.`} arrive />
                     </Cell>
                     <Cell label="error={null}" span="full">
                         <FormError error={null} />
@@ -589,7 +590,7 @@ export const ourSections: SectionSpec[] = [
                         <Button
                             size="md"
                             color="secondary"
-                            onClick={() => notify.failed("That card was not added to your collection", { description: "The catalogue is not answering." })}
+                            onClick={() => notify.failed("That card was not added to your collection", { description: CATALOGUE_NOT_ANSWERING })}
                         >
                             Show a failure
                         </Button>

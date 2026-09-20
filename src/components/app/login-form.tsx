@@ -15,7 +15,7 @@ export const LoginForm = ({ notice }: { notice?: string }) => {
         <AuthShell
             title="Sign in"
             subtitle="Welcome back. Enter your details."
-            footer={{ question: "Don't have an account?", href: "/signup", label: "Sign up" }}
+            footer={{ question: "Don’t have an account?", href: "/signup", label: "Sign up" }}
         >
             {/* A link that could not be verified is a failure, in the colour and role every other
                 failure on these forms has; as grey body text it read as a caption. */}

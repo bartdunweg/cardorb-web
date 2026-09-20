@@ -89,7 +89,7 @@ function LoadedForm({ form, close }: { form: FormProps; close: () => void }) {
                 <div className={BINDER_FORM_FRAME}>
                     {title}
                     <p className="text-sm text-tertiary" role="alert">
-                        This form couldn&apos;t load. Check your connection and try again.
+                        This form couldn’t load. Check your connection and try again.
                     </p>
                     <div className="flex justify-end gap-2">
                         <Button color="secondary" onClick={close}>

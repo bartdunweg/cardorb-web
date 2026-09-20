@@ -44,8 +44,10 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
     return (
         <BinderPage
             title="Wishlist"
-            phoneTitle="My cards"
-            // No count or value under the title, as on Collection: the two halves of My cards have one header (Bart's call, 2026-09-18).
+            /* Its own title on a phone too, where the tab that holds both halves is now called Collection:
+               a heading reading Collection over the wishlist would name the other list (WCAG 2.4.6), and the
+               switch under it already says which half you are on. */
+            // No count or value under the title, as on Collection: the two halves of the Collection tab have one header (Bart's call, 2026-09-18).
             settings={(compact) => <ListSettingsDialog list="wishlist" title="Wishlist" isPublic={profile?.wishlist_public ?? false} compact={compact} />}
             query={query}
             basePath="/dashboard/wishlist"
@@ -58,7 +60,7 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
                 <AppEmptyState
                     icon="heart"
                     title="Your wishlist is empty"
-                    description="Find a card you’re looking for and add it to your wishlist from its preview"
+                    description="Find a card you’re looking for and add it to your wishlist from its preview."
                 >
                     {/* The palette opens with nothing preset (Bart's call, see add-card-button.tsx), so the
                         button says what it does; "Add to wishlist" promised a step the palette leaves to you. */}

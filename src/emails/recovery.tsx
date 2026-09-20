@@ -10,7 +10,7 @@ export const Recovery = () => (
         button="Set new password"
         notes={[
             "The link works once and expires in an hour. If it has expired, ask for a new one from the sign-in page.",
-            "Didn't ask for this? You can ignore this email. Your password stays as it is.",
+            "Didn’t ask for this? You can ignore this email. Your password stays as it is.",
         ]}
         reason={<>This email was sent to {EMAIL} because a password reset was requested for this Card Orb account.</>}
     />

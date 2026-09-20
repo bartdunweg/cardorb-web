@@ -230,8 +230,9 @@ function CopyForm({ mode, from, binders, languages, facts, onSaved, close }: Pro
              * and no condition; a loose card has a condition and no grade.
              */}
             <div className={row}>
-                Condition
+                Raw or graded
                 <ButtonGroup
+                    aria-label="Raw or graded"
                     size="sm"
                     // Its own class is `w-max`, so the row's width has to be given; the halves
                     // then share it. justify-center because the kit's item is `items-center`
@@ -275,7 +276,7 @@ function CopyForm({ mode, from, binders, languages, facts, onSaved, close }: Pro
                 </div>
             ) : (
                 <div className={row}>
-                    Kept as
+                    Condition
                     <NativeSelect
                         aria-label="Condition"
                         size="sm"

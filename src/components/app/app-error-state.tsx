@@ -4,6 +4,7 @@ import { AlertCircle, RefreshCcw01 } from "@untitledui/icons";
 import { Button } from "@/components/base/buttons/button";
 import { FeaturedIcon } from "@/components/foundations/featured-icon/featured-icon";
 import { Circle } from "@/components/shared-assets/background-patterns/circle";
+import { CATALOGUE_NOT_ANSWERING } from "@/lib/read-failure";
 
 // What a signed-in screen shows when its reads threw: the same shape as AppEmptyState, so a
 // failed page and an empty one sit in the same place, with the one thing an empty page has no
@@ -24,8 +25,8 @@ export function AppErrorState({ retry, home }: { retry: () => void; home: { href
                 </div>
                 <div className="z-10 mb-8 flex w-full max-w-88 flex-col items-center justify-center gap-2">
                     {/* h1: this replaces the page, header included, so it is the page's title now. */}
-                    <h1 className="text-center text-xl font-semibold text-primary">This page couldn&apos;t load</h1>
-                    <p className="text-center text-md text-tertiary">The card service didn&apos;t answer. Try again in a moment.</p>
+                    <h1 className="text-center text-xl font-semibold text-primary">This page couldn’t load</h1>
+                    <p className="text-center text-md text-tertiary">{CATALOGUE_NOT_ANSWERING} Try again in a minute.</p>
                 </div>
                 <div className="z-10 flex gap-3">
                     <Button color="secondary" size="lg" href={home.href}>

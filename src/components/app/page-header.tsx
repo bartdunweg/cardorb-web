@@ -37,7 +37,6 @@ export function PageHeader({
     titleOnPhone = true,
     searchField = false,
     sticky = true,
-    phoneTitle,
     heading,
     barTitle,
 }: {
@@ -49,11 +48,6 @@ export function PageHeader({
     heading?: ReactNode;
     /** What the phone's bar says once the title has scrolled under it, where `heading` is not plain words (Home's list). */
     barTitle?: ReactNode;
-    /**
-     * The title below `lg`, where it differs: Collection and Wishlist are one tab on a phone, My cards,
-     * and its title says so while the switch under it says which half (Bart's call, 2026-09-18).
-     */
-    phoneTitle?: string;
     /** A short line over the title, in the small size: what the page belongs to (a set's era). */
     eyebrow?: string;
     /** The line under the title: a description or a count. */
@@ -86,7 +80,7 @@ export function PageHeader({
     titleOnPhone?: boolean;
     /**
      * On a phone the list's search field is the bar's first line, in the title's place, with the bar's
-     * buttons beside it (`RowSearch` place "bar"): a page the tab bar reaches (My cards, Browse), where
+     * buttons beside it (`RowSearch` place "bar"): a page the tab bar reaches (Collection, Browse), where
      * the tab already says the name (Bart's call, 2026-09-19). The h1 stays for a screen reader.
      */
     searchField?: boolean;
@@ -271,7 +265,7 @@ export function PageHeader({
                         "col-start-2 row-start-1 truncate px-2 text-center text-md font-semibold text-primary opacity-(--bar)",
                     )}
                 >
-                    {barTitle ?? phoneTitle ?? title}
+                    {barTitle ?? title}
                 </span>
                 <div
                     ref={buttons}
@@ -361,17 +355,7 @@ export function PageHeader({
                                     searchField && "max-sm:sr-only",
                                 )}
                             >
-                                {/* Hidden, not just unseen: a name a screen reader reads is the one on screen. */}
-                                {heading ? (
-                                    heading
-                                ) : phoneTitle ? (
-                                    <>
-                                        <span className="lg:hidden">{phoneTitle}</span>
-                                        <span className="max-lg:hidden">{title}</span>
-                                    </>
-                                ) : (
-                                    title
-                                )}
+                                {heading ?? title}
                             </h1>
                             {subtitle ? <p className="text-md text-tertiary">{subtitle}</p> : null}
                         </div>

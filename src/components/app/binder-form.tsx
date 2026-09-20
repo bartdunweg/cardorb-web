@@ -228,7 +228,7 @@ export function BinderForm({ mode, binder, facets: given, onSaved, close }: Form
             {asPokedex ? (
                 <>
                     <DexRangeFields label="Pokédex range" anyLabel="Every Pokémon" dex={dexShown} onChange={setDexShown} />
-                    <Toggle label="Show the Pokémon I'm missing" isSelected={missing} onChange={setMissing} />
+                    <Toggle label="Show the Pokémon I’m missing" isSelected={missing} onChange={setMissing} />
                     <RarityPicker label="Rarities that count" options={facets.rarities} selected={dexRarities} onChange={setDexRarities} isLoading={!loaded} />
                 </>
             ) : null}

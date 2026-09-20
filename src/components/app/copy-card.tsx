@@ -211,9 +211,9 @@ export function CopyCard({
                 condition, a loose card the other way round. Graded starts on the form's own
                 defaults, so the switch is one press and the two selects refine it. */}
             <div className={field}>
-                Condition
+                Raw or graded
                 <ButtonGroup
-                    aria-label="Condition"
+                    aria-label="Raw or graded"
                     size="sm"
                     className="w-full *:flex-1 *:justify-center"
                     selectionMode="single"
@@ -262,9 +262,10 @@ export function CopyCard({
                 </div>
             ) : (
                 <div className={field}>
-                    {wish ? "Looking for" : "Kept as"}
+                    {/* The name a screen reader reads is the one on screen (WCAG 2.5.3). */}
+                    {wish ? "Looking for" : "Condition"}
                     <NativeSelect
-                        aria-label="Condition"
+                        aria-label={wish ? "Looking for" : "Condition"}
                         size="sm"
                         className="w-full"
                         disabled={disabled}

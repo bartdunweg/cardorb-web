@@ -77,7 +77,7 @@ export function BrowseToolbar({
         },
         [query.q, query.language],
     );
-    // The catalogue tab follows the tap at once and the line slides then, as the set page's and My cards' do;
+    // The catalogue tab follows the tap at once and the line slides then, as the set page's and the collection's do;
     // the address and the shelf follow when the page answers.
     const [language, showLanguage] = useOptimistic(query.language);
     const go = (patch: Partial<BrowseQuery>) =>
@@ -111,7 +111,7 @@ export function BrowseToolbar({
         </Dropdown.Root>
     );
     return (
-        // The row, then the language as tabs under it, 16 px apart as on My cards.
+        // The row, then the language as tabs under it, 16 px apart as on the collection.
         <div className="flex flex-col gap-4">
             {/* The row dims while the next answer is fetched, after 150 ms, so a quick answer never flickers;
                 it lights up again at once. The tabs under it do not: their line has already moved. */}
@@ -151,7 +151,7 @@ export function BrowseToolbar({
                 {/* On a phone in the bar beside the search field (`SetsViewMenu` in the page's header). */}
                 <SetsViewMenu initialView={initialView} className="max-sm:hidden" />
             </div>
-            {/* The catalogue as a switch under the filters, English | Japanese, half the line each, as My cards
+            {/* The catalogue as a switch under the filters, English | Japanese, half the line each, as the collection
             switches Collection | Wishlist (Bart's call, 2026-09-19). Two catalogues are too few to hide in
             the filter sheet, where it was a menu of one choice. */}
             {/* A replace, as Browse's other choices are, not links: the plain address a link to English
@@ -164,7 +164,7 @@ export function BrowseToolbar({
                     if (isBrowseLanguage(key) && key !== language) go({ language: key, series: [], year: [] });
                 }}
             >
-                {/* The line under the tabs runs out to the screen's edges, as My cards' does. */}
+                {/* The line under the tabs runs out to the screen's edges, as the collection's does. */}
                 <TabList aria-label="Catalogue" type="underline" size="sm" fullWidth className="before:-inset-x-4 sm:before:-inset-x-6">
                     {BROWSE_LANGUAGES.map((l) => (
                         <Tab key={l.code} id={l.code} label={l.label} className="flex-1 justify-center py-3" />
@@ -177,7 +177,7 @@ export function BrowseToolbar({
 
 /**
  * The shelf's View: tiles or rows. In the row from sm, and on a phone in the bar beside the search
- * field, as My cards has its View (Bart's call, 2026-09-19). Both read one choice (`useSetsView`).
+ * field, as the collection has its View (Bart's call, 2026-09-19). Both read one choice (`useSetsView`).
  */
 export function SetsViewMenu({ initialView, className }: { initialView: SetsViewMode; className?: string }) {
     const view = useSetsView(initialView);

@@ -80,11 +80,11 @@ async function Binder({ params, searchParams }: { params: Promise<{ id: string }
     // An empty binder's one way in, in the middle of the room: the header has no plus (Bart's call,
     // 2026-09-19); a binder that holds cards takes more from a card's own sheet.
     const empty = binder.rule ? (
-        <AppEmptyState icon="folder" title="Nothing matches yet" description="Cards you own that fit the rule show up here">
+        <AppEmptyState icon="folder" title="Nothing matches yet" description="Cards you own that fit the rule show up here.">
             <AddCardButton />
         </AppEmptyState>
     ) : (
-        <AppEmptyState icon="folder" title="No cards in this binder" description="Add a card you own, or a new one">
+        <AppEmptyState icon="folder" title="No cards in this binder" description="Add a card you own, or a new one.">
             <BinderAddButton binder={{ id: binder.id, name: binder.name }} compact={false} />
         </AppEmptyState>
     );

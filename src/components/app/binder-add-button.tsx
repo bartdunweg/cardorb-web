@@ -21,6 +21,7 @@ import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import { cardLine } from "@/lib/card-label";
 import { forgetMineThenRefresh } from "@/lib/forget-then-refresh";
 import { formatCount } from "@/lib/format";
+import { CATALOGUE_NOT_ANSWERING } from "@/lib/read-failure";
 import { searchMyCards } from "@/lib/reads";
 import { cx } from "@/utils/cx";
 
@@ -95,13 +96,7 @@ function OwnCardsPicker({ binder, close }: { binder: { id: string; name: string 
         retry();
         inputRef.current?.focus();
     };
-    const searchState = loading
-        ? "Searching…"
-        : failed
-          ? "The card service didn't answer."
-          : query.trim().length >= 1 && results.length === 0
-            ? "No cards found."
-            : "";
+    const searchState = loading ? "Searching…" : failed ? CATALOGUE_NOT_ANSWERING : query.trim().length >= 1 && results.length === 0 ? "No cards found." : "";
 
     const [picked, setPicked] = useState<Map<string, CardHit>>(new Map());
     const toggle = (card: CardHit, on: boolean) =>
