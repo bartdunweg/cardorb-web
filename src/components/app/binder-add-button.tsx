@@ -125,7 +125,7 @@ function OwnCardsPicker({ binder, close }: { binder: { id: string; name: string 
         void editCopies(ids, { collectionId: binder.id }, { reread: false })
             .then((res) => {
                 if (!res.ok) {
-                    notify.failed(`Those cards were not added to ${binder.name}`, { description: res.error });
+                    notify.writeFailed(`Those cards were not added to ${binder.name}`, res);
                     return;
                 }
                 void forgetMineThenRefresh("cards", router);

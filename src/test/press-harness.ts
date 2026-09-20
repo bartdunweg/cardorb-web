@@ -101,6 +101,8 @@ export const notifyMock = {
     done: vi.fn(),
     removed: vi.fn(),
     failed: vi.fn(),
+    /** A refused write, with its whole refusal: the sentence and, on a 401, the way to /login. */
+    writeFailed: vi.fn(),
     dismiss: vi.fn(),
 };
 export const toastMock = () => ({ notify: notifyMock, Toasts: () => null });

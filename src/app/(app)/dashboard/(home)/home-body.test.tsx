@@ -66,7 +66,7 @@ vi.mock("@/components/app/value-hero", () => ({ ValueHero: () => null }));
 vi.mock("@/lib/profile", () => ({ getMyProfile: vi.fn() }));
 vi.mock("@/components/app/add-card-button", () => ({ AddCardButton: () => null }));
 
-const { HomeBody } = await import("@/app/(app)/dashboard/(home)/home-body");
+const { HomeBody, welcomeLine } = await import("@/app/(app)/dashboard/(home)/home-body");
 
 /** Lets every read that has been started take its next step. */
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -117,5 +117,33 @@ describe("HomeBody", () => {
         await settle();
         stats.fail(new Error("stats down"));
         await expect(body).rejects.toThrow("stats down");
+    });
+});
+
+/*
+ * The first thing a new account reads. It called the username "the address of your public page"
+ * while is_public is off until somebody turns it on, so it promised a page that answers to nobody
+ * (error-path audit). The promise is only made where the page is really there.
+ */
+describe("the welcome's sentence", () => {
+    it("promises no public page while the profile is private", () => {
+        const said = welcomeLine({ username: "ash-4f2b", is_public: false });
+        expect(said).not.toMatch(/your public page is at/);
+        expect(said).toMatch(/turn on your public page if you want one/);
+        expect(said).toMatch(/ash-4f2b/);
+    });
+
+    it("gives the address as the username, never as the display name", () => {
+        const said = welcomeLine({ display_name: "Bart", username: "ash-4f2b", is_public: true });
+        expect(said).toMatch(/signed in as Bart/);
+        expect(said).toMatch(/\/user\/ash-4f2b/);
+    });
+
+    it("stops asking for a name from somebody who has one", () => {
+        expect(welcomeLine({ display_name: "Bart", username: "ash-4f2b", is_public: false })).not.toMatch(/choose a name of your own/);
+    });
+
+    it("says the one thing to do when there is no name to say", () => {
+        expect(welcomeLine(null)).toBe("Add your first card to start your collection.");
     });
 });

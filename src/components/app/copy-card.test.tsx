@@ -16,8 +16,8 @@ vi.mock("@/lib/reads", () => ({ loadFacets: vi.fn().mockResolvedValue({ sets: []
 const forget = vi.fn();
 vi.mock("@/lib/forget-mine", () => ({ forgetMineQuietly: () => (forget(), Promise.resolve()) }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
-const failed = vi.fn();
-vi.mock("@/components/app/toast", () => ({ notify: { done: vi.fn(), failed: (...args: unknown[]) => failed(...args) } }));
+const writeFailed = vi.fn();
+vi.mock("@/components/app/toast", () => ({ notify: { done: vi.fn(), writeFailed: (...args: unknown[]) => writeFailed(...args) } }));
 vi.stubGlobal("matchMedia", () => ({ matches: true, addEventListener() {}, removeEventListener() {} }));
 
 const row = {
@@ -55,7 +55,7 @@ describe("CopyCard field saves", () => {
     beforeEach(() => {
         editCopies.mockReset();
         forget.mockReset();
-        failed.mockReset();
+        writeFailed.mockReset();
     });
 
     it("shows the new value at once, writes every row without a re-read, and tells the sheet after the cache is gone", async () => {
@@ -78,7 +78,7 @@ describe("CopyCard field saves", () => {
         const onSaved = vi.fn();
         draw(onSaved);
         fireEvent.change(condition(), { target: { value: "Played" } });
-        await waitFor(() => expect(failed).toHaveBeenCalledWith("The condition did not change", { description: "The API is away." }));
+        await waitFor(() => expect(writeFailed).toHaveBeenCalledWith("The condition did not change", { ok: false, error: "The API is away." }));
         expect(condition().value).toBe("Near Mint");
         expect(onSaved).not.toHaveBeenCalled();
         expect(forget).not.toHaveBeenCalled();

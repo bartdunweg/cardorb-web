@@ -38,6 +38,8 @@ type Options = {
     description?: string;
     /** A way back. `label` defaults to "Undo". */
     undo?: { label?: string; onUndo: () => void };
+    /** A way on, where the failure has one: "Sign in" on a session that has ended. */
+    link?: { label: string; href: string };
     /** The same id twice updates that toast instead of stacking a second one. */
     id?: string;
 };
@@ -68,6 +70,13 @@ export const notify = {
     removed: (title: string, options?: Options) => show("removed", title, options),
     /** Something did not work. Say what, in the app's own words, not the API's. */
     failed: (title: string, options?: Options) => show("failed", title, options),
+    /**
+     * A write the API refused. The same as `failed`, with the one refusal you can act on carrying
+     * its way out: a session that has ended gets Sign in, rather than the API's "Sign in to see
+     * this" as a sentence with nowhere to go (error-path audit).
+     */
+    writeFailed: (title: string, failure: { error: string; signedOut?: boolean }) =>
+        show("failed", title, { description: failure.error, link: failure.signedOut ? { label: "Sign in", href: "/login" } : undefined }),
     dismiss: (id?: string | number) => sonner.dismiss(id),
 };
 
@@ -76,6 +85,7 @@ function ToastCard({
     title,
     description,
     undo,
+    link,
     toastId,
 }: Options & {
     tone: Tone;
@@ -94,6 +104,12 @@ function ToastCard({
                 <p className="text-sm font-medium text-secondary">{title}</p>
                 {description ? <p className="text-sm text-tertiary">{description}</p> : null}
             </div>
+
+            {link ? (
+                <Button size="sm" color="link-color" href={link.href} className="shrink-0" onClick={dismiss}>
+                    {link.label}
+                </Button>
+            ) : null}
 
             {undo ? (
                 <Button

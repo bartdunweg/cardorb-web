@@ -57,7 +57,7 @@ describe("settleLatest", () => {
 
         expect(await first).toBe(false);
         expect(write).toHaveBeenCalledTimes(1);
-        expect(lastFailed).toHaveBeenCalledWith("The API said no");
+        expect(lastFailed).toHaveBeenCalledWith({ ok: false, error: "The API said no" });
         expect(firstFailed).not.toHaveBeenCalled();
 
         // The key is free again: the next press flies.

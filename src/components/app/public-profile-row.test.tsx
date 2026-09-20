@@ -14,14 +14,14 @@ vi.mock("@/app/(app)/dashboard/settings/actions", () => ({
 const refresh = vi.fn();
 vi.mock("@/lib/forget-mine", () => ({ forgetMineQuietly: () => Promise.resolve() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
-const failed = vi.fn();
-vi.mock("@/components/app/toast", () => ({ notify: { failed: (...args: unknown[]) => failed(...args) } }));
+const writeFailed = vi.fn();
+vi.mock("@/components/app/toast", () => ({ notify: { writeFailed: (...args: unknown[]) => writeFailed(...args) } }));
 
 describe("PublicProfileRow", () => {
     beforeEach(() => {
         setProfilePublic.mockReset();
         refresh.mockReset();
-        failed.mockReset();
+        writeFailed.mockReset();
     });
 
     it("shows the address as a link when public", () => {
@@ -54,7 +54,7 @@ describe("PublicProfileRow", () => {
         expect(onChange).toHaveBeenCalledWith(true);
         await waitFor(() => expect(setProfilePublic).toHaveBeenCalledWith(true, { reread: false }));
         await waitFor(() => expect(refresh).toHaveBeenCalled());
-        expect(failed).not.toHaveBeenCalled();
+        expect(writeFailed).not.toHaveBeenCalled();
     });
 
     it("puts the switch back and says so when the save fails", async () => {
@@ -62,7 +62,7 @@ describe("PublicProfileRow", () => {
         const onChange = vi.fn();
         render(<PublicProfileRow username="ash" isPublic={false} onChange={onChange} />);
         fireEvent.click(screen.getByRole("switch", { name: "Public profile" }));
-        await waitFor(() => expect(failed).toHaveBeenCalledWith("Your profile is still private", { description: "The API is away." }));
+        await waitFor(() => expect(writeFailed).toHaveBeenCalledWith("Your profile is still private", { ok: false, error: "The API is away." }));
         expect(onChange).toHaveBeenLastCalledWith(false);
         expect(refresh).not.toHaveBeenCalled();
     });

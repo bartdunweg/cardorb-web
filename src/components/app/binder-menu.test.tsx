@@ -12,7 +12,7 @@ import { BinderMenu } from "./binder-menu";
 const push = vi.fn();
 vi.mock("@/app/(app)/dashboard/collections/actions", () => ({ deleteBinder: vi.fn() }));
 vi.mock("@/components/app/binder-dialog", () => ({ BinderModal: () => null }));
-vi.mock("@/components/app/toast", () => ({ notify: { failed: vi.fn() } }));
+vi.mock("@/components/app/toast", () => ({ notify: { failed: vi.fn(), writeFailed: vi.fn() } }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 
 describe("BinderMenu delete", () => {
@@ -25,7 +25,7 @@ describe("BinderMenu delete", () => {
         const confirm = await screen.findByRole("button", { name: "Delete" });
         await act(async () => fireEvent.click(confirm));
 
-        expect(notify.failed).toHaveBeenCalledWith("Fire was not deleted", { description: "Something went wrong. Try again." });
+        expect(notify.writeFailed).toHaveBeenCalledWith("Fire was not deleted", { ok: false, error: "Something went wrong. Try again." });
         expect(push).not.toHaveBeenCalled();
         expect(screen.getByRole("button", { name: "Delete" })).not.toHaveAttribute("data-loading");
     });

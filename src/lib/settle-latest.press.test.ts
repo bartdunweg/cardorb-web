@@ -94,7 +94,7 @@ describe("settleLatest under pressure", () => {
         writes.calls[0]!.resolve({ ok: false, error: "No" });
 
         expect(await first).toBe(false);
-        expect(failedThird).toHaveBeenCalledWith("No");
+        expect(failedThird).toHaveBeenCalledWith({ ok: false, error: "No" });
         expect(failedFirst).not.toHaveBeenCalled();
         expect(failedSecond).not.toHaveBeenCalled();
         expect(writes.calls).toHaveLength(1);

@@ -109,11 +109,11 @@ export function useCopySteps({
     const putBack = (removed: RemovedCard) => {
         if (!quiet) {
             return void orFailed(restoreCard(removed)).then((res) => {
-                if (!res.ok) notify.failed("That did not go back", { description: res.error });
+                if (!res.ok) notify.writeFailed("That did not go back", res);
             });
         }
         void orFailed(restoreCard(removed, { reread: false })).then((res) => {
-            if (!res.ok) return notify.failed("That did not go back", { description: res.error });
+            if (!res.ok) return notify.writeFailed("That did not go back", res);
             void forgetMineQuietly("cards", set).then(() => router.refresh());
         });
     };
@@ -144,7 +144,7 @@ export function useCopySteps({
                     steps.aim(before.value);
                     onShown?.(0, before.value);
                 }
-                return void notify.failed("That did not go back", { description: r.error });
+                return void notify.writeFailed("That did not go back", r);
             }
             steps.keep({ value: 0, id: undefined });
             notify.done("Undone");

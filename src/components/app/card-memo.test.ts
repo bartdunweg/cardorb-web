@@ -26,12 +26,15 @@ const facts = vi.fn();
 const many = vi.fn();
 const history = vi.fn();
 const setRows = vi.fn();
+/** The read that did not answer, as `@/lib/reads` has it; hoisted with the mock that uses it. */
+const FAILED_READ = vi.hoisted(() => Symbol("read failed"));
 vi.mock("@/lib/reads", () => ({
     cardFacts: (id: string, language?: string | null) => facts(id, language),
     cardFactsMany: (ids: string[], language?: string | null) => many(ids, language),
     // A bare list is a line with no listings beside it; an object is the whole answer.
     cardPriceHistory: (id: string) => Promise.resolve(history(id)).then((a: unknown) => (Array.isArray(a) ? { points: a, listings: {} } : a)),
     listSetRows: (set: string) => setRows(set),
+    isReadFailed: (a: unknown) => a === FAILED_READ,
 }));
 vi.mock("@/components/app/card-detail-slideout", () => ({}));
 

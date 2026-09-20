@@ -41,3 +41,32 @@ describe("a binder tile's icon", () => {
         expect(classes.some((c) => c.startsWith("before:shadow"))).toBe(false);
     });
 });
+
+/*
+ * A new account: the only binder is Favorites with nothing in it. The page said "Favorites" and
+ * "0", and on a phone the empty state was hidden outright, so the whole page was a tile and a zero
+ * (error-path audit). The zero goes, and the invitation is there at every width.
+ */
+describe("a new account's Binders page", () => {
+    it("says nothing where there is nothing to count", () => {
+        const { container } = render(<BindersGrid binders={[]} favoritesCount={0} />);
+        expect(container.textContent).not.toMatch(/\b0\b/);
+        expect(container.textContent).not.toMatch(/0 cards/);
+        expect(container.textContent).toMatch(/Favorites/);
+    });
+
+    it("invites a first binder on a phone as well as on a desktop", () => {
+        const { container, getAllByRole } = render(<BindersGrid binders={[]} favoritesCount={0} />);
+        expect(container.textContent).toMatch(/No binders yet/);
+        // Two invitations, one per width, and neither of them hidden from a screen reader.
+        expect(getAllByRole("button", { name: "New binder" }).length).toBe(2);
+        expect(container.querySelector(".hidden.lg\\:contents")).not.toBeNull();
+        expect(container.querySelector(".lg\\:hidden")).not.toBeNull();
+    });
+
+    it("leaves a binder that holds cards with its count", () => {
+        const { container } = render(<BindersGrid binders={[{ id: "b1", name: "Shinies", count: 3, kind: "manual", rule: null }]} favoritesCount={2} />);
+        expect(container.textContent).toMatch(/3 cards/);
+        expect(container.textContent).toMatch(/2 cards/);
+    });
+});

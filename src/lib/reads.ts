@@ -37,6 +37,29 @@ async function read<T>(what: string, query: [string, string | null | undefined][
 }
 
 /**
+ * A read that did not answer, which is not the same as one that answered with nothing.
+ *
+ * `read` folds the two together, so a screen drawing its fallback says there is nothing to see
+ * when the truth is that nobody got an answer: a price line became "No readings in this period
+ * yet", a binder list became a card with nowhere to go. A caller that has to tell them apart asks
+ * with `tryRead` and reads this back.
+ */
+export const READ_FAILED = Symbol("read failed");
+export type ReadFailed = typeof READ_FAILED;
+
+/** Whether an answer is a read that never came. */
+export const isReadFailed = (answer: unknown): answer is ReadFailed => answer === READ_FAILED;
+
+/** `read`, with the failure kept rather than folded into the fallback. An address the route refuses (400) is still the fallback, as it is there. */
+async function tryRead<T>(what: string, query: [string, string | null | undefined][], fallback: T): Promise<T | ReadFailed> {
+    try {
+        return await ask(what, query, fallback);
+    } catch {
+        return READ_FAILED;
+    }
+}
+
+/**
  * The read for callers whose action threw when the API did not answer: a search box that says the
  * card service did not answer, a list that offers to try again. An address the route refuses (400)
  * is still the fallback, because the action answered an input its schema refused with an empty
@@ -72,7 +95,8 @@ export const cardFactsMany = (tcgIds: string[], language?: string | null): Promi
         ? read("facts-many", [...[...new Set(tcgIds)].map((id): [string, string] => ["id", id]), ["language", catalogue(language)]], {})
         : Promise.resolve({});
 
-export const cardPriceHistory = (tcgId: string): Promise<PriceHistory> => read("prices", [["id", tcgId]], { points: [], listings: {} });
+/** A card's line. READ_FAILED where it could not be read: the chart then says so rather than that the card has no readings. */
+export const cardPriceHistory = (tcgId: string): Promise<PriceHistory | ReadFailed> => tryRead("prices", [["id", tcgId]], { points: [], listings: {} });
 
 export const seriesLogo = (series: string): Promise<string | null> => read<string | null>("series-logo", [["series", series]], null);
 
@@ -96,6 +120,9 @@ export const listCopies = async (card: CardName): Promise<Card[]> => (await list
 export const listSetRows = (set: string): Promise<Card[] | null> => read<Card[] | null>("set-rows", [["set", set]], null);
 
 export const listBinders = (): Promise<BinderChoice[]> => read("folders", [], []);
+
+/** The binders, with a read that failed told apart from an account with none: the card sheet keeps its button alive either way, and says which it is. */
+export const tryListBinders = (): Promise<BinderChoice[] | ReadFailed> => tryRead("folders", [], []);
 
 export const loadFacets = (): Promise<Facets> => read("facets", [], NO_FACETS);
 

@@ -422,7 +422,7 @@ describe("useCopySteps: an Undo on the add that does not land", () => {
 
         expect(result.current.held).toBe(1);
         expect(onShown).toHaveBeenLastCalledWith(0, 1);
-        expect(notifyMock.failed).toHaveBeenCalledWith("That did not go back", { description: "No." });
+        expect(notifyMock.writeFailed).toHaveBeenCalledWith("That did not go back", { ok: false, error: "No." });
         expect(notifyMock.done).not.toHaveBeenCalledWith("Undone");
 
         act(() => result.current.press(2));
@@ -438,7 +438,7 @@ describe("useCopySteps: an Undo on the add that does not land", () => {
         await act(flush);
 
         expect(result.current.held).toBe(1);
-        expect(notifyMock.failed).toHaveBeenCalledWith("That did not go back", { description: "Something went wrong. Try again." });
+        expect(notifyMock.writeFailed).toHaveBeenCalledWith("That did not go back", { ok: false, error: "Something went wrong. Try again." });
         act(() => result.current.press(0));
         expect(removals.calls[1]!.args[0]).toBe("new-row");
     });

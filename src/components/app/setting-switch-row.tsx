@@ -68,7 +68,7 @@ export function SettingSwitchRow({
         setPending(false);
         if (!res.ok) {
             onChange(before);
-            notify.failed(stillTitle(before), { description: res.error });
+            notify.writeFailed(stillTitle(before), res);
             return;
         }
         // Whatever else reads the profile from the server (the Manage sheet, the account menu) gets the new one.

@@ -2,7 +2,7 @@ import type { CardFacts, PricePoint } from "@/app/(app)/dashboard/cards/actions"
 import { CARD_FACTS_BATCH } from "@/lib/card-shapes";
 import type { Card } from "@/lib/cards";
 import { type CardName, sameCard } from "@/lib/copies";
-import { cardFacts, cardFactsMany, cardPriceHistory, listSetRows } from "@/lib/reads";
+import { cardFacts, cardFactsMany, cardPriceHistory, isReadFailed, listSetRows } from "@/lib/reads";
 
 /**
  * What the catalogue has said about a printing, kept for as long as the page lives.
@@ -25,6 +25,8 @@ const FACTS_PAGED = new Map<string, Promise<CardFacts | undefined>>();
 /** A price line with the moment it was read: the facts never change, the line gains a day every night. */
 const PRICES_SEEN = new Map<string, { points: PricePoint[]; listings: Record<string, number>; at: number }>();
 const PRICES_ASKED = new Map<string, Promise<PricePoint[]>>();
+/** Cards whose last read of the line did not answer: a chart with nothing to draw says which of the two it is. */
+const PRICES_FAILED = new Set<string>();
 
 /**
  * How long a known line is taken as current. Past it, the next ask still answers the known line at
@@ -103,24 +105,42 @@ export function knownCardFacts(tcgId: string, language?: string | null): CardFac
 
 /**
  * The card's line: the known one while it is fresh, else read again. A second ask while one is out
- * joins it. An empty answer never replaces a line with readings: cardPriceHistory answers an API it
- * could not reach as empty, and a card does not lose its past, so the known line stands and the
- * next ask tries again.
+ * joins it. A read that did not answer never replaces a line with readings: a card does not lose
+ * its past, so the known line stands, the failure is noted for a chart with nothing to draw, and
+ * the next ask tries again.
  */
 export function preloadPriceHistory(tcgId: string): Promise<PricePoint[]> {
     const known = PRICES_SEEN.get(tcgId);
     if (known && Date.now() - known.at < PRICES_FRESH_MS) return Promise.resolve(known.points);
     const open = PRICES_ASKED.get(tcgId);
     if (open) return open;
-    const p = cardPriceHistory(tcgId).then(({ points, listings }) => {
+    const p = cardPriceHistory(tcgId).then((answer) => {
         PRICES_ASKED.delete(tcgId);
         const before = PRICES_SEEN.get(tcgId);
+        if (isReadFailed(answer)) {
+            PRICES_FAILED.add(tcgId);
+            return before?.points ?? [];
+        }
+        PRICES_FAILED.delete(tcgId);
+        const { points, listings } = answer;
         if (!points.length && before?.points.length) return before.points;
         PRICES_SEEN.set(tcgId, { points, listings, at: Date.now() });
         return points;
     });
     PRICES_ASKED.set(tcgId, p);
     return p;
+}
+
+/** Whether the last read of this card's line did not answer, so a chart with no points says that instead of "no readings". */
+export function priceHistoryFailed(tcgId: string): boolean {
+    return PRICES_FAILED.has(tcgId);
+}
+
+/** Ask for this card's line again, whatever is known of it: what the chart's Try again presses. */
+export function forgetPriceHistory(tcgId: string) {
+    PRICES_SEEN.delete(tcgId);
+    PRICES_ASKED.delete(tcgId);
+    PRICES_FAILED.delete(tcgId);
 }
 
 /**
@@ -223,4 +243,5 @@ export function forgetCards() {
     FACTS_PAGED.clear();
     PRICES_SEEN.clear();
     PRICES_ASKED.clear();
+    PRICES_FAILED.clear();
 }

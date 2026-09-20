@@ -1,20 +1,19 @@
 "use server";
 
 import { z } from "zod";
-import { ApiError, api } from "@/lib/api";
+import { api } from "@/lib/api";
 import { createdBinderAnswer } from "@/lib/api-shapes";
 import type { BinderRule, PokedexSetting } from "@/lib/binder-rule";
 import { binderRuleSchema, pokedexSettingSchema } from "@/lib/binder-rule-schema";
 import { getFacets } from "@/lib/cards";
 import { type Facets, NO_FACETS } from "@/lib/facets";
 import { forgetMine } from "@/lib/user-cache";
+import { writeFailure } from "@/lib/write-failure";
+import type { FailedWrite } from "@/lib/write-outcome";
 
-export type BinderResult = { ok: true; id?: string } | { ok: false; error: string };
+export type BinderResult = { ok: true; id?: string } | FailedWrite;
 
-const failed = (err: unknown): { ok: false; error: string } => ({
-    ok: false,
-    error: err instanceof ApiError ? err.message : "Something went wrong. Try again.",
-});
+const failed = writeFailure;
 
 const nameSchema = z.string().trim().min(1, "Enter a name.").max(60);
 

@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { ApiError, api } from "@/lib/api";
+import { api } from "@/lib/api";
 import {
     CARD_FACTS_BATCH,
     EDITIONS,
@@ -30,20 +30,19 @@ import { titleScope } from "@/lib/list-filter-schema";
 import { rank } from "@/lib/name-rank";
 import { getShelf } from "@/lib/sets";
 import { forgetMine } from "@/lib/user-cache";
+import { writeFailure } from "@/lib/write-failure";
+import type { FailedWrite } from "@/lib/write-outcome";
 
 export type { PokemonCard } from "@/lib/api-shapes";
 
 /** A hit in your own collection is the whole card, so a tap on it can open the card rather than a search for its name. */
 export type CardHit = Card;
 
-type Result = { ok: true } | { ok: false; error: string };
+type Result = { ok: true } | FailedWrite;
 
 const addedAnswer = z.object({ id: z.string().optional() });
 
-const failed = (err: unknown): { ok: false; error: string } => ({
-    ok: false,
-    error: err instanceof ApiError ? err.message : "Something went wrong. Try again.",
-});
+const failed = writeFailure;
 
 const term = z.string().trim().max(100);
 const choice = z.string().trim().min(1).max(100).optional();
@@ -397,15 +396,16 @@ export type PricePoint = { date: string; market: number | null; holo: number | n
 export type PriceHistory = { points: PricePoint[]; listings: Record<string, number> };
 
 // A card's price day by day over the last ninety days, for the sheet. Empty, not an error, for a
-// card with no readings yet; and empty when the API cannot answer, since the sheet is open for
-// the card, not for its line.
+// card with no readings yet. It used to answer an API that could not be reached with that same
+// empty line, and the chart then told everybody the card had never been priced; it throws now, so
+// the read says the line did not come and the chart offers to ask again (error-path audit).
 export async function cardPriceHistory(tcgId: string): Promise<PriceHistory> {
     try {
         const { points, listings } = await api(`/cards/${encodeURIComponent(tcgId)}/prices`, { schema: pricePointsAnswer });
         return { points, listings: listings ?? {} };
     } catch (err) {
         console.error("Price history unavailable:", err instanceof Error ? err.message : err);
-        return { points: [], listings: {} };
+        throw err;
     }
 }
 

@@ -109,7 +109,7 @@ export function CopyCard({
             ),
         );
         if (!res.ok) {
-            notify.failed(failed, { description: res.error });
+            notify.writeFailed(failed, res);
             setOver((o) => {
                 const kept = { ...(o.id === row.id ? o.edits : {}) };
                 for (const k of Object.keys(edits) as (keyof CopyEdits)[]) delete kept[k];
