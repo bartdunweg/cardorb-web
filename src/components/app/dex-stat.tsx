@@ -38,13 +38,14 @@ export async function readDexCaught(): Promise<number | null> {
     return sideRead("dex caught", () => caughtCount(binder.pokedex), null);
 }
 
-// The number alone is kept per person, in the stats scope and window as the rest of Home: reading
+// The number alone is kept per person, in the holdings scope and the window of the rest of Home: reading
 // every card to count them took a two-thousand-card read on each open of Home, which no cache
 // held (the list cache keeps first batches only). Only the count is stored, not the cards. A
-// card write drops it (forgetMine). The setting is in the key, so a binder given other
+// card write drops it (forgetMine), and a star does not: no star changes which species you hold.
+// The setting is in the key, so a binder given other
 // rarities or another range counts afresh rather than waiting on the tag.
 function caughtCount(setting: PokedexSetting): Promise<number> {
-    return perUser("stats", `dex-caught:v1:${JSON.stringify(setting)}`, async (token) => {
+    return perUser("holdings", `dex-caught:v1:${JSON.stringify(setting)}`, async (token) => {
         // No pictures: the tile counts species and draws nothing, and the printings' pictures of a
         // whole collection were 1,191 ms of the 1,442 ms this read cost (measured 2026-09-18).
         const [all, names] = await Promise.all([getAllMyCards({ facets: false, pictures: false }, token), getDexNames()]);

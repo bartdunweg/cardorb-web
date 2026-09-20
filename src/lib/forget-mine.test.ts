@@ -43,4 +43,13 @@ describe("forgetMineQuietly", () => {
         await forgetMineQuietly("dexFace");
         expect(fetchMock).toHaveBeenCalledWith("/api/forget-mine?write=dexFace", { method: "POST" });
     });
+
+    it("names the set a set page's press was in, and names none where the caller has none", async () => {
+        const fetchMock = forgot();
+        vi.stubGlobal("fetch", fetchMock);
+        await forgetMineQuietly("cards", "sv3pt5");
+        expect(fetchMock).toHaveBeenLastCalledWith("/api/forget-mine?write=cards&set=sv3pt5", { method: "POST" });
+        await forgetMineQuietly("cards");
+        expect(fetchMock).toHaveBeenLastCalledWith("/api/forget-mine?write=cards", { method: "POST" });
+    });
 });

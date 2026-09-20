@@ -85,7 +85,7 @@ describe("perUser", () => {
         await perUser("profile", "profile", async () => 1);
         expect(cacheTags.at(-1)).toEqual(["user:u1", "user:u1:profile"]);
         // Entries from before the split carry the person's tag alone, which a scoped forget misses.
-        expect(cacheKeys.at(-1)).toContain("scoped:v2");
+        expect(cacheKeys.at(-1)).toContain("scoped:v3");
     });
 
     it("keeps one name in two scopes apart", async () => {
@@ -117,6 +117,52 @@ describe("a card write in the same request", () => {
         expect(stats).toHaveBeenCalledTimes(2);
         expect(profile).toHaveBeenCalledTimes(1);
     });
+
+    it("reads the set it named again and leaves the other set's page alone", async () => {
+        const one = vi.fn(async () => 1);
+        const other = vi.fn(async () => 2);
+        const read = () =>
+            Promise.all([perUser({ scope: "setPages", part: "sv1" }, "set:sv1", one), perUser({ scope: "setPages", part: "base1" }, "set:base1", other)]);
+        await read();
+        await forgetMine("cards", "sv1");
+        await read();
+        expect(one).toHaveBeenCalledTimes(2);
+        expect(other).toHaveBeenCalledTimes(1);
+    });
+
+    it("reads every set page again when the write cannot name a set", async () => {
+        const one = vi.fn(async () => 1);
+        const other = vi.fn(async () => 2);
+        const read = () =>
+            Promise.all([perUser({ scope: "setPages", part: "sv1" }, "set:sv1", one), perUser({ scope: "setPages", part: "base1" }, "set:base1", other)]);
+        await read();
+        await forgetMine("cards");
+        await read();
+        expect(one).toHaveBeenCalledTimes(2);
+        expect(other).toHaveBeenCalledTimes(2);
+    });
+});
+
+describe("a star in the same request", () => {
+    beforeEach(() => memo.clear());
+
+    it("reads the counts again and neither the facets, the dearest cards nor the set pages", async () => {
+        const stats = vi.fn(async () => 1);
+        const facets = vi.fn(async () => 2);
+        const setPage = vi.fn(async () => 3);
+        const read = () =>
+            Promise.all([
+                perUser("stats", "stats", stats),
+                perUser("holdings", "facets", facets),
+                perUser({ scope: "setPages", part: "sv1" }, "set:sv1", setPage),
+            ]);
+        await read();
+        await forgetMine("favorite");
+        await read();
+        expect(stats).toHaveBeenCalledTimes(2);
+        expect(facets).toHaveBeenCalledTimes(1);
+        expect(setPage).toHaveBeenCalledTimes(1);
+    });
 });
 
 describe("forgetMine", () => {
@@ -137,11 +183,28 @@ describe("forgetMine", () => {
         expect(vi.mocked(updateTag).mock.calls.flat()).toEqual([
             "user:u1:lists",
             "user:u1:stats",
+            "user:u1:holdings",
             "user:u1:binders",
             "user:u1:sets",
+            "user:u1:setPages",
             "user:u1:value",
             "public:bart",
         ]);
+    });
+
+    it("drops one set's page and no other when the write names its set", async () => {
+        await forgetMine("cards", "sv1");
+        const dropped = vi.mocked(updateTag).mock.calls.flat();
+        expect(dropped).toContain("user:u1:setPages:sv1");
+        // Every other set page stands: the scope's own tag, which all of them carry, is not dropped.
+        expect(dropped).not.toContain("user:u1:setPages");
+        // The shelf still goes: its tile counts really do move on a card write.
+        expect(dropped).toContain("user:u1:sets");
+    });
+
+    it("keeps the facets, the dearest cards and the Pokémon count on a star", async () => {
+        await forgetMine("favorite");
+        expect(vi.mocked(updateTag).mock.calls.flat()).toEqual(["user:u1:lists", "user:u1:stats", "user:u1:value", "public:bart"]);
     });
 
     it("drops the profile alone after a profile write", async () => {

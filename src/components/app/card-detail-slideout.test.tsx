@@ -192,7 +192,7 @@ describe("CardDetailSlideout: smoke", () => {
         vi.mocked(listCopies).mockResolvedValue([makeCard({ id: "p1", quantity: 4 })]);
         await act(async () => writes.calls[1]!.resolve({ ok: true }));
         await act(flush);
-        expect(forgetMine).toHaveBeenCalledWith("cards");
+        expect(forgetMine).toHaveBeenCalledWith("cards", null);
         expect(listCopies).toHaveBeenCalledTimes(2);
 
         await tap(screen.getByRole("button", { name: "One copy fewer" }));
@@ -222,7 +222,7 @@ describe("CardDetailSlideout: smoke", () => {
         await act(flush);
 
         expect(notifyMock.failed).toHaveBeenCalledWith("The number of copies did not change", expect.anything());
-        expect(forgetMine).toHaveBeenCalledWith("cards");
+        expect(forgetMine).toHaveBeenCalledWith("cards", null);
     });
 
     it("removes the last copy with the minus, says so, and puts it back", async () => {

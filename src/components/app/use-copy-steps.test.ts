@@ -125,7 +125,7 @@ describe("useCopySteps: rapid presses", () => {
         act(() => result.current.press(2));
         await act(async () => copies.calls[0]!.resolve({ ok: true }));
 
-        expect(forgetMine).toHaveBeenCalledWith("cards");
+        expect(forgetMine).toHaveBeenCalledWith("cards", null);
         expect(rereadMine).not.toHaveBeenCalled();
     });
 });
@@ -392,7 +392,7 @@ describe("useCopySteps: Undo and Put back during a press", () => {
         await act(flush);
 
         expect(restoreCard).toHaveBeenCalledWith(removed, { reread: false });
-        expect(forgetMine).toHaveBeenCalledWith("cards");
+        expect(forgetMine).toHaveBeenCalledWith("cards", null);
         expect(router.refresh).toHaveBeenCalled();
     });
 });

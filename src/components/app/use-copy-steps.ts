@@ -29,6 +29,7 @@ type Added = { ok: true; id?: string } | { ok: false; error: string };
  */
 export function useCopySteps({
     name,
+    set = null,
     held: heldOnPage,
     rowId,
     add,
@@ -38,6 +39,11 @@ export function useCopySteps({
 }: {
     /** The card's name, for the toasts. */
     name: string;
+    /**
+     * The set the card is in, where the tile knows it: then the forget drops that set's page alone
+     * and every other set page keeps its five minutes. Null drops them all, as it always did.
+     */
+    set?: string | null;
     /** How many the page says are held; 0 for a card with no row. */
     held: number;
     /** The row the copies are on, where there is one. */
@@ -77,7 +83,7 @@ export function useCopySteps({
             // Held, but no row to write to: a run that stopped short of the press re-read the page for ever.
             return { failure: "This copy cannot be changed from here." };
         },
-        settle: () => (quiet ? forgetMineQuietly("cards") : rereadMine()),
+        settle: () => (quiet ? forgetMineQuietly("cards", set) : rereadMine()),
         onStored: onStored && (({ value, id }) => onStored(value, id)),
         onFailed: ({ error, wanted, stored }) => {
             onShown?.(wanted, stored.value);
@@ -108,7 +114,7 @@ export function useCopySteps({
         }
         void orFailed(restoreCard(removed, { reread: false })).then((res) => {
             if (!res.ok) return notify.failed("That did not go back", { description: res.error });
-            void forgetMineQuietly("cards").then(() => router.refresh());
+            void forgetMineQuietly("cards", set).then(() => router.refresh());
         });
     };
 
@@ -142,7 +148,7 @@ export function useCopySteps({
             }
             steps.keep({ value: 0, id: undefined });
             notify.done("Undone");
-            if (quiet) void forgetMineQuietly("cards").then(() => router.refresh());
+            if (quiet) void forgetMineQuietly("cards", set).then(() => router.refresh());
         });
     };
 

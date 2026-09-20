@@ -1,4 +1,4 @@
-import { forgetWriteSchema } from "@/lib/cache-scopes";
+import { forgetSetSchema, forgetWriteSchema } from "@/lib/cache-scopes";
 import { forgetMineLater } from "@/lib/user-cache";
 
 /**
@@ -14,6 +14,10 @@ import { forgetMineLater } from "@/lib/user-cache";
  * changes is forgotten (`cache-scopes.ts`): a plus on a tile keeps the profile. No `write` is
  * `all`, as it was before writes were told apart; a name this route does not know is a 400.
  *
+ * `?set=` is the set the written card is in, where the caller knows it: then that set's page is the
+ * only one forgotten. It reaches a cache tag, so it is checked like the write's name; a set id this
+ * route cannot read is a 400 rather than a tag nobody meant.
+ *
  * Only the caller's own cache, found from their session; no session is a 401. It changes nothing
  * but a cache, and it must come from this site's own pages (the Origin a browser sends with a
  * fetch), so another site cannot have a visitor's browser empty it.
@@ -25,6 +29,9 @@ export async function POST(request: Request) {
     if (origin !== url.origin) return new Response(null, { status: 403 });
     const write = forgetWriteSchema.safeParse(url.searchParams.get("write") ?? "all");
     if (!write.success) return new Response(null, { status: 400 });
-    const forgotten = await forgetMineLater(write.data);
+    const named = url.searchParams.get("set");
+    const set = named === null ? null : forgetSetSchema.safeParse(named);
+    if (set && !set.success) return new Response(null, { status: 400 });
+    const forgotten = await forgetMineLater(write.data, set ? set.data : null);
     return new Response(null, { status: forgotten ? 204 : 401 });
 }

@@ -82,11 +82,14 @@ const CARD_BATCH = 48;
 
 export function SetCards({
     cards: drawnCards,
+    setId = null,
     language = "en",
     firstRow = 6,
     initialSize = "md",
 }: {
     cards: SetCard[];
+    /** The set this page is, so a press on a tile forgets this set's page and no other set's. */
+    setId?: string | null;
     language?: string;
     firstRow?: number;
     /** The size the cookie holds, for the first paint; the View menu changes it (use-cards-view). */
@@ -411,6 +414,7 @@ export function SetCards({
                                 <li key={card.id} className="arrive" style={{ "--arrive-delay": arriveDelay(i, i < CARD_BATCH) } as React.CSSProperties}>
                                     <SetCardTile
                                         card={card}
+                                        setId={setId}
                                         stamp={`${holdingKey(drawnById.get(card.id) ?? card)}#${outsideCount(drawnById.get(card.id) ?? card)}`}
                                         onChange={(patch) => {
                                             const drawnCard = drawnById.get(card.id);
@@ -451,6 +455,7 @@ export function SetCards({
                 printing, with the two ways to take it; the sheet is where you looked for them. */}
             <CardDetailSlideout
                 card={selected}
+                setId={setId}
                 onClose={() => {
                     setSelected(null);
                     setAddable(null);

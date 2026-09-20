@@ -54,7 +54,7 @@ describe("useWishStep: rapid presses", () => {
         expect(result.current.wished).toBe(true);
         expect(result.current.id).toBe("wish-1");
         expect(forgetMine).toHaveBeenCalledTimes(1);
-        expect(forgetMine).toHaveBeenCalledWith("cards");
+        expect(forgetMine).toHaveBeenCalledWith("cards", null);
     });
 
     it("settles on, off as off: the add, then the removal of the row it made", async () => {

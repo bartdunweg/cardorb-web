@@ -21,6 +21,7 @@ type Added = { ok: true; id?: string } | { ok: false; error: string };
  */
 export function useWishStep({
     name,
+    set = null,
     wished: wishedOnPage,
     rowId,
     add,
@@ -29,6 +30,11 @@ export function useWishStep({
 }: {
     /** The card's name, for the toasts. */
     name: string;
+    /**
+     * The set the card is in, where the tile knows it: then the forget drops that set's page alone
+     * and every other set page keeps its five minutes. Null drops them all, as it always did.
+     */
+    set?: string | null;
     /** Whether the page says the card is wished for. */
     wished: boolean;
     /** The wish's row, where there is one. */
@@ -57,7 +63,7 @@ export function useWishStep({
             notify.removed(`${name} is off your wishlist`, { undo: { label: "Put back", onUndo: () => latest.current(true) } });
             return { value: false, id: undefined };
         },
-        settle: () => forgetMineQuietly("cards"),
+        settle: () => forgetMineQuietly("cards", set),
         onStored: onStored && (({ id }) => onStored(id)),
         onFailed: ({ error, threw, stored }) => {
             onShown?.(stored.value);
