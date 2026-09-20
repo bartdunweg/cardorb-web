@@ -9,5 +9,4 @@ import { forgetMineQuietly } from "@/lib/forget-mine";
  * Its own module, not `forget-mine.ts`: tests stub `forgetMineQuietly` by mocking that path, and
  * this reaches it through the import, so the stub still applies.
  */
-export const forgetMineThenRefresh = (write: ForgetWrite, router: { refresh: () => void }, set?: string | null) =>
-    forgetMineQuietly(write, set).then(() => router.refresh());
+export const forgetMineThenRefresh = (write: ForgetWrite, router: { refresh: () => void }) => forgetMineQuietly(write).then(() => router.refresh());
