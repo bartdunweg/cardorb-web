@@ -13,6 +13,7 @@ export const literal = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\
 export type FixtureCard = { id: string; name: string; localId: string };
 
 export const SET_ID: string = fixture.sets[0].id;
+export const SET_NAME: string = fixture.sets[0].name;
 
 export const card = (index: number): FixtureCard => {
     const row = fixture.cards[index];

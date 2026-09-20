@@ -13,7 +13,8 @@ describe("askedList", () => {
         ["the favorites, by name", "favorites", "favorites"],
         ["the wishlist, by name", "wishlist", "wishlist"],
         ["a binder, by its uuid", UUID, UUID],
-        ["a uuid in capitals, which is the same binder", UUID.toUpperCase(), UUID.toUpperCase()],
+        // Taken, and handed on exactly as written: the same binder, under a value of its own.
+        ["a uuid in capitals, kept as it was written", UUID.toUpperCase(), UUID.toUpperCase()],
         ["nothing asked at all", undefined, "all"],
         ["an empty value", "", "all"],
         ["a path out of the address", "../", "all"],

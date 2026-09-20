@@ -76,8 +76,9 @@ describe("getSet's cache key", () => {
         await getSet("sv01", "ja");
         expect(lastRead().key).not.toBe(english);
         expect(lastRead().key).toContain("ja");
-        // Seven days back, the window the page's price change covers, as the API's date.
-        expect(english).toMatch(/\d{4}-\d{2}-\d{2}/);
+        // Seven days back, the window the page's price change covers, as the API writes a date.
+        const weekAgo = new Date(Date.now() - 7 * 86_400_000).toISOString().slice(0, 10);
+        expect(english).toBe(`set:v2:en:${weekAgo}:sv01`);
     });
 });
 
