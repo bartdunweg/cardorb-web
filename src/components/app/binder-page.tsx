@@ -16,7 +16,6 @@ import { rememberedView } from "@/lib/list-memory-server";
 // take their place under the title when it lands.
 export async function BinderPage({
     title,
-    phoneTitle,
     subtitle,
     datapointLines = 1,
     back,
@@ -30,8 +29,6 @@ export async function BinderPage({
     ...body
 }: BinderBodyProps & {
     title: string;
-    /** The title below `lg` where it differs (PageHeader). */
-    phoneTitle?: string;
     /** A sentence under the title, above the count, where the title alone does not say what the list is. */
     subtitle?: string;
     /** How many lines the count takes: two on a Pokédex ("544 of 1,025 Pokémon", then the count). */
@@ -82,7 +79,6 @@ export async function BinderPage({
             <div className="flex flex-1 flex-col gap-6">
                 <PageHeader
                     title={title}
-                    phoneTitle={phoneTitle}
                     subtitle={
                         subtitle || datapoints ? (
                             <>

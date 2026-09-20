@@ -61,7 +61,7 @@ async function tryRead<T>(what: string, query: [string, string | null | undefine
 
 /**
  * The read for callers whose action threw when the API did not answer: a search box that says the
- * card service did not answer, a list that offers to try again. An address the route refuses (400)
+ * card catalogue is not answering, a list that offers to try again. An address the route refuses (400)
  * is still the fallback, because the action answered an input its schema refused with an empty
  * answer rather than an error.
  */

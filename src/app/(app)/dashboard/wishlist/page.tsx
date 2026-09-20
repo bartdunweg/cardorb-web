@@ -44,7 +44,9 @@ export default async function WishlistPage({ searchParams }: { searchParams: Pro
     return (
         <BinderPage
             title="Wishlist"
-            phoneTitle="Collection"
+            /* Its own title on a phone too, where the tab that holds both halves is now called Collection:
+               a heading reading Collection over the wishlist would name the other list (WCAG 2.4.6), and the
+               switch under it already says which half you are on. */
             // No count or value under the title, as on Collection: the two halves of the Collection tab have one header (Bart's call, 2026-09-18).
             settings={(compact) => <ListSettingsDialog list="wishlist" title="Wishlist" isPublic={profile?.wishlist_public ?? false} compact={compact} />}
             query={query}

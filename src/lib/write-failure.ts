@@ -29,6 +29,6 @@ export function writeFailure(err: unknown): FailedWrite {
     const said = SAID[err.status];
     if (said) return { ok: false, error: said };
     if (OWN_WORDS.has(err.status) && err.message) return { ok: false, error: err.message };
-    // A 5xx, or anything else the API answers: the card service, not the person, and nothing to act on.
+    // A 5xx, or anything else the API answers: the API, not the person, and nothing to act on.
     return { ok: false, error: FAILED_WRITE_MESSAGE };
 }

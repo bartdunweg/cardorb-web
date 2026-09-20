@@ -51,7 +51,7 @@ async function Shelf({ shelf: reading, query, view }: { shelf: ReturnType<typeof
         return (
             <AppEmptyState
                 icon="book"
-                title="The catalogue is not answering"
+                title="The card catalogue is not answering"
                 description="The list of sets comes from the card catalogue, which is not reachable right now. Try again in a minute."
             />
         );
