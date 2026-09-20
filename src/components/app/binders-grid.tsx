@@ -19,8 +19,10 @@ import { cx } from "@/utils/cx";
 // Pokédex too, which is what the Pokédex is now. `count` is null only when a count could not be
 // read, and the tile goes without.
 function BinderCard({ href, icon, name, count }: { href: string; icon: FC<{ className?: string }>; name: string; count: number | null }) {
-    // Nothing where there is nothing to count, as in the sidebar: "0 cards" under a name is a line
-    // that says less than the blank it replaces (error-path audit).
+    /* Nothing where there is nothing to count, as in the sidebar: "0 cards" under a name is a line
+       that says less than the blank it replaces (error-path audit). A binder with no cards and one
+       whose count could not be read draw the same blank here, deliberately: on a tile the answer to
+       both is the same, and the binder's own page is where a rule that matched nothing is explained. */
     const counted = !count ? null : `${formatCount(count)} card${count === 1 ? "" : "s"}`;
     return (
         <Link

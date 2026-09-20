@@ -190,7 +190,10 @@ export function CardDetailSlideout({
                 {/* Only on a binder's page, and only where the list did not answer: the card still
                     goes into the collection, it just cannot be filed into the binder you are looking at. */}
                 {bindersFailed ? (
-                    <p className="text-sm text-tertiary">Your binders could not be loaded, so this card goes to your collection without one.</p>
+                    /* An <output>, so it is said and not only drawn: it appears when the read comes
+                       back, and it is the only signal that the binder on this page will not be
+                       filled (code review of this branch). */
+                    <output className="text-sm text-tertiary">Your binders could not be loaded, so this card goes to your collection without one.</output>
                 ) : null}
             </div>
         ) : mine?.wishlist && !emptied ? (

@@ -14,14 +14,14 @@ vi.mock("@/app/(app)/dashboard/settings/actions", () => ({
 const refresh = vi.fn();
 vi.mock("@/lib/forget-mine", () => ({ forgetMineQuietly: () => Promise.resolve() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
-const failed = vi.fn();
-vi.mock("@/components/app/toast", () => ({ notify: { failed: (...args: unknown[]) => failed(...args) } }));
+const writeFailed = vi.fn();
+vi.mock("@/components/app/toast", () => ({ notify: { writeFailed: (...args: unknown[]) => writeFailed(...args) } }));
 
 describe("PricesPublicRow", () => {
     beforeEach(() => {
         setPricesPublic.mockReset();
         refresh.mockReset();
-        failed.mockReset();
+        writeFailed.mockReset();
     });
 
     it("says prices stay private while off", () => {
@@ -47,7 +47,7 @@ describe("PricesPublicRow", () => {
         expect(onChange).toHaveBeenCalledWith(true);
         await waitFor(() => expect(setPricesPublic).toHaveBeenCalledWith(true, { reread: false }));
         await waitFor(() => expect(refresh).toHaveBeenCalled());
-        expect(failed).not.toHaveBeenCalled();
+        expect(writeFailed).not.toHaveBeenCalled();
     });
 
     it("puts the switch back and says so when the save fails", async () => {
@@ -55,7 +55,7 @@ describe("PricesPublicRow", () => {
         const onChange = vi.fn();
         render(<PricesPublicRow isPublic pricesPublic={false} onChange={onChange} />);
         fireEvent.click(screen.getByRole("switch", { name: "Show prices" }));
-        await waitFor(() => expect(failed).toHaveBeenCalledWith("Prices are still private", { description: "The API is away." }));
+        await waitFor(() => expect(writeFailed).toHaveBeenCalledWith("Prices are still private", { ok: false, error: "The API is away." }));
         expect(onChange).toHaveBeenLastCalledWith(false);
         expect(refresh).not.toHaveBeenCalled();
     });

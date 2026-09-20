@@ -16,18 +16,21 @@ describe("what a refused write says", () => {
     });
 
     it("speaks the app's words for the other refusals, and marks none of them", () => {
-        for (const status of [403, 404, 409, 429]) {
+        for (const status of [403, 404, 429]) {
             const said = writeFailure(new ApiError(status, "raw api words"));
             expect(said.error).not.toBe("raw api words");
             expect(said.signedOut).toBeUndefined();
         }
     });
 
-    it("keeps a 400's own sentence, the one refusal that is about what was sent", () => {
+    it("keeps the sentence of the refusals that are about what was sent", () => {
         expect(writeFailure(new ApiError(400, "That finish is not one of this card's."))).toEqual({
             ok: false,
             error: "That finish is not one of this card's.",
         });
+        // POST /username answers a taken name with a 409: telling somebody to reload the page
+        // instead would hide the one thing they can act on (code review of this branch).
+        expect(writeFailure(new ApiError(409, "That name is taken."))).toEqual({ ok: false, error: "That name is taken." });
     });
 
     it("falls back to the one message for a service that broke or never answered", () => {

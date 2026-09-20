@@ -127,17 +127,23 @@ describe("HomeBody", () => {
  */
 describe("the welcome's sentence", () => {
     it("promises no public page while the profile is private", () => {
-        const said = welcomeLine("ash-4f2b", false);
-        expect(said).not.toMatch(/address of your public page/);
+        const said = welcomeLine({ username: "ash-4f2b", is_public: false });
+        expect(said).not.toMatch(/your public page is at/);
         expect(said).toMatch(/turn on your public page if you want one/);
         expect(said).toMatch(/ash-4f2b/);
     });
 
-    it("names the address once the page really is public", () => {
-        expect(welcomeLine("ash-4f2b", true)).toMatch(/address of your public page/);
+    it("gives the address as the username, never as the display name", () => {
+        const said = welcomeLine({ display_name: "Bart", username: "ash-4f2b", is_public: true });
+        expect(said).toMatch(/signed in as Bart/);
+        expect(said).toMatch(/\/user\/ash-4f2b/);
+    });
+
+    it("stops asking for a name from somebody who has one", () => {
+        expect(welcomeLine({ display_name: "Bart", username: "ash-4f2b", is_public: false })).not.toMatch(/choose a name of your own/);
     });
 
     it("says the one thing to do when there is no name to say", () => {
-        expect(welcomeLine(null, false)).toBe("Add your first card to start your collection.");
+        expect(welcomeLine(null)).toBe("Add your first card to start your collection.");
     });
 });

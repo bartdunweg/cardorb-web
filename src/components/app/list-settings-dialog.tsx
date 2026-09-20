@@ -66,7 +66,7 @@ export function ListSettingsDialog({
             (res) => {
                 if (!res.ok) {
                     setSaved((s) => (s === tap ? null : s));
-                    notify.failed(still, { description: res.error });
+                    notify.writeFailed(still, res);
                     return;
                 }
                 void forgetMineThenRefresh("profile", router);

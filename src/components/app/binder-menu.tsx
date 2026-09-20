@@ -51,7 +51,7 @@ export function BinderMenu({
         if (res.ok) router.push("/dashboard/collections");
         else {
             setDeleting(false);
-            notify.failed(`${binder.name} was not deleted`, { description: res.error });
+            notify.writeFailed(`${binder.name} was not deleted`, res);
         }
     };
 

@@ -434,8 +434,8 @@ describe("CardDetailSlideout: the star under rapid taps", () => {
         await act(flush);
 
         expect(star()).toHaveAttribute("aria-pressed", "true");
-        expect(notifyMock.failed).toHaveBeenCalledTimes(1);
-        expect(notifyMock.failed).toHaveBeenCalledWith("That card is still a Favorite", { description: "No" });
+        expect(notifyMock.writeFailed).toHaveBeenCalledTimes(1);
+        expect(notifyMock.writeFailed).toHaveBeenCalledWith("That card is still a Favorite", { ok: false, error: "No" });
         expect(forgetMine).toHaveBeenCalledWith("favorite");
     });
 
@@ -483,7 +483,7 @@ describe("CardDetailSlideout: the star under rapid taps", () => {
         await act(flush);
 
         expect(star()).toHaveAttribute("aria-pressed", "false");
-        expect(notifyMock.failed).toHaveBeenCalledTimes(1);
-        expect(notifyMock.failed).toHaveBeenCalledWith("That card is not a Favorite", { description: "No" });
+        expect(notifyMock.writeFailed).toHaveBeenCalledTimes(1);
+        expect(notifyMock.writeFailed).toHaveBeenCalledWith("That card is not a Favorite", { ok: false, error: "No" });
     });
 });

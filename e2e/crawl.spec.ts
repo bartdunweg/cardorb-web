@@ -84,9 +84,9 @@ const ROUTES: { name: string; path: () => string; heading: string | RegExp }[] =
     { name: "Binders", path: () => "/dashboard/collections", heading: "Binders" },
     { name: "a binder", path: () => binderPath, heading: BINDER },
     // The Pokédex stopped being a page of its own and is a binder now; the address stays and leads
-    // to the dex binder, or to Binders where there is none (pokedex/page.tsx). This account has
-    // none, so Binders is what it must draw: the point is that the redirect still lands somewhere.
-    { name: "Pokedex", path: () => "/dashboard/pokedex", heading: "Binders" },
+    // to the dex binder. This account has none, so it lands on the invitation to make one, under
+    // its own heading: it used to walk off to Binders without a word (pokedex/page.tsx).
+    { name: "Pokedex", path: () => "/dashboard/pokedex", heading: "Pokédex" },
     { name: "Browse", path: () => "/dashboard/sets", heading: "Browse" },
     { name: "a set page", path: () => `/dashboard/sets/${SET_ID}`, heading: "Scarlet & Violet" },
     { name: "Settings", path: () => "/dashboard/settings", heading: "Settings" },

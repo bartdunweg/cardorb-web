@@ -73,8 +73,15 @@ describe("CardPriceChart", () => {
         await waitFor(() => expect(container.textContent).toMatch(/could not be loaded/));
         expect(container.textContent).not.toMatch(/No readings/);
 
-        history.mockResolvedValue(two);
+        // Said out loud, not only drawn: it arrives after the sheet is open, over a silent placeholder.
+        expect(container.querySelector("output")).not.toBeNull();
+
+        let answer: (p: typeof two) => void = () => {};
+        history.mockReturnValue(new Promise((r) => (answer = r)));
         getByRole("button", { name: "Try again" }).click();
+        // The button holds its place while the read is out, so the press does not drop the focus on it.
+        await waitFor(() => expect(getByRole("button", { name: "Try again" })).toBeDisabled());
+        answer(two);
         await waitFor(() => expect(container.querySelector("svg[tabindex]")).not.toBeNull());
     });
 

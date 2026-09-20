@@ -45,14 +45,14 @@ export function useSheetStar({ card, mine, scheduleRefresh, onStarChanged }: Par
         if (!starSaved.current.has(id)) starSaved.current.set(id, isStarred);
         setStarred({ id, on: next });
         onStarChanged?.(id, next);
-        const putBack = (error?: string) => {
+        const putBack = (refusal?: { error: string; signedOut?: boolean }) => {
             const saved = starSaved.current.get(id) ?? !next;
             starSaved.current.delete(id);
             setStarred({ id, on: saved });
             onStarChanged?.(id, saved);
             const title = saved ? "That card is still a Favorite" : "That card is not a Favorite";
-            if (error === undefined) notify.failed(title);
-            else notify.failed(title, { description: error });
+            if (refusal === undefined) notify.failed(title);
+            else notify.writeFailed(title, refusal);
         };
         // Written without the re-read (the page drawn inside each answer held the next tap's write
         // in Next's action queue), and the cache dropped once the last tap has landed, either way:
@@ -67,7 +67,7 @@ export function useSheetStar({ card, mine, scheduleRefresh, onStarChanged }: Par
                 if (res.ok) {
                     starSaved.current.delete(id);
                     void forgotten.then(scheduleRefresh);
-                } else putBack(res.error);
+                } else putBack(res);
             },
             () => {
                 if (tap !== starTaps.current) return;

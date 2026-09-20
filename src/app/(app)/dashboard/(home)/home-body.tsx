@@ -128,18 +128,27 @@ async function ListMovers({ list, dex }: { list: string; dex: Promise<boolean> }
 // nobody (error-path audit). Reworded rather than pointed elsewhere, because the button under it
 // already opens the one sheet that holds both the name and the switch: the promise was the wrong
 // part, not the destination.
-/** The welcome's sentence, apart from the component so the promise in it can be read by a test. */
-export function welcomeLine(name: string | null | undefined, shared: boolean): string {
-    if (!name) return "Add your first card to start your collection.";
-    return shared
-        ? `Add your first card to start your collection. You are signed in as ${name}, which is also the address of your public page; choose a name of your own.`
-        : `Add your first card to start your collection. You are signed in as ${name}; choose a name of your own, and turn on your public page if you want one.`;
+/**
+ * The welcome's sentence, apart from the component so the promise in it can be read by a test.
+ *
+ * The username is the address of the public page; a display name is not, so only the username is
+ * ever named as one. And the invitation to choose a name is only for somebody who has not
+ * (sign-up asks for none, so the profile starts on a generated handle).
+ */
+export function welcomeLine(profile: { display_name?: string | null; username?: string | null; is_public?: boolean } | null): string {
+    const username = profile?.username;
+    const name = profile?.display_name || username;
+    const start = "Add your first card to start your collection.";
+    if (!name) return start;
+    if (profile?.is_public && username) return `${start} You are signed in as ${name}, and your public page is at /user/${username}.`;
+    if (profile?.display_name) return `${start} You are signed in as ${name}. Turn on your public page in Settings if you want one.`;
+    return `${start} You are signed in as ${name}; choose a name of your own, and turn on your public page if you want one.`;
 }
 
 async function Welcome() {
     const { profile } = await getMyProfile();
     return (
-        <AppEmptyState icon="plus" title="Welcome to Cardorb" description={welcomeLine(profile?.display_name || profile?.username, !!profile?.is_public)}>
+        <AppEmptyState icon="plus" title="Welcome to Cardorb" description={welcomeLine(profile)}>
             <AddCardButton label="Add your first card" />
             {/* Straight into the sheet with the name field, not the page it sits behind. */}
             <Button href="/dashboard/settings?profile=1" color="secondary" size="md">

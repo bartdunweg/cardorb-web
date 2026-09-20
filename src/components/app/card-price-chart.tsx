@@ -46,8 +46,9 @@ export function CardPriceChart({
 }) {
     // Kept with the id it was read for, so a sheet reopened on another card never shows this one's line.
     const [loaded, setLoaded] = useState<{ tcgId: string; points: PricePoint[] } | null>(null);
-    /** Try again: the line is forgotten and the effect below runs once more. */
+    /** Try again: the line is forgotten and the effect below runs once more, with the button still there. */
     const [attempt, setAttempt] = useState(0);
+    const [retrying, setRetrying] = useState(false);
     // What was fetched, or what an earlier open already learned. Derived, so a known line needs
     // no effect and no second render to show.
     const points = loaded?.tcgId === tcgId ? loaded.points : (knownPriceHistory(tcgId) ?? null);
@@ -57,39 +58,50 @@ export function CardPriceChart({
     useEffect(() => {
         let live = true;
         preloadPriceHistory(tcgId).then((p) => {
-            if (live) setLoaded({ tcgId, points: p });
+            if (!live) return;
+            setLoaded({ tcgId, points: p });
+            setRetrying(false);
         });
         return () => {
             live = false;
         };
     }, [tcgId, attempt]);
 
-    // Still on its way: the height the line will take, and nothing said. "No readings" is an
-    // answer, and this is not one yet.
-    if (points === null) return <div aria-busy="true" style={{ height: CHART_HEIGHT }} />;
-
     /* The read did not answer and there is nothing known to draw. "No readings in this period yet"
        would be the app saying something about the card that is not true (error-path audit): the
-       line is unknown, not absent, so it says that and offers the one thing that can change it. */
-    if (!points.length && priceHistoryFailed(tcgId)) {
+       line is unknown, not absent, so it says that and offers the one thing that can change it.
+
+       An <output> because it arrives after the sheet is open and replaces a silent placeholder:
+       without a live region the chart simply stays quiet for a screen reader for good. The element
+       rather than role="status" on a div, as jsx-a11y asks. The button holds its place while the
+       read is out, disabled, rather than unmounting with the focus on it. */
+    if (retrying || (points !== null && !points.length && priceHistoryFailed(tcgId))) {
         return (
-            <div className="flex flex-col items-center justify-center gap-3 text-center" style={{ minHeight: CHART_HEIGHT }}>
+            <output className="flex flex-col items-center justify-center gap-3 text-center" style={{ minHeight: CHART_HEIGHT }}>
                 <BarChart01 aria-hidden="true" className="size-5 text-fg-quaternary" />
-                <p className="text-sm text-tertiary">The price history for this card could not be loaded.</p>
+                <p className="text-sm text-tertiary">
+                    {retrying ? "Reading the price history again." : "The price history for this card could not be loaded."}
+                </p>
                 <Button
                     size="sm"
                     color="secondary"
+                    isDisabled={retrying}
                     onClick={() => {
                         forgetPriceHistory(tcgId);
+                        setRetrying(true);
                         setLoaded(null);
                         setAttempt((n) => n + 1);
                     }}
                 >
                     Try again
                 </Button>
-            </div>
+            </output>
         );
     }
+
+    // Still on its way: the height the line will take, and nothing said. "No readings" is an
+    // answer, and this is not one yet.
+    if (points === null) return <div aria-busy="true" style={{ height: CHART_HEIGHT }} />;
 
     /*
      * One printing's line, never two: the one the sheet shows, whose price is the one above. A card
