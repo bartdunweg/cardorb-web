@@ -77,6 +77,11 @@ export type SetDetail = {
 };
 
 // One set, every card in set order, the viewer's own marked. Null when no catalogue carries the id.
+// The `setPages` part is the id asked for, not the canonical one the API answers with: a caller
+// that wants to forget this page must name the id it was read under. A set whose gallery the API
+// folds in (a Trainer Gallery, a Shiny Vault) still answers its own address as well, and those two
+// pages are two parts: a press on one leaves the other's five minutes standing. That is the one
+// place the narrowing is not exact, and it costs a stale count on a page you are not looking at.
 // Five minutes per person (user-cache.ts): the marks and counts change on a write. Kept per set
 // (the `setPages` scope, parted by id), so a card write that names its set drops that set's page and
 // leaves every other one standing; a write that cannot name a set drops them all. It was read fresh
