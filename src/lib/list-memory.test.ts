@@ -88,6 +88,13 @@ describe("rememberedQuery", () => {
         expect(rememberedQuery("sort=q%3Dname")).toBe("sort=q%3Dname");
     });
 
+    // The page goes with the term: page 2 of a search is nowhere in the list without it.
+    it("takes the pager's page out too", () => {
+        expect(rememberedQuery("q=30th&page=2&rarity=Rare")).toBe("rarity=Rare");
+        expect(rememberedQuery("page=3")).toBe("");
+        expect(rememberedQuery("sort=name&page=2")).toBe("sort=name");
+    });
+
     it("is empty for nothing at all", () => {
         expect(rememberedQuery(undefined)).toBe("");
         expect(rememberedQuery("")).toBe("");

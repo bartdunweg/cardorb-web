@@ -58,11 +58,16 @@ export const MAX_COOKIE_LENGTH = 3000;
  */
 export const memoryKey = (pathname: string): string => (/^\/dashboard\/sets\/[^/]+$/.test(pathname) ? "/dashboard/sets/*" : pathname);
 
-/** The search field's parameter, in the address of every list that has one. */
-export const SEARCH_PARAM = "q";
+/**
+ * The search field's term and the page the pager is on: the two things a list does not remember.
+ * The page goes with the term, as it does in the search field itself (cards-search.tsx): without
+ * the term the pages are other pages, and page 2 of them is a screenful from the middle of the
+ * list with nothing saying why.
+ */
+const FORGOTTEN_PARAMS = ["q", "page"];
 
 /**
- * A list's query with its search term taken out: the sort, the filters, the grouping and Browse's
+ * A list's query with those two taken out: the sort, the filters, the grouping and Browse's
  * catalogue are remembered, the term never is (Bart's call, 2026-09-20). A filter is how you keep
  * a list; a term is a question asked once, and days later Browse still opened on "30th" with
  * nothing on screen saying where that came from. Within a visit the term still comes back, because
@@ -73,10 +78,9 @@ export const SEARCH_PARAM = "q";
  */
 export function rememberedQuery(query: string | undefined | null): string {
     if (!query) return "";
-    if (!query.includes(`${SEARCH_PARAM}=`)) return query;
     const params = new URLSearchParams(query);
-    if (!params.has(SEARCH_PARAM)) return query;
-    params.delete(SEARCH_PARAM);
+    if (!FORGOTTEN_PARAMS.some((name) => params.has(name))) return query;
+    for (const name of FORGOTTEN_PARAMS) params.delete(name);
     return params.toString();
 }
 

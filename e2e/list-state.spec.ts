@@ -89,11 +89,10 @@ test("a cleared search stays cleared after a reload, Back and a bare address", a
     await page.goBack();
     await cleared();
 
-    // The regression test for #656 (commit 11eebe6): a document navigation to the bare address
-    // (Sec-Fetch-Dest: document, which page.goto sends) must not be redirected back to the term
-    // the list-memory cookie still remembers from before it was cleared above. Only a client
-    // navigation (Sec-Fetch-Dest: empty) skips that redirect; this goto is a document load, so if
-    // openAsLeft ever redirects a typed address again, this assertion fails.
+    // What #656 was about, for the field: the bare address shows the whole list with the field
+    // empty. The redirect that caused it cannot reach a term any more, because the memory holds
+    // none (the test at the bottom of this file); the mechanism itself, a document navigation to a
+    // bare address answered from the cookie, is held by the filter version of this test below.
     await page.goto("/dashboard/cards");
     await cleared();
 });
