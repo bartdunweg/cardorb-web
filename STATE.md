@@ -23,7 +23,7 @@ Live: landing, Home, Collection, Browse, Binders, Favorites, wishlist, set pages
 command-palette search, Settings, public profile, and `/dashboard/design`, the design system,
 reachable only by typing the address (see `CLAUDE.md`).
 
-End-to-end smoke tests run on every pull request (job `e2e`), forty-one scenarios, fixture set from
+End-to-end smoke tests run on every pull request (job `e2e`), fixture set from
 `scripts/e2e-fixture.sh` (the first 20 cards of sv01, plus four more whose names none of those
 twenty carry, cards 20 to 23, so a new flow has a card of its own to act on). Thirteen of them are the crawl
 (`e2e/crawl.spec.ts`): every signed-in route the app has, the design page and the public profile
@@ -42,7 +42,11 @@ the palette can only ever answer "The card service didn't answer." in this stack
 from the sheet, a chosen printing, the previous and next arrows, and a sheet opened from Collection,
 each read in the sheet, on the tile and after a reload. The cache scenario now covers a remove as well
 as an add, and list state now covers a rarity filter chosen and cleared in the Filters sheet
-(reload, Back and a bare address), beside search, sort, view and the set page's own address.
+(reload, Back and a bare address), beside search, sort, view and the set page's own address. A set
+page is also opened under a differently cased id (`e2e/set-alias-cache.spec.ts`), which the API
+resolves to the canonical set: the tiles, a press and the count over them all have to work on such
+an address. The cache key behind it (#763) is not reachable here, because the API drops the whole
+person's tag through `/api/revalidate` after every write; `src/lib/sets.test.ts` holds that.
 
 Production itself is read once an hour (`.github/workflows/prod-check.yml`, `scripts/prod-check.ts`),
 signed out and read-only, since there is no test account: the landing, sign in, sign up, privacy,

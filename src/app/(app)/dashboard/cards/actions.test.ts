@@ -2,12 +2,23 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { pokemonCardFromSetCard } from "@/lib/api-shapes";
 
 // Only what reaches the API is under test: the write itself is a stand-in that answers nothing.
-const { api } = vi.hoisted(() => ({ api: vi.fn(async () => ({})) }));
-vi.mock("@/lib/api", () => ({ ApiError: class extends Error {}, api }));
+const { api, ApiError } = vi.hoisted(() => ({
+    api: vi.fn(async () => ({})),
+    // Carries a status, so an action's answer to a refusal can be read (write-failure.ts).
+    ApiError: class ApiError extends Error {
+        status: number;
+        constructor(status: number, message = "") {
+            super(message);
+            this.status = status;
+        }
+    },
+}));
+vi.mock("@/lib/api", () => ({ ApiError, api }));
 vi.mock("@/lib/user-cache", () => ({ forgetMine: vi.fn(async () => undefined) }));
 vi.mock("next/cache", () => ({ unstable_cache: (fn: () => unknown) => fn, updateTag: vi.fn(), revalidatePath: vi.fn() }));
 
-const { addCard, listSetRows, rereadMine, searchPokemon, setCopies } = await import("./actions");
+const { addCard, editCopies, listSetRows, markOwnedWith, removeCard, rereadMine, restoreCard, searchPokemon, setCopies, setDexFace, splitCopy } =
+    await import("./actions");
 const { forgetMine } = await import("@/lib/user-cache");
 
 const tile = {
@@ -168,5 +179,292 @@ describe("listSetRows", () => {
         api.mockReset().mockRejectedValueOnce(new Error("down")).mockResolvedValue({ cards: [], total: 0 });
         expect(await listSetRows("Base Set")).toBeNull();
         expect(await listSetRows("")).toBeNull();
+    });
+});
+
+/*
+ * The writes the card sheet makes, none of which had a test. Each is read the same way as
+ * setCopies above: what body reaches the API, what the action answers when the API refuses, and
+ * which write name is forgotten afterwards. None of the six names a set: they are made from a
+ * row, which carries no set id, so they drop every set page (cache-scopes.ts).
+ */
+const ID = "d6ba4891-3908-48d0-b4da-ed0096bd4360";
+const OTHER = "a1f0c7d2-5f4e-4b3a-9c21-0d3e5b6f7a80";
+
+/** The one call an action made: its path, its method and its body. */
+const call = (i = 0) => {
+    const made = api.mock.calls[i] as unknown as [string, { method?: string; body?: Record<string, unknown> }] | undefined;
+    if (!made) throw new Error(`no call ${i}`);
+    return { path: made[0], method: made[1]?.method, body: made[1]?.body };
+};
+
+const freshly = () => {
+    api.mockReset().mockResolvedValue({} as never);
+    vi.mocked(forgetMine).mockClear();
+};
+
+describe("splitCopy", () => {
+    beforeEach(freshly);
+
+    it("posts the differences and how many copies take them, to the row's own split", async () => {
+        expect(await splitCopy(ID, { condition: "Near Mint", language: "de" }, 2)).toEqual({ ok: true });
+        expect(call()).toEqual({ path: `/collection/items/${ID}/split`, method: "POST", body: { condition: "Near Mint", language: "de", count: 2 } });
+        expect(forgetMine).toHaveBeenCalledExactlyOnceWith("cards");
+    });
+
+    it("splits one copy off where no count is given", async () => {
+        await splitCopy(ID, { grade: "PSA 10" });
+        expect(call().body).toEqual({ grade: "PSA 10", count: 1 });
+    });
+
+    it("refuses a split with nothing to differ in, before the API is asked", async () => {
+        expect(await splitCopy(ID, {})).toEqual({ ok: false, error: "Invalid input." });
+        expect(await splitCopy("not-a-row", { condition: "Near Mint" })).toEqual({ ok: false, error: "Invalid input." });
+        expect(api).not.toHaveBeenCalled();
+        expect(forgetMine).not.toHaveBeenCalled();
+    });
+
+    it("says what happened when the API refuses, and forgets nothing", async () => {
+        api.mockImplementationOnce(async () => {
+            throw new ApiError(404);
+        });
+        expect(await splitCopy(ID, { condition: "Near Mint" })).toEqual({ ok: false, error: "That is not there any more. Reload the page." });
+        expect(forgetMine).not.toHaveBeenCalled();
+    });
+
+    it("writes and nothing more when the caller re-reads once, later", async () => {
+        await splitCopy(ID, { condition: "Near Mint" }, 1, { reread: false });
+        expect(api).toHaveBeenCalledTimes(1);
+        expect(forgetMine).not.toHaveBeenCalled();
+    });
+});
+
+describe("editCopies", () => {
+    beforeEach(freshly);
+
+    it("sends every row of the kind beside the fields, in one call", async () => {
+        expect(await editCopies([ID, OTHER], { condition: "Near Mint" })).toEqual({ ok: true });
+        expect(call()).toEqual({ path: "/collection/items", method: "PATCH", body: { ids: [ID, OTHER], condition: "Near Mint" } });
+        expect(api).toHaveBeenCalledTimes(1);
+        expect(forgetMine).toHaveBeenCalledExactlyOnceWith("cards");
+    });
+
+    it("counts a row named twice as one row", async () => {
+        await editCopies([ID, ID], { grade: "PSA 9" });
+        expect(call().body).toEqual({ ids: [ID], grade: "PSA 9" });
+    });
+
+    it("refuses no rows, a row that is not one, and nothing to change", async () => {
+        expect(await editCopies([], { condition: "Near Mint" })).toEqual({ ok: false, error: "Invalid input." });
+        expect(await editCopies(["not-a-row"], { condition: "Near Mint" })).toEqual({ ok: false, error: "Invalid input." });
+        expect(await editCopies([ID], {})).toEqual({ ok: false, error: "Invalid input." });
+        expect(api).not.toHaveBeenCalled();
+    });
+
+    it("says what happened when the API refuses, and forgets nothing", async () => {
+        api.mockImplementationOnce(async () => {
+            throw new ApiError(403);
+        });
+        expect(await editCopies([ID], { condition: "Near Mint" })).toEqual({ ok: false, error: "That is not yours to change." });
+        expect(forgetMine).not.toHaveBeenCalled();
+    });
+
+    it("writes and nothing more when the caller re-reads once, later", async () => {
+        await editCopies([ID], { condition: "Near Mint" }, { reread: false });
+        expect(forgetMine).not.toHaveBeenCalled();
+    });
+});
+
+describe("markOwnedWith", () => {
+    beforeEach(freshly);
+
+    it("marks the wish owned and stamps the day it was got, with what is known about it", async () => {
+        expect(await markOwnedWith(ID, { condition: "Near Mint", purchasePrice: 12.5 })).toEqual({ ok: true });
+        expect(call().path).toBe(`/collection/items/${ID}`);
+        expect(call().method).toBe("PATCH");
+        expect(call().body).toMatchObject({ owned: true, condition: "Near Mint", purchasePrice: 12.5 });
+        expect(String(call().body?.acquiredAt)).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+        // R-DATA-002: owned and wishlist are one another's opposite, and the API flips both on `owned`.
+        expect(forgetMine).toHaveBeenCalledExactlyOnceWith("cards");
+    });
+
+    it("keeps the day the person gave over today's", async () => {
+        await markOwnedWith(ID, { acquiredAt: "2019-04-02T00:00:00.000Z" });
+        expect(call().body?.acquiredAt).toBe("2019-04-02T00:00:00.000Z");
+    });
+
+    it("refuses a row that is not one, and an edit it does not know", async () => {
+        expect(await markOwnedWith("not-a-row", {})).toEqual({ ok: false, error: "Invalid input." });
+        expect(await markOwnedWith(ID, { condition: "x".repeat(60) })).toEqual({ ok: false, error: "Invalid input." });
+        expect(api).not.toHaveBeenCalled();
+    });
+
+    it("says what happened when the API refuses, and forgets nothing", async () => {
+        api.mockImplementationOnce(async () => {
+            throw new ApiError(401);
+        });
+        expect(await markOwnedWith(ID, {})).toEqual({ ok: false, error: "Your session has ended. Sign in and try again.", signedOut: true });
+        expect(forgetMine).not.toHaveBeenCalled();
+    });
+
+    it("writes and nothing more when the caller re-reads once, later", async () => {
+        await markOwnedWith(ID, {}, { reread: false });
+        expect(forgetMine).not.toHaveBeenCalled();
+    });
+});
+
+describe("removeCard", () => {
+    beforeEach(freshly);
+
+    it("deletes the row with a body, because the API wants a JSON content type on a delete", async () => {
+        const card = { name: "Metapod", number: "011", setName: "151", owned: true };
+        api.mockResolvedValue({ card } as never);
+        expect(await removeCard(ID)).toEqual({ ok: true, card });
+        expect(call().path).toBe(`/collection/items/${ID}`);
+        expect(call().method).toBe("DELETE");
+        expect(call().body).toEqual({});
+        expect(forgetMine).toHaveBeenCalledExactlyOnceWith("cards");
+    });
+
+    it("is still a removal where the API hands back no row, only one with no way back", async () => {
+        api.mockResolvedValue({} as never);
+        expect(await removeCard(ID)).toEqual({ ok: true, card: undefined });
+        expect(forgetMine).toHaveBeenCalledExactlyOnceWith("cards");
+    });
+
+    it("refuses a row that is not one", async () => {
+        expect(await removeCard("not-a-row")).toEqual({ ok: false, error: "Invalid card." });
+        expect(api).not.toHaveBeenCalled();
+    });
+
+    it("says what happened when the API refuses, and forgets nothing", async () => {
+        api.mockImplementationOnce(async () => {
+            throw new ApiError(500);
+        });
+        expect(await removeCard(ID)).toMatchObject({ ok: false });
+        expect(forgetMine).not.toHaveBeenCalled();
+    });
+
+    it("writes and nothing more when the caller re-reads once, later", async () => {
+        await removeCard(ID, { reread: false });
+        expect(forgetMine).not.toHaveBeenCalled();
+    });
+});
+
+describe("restoreCard", () => {
+    beforeEach(freshly);
+
+    const removed = {
+        name: "Metapod",
+        number: "011",
+        setName: "151",
+        owned: true,
+        types: ["Grass"],
+        rarity: "Common",
+        finish: "holo" as const,
+        edition: "1st-edition" as const,
+        quantity: 2,
+        condition: "Near Mint",
+        language: "de",
+        purchasePrice: 4.5,
+        acquiredAt: "2019-04-02T00:00:00.000Z",
+        isFavorite: true,
+    };
+
+    it("puts the row back whole, the day it was got and its run among the fields", async () => {
+        expect(await restoreCard(removed)).toEqual({ ok: true });
+        expect(call().path).toBe("/cards");
+        expect(call().method).toBe("POST");
+        expect(call().body).toMatchObject({
+            name: "Metapod",
+            set: "151",
+            number: "011",
+            types: ["Grass"],
+            // `collection` is the API's word for owned; a wish goes back to the wishlist.
+            collection: true,
+            finish: "holo",
+            edition: "1st-edition",
+            quantity: 2,
+            condition: "Near Mint",
+            language: "de",
+            purchasePrice: 4.5,
+            acquiredAt: "2019-04-02T00:00:00.000Z",
+            isFavorite: true,
+        });
+        expect(forgetMine).toHaveBeenCalledExactlyOnceWith("cards");
+    });
+
+    it("puts a wish back on the wishlist, and sends nothing it was not told", async () => {
+        await restoreCard({ name: "Metapod", number: "011", setName: "151", owned: false });
+        expect(call().body).toMatchObject({ collection: false });
+        for (const field of ["rarity", "finish", "edition", "quantity", "condition", "grade", "language", "notes", "isFavorite", "acquiredAt"]) {
+            expect(call().body).not.toHaveProperty(field);
+        }
+    });
+
+    it("refuses a row it cannot read", async () => {
+        expect(await restoreCard({ name: "Metapod" } as never)).toEqual({ ok: false, error: "That card cannot be put back." });
+        expect(api).not.toHaveBeenCalled();
+    });
+
+    it("says what happened when the API refuses, and forgets nothing", async () => {
+        api.mockImplementationOnce(async () => {
+            throw new ApiError(429);
+        });
+        expect(await restoreCard(removed)).toEqual({ ok: false, error: "That was a lot of changes at once. Wait a moment and try again." });
+        expect(forgetMine).not.toHaveBeenCalled();
+    });
+
+    it("writes and nothing more when the caller re-reads once, later", async () => {
+        await restoreCard(removed, { reread: false });
+        expect(forgetMine).not.toHaveBeenCalled();
+    });
+});
+
+describe("setDexFace", () => {
+    beforeEach(freshly);
+
+    it("clears the old face before it sets the new one, so a failure leaves at most none", async () => {
+        expect(await setDexFace(ID, OTHER)).toEqual({ ok: true });
+        expect(call(0)).toEqual({ path: `/collection/items/${OTHER}`, method: "PATCH", body: { dexFace: false } });
+        expect(call(1)).toEqual({ path: `/collection/items/${ID}`, method: "PATCH", body: { dexFace: true } });
+    });
+
+    it("writes once where the slot showed nothing, or showed this very card", async () => {
+        await setDexFace(ID, null);
+        expect(api).toHaveBeenCalledTimes(1);
+        expect(call(0).body).toEqual({ dexFace: true });
+        api.mockClear();
+        await setDexFace(ID, ID);
+        expect(api).toHaveBeenCalledTimes(1);
+        expect(call(0).path).toBe(`/collection/items/${ID}`);
+    });
+
+    /*
+     * No forgetMine at all: dropping a tag in an action would redraw a thousand slots for a picture
+     * already on screen. The grid forgets `dexFace` quietly after the write (dex-grid.tsx).
+     */
+    it("forgets nothing, on either answer", async () => {
+        await setDexFace(ID, OTHER);
+        expect(forgetMine).not.toHaveBeenCalled();
+        api.mockImplementationOnce(async () => {
+            throw new ApiError(403);
+        });
+        expect(await setDexFace(ID, OTHER)).toEqual({ ok: false, error: "That is not yours to change." });
+        expect(forgetMine).not.toHaveBeenCalled();
+    });
+
+    it("leaves the new face unwritten when clearing the old one fails", async () => {
+        api.mockImplementationOnce(async () => {
+            throw new ApiError(500);
+        });
+        expect(await setDexFace(ID, OTHER)).toMatchObject({ ok: false });
+        expect(api).toHaveBeenCalledTimes(1);
+    });
+
+    it("refuses a card or a slot that is not a row", async () => {
+        expect(await setDexFace("not-a-row", null)).toEqual({ ok: false, error: "Invalid card." });
+        expect(await setDexFace(ID, "not-a-row")).toEqual({ ok: false, error: "Invalid card." });
+        expect(api).not.toHaveBeenCalled();
     });
 });
