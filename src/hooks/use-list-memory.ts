@@ -2,10 +2,20 @@
 
 import { useEffect, useSyncExternalStore } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { LIST_MEMORY_COOKIE, type ListMemory, type ListMemoryEntry, memoryKey, parseListMemory, serializeListMemory, withEntry } from "@/lib/list-memory";
+import {
+    LIST_MEMORY_COOKIE,
+    type ListMemory,
+    type ListMemoryEntry,
+    memoryKey,
+    parseListMemory,
+    rememberedQuery,
+    serializeListMemory,
+    withEntry,
+} from "@/lib/list-memory";
 
 /**
- * How each list was left: its filters, sort and search, and its View menu, for when you come back.
+ * How each list was left: its filters and sort, and its View menu, for when you come back. Not its
+ * search term: `rememberedQuery` (list-memory.ts) takes that out, on the way in and on the way out.
  *
  * The filters, sort and search live in the list's URL (`?rarity=`, `?sort=`, `?q=`), and every
  * way back to a list, a tab, a sidebar row, a binder's Back link, writes its bare address: set a
@@ -62,7 +72,7 @@ export const remember = (key: string, patch: ListMemoryEntry) => {
 /** Where a link to `href` should go: the list as it was left, when the link names the list alone. */
 export const withListQuery = (href: string, remembered: ListMemory = current()) => {
     if (href.includes("?") || href.includes("#")) return href;
-    const query = remembered[memoryKey(href)]?.query;
+    const query = rememberedQuery(remembered[memoryKey(href)]?.query);
     return query ? `${href}?${query}` : href;
 };
 
@@ -71,10 +81,14 @@ export function useListMemory(): ListMemory {
     return useSyncExternalStore(subscribe, current, () => NOTHING);
 }
 
-/** Writes down the list's query each time it changes. Mounted once, in the app's layout. */
+/**
+ * Writes down the list's query each time it changes, its search term left out. Mounted once, in
+ * the app's layout. A term typed and then the page left behind writes the query without it, which
+ * is what clears a term an older cookie still holds.
+ */
 export function RememberListQuery() {
     const pathname = usePathname();
-    const search = useSearchParams().toString();
+    const search = rememberedQuery(useSearchParams().toString());
     useEffect(() => {
         if (!isList(pathname) || (current()[memoryKey(pathname)]?.query ?? "") === search) return;
         remember(memoryKey(pathname), { query: search });

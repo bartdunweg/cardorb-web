@@ -21,6 +21,9 @@ test.beforeAll(async ({ browser }) => {
     await page.context().close();
 });
 
+/* The term comes back here because it is in the address the browser holds, not because the list
+   remembers it: a reload, Back and Forward all replay the address. What the list remembers is the
+   test at the bottom of this file, and a term is no part of it. */
 test("search, sort and view survive a reload, Back and Forward", async ({ page }) => {
     const [target] = cards;
     await page.goto("/dashboard/cards?sort=set");
@@ -168,4 +171,41 @@ test("the set page keeps its search and tab in its address", async ({ page }) =>
     await expect(page.getByLabel("Search in Scarlet & Violet")).toHaveValue(target.name);
     await expect(page.getByRole("tab", { name: /^Owned/ })).toHaveAttribute("aria-selected", "true");
     await expect(setTile(page, target, "in your collection")).toBeVisible();
+});
+
+/* What a list remembers of how it was left, and what it does not (Bart's call, 2026-09-20): the
+   filters, the sort, the grouping and the view come back, the search term never does. Before this
+   a bare address days later opened on the term last typed, "30th" on Browse, with nothing on
+   screen saying where it came from. */
+test("a bare address brings the filters back but not the search term", async ({ page }) => {
+    await page.goto("/dashboard/cards");
+    await expect(page.getByRole("heading", { name: "Collection", exact: true })).toBeVisible();
+
+    await page.getByRole("button", { name: /^Filters/ }).click();
+    const sheet = page.getByRole("dialog", { name: "Filters" });
+    await sheet.getByRole("row", { name: "Uncommon" }).click();
+    await sheet.getByRole("button", { name: /^Show/ }).click();
+    await expect(page).toHaveURL(/[?&]rarity=Uncommon/);
+
+    await page.getByLabel("Search in Collection").fill(card(9).name);
+    await expect(page).toHaveURL(/[?&]q=/);
+    await expect(collectionTile(page, card(9))).toBeVisible();
+
+    // Written down after the address changed: the filter is in the cookie, the term is not, so no
+    // link the app builds from it (withListQuery) can carry the term either.
+    await expect
+        .poll(async () => decodeURIComponent((await page.context().cookies()).find((c) => c.name === "list-memory")?.value ?? ""))
+        .toContain("rarity=Uncommon");
+    const remembered = decodeURIComponent((await page.context().cookies()).find((c) => c.name === "list-memory")?.value ?? "");
+    expect(remembered).not.toContain("q=");
+
+    // Away, then the list's bare address typed in again (Sec-Fetch-Dest: document, so openAsLeft answers).
+    await page.goto("/dashboard");
+    await page.goto("/dashboard/cards");
+
+    await expect(page).toHaveURL(/[?&]rarity=Uncommon/);
+    await expect(page).not.toHaveURL(/[?&]q=/);
+    await expect(page.getByLabel("Search in Collection")).toHaveValue("");
+    await expect(collectionTile(page, card(9))).toBeVisible();
+    await expect(collectionTile(page, card(7))).toHaveCount(0);
 });

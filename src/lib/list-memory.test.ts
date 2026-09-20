@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_COOKIE_LENGTH, memoryKey, parseListMemory, serializeListMemory, withEntry } from "./list-memory";
+import { MAX_COOKIE_LENGTH, memoryKey, parseListMemory, rememberedQuery, serializeListMemory, withEntry } from "./list-memory";
 
 describe("memoryKey", () => {
     it("is the page, except that every set page is one page", () => {
@@ -68,5 +68,28 @@ describe("serializeListMemory", () => {
     it("is empty for an empty memory and for entries that say nothing", () => {
         expect(serializeListMemory({})).toBe("");
         expect(serializeListMemory({ "/a": {} })).toBe("");
+    });
+});
+
+describe("rememberedQuery", () => {
+    it("keeps the filters, the sort, the grouping and Browse's catalogue", () => {
+        expect(rememberedQuery("sort=name&rarity=Rare&group=none&language=ja")).toBe("sort=name&rarity=Rare&group=none&language=ja");
+    });
+
+    it("takes the search term out, wherever it stands, and leaves the rest in order", () => {
+        expect(rememberedQuery("q=30th")).toBe("");
+        expect(rememberedQuery("q=30th&sort=name")).toBe("sort=name");
+        expect(rememberedQuery("sort=name&q=30th&rarity=Rare")).toBe("sort=name&rarity=Rare");
+        expect(rememberedQuery("q=")).toBe("");
+    });
+
+    it("takes out every one of them, and leaves a value that only looks like one alone", () => {
+        expect(rememberedQuery("q=a&q=b&sort=name")).toBe("sort=name");
+        expect(rememberedQuery("sort=q%3Dname")).toBe("sort=q%3Dname");
+    });
+
+    it("is empty for nothing at all", () => {
+        expect(rememberedQuery(undefined)).toBe("");
+        expect(rememberedQuery("")).toBe("");
     });
 });

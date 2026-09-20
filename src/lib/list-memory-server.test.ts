@@ -15,13 +15,26 @@ const { parseListMemory, serializeListMemory } = await import("./list-memory");
 
 describe("openAsLeft", () => {
     beforeEach(() => {
-        jar.cookie = serializeListMemory({ "/dashboard/cards": { query: "q=pika" } });
+        jar.cookie = serializeListMemory({ "/dashboard/cards": { query: "rarity=Rare" } });
         jar.dest = "document";
         redirect.mockClear();
     });
 
     it("sends a typed bare address to the list as it was left", async () => {
-        await expect(openAsLeft("/dashboard/cards", {})).rejects.toThrow("redirect:/dashboard/cards?q=pika");
+        await expect(openAsLeft("/dashboard/cards", {})).rejects.toThrow("redirect:/dashboard/cards?rarity=Rare");
+    });
+
+    // A cookie written before the term was dropped from the memory still holds one: it is read out
+    // here, so a bare address opens on the filters alone and never puts the old term back.
+    it("leaves a search term a cookie still holds out of the address", async () => {
+        jar.cookie = serializeListMemory({ "/dashboard/cards": { query: "q=pika&rarity=Rare" } });
+        await expect(openAsLeft("/dashboard/cards", {})).rejects.toThrow("redirect:/dashboard/cards?rarity=Rare");
+    });
+
+    it("does not redirect at all when the term was all the memory held", async () => {
+        jar.cookie = serializeListMemory({ "/dashboard/cards": { query: "q=pika" } });
+        await openAsLeft("/dashboard/cards", {});
+        expect(redirect).not.toHaveBeenCalled();
     });
 
     it("leaves an address with a query alone", async () => {
@@ -29,10 +42,10 @@ describe("openAsLeft", () => {
         expect(redirect).not.toHaveBeenCalled();
     });
 
-    // The search field emptied, the last filter taken off: a `router.replace` of the bare path,
-    // fetched by the router (`Sec-Fetch-Dest: empty`) while the cookie still says the old term.
-    // Redirecting put the term straight back.
-    it("never redirects a client navigation, so a cleared search stays cleared", async () => {
+    // The last filter taken off: a `router.replace` of the bare path, fetched by the router
+    // (`Sec-Fetch-Dest: empty`) while the cookie still says the old filter. Redirecting put it
+    // straight back (a search term, back when the memory still held one, web#656).
+    it("never redirects a client navigation, so a cleared filter stays cleared", async () => {
         jar.dest = "empty";
         await openAsLeft("/dashboard/cards", {});
         expect(redirect).not.toHaveBeenCalled();
@@ -40,7 +53,7 @@ describe("openAsLeft", () => {
 
     it("treats a client that sends no Sec-Fetch-Dest as a document", async () => {
         jar.dest = null;
-        await expect(openAsLeft("/dashboard/cards", {})).rejects.toThrow("redirect:/dashboard/cards?q=pika");
+        await expect(openAsLeft("/dashboard/cards", {})).rejects.toThrow("redirect:/dashboard/cards?rarity=Rare");
     });
 });
 
