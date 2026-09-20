@@ -50,12 +50,12 @@ export async function TopCards({
 export const readTopCards = (list: HomeList = "all"): Promise<Card[]> => sideRead("top cards", () => topCards(list), []);
 
 // Kept per person like the list's first batch: twelve is not a batch size, so this read went to the
-// API on every open of Home. Five minutes in the person's stats scope, dropped by a card write; the window in
-// the key also carries the night's new prices in by the next morning's first open.
-// Per list: Home's list choice picks whose dearest cards these are. The collection's are among its
-// numbers (`stats`); a list's go with its first batch (`lists`), which a binder edit also forgets.
+// API on every open of Home. Five minutes in the person's holdings scope, dropped by a card write and
+// not by a star; the window in the key also carries the night's new prices in by the next morning's first open.
+// Per list: Home's list choice picks whose dearest cards these are. The collection's go with what it
+// holds (`holdings`); a list's go with its first batch (`lists`), which a binder edit also forgets.
 function topCards(list: HomeList) {
-    return perUser(list === "all" ? "stats" : "lists", `top-cards:v2:${list}`, async (token) => {
+    return perUser(list === "all" ? "holdings" : "lists", `top-cards:v2:${list}`, async (token) => {
         const { cards } = await getMyCards({ ...listFilter(list), sort: "price", order: "desc", limit: 12, facets: false, token });
         return cards.filter((c) => c.price != null);
     });

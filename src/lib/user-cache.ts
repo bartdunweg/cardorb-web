@@ -3,7 +3,7 @@ import { revalidatePath, revalidateTag, unstable_cache, updateTag } from "next/c
 import { randomUUID } from "node:crypto";
 import { ApiError, CACHE_SECONDS, api, cacheWindow, session } from "@/lib/api";
 import { ownProfileSchema } from "@/lib/api-shapes";
-import { type CacheScope, type ForgetWrite, forgetTags, readTags, scopesForgotten } from "@/lib/cache-scopes";
+import { type ForgetWrite, type ScopeRef, forgetTags, readTags, refKey, targetReaches, targetsForgotten } from "@/lib/cache-scopes";
 import { elapsed, logTiming } from "@/lib/timing";
 
 /**
@@ -32,8 +32,10 @@ export { userTag } from "@/lib/cache-scopes";
 /**
  * In every key since reads were filed by scope. An entry from before carries only the person's tag,
  * so a scoped forget would not reach it, and the Data Cache keeps entries across a deploy (#206).
+ * "v3" is for the scopes being split (`cache-scopes.ts`): an entry stored under the old `stats` or
+ * `sets` tag would otherwise survive a forget of the scope its read now belongs to.
  */
-const KEY_VERSION = "scoped:v2";
+const KEY_VERSION = "scoped:v3";
 
 /** The name a scope's mark goes by, in the request's reads and in its cache key (`scopeMark`). */
 const MARK = "#mark";
@@ -62,24 +64,24 @@ const inFlight = cache(() => new Map<string, Promise<unknown>>());
  * one render. The second caller gets the first caller's promise, so a name is read once per
  * request whatever the cache says.
  */
-export function perUser<T>(scope: CacheScope, name: string, load: (token: string) => Promise<T>): Promise<T> {
+export function perUser<T>(ref: ScopeRef, name: string, load: (token: string) => Promise<T>): Promise<T> {
     const reads = inFlight();
-    const key = `${scope}|${name}`;
+    const key = `${refKey(ref)}|${name}`;
     const started = reads.get(key);
     if (started) return started as Promise<T>;
-    const read = perUserUncached(scope, name, load);
+    const read = perUserUncached(ref, name, load);
     reads.set(key, read);
     return read;
 }
 
-async function perUserUncached<T>(scope: CacheScope, name: string, load: (token: string) => Promise<T>): Promise<T> {
+async function perUserUncached<T>(ref: ScopeRef, name: string, load: (token: string) => Promise<T>): Promise<T> {
     const s = await session();
     if (!s) throw new ApiError(401, "Sign in to see this.");
     // A miss runs `load` (its API call logs its own line); a hit is one read from the cache.
     let ran = false;
     const start = performance.now();
     try {
-        const mark = await scopeMark(s.userId, scope);
+        const mark = await scopeMark(s.userId, ref);
         if (!mark.stored) {
             ran = true;
             return await load(s.token);
@@ -90,7 +92,7 @@ async function perUserUncached<T>(scope: CacheScope, name: string, load: (token:
                 return load(s.token);
             },
             [name, s.userId, cacheWindow(), KEY_VERSION, mark.id],
-            { revalidate: CACHE_SECONDS, tags: readTags(s.userId, scope) },
+            { revalidate: CACHE_SECONDS, tags: readTags(s.userId, ref) },
         )();
     } finally {
         logTiming(`cache ${name}`, elapsed(start), ran ? "miss" : "hit");
@@ -123,16 +125,20 @@ async function perUserUncached<T>(scope: CacheScope, name: string, load: (token:
  * themselves do. No window in its key: a mark only ends by a forget, and a new one every five
  * minutes would cost that unstored read every five minutes.
  */
-function scopeMark(userId: string, scope: CacheScope): Promise<{ id: string; stored: boolean }> {
+function scopeMark(userId: string, ref: ScopeRef): Promise<{ id: string; stored: boolean }> {
     const reads = inFlight();
-    const key = `${scope}|${MARK}`;
+    const key = `${refKey(ref)}|${MARK}`;
     const started = reads.get(key);
     if (started) return started as Promise<{ id: string; stored: boolean }>;
     const made = randomUUID();
-    const mark = unstable_cache(async () => made, [MARK, userId, scope, KEY_VERSION], { revalidate: false, tags: readTags(userId, scope) })().then((id) => ({
-        id,
-        stored: id !== made,
-    }));
+    // A parted scope has a mark per piece, filed under the piece's tags, which carry the scope's
+    // too: forgetting one set drops that set's mark alone, forgetting the scope drops them all.
+    const mark = unstable_cache(async () => made, [MARK, userId, refKey(ref), KEY_VERSION], { revalidate: false, tags: readTags(userId, ref) })().then(
+        (id) => ({
+            id,
+            stored: id !== made,
+        }),
+    );
     reads.set(key, mark);
     return mark;
 }
@@ -143,28 +149,33 @@ function scopeMark(userId: string, scope: CacheScope): Promise<{ id: string; sto
  * stale-while-revalidate would hand the writer the screen from before their write.
  *
  * `write` names what was written (`cache-scopes.ts`); `all` forgets everything the person has.
+ * `set` is the set the written card is in, where the caller knows it: then only that set's page
+ * goes and the other nine hundred stand. A caller that cannot say drops every set page.
  */
-export async function forgetMine(write: ForgetWrite = "all"): Promise<void> {
+export async function forgetMine(write: ForgetWrite = "all", set?: string | null): Promise<void> {
     const s = await session();
     if (s) {
         // Before the tag goes: dropping it first would make this read a miss and cost a call.
         // The name it returns is the one from before the write, which is exactly the name whose
         // public pages are now stale; a rename leaves nothing cached under the new one.
         const username = await myUsername();
-        for (const tag of forgetTags(s.userId, write)) updateTag(tag);
+        for (const tag of forgetTags(s.userId, write, set)) updateTag(tag);
         if (username) updateTag(publicTag(username));
     }
     // The render after this action runs in the same request; it must not get a read from before the write.
-    forgetInFlight(write);
+    forgetInFlight(write, set);
     revalidatePath("/dashboard", "layout");
 }
 
-/** This request's reads in the scopes a write changed. */
-function forgetInFlight(write: ForgetWrite) {
+/** This request's reads in what a write changed: its scopes, or the one piece of a scope it named. */
+function forgetInFlight(write: ForgetWrite, set?: string | null) {
     const reads = inFlight();
     if (write === "all") return reads.clear();
-    const gone = scopesForgotten(write);
-    for (const key of [...reads.keys()]) if (gone.some((scope) => key.startsWith(`${scope}|`))) reads.delete(key);
+    const gone = targetsForgotten(write, set);
+    for (const key of [...reads.keys()]) {
+        const filed = key.slice(0, key.indexOf("|"));
+        if (gone.some((target) => targetReaches(target, filed))) reads.delete(key);
+    }
 }
 
 /**
@@ -178,11 +189,11 @@ function forgetInFlight(write: ForgetWrite) {
  * press while a fresh one was fetched behind it, so the sidebar read after a plus still said the
  * old count and caught up one press late (measured 2026-09-13).
  */
-export async function forgetMineLater(write: ForgetWrite = "all"): Promise<boolean> {
+export async function forgetMineLater(write: ForgetWrite = "all", set?: string | null): Promise<boolean> {
     const s = await session();
     if (!s) return false;
     const username = await myUsername();
-    for (const tag of forgetTags(s.userId, write)) revalidateTag(tag, { expire: 0 });
+    for (const tag of forgetTags(s.userId, write, set)) revalidateTag(tag, { expire: 0 });
     if (username) revalidateTag(publicTag(username), { expire: 0 });
     return true;
 }

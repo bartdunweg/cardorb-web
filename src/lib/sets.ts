@@ -77,8 +77,10 @@ export type SetDetail = {
 };
 
 // One set, every card in set order, the viewer's own marked. Null when no catalogue carries the id.
-// Five minutes per person (user-cache.ts), like the shelf: the marks and counts change on a write,
-// and every write drops the person's entries. It was read fresh on every visit, and opening a set
+// Five minutes per person (user-cache.ts): the marks and counts change on a write. Kept per set
+// (the `setPages` scope, parted by id), so a card write that names its set drops that set's page and
+// leaves every other one standing; a write that cannot name a set drops them all. It was read fresh
+// on every visit, and opening a set
 // a second time waited on the API as long as the first (2.2 s measured on Scarlet & Violet). A 404
 // or a refusal throws inside the cache and is never kept. The "v2" is for when SetDetail's shape
 // changes: an entry survives a deploy (#206). The day the change is read from is in the key too, so
@@ -86,7 +88,7 @@ export type SetDetail = {
 export async function getSet(id: string, language: BrowseLanguage = "en"): Promise<SetDetail | null> {
     const from = weekAgo();
     try {
-        return await perUser("sets", `set:v2:${language}:${from}:${id}`, (token) => readSet(id, language, from, token));
+        return await perUser({ scope: "setPages", part: id }, `set:v2:${language}:${from}:${id}`, (token) => readSet(id, language, from, token));
     } catch (err) {
         if (err instanceof ApiError && err.status === 404) return null;
         if (catalogueDown(err)) throw new CatalogueUnavailable();

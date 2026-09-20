@@ -44,6 +44,7 @@ import type { Holding } from "@/lib/set-holding";
  */
 export function SetCardTile({
     card,
+    setId = null,
     language = "en",
     size = "md",
     priority = false,
@@ -52,6 +53,8 @@ export function SetCardTile({
     onChange,
 }: {
     card: SetCard;
+    /** The set this page is, so a press forgets this set's page and leaves every other set's standing. */
+    setId?: string | null;
     /** The card's holding as the server drew it (`holdingKey`). */
     stamp?: string;
     onChange?: (patch: Partial<Holding>) => void;
@@ -77,6 +80,7 @@ export function SetCardTile({
         error: stepError,
     } = useCopySteps({
         name: card.name,
+        set: setId,
         held: base.owned ? base.quantity : 0,
         rowId: base.owned ? base.itemIds[0] : undefined,
         add: () => addCard(pokemonCardFromSetCard(card, language), "collection", undefined, { reread: false }),
@@ -87,6 +91,7 @@ export function SetCardTile({
     });
     const wish = useWishStep({
         name: card.name,
+        set: setId,
         wished: base.wishlist,
         rowId: base.wishlist && oneRow ? base.itemIds[0] : undefined,
         add: () => addCard(pokemonCardFromSetCard(card, language), "wishlist", undefined, { reread: false }),

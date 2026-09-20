@@ -88,12 +88,21 @@ type Opening = { printing?: string | null };
  */
 type Starred = { onStarChanged?: (cardId: string, starred: boolean) => void };
 
+/**
+ * The set page this sheet was opened from, by its catalogue id: every card it writes is in that
+ * set, so a write forgets that set's page and leaves every other set's standing (`cache-scopes.ts`).
+ * Left out everywhere else, because a collection row names its set by name and not by that id, and
+ * then every set page goes, as it always did.
+ */
+type InSet = { setId?: string | null };
+
 type Props = ({ card: Card | null; onClose: () => void; readOnly?: false } | { card: PublicCard | null; onClose: () => void; readOnly: true }) &
     Neighbours &
     Addable &
     Period &
     Opening &
-    Starred;
+    Starred &
+    InSet;
 
 export function CardDetailSlideout({
     card,
@@ -109,6 +118,7 @@ export function CardDetailSlideout({
     period: opensOn = "1m",
     printing: tilePrinting = null,
     onStarChanged,
+    setId = null,
 }: Props) {
     const { mine, copies, setViewing, showRows, pressedRef, reloadCopies } = useSheetCopies({ card, readOnly });
     const { binders, setBinders, facets, binder, binderPending } = useSheetBinders({ card, readOnly });
@@ -131,6 +141,7 @@ export function CardDetailSlideout({
     } = useSheetPrinting({ card, mine, readOnly, tcgId, known, points, listings, period, said, change, stepFromRef, tilePrinting });
     const { takeable, emptied, busy, scheduleRefresh, add, fileInBinder, dropCopies, stepUp, stepDown, closeSheet, removeAndOffer } = useSheetWrites({
         card,
+        setId,
         readOnly,
         mine,
         copies,

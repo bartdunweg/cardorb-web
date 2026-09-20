@@ -15,6 +15,12 @@ import { orFailed } from "@/lib/write-outcome";
 
 type Params = {
     card: Card | PublicCard | null;
+    /**
+     * The set page the sheet was opened from, by its catalogue id: then a write here forgets that
+     * one set page and every other set's keeps its five minutes. Null everywhere else, and then
+     * every set page goes, as it did before.
+     */
+    setId?: string | null;
     readOnly: boolean;
     mine: Card | null;
     copies: Card[] | null;
@@ -38,6 +44,7 @@ type Params = {
  */
 export function useSheetWrites({
     card,
+    setId = null,
     readOnly,
     mine,
     copies,
@@ -114,7 +121,7 @@ export function useSheetWrites({
            since the others may still have removed their rows. */
         const results = await Promise.all(group.map((row) => orFailed(removeCard(row.id, { reread: false }))));
         setBusy(false);
-        const forgotten = forgetMineQuietly("cards");
+        const forgotten = forgetMineQuietly("cards", setId);
         const failed = results.find((r) => !r.ok);
         if (failed && !failed.ok) {
             notify.failed(group.length > 1 ? "Those copies were not removed" : "That copy was not removed", { description: failed.error });
@@ -193,7 +200,7 @@ export function useSheetWrites({
             }
             // The write forgot nothing (reread: false), so a refresh on its own drew the sidebar's
             // counts from the cache as they were before the add.
-            const forgotten = forgetMineQuietly("cards");
+            const forgotten = forgetMineQuietly("cards", setId);
             if (onTaken) onTaken(taken, list, res.id);
             else void forgotten.then(() => router.refresh());
         });
@@ -224,7 +231,7 @@ export function useSheetWrites({
                 notify.failed(`${mine.name} was not added to ${into.name}`, { description: res.error });
                 return;
             }
-            void forgetMineQuietly("cards").then(() => {
+            void forgetMineQuietly("cards", setId).then(() => {
                 scheduleRefresh();
                 void reloadCopies();
             });
@@ -261,7 +268,7 @@ export function useSheetWrites({
             // Quietly, through the route: rereadMine() is an action, and a cache dropped inside one
             // draws the page again in its answer, a redraw of the list behind the sheet on top of the
             // refresh this schedules.
-            void forgetMineQuietly("cards").then(() => {
+            void forgetMineQuietly("cards", setId).then(() => {
                 scheduleRefresh();
                 void reloadCopies();
             });
@@ -305,7 +312,7 @@ export function useSheetWrites({
                             setRemoved(null);
                             notify.done(rows.length > 1 ? `${rows.length} copies are back` : "It is back");
                         }
-                        await forgetMineQuietly("cards");
+                        await forgetMineQuietly("cards", setId);
                         scheduleRefresh();
                         void reloadCopies();
                     });
@@ -327,7 +334,7 @@ export function useSheetWrites({
                 router.refresh();
                 return;
             }
-            const forgotten = forgetMineQuietly("cards");
+            const forgotten = forgetMineQuietly("cards", setId);
             if (!onRemoved) void forgotten.then(() => router.refresh());
             offerUndo(res.card ? [res.card] : [], wishlist ? "Removed from your wishlist" : "Removed from your collection");
         });

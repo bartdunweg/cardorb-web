@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { forgetMineLater } = vi.hoisted(() => ({ forgetMineLater: vi.fn<(write?: string) => Promise<boolean>>(async () => true) }));
+const { forgetMineLater } = vi.hoisted(() => ({ forgetMineLater: vi.fn<(write?: string, set?: string | null) => Promise<boolean>>(async () => true) }));
 vi.mock("@/lib/user-cache", () => ({ forgetMineLater }));
 
 const { POST } = await import("./route");
@@ -17,13 +17,23 @@ describe("POST /api/forget-mine", () => {
     it("forgets what the write names", async () => {
         for (const write of ["cards", "favorite", "binders", "profile", "dexFace", "all"]) {
             expect((await post(`?write=${write}`)).status).toBe(204);
-            expect(forgetMineLater).toHaveBeenLastCalledWith(write);
+            expect(forgetMineLater).toHaveBeenLastCalledWith(write, null);
         }
+    });
+
+    it("forgets one set's page when the write names its set", async () => {
+        expect((await post("?write=cards&set=sv3pt5")).status).toBe(204);
+        expect(forgetMineLater).toHaveBeenLastCalledWith("cards", "sv3pt5");
+    });
+
+    it("refuses a set id that could be another tag, and forgets nothing", async () => {
+        for (const query of ["?write=cards&set=", "?write=cards&set=user:u1", "?write=cards&set=a/b"]) expect((await post(query)).status).toBe(400);
+        expect(forgetMineLater).not.toHaveBeenCalled();
     });
 
     it("forgets everything when no write is named", async () => {
         expect((await post()).status).toBe(204);
-        expect(forgetMineLater).toHaveBeenCalledWith("all");
+        expect(forgetMineLater).toHaveBeenCalledWith("all", null);
     });
 
     it("refuses a write it does not know, and forgets nothing", async () => {

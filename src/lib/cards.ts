@@ -15,7 +15,7 @@ export type { Facets } from "@/lib/facets";
  * request to read a session from, and a read that asks for one throws before the API is called.
  */
 export const getFacets = (): Promise<Facets> =>
-    perUser("stats", "facets", async (token) => {
+    perUser("holdings", "facets", async (token) => {
         const { facets } = await api("/cards", { token, params: { owned: true, limit: 1 }, schema: facetsAnswer });
         return facetsFrom(facets);
     });

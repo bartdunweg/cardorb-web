@@ -96,3 +96,30 @@ describe("SetCardTile's Undo after an add", () => {
         expect(refresh).toHaveBeenCalled();
     });
 });
+
+/*
+ * A press on a set page's tile knows which set it is in, so the forget names it and the other nine
+ * hundred set pages keep their five minutes. A tile with no set named still forgets them all.
+ */
+describe("SetCardTile's forget", () => {
+    const forgot = () =>
+        vi
+            .mocked(fetch)
+            .mock.calls.map(([url]) => String(url))
+            .filter((url) => url.startsWith("/api/forget-mine"));
+
+    it("names the set the page is, and names none where the tile was given none", async () => {
+        vi.mocked(fetch).mockClear();
+        const { unmount } = render(<SetCardTile card={card} setId="me03" />);
+        await act(async () => fireEvent.click(screen.getByRole("button", { name: "Add Spinarak #001 to your collection" })));
+        await act(async () => new Promise((r) => setTimeout(r, 0)));
+        expect(forgot()).toContain("/api/forget-mine?write=cards&set=me03");
+        unmount();
+
+        vi.mocked(fetch).mockClear();
+        render(<SetCardTile card={card} />);
+        await act(async () => fireEvent.click(screen.getByRole("button", { name: "Add Spinarak #001 to your collection" })));
+        await act(async () => new Promise((r) => setTimeout(r, 0)));
+        expect(forgot()).toContain("/api/forget-mine?write=cards");
+    });
+});

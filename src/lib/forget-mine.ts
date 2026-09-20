@@ -5,10 +5,11 @@ import type { ForgetWrite } from "@/lib/cache-scopes";
  * could not forget still shows the right count, and the cache holds the old one five minutes at most.
  *
  * `write` names what was written, so only what it changes goes (`cache-scopes.ts`); a caller that
- * names nothing forgets everything.
+ * names nothing forgets everything. `set` is the set the written card is in, where the caller has
+ * it: then that set's page is the only one forgotten, and every other set's stands.
  */
-export const forgetMineQuietly = (write: ForgetWrite = "all") =>
-    fetch(`/api/forget-mine?write=${write}`, { method: "POST" }).then(
+export const forgetMineQuietly = (write: ForgetWrite = "all", set?: string | null) =>
+    fetch(`/api/forget-mine?write=${write}${set ? `&set=${encodeURIComponent(set)}` : ""}`, { method: "POST" }).then(
         () => {
             if (CHANGES_COUNTS.has(write)) window.dispatchEvent(new Event(CARDS_CHANGED));
         },

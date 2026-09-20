@@ -132,7 +132,7 @@ async function Set({ params, searchParams }: { params: Promise<{ id: string }>; 
                         }
                     />
                 ) : (
-                    <SetCards cards={set.cards} language={language} initialSize={remembered.size} />
+                    <SetCards cards={set.cards} setId={set.id} language={language} initialSize={remembered.size} />
                 )}
             </div>
         </SetLive>
