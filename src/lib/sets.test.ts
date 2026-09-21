@@ -90,8 +90,8 @@ describe("a card write that names the set", () => {
 
         // The set page hands its tiles the address's own id, and the tile's write names that one.
         expect(forgetTags("u1", "cards", "SV01").some((tag) => held.includes(tag))).toBe(true);
-        // The canonical id the API answered with reaches nothing: that was the bug.
-        expect(forgetTags("u1", "cards", "sv01").some((tag) => held.includes(tag))).toBe(false);
+        // The canonical id, which is what a write from the API names: the tags meet, folded (api#579).
+        expect(forgetTags("u1", "cards", "sv01").some((tag) => held.includes(tag))).toBe(true);
         // Another set's press leaves this page standing, which is what keeping them apart is for.
         expect(forgetTags("u1", "cards", "base1").some((tag) => held.includes(tag))).toBe(false);
         // A write that cannot name a set drops every set page, this one among them.
