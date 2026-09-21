@@ -11,7 +11,7 @@ import { cx } from "@/utils/cx";
  * of these five buttons would have drifted the first time either was edited, and the whole point
  * of the card's chart is that it is the one people already know from Home.
  */
-export { PERIODS, byWeek, forChart, withinPeriod, type PeriodKey } from "@/lib/chart-periods";
+export { PERIODS, byWeek, changeSaid, forChart, withinPeriod, type PeriodKey } from "@/lib/chart-periods";
 
 /**
  * One pressed, the pill behind it. Tapped often, so the state changes without motion.
