@@ -3,7 +3,7 @@
 import { ChartPeriods } from "@/components/app/chart-periods";
 import { useHomePeriod } from "@/components/app/home-period";
 import { ValueChart } from "@/components/app/value-chart";
-import { PERIODS, forChart, isoDaysAgo } from "@/lib/chart-periods";
+import { PERIODS, changeSaid, forChart, isoDaysAgo } from "@/lib/chart-periods";
 import { formatValue } from "@/lib/format";
 import { splitChange } from "@/lib/value-change";
 import type { ValueSnapshot } from "@/lib/value-history";
@@ -37,6 +37,9 @@ export function ValueHero({
     const shown = chosen.days === null ? snapshots : snapshots.filter((s) => s.date >= isoDaysAgo(chosen.days));
     const split = splitChange(shown, value);
     const change = split ? split.change : null;
+    /* What the change is over. A list younger than the period is measured from its first reading, and
+       says that rather than naming a month it has not lived through (Bart, 2026-09-21). */
+    const said = changeSaid(period, shown);
 
     return (
         <section aria-labelledby="value-heading" className="flex flex-col gap-4">
@@ -58,8 +61,8 @@ export function ValueHero({
                     {change === null
                         ? "No readings yet for this period."
                         : change === 0
-                          ? `Unchanged ${chosen.said}`
-                          : `${change > 0 ? "+" : "−"}${formatValue(Math.abs(change))} ${chosen.said}`}
+                          ? `Unchanged ${said}`
+                          : `${change > 0 ? "+" : "−"}${formatValue(Math.abs(change))} ${said}`}
                 </p>
             </div>
 

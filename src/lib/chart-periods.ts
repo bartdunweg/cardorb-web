@@ -31,6 +31,24 @@ export function withinPeriod<T extends { date: string }>(rows: T[], period: Peri
     return rows.filter((r) => r.date >= from);
 }
 
+/**
+ * What a period's change is measured over, in words: the period's own ("in the last 30 days"), or
+ * "since the first reading" where the readings do not reach back that far.
+ *
+ * A collection twelve days old still read "+EUR 7,967 in the last 30 days" over its figure, and
+ * those 7,967 were a fortnight and an import, not a month (Bart, 2026-09-21). The figure itself does
+ * not move: it is measured from the first reading in the window either way, and the sentence now
+ * says so. A history that fills the period reads exactly as before, and Max, whose words these are,
+ * is untouched.
+ */
+export function changeSaid(period: PeriodKey, shown: { date: string }[]): string {
+    const chosen = PERIODS.find((p) => p.key === period) ?? PERIODS[1];
+    const sinceFirst = PERIODS[PERIODS.length - 1].said;
+    if (chosen.days === null) return sinceFirst;
+    const first = shown[0];
+    return first && first.date > isoDaysAgo(chosen.days) ? sinceFirst : chosen.said;
+}
+
 const isoOf = (d: Date) => d.toISOString().slice(0, 10);
 const utc = (iso: string) => new Date(`${iso}T00:00:00Z`);
 

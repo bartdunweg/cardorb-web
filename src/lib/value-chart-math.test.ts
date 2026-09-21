@@ -62,6 +62,18 @@ describe("readings placed by time", () => {
         const points = pointsFor([1, 2, 3], frame, 0, 3, ["2026-01-01", "2026-01-02", "2026-01-11"]);
         expect(points.map((p) => p.x)).toEqual([0, 10, 100]);
     });
+
+    /*
+     * The axis runs from the first reading to the last, never from the period's own first day: a
+     * collection a week old fills the width on 1M rather than standing in its last quarter, and the
+     * dates written under the line are the days it has (Bart, 2026-09-21).
+     */
+    it("spans the readings themselves, however short the history", () => {
+        const week = ["2026-09-14", "2026-09-15", "2026-09-16", "2026-09-17", "2026-09-18", "2026-09-19", "2026-09-20"];
+        const points = pointsFor([7761, 7756, 8067, 8101, 8105, 8097, 8089], frame, 7756, 8105, week);
+        expect(points[0].x).toBe(frame.left);
+        expect(points[points.length - 1].x).toBe(frame.width - frame.right);
+    });
 });
 
 describe("the line through every reading", () => {
