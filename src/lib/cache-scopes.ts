@@ -90,7 +90,14 @@ export const FORGETS: Record<Exclude<ForgetWrite, "all">, readonly CacheScope[]>
 
 export const userTag = (userId: string) => `user:${userId}`;
 export const scopeTag = (userId: string, scope: CacheScope) => `user:${userId}:${scope}`;
-export const partTag = (userId: string, scope: PartedScope, part: string) => `user:${userId}:${scope}:${part}`;
+/*
+ * The piece's tag, with the piece folded to lower case. A set page is filed under the id its address
+ * was read with (`BASE1`), while a write from the API names the set as the API resolves it, case
+ * blind (`base1`, api#579 webSetOf). Two spellings of one set would be two tags, and the write would
+ * forget a piece no read carries while the page stood stale. Folding here is the one place both
+ * sides pass through, so neither has to remember.
+ */
+export const partTag = (userId: string, scope: PartedScope, part: string) => `user:${userId}:${scope}:${part.toLowerCase()}`;
 
 /** The one tag that stands for a ref: its scope's, or its piece's. */
 const refTag = (userId: string, ref: ScopeRef) => (typeof ref === "string" ? scopeTag(userId, ref) : partTag(userId, ref.scope, ref.part));

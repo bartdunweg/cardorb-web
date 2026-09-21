@@ -45,8 +45,10 @@ as an add, and list state now covers a rarity filter chosen and cleared in the F
 (reload, Back and a bare address), beside search, sort, view and the set page's own address. A set
 page is also opened under a differently cased id (`e2e/set-alias-cache.spec.ts`), which the API
 resolves to the canonical set: the tiles, a press and the count over them all have to work on such
-an address. The cache key behind it (#763) is not reachable here, because the API drops the whole
-person's tag through `/api/revalidate` after every write; `src/lib/sets.test.ts` holds that.
+an address. The cache key behind it (#763) is not reachable here: a press in this app forgets every set page,
+so no address can be stale whichever id the tile named. A write from the API or the phone does name
+its set (api#579), and the parts meet because both fold the id to lower case;
+`src/lib/sets.test.ts` holds that.
 
 Production itself is read once an hour (`.github/workflows/prod-check.yml`, `scripts/prod-check.ts`),
 signed out and read-only, since there is no test account: the landing, sign in, sign up, privacy,

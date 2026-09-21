@@ -11,10 +11,11 @@ import { SET_ID, SET_NAME, addButton, cacheCleared, card, removeButton, setTile,
  * opened such an address.
  *
  * What this spec does not prove is the cache key itself. Run with #763 reverted (a probe commit on
- * web#767) it still passed: the API calls this app's `/api/revalidate` after every write and sends
- * no `write` name, which reads as `all`, so the person's whole tag goes and no set page can be
- * stale whatever the tile named. The narrowing is held by `src/lib/sets.test.ts` instead. This is
- * the address itself: that an alias id draws the set, takes a press and reads it back.
+ * web#767) it still passed, and it still would: a press in this app forgets every set page, so no
+ * address can be stale whichever id the tile named. A write from the API names its set (api#579),
+ * and its part meets this page's because both fold the id to lower case. The narrowing is held by
+ * `src/lib/sets.test.ts` instead. This is the address itself: that an alias id draws the set,
+ * takes a press and reads it back.
  */
 const ALIAS = SET_ID.toUpperCase();
 
