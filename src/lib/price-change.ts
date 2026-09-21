@@ -1,4 +1,4 @@
-import { type PeriodKey, forChart } from "@/lib/chart-periods";
+import { type PeriodKey, changeSaid, forChart } from "@/lib/chart-periods";
 import { formatPercent, formatPrice } from "@/lib/format";
 
 export type PriceChange = {
@@ -53,10 +53,15 @@ function changeAgainst(price: number | null | undefined, before: number | null |
  *
  * Null under two figures in the window: one reading is a price, not a move.
  */
-export function periodChange(points: PriceLinePoint[], period: PeriodKey, holo: boolean, printing: string | null, said: string): PriceChange | null {
-    const within = forChart(chartLine(points, printing, holo), period);
+export function periodChange(points: PriceLinePoint[], period: PeriodKey, holo: boolean, printing: string | null): PriceChange | null {
+    const line = chartLine(points, printing, holo);
+    const within = forChart(line, period);
     if (within.length < 2) return null;
-    return changeAgainst(within[within.length - 1]!.value, within[0]!.value, said);
+    /* The words are this line's own, not the button's: a printing first priced last week, or one
+       whose line the chart distrusts back to last week, said "in the last 6 months" to a screen
+       reader over a move that was a week old. Judged on the whole drawn line rather than the
+       window's slice of it, the same rule Home's figure follows (changeSaid). */
+    return changeAgainst(within[within.length - 1]!.value, within[0]!.value, changeSaid(period, line));
 }
 
 /**

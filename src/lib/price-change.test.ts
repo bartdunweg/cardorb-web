@@ -20,7 +20,7 @@ describe("periodChange", () => {
     // that put it there rather than its price against a month's average (Bart, 2026-09-16).
     it("reads the first figure in the window against the last, and names the period", () => {
         const line = [day(40, 1), day(20, 2), day(1, 2.4)];
-        const change = periodChange(line, "1m", false, "normal", "in the last 30 days");
+        const change = periodChange(line, "1m", false, "normal");
         expect(change?.direction).toBe("up");
         expect(change?.text).toBe("+€0.40 · 20%");
         expect(change?.label).toBe("Up €0.40, 20 percent, in the last 30 days");
@@ -28,8 +28,8 @@ describe("periodChange", () => {
 
     it("leaves out what is older than the window, so a shorter period reads a smaller move", () => {
         const line = [day(40, 1), day(20, 2), day(1, 2.4)];
-        expect(periodChange(line, "6m", false, "normal", "in the last 6 months")?.text).toBe("+€1.40 · 140%");
-        expect(periodChange(line, "max", false, "normal", "since the first reading")?.text).toBe("+€1.40 · 140%");
+        expect(periodChange(line, "6m", false, "normal")?.text).toBe("+€1.40 · 140%");
+        expect(periodChange(line, "max", false, "normal")?.text).toBe("+€1.40 · 140%");
     });
 
     // Max draws one reading a week, the week's average (chart-periods.ts), so its figure starts there
@@ -38,13 +38,26 @@ describe("periodChange", () => {
     it("under Max, starts where the weekly line starts: the first week's average", () => {
         const at = (date: string, value: number) => ({ date, market: null, holo: null, printings: { normal: value } });
         const line = [at("2025-06-09", 0.43), at("2025-06-11", 0.4), at("2025-06-13", 0.37), at("2025-06-16", 0.5)];
-        const change = periodChange(line, "max", false, "normal", "since the first reading");
+        const change = periodChange(line, "max", false, "normal");
         expect(change?.direction).toBe("up");
         expect(change?.amount).toBeCloseTo(0.5 - 0.4, 2);
     });
 
+    /* The words a screen reader hears come from the line, not the button: a printing first priced
+       last week said "in the last 6 months" over a move that was seven days old (Bart, 2026-09-21).
+       The same rule Home's figure follows, so the two never say different things about one period. */
+    it("names the first reading where the line does not reach back as far as the period", () => {
+        const young = [day(6, 1), day(1, 1.5)];
+        expect(periodChange(young, "6m", false, "normal")?.label).toBe("Up €0.50, 50 percent, since the first reading");
+        // Six days of readings do not fill a seven-day window either, so 7D says the same thing.
+        expect(periodChange(young, "7d", false, "normal")?.label).toBe("Up €0.50, 50 percent, since the first reading");
+        const old = [day(200, 1), day(20, 1.4), day(7, 1), day(1, 1.5)];
+        expect(periodChange(old, "6m", false, "normal")?.label).toBe("Up €0.10, 7 percent, in the last 6 months");
+        expect(periodChange(old, "7d", false, "normal")?.label).toBe("Up €0.50, 50 percent, in the last 7 days");
+    });
+
     it("says how far down, with a proper minus", () => {
-        const change = periodChange([day(20, 2.4), day(1, 2.28)], "1m", false, "normal", "in the last 30 days");
+        const change = periodChange([day(20, 2.4), day(1, 2.28)], "1m", false, "normal");
         expect(change?.direction).toBe("down");
         expect(change?.text).toBe("−€0.12 · 5%");
     });
@@ -55,17 +68,17 @@ describe("periodChange", () => {
             { date: daysAgo(20), market: 3, holo: null, printings: { normal: 3, holofoil: 20 } },
             { date: daysAgo(1), market: 3, holo: null, printings: { normal: 3, holofoil: 22 } },
         ];
-        expect(periodChange(line, "1m", false, "holofoil", "in the last 30 days")?.text).toBe("+€2.00 · 10%");
-        expect(periodChange(line, "1m", false, "normal", "in the last 30 days")).toBeNull();
-        expect(periodChange(line, "1m", false, "reverse-holofoil", "in the last 30 days")).toBeNull();
+        expect(periodChange(line, "1m", false, "holofoil")?.text).toBe("+€2.00 · 10%");
+        expect(periodChange(line, "1m", false, "normal")).toBeNull();
+        expect(periodChange(line, "1m", false, "reverse-holofoil")).toBeNull();
     });
 
     it("shows nothing under half a percent, under a cent, or without two figures in the window", () => {
-        expect(periodChange([day(20, 100), day(1, 100.3)], "1m", false, "normal", "in the last 30 days")).toBeNull();
-        expect(periodChange([day(20, 0.5), day(1, 0.505)], "1m", false, "normal", "in the last 30 days")).toBeNull();
-        expect(periodChange([day(1, 2.4)], "1m", false, "normal", "in the last 30 days")).toBeNull();
-        expect(periodChange([day(200, 1), day(150, 5)], "1m", false, "normal", "in the last 30 days")).toBeNull();
-        expect(periodChange([], "1m", false, "normal", "in the last 30 days")).toBeNull();
+        expect(periodChange([day(20, 100), day(1, 100.3)], "1m", false, "normal")).toBeNull();
+        expect(periodChange([day(20, 0.5), day(1, 0.505)], "1m", false, "normal")).toBeNull();
+        expect(periodChange([day(1, 2.4)], "1m", false, "normal")).toBeNull();
+        expect(periodChange([day(200, 1), day(150, 5)], "1m", false, "normal")).toBeNull();
+        expect(periodChange([], "1m", false, "normal")).toBeNull();
     });
 
     // Base Set Charizard's Shadowless run: €1,869, then €1,000 for eleven days, then €1,948. The line
@@ -78,7 +91,7 @@ describe("periodChange", () => {
             day(2, 1948, "shadowless-holofoil"),
             day(1, 1955, "shadowless-holofoil"),
         ];
-        expect(periodChange(shadowless, "1m", false, "shadowless-holofoil", "in the last 30 days")?.ratio).toBeLessThan(0.06);
+        expect(periodChange(shadowless, "1m", false, "shadowless-holofoil")?.ratio).toBeLessThan(0.06);
     });
 });
 

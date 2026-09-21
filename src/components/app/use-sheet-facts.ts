@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { CardFacts, PricePoint } from "@/app/(app)/dashboard/cards/actions";
 import { knownCardFacts, knownPriceHistory, knownPriceListings, preloadCardFacts, preloadPriceHistory } from "@/components/app/card-memo";
-import { PERIODS, type PeriodKey } from "@/components/app/chart-periods";
+import type { PeriodKey } from "@/components/app/chart-periods";
 import type { PokemonCard } from "@/lib/api-shapes";
 import { isReverseFinish } from "@/lib/card-shapes";
 import type { Card, PublicCard } from "@/lib/cards";
@@ -96,8 +96,7 @@ export function useSheetFacts({ card, mine, addable, opensOn }: Params) {
     if (periodState.opensOn !== opensOn) setPeriodState({ opensOn, period: opensOn });
     const period = periodState.period;
     const setPeriod = (next: PeriodKey) => setPeriodState({ opensOn, period: next });
-    const chosen = PERIODS.find((p) => p.key === period) ?? PERIODS[1];
-    const change = mine ? periodChange(points, period, isReverseFinish(mine.finish), mine.price_printing ?? null, chosen.said) : null;
+    const change = mine ? periodChange(points, period, isReverseFinish(mine.finish), mine.price_printing ?? null) : null;
 
-    return { tcgId, genLogo, formFacts, known, points, listings, period, setPeriod, said: chosen.said, change };
+    return { tcgId, genLogo, formFacts, known, points, listings, period, setPeriod, change };
 }

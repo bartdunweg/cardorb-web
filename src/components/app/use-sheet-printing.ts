@@ -21,7 +21,6 @@ type Params = {
     /** Today's lowest listing of each printing with no market figure (knownPriceListings). */
     listings: Record<string, number>;
     period: PeriodKey;
-    said: string;
     change: PriceChange | null;
     stepFromRef: RefObject<StepFrom>;
     /** Where the card has no copy: the printing the tile that opened it showed, else the first. */
@@ -32,7 +31,7 @@ type Params = {
  * The printing or print run on show in the card sheet, the one pressed under the card, and the
  * picture and price that follow it.
  */
-export function useSheetPrinting({ card, mine, readOnly, tcgId, known, points, listings, period, said, change, stepFromRef, tilePrinting }: Params) {
+export function useSheetPrinting({ card, mine, readOnly, tcgId, known, points, listings, period, change, stepFromRef, tilePrinting }: Params) {
     /*
      * The printing on show, under the card (printing-choices.ts): the copy's own to begin with,
      * and whichever button was pressed after that, until the sheet moves to another card. A
@@ -112,7 +111,7 @@ export function useSheetPrinting({ card, mine, readOnly, tcgId, known, points, l
     /* The pressed printing's lowest listing where it has no market figure, under the same rule as
        its price: never where the owner keeps prices private. */
     const shownListing = pricesHidden || pressedPrice !== null ? null : (pressedListing ?? null);
-    const shownChange = pressedAway ? (shownPrice != null && shownSeries ? periodChange(points, period, false, shownSeries, said) : null) : change;
+    const shownChange = pressedAway ? (shownPrice != null && shownSeries ? periodChange(points, period, false, shownSeries) : null) : change;
     // On a public page the card carries a price only where its owner shows them; that is the figure under the title then.
     const publicPrice = readOnly && card && "price" in card ? (card.price ?? null) : null;
 
