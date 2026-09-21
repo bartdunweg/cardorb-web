@@ -42,6 +42,26 @@ describe("POST /api/revalidate", () => {
         expect(revalidateTag).toHaveBeenCalledWith(`user:${who.userId}`, { expire: 0 });
     });
 
+    it("forgets one set's page where the API names the set, and every set's where it does not", async () => {
+        await post({ ...who, write: "cards", set: "sv1" }, "s3cret");
+        let dropped = revalidateTag.mock.calls.map(([tag]) => tag);
+        expect(dropped).toContain(`user:${who.userId}:setPages:sv1`);
+        expect(dropped).not.toContain(`user:${who.userId}:setPages`);
+        revalidateTag.mockClear();
+        await post({ ...who, write: "cards" }, "s3cret");
+        dropped = revalidateTag.mock.calls.map(([tag]) => tag);
+        expect(dropped).toContain(`user:${who.userId}:setPages`);
+        expect(dropped.some((tag) => tag.startsWith(`user:${who.userId}:setPages:`))).toBe(false);
+    });
+
+    it("drops a set id it cannot read rather than refusing, and then forgets every set page", async () => {
+        const res = await post({ ...who, write: "cards", set: "sv1:not a set id" }, "s3cret");
+        expect(res.status).toBe(204);
+        const dropped = revalidateTag.mock.calls.map(([tag]) => tag);
+        expect(dropped).toContain(`user:${who.userId}:setPages`);
+        expect(dropped).not.toContain(`user:${who.userId}:setPages:sv1:not a set id`);
+    });
+
     it("refuses a missing or wrong secret, and drops nothing", async () => {
         expect((await post(who)).status).toBe(401);
         expect((await post(who, "guess")).status).toBe(401);

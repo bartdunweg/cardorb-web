@@ -2,7 +2,7 @@ import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { z } from "zod";
-import { forgetTags, forgetWriteSchema } from "@/lib/cache-scopes";
+import { forgetSetSchema, forgetTags, forgetWriteSchema } from "@/lib/cache-scopes";
 import { publicTag } from "@/lib/user-cache";
 
 /**
@@ -18,10 +18,22 @@ import { publicTag } from "@/lib/user-cache";
  * only empties a cache is still a door.
  *
  * `write` names what changed (`cache-scopes.ts`), so a card written from the phone need not drop the
- * profile and the binders too. The API sends none today; none, or one this app does not know yet, is
- * `all`, everything, as before, rather than a refusal that would forget nothing.
+ * profile and the binders too. None, or one this app does not know yet, is `all`, everything, as
+ * before, rather than a refusal that would forget nothing: an API that has not shipped the name yet
+ * still empties the right cache, only a wider one.
+ *
+ * `set` is the set the written card is in, where the API knows it (`setIdOf` there): then that set's
+ * page is the only one forgotten and every other set's five minutes stand. It reaches a cache tag,
+ * so it is read through the same check the browser's own `/api/forget-mine` uses; one this app
+ * cannot read is dropped rather than refused, and the write then forgets every set page, which is
+ * what it did before the set was sent at all. Wider is safe here, narrower is not.
  */
-const body = z.object({ username: z.string().trim().min(1).max(64), userId: z.string().uuid(), write: forgetWriteSchema.catch("all") });
+const body = z.object({
+    username: z.string().trim().min(1).max(64),
+    userId: z.string().uuid(),
+    write: forgetWriteSchema.catch("all"),
+    set: forgetSetSchema.nullish().catch(null),
+});
 
 export async function POST(request: Request) {
     const secret = process.env.REVALIDATE_SECRET?.trim();
@@ -42,6 +54,6 @@ export async function POST(request: Request) {
     // right after a plus and a second copy said "not in your collection" (1 round in 3, e2e probe
     // on web#676, 2026-09-17).
     revalidateTag(publicTag(parsed.data.username), { expire: 0 });
-    for (const tag of forgetTags(parsed.data.userId, parsed.data.write)) revalidateTag(tag, { expire: 0 });
+    for (const tag of forgetTags(parsed.data.userId, parsed.data.write, parsed.data.set)) revalidateTag(tag, { expire: 0 });
     return new Response(null, { status: 204 });
 }
