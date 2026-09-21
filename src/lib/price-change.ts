@@ -1,4 +1,4 @@
-import { type PeriodKey, forChart } from "@/lib/chart-periods";
+import { type PeriodKey, changeSaid, forChart } from "@/lib/chart-periods";
 import { formatPercent, formatPrice } from "@/lib/format";
 
 export type PriceChange = {
@@ -9,13 +9,14 @@ export type PriceChange = {
     ratio: number;
     /** What the line says: "+€0.12 · 5%". The sign is always there, so colour never carries it alone. */
     text: string;
-    /** What a screen reader says: "Up €0.12, 5 percent, against the 30-day average". */
+    /** What a screen reader says: "Up €0.12, 5 percent, in the last 30 days" (changeSaid writes the last part). */
     label: string;
 };
 
 /**
  * One price against an earlier one, as the line beside the price reads it. `said` is what the
- * earlier figure was ("against the 30-day average", "in the last 30 days"): the reading only a
+ * earlier figure was, in the words `changeSaid` writes ("in the last 30 days", "since the first
+ * reading"): the reading only a
  * screen reader gets, since the number itself is beside the control that set the window.
  *
  * Nothing under half a percent or under a cent: a card that moved by less than that has not
@@ -53,10 +54,15 @@ function changeAgainst(price: number | null | undefined, before: number | null |
  *
  * Null under two figures in the window: one reading is a price, not a move.
  */
-export function periodChange(points: PriceLinePoint[], period: PeriodKey, holo: boolean, printing: string | null, said: string): PriceChange | null {
-    const within = forChart(chartLine(points, printing, holo), period);
+export function periodChange(points: PriceLinePoint[], period: PeriodKey, holo: boolean, printing: string | null): PriceChange | null {
+    const line = chartLine(points, printing, holo);
+    const within = forChart(line, period);
     if (within.length < 2) return null;
-    return changeAgainst(within[within.length - 1]!.value, within[0]!.value, said);
+    /* The words are this line's own, not the button's: a printing first priced last week, or one
+       whose line the chart distrusts back to last week, said "in the last 6 months" to a screen
+       reader over a move that was a week old. Judged on the whole drawn line rather than the
+       window's slice of it, the same rule Home's figure follows (changeSaid). */
+    return changeAgainst(within[within.length - 1]!.value, within[0]!.value, changeSaid(period, line));
 }
 
 /**

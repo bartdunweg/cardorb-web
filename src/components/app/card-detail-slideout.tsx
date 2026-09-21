@@ -123,7 +123,7 @@ export function CardDetailSlideout({
     const { mine, copies, setViewing, showRows, pressedRef, reloadCopies } = useSheetCopies({ card, readOnly });
     const { binders, setBinders, facets, binder, binderPending, bindersFailed } = useSheetBinders({ card, readOnly });
     const { stepFromRef, step } = useSheetSteps({ onPrev, onNext });
-    const { tcgId, genLogo, formFacts, known, points, listings, period, setPeriod, said, change } = useSheetFacts({ card, mine, addable, opensOn });
+    const { tcgId, genLogo, formFacts, known, points, listings, period, setPeriod, change } = useSheetFacts({ card, mine, addable, opensOn });
     const {
         printings,
         editions,
@@ -138,7 +138,7 @@ export function CardDetailSlideout({
         shownListing,
         shownChange,
         publicPrice,
-    } = useSheetPrinting({ card, mine, readOnly, tcgId, known, points, listings, period, said, change, stepFromRef, tilePrinting });
+    } = useSheetPrinting({ card, mine, readOnly, tcgId, known, points, listings, period, change, stepFromRef, tilePrinting });
     const { takeable, emptied, busy, scheduleRefresh, add, fileInBinder, dropCopies, stepUp, stepDown, closeSheet, removeAndOffer } = useSheetWrites({
         card,
         setId,
