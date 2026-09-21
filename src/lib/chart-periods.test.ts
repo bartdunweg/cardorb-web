@@ -90,6 +90,19 @@ describe("changeSaid", () => {
         expect(changeSaid("6m", from(isoDaysAgo(182)))).toBe("in the last 6 months");
     });
 
+    /*
+     * The whole line decides, not the period's slice of it: a copy counts from the day it was
+     * acquired, which the owner sets by hand, so a collection can reach back to 2023 while one
+     * nightly reading is missing on the period's own first day. That gap is not a young account.
+     */
+    it("reads the line itself, so a gap on the period's first day is not a short history", () => {
+        hold();
+        const yearsBack = [{ date: "2023-07-15" }, { date: isoDaysAgo(29) }, { date: "2026-09-21" }];
+        expect(changeSaid("1m", yearsBack)).toBe("in the last 30 days");
+        expect(changeSaid("6m", yearsBack)).toBe("in the last 6 months");
+        expect(changeSaid("7d", yearsBack)).toBe("in the last 7 days");
+    });
+
     it("leaves Max as it was, which already says it, and answers with no readings at all", () => {
         hold();
         expect(changeSaid("max", from("2026-09-09"))).toBe("since the first reading");
