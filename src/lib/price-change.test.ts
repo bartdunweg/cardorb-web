@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
+import { isoDaysAgo } from "./chart-periods";
 import { chartLine, holdRecoveredDips, periodChange, printingsOfLine, trustedStretch } from "./price-change";
 
-/** A day this many days back, since the periods are counted from today. */
-const daysAgo = (days: number) => {
-    const d = new Date();
-    d.setDate(d.getDate() - days);
-    return d.toISOString().slice(0, 10);
-};
+/*
+ * A day this many days back, since the periods are counted from today, written the way the periods
+ * are cut: `isoDaysAgo` is the local calendar day, and toISOString is UTC, which is a day earlier
+ * between midnight and two in Amsterdam. A test with a reading on the window's own edge failed in
+ * any zone ahead of UTC while the ones with a twenty-day margin passed (review of #771).
+ */
+const daysAgo = (days: number) => isoDaysAgo(days);
 /** One day of a line, one printing, as the API answers it. */
 const day = (back: number, value: number, printing = "normal") => ({
     date: daysAgo(back),

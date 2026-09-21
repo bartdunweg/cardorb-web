@@ -9,13 +9,14 @@ export type PriceChange = {
     ratio: number;
     /** What the line says: "+€0.12 · 5%". The sign is always there, so colour never carries it alone. */
     text: string;
-    /** What a screen reader says: "Up €0.12, 5 percent, against the 30-day average". */
+    /** What a screen reader says: "Up €0.12, 5 percent, in the last 30 days" (changeSaid writes the last part). */
     label: string;
 };
 
 /**
  * One price against an earlier one, as the line beside the price reads it. `said` is what the
- * earlier figure was ("against the 30-day average", "in the last 30 days"): the reading only a
+ * earlier figure was, in the words `changeSaid` writes ("in the last 30 days", "since the first
+ * reading"): the reading only a
  * screen reader gets, since the number itself is beside the control that set the window.
  *
  * Nothing under half a percent or under a cent: a card that moved by less than that has not
