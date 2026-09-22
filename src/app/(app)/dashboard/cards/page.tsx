@@ -4,6 +4,9 @@ import { AppEmptyState } from "@/components/app/app-empty-state";
 import { BinderPage } from "@/components/app/binder-page";
 import { CollectionSwitch } from "@/components/app/collection-switch";
 import { ListSettingsDialog } from "@/components/app/list-settings-dialog";
+import { PageHeader } from "@/components/app/page-header";
+import { SignInInvite } from "@/components/app/sign-in-invite";
+import { session } from "@/lib/api";
 import { type CardFilter, getMyCards } from "@/lib/cards";
 import { openAsLeft } from "@/lib/list-memory-server";
 import { type ListSearchParams, changeWindow, readListQuery } from "@/lib/list-query";
@@ -11,7 +14,8 @@ import { getMyProfile } from "@/lib/profile";
 
 // The tab's name, which the root layout's template finishes as “… · Cardorb”: without it every
 // tab and every history entry read “Cardorb”. The word is the one the navigation uses for this page.
-export const metadata: Metadata = { title: "Collection" };
+// Out of the index: an empty Collection in a search result is worse than none.
+export const metadata: Metadata = { title: "Collection", robots: { index: false } };
 
 // Every card you own: the whole collection as one list, a tab of its own beside Home. No Add card
 // in its header: the search beside the tab bar and in the sidebar opens the same palette, so a plus
@@ -21,6 +25,17 @@ export const metadata: Metadata = { title: "Collection" };
 // the first batch of cards, with the count and value under the title, follows when the API
 // answers. The facets for the Filters menu are a cached read, five minutes per person.
 export default async function CardsPage({ searchParams }: { searchParams: Promise<ListSearchParams> }) {
+    const mine = await session();
+    // Before any read of the person's: a visitor gets an invitation where an error or a blank would
+    // have been, and the page keeps its title so they still know which page answered.
+    if (!mine)
+        return (
+            <div className="flex flex-1 flex-col gap-6">
+                <PageHeader title="Collection" />
+                <SignInInvite place="collection" />
+            </div>
+        );
+
     const params = await searchParams;
     // A bare address opens the list as it was left (list-memory-server.ts).
     await openAsLeft("/dashboard/cards", params);

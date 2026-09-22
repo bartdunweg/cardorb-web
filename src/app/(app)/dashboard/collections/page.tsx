@@ -2,14 +2,28 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { BindersGrid, NewBinderButton } from "@/components/app/binders-grid";
 import { PageHeader } from "@/components/app/page-header";
+import { SignInInvite } from "@/components/app/sign-in-invite";
 import { BindersOutline } from "@/components/app/skeletons";
+import { session } from "@/lib/api";
 import { getBinderOverview } from "@/lib/binders";
 
 // The tab's name, which the root layout's template finishes as “… · Cardorb”: without it every
 // tab and every history entry read “Cardorb”. The word is the one the navigation uses for this page.
-export const metadata: Metadata = { title: "Binders" };
+// Out of the index: an empty Binders page in a search result is worse than none.
+export const metadata: Metadata = { title: "Binders", robots: { index: false } };
 
-export default function BindersPage() {
+export default async function BindersPage() {
+    const mine = await session();
+    // Before any read of the person's: a visitor gets an invitation where an error or a blank would
+    // have been, and the page keeps its title so they still know which page answered.
+    if (!mine)
+        return (
+            <div className="flex flex-1 flex-col gap-6">
+                <PageHeader title="Binders" />
+                <SignInInvite place="binders" />
+            </div>
+        );
+
     return (
         <div className="flex flex-1 flex-col gap-6">
             <PageHeader

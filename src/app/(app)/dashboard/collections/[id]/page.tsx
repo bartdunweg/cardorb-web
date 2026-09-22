@@ -6,8 +6,11 @@ import { AppEmptyState } from "@/components/app/app-empty-state";
 import { BinderAddButton } from "@/components/app/binder-add-button";
 import { BinderMenu } from "@/components/app/binder-menu";
 import { BinderPage } from "@/components/app/binder-page";
+import { PageHeader } from "@/components/app/page-header";
+import { SignInInvite } from "@/components/app/sign-in-invite";
 import { ListSkeleton } from "@/components/app/skeletons";
 import { Badge } from "@/components/base/badges/badges";
+import { session } from "@/lib/api";
 import { type BinderRule, ruleChips } from "@/lib/binder-rule";
 import { getBinder } from "@/lib/binders";
 import { type CardFilter, type Facets, getDexCards, getMyCards } from "@/lib/cards";
@@ -18,10 +21,14 @@ import { getDexNames } from "@/lib/pokedex";
 
 // The binder's own name in the tab. `getBinder` reads the binder list, which is cached five
 // minutes per person, so this is the same read the page makes and costs nothing extra.
+// Out of the index: a binder a visitor cannot be shown is worse in a search result than none.
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+    const robots = { index: false };
+    // A visitor has no binders, so nothing is asked for: the page below says so in words.
+    if (!(await session())) return { title: "Binder", robots };
     const { id } = await params;
     const binder = await getBinder(id);
-    return { title: binder?.name ?? "Binder" };
+    return { title: binder?.name ?? "Binder", robots };
 }
 
 // A binder of your own: filed by hand, or filled by its rule; as a list, or as a Pokédex. The
@@ -36,6 +43,19 @@ export default function BinderDetailPage({ params, searchParams }: { params: Pro
 }
 
 async function Binder({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<ListSearchParams> }) {
+    const mine = await session();
+    // Before any read of the person's: a visitor gets an invitation where an error or a blank would
+    // have been, and the page keeps its title so they still know which page answered.
+    // Not notFound(): a visitor has no binders, so saying this one does not exist would answer a
+    // question we never asked. The invitation is the truth, that binders come with an account.
+    if (!mine)
+        return (
+            <div className="flex flex-1 flex-col gap-6">
+                <PageHeader title="Binder" back={{ href: "/dashboard/collections", label: "Binders" }} />
+                <SignInInvite place="binders" />
+            </div>
+        );
+
     const { id } = await params;
     const binder = await getBinder(id);
     if (!binder) notFound();
