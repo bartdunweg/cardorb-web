@@ -41,6 +41,15 @@ function pages(): { route: string; file: string }[] {
     }));
 }
 
+/** A page's own source and every file in its folder: the work is often one import away. */
+function beside(file: string): string {
+    const dir = join(file, "..");
+    return readdirSync(dir, { withFileTypes: true })
+        .filter((e) => e.isFile() && /\.tsx?$/.test(e.name) && !e.name.includes(".test."))
+        .map((e) => readFileSync(join(dir, e.name), "utf8"))
+        .join("\n");
+}
+
 describe("every page under (app), for somebody with no account", () => {
     it("finds the pages at all, so a broken walk cannot pass silently", () => {
         expect(pages().length).toBeGreaterThan(8);
@@ -60,8 +69,16 @@ describe("every page under (app), for somebody with no account", () => {
         const silent = pages()
             .filter((p) => !isProtected(p.route))
             .filter((p) => {
-                const source = readFileSync(p.file, "utf8");
+                /*
+                 * The page and whatever sits beside it. Home reads nothing itself and hands the
+                 * work to home-body.tsx in the same folder, so reading page.tsx alone said Home
+                 * was fine while it was the page with the most to do. A test that misses the
+                 * hardest case is worse than none, because it is believed.
+                 */
+                const source = beside(p.file);
                 if (!PERSONAL.test(source)) return false;
+                // Any component whose name ends in SignInInvite counts: Home has its own, because
+                // its invitation is three places and a sentence each rather than one block.
                 return !(source.includes("session()") && source.includes("SignInInvite"));
             });
         expect(silent.map((p) => p.route).sort()).toEqual([]);
@@ -80,7 +97,15 @@ describe("every page under (app), for somebody with no account", () => {
     });
 
     it("lets the navigation's own pages through", () => {
-        for (const route of ["/dashboard", "/dashboard/cards", "/dashboard/wishlist", "/dashboard/collections", "/dashboard/favorites", "/dashboard/pokedex", "/sets"]) {
+        for (const route of [
+            "/dashboard",
+            "/dashboard/cards",
+            "/dashboard/wishlist",
+            "/dashboard/collections",
+            "/dashboard/favorites",
+            "/dashboard/pokedex",
+            "/sets",
+        ]) {
             expect(isProtected(route), route).toBe(false);
         }
     });
