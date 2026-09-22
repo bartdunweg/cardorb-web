@@ -106,9 +106,7 @@ export const pokemonCardFromSetCard = (c: SetCard, language?: string): PokemonCa
     setPrintedTotal: null,
     flavorText: null,
     nationalPokedexNumbers: null,
-    owned: c.owned,
-    wishlist: c.wishlist,
-    quantity: c.quantity ?? 0,
+    holding: c.holding === null ? null : { owned: c.holding.owned, wishlist: c.holding.wishlist, quantity: c.holding.quantity },
     price: c.price,
     listingPrice: c.listingPrice ?? null,
 });
@@ -117,6 +115,10 @@ export const pokemonCardFromSetCard = (c: SetCard, language?: string): PokemonCa
  * A search hit as the sheet reads a card: every field about a copy is empty, because there is
  * none. What the set page does for a tile nobody holds, so a hit opens the same sheet a tile
  * does, with its price line, which the catalogue id asks for, and the number above the tabs.
+ *
+ * A hit nobody was asked about is empty here in the same way. The sheet is told separately that
+ * there is nothing to say about copies (`useSheetFacts`), so this row is never read as "you own
+ * none of it".
  */
 export const cardFromPokemonCard = (c: PokemonCard): Card => ({
     id: c.id,
@@ -129,8 +131,8 @@ export const cardFromPokemonCard = (c: PokemonCard): Card => ({
     rarity: c.rarity,
     gen: null,
     types: c.types,
-    quantity: c.quantity,
-    owned: c.owned,
+    quantity: c.holding?.quantity ?? 0,
+    owned: c.holding?.owned ?? false,
     is_favorite: false,
     dex_face: false,
     excluded: false,
@@ -154,7 +156,7 @@ export const cardFromPokemonCard = (c: PokemonCard): Card => ({
     image_high_url: null,
     tcg_id: c.tcgId ?? null,
     collection_id: null,
-    wishlist: c.wishlist,
+    wishlist: c.holding?.wishlist ?? false,
     species_id: null,
 });
 

@@ -3,6 +3,7 @@ import type { BinderKind, BinderRule, PokedexSetting } from "@/lib/binder-rule";
 import { binderRuleSchema, pokedexSettingSchema } from "@/lib/binder-rule-schema";
 import { EDITIONS, FINISHES, FOIL_PATTERNS, FOIL_PATTERN_LABELS, isReverseFinish, ownImage } from "@/lib/card-shapes";
 import type { Finish, FoilPattern } from "@/lib/card-shapes";
+import type { CardHolding, Holding } from "@/lib/set-holding";
 
 // The labels, the vocabularies and the mappers without zod live in card-shapes.ts; every importer of this file still finds them here.
 export {
@@ -655,11 +656,15 @@ export type SetCard = {
     imageUrl: string | null;
     /** The larger scan, so a set tile is as sharp as the same card on any other overview. */
     imageHighUrl: string | null;
-    owned: boolean;
-    wishlist: boolean;
-    quantity: number;
-    /** Every collection row this card matched: owned copies and wishes alike. */
-    itemIds: string[];
+    /**
+     * What this person holds of the card: whether it is owned, whether it is wished for, how many
+     * copies, and every collection row it matched (owned copies and wishes alike).
+     *
+     * Null where nobody was asked, which is what an answer to a reader without an account carries.
+     * One nullable object rather than four nullable fields: they are one answer to one question,
+     * and a single null cannot be checked for the count and forgotten for the heart.
+     */
+    holding: Holding | null;
     /** One number, the way a tile shows it: null where TCGplayer has no market figure for the card. */
     price: number | null;
     /** TCGplayer's lowest listing where it has no market figure; shown as "From €…". */
@@ -689,10 +694,7 @@ export const setCardFromBrowse = (c: BrowseCard, setAbbr: string | null = null):
     types: c.types,
     imageUrl: ownImage(c.image),
     imageHighUrl: ownImage(c.imageHigh),
-    owned: c.owned,
-    wishlist: c.wishlist,
-    quantity: c.quantity,
-    itemIds: c.itemIds,
+    holding: holdingFromBrowse(c),
     // The same rule the collection uses, so one card does not carry two prices across two screens.
     price: priceForCopy({ price: c.price }),
     listingPrice: listingForCopy({ price: c.price }),
@@ -729,10 +731,14 @@ export const browseCardSchema = z.object({
     trainerType: nullable(z.string()).optional(),
     types: z.array(z.string()),
     series: z.string(),
-    owned: z.boolean(),
-    wishlist: z.boolean(),
-    quantity: z.number(),
-    itemIds: z.array(z.string()),
+    /* What this person holds of the card. All four are left out of an answer to a reader who
+       carried no credential (cardorb-api, 2026-09-22): absent means nobody was asked, which is
+       not the `false` of a card nobody wants nor the `0` of a card nobody has. They arrive
+       together or not at all, so `holdingFromBrowse` folds them into one object or one null. */
+    owned: z.boolean().optional(),
+    wishlist: z.boolean().optional(),
+    quantity: z.number().optional(),
+    itemIds: z.array(z.string()).optional(),
     /* The same card's TCGdex id, where the two catalogues could be matched. The English path
        numbers a card `me5-85` and everything priced is keyed `me05-085`; the set page carries it
        so a sheet opened on a card nobody holds can still ask for its price line. */
@@ -758,6 +764,18 @@ export const browseCardSchema = z.object({
     fullArt: z.boolean().optional(),
 });
 export type BrowseCard = z.infer<typeof browseCardSchema>;
+
+/**
+ * The four holding fields of an answer as one object, or null where the answer carried none.
+ *
+ * `owned` is enough to tell the two apart: the API sends all four or none of them, so a card that
+ * names one names the rest. A holding read here is never partly invented, which is the point of
+ * folding them: `quantity ?? 0` on a card nobody was asked about would say "you have none".
+ */
+export function holdingFromBrowse(c: BrowseCard): Holding | null {
+    if (c.owned === undefined) return null;
+    return { owned: c.owned, wishlist: c.wishlist ?? false, quantity: c.quantity ?? 0, itemIds: c.itemIds ?? [] };
+}
 
 /** What the search previews render. The fields the catalogue does not carry are null, and the preview skips them. */
 export type PokemonCard = {
@@ -787,11 +805,14 @@ export type PokemonCard = {
      */
     tcgId?: string | null;
     language?: string | null;
-    /** Already in the collection or on the wishlist, so the button can say so. */
-    owned: boolean;
-    wishlist: boolean;
-    /** Copies already held: "you have three of this" is a different answer from "you have it". */
-    quantity: number;
+    /**
+     * Already in the collection or on the wishlist and how many copies, so the button can say so.
+     * "You have three of this" is a different answer from "you have it".
+     *
+     * Null where nobody was asked, as on `SetCard.holding`, and for the same reason: a hit off the
+     * open catalogue carries no answer about a collection, and false would be one.
+     */
+    holding: CardHolding | null;
     /** One number, the way a tile shows it: null where the guide does not price the card, or the route did not ask. */
     price: number | null;
     /** TCGplayer's lowest listing where it has no market figure; shown as "From €…". */
@@ -832,9 +853,7 @@ export const pokemonCardFromBrowse = (c: BrowseCard, language?: string | null): 
     setPrintedTotal: null,
     flavorText: null,
     nationalPokedexNumbers: null,
-    owned: c.owned,
-    wishlist: c.wishlist,
-    quantity: c.quantity ?? 0,
+    holding: holdingFromBrowse(c),
     price: priceForCopy({ price: c.price }),
     listingPrice: listingForCopy({ price: c.price }),
 });
