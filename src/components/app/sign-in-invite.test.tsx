@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { SignInInvite, withReturn } from "./sign-in-invite";
+import { withReturn } from "@/lib/return-to";
+import { SignInInvite } from "./sign-in-invite";
 
 /*
  * The closed places say what an account adds there, and the way in carries the page the visitor

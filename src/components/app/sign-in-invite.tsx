@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { LinkButton } from "@/components/app/link-button";
+import { withReturn } from "@/lib/return-to";
 
 /**
  * The state behind every closed place: binders, the collection, the wishlist, the Pokédex.
@@ -11,14 +12,6 @@ import { LinkButton } from "@/components/app/link-button";
  * navigation, the control stays pressable, and the explanation arrives at the press. One
  * component draws it, so the same thing is not said four slightly different ways.
  */
-
-/** Where a visitor comes back to once they are in. One rule for the whole app. */
-export function withReturn(to: string, from: string) {
-    // Only a path of this app, and never the door itself: a "next" a stranger can set is an open
-    // redirect, and a next of /login would send somebody back where they started.
-    const safe = from.startsWith("/") && !from.startsWith("//") && !from.startsWith("/login") && !from.startsWith("/signup");
-    return safe ? `${to}?next=${encodeURIComponent(from)}` : to;
-}
 
 /** Sign in and Create account, both carrying the page the visitor is on. */
 export function useReturnHrefs(): { signIn: string; signUp: string } {
