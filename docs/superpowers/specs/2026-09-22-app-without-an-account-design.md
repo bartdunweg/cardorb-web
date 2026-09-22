@@ -141,6 +141,11 @@ both (Bart, 2026-09-22). They are the best argument for an account, and a set pa
 is too thin to be worth indexing. The cost is accepted knowingly: our daily price history is
 readable by anyone who walks the pages. The progress bar on a set tile is yours and goes.
 
+Two charts look alike and must not be confused: the one on the card sheet is that card's market
+price, a catalogue fact and open; the one on Home is the value of **your** collection, which is
+yours and stays behind the login along with the movers beside it. "Prices are open" is about the
+first and never the second (Bart, 2026-09-22).
+
 The Pokedex stays closed. It is a binder, and an exception here would be one more thing to
 explain later (Bart, 2026-09-22).
 
