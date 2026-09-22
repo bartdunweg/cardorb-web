@@ -60,6 +60,32 @@ closed by the first run it passes. A private profile is not a finding: those che
 
 ## Last session
 
+**2026-09-21/22, what a chart says about itself (#770 to #772, api#569, api#581).** Home's figure
+took its words from the period button, so a collection twelve days old read "+EUR 7,967 in the last
+30 days". It reads the whole line the API answered with and says "since the first reading" where the
+line is shorter than the button (#770), and the card sheet, the one other place that prints these
+words, does the same out of the line it already draws, which also covers a printing whose line the
+chart distrusts back to last week (#771). Then the other half: an account holding one card of EUR 281
+that is EUR 280 today had that euro drawn as a fall from the top of the chart to the floor. The scale
+is not the fault, since the owner's own seven days move two tenths of a percent and pikachu's card
+moved more, so the size was added beside the amount instead ("-EUR 1 - 0.4% in the last 7 days"),
+left out where the period added cards (#772).
+
+Checked and not a bug: Jasper's line is twelve days because every one of his 2,090 rows carries the
+import day. A file Dex exported has no date column at all, and the early line is worked out from
+acquired dates against our own price history, so nothing about prices was missing from the import.
+The 30th Celebration Classic Collection shows the main set's logo because it has no wordmark of its
+own (Bulbapedia gives it no page, Scrydex answers me55c-logo with me55's bytes); api#582 is narrowed
+to writing down which sets share a logo on purpose. A bot PR stuck since 2026-09-19 (api#569) had no
+checks at all, because a PR the bot opens with its own token starts no workflow: closed and reopened,
+green, merged, and the morning's one failing data check went with it. The auth email templates were
+five days behind their source (api#581); the live templates need a `supabase config push`, which is
+the owner's line.
+
+Open and deliberately not taken: the database at 403 of 500 MB (Bart's Supabase upgrade, api#580),
+and the pre-April 1st Edition and Shadowless price lines, which need a source we do not have.
+Not measured in a browser: the chart work is held by unit tests, since a fresh pane is signed out.
+
 **2026-09-17 evening, a second round on today's work (#684 to #698).** A Pokédex binder caches
 trimmed cards per person (`getDexCards`, logs its entry size) and Home starts its reads together.
 Folder and collection identifiers are Binder in code (#688; wire names, routes and cache keys kept).
