@@ -88,6 +88,20 @@ export const FORGETS: Record<Exclude<ForgetWrite, "all">, readonly CacheScope[]>
     dexFace: ["lists"],
 };
 
+/**
+ * The catalogue as a reader with no account sees it: one entry for everybody, so one tag for all
+ * of it.
+ *
+ * No person in it on purpose. A signed-in reader's shelf carries their counts and is filed per
+ * person under `scopeTag`; this answer carries nobody's, so a second entry per visitor would be a
+ * cache with one entry each and a hit rate of nothing.
+ *
+ * Nothing in this app forgets it: the catalogue changes when the nightly copy on the API side
+ * runs, and the five-minute window is what carries that across. The tag is here so a forget is one
+ * import away on the day something does.
+ */
+export const CATALOGUE_TAG = "public:catalogue";
+
 export const userTag = (userId: string) => `user:${userId}`;
 export const scopeTag = (userId: string, scope: CacheScope) => `user:${userId}:${scope}`;
 /*

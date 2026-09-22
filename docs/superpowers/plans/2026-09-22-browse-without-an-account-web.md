@@ -142,130 +142,23 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 
 ---
 
-### Task 2: One cached copy of the catalogue for everybody
+### Task 2: There is no Task 2
 
-`perUser()` throws 401 without a session (`user-cache.ts:79`) and keys every entry on the
-person, their scope mark and the five-minute window. A visitor has no person and should not be
-given one: every signed-out reader may share one copy.
+Written as "build `sharedRead()`, a shared cache beside `perUser()`". Reading the code first
+showed the road already exists.
 
-**Files:**
-- Modify: `src/lib/user-cache.ts` (a new export beside `perUser`, which does not change)
-- Test: `src/lib/user-cache.test.ts`
+`api()` with no token sets `next: { revalidate: CACHE_SECONDS, tags }`, which **is** the shared
+Data Cache: one entry per URL, params and the `x-cache-window` header, held for five minutes and
+the same for every reader. `public-profile.ts` has used exactly that since the public profile
+shipped, with `auth: false` and a `publicTag`. A second caching layer over it would have been a
+wrapper around a cache, with its own key version to keep in step.
 
-**Interfaces:**
-- Produces: `sharedRead<T>(name: string, load: () => Promise<T>): Promise<T>`, and the tag
-  `PUBLIC_TAG` it files entries under so a deploy or a catalogue change can drop them all.
+So the shared path is: `api(..., { auth: "optional", tags: [CATALOGUE_TAG] })` when there is no
+session, and `perUser(...)` when there is. The only new thing needed was the tag, which is in
+`src/lib/cache-scopes.ts` beside `userTag`, with no person in it on purpose.
 
-- [ ] **Step 1: Write the failing tests**
-
-```ts
-describe("sharedRead", () => {
-    it("reads without a session rather than throwing", async () => {
-        sessionIs(null);
-        await expect(sharedRead("sets:en", async () => "the shelf")).resolves.toBe("the shelf");
-    });
-
-    it("asks once for two readers", async () => {
-        sessionIs(null);
-        const load = vi.fn(async () => "the shelf");
-        await Promise.all([sharedRead("sets:en", load), sharedRead("sets:en", load)]);
-        expect(load).toHaveBeenCalledTimes(1);
-    });
-
-    it("keeps two names apart", async () => {
-        sessionIs(null);
-        const en = vi.fn(async () => "english");
-        const ja = vi.fn(async () => "japanese");
-        expect(await sharedRead("sets:en", en)).toBe("english");
-        expect(await sharedRead("sets:ja", ja)).toBe("japanese");
-    });
-
-    it("never keys on a person, so one reader's entry is every reader's", async () => {
-        const load = vi.fn(async () => "the shelf");
-        sessionIs(null);
-        await sharedRead("sets:en", load);
-        sessionIs({ userId: "someone", token: "t" });
-        await sharedRead("sets:en", load);
-        expect(load).toHaveBeenCalledTimes(1);
-    });
-});
-```
-
-`sessionIs` is whatever this file already uses to stub `session()`; reuse it rather than adding a
-second way.
-
-- [ ] **Step 2: Run the tests and watch them fail**
-
-Run: `pnpm vitest run src/lib/user-cache.test.ts -t sharedRead`
-Expected: FAIL, `sharedRead is not a function`.
-
-- [ ] **Step 3: Write the implementation**
-
-```ts
-/** Every shared catalogue entry, so one forget drops the lot. */
-export const PUBLIC_TAG = "public:catalogue";
-
-/**
- * A read that belongs to nobody, cached once for everybody.
- *
- * perUser() keys on the person, their scope mark and the window, because its answers carry what
- * that person holds. These answers carry none, so a second key per visitor would be a cache with
- * one entry each and a hit rate of nothing. The name and the window are the whole key.
- *
- * Deliberately without a scope mark. A mark exists so a read that began before a write cannot be
- * handed out after it, and there is no write here: nobody signed out can change the catalogue.
- *
- * Also used by a signed-in reader wherever the answer does not depend on them, which is why the
- * key has no person in it even when there is one to name.
- */
-export function sharedRead<T>(name: string, load: () => Promise<T>): Promise<T> {
-    const reads = inFlight();
-    const key = `shared|${name}`;
-    const started = reads.get(key);
-    if (started) return started as Promise<T>;
-    const read = (async () => {
-        let ran = false;
-        const start = performance.now();
-        try {
-            return await unstable_cache(
-                () => {
-                    ran = true;
-                    return load();
-                },
-                [name, cacheWindow(), KEY_VERSION, "public"],
-                { revalidate: CACHE_SECONDS, tags: [PUBLIC_TAG] },
-            )();
-        } finally {
-            logTiming(`cache shared ${name}`, elapsed(start), ran ? "miss" : "hit");
-        }
-    })();
-    reads.set(key, read);
-    return read;
-}
-```
-
-- [ ] **Step 4: Run the tests and watch them pass**
-
-Run: `pnpm vitest run src/lib/user-cache.test.ts`
-Expected: PASS.
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add src/lib/user-cache.ts src/lib/user-cache.test.ts
-git commit -m "One cached copy of the catalogue for everybody
-
-perUser() keys on the person because its answers carry what that person
-holds. A shelf read without a session carries none, so keying it per visitor
-would be a cache with one entry each and a hit rate of nothing.
-
-No scope mark: a mark exists so a read that began before a write is not
-handed out after it, and nobody signed out can write.
-
-Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
-```
-
----
+Kept as a task rather than deleted, because a plan that quietly loses a step reads as if the step
+was never needed.
 
 ### Task 3: The shelf and the set page read either way
 
