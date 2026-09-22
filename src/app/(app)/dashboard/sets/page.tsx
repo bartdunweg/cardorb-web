@@ -6,7 +6,16 @@ import { BrowseToolbar, SetsViewMenu } from "@/components/app/browse-toolbar";
 import { PageHeader } from "@/components/app/page-header";
 import { SetsShelf } from "@/components/app/sets-shelf";
 import { SetsOutline } from "@/components/app/skeletons";
-import { type BrowseQuery, type BrowseSearchParams, narrowShelf, readBrowseQuery, searchShelf, shelfFacets, sortShelf } from "@/lib/browse-query";
+import {
+    type BrowseQuery,
+    type BrowseSearchParams,
+    NO_SHELF_FACETS,
+    narrowShelf,
+    readBrowseQuery,
+    searchShelf,
+    shelfFacets,
+    sortShelf,
+} from "@/lib/browse-query";
 import { openAsLeft } from "@/lib/list-memory-server";
 import { CatalogueUnavailable, getSets } from "@/lib/sets";
 import { SETS_VIEW_COOKIE, type SetsViewMode, parseSetsView } from "@/lib/sets-view";
@@ -25,7 +34,7 @@ export default async function SetsPage({ searchParams }: { searchParams: Promise
     /* One read of the catalogue for the shelf and for what the Series and Year filters offer. Not
        awaited: the row goes out first, and its filters take their choices when the shelf answers. */
     const shelf = getSets(query.language);
-    const facets = shelf.then((s) => shelfFacets(s.series)).catch(() => ({ series: [], years: [] }));
+    const facets = shelf.then((s) => shelfFacets(s.series)).catch(() => NO_SHELF_FACETS);
     return (
         <div className="flex flex-1 flex-col gap-6">
             {/* The title alone: how far the shelf is comes per set, on its tile, not as one number over all of them. */}

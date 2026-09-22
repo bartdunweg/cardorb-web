@@ -85,7 +85,9 @@ export function LiveSetStats(props: { stats: Stats; released: string | null; gal
         let { owned, value } = props.stats;
         for (const change of Object.values(changes)) {
             const by = Number(change.owned) - Number(change.was.owned);
-            owned += by;
+            // Nobody was asked what is held, so there is no count to move; null stays null rather
+            // than becoming a number the moment something is pressed.
+            if (owned !== null) owned += by;
             value += by * (change.price ?? 0);
         }
         return { ...props.stats, owned, value };

@@ -59,4 +59,15 @@ describe("SetTile", () => {
         expect(screen.queryByText(/ of /)).toBeNull();
         expect(screen.queryByRole("progressbar")).toBeNull();
     });
+
+    // Nobody was asked what is held (a shelf read without a session): the set's size, which is the
+    // catalogue's own fact, and never "0 of 207", which would say the visitor owns none of it.
+    it("says the set's size alone where nothing is marked, and is not dimmed", () => {
+        render(<SetTile set={{ ...base, owned: null, complete: null }} language="en" />);
+        expect(screen.getByText("207 cards")).toBeInTheDocument();
+        expect(screen.queryByText(/ of /)).toBeNull();
+        expect(screen.queryByText("0 of 207")).toBeNull();
+        expect(screen.queryByRole("progressbar")).toBeNull();
+        expect(screen.getByRole("link").className).not.toContain("opacity-70");
+    });
 });
