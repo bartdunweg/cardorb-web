@@ -78,8 +78,20 @@ type Init = {
     method?: "GET" | "POST" | "PATCH" | "DELETE";
     body?: unknown;
     params?: Params;
-    /** false for the three unkeyed public routes; they are also cached for five minutes, under `tags`. */
-    auth?: boolean;
+    /**
+     * Whether this call needs somebody.
+     *
+     * `true`, the default, refuses before calling when there is no token: the route would answer
+     * 401 anyway and this says so without a round trip. `false` is a route that never takes one,
+     * cached for five minutes under `tags`.
+     *
+     * `"optional"` is the catalogue since it opened (the app without an account). The same route
+     * answers a signed-in reader with their holdings on it and a visitor with the catalogue
+     * alone, so the call is made either way and the answer differs. What decides the caching is
+     * whether a token actually went out, not what the call asked for: an answer carrying
+     * somebody's holdings is nobody else's to keep.
+     */
+    auth?: boolean | "optional";
     /** A token resolved earlier, for a call made inside a cache scope where `cookies()` is refused. */
     token?: string;
     /**
@@ -149,14 +161,12 @@ export async function api(path: string, init: Init = {}): Promise<unknown> {
     }
 
     const headers: Record<string, string> = { accept: "application/json" };
-    const withAuth = init.auth !== false;
-    if (withAuth) {
-        const token = init.token ?? (await accessToken());
-        if (!token) throw new ApiError(401, "Sign in to see this.");
-        headers.authorization = `Bearer ${token}`;
-    } else {
-        headers["x-cache-window"] = cacheWindow();
-    }
+    const token = init.auth === false ? null : (init.token ?? (await accessToken()));
+    // Only a call that insists on somebody refuses here. "optional" asks anyway, and the route
+    // answers it with the catalogue and nothing of anybody's.
+    if (init.auth !== false && init.auth !== "optional" && !token) throw new ApiError(401, "Sign in to see this.");
+    if (token) headers.authorization = `Bearer ${token}`;
+    else headers["x-cache-window"] = cacheWindow();
     if (init.body !== undefined) headers["content-type"] = "application/json";
 
     // Timed to the last byte: a large answer costs more to receive and parse than to wait for.
@@ -166,7 +176,9 @@ export async function api(path: string, init: Init = {}): Promise<unknown> {
             headers,
             body: init.body !== undefined ? JSON.stringify(init.body) : undefined,
             signal: AbortSignal.timeout(init.timeoutMs ?? API_TIMEOUT_MS),
-            ...(withAuth ? { cache: "no-store" } : { next: { revalidate: CACHE_SECONDS, tags: init.tags } }),
+            // Keyed on whether a token went out, not on what the call asked for: with "optional"
+            // the same call site is both, and only the answer that named nobody may be shared.
+            ...(token ? { cache: "no-store" } : { next: { revalidate: CACHE_SECONDS, tags: init.tags } }),
         });
         const json: unknown = await res.json().catch(() => null);
         return { res, json };
