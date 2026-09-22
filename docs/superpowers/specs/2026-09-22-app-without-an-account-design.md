@@ -126,11 +126,17 @@ The hazards, each with its answer:
 
 ## Where the wall really is
 
-Not in the middleware. In the API. `/catalog/sets`, `/catalog/sets/{id}` and `/catalog/search`
-all require a bearer token today, and they fold the reader's own holdings into the answer
-(`ownedCount` per set, what you hold per card). Without a token there is nothing to read.
+Not in the middleware. In the API. Five catalogue routes require a bearer token today, and they
+fold the reader's own holdings into the answer (`ownedCount` per set, what you hold per card).
+Without a token there is nothing to read.
 
-**The API answers these three without a token.** Not a second `/public/catalog/*` family beside
+Three of them are read by this app's server: `/catalog/sets`, `/catalog/sets/{id}` and
+`/catalog/search`. Two more are read by the browser itself, from `catalogue-client.ts`, and they
+are easy to miss for exactly that reason: `/catalog/index` and `/catalog/cards`, which are the
+command palette. The palette is search, and search is open, so those two go with the rest.
+Missed in the first pass of this spec (2026-09-22) because only the server's reads were traced.
+
+**The API answers all five without a token.** Not a second `/public/catalog/*` family beside
 them: two sets of routes over one catalogue drift apart, and the shapes are the contract the iOS
 app reads. Without a token the answer carries the catalogue and leaves the holding fields out
 (absent, not zero, so "none" and "not asked" stay different things). With a token nothing
