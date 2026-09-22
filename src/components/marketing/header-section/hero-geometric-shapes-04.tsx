@@ -32,9 +32,16 @@ export const HeroGeometricShapes04 = () => {
                         <p className="mt-4 max-w-120 text-lg text-balance text-tertiary md:mt-6 md:text-xl">
                             Browse, organize, and manage every card in one place.
                         </p>
-                        <div className="mt-8 flex w-full flex-col items-stretch sm:w-auto md:mt-12">
+                        {/* Two ways on, and not the same weight. Somebody who already trusts us presses
+                            Get started and needs to see nothing first; the other button is for the one
+                            who does not, which is the person this page has to win. Equal weight would
+                            make neither read as the answer. */}
+                        <div className="mt-8 flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row md:mt-12">
                             <LinkButton href="/signup" size="xl">
                                 Get started
+                            </LinkButton>
+                            <LinkButton href="/sets" color="secondary" size="xl">
+                                Browse the sets
                             </LinkButton>
                         </div>
                     </div>
