@@ -54,7 +54,8 @@ What the frame drops without a session:
 |---|---|
 | The account card at the foot of the sidebar | Sign in / Create account |
 | The binder list | One row inviting an account |
-| Collection, Wishlist, Pokedex in the navigation | Still there, leading to a page that says what is behind them, not to a bare login form |
+| Collection, Wishlist, Pokedex in the navigation | Still there, and still pressable. Nothing greyed out and nothing hidden (Bart, 2026-09-22) |
+| New binder, and every other control that would write | Pressable. The press is what raises the state saying an account is what makes this possible |
 | Browse, the set page, search, the card sheet | Exactly as they are |
 | The star, the heart, add a copy | Still there. One press leads to sign in and the press is carried through (below) |
 

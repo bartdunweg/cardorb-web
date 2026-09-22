@@ -461,8 +461,14 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 
 ### Task 5: The sidebar invites rather than lists
 
-**Design decision required before this task.** See "The open question" at the end of this plan.
-Do not start Task 5 until the owner has answered it.
+**Answered by the owner, 2026-09-22.** Nothing is greyed out and nothing is hidden. Every
+section stays in the navigation and stays pressable, and the explanation arrives at the moment of
+the press: press "New binder" as a visitor and you get the state that says an account is what
+makes binders possible. The same for Collection, Wishlist and the Pokedex.
+
+That is the Suno shape from the spec's Sources, and it is the harder one to build, because a
+disabled control needs no copy and a working one that cannot finish does. Every closed thing
+therefore leads to the same component, saying what an account adds in that place.
 
 **Files:**
 - Modify: `src/components/app/app-sidebar.tsx` (the account card at the foot, the Binders section, `SIDEBAR_ROUTES`)
@@ -746,13 +752,6 @@ press the star. Screenshot each, and read the console at every step.
 - [ ] **Step 3: Report both, with the screenshots**
 
 ---
-
-## The open question
-
-Task 5 needs an answer before it starts: what the sidebar's account card says and how far the
-closed sections are shown. The shapes worth copying are in the spec's Sources section (Suno and
-ChatGPT for the shell, MagicPath for a closed section that explains itself). Put the choice to the
-owner rather than picking one.
 
 ## Not in this plan
 
