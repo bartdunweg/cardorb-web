@@ -5,9 +5,11 @@ import { BookOpen01, Folder, Heart, HomeLine, LayoutLeft, Plus, Rows01, Star01 }
 import { AccountMenu } from "@/components/app/account-menu";
 import { BinderModal } from "@/components/app/binder-dialog";
 import { SidebarSearchTrigger } from "@/components/app/command-search";
+import { LinkButton } from "@/components/app/link-button";
 import { PrefetchRoutes } from "@/components/app/prefetch-routes";
 import { useRouteTarget } from "@/components/app/route-pending";
 import { type RailItem, SidebarRail } from "@/components/app/sidebar-rail";
+import { useReturnHrefs } from "@/components/app/sign-in-invite";
 import { NavButton } from "@/components/application/app-navigation/base-components/nav-button";
 import { NavItemBase } from "@/components/application/app-navigation/base-components/nav-item";
 import type { NavItemDividerType, NavItemType } from "@/components/application/app-navigation/config";
@@ -47,9 +49,10 @@ export function AppSidebar({
     favoritesCount,
     initialCollapsed = false,
 }: {
-    account: Promise<Account>;
-    binders: Promise<BinderLink[]>;
-    favoritesCount: Promise<number | null>;
+    /** Null when nobody is signed in: the three reads were never made, so there is nothing to wait for. */
+    account: Promise<Account> | null;
+    binders: Promise<BinderLink[]> | null;
+    favoritesCount: Promise<number | null> | null;
     /** Folded to the rail on the first paint: what the cookie said when the layout rendered. */
     initialCollapsed?: boolean;
 }) {
@@ -57,6 +60,9 @@ export function AppSidebar({
     // when the page lands, because the page you clicked from stays on screen until the next one is
     // ready (route-pending.tsx).
     const pathname = useRouteTarget();
+    // Where signing in leads back to, for a visitor: the page under them, not the page a click is
+    // on its way to (sign-in-invite.tsx).
+    const back = useReturnHrefs();
     // Folded or open: a choice that stays, so it lives in the cookie and in state, not in the URL.
     const [collapsed, setCollapsed] = useState(initialCollapsed);
     /* The button pressed to fold or unfold is gone once the switch is drawn (the rail and the open
@@ -81,6 +87,8 @@ export function AppSidebar({
     // `binders: null` is a binders read that failed: the layout's list stays, not an empty one.
     const [fresh, setFresh] = useState<{ of: Promise<BinderLink[]>; binders: BinderLink[] | null; favorites: number | null } | null>(null);
     useEffect(() => {
+        // Nobody signed in: there is nothing of anybody's to refresh, and the route would answer 401.
+        if (!binders) return;
         // A fetch, not an action: an action waits its turn behind the writes (api/sidebar-counts).
         const reread = () =>
             void fetch("/api/sidebar-counts")
@@ -109,16 +117,20 @@ export function AppSidebar({
         // but Back from Favorites or a binder.
         // New binder is the plus at the heading's end, on its line (Bart, 2026-09-19): a row at the list's end
         // stood as far from the heading as the list was long.
-        { divider: true, label: "Binders", href: "/dashboard/collections", action: <NewBinderButton /> },
+        // New binder stays, and stays pressable, for a visitor too: hiding it empties the app and
+        // hides the reason to make an account. Without a session it is a link to the door, not the
+        // dialog, and it carries the page the visitor is on.
+        { divider: true, label: "Binders", href: "/dashboard/collections", action: <NewBinderButton signInHref={binders ? null : back.signIn} /> },
         {
             label: "Favorites",
             href: "/dashboard/favorites",
             icon: Star01,
-            badge: (
+            // No number for a visitor: nobody was asked what they hold, and "not asked" is not 0.
+            badge: favoritesCount ? (
                 <Suspense fallback={null}>
                     <LateCount count={favoritesCount} fresh={override ? override.favorites : undefined} />
                 </Suspense>
-            ),
+            ) : undefined,
         },
     ];
 
@@ -145,15 +157,29 @@ export function AppSidebar({
                     search={<SidebarSearchTrigger />}
                     afterItems={
                         <>
-                            <Suspense fallback={null}>
-                                <BinderRows binders={binders} fresh={override?.binders ?? undefined} activeUrl={pathname} />
-                            </Suspense>
+                            {binders ? (
+                                <Suspense fallback={null}>
+                                    <BinderRows binders={binders} fresh={override?.binders ?? undefined} activeUrl={pathname} />
+                                </Suspense>
+                            ) : (
+                                // One row saying what an account adds here. An empty list would read as
+                                // "you have no binders", which is a different sentence and an untrue one.
+                                <li className="py-px">
+                                    <NavItemBase type="link" icon={Folder} href={back.signIn}>
+                                        Sign in to make binders
+                                    </NavItemBase>
+                                </li>
+                            )}
                         </>
                     }
                     footer={
-                        <Suspense fallback={null}>
-                            <AccountSlot account={account} />
-                        </Suspense>
+                        account ? (
+                            <Suspense fallback={null}>
+                                <AccountSlot account={account} />
+                            </Suspense>
+                        ) : (
+                            <SignInSlot signIn={back.signIn} signUp={back.signUp} />
+                        )
                     }
                 />
             </nav>
@@ -162,8 +188,22 @@ export function AppSidebar({
 }
 
 // New binder beside the Binders heading: the kit's icon-only button at its smallest, 28 px (Bart, 2026-09-19).
-function NewBinderButton() {
+// With `signInHref` there is no session: the same control, in the same place, leading to the door
+// instead of the dialog. A link, because it navigates.
+function NewBinderButton({ signInHref }: { signInHref: string | null }) {
     const [creating, setCreating] = useState(false);
+    if (signInHref) {
+        return (
+            <ButtonUtility
+                size="xs"
+                color="secondary"
+                icon={Plus}
+                tooltip="New binder"
+                href={signInHref}
+                className="text-fg-tertiary hover:text-fg-tertiary_hover"
+            />
+        );
+    }
     return (
         <>
             {/* The icon a step darker than the kit's secondary (fg-quaternary, 2.6:1 on white): alone on the
@@ -230,6 +270,22 @@ export function Count({ count }: { count: number }) {
 function LateCount({ count, fresh }: { count: Promise<number | null>; fresh?: number | null }) {
     const n = fresh !== undefined ? fresh : use(count);
     return n === null ? null : <Count count={n} />;
+}
+
+// Where the account card sits when there is no account: the way in. The same pair, in the same
+// order and the same words, as the bar on every public page (public-top-bar.tsx), so the app does
+// not say one thing on the landing and another inside.
+function SignInSlot({ signIn, signUp }: { signIn: string; signUp: string }) {
+    return (
+        <div className="flex flex-col gap-2 px-2">
+            <LinkButton href={signIn} color="secondary" size="md" className="w-full">
+                Sign in
+            </LinkButton>
+            <LinkButton href={signUp} size="md" className="w-full">
+                Get started
+            </LinkButton>
+        </div>
+    );
 }
 
 function AccountSlot({ account }: { account: Promise<Account> }) {
