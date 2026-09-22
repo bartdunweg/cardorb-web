@@ -125,6 +125,52 @@ The hazards, each with its answer:
 - **It must not outlive its moment.** Thirty minutes. An intent older than that is dropped
   unapplied, because a star that appears long after the press is a surprise, not a service.
 
+## A closed page opens and keeps its shape
+
+Decided 2026-09-23, after the owner pressed Home as a visitor and got a login form he had not
+asked for. He had asked for Home.
+
+**Every page in the navigation opens.** Home, Collection, Wishlist, Binders, Favorites and the
+Pokedex. Only Settings, the profile and the design page stay redirected: they are not in a
+visitor's navigation and have nothing to show.
+
+**And it keeps its own shape.** Not one door in the middle of an empty page, but the page's real
+sections, each standing in its own place with one line saying what would be there. The pattern is
+Tubi's "My Stuff" signed out: Continue Watching, My List and My Likes all present, each with a
+sentence rather than a row of films. Calm's profile does the same. The weaker shape, one centred
+"please log in", is Blue Bottle's, and it sells nothing because you cannot see what you are
+missing.
+
+Home, which the owner named as the strongest case:
+
+| Place | What a visitor reads there |
+|---|---|
+| The total | What your collection is worth, updated every day |
+| The chart | See how your collection moved this week, and over the last year |
+| The movers | The cards that rose and fell most, so you know what moved without checking each one |
+
+**No invented numbers, ever.** Tubi shows an empty tile and a sentence, not a fake film. A drawn
+chart of a collection nobody has is a lie on the first page a stranger sees, and this whole
+project is about not doing that.
+
+The Pokedex is the one page that can go further without inventing anything: 1,025 real slots, all
+grey, because you own none of them. That is true, and it is the best argument this product has.
+
+**Every sentence names what the reader gains, never what we require.** "Create an account to see
+this" is a notice about our wall. "See which cards rose this week" is a reason.
+
+These pages carry `index: false`. An empty Collection in a search result is worse than none.
+
+### How the wall moves without opening a hole
+
+`PROTECTED_PREFIXES` shrinks to the three pages that stay closed. The six that open each check the
+session themselves and render their invitation.
+
+The risk is a page that forgets, and two things cover it. The API refuses without a token, so the
+worst case is an error and not a leak. And a test walks every route under `(app)` and demands that
+each one either redirects or renders an invitation for a visitor, the same trick `csp.test.ts`
+already uses for the nonce list, so a new page cannot quietly join the group unguarded.
+
 ## Where the wall really is
 
 Not in the middleware. In the API. Five catalogue routes require a bearer token today, and they
