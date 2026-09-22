@@ -56,7 +56,7 @@ What the frame drops without a session:
 | The binder list | One row inviting an account |
 | Collection, Wishlist, Pokedex in the navigation | Still there, leading to a page that says what is behind them, not to a bare login form |
 | Browse, the set page, search, the card sheet | Exactly as they are |
-| The star, the heart, add a copy | Still there. One press leads to sign in, with the intent kept |
+| The star, the heart, add a copy | Still there. One press leads to sign in and the press is carried through (below) |
 
 The write controls stay visible on purpose. Hiding them empties the app and hides the argument
 for making an account, which is the whole point of the page.
@@ -91,6 +91,39 @@ one deliberate door, taken once. The public profile is the case that does not fi
 and still wears the marketing bar. It should move into the app shell eventually. Not in this work,
 written down so it is not lost.
 
+## The press that is carried through
+
+A visitor presses the star on a card, signs up, and the star is on when they come back. Bart's
+call on 2026-09-22: if you wanted to do something, doing it is the point, and asking again on
+the other side of a sign-up wastes the one moment the person said yes.
+
+The mechanism, and it is deliberately the smallest one that works:
+
+- A press without a session writes **one** intent to a signed, httpOnly cookie: the action, the
+  card, the printing where the action has one, and the time. One at a time. A newer press
+  replaces an older one, because a queue of parked writes is something nobody asked for and
+  nobody can see.
+- The visitor goes to `/login` with the card's own address as the destination, so the page they
+  return to is the page they left.
+- On the first request that has a session, the app applies the intent, clears the cookie in the
+  same response, and says what happened by name: "Charizard added to your favourites". A write
+  the person cannot see happen is worse than no write.
+
+The hazards, each with its answer:
+
+- **The cookie is input from the browser, so it is input from an attacker.** It is parsed with
+  zod against a closed set of actions and a card id the catalogue knows. It can never name a
+  binder id, a row id or another person. The worst a forged cookie can do is star a card for the
+  person who is signing in, which they can undo in one press.
+- **A confirmation mail may be opened in another browser.** Then there is no cookie and nothing
+  happens. That has to fail silently and safely: the card is on screen, the star is off, one
+  press does it. No error, no apology.
+- **It must not apply twice.** The clear rides in the same response as the write. A failed write
+  clears the cookie too and the toast says it did not happen, rather than leaving an intent that
+  retries on every page for half an hour.
+- **It must not outlive its moment.** Thirty minutes. An intent older than that is dropped
+  unapplied, because a star that appears long after the press is a surprise, not a service.
+
 ## Where the wall really is
 
 Not in the middleware. In the API. `/catalog/sets`, `/catalog/sets/{id}` and `/catalog/search`
@@ -103,8 +136,13 @@ app reads. Without a token the answer carries the catalogue and leaves the holdi
 (absent, not zero, so "none" and "not asked" stay different things). With a token nothing
 changes, so the iOS app does not notice this release.
 
-Prices are catalogue facts and stay in the open answer. They are also the best argument for an
-account. The progress bar on a set tile is yours and goes.
+Prices are catalogue facts and stay in the open answer, the current price and the history chart
+both (Bart, 2026-09-22). They are the best argument for an account, and a set page without them
+is too thin to be worth indexing. The cost is accepted knowingly: our daily price history is
+readable by anyone who walks the pages. The progress bar on a set tile is yours and goes.
+
+The Pokedex stays closed. It is a binder, and an exception here would be one more thing to
+explain later (Bart, 2026-09-22).
 
 ## Reads without a person
 
