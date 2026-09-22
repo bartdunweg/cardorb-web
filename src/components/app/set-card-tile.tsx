@@ -72,7 +72,12 @@ export function SetCardTile({
     // What the sheet will ask for, asked while the pointer rests here, so the first open is complete.
     const warm = useWarm(onOpen ? () => warmCard(card.tcgId, language) : undefined);
 
-    const oneRow = base.itemIds.length === 1;
+    /* Null where nobody was asked what is held, which is every card of a set read without an
+       account. The tile then says nothing about a collection: no mark on the picture, no count
+       beside the price and no buttons, because an empty heart reads as "you have not wished for
+       this" and that is an answer we do not have. */
+    const holding = base.holding;
+    const oneRow = holding?.itemIds.length === 1;
     const {
         held,
         press,
@@ -81,8 +86,8 @@ export function SetCardTile({
     } = useCopySteps({
         name: card.name,
         set: setId,
-        held: base.owned ? base.quantity : 0,
-        rowId: base.owned ? base.itemIds[0] : undefined,
+        held: holding?.owned ? holding.quantity : 0,
+        rowId: holding?.owned ? holding.itemIds[0] : undefined,
         add: () => addCard(pokemonCardFromSetCard(card, language), "collection", undefined, { reread: false }),
         // The cache forgotten, the page not drawn again: that was the wait.
         quiet: true,
@@ -92,8 +97,8 @@ export function SetCardTile({
     const wish = useWishStep({
         name: card.name,
         set: setId,
-        wished: base.wishlist,
-        rowId: base.wishlist && oneRow ? base.itemIds[0] : undefined,
+        wished: holding?.wishlist ?? false,
+        rowId: holding?.wishlist && oneRow ? holding.itemIds[0] : undefined,
         add: () => addCard(pokemonCardFromSetCard(card, language), "wishlist", undefined, { reread: false }),
         onShown: (wished) => onChange?.({ wishlist: wished, ...(wished ? {} : { itemIds: [] }) }),
         onStored: (id) => onChange?.({ itemIds: id ? [id] : [] }),
@@ -108,18 +113,20 @@ export function SetCardTile({
         if (hadFocus) requestAnimationFrame(() => buttons.current?.querySelector("button")?.focus());
     };
 
-    const state = held > 0 ? "owned" : wish.wished ? "wishlist" : "missing";
+    const state = holding === null ? "unasked" : held > 0 ? "owned" : wish.wished ? "wishlist" : "missing";
     // One wish row, or none yet (a wish pressed a moment ago): two rows are managed in Cards.
-    const wishHere = state === "wishlist" && (oneRow || !base.wishlist);
+    const wishHere = state === "wishlist" && (oneRow || !holding?.wishlist);
     // A card sold in runs is chosen between by its run in the sheet (Base Set Charizard: Unlimited,
     // 1st Edition), so its tile names the run; any other card names its printing.
     const printed = editionLabel(card.edition) ?? printingLabel(card.printing);
     // A copy more or less from here: a card you do not hold, or one you hold as one row.
-    const stepping = state === "missing" || (state === "owned" && (oneRow || !base.owned));
+    const stepping = state === "missing" || (state === "owned" && (oneRow || !holding?.owned));
     const stateLabel = {
         owned: held > 1 ? `${held} copies` : "in your collection",
         wishlist: "on your wishlist",
         missing: "not in your collection",
+        // Nothing follows the number: the label says which card this is and claims nothing else.
+        unasked: null,
     }[state];
 
     return (
@@ -128,7 +135,9 @@ export function SetCardTile({
                 It used to be the menu's trigger, so a tap on a card answered with a list of things
                 to do to it and never with the card itself. The menu is a button of its own now. */}
             <AriaButton
-                aria-label={`${card.name} #${card.printedNumber ?? card.number}, ${stateLabel}`}
+                aria-label={
+                    stateLabel ? `${card.name} #${card.printedNumber ?? card.number}, ${stateLabel}` : `${card.name} #${card.printedNumber ?? card.number}`
+                }
                 onPress={() => onOpen?.(card)}
                 {...warm}
                 // The shared tile's own frame: a card is its own surface, so nothing of ours sits behind

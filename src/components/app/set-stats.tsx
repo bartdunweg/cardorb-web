@@ -34,7 +34,19 @@ export function SetStats({
                 ) : (
                     <DataPoint label="Progress" value={`${formatCount(stats.owned)} of ${formatCount(stats.total)}`} detail={cardsDetail} delay={0} />
                 )}
-                <DataPoint label="Collected value" value={`${formatValue(stats.value)} of ${formatValue(stats.setValue)}`} detail={valueDetail} delay={40} />
+                {/* The same rule as the progress beside it: what the cards you hold are worth is
+                    yours, so a reader nobody asked reads what the set is worth and nothing about a
+                    collection. */}
+                {stats.value === null ? (
+                    <DataPoint label="Set value" value={formatValue(stats.setValue)} detail={valueDetail} delay={40} />
+                ) : (
+                    <DataPoint
+                        label="Collected value"
+                        value={`${formatValue(stats.value)} of ${formatValue(stats.setValue)}`}
+                        detail={valueDetail}
+                        delay={40}
+                    />
+                )}
             </dl>
         </>
     );

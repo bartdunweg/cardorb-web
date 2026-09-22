@@ -163,9 +163,9 @@ export function useSheetWrites({
                   setPrintedTotal: null,
                   flavorText: null,
                   nationalPokedexNumbers: null,
-                  owned: false,
-                  wishlist: false,
-                  quantity: 0,
+                  // A row of this person's own, which is an answer: it is the card the sheet is
+                  // showing rather than a copy held, so the holding is empty and not unknown.
+                  holding: { owned: false, wishlist: false, quantity: 0 },
                   price: own.price,
                   listingPrice: own.listing_price ?? null,
               }

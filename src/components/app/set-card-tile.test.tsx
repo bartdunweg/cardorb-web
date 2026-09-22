@@ -42,10 +42,7 @@ const card: SetCard = {
     types: [],
     imageUrl: null,
     imageHighUrl: null,
-    owned: false,
-    wishlist: false,
-    quantity: 0,
-    itemIds: [],
+    holding: { owned: false, wishlist: false, quantity: 0, itemIds: [] },
     price: 0.06,
     tcgId: "me03-001",
 };
@@ -99,6 +96,24 @@ describe("SetCardTile's Undo after an add", () => {
         expect(removeCard).toHaveBeenCalledWith("4f0c1b2a-5d6e-4f70-8a9b-0c1d2e3f4a5b", { reread: false });
         expect(notify.done).toHaveBeenCalledWith("Undone");
         expect(refresh).toHaveBeenCalled();
+    });
+});
+
+/*
+ * A card of a set read without an account carries no holding: the API was never asked what this
+ * person holds. The tile then says nothing about a collection, rather than an empty heart and a
+ * plus that read as "you have not got this one".
+ */
+describe("SetCardTile for a reader nobody was asked about", () => {
+    it("shows no mark, no count and no buttons", () => {
+        render(<SetCardTile card={{ ...card, holding: null }} />);
+        expect(screen.getByRole("button", { name: "Spinarak #001" })).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /wishlist/ })).toBeNull();
+        expect(screen.queryByRole("button", { name: /collection/ })).toBeNull();
+        expect(screen.queryByText(/You hold/)).toBeNull();
+        expect(screen.queryByText(/^×/)).toBeNull();
+        // The card itself is all there: its name, its number and its price.
+        expect(screen.getByText("Spinarak")).toBeInTheDocument();
     });
 });
 

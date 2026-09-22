@@ -166,12 +166,16 @@ export function SetCards({
     const setName = drawnCards[0]?.setName;
     const searchLabel = setName ? `Search in ${setName}` : "Search this set";
     useEffect(() => {
-        if (setName && drawnCards.some((c) => c.owned || c.wishlist)) warmSetRows(setName, drawnCards);
+        if (setName && drawnCards.some((c) => c.holding?.owned || c.holding?.wishlist)) warmSetRows(setName, drawnCards);
     }, [drawnCards, setName]);
     const rarities = useMemo(
         () => [...new Set(drawnCards.map((c) => c.rarity).filter((r): r is string => Boolean(r)))].sort().map((r) => ({ value: r, label: r })),
         [drawnCards],
     );
+    /* Whether anybody was asked what is held here. The answer carries a holding for every card of a
+       set or for none of them, so one card that has one settles it for the page: the tabs, the
+       counts over them and the marks on the tiles all say nothing without it. */
+    const asked = useMemo(() => cards.some((c) => c.holding !== null), [cards]);
     /* The grid follows the field when React has a moment: a keystroke draws the letter first, then
        the tiles, rather than waiting on a grid and its counts to be worked out again. */
     const needle = useDeferredValue(q);
@@ -185,12 +189,19 @@ export function SetCards({
                         c.name.toLowerCase().includes(term) ||
                         (c.localName ?? "").toLowerCase().includes(term) ||
                         c.number.toLowerCase().includes(term)) &&
-                    (!f.holding || keep?.has(c.id) || (f.holding === "owned" ? c.owned : f.holding === "wishlist" ? c.wishlist : !c.owned && !c.wishlist)) &&
+                    (!f.holding ||
+                        !asked ||
+                        keep?.has(c.id) ||
+                        (f.holding === "owned"
+                            ? c.holding?.owned
+                            : f.holding === "wishlist"
+                              ? c.holding?.wishlist
+                              : !c.holding?.owned && !c.holding?.wishlist)) &&
                     (f.rarity.length === 0 || (c.rarity !== null && c.rarity !== undefined && f.rarity.includes(c.rarity))) &&
                     (!f.art || fullArt.has(c.number)),
             );
         },
-        [cards, needle, fullArt],
+        [cards, needle, fullArt, asked],
     );
     const view = `${needle}\u0000${holding ?? ""}\u0000${rarity.join(",")}\u0000${art}\u0000${sort}`;
     /* The cards pressed on in this view stay in it: a plus under Missing would otherwise take the
@@ -282,7 +293,7 @@ export function SetCards({
         const name = { set: card.setName, number: card.number, name: card.name, tcg_id: card.tcgId };
         // The row stores one name, the English one; the printed name is the shelf's to tell.
         const onRow = (row: Card) => ({ ...row, local_name: card.localName });
-        const held = card.owned || card.wishlist;
+        const held = Boolean(card.holding?.owned || card.holding?.wishlist);
         // The rows read with the page say nothing of a card pressed on since; that one is asked for.
         const pressed = !drawnCards.includes(card);
         const known = held && !pressed ? knownRows(name)?.[0] : undefined;
@@ -330,124 +341,149 @@ export function SetCards({
             </Dropdown.Popover>
         </Dropdown.Root>
     );
+    /* The row of controls over the grid: the search, the filters and the view menu. Held here
+       because the frame round it differs, and a reader nobody was asked about gets the same row. */
+    const row = (
+        <>
+            {/* The whole first line on a phone, a short field from sm (`RowSearch`), as in a binder's row. */}
+            <div className={LIST_ROW}>
+                {/* On a phone behind the search button in the bar across from Back (`BarSearchButton`). */}
+                <RowSearch place="button" filled={q !== ""} onClear={() => setQ("")}>
+                    <Input
+                        size="sm"
+                        icon={SearchLg}
+                        aria-label={searchLabel}
+                        placeholder={searchLabel}
+                        value={q}
+                        onChange={setQ}
+                        // What the URL keeps (readSetQuery); longer, the two would disagree for good.
+                        maxLength={100}
+                        wrapperClassName="rounded-full"
+                    />
+                </RowSearch>
+                {/* On a phone the line under the search, scrolling sideways; from sm its buttons stand in the row. */}
+                <div className={FILTER_BAR}>
+                    <FiltersSheet
+                        inline
+                        lead={sortMenu}
+                        noun={["card", "cards"]}
+                        groups={[
+                            ...(rarities.length > 1 ? [{ id: "rarity", label: "Rarity", multiple: true, options: rarities }] : []),
+                            // Full art cuts across the rarities, so it is its own yes-or-no, not one of them.
+                            ...(fullArt.size > 0
+                                ? [{ id: "only", label: "Show only", multiple: true, options: [{ value: FULL_ART, label: "Full art" }] }]
+                                : []),
+                        ]}
+                        values={{ rarity, only: art ? [FULL_ART] : [] }}
+                        count={countDraft}
+                        onApply={(v) => {
+                            const next = filtersOf(v);
+                            write({ rarity: next.rarity, fullArt: next.art });
+                        }}
+                    />
+                    <div className="contents max-sm:hidden">{sortMenu}</div>
+                </div>
+                {/* On a phone in the bar across from Back (`BarViewMenu`). */}
+                <ViewMenu view="grid" size={size} layouts={false} className="max-sm:hidden" />
+            </div>
+        </>
+    );
+    /* The cards themselves, or what stands in their place. */
+    const grid = (
+        <>
+            {shown.length === 0 && narrowed ? (
+                <AppEmptyState
+                    icon="search"
+                    title="No cards found"
+                    description={
+                        needle.trim()
+                            ? `No cards in this set match “${needle.trim()}”.`
+                            : "Nothing in this set with those filters. Clear one to widen the list."
+                    }
+                />
+            ) : (
+                /* The same grid as every other overview, at the same size: a set was denser than any
+                   list in the app, which is what made it read as a checklist rather than a shelf. */
+                <ul className={`grid gap-4 ${GRID_COLUMNS[size]}`}>
+                    {shown.slice(0, limit).map((card, i) => (
+                        // The first batch arrives in a wave; a batch drawn on scroll comes in at once.
+                        <li key={card.id} className="arrive" style={{ "--arrive-delay": arriveDelay(i, i < CARD_BATCH) } as React.CSSProperties}>
+                            <SetCardTile
+                                card={card}
+                                setId={setId}
+                                stamp={`${holdingKey((drawnById.get(card.id) ?? card).holding)}#${outsideCount(drawnById.get(card.id) ?? card)}`}
+                                onChange={(patch) => {
+                                    const drawnCard = drawnById.get(card.id);
+                                    if (drawnCard) report(drawnCard, patch);
+                                    /* A sheet opened on this card while its add was in the air is waiting for
+                                       the row: open it again once the tile has one, or once the write failed
+                                       and the card is not held after all. */
+                                    if (drawnCard && pendingId === card.id) {
+                                        const was = live(drawnCard);
+                                        const now = { ...was, holding: was.holding ? { ...was.holding, ...patch } : was.holding };
+                                        if (now.holding && (now.holding.itemIds[0] || !(now.holding.owned || now.holding.wishlist))) void open(now);
+                                    }
+                                    setTouched((t) => ({ view, ids: new Set(t.view === view ? t.ids : []).add(card.id) }));
+                                }}
+                                language={language}
+                                size={size}
+                                priority={i < (size === "lg" ? Math.min(firstRow, 2) : firstRow)}
+                                onOpen={open}
+                            />
+                        </li>
+                    ))}
+                </ul>
+            )}
+            {more && shown.length > 0 ? (
+                <div ref={sentinel} className="flex justify-center py-2">
+                    {/* The way on when the sentinel is never seen: a keyboard, or an observer the
+                browser does not have. The kit's quietest button, as the shelf has it. */}
+                    <Button color="link-gray" size="sm" className="hit-area" onClick={() => drawUpTo(limit + CARD_BATCH)}>
+                        Show more
+                    </Button>
+                </div>
+            ) : null}
+        </>
+    );
     return (
         <>
-            <Tabs
-                // 16 px between the row, the tabs and the grid on a phone, as on the collection; 24 from sm.
-                className="flex flex-1 flex-col gap-4 sm:gap-6"
-                selectedKey={holding ?? "all"}
-                onSelectionChange={(key) => write({ holding: key === "all" ? undefined : (key as SetHolding) })}
-            >
-                {/* The whole first line on a phone, a short field from sm (`RowSearch`), as in a binder's row. */}
-                <div className={LIST_ROW}>
-                    {/* On a phone behind the search button in the bar across from Back (`BarSearchButton`). */}
-                    <RowSearch place="button" filled={q !== ""} onClear={() => setQ("")}>
-                        <Input
-                            size="sm"
-                            icon={SearchLg}
-                            aria-label={searchLabel}
-                            placeholder={searchLabel}
-                            value={q}
-                            onChange={setQ}
-                            // What the URL keeps (readSetQuery); longer, the two would disagree for good.
-                            maxLength={100}
-                            wrapperClassName="rounded-full"
-                        />
-                    </RowSearch>
-                    {/* On a phone the line under the search, scrolling sideways; from sm its buttons stand in the row. */}
-                    <div className={FILTER_BAR}>
-                        <FiltersSheet
-                            inline
-                            lead={sortMenu}
-                            noun={["card", "cards"]}
-                            groups={[
-                                ...(rarities.length > 1 ? [{ id: "rarity", label: "Rarity", multiple: true, options: rarities }] : []),
-                                // Full art cuts across the rarities, so it is its own yes-or-no, not one of them.
-                                ...(fullArt.size > 0
-                                    ? [{ id: "only", label: "Show only", multiple: true, options: [{ value: FULL_ART, label: "Full art" }] }]
-                                    : []),
-                            ]}
-                            values={{ rarity, only: art ? [FULL_ART] : [] }}
-                            count={countDraft}
-                            onApply={(v) => {
-                                const next = filtersOf(v);
-                                write({ rarity: next.rarity, fullArt: next.art });
-                            }}
-                        />
-                        <div className="contents max-sm:hidden">{sortMenu}</div>
-                    </div>
-                    {/* On a phone in the bar across from Back (`BarViewMenu`). */}
-                    <ViewMenu view="grid" size={size} layouts={false} className="max-sm:hidden" />
-                </div>
-                {/* Under the row of filters, as the collection has its Collection | Wishlist (Bart's call, 2026-09-19).
-                    The kit's underline tabs, as the card sheet has them; scrolls sideways on a phone too narrow for four.
-                    `overflow-x` alone makes the other way `auto` as well, which cut the top pixel off every count
-                    badge (they carry `-my-px`, so they stand a pixel outside the tab and their ring read as sliced).
-                    The pixel back as padding, and off again as margin, so nothing else moves. */}
-                <div className="-mx-4 -mt-px overflow-x-auto px-4 pt-px sm:-mx-6 sm:px-6">
-                    {/* At least the row's width, and its line out into the padding on both sides: edge to edge, as My
+            {/* The four tabs sort the cards by what you hold, so a reader nobody was asked about is
+                offered none of them, and the frame round the grid is then a plain box: a TabPanel
+                with no tab beside it draws nothing at all, the kit matching its id against the tab
+                chosen. A ?holding= that arrived in a shared address narrows nothing (`matching`). */}
+            {asked ? (
+                <Tabs
+                    // 16 px between the row, the tabs and the grid on a phone, as on the collection; 24 from sm.
+                    className="flex flex-1 flex-col gap-4 sm:gap-6"
+                    selectedKey={holding ?? "all"}
+                    onSelectionChange={(key) => write({ holding: key === "all" ? undefined : (key as SetHolding) })}
+                >
+                    {row}
+                    {/* Under the row of filters, as the collection has its Collection | Wishlist (Bart's call, 2026-09-19).
+                        The kit's underline tabs, as the card sheet has them; scrolls sideways on a phone too narrow for four.
+                        `overflow-x` alone makes the other way `auto` as well, which cut the top pixel off every count
+                        badge (they carry `-my-px`, so they stand a pixel outside the tab and their ring read as sliced).
+                        The pixel back as padding, and off again as margin, so nothing else moves. */}
+                    <div className="-mx-4 -mt-px overflow-x-auto px-4 pt-px sm:-mx-6 sm:px-6">
+                        {/* At least the row's width, and its line out into the padding on both sides: edge to edge, as My
                         cards' (Bart, 2026-09-19). Inside the scroller's padding, so it adds nothing to scroll. */}
-                    <TabList aria-label="Cards in this set" type="underline" size="sm" className="w-max min-w-full before:-inset-x-4 sm:before:-inset-x-6">
-                        {HOLDINGS.map((h) => (
-                            <Tab key={h.value} id={h.value} label={h.label} badge={String(tabCounts[h.value] ?? 0)} />
-                        ))}
-                    </TabList>
-                </div>
-                {/* One panel, named after the tab chosen: the grid is the same list filtered, not four lists. */}
-                <TabPanel id={holding ?? "all"} className="flex flex-col gap-6">
-                    {shown.length === 0 && narrowed ? (
-                        <AppEmptyState
-                            icon="search"
-                            title="No cards found"
-                            description={
-                                needle.trim()
-                                    ? `No cards in this set match “${needle.trim()}”.`
-                                    : "Nothing in this set with those filters. Clear one to widen the list."
-                            }
-                        />
-                    ) : (
-                        /* The same grid as every other overview, at the same size: a set was denser than any
-                   list in the app, which is what made it read as a checklist rather than a shelf. */
-                        <ul className={`grid gap-4 ${GRID_COLUMNS[size]}`}>
-                            {shown.slice(0, limit).map((card, i) => (
-                                // The first batch arrives in a wave; a batch drawn on scroll comes in at once.
-                                <li key={card.id} className="arrive" style={{ "--arrive-delay": arriveDelay(i, i < CARD_BATCH) } as React.CSSProperties}>
-                                    <SetCardTile
-                                        card={card}
-                                        setId={setId}
-                                        stamp={`${holdingKey(drawnById.get(card.id) ?? card)}#${outsideCount(drawnById.get(card.id) ?? card)}`}
-                                        onChange={(patch) => {
-                                            const drawnCard = drawnById.get(card.id);
-                                            if (drawnCard) report(drawnCard, patch);
-                                            /* A sheet opened on this card while its add was in the air is waiting for
-                                               the row: open it again once the tile has one, or once the write failed
-                                               and the card is not held after all. */
-                                            if (drawnCard && pendingId === card.id) {
-                                                const now = { ...live(drawnCard), ...patch };
-                                                if (now.itemIds[0] || !(now.owned || now.wishlist)) void open(now);
-                                            }
-                                            setTouched((t) => ({ view, ids: new Set(t.view === view ? t.ids : []).add(card.id) }));
-                                        }}
-                                        language={language}
-                                        size={size}
-                                        priority={i < (size === "lg" ? Math.min(firstRow, 2) : firstRow)}
-                                        onOpen={open}
-                                    />
-                                </li>
+                        <TabList aria-label="Cards in this set" type="underline" size="sm" className="w-max min-w-full before:-inset-x-4 sm:before:-inset-x-6">
+                            {HOLDINGS.map((h) => (
+                                <Tab key={h.value} id={h.value} label={h.label} badge={String(tabCounts[h.value] ?? 0)} />
                             ))}
-                        </ul>
-                    )}
-                    {more && shown.length > 0 ? (
-                        <div ref={sentinel} className="flex justify-center py-2">
-                            {/* The way on when the sentinel is never seen: a keyboard, or an observer the
-                        browser does not have. The kit's quietest button, as the shelf has it. */}
-                            <Button color="link-gray" size="sm" className="hit-area" onClick={() => drawUpTo(limit + CARD_BATCH)}>
-                                Show more
-                            </Button>
-                        </div>
-                    ) : null}
-                </TabPanel>
-            </Tabs>
+                        </TabList>
+                    </div>
+                    {/* One panel, named after the tab chosen: the grid is the same list filtered, not four lists. */}
+                    <TabPanel id={holding ?? "all"} className="flex flex-col gap-6">
+                        {grid}
+                    </TabPanel>
+                </Tabs>
+            ) : (
+                <div className="flex flex-1 flex-col gap-4 sm:gap-6">
+                    {row}
+                    <div className="flex flex-col gap-6">{grid}</div>
+                </div>
+            )}
             {/* Outside the Tabs: inside them the sheet's own tabs (Your copies, Details, Price) were
                 counted into the page's tab list and drawn beside All, Owned and Missing, and the sheet
                 opened with none (2026-09-15). The sheet is a portal, so where it sits changes no layout. */}
@@ -479,8 +515,7 @@ export function SetCards({
                             : { owned: true, quantity: 1, wishlist: false, itemIds: [] },
                         true,
                     );
-                    return () =>
-                        report(drawnCard, { owned: before.owned, quantity: before.quantity, wishlist: before.wishlist, itemIds: before.itemIds }, true);
+                    return () => report(drawnCard, before.holding ?? {}, true);
                 }}
                 onTaken={(taken, list, id) => {
                     const drawnCard = drawnById.get(taken.id);
@@ -495,7 +530,10 @@ export function SetCards({
                 onRemoved={(row) => {
                     const drawnCard = openId ? drawnById.get(openId) : undefined;
                     if (!drawnCard) return;
-                    const now = live(drawnCard);
+                    const now = live(drawnCard).holding;
+                    // A row was removed, so there is a person and an answer to move; a card nobody was
+                    // asked about has none, and none is made up here.
+                    if (!now) return;
                     const itemIds = now.itemIds.filter((i) => i !== row.id);
                     const quantity = row.owned ? Math.max(0, now.quantity - (row.quantity ?? 1)) : now.quantity;
                     report(drawnCard, { itemIds, quantity, owned: quantity > 0, wishlist: row.wishlist ? false : now.wishlist }, true);
