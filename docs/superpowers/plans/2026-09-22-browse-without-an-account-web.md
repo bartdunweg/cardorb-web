@@ -352,6 +352,20 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 
 ---
 
+### Debt carried into Task 5, recorded 2026-09-22
+
+The card tile, the wish heart and the add button are **hidden** for a reader nobody asked about,
+as of commit 81cc8c5b. That contradicts the owner's decision on the same day: nothing greyed out,
+nothing hidden, the press is what explains.
+
+Why it stands for now: the press that is carried through does not exist yet, so a pressable heart
+would call `addCard`, be refused, and leave a visitor with an error instead of an invitation.
+Hiding was the safe half of a choice that cannot be made properly until Task 5.
+
+**Task 5 is not finished while this is true.** The controls come back, pressable, each leading to
+the same invitation, and the tile's accessible name gains whatever the control adds. A grep for
+`"unasked"` finds every place that took the shortcut.
+
 ### Task 5: The sidebar invites rather than lists
 
 **Answered by the owner, 2026-09-22.** Nothing is greyed out and nothing is hidden. Every
