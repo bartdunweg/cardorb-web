@@ -9,6 +9,7 @@ import {
     seriesShelf,
     shelfCounts,
     shelfFacets,
+    shelfHasHoldings,
     sortShelf,
     yearShelf,
 } from "./browse-query";
@@ -27,6 +28,9 @@ const set = (name: string): SetSummary => ({
     complete: false,
     cardsRecorded: true,
 });
+
+/** A set on a shelf read without a session: the catalogue's own fields and no holdings at all. */
+const unasked = (name: string, total: number): SetSummary => ({ ...set(name), total, owned: null, complete: null });
 
 // As the API hands them: newest series first, newest set first in each.
 const shelf: SetSeries[] = [
@@ -99,6 +103,20 @@ describe("progressShelf", () => {
         expect(names(progressShelf(mixed, "complete"))).toEqual(["Jungle"]);
         expect(names(progressShelf(mixed, "new"))).toEqual(["Surging Sparks"]);
         expect(progressShelf(mixed, "complete").map((g) => g.name)).toEqual(["Base"]);
+    });
+
+    // Nobody was asked what is held, so there is no progress to narrow by. An empty shelf would
+    // read as "you have started none of these", which is a claim about a collection never read.
+    it("leaves a shelf nobody was asked about whole, whatever the choice", () => {
+        const unmarked: SetSeries[] = [{ name: "Base", sets: [unasked("Jungle", 64), unasked("Base Set", 102)] }];
+        for (const progress of ["started", "complete", "new"] as const) expect(progressShelf(unmarked, progress)).toBe(unmarked);
+    });
+
+    it("offers no progress filter for a shelf nobody was asked about", () => {
+        const unmarked: SetSeries[] = [{ name: "Base", sets: [unasked("Jungle", 64)] }];
+        expect(shelfHasHoldings(unmarked)).toBe(false);
+        expect(shelfFacets(unmarked).holdings).toBe(false);
+        expect(shelfHasHoldings(mixed)).toBe(true);
     });
 });
 
@@ -173,7 +191,7 @@ describe("series and year", () => {
     });
 
     it("offers the shelf's series in its order and its years newest first", () => {
-        expect(shelfFacets(years)).toEqual({ series: ["Scarlet & Violet", "Base"], years: ["2024", "2023", "1999"] });
+        expect(shelfFacets(years)).toEqual({ series: ["Scarlet & Violet", "Base"], years: ["2024", "2023", "1999"], holdings: true });
     });
 
     it("counts each series and year with the other filters as they are, not itself", () => {

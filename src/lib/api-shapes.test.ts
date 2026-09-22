@@ -440,12 +440,41 @@ describe("seriesFromSets", () => {
     });
 
     it("counts complete and started sets", () => {
-        const { complete, started, totalSets } = seriesFromSets([
+        const { progress, totalSets } = seriesFromSets([
             set({ id: "a", total: 10, ownedCount: 10 }),
             set({ id: "b", total: 10, ownedCount: 3 }),
             set({ id: "c", total: 10, ownedCount: 0 }),
         ]);
-        expect({ complete, started, totalSets }).toEqual({ complete: 1, started: 2, totalSets: 3 });
+        expect({ ...progress, totalSets }).toEqual({ complete: 1, started: 2, totalSets: 3 });
+    });
+
+    // The API leaves the holding fields out for a reader it was given no credential for. Absent is
+    // not 0: a visitor owning none of a set and nobody having been asked are different answers, and
+    // only one of them may be drawn as a count.
+    it("gives a set no owned count where the answer carries none", () => {
+        const { series } = seriesFromSets([set({ id: "a", total: 10, ownedCount: undefined, wishlistCount: undefined })]);
+        const [only] = series[0].sets;
+        expect(only.owned).toBeNull();
+        expect(only.owned).not.toBe(0);
+        expect(only.complete).toBeNull();
+        expect(only.total).toBe(10);
+    });
+
+    it("keeps the owned count a number where the answer carries one, even at none held", () => {
+        const { series } = seriesFromSets([set({ id: "a", total: 10, ownedCount: 4 }), set({ id: "b", total: 10, ownedCount: 0 })]);
+        expect(series[0].sets[0].owned).toBe(4);
+        expect(series[0].sets[1].owned).toBe(0);
+        expect(series[0].sets[1].owned).not.toBeNull();
+    });
+
+    it("has no shelf progress at all where nobody was asked, rather than none complete and none started", () => {
+        const { progress, totalSets } = seriesFromSets([
+            set({ id: "a", total: 10, ownedCount: undefined, wishlistCount: undefined }),
+            set({ id: "b", total: 10, ownedCount: undefined, wishlistCount: undefined }),
+        ]);
+        expect(progress).toBeNull();
+        // The shelf's size is a catalogue fact and stays a number for everyone.
+        expect(totalSets).toBe(2);
     });
 
     it("reads whether the catalogue has the set's cards, and assumes so from an API that does not say", () => {

@@ -560,9 +560,13 @@ export const catalogueSetSchema = z.object({
      * from an API before cardorb-api#265, which reads as recorded: that was the only answer then.
      */
     cardsRecorded: z.boolean().nullish(),
-    /** Distinct cards of the set held; never more than `total` (cardorb-api#162). */
-    ownedCount: z.number(),
-    wishlistCount: z.number(),
+    /**
+     * Distinct cards of the set held; never more than `total` (cardorb-api#162). Both are left out
+     * of the answer where the reader carried no credential (cardorb-api, 2026-09-22): absent means
+     * nobody was asked, which is not the same as a 0 that says the set is untouched.
+     */
+    ownedCount: z.number().optional(),
+    wishlistCount: z.number().optional(),
 });
 export type CatalogueSet = z.infer<typeof catalogueSetSchema>;
 
@@ -577,22 +581,35 @@ export type SetSummary = {
     symbolUrl: string | null;
     /** The logo's own colours, largest first (`logo-color.ts`), filled in by `getSets` (`getShelf` leaves them empty); empty until then, or where none can be read. */
     colors: string[];
-    owned: number;
+    /** Distinct cards of the set held; null where nobody was asked, which no count can stand in for. */
+    owned: number | null;
     total: number;
-    complete: boolean;
+    /** Whether the whole set is held; null where nobody was asked, for the same reason `owned` is. */
+    complete: boolean | null;
     /** False where the catalogue has the set and its count but none of its cards yet. */
     cardsRecorded: boolean;
 };
 
 export type SetSeries = { name: string; sets: SetSummary[] };
 
-/** The shelf, one row per series in the order the API lists sets, plus the counts the header shows. */
-export function seriesFromSets(sets: CatalogueSet[]): { series: SetSeries[]; complete: number; started: number; totalSets: number } {
+/**
+ * The shelf, one row per series in the order the API lists sets, plus the counts the header shows.
+ *
+ * `complete` and `started` are counts of one person's own progress across the shelf, so a reader
+ * nobody asked has neither, and neither is 0. They travel as one nullable object rather than two
+ * nullable numbers: they answer one question ("how far along is this person"), and a single null
+ * cannot be checked for one of them and forgotten for the other. `totalSets` is a catalogue fact
+ * and stays a number for everyone.
+ */
+export function seriesFromSets(sets: CatalogueSet[]): { series: SetSeries[]; progress: { complete: number; started: number } | null; totalSets: number } {
     const bySeries = new Map<string, SetSummary[]>();
     let complete = 0;
     let started = 0;
+    // The API leaves the holding fields out of the whole answer or sends them for every set, so one
+    // set carrying a count is enough to say a person was asked.
+    const asked = sets.some((set) => set.ownedCount !== undefined);
     for (const set of sets) {
-        const owned = set.ownedCount;
+        const owned = set.ownedCount ?? null;
         const summary: SetSummary = {
             id: set.id,
             name: set.name,
@@ -605,14 +622,14 @@ export function seriesFromSets(sets: CatalogueSet[]): { series: SetSeries[]; com
             cardsRecorded: set.cardsRecorded ?? true,
             owned,
             total: set.total,
-            complete: set.total > 0 && owned >= set.total,
+            complete: owned === null ? null : set.total > 0 && owned >= set.total,
         };
         if (summary.complete) complete += 1;
-        if (owned > 0) started += 1;
+        if (owned !== null && owned > 0) started += 1;
         bySeries.set(set.series, [...(bySeries.get(set.series) ?? []), summary]);
     }
     const series = [...bySeries.entries()].map(([name, list]) => ({ name, sets: list }));
-    return { series, complete, started, totalSets: sets.length };
+    return { series, progress: asked ? { complete, started } : null, totalSets: sets.length };
 }
 
 // ── GET /v1/catalog/sets/:setId ───────────────────────────────────────────────────────────
@@ -950,7 +967,8 @@ export const setPageAnswer = z.object({
     set: catalogueSetSchema.omit({ ownedCount: true, wishlistCount: true }).extend({ abbreviation: z.string().nullish() }),
     cards: z.array(browseCardSchema),
     totalCount: z.number(),
-    ownedCount: z.number(),
+    /** Distinct cards of the set held; left out where the reader carried no credential, as on the shelf. */
+    ownedCount: z.number().optional(),
     hasMore: z.boolean(),
 });
 

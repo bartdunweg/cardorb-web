@@ -72,8 +72,8 @@ export type SetDetail = {
     total: number;
     /** The set's gallery, whose cards are part of `total`. */
     gallery: { name: string; total: number } | null;
-    /** Distinct cards held, over the whole set. */
-    owned: number;
+    /** Distinct cards held, over the whole set; null where nobody was asked (a reader without a session). */
+    owned: number | null;
     cards: SetCard[];
 };
 
@@ -135,7 +135,7 @@ async function readSet(id: string, language: BrowseLanguage, from: string, token
         // rather than "0 of 0", which says nothing was ever there.
         total: totalCount || set.total,
         gallery: set.gallery ?? null,
-        owned: ownedCount,
+        owned: ownedCount ?? null,
         cards: cards.map((c) => setCardFromBrowse(c, set.abbreviation ?? null)),
     };
 }

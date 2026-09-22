@@ -1,8 +1,8 @@
 import type { SetCard } from "@/lib/api-shapes";
 
 export type SetStats = {
-    /** Distinct cards of the set held. */
-    owned: number;
+    /** Distinct cards of the set held; null where nobody was asked, which is not none held. */
+    owned: number | null;
     total: number;
     /** What the cards held are worth, one of each: a second copy does not bring the set nearer. */
     value: number;
