@@ -64,6 +64,33 @@ for making an account, which is the whole point of the page.
 The landing page is the one exception and keeps its own marketing look: it is the only page that
 is not the app.
 
+## The door, and the way back
+
+The landing page has one button today and it goes to `/signup`. There is no way into the app at
+all, so the door has to be built with the rest of this.
+
+| From | To | How |
+|---|---|---|
+| The landing | The app | A second button in the hero beside "Get started": "Browse the sets", secondary. The same link in `PublicTopBar` |
+| Legal, the API reference, a public profile | The app | That same `PublicTopBar` link, so the door stands wherever a stranger arrives |
+| The app, signed out | The landing | The logo at the top of the sidebar |
+
+One rule holds the last row: **the logo goes to your home.** Signed in that is Home; signed out it
+is the landing page. No "what is this" item inside the app's navigation and no marketing bar
+inside the shell.
+
+The landing's second button is secondary on purpose. A visitor who already trusts us presses Get
+started and needs to see nothing first. The other button is for the visitor who does not, which is
+the person this whole design is for. Both have to be there; equal weight would make neither read
+as the answer.
+
+**The rough edge:** there are two chromes now, `PublicTopBar` on the landing, the legal pages, the
+API reference and the public profile, and the app shell on Browse and the set pages. Crossing from
+one to the other changes the furniture under the visitor. That is defensible while the crossing is
+one deliberate door, taken once. The public profile is the case that does not fit: it shows cards
+and still wears the marketing bar. It should move into the app shell eventually. Not in this work,
+written down so it is not lost.
+
 ## Where the wall really is
 
 Not in the middleware. In the API. `/catalog/sets`, `/catalog/sets/{id}` and `/catalog/search`
