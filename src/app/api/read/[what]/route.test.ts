@@ -45,7 +45,7 @@ vi.mock("@/app/(app)/dashboard/cards/actions", () => ({
 vi.mock("@/app/(app)/dashboard/collections/actions", () => ({ loadFacets: vi.fn() }));
 vi.mock("@/app/(app)/dashboard/(home)/actions", () => ({ moversFor }));
 vi.mock("@/app/(app)/dashboard/list-actions", () => ({ warmList, loadMoreCards, countCards }));
-vi.mock("@/app/(app)/dashboard/sets/actions", () => ({ listSetsShelf, countShelf }));
+vi.mock("@/app/(app)/sets/actions", () => ({ listSetsShelf, countShelf }));
 vi.mock("@/lib/binders", () => ({ getBinderChoices: vi.fn() }));
 
 const { GET } = await import("./route");

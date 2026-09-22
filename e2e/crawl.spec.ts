@@ -87,8 +87,8 @@ const ROUTES: { name: string; path: () => string; heading: string | RegExp }[] =
     // to the dex binder. This account has none, so it lands on the invitation to make one, under
     // its own heading: it used to walk off to Binders without a word (pokedex/page.tsx).
     { name: "Pokedex", path: () => "/dashboard/pokedex", heading: "Pokédex" },
-    { name: "Browse", path: () => "/dashboard/sets", heading: "Browse" },
-    { name: "a set page", path: () => `/dashboard/sets/${SET_ID}`, heading: "Scarlet & Violet" },
+    { name: "Browse", path: () => "/sets", heading: "Browse" },
+    { name: "a set page", path: () => `/sets/${SET_ID}`, heading: "Scarlet & Violet" },
     { name: "Settings", path: () => "/dashboard/settings", heading: "Settings" },
     // You is titled with its own name; the account's is on the card under it (ui-polish.spec.ts).
     { name: "You", path: () => "/dashboard/you", heading: "You" },

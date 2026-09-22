@@ -13,7 +13,7 @@ import {
     writesLanded,
 } from "./support.ts";
 
-const setPage = `/dashboard/sets/${SET_ID}`;
+const setPage = `/sets/${SET_ID}`;
 
 test("adding a card shows on the tile, on Collection and on Home, before and after a reload", async ({ page }) => {
     const c = card(0);

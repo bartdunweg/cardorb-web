@@ -12,7 +12,7 @@ export default function AppNotFound() {
             title="We can’t find that page"
             description="The set or binder you were looking for doesn’t exist, or it isn’t there any more."
         >
-            <LinkButton href="/dashboard/sets" color="secondary" size="md">
+            <LinkButton href="/sets" color="secondary" size="md">
                 Browse sets
             </LinkButton>
             <LinkButton href="/dashboard" size="md">

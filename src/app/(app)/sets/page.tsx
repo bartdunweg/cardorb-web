@@ -28,7 +28,7 @@ export default async function SetsPage({ searchParams }: { searchParams: Promise
     // Which catalogue and in what order, from the URL; tiles or rows, from the cookie the View menu writes.
     const params = await searchParams;
     // A bare address opens the shelf as it was left (list-memory-server.ts).
-    await openAsLeft("/dashboard/sets", params);
+    await openAsLeft("/sets", params);
     const query = readBrowseQuery(params);
     const view = parseSetsView((await cookies()).get(SETS_VIEW_COOKIE)?.value);
     /* One read of the catalogue for the shelf and for what the Series and Year filters offer. Not

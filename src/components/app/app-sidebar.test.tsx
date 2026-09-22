@@ -39,7 +39,7 @@ describe("the sidebar with nobody signed in", () => {
     });
 
     it("keeps Browse where it was, and pressable", () => {
-        expect(screen.getByRole("link", { name: "Browse" })).toHaveAttribute("href", "/dashboard/sets");
+        expect(screen.getByRole("link", { name: "Browse" })).toHaveAttribute("href", "/sets");
     });
 
     it("keeps Collection, the wishlist and Favorites in the navigation", () => {

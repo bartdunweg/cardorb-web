@@ -24,8 +24,14 @@ import { BOOT_SCRIPT_HASH } from "@/lib/theme-script";
  * keep it so: a new page under (app) or (auth) fails the test until it is named here.
  */
 export const NONCE_ROUTES: RegExp[] = [
-    /^\/dashboard(\/(cards|collections|design|favorites|pokedex|sets|settings|wishlist|you))?$/,
-    /^\/dashboard\/(collections|sets)\/[^/]+$/,
+    /^\/dashboard(\/(cards|collections|design|favorites|pokedex|settings|wishlist|you))?$/,
+    /^\/dashboard\/collections\/[^/]+$/,
+    // Browse and a set page, which live outside /dashboard since they opened to readers with no
+    // account. They are the same documents in the same frame, so they need the same policy: a
+    // page left off this list loses the nonce its inline scripts are signed against, and that
+    // shows up as "it only works after a refresh", which is the hardest symptom here to trace.
+    /^\/sets$/,
+    /^\/sets\/[^/]+$/,
     /^\/(login|signup|forgot-password|reset-password)$/,
     // A username that belongs to nobody renders `notFound()` inside this same per-request render,
     // so Next signs that page's scripts with the same nonce. It is not the prerendered 404 the

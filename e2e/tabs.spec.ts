@@ -6,7 +6,7 @@ import { SET_ID } from "./support.ts";
  * presses a card: the tabs only filter what is already on the page.
  */
 
-const setPage = `/dashboard/sets/${SET_ID}`;
+const setPage = `/sets/${SET_ID}`;
 
 /** The selected tab, its line and the nearest ancestor that clips, all read from the same frame. */
 const readTabs = (page: import("@playwright/test").Page) =>

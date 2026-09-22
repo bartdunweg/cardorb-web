@@ -13,7 +13,7 @@ import { SET_ID, addButton, cacheCleared, card, collectionTile, literal, setTile
  * before the press that causes it, as the set tile's own writes are in writes.spec.ts.
  */
 
-const setPage = `/dashboard/sets/${SET_ID}`;
+const setPage = `/sets/${SET_ID}`;
 const collection = (name: string) => `/dashboard/cards?q=${encodeURIComponent(name)}`;
 
 const sprigatito = card(12);

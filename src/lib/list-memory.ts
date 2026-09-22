@@ -56,7 +56,7 @@ export const MAX_COOKIE_LENGTH = 3000;
  * Which page a memory belongs to. A binder is a page of its own, and so is a public profile; the
  * set pages are one page, so a size chosen on one set holds on the next.
  */
-export const memoryKey = (pathname: string): string => (/^\/dashboard\/sets\/[^/]+$/.test(pathname) ? "/dashboard/sets/*" : pathname);
+export const memoryKey = (pathname: string): string => (/^\/sets\/[^/]+$/.test(pathname) ? "/sets/*" : pathname);
 
 /**
  * The search field's term and the page the pager is on: the two things a list does not remember.

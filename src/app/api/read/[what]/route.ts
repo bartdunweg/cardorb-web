@@ -14,7 +14,7 @@ import {
 } from "@/app/(app)/dashboard/cards/actions";
 import { loadFacets } from "@/app/(app)/dashboard/collections/actions";
 import { countCards, loadMoreCards, warmList } from "@/app/(app)/dashboard/list-actions";
-import { countShelf, listSetsShelf } from "@/app/(app)/dashboard/sets/actions";
+import { countShelf, listSetsShelf } from "@/app/(app)/sets/actions";
 import { session } from "@/lib/api";
 import { CARD_FACTS_BATCH } from "@/lib/api-shapes";
 import { getBinderChoices } from "@/lib/binders";

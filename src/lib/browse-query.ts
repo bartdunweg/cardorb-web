@@ -76,7 +76,7 @@ export function browseHref(current: BrowseQuery, patch: Partial<BrowseQuery>): s
     for (const name of series) p.append("series", name);
     for (const y of year) p.append("year", y);
     const s = p.toString();
-    return s ? `/dashboard/sets?${s}` : "/dashboard/sets";
+    return s ? `/sets?${s}` : "/sets";
 }
 
 /**

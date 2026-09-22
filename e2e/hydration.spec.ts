@@ -29,7 +29,7 @@ test("the set page hydrates the server's drawing instead of drawing it again", a
     }, LABEL);
 
     for (let load = 1; load <= 10; load++) {
-        await page.goto(`/dashboard/sets/${SET_ID}`);
+        await page.goto(`/sets/${SET_ID}`);
         const owned = await page.waitForFunction((label) => {
             const shown = [...document.querySelectorAll(`input[aria-label="${label}"]`)].find(
                 (i) => !i.closest("[hidden]") && Object.keys(i).some((k) => k.startsWith("__reactFiber$")),

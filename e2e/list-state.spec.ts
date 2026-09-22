@@ -7,7 +7,7 @@ test.describe.configure({ mode: "serial" });
 
 test.beforeAll(async ({ browser }) => {
     const page = await (await browser.newContext({ storageState: "e2e/.auth/user.json" })).newPage();
-    await page.goto(`/dashboard/sets/${SET_ID}`);
+    await page.goto(`/sets/${SET_ID}`);
     for (const c of cards) {
         // Registered before the click: the set tile presses with quiet: true, so the write's own
         // cache clear is POST /api/forget-mine (forget-mine.ts's forgetMineQuietly()), the same
@@ -157,7 +157,7 @@ test("a filter cleared in the Filters sheet stays cleared after a reload, Back a
 
 test("the set page keeps its search and tab in its address", async ({ page }) => {
     const [target] = cards;
-    await page.goto(`/dashboard/sets/${SET_ID}`);
+    await page.goto(`/sets/${SET_ID}`);
     await page.getByLabel("Search in Scarlet & Violet").fill(target.name);
     await page
         .getByRole("tablist", { name: "Cards in this set" })

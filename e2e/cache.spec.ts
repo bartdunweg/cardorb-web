@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { E2E_USER, SET_ID, addButton, cacheCleared, card, collectionTile, removeButton, setTile } from "./support.ts";
 
-const setPage = `/dashboard/sets/${SET_ID}`;
+const setPage = `/sets/${SET_ID}`;
 
 test("after a write, Back and a reload show the new state, not the cached one", async ({ page }) => {
     const c = card(5);

@@ -11,7 +11,7 @@ import { SET_ID, addButton, cacheCleared, card, collectionTile, literal, makeBin
  * name that is taken. Four writes in the file altogether.
  */
 
-const setPage = `/dashboard/sets/${SET_ID}`;
+const setPage = `/sets/${SET_ID}`;
 
 test("a binder is made, a card goes in it, and the binder is on the card's sheet", async ({ page }) => {
     const name = "Binder with a card";

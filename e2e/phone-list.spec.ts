@@ -17,7 +17,7 @@ test.describe.configure({ mode: "serial" });
 
 test.beforeAll(async ({ browser }) => {
     const page = await (await browser.newContext({ storageState: "e2e/.auth/user.json" })).newPage();
-    await page.goto(`/dashboard/sets/${SET_ID}`);
+    await page.goto(`/sets/${SET_ID}`);
     for (const c of [toedscool, toedscruel]) {
         // search-field.spec.ts may have added them already; a card in the collection is left as it is.
         // Wait for the tile either way first: `isVisible` does not wait, and read before the grid was in it said no.
@@ -151,7 +151,7 @@ test("a term survives a client navigation away and Back, in the bar of the page 
 });
 
 test("a set page's search is a button beside Back; Escape in an empty field and Cancel put the bar back", async ({ page }) => {
-    await page.goto(`/dashboard/sets/${SET_ID}`);
+    await page.goto(`/sets/${SET_ID}`);
     const button = page.getByRole("button", { name: "Search in Scarlet & Violet" });
     await expect(button).toBeVisible();
     await hydrated(page, "Search in Scarlet & Violet");
@@ -184,7 +184,7 @@ test("a set page's search is a button beside Back; Escape in an empty field and 
 });
 
 test("Browse has its field in the bar, in the title's place", async ({ page }) => {
-    await page.goto("/dashboard/sets");
+    await page.goto("/sets");
     const field = page.getByRole("combobox", { name: "Search in Browse" });
     await expect(field).toBeVisible();
     expect((await field.boundingBox())!.y).toBeLessThan(40);
@@ -201,7 +201,7 @@ test("Browse has its field in the bar, in the title's place", async ({ page }) =
 });
 
 test("Browse switches its catalogue with tabs of half the line each, under the filters", async ({ page }) => {
-    await page.goto("/dashboard/sets");
+    await page.goto("/sets");
     const tabs = page.getByRole("main").getByRole("tablist", { name: "Catalogue" });
     const filters = page.getByRole("main").getByRole("button", { name: /^Filters/ });
     await expect(tabs).toBeVisible();
@@ -219,7 +219,7 @@ test("Browse switches its catalogue with tabs of half the line each, under the f
 });
 
 test("Browse narrows its shelf by series and year from buttons of their own", async ({ page }) => {
-    await page.goto("/dashboard/sets");
+    await page.goto("/sets");
     const main = page.getByRole("main");
     await hydrated(page, "Series");
     await main.getByRole("button", { name: /^Series/ }).click();

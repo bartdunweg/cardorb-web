@@ -36,7 +36,7 @@ type BinderLink = { id: string; name: string; kind: "manual" | "rule"; count: nu
 // The pages the sidebar leads to, fetched ahead so a click draws them at once. A binder is not
 // among them, and a binder shown as a Pokédex is why: it reads every card you own, up to 2,000
 // per request, and paying for that on the chance of a click made the page you are on wait for it.
-const SIDEBAR_ROUTES = ["/dashboard", "/dashboard/collections", "/dashboard/cards", "/dashboard/favorites", "/dashboard/sets", "/dashboard/wishlist"];
+const SIDEBAR_ROUTES = ["/dashboard", "/dashboard/collections", "/dashboard/cards", "/dashboard/favorites", "/sets", "/dashboard/wishlist"];
 
 // Folded or open, kept for a year; open is no cookie at all (see src/lib/sidebar-cookie.ts).
 function storeCollapsed(collapsed: boolean) {
@@ -105,7 +105,7 @@ export function AppSidebar({
     // The four pages, on the rail as icons alone.
     const pages: RailItem[] = [
         { label: "Home", href: "/dashboard", icon: HomeLine },
-        { label: "Browse", href: "/dashboard/sets", icon: BookOpen01 },
+        { label: "Browse", href: "/sets", icon: BookOpen01 },
         // Collection and Wishlist, the names the pages carry and the order of the phone's switch (collection-switch.tsx).
         { label: "Collection", href: "/dashboard/cards", icon: Rows01 },
         { label: "Wishlist", href: "/dashboard/wishlist", icon: Heart },

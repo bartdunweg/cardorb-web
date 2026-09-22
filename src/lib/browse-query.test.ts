@@ -63,11 +63,11 @@ describe("readBrowseQuery", () => {
 describe("browseHref", () => {
     it("keeps the defaults out of the URL", () => {
         const en = { language: "en", sort: "newest", progress: "all", q: undefined, series: [], year: [] } as BrowseQuery;
-        expect(browseHref(en, {})).toBe("/dashboard/sets");
-        expect(browseHref(en, { sort: "oldest" })).toBe("/dashboard/sets?sort=oldest");
-        expect(browseHref(en, { progress: "started" })).toBe("/dashboard/sets?progress=started");
-        expect(browseHref({ ...en, language: "ja", sort: "name" }, { sort: "newest" })).toBe("/dashboard/sets?language=ja");
-        expect(browseHref({ ...en, language: "ja", sort: "name", q: "base" }, {})).toBe("/dashboard/sets?q=base&language=ja&sort=name");
+        expect(browseHref(en, {})).toBe("/sets");
+        expect(browseHref(en, { sort: "oldest" })).toBe("/sets?sort=oldest");
+        expect(browseHref(en, { progress: "started" })).toBe("/sets?progress=started");
+        expect(browseHref({ ...en, language: "ja", sort: "name" }, { sort: "newest" })).toBe("/sets?language=ja");
+        expect(browseHref({ ...en, language: "ja", sort: "name", q: "base" }, {})).toBe("/sets?q=base&language=ja&sort=name");
     });
 });
 
@@ -177,7 +177,7 @@ describe("series and year", () => {
         const query = readBrowseQuery({ series: ["Base", " Base ", "Scarlet & Violet"], year: ["1999", "99", "2024"] });
         expect(query.series).toEqual(["Base", "Scarlet & Violet"]);
         expect(query.year).toEqual(["1999", "2024"]);
-        expect(browseHref(query, {})).toBe("/dashboard/sets?series=Base&series=Scarlet+%26+Violet&year=1999&year=2024");
+        expect(browseHref(query, {})).toBe("/sets?series=Base&series=Scarlet+%26+Violet&year=1999&year=2024");
     });
 
     it("keeps the chosen series, and every series when none is chosen", () => {

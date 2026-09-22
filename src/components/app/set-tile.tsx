@@ -67,7 +67,7 @@ export function SetTile({
     const empty = set.owned === 0;
     return (
         <HoverPrefetchLink
-            href={`/dashboard/sets/${encodeURIComponent(set.id)}${language === "en" ? "" : `?language=${language}`}`}
+            href={`/sets/${encodeURIComponent(set.id)}${language === "en" ? "" : `?language=${language}`}`}
             // One level in: the set's page comes from the right (page-transition.tsx).
             transitionTypes={["nav-forward"]}
             className={cx(

@@ -5,15 +5,15 @@ describe("memoryKey", () => {
     it("is the page, except that every set page is one page", () => {
         expect(memoryKey("/dashboard/wishlist")).toBe("/dashboard/wishlist");
         expect(memoryKey("/dashboard/collections/abc")).toBe("/dashboard/collections/abc");
-        expect(memoryKey("/dashboard/sets")).toBe("/dashboard/sets");
-        expect(memoryKey("/dashboard/sets/sv1")).toBe("/dashboard/sets/*");
+        expect(memoryKey("/sets")).toBe("/sets");
+        expect(memoryKey("/sets/sv1")).toBe("/sets/*");
         expect(memoryKey("/user/bart")).toBe("/user/bart");
     });
 });
 
 describe("parseListMemory", () => {
     it("reads what serializeListMemory wrote", () => {
-        const memory = { "/dashboard/cards": { view: "table" as const, query: "sort=name&rarity=Rare" }, "/dashboard/sets/*": { size: "lg" as const } };
+        const memory = { "/dashboard/cards": { view: "table" as const, query: "sort=name&rarity=Rare" }, "/sets/*": { size: "lg" as const } };
         expect(parseListMemory(serializeListMemory(memory))).toEqual(memory);
     });
 
