@@ -44,11 +44,18 @@ export function formatValue(value: number | null | undefined): string {
 }
 
 const percents = new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 0 });
+const smallPercents = new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 1 });
 
-// Formats a ratio as "5%": 0.05 in, a whole percent out. A change against an average is read
-// to the percent; the decimals would only make a glance at it slower.
+/**
+ * Formats a ratio as "5%": 0.05 in, a whole percent out. A change against an average is read to the
+ * percent; the decimals would only make a glance at it slower.
+ *
+ * Under one percent it keeps one decimal, because there the whole percent is "0%" beside an amount
+ * that is not nothing, and the reader is left with two figures that argue (an account holding one
+ * card of €281 that is €280 today: Bart, 2026-09-22).
+ */
 export function formatPercent(ratio: number): string {
-    return percents.format(ratio);
+    return (Math.abs(ratio) < 0.01 ? smallPercents : percents).format(ratio);
 }
 
 const counts = new Intl.NumberFormat("en-US");

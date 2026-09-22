@@ -4,7 +4,7 @@ import { ChartPeriods } from "@/components/app/chart-periods";
 import { useHomePeriod } from "@/components/app/home-period";
 import { ValueChart } from "@/components/app/value-chart";
 import { PERIODS, changeSaid, forChart, isoDaysAgo } from "@/lib/chart-periods";
-import { formatValue } from "@/lib/format";
+import { formatPercent, formatValue } from "@/lib/format";
 import { splitChange } from "@/lib/value-change";
 import type { ValueSnapshot } from "@/lib/value-history";
 import { cx } from "@/utils/cx";
@@ -37,6 +37,17 @@ export function ValueHero({
     const shown = chosen.days === null ? snapshots : snapshots.filter((s) => s.date >= isoDaysAgo(chosen.days));
     const split = splitChange(shown, value);
     const change = split ? split.change : null;
+    /* How big that is, beside it, as the card sheet has always written a move (Bart, 2026-09-22).
+       Without it every chart looks alike: the line is drawn from the period's lowest reading to its
+       highest, so an account holding one card of €281 that is €280 today falls from the top of the
+       chart to the floor, and nothing on screen said the fall was one euro.
+
+       Only where the period added no cards. A month an import arrived in is a collection that grew,
+       not prices that rose, and "+6,482%" over the one card it started with would be a true sum and
+       a false sentence. There the amount stands alone, as it did. */
+    const from = shown[0];
+    const percent = split && split.added === 0 && from && from.value > 0 ? split.change / from.value : null;
+    const size = percent === null ? "" : ` · ${formatPercent(Math.abs(percent))}`;
     /* What the change is over, read off the whole line rather than the period's slice of it: a list
        whose readings do not reach back as far as the button does is measured from its first reading,
        and says that rather than naming a month it has not lived through (Bart, 2026-09-21). */
@@ -63,7 +74,7 @@ export function ValueHero({
                         ? "No readings yet for this period."
                         : change === 0
                           ? `Unchanged ${said}`
-                          : `${change > 0 ? "+" : "−"}${formatValue(Math.abs(change))} ${said}`}
+                          : `${change > 0 ? "+" : "−"}${formatValue(Math.abs(change))}${size} ${said}`}
                 </p>
             </div>
 
