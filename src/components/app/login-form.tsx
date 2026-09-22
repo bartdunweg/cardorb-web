@@ -8,7 +8,7 @@ import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 
 // Clean, single-column sign-in: the form centered in the viewport, no marketing panel.
-export const LoginForm = ({ notice }: { notice?: string }) => {
+export const LoginForm = ({ notice, next }: { notice?: string; next?: string | null }) => {
     const [state, formAction, pending] = useActionState<AuthState, FormData>(signIn, undefined);
 
     return (
@@ -58,6 +58,9 @@ export const LoginForm = ({ notice }: { notice?: string }) => {
                 <Button type="submit" size="lg" isLoading={pending} showTextWhileLoading>
                     {pending ? "Signing in…" : "Sign in"}
                 </Button>
+                {/* Where the invitation said this visitor was. An action reads the form and not
+                    the address, and the value is checked again on the far side. */}
+                {next ? <input type="hidden" name="next" value={next} /> : null}
             </form>
         </AuthShell>
     );

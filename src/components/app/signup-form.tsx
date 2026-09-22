@@ -15,7 +15,7 @@ import { FeaturedIcon } from "@/components/foundations/featured-icon/featured-ic
 const MIN_PASSWORD = 10;
 
 // Clean, single-column sign-up: the form centered in the viewport, no marketing panel.
-export const SignupForm = () => {
+export const SignupForm = ({ next }: { next?: string | null }) => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [state, formAction, pending] = useActionState<AuthState, FormData>(signUp, undefined);
@@ -115,6 +115,9 @@ export const SignupForm = () => {
                 <Button type="submit" size="lg" isLoading={pending} showTextWhileLoading>
                     {pending ? "Creating account…" : "Get started"}
                 </Button>
+                {/* Where the invitation said this visitor was. An action reads the form and not
+                    the address, and the value is checked again on the far side. */}
+                {next ? <input type="hidden" name="next" value={next} /> : null}
             </form>
         </AuthShell>
     );

@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
+import { safeReturn } from "@/lib/return-to";
 import { COOKIE_OPTIONS } from "@/lib/supabase/cookie-options";
 import { elapsed, logTiming } from "@/lib/timing";
 
@@ -65,6 +66,10 @@ export async function updateSession(request: NextRequest) {
     if (!user && isProtected) {
         const url = request.nextUrl.clone();
         url.pathname = "/login";
+        // Where they were going, so signing in finishes the journey rather than landing them on
+        // Home. The same rule the invitations use, and the form checks it again on the far side.
+        const back = safeReturn(`${pathname}${request.nextUrl.search}`);
+        url.search = back ? `?next=${encodeURIComponent(back)}` : "";
         return NextResponse.redirect(url);
     }
 

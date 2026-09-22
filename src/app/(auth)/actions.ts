@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { RECOVERY_COOKIE } from "@/lib/auth-redirect";
+import { safeReturn } from "@/lib/return-to";
 import { createClient } from "@/lib/supabase/server";
 import { usernameFromEmail } from "@/lib/username";
 import { credentialsSchema, emailSchema, newPasswordSchema, signInSchema } from "@/lib/validation/auth";
@@ -26,7 +27,10 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
     const { error } = await supabase.auth.signInWithPassword(parsed.data);
     if (error) return { error: error.message };
 
-    redirect("/dashboard");
+    // Back where the invitation found them, where one sent them here. Read against the rule a
+    // second time: the value went out to the browser and came back in a form, so by now it is a
+    // stranger's, and a redirect that follows it anywhere is this app lending its name to it.
+    redirect(safeReturn(formData.get("next")) ?? "/dashboard");
 }
 
 export async function signUp(_prev: AuthState, formData: FormData): Promise<AuthState> {
@@ -52,12 +56,12 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
     // not, the form says the account is there and points to signing in or a new password.
     if (data.user && data.user.identities?.length === 0) {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-        if (!signInError) redirect("/dashboard");
+        if (!signInError) redirect(safeReturn(formData.get("next")) ?? "/dashboard");
         return { existing: true };
     }
 
     // Email confirmation off → a session is returned, so go straight in.
-    if (data.session) redirect("/dashboard");
+    if (data.session) redirect(safeReturn(formData.get("next")) ?? "/dashboard");
 
     // The link in that email signs the person in; there is no "then sign in" step.
     return { success: `Open the link we sent to ${email} and you are in.` };
