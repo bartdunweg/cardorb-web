@@ -51,4 +51,31 @@ describe("ValueHero's change sentence", () => {
         expect(screen.getByText(/in the last 30 days/)).toBeTruthy();
         expect(screen.queryByText(/since the first reading/)).toBeNull();
     });
+
+    /*
+     * Bart, 2026-09-22: pikachu holds one card, €281 on the 17th and €280 today, and the chart drew
+     * that euro as a fall from the top to the floor, because the line always spans its own lowest
+     * reading to its highest. The size of the move is what was missing, not the scale of the chart.
+     */
+    it("says how big the move is beside it", () => {
+        render(
+            <ValueHero name="Collection" selected="all" value={280} snapshots={[...daily("2026-09-17", () => 281).slice(0, -1), reading("2026-09-21", 280)]} />,
+        );
+        // One euro off €281, which is four tenths of a percent: under one percent it keeps a decimal,
+        // because "0%" beside an amount that is not nothing leaves two figures arguing.
+        expect(screen.getByText("−€1 · 0.4% since the first reading")).toBeTruthy();
+    });
+
+    /* Not where the period added cards: a month an import arrived in grew, and a percent over the
+       one card it started with would be a true sum and a false sentence. */
+    it("leaves the percent out where the period added cards", () => {
+        const imported = [
+            { ...reading("2026-09-09", 122), cards: 1 },
+            { ...reading("2026-09-14", 7761), addedValue: 7700, added: 2260 },
+            reading("2026-09-21", 8089),
+        ];
+        render(<ValueHero name="Collection" selected="all" value={8089} snapshots={imported} />);
+        expect(screen.getByText(/\+€7,967 since the first reading/)).toBeTruthy();
+        expect(screen.queryByText(/%/)).toBeNull();
+    });
 });
