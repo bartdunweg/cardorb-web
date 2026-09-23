@@ -110,3 +110,46 @@ describe("every page under (app), for somebody with no account", () => {
         }
     });
 });
+
+/**
+ * Every route handler, not only pages. Found in review: the rule above reads page folders, and a
+ * route.ts that reads a person without its own check would have passed it unseen. Each one here
+ * either reads the session itself or is named below with the reason it needs none, so a new route
+ * is red until somebody writes that reason down.
+ */
+const ROUTES_WITHOUT_A_SESSION: Record<string, string> = {
+    "api/forget-mine/route.ts": "forgets through forgetMineLater, which reads the session and does nothing without one",
+    "api/revalidate/route.ts": "called by the API, behind a shared secret, and names the account it forgets",
+    "auth/confirm/route.ts": "the door itself: it turns a mailed link into a session",
+    "logo/[file]/route.ts": "a public picture, the same for everybody",
+};
+
+describe("every route handler, for somebody with no account", () => {
+    const APP_ROOT = join(__dirname, "..", "app");
+    const routes: string[] = [];
+    const walk = (dir: string) => {
+        for (const entry of readdirSync(dir, { withFileTypes: true })) {
+            if (entry.isDirectory()) walk(join(dir, entry.name));
+            else if (entry.name === "route.ts") routes.push(join(dir, entry.name));
+        }
+    };
+    walk(APP_ROOT);
+    const named = (file: string) => relative(APP_ROOT, file).replace(/\([^)]+\)\//g, "");
+
+    it("finds the routes at all", () => {
+        expect(routes.length).toBeGreaterThan(5);
+    });
+
+    it("either reads the session or is named with the reason it needs none", () => {
+        const unexplained = routes
+            .filter((f) => !/session\(\)|accessToken\(\)/.test(readFileSync(f, "utf8")))
+            .map(named)
+            .filter((r) => !(r in ROUTES_WITHOUT_A_SESSION));
+        expect(unexplained).toEqual([]);
+    });
+
+    it("names no route that is gone, so the list cannot rot", () => {
+        const present = new Set(routes.map(named));
+        expect(Object.keys(ROUTES_WITHOUT_A_SESSION).filter((r) => !present.has(r))).toEqual([]);
+    });
+});
