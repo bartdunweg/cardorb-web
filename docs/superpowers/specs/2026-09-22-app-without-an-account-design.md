@@ -13,26 +13,26 @@ account. This design opens the catalogue and keeps the collection closed.
 One sentence, checkable, and it decides every case that comes up later without a second
 conversation.
 
-| Open, no account | Behind a login |
-|---|---|
-| Browse, every set | Home (your value, your chart) |
-| A set page, every card in it | Collection |
-| The card sheet: picture, price, printings | Binders, Favorites |
-| Search | Wishlist |
-| The landing page, privacy, terms, API docs | Pokedex (it is a binder) |
-| A public profile (already open) | Settings, your profile |
+| Open, no account                           | Behind a login                |
+| ------------------------------------------ | ----------------------------- |
+| Browse, every set                          | Home (your value, your chart) |
+| A set page, every card in it               | Collection                    |
+| The card sheet: picture, price, printings  | Binders, Favorites            |
+| Search                                     | Wishlist                      |
+| The landing page, privacy, terms, API docs | Pokedex (it is a binder)      |
+| A public profile (already open)            | Settings, your profile        |
 
 ## Addresses
 
 Browse moves out of `/dashboard`, because it is now a page for strangers and "dashboard" has no
 business in the URL of the page that has to earn the click.
 
-| Address | Signed out | Signed in |
-|---|---|---|
-| `/` | The landing page, with a way through to Browse | Redirect to `/dashboard` (it already does this) |
-| `/sets` | Browse | Browse, with your progress on the tiles |
-| `/sets/[id]` | The set, every card | The set, with what you hold marked |
-| `/dashboard` and the rest | Redirect to `/login` | Home, Collection, Binders, Wishlist, Pokedex, Settings |
+| Address                   | Signed out                                     | Signed in                                              |
+| ------------------------- | ---------------------------------------------- | ------------------------------------------------------ |
+| `/`                       | The landing page, with a way through to Browse | Redirect to `/dashboard` (it already does this)        |
+| `/sets`                   | Browse                                         | Browse, with your progress on the tiles                |
+| `/sets/[id]`              | The set, every card                            | The set, with what you hold marked                     |
+| `/dashboard` and the rest | Redirect to `/login`                           | Home, Collection, Binders, Wishlist, Pokedex, Settings |
 
 The old `/dashboard/sets` and `/dashboard/sets/[id]` keep working as permanent redirects: they
 are in the sitemap, in browser history and in the iOS app's share links.
@@ -50,14 +50,14 @@ tab bar, tiles, filters and card sheet. In Next a route group is a folder and no
 
 What the frame drops without a session:
 
-| Part | Signed out |
-|---|---|
-| The account card at the foot of the sidebar | Sign in / Create account |
-| The binder list | One row inviting an account |
-| Collection, Wishlist, Pokedex in the navigation | Still there, and still pressable. Nothing greyed out and nothing hidden (Bart, 2026-09-22) |
+| Part                                                 | Signed out                                                                                  |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| The account card at the foot of the sidebar          | Sign in / Create account                                                                    |
+| The binder list                                      | One row inviting an account                                                                 |
+| Collection, Wishlist, Pokedex in the navigation      | Still there, and still pressable. Nothing greyed out and nothing hidden (Bart, 2026-09-22)  |
 | New binder, and every other control that would write | Pressable. The press is what raises the state saying an account is what makes this possible |
-| Browse, the set page, search, the card sheet | Exactly as they are |
-| The star, the heart, add a copy | Still there. One press leads to sign in and the press is carried through (below) |
+| Browse, the set page, search, the card sheet         | Exactly as they are                                                                         |
+| The star, the heart, add a copy                      | Still there. One press leads to sign in and the press is carried through (below)            |
 
 The write controls stay visible on purpose. Hiding them empties the app and hides the argument
 for making an account, which is the whole point of the page.
@@ -70,11 +70,11 @@ is not the app.
 The landing page has one button today and it goes to `/signup`. There is no way into the app at
 all, so the door has to be built with the rest of this.
 
-| From | To | How |
-|---|---|---|
-| The landing | The app | A second button in the hero beside "Get started": "Browse the sets", secondary. The same link in `PublicTopBar` |
-| Legal, the API reference, a public profile | The app | That same `PublicTopBar` link, so the door stands wherever a stranger arrives |
-| The app, signed out | The landing | The logo at the top of the sidebar |
+| From                                       | To          | How                                                                                                             |
+| ------------------------------------------ | ----------- | --------------------------------------------------------------------------------------------------------------- |
+| The landing                                | The app     | A second button in the hero beside "Get started": "Browse the sets", secondary. The same link in `PublicTopBar` |
+| Legal, the API reference, a public profile | The app     | That same `PublicTopBar` link, so the door stands wherever a stranger arrives                                   |
+| The app, signed out                        | The landing | The logo at the top of the sidebar                                                                              |
 
 One rule holds the last row: **the logo goes to your home.** Signed in that is Home; signed out it
 is the landing page. No "what is this" item inside the app's navigation and no marketing bar
@@ -143,10 +143,10 @@ missing.
 
 Home, which the owner named as the strongest case:
 
-| Place | What a visitor reads there |
-|---|---|
-| The total | What your collection is worth, updated every day |
-| The chart | See how your collection moved this week, and over the last year |
+| Place      | What a visitor reads there                                                          |
+| ---------- | ----------------------------------------------------------------------------------- |
+| The total  | What your collection is worth, updated every day                                    |
+| The chart  | See how your collection moved this week, and over the last year                     |
 | The movers | The cards that rose and fell most, so you know what moved without checking each one |
 
 **No invented numbers, ever.** Tubi shows an empty tile and a sentence, not a fake film. A drawn
@@ -258,14 +258,14 @@ The payoff is a set page a search engine can read.
 
 Phase 0 to 3 are one stretch and have to land together; 4 and 5 can follow.
 
-| # | What | Where |
-|---|---|---|
-| 0 | The catalogue answers without a token, holdings left out | cardorb-api |
-| 1 | Optional auth in `api()`, a shared key in `perUser()` | `api.ts`, `user-cache.ts`, `sets.ts` |
-| 2 | The frame without a session, and the layout's reads skipped | `(app)/layout.tsx`, sidebar, tab bar |
-| 3 | Browse moves to `/sets`, redirects, CSP, middleware | routes, `csp.ts`, `proxy.ts` |
-| 4 | Every write control becomes an invitation, intent kept | card sheet, tiles, star, heart |
-| 5 | Sitemap, canonicals, the signed-out crawl, prod-check | sitemap, e2e, prod-check |
+| #   | What                                                        | Where                                |
+| --- | ----------------------------------------------------------- | ------------------------------------ |
+| 0   | The catalogue answers without a token, holdings left out    | cardorb-api                          |
+| 1   | Optional auth in `api()`, a shared key in `perUser()`       | `api.ts`, `user-cache.ts`, `sets.ts` |
+| 2   | The frame without a session, and the layout's reads skipped | `(app)/layout.tsx`, sidebar, tab bar |
+| 3   | Browse moves to `/sets`, redirects, CSP, middleware         | routes, `csp.ts`, `proxy.ts`         |
+| 4   | Every write control becomes an invitation, intent kept      | card sheet, tiles, star, heart       |
+| 5   | Sitemap, canonicals, the signed-out crawl, prod-check       | sitemap, e2e, prod-check             |
 
 ## Not in this design
 

@@ -115,8 +115,10 @@ export const SignupForm = ({ next }: { next?: string | null }) => {
                 <Button type="submit" size="lg" isLoading={pending} showTextWhileLoading>
                     {pending ? "Creating account…" : "Get started"}
                 </Button>
-                {/* Where the invitation said this visitor was. An action reads the form and not
-                    the address, and the value is checked again on the far side. */}
+                {/* kit-drift: nobody sees this one and nobody types in it. It carries where the
+                    invitation said this visitor was, because an action reads the form and not the
+                    address; the kit's Input is a field somebody fills, which is a different thing.
+                    The value is checked again on the far side. */}
                 {next ? <input type="hidden" name="next" value={next} /> : null}
             </form>
         </AuthShell>

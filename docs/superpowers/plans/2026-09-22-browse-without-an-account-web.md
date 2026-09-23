@@ -34,28 +34,30 @@ Playwright.
 
 ## File structure
 
-| File | Responsibility after this plan |
-|---|---|
-| `src/lib/api.ts` | `api()` gains a third auth state: ask with the token when there is one, without when there is not |
-| `src/lib/user-cache.ts` | `perUser()` unchanged; a new `sharedRead()` beside it for readers with no session |
-| `src/lib/sets.ts` | `getShelf`/`getSet` pick the per-person or the shared path from the session, not from an argument |
-| `src/app/(app)/layout.tsx` | Skips the profile, binder and favourites reads without a session; `SessionGuard` with them |
-| `src/components/app/app-sidebar.tsx` | An account card that says "Sign in", a binder section that invites one |
-| `src/components/app/mobile-nav.tsx` | The same four tabs, the closed ones leading to an invitation |
-| `src/app/(app)/sets/` | Browse and the set page at their new addresses, same layout |
-| `src/app/(app)/dashboard/sets/` | Permanent redirects to the above |
-| `src/components/app/public-top-bar.tsx` | A "Browse the sets" link, so every public page has the door |
-| `e2e/signed-out.spec.ts` | The crawl that proves what is open and, more importantly, what is not |
+| File                                    | Responsibility after this plan                                                                    |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `src/lib/api.ts`                        | `api()` gains a third auth state: ask with the token when there is one, without when there is not |
+| `src/lib/user-cache.ts`                 | `perUser()` unchanged; a new `sharedRead()` beside it for readers with no session                 |
+| `src/lib/sets.ts`                       | `getShelf`/`getSet` pick the per-person or the shared path from the session, not from an argument |
+| `src/app/(app)/layout.tsx`              | Skips the profile, binder and favourites reads without a session; `SessionGuard` with them        |
+| `src/components/app/app-sidebar.tsx`    | An account card that says "Sign in", a binder section that invites one                            |
+| `src/components/app/mobile-nav.tsx`     | The same four tabs, the closed ones leading to an invitation                                      |
+| `src/app/(app)/sets/`                   | Browse and the set page at their new addresses, same layout                                       |
+| `src/app/(app)/dashboard/sets/`         | Permanent redirects to the above                                                                  |
+| `src/components/app/public-top-bar.tsx` | A "Browse the sets" link, so every public page has the door                                       |
+| `e2e/signed-out.spec.ts`                | The crawl that proves what is open and, more importantly, what is not                             |
 
 ---
 
 ### Task 1: `api()` may ask without a token
 
 **Files:**
+
 - Modify: `src/lib/api.ts` (the `Init` type at its `auth?: boolean`, and the `withAuth` branch around line 154)
 - Test: `src/lib/api.test.ts`
 
 **Interfaces:**
+
 - Produces: `auth?: boolean | "optional"` on `Init`. `true` (the default) throws 401 without a
   token, `false` never sends one, `"optional"` sends one when the session has one and asks
   anyway when it does not.
@@ -112,10 +114,10 @@ In the `Init` type, replace the `auth?: boolean` field and its comment with:
 Then the branch, where `withAuth` is decided:
 
 ```ts
-    const token = init.auth === false ? null : (init.token ?? (await accessToken()));
-    if (init.auth !== false && init.auth !== "optional" && !token) throw new ApiError(401, "Sign in to see this.");
-    if (token) headers.authorization = `Bearer ${token}`;
-    else headers["x-cache-window"] = cacheWindow();
+const token = init.auth === false ? null : (init.token ?? (await accessToken()));
+if (init.auth !== false && init.auth !== "optional" && !token) throw new ApiError(401, "Sign in to see this.");
+if (token) headers.authorization = `Bearer ${token}`;
+else headers["x-cache-window"] = cacheWindow();
 ```
 
 Keep the `cache` choice keyed on whether a token was sent, not on the `auth` value: an answer
@@ -163,10 +165,12 @@ was never needed.
 ### Task 3: The shelf and the set page read either way
 
 **Files:**
+
 - Modify: `src/lib/sets.ts` (`getShelf` at line 27, `getSet` at line 97, `readSet` at line 108)
 - Test: `src/lib/sets.test.ts`
 
 **Interfaces:**
+
 - Consumes: `sharedRead` and `PUBLIC_TAG` from Task 2, `auth: "optional"` from Task 1.
 - Produces: `getShelf` and `getSet` unchanged in signature. Their answers gain nullable holdings:
   `SetSummary.owned` and `SetDetail.owned` become `number | null`, `null` meaning nobody asked.
@@ -219,7 +223,7 @@ export async function getShelf(language: BrowseLanguage = "en") {
     try {
         // Signed in, the counts are this person's and the entry is theirs. Signed out there is
         // nothing of anybody's in the answer, so every visitor shares one.
-        const sets = await (await session())
+        const sets = (await await session())
             ? perUser("sets", `sets:${language}`, async (token) => (await read(token)).sets)
             : sharedRead(`sets:${language}`, async () => (await read()).sets);
         return seriesFromSets(sets);
@@ -273,13 +277,15 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 signed-out page possible at all: today those reads alone bounce a visitor before the page renders.
 
 **Files:**
+
 - Modify: `src/app/(app)/layout.tsx` (the three reads and `SessionGuard`)
 - Test: `src/app/(app)/layout.test.tsx` (create if absent)
 
 **Interfaces:**
+
 - Consumes: `session()` from `src/lib/api.ts`.
 - Produces: `AppSidebar` receives `account: Promise<Account> | null` and `binders:
-  Promise<Binder[]> | null`, `null` meaning nobody is signed in. Task 5 renders that.
+Promise<Binder[]> | null`, `null` meaning nobody is signed in. Task 5 renders that.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -308,24 +314,26 @@ Expected: FAIL, the reads run and `SessionGuard` redirects.
 - [ ] **Step 3: Write the implementation**
 
 ```tsx
-    const mine = await session();
-    // Nobody signed in: there is no profile to draw, no binders to list and no favourites to
-    // count, and asking would be three 401s and a redirect to /login before the page rendered.
-    const me = mine ? getMyProfile() : null;
-    const binderRead = mine ? getMyBinders() : null;
-    const account = me ? me.then(accountFrom, () => NO_ACCOUNT) : null;
-    const binders = binderRead ? binderRead.catch(() => []) : null;
-    const favoritesCount = mine ? getFavoritesCount().catch(() => null) : null;
+const mine = await session();
+// Nobody signed in: there is no profile to draw, no binders to list and no favourites to
+// count, and asking would be three 401s and a redirect to /login before the page rendered.
+const me = mine ? getMyProfile() : null;
+const binderRead = mine ? getMyBinders() : null;
+const account = me ? me.then(accountFrom, () => NO_ACCOUNT) : null;
+const binders = binderRead ? binderRead.catch(() => []) : null;
+const favoritesCount = mine ? getFavoritesCount().catch(() => null) : null;
 ```
 
 and give `SessionGuard` nothing to guard when there is no session:
 
 ```tsx
-    {mine ? (
+{
+    mine ? (
         <Suspense fallback={null}>
             <SessionGuard reads={[me!, binderRead!]} />
         </Suspense>
-    ) : null}
+    ) : null;
+}
 ```
 
 `RememberListQuery` and `WarmLists` both read lists. Check each: anything reading a person's list
@@ -378,11 +386,13 @@ disabled control needs no copy and a working one that cannot finish does. Every 
 therefore leads to the same component, saying what an account adds in that place.
 
 **Files:**
+
 - Modify: `src/components/app/app-sidebar.tsx` (the account card at the foot, the Binders section, `SIDEBAR_ROUTES`)
 - Create: `src/components/app/sign-in-invite.tsx` (the one component both the sidebar and the closed pages use)
 - Test: `src/components/app/sign-in-invite.test.tsx`, `src/components/app/app-sidebar.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `account: Promise<Account> | null`, `binders: Promise<Binder[]> | null` from Task 4.
 - Produces: `<SignInInvite what="binders" />`, which renders one sentence naming what an account
   adds and a link to `/login` carrying the current address as its destination.
@@ -446,6 +456,7 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 ### Task 6: Browse moves to /sets
 
 **Files:**
+
 - Move: `src/app/(app)/dashboard/sets/page.tsx` to `src/app/(app)/sets/page.tsx`
 - Move: `src/app/(app)/dashboard/sets/[id]/page.tsx` to `src/app/(app)/sets/[id]/page.tsx`
 - Create: `src/app/(app)/dashboard/sets/page.tsx` and `[id]/page.tsx` as permanent redirects
@@ -455,6 +466,7 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 - Test: `src/lib/csp.test.ts`, and a new `src/app/sets-address.test.ts`
 
 **Interfaces:**
+
 - Produces: `/sets` and `/sets/[id]`, inside the `(app)` route group, so the layout is unchanged.
   `/dashboard/sets*` answers 308 to the new address.
 
@@ -530,6 +542,7 @@ that way once. `git status` after the move, so a file the rename left behind is 
 ### Task 7: The door, and the way back
 
 **Files:**
+
 - Modify: `src/components/app/public-top-bar.tsx` (a "Browse the sets" link before the pair)
 - Modify: `src/components/marketing/header-section/hero-geometric-shapes-04.tsx` (a second button)
 - Modify: `src/components/app/app-sidebar.tsx` (the logo's destination)
@@ -577,6 +590,7 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 ### Task 8: The crawl that proves what is closed
 
 **Files:**
+
 - Create: `e2e/signed-out.spec.ts`
 - Modify: `e2e/README.md` if one exists, else the e2e section of `STATE.md`
 

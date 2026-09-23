@@ -32,7 +32,7 @@ filed. The spec and both plans live together on purpose; the work does not.
 - Prices stay in the anonymous answer, the current price and the history both. The owner decided
   this on 2026-09-22 knowing it can be harvested.
 - Before opening a branch here: `git fetch`, then `git worktree add .claude/worktrees/<topic> …
-  origin/main` **inside** the api repo. Never `git checkout -b` in the shared checkout, and never
+origin/main` **inside** the api repo. Never `git checkout -b` in the shared checkout, and never
   a `../cardorb-api-x` sibling.
 - There is a stray Finder copy at `src/app/api/v1/folders/[id] 2` in the shared checkout. Delete
   it before running typecheck or it fails for a reason that has nothing to do with this work.
@@ -46,10 +46,12 @@ filed. The spec and both plans live together on purpose; the work does not.
 anonymous reader to the 10-a-minute ceiling meant for someone guessing at a key.
 
 **Files:**
+
 - Modify: `src/lib/api/guard.ts` (add `openRead` limiter and `authoriseOpen`, beside `authorise` at line 165)
 - Test: `src/lib/api/guard.test.ts`
 
 **Interfaces:**
+
 - Consumes: `originAllowed`, `createRateLimiter`, `configured`, `requestViewer`, `carriesCredential`, `REFUSALS`, `retryAfter`, type `Refusal`, type `Viewer`, all already in this file.
 - Produces: `authoriseOpen(req: Request): Promise<Refusal | Viewer | null>`. `null` means nobody is asking and that is allowed. Narrow a non-null result with the existing `refused()`.
 
@@ -59,27 +61,27 @@ Add to `src/lib/api/guard.test.ts`, following the `req({ … })` helper already 
 
 ```ts
 describe("authoriseOpen", () => {
-  it("answers null when no credential is offered", async () => {
-    expect(await authoriseOpen(req({}))).toBeNull();
-  });
+    it("answers null when no credential is offered", async () => {
+        expect(await authoriseOpen(req({}))).toBeNull();
+    });
 
-  it("refuses a credential that does not verify, rather than treating it as nobody", async () => {
-    const answer = await authoriseOpen(req({ bearer: "not-a-real-token" }));
-    expect(answer).not.toBeNull();
-    expect(refused(answer!)).toBe(true);
-    expect((answer as { status: number }).status).toBe(401);
-  });
+    it("refuses a credential that does not verify, rather than treating it as nobody", async () => {
+        const answer = await authoriseOpen(req({ bearer: "not-a-real-token" }));
+        expect(answer).not.toBeNull();
+        expect(refused(answer!)).toBe(true);
+        expect((answer as { status: number }).status).toBe(401);
+    });
 
-  it("answers the viewer when the credential verifies", async () => {
-    const answer = await authoriseOpen(req({ bearer: VALID_TOKEN }));
-    expect(refused(answer!)).toBe(false);
-    expect((answer as { userId: string }).userId).toBe(VIEWER_ID);
-  });
+    it("answers the viewer when the credential verifies", async () => {
+        const answer = await authoriseOpen(req({ bearer: VALID_TOKEN }));
+        expect(refused(answer!)).toBe(false);
+        expect((answer as { userId: string }).userId).toBe(VIEWER_ID);
+    });
 
-  it("still refuses a cross-site origin", async () => {
-    const answer = await authoriseOpen(req({ origin: "https://evil.example" }));
-    expect((answer as { status: number }).status).toBe(403);
-  });
+    it("still refuses a cross-site origin", async () => {
+        const answer = await authoriseOpen(req({ origin: "https://evil.example" }));
+        expect((answer as { status: number }).status).toBe(403);
+    });
 });
 ```
 
@@ -126,26 +128,23 @@ And beside `authorise`:
  * loss and is the worst lie this door could tell.
  */
 export async function authoriseOpen(req: Request): Promise<Refusal | Viewer | null> {
-  if (!originAllowed(req)) return { status: 403, error: "Forbidden" };
+    if (!originAllowed(req)) return { status: 403, error: "Forbidden" };
 
-  const ip =
-    req.headers.get("x-real-ip")?.trim() ||
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    "unknown";
-  const offered = carriesCredential(req);
-  const wait = (offered ? withCredential : openRead)(ip);
-  if (wait) return { ...REFUSALS.tooMany, headers: retryAfter(wait) };
+    const ip = req.headers.get("x-real-ip")?.trim() || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    const offered = carriesCredential(req);
+    const wait = (offered ? withCredential : openRead)(ip);
+    if (wait) return { ...REFUSALS.tooMany, headers: retryAfter(wait) };
 
-  if (!configured()) {
-    console.error("No database is configured: every request will be refused");
-    return { status: 503, error: NO_DATABASE_CONFIGURED };
-  }
+    if (!configured()) {
+        console.error("No database is configured: every request will be refused");
+        return { status: 503, error: NO_DATABASE_CONFIGURED };
+    }
 
-  if (!offered) return null;
+    if (!offered) return null;
 
-  const viewer = await requestViewer(req);
-  if (!viewer) return { ...REFUSALS.signIn };
-  return viewer;
+    const viewer = await requestViewer(req);
+    if (!viewer) return { ...REFUSALS.signIn };
+    return viewer;
 }
 ```
 
@@ -180,10 +179,12 @@ the request's credential, so without a correct `Vary` a shared cache can hand a 
 answer, holdings and all, to a stranger.
 
 **Files:**
+
 - Modify: `src/lib/api/guard.ts` (beside `readHeaders`, line 239)
 - Test: `src/lib/api/guard.test.ts`
 
 **Interfaces:**
+
 - Consumes: `allowed()`, in this file.
 - Produces: `openReadHeaders(req: Request): Record<string, string>`.
 
@@ -191,24 +192,24 @@ answer, holdings and all, to a stranger.
 
 ```ts
 describe("openReadHeaders", () => {
-  it("lets a shared cache hold the answer", () => {
-    expect(openReadHeaders(req({}))["Cache-Control"]).toBe(
-      "public, s-maxage=300, stale-while-revalidate=86400",
-    );
-  });
+    it("lets a shared cache hold the answer", () => {
+        expect(openReadHeaders(req({}))["Cache-Control"]).toBe("public, s-maxage=300, stale-while-revalidate=86400");
+    });
 
-  it("varies on everything that changes the answer", () => {
-    const vary = openReadHeaders(req({}))["Vary"].split(",").map((v) => v.trim());
-    expect(vary).toContain("Origin");
-    expect(vary).toContain("Authorization");
-    expect(vary).toContain("Cookie");
-  });
+    it("varies on everything that changes the answer", () => {
+        const vary = openReadHeaders(req({}))
+            ["Vary"].split(",")
+            .map((v) => v.trim());
+        expect(vary).toContain("Origin");
+        expect(vary).toContain("Authorization");
+        expect(vary).toContain("Cookie");
+    });
 
-  it("still names an allowed origin", () => {
-    process.env.ALLOWED_ORIGINS = "https://cardorb.com";
-    const h = openReadHeaders(req({ origin: "https://cardorb.com" }));
-    expect(h["Access-Control-Allow-Origin"]).toBe("https://cardorb.com");
-  });
+    it("still names an allowed origin", () => {
+        process.env.ALLOWED_ORIGINS = "https://cardorb.com";
+        const h = openReadHeaders(req({ origin: "https://cardorb.com" }));
+        expect(h["Access-Control-Allow-Origin"]).toBe("https://cardorb.com");
+    });
 });
 ```
 
@@ -234,14 +235,12 @@ Expected: FAIL, `openReadHeaders is not a function`.
  * above, as in readHeaders().
  */
 export function openReadHeaders(req: Request): Record<string, string> {
-  const origin = req.headers.get("origin");
-  return {
-    ...(origin && allowed().includes(origin)
-      ? { "Access-Control-Allow-Origin": origin, "Access-Control-Allow-Credentials": "true" }
-      : {}),
-    Vary: "Origin, Authorization, Cookie",
-    "Cache-Control": "public, s-maxage=300, stale-while-revalidate=86400",
-  };
+    const origin = req.headers.get("origin");
+    return {
+        ...(origin && allowed().includes(origin) ? { "Access-Control-Allow-Origin": origin, "Access-Control-Allow-Credentials": "true" } : {}),
+        Vary: "Origin, Authorization, Cookie",
+        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=86400",
+    };
 }
 ```
 
@@ -268,10 +267,12 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 ### Task 3: GET /catalog/sets answers a stranger
 
 **Files:**
+
 - Modify: `src/app/api/v1/catalog/sets/route.ts` (the `authorise` call at line 37, the `getRows` read, the `ownershipIndex` join, and every `readHeaders` in the success path)
 - Test: `src/app/api/v1/catalog/sets/route.test.ts`
 
 **Interfaces:**
+
 - Consumes: `authoriseOpen`, `openReadHeaders` from Task 1 and Task 2.
 - Produces: the same answer shape, with each set's `ownedCount` **absent** when nobody is asking. `failed` is absent too: nothing was read, so nothing failed.
 
@@ -281,30 +282,30 @@ The existing file mocks `@/lib/api/guard`. Extend that mock with the two new nam
 
 ```ts
 describe("without a credential", () => {
-  beforeEach(() => {
-    authoriseOpen.mockResolvedValue(null);
-    listSets.mockResolvedValue([SET]);
-  });
+    beforeEach(() => {
+        authoriseOpen.mockResolvedValue(null);
+        listSets.mockResolvedValue([SET]);
+    });
 
-  it("answers the shelf", async () => {
-    const res = await GET(new Request("https://api.test/api/v1/catalog/sets"));
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body.sets).toHaveLength(1);
-    expect(body.sets[0].id).toBe("base1");
-  });
+    it("answers the shelf", async () => {
+        const res = await GET(new Request("https://api.test/api/v1/catalog/sets"));
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.sets).toHaveLength(1);
+        expect(body.sets[0].id).toBe("base1");
+    });
 
-  it("leaves the holdings out rather than answering zero", async () => {
-    const res = await GET(new Request("https://api.test/api/v1/catalog/sets"));
-    const body = await res.json();
-    expect(body.sets[0]).not.toHaveProperty("ownedCount");
-    expect(body).not.toHaveProperty("failed");
-  });
+    it("leaves the holdings out rather than answering zero", async () => {
+        const res = await GET(new Request("https://api.test/api/v1/catalog/sets"));
+        const body = await res.json();
+        expect(body.sets[0]).not.toHaveProperty("ownedCount");
+        expect(body).not.toHaveProperty("failed");
+    });
 
-  it("never reads the collection", async () => {
-    await GET(new Request("https://api.test/api/v1/catalog/sets"));
-    expect(getRows).not.toHaveBeenCalled();
-  });
+    it("never reads the collection", async () => {
+        await GET(new Request("https://api.test/api/v1/catalog/sets"));
+        expect(getRows).not.toHaveBeenCalled();
+    });
 });
 ```
 
@@ -321,26 +322,22 @@ Expected: FAIL. The new block fails; the existing blocks still pass.
 Replace the guard at the top of `GET` with:
 
 ```ts
-  const who = await authoriseOpen(req);
-  if (who && refused(who)) {
+const who = await authoriseOpen(req);
+if (who && refused(who)) {
     return apiError(who.status, who.error, undefined, {
-      headers: { ...readHeaders(req), ...who.headers },
+        headers: { ...readHeaders(req), ...who.headers },
     });
-  }
-  // Nobody asking is allowed here: the shelf minus the counts is the catalogue,
-  // and the catalogue is nobody's secret (the app without an account).
-  const headers = who ? readHeaders(req) : openReadHeaders(req);
+}
+// Nobody asking is allowed here: the shelf minus the counts is the catalogue,
+// and the catalogue is nobody's secret (the app without an account).
+const headers = who ? readHeaders(req) : openReadHeaders(req);
 ```
 
 Then make the rows read conditional, and the join with it:
 
 ```ts
-  const { rows, failed } = who
-    ? await timed("shelf rows", () => getRows(who.userId, bearer(req) ?? undefined))
-    : { rows: [], failed: false };
-  const index = who
-    ? ownershipIndex(rows, isBrowseLanguage(language) ? language : null, sets)
-    : null;
+const { rows, failed } = who ? await timed("shelf rows", () => getRows(who.userId, bearer(req) ?? undefined)) : { rows: [], failed: false };
+const index = who ? ownershipIndex(rows, isBrowseLanguage(language) ? language : null, sets) : null;
 ```
 
 Where each set is built, add the count only when there is an index, so the field is absent
@@ -378,10 +375,12 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 ### Task 4: GET /catalog/sets/[setId] answers a stranger
 
 **Files:**
+
 - Modify: `src/app/api/v1/catalog/sets/[setId]/route.ts` (the guard, the `rowsRead` at line 88, the `ownershipIndex` at 148, the `who.userId` use at 204, the `ownedCount` at 250, and the success-path headers)
 - Test: `src/app/api/v1/catalog/sets/[setId]/route.test.ts`
 
 **Interfaces:**
+
 - Consumes: `authoriseOpen`, `openReadHeaders`.
 - Produces: the same answer, with the top-level `ownedCount` absent and each card's ownership
   marks absent. `set`, `cards`, `totalCount`, `hasMore` and every price are unchanged.
@@ -390,35 +389,35 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 
 ```ts
 describe("without a credential", () => {
-  beforeEach(() => authoriseOpen.mockResolvedValue(null));
+    beforeEach(() => authoriseOpen.mockResolvedValue(null));
 
-  it("answers the set and its cards", async () => {
-    const res = await GET(new Request("https://api.test/api/v1/catalog/sets/base1"), {
-      params: Promise.resolve({ setId: "base1" }),
+    it("answers the set and its cards", async () => {
+        const res = await GET(new Request("https://api.test/api/v1/catalog/sets/base1"), {
+            params: Promise.resolve({ setId: "base1" }),
+        });
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.set.id).toBe("base1");
+        expect(body.cards.length).toBeGreaterThan(0);
     });
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body.set.id).toBe("base1");
-    expect(body.cards.length).toBeGreaterThan(0);
-  });
 
-  it("keeps the prices, which are catalogue facts", async () => {
-    const res = await GET(new Request("https://api.test/api/v1/catalog/sets/base1"), {
-      params: Promise.resolve({ setId: "base1" }),
+    it("keeps the prices, which are catalogue facts", async () => {
+        const res = await GET(new Request("https://api.test/api/v1/catalog/sets/base1"), {
+            params: Promise.resolve({ setId: "base1" }),
+        });
+        const body = await res.json();
+        expect(body.cards[0]).toHaveProperty("price");
     });
-    const body = await res.json();
-    expect(body.cards[0]).toHaveProperty("price");
-  });
 
-  it("leaves every ownership mark out", async () => {
-    const res = await GET(new Request("https://api.test/api/v1/catalog/sets/base1"), {
-      params: Promise.resolve({ setId: "base1" }),
+    it("leaves every ownership mark out", async () => {
+        const res = await GET(new Request("https://api.test/api/v1/catalog/sets/base1"), {
+            params: Promise.resolve({ setId: "base1" }),
+        });
+        const body = await res.json();
+        expect(body).not.toHaveProperty("ownedCount");
+        expect(body.cards[0]).not.toHaveProperty("owned");
+        expect(getRows).not.toHaveBeenCalled();
     });
-    const body = await res.json();
-    expect(body).not.toHaveProperty("ownedCount");
-    expect(body.cards[0]).not.toHaveProperty("owned");
-    expect(getRows).not.toHaveBeenCalled();
-  });
 });
 ```
 
@@ -435,14 +434,14 @@ Expected: FAIL on the new block.
 Same three moves as Task 3, in this file's own terms:
 
 ```ts
-  const who = await authoriseOpen(req);
-  if (who && refused(who)) {
+const who = await authoriseOpen(req);
+if (who && refused(who)) {
     return apiError(who.status, who.error, undefined, {
-      headers: { ...readHeaders(req), ...who.headers },
+        headers: { ...readHeaders(req), ...who.headers },
     });
-  }
-  const headers = who ? readHeaders(req) : openReadHeaders(req);
-  const rowsRead = who ? getRows(who.userId, bearer(req) ?? undefined) : null;
+}
+const headers = who ? readHeaders(req) : openReadHeaders(req);
+const rowsRead = who ? getRows(who.userId, bearer(req) ?? undefined) : null;
 ```
 
 Guard every later use. `markOwnership` is skipped entirely when `rowsRead` is null, so the cards
@@ -473,12 +472,14 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 ### Task 5: GET /catalog/search answers a stranger, and the reference says so
 
 **Files:**
+
 - Modify: `src/app/api/v1/catalog/search/route.ts` (the guard at line 68, the `getRows` at 125, the ownership join, the success-path headers)
 - Modify: the API reference page that documents these three routes (find it with `grep -rln "catalog/sets" src/app --include=*.tsx`)
 - Modify: `CHANGELOG.md` if the repo keeps one at its root
 - Test: `src/app/api/v1/catalog/search/route.test.ts`
 
 **Interfaces:**
+
 - Consumes: `authoriseOpen`, `openReadHeaders`.
 - Produces: results without `owned`, `wishlist` or `quantity` when nobody is asking.
 
@@ -486,18 +487,18 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 
 ```ts
 describe("without a credential", () => {
-  beforeEach(() => authoriseOpen.mockResolvedValue(null));
+    beforeEach(() => authoriseOpen.mockResolvedValue(null));
 
-  it("answers hits with no marks on them", async () => {
-    const res = await GET(new Request("https://api.test/api/v1/catalog/search?q=pikachu"));
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body.cards.length).toBeGreaterThan(0);
-    expect(body.cards[0]).not.toHaveProperty("owned");
-    expect(body.cards[0]).not.toHaveProperty("wishlist");
-    expect(body.cards[0]).not.toHaveProperty("quantity");
-    expect(getRows).not.toHaveBeenCalled();
-  });
+    it("answers hits with no marks on them", async () => {
+        const res = await GET(new Request("https://api.test/api/v1/catalog/search?q=pikachu"));
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.cards.length).toBeGreaterThan(0);
+        expect(body.cards[0]).not.toHaveProperty("owned");
+        expect(body.cards[0]).not.toHaveProperty("wishlist");
+        expect(body.cards[0]).not.toHaveProperty("quantity");
+        expect(getRows).not.toHaveBeenCalled();
+    });
 });
 ```
 
@@ -546,7 +547,8 @@ with no Authorization header gets through. That has to be read once, live.
 ```bash
 curl -s -o /dev/null -w '%{http_code} %header{cache-control}\n' http://localhost:3000/api/v1/catalog/sets
 curl -s http://localhost:3000/api/v1/catalog/sets | head -c 400
-curl -s -H 'authorization: Bearer not-a-real-token' -o /dev/null -w '%{http_code}\n' http://localhost:3000/api/v1/catalog/sets
+WRONG=not-a-real-token
+curl -s -H "authorization: Bearer $WRONG" -o /dev/null -w '%{http_code}\n' http://localhost:3000/api/v1/catalog/sets
 ```
 
 Expected, in order: `200 public, s-maxage=300, stale-while-revalidate=86400`; a body whose first
