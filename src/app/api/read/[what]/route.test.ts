@@ -105,6 +105,19 @@ describe("GET /api/read/[what]", () => {
         expect(session).not.toHaveBeenCalled();
     });
 
+    /* Search is open, the owner's first word on it, and the palette leans on four reads for it:
+       the hits, the shelf behind its Set chip, the counts beside Browse's filters, a series'
+       logo on the sheet. Each is the catalogue alone. A visitor got a 401 for all four. */
+    it("answers a search and the shelf's reads without a session", async () => {
+        session.mockResolvedValue(null);
+        searchPokemon.mockResolvedValue({ items: [], total: 0 });
+        listSetsShelf.mockResolvedValue({ series: [], unavailable: false });
+        expect((await get("sets-shelf")).status).toBe(200);
+        expect(listSetsShelf).toHaveBeenCalled();
+        expect((await get("series-logo", "?series=Base")).status).not.toBe(401);
+        expect(session).not.toHaveBeenCalled();
+    });
+
     it("is a 401 without a session for a read about the reader, and reads nothing", async () => {
         session.mockResolvedValue(null);
         expect((await get("rows", "?name=Charizard&set=Base&number=4")).status).toBe(401);
@@ -196,9 +209,12 @@ describe("GET /api/read/[what], the list and search reads", () => {
         expect(countShelf).toHaveBeenLastCalledWith({ language: "en", progress: "all", series: [], year: [] });
     });
 
-    it("is a 401 without a session for these too", async () => {
+    // It used to be a 401: search was behind the wall with the rest. The owner opened it on
+    // 2026-09-22, so a visitor's query is answered, and without marks (the route decides that).
+    it("answers a search without a session", async () => {
         session.mockResolvedValue(null);
-        expect((await get("catalogue", input({ q: "charizard", page: 1 }))).status).toBe(401);
-        expect(searchPokemon).not.toHaveBeenCalled();
+        searchPokemon.mockResolvedValue({ items: [], total: 0 });
+        expect((await get("catalogue", input({ q: "charizard", page: 1 }))).status).toBe(200);
+        expect(searchPokemon).toHaveBeenCalled();
     });
 });
