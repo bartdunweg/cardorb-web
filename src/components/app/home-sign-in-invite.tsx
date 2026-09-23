@@ -2,7 +2,9 @@
 
 import type { ReactNode } from "react";
 import { LinkButton } from "@/components/app/link-button";
+import { MoverList } from "@/components/app/movers";
 import { useReturnHrefs } from "@/components/app/sign-in-invite";
+import type { Mover } from "@/lib/api-shapes";
 import { TILE_SURFACE } from "@/lib/tile";
 import { cx } from "@/utils/cx";
 
@@ -34,7 +36,7 @@ import { cx } from "@/utils/cx";
  * be read, copied or spoken. Quicken's signed-out dashboard is the pattern (Mobbin), and Origin's,
  * where a sample figure stays legible through the blur, is the one not to copy.
  */
-export function HomeSignInInvite() {
+export function HomeSignInInvite({ market = null }: { market?: { up: Mover[]; down: Mover[] } | null }) {
     return (
         <div className="flex flex-1 arrive flex-col gap-8">
             {/* First, before anything it describes: a stranger should know at once what this page is
@@ -46,12 +48,25 @@ export function HomeSignInInvite() {
             {/* The most room of the three: the owner called the movers the strongest thing we can
                 show of a collection, so they get the shape they really have, two tiles side by side
                 from sm, each holding its own heading and nothing else. */}
-            <Place heading="Biggest movers" line="The cards that rose and fell most, so you know what moved without checking each one">
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-                    <Frame className="h-44 sm:h-56" title="Up" />
-                    <Frame className="h-44 sm:h-56" title="Down" />
-                </div>
-            </Place>
+            {market ? (
+                /* Real data, and the owner's idea: not a picture of a collection nobody has, but the
+                   week's biggest moves across every card, which anybody may see. The same list a
+                   reader's own movers draw in, so the two read as one thing; the rows are text,
+                   since opening a card from here would read the reader's own rows. */
+                <Place heading="Biggest movers this week" line="The cards whose price moved most in the last 7 days, across every card there is">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+                        <MoverList title="Up" movers={market.up} empty="Nothing rose this week." href={null} linkLabel="" />
+                        <MoverList title="Down" movers={market.down} empty="Nothing fell this week." href={null} linkLabel="" />
+                    </div>
+                </Place>
+            ) : (
+                <Place heading="Biggest movers" line="The cards that rose and fell most, so you know what moved without checking each one">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+                        <Frame className="h-44 sm:h-56" title="Up" />
+                        <Frame className="h-44 sm:h-56" title="Down" />
+                    </div>
+                </Place>
+            )}
         </div>
     );
 }

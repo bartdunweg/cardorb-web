@@ -9,6 +9,7 @@ import { HomeBodyOutline } from "@/components/app/skeletons";
 import { YouLink } from "@/components/app/you-link";
 import { session } from "@/lib/api";
 import { askedList } from "@/lib/home-list";
+import { getMarketMovers } from "@/lib/market-movers";
 
 // The tab's name, which the root layout's template finishes as “… · Cardorb”: without it every
 // tab and every history entry read “Cardorb”. The word is the one the navigation uses for this page.
@@ -39,12 +40,15 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
        visitor would get Home as an error page where an invitation belonged. */
     const mine = await session();
     if (!mine) {
+        // The market's movers are the one real thing a visitor's Home can show: every card's price
+        // is public, so the week's biggest moves across the catalogue are nobody's to hide.
+        const market = await getMarketMovers();
         return (
             <div className="flex flex-1 flex-col gap-6">
                 {/* The page's own name, and none of the parts that need a read: no list to choose
                     between, and no picture of a person to link to. */}
                 <PageHeader title="Home" />
-                <HomeSignInInvite />
+                <HomeSignInInvite market={market} />
             </div>
         );
     }

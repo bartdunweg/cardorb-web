@@ -189,7 +189,7 @@ export function Movers({ list = "all", seeAll = true }: { list?: HomeList; seeAl
 /** A mover's printing and state in the words every list uses; null where the API said nothing. */
 const moverLine = (m: Mover) => copyLine({ finish: m.finish, foil_pattern: m.foilPattern, edition: m.edition, condition: m.condition, grade: m.grade });
 
-function MoverList({
+export function MoverList({
     title,
     movers,
     empty,
@@ -200,7 +200,12 @@ function MoverList({
     title: string;
     movers: Mover[];
     empty: string;
-    onOpen: (index: number) => void;
+    /**
+     * Left out, the rows are text and not buttons: the market's movers on a visitor's Home, where
+     * opening a card would read the reader's own rows. A row that looks pressable and does nothing
+     * is worse than one that plainly is not.
+     */
+    onOpen?: (index: number) => void;
     /** Null where the list's page cannot show them sorted (a Pokédex binder). */
     href: string | null;
     /** The link's words for a screen reader; on screen it says See all under its tile's heading. */
@@ -228,42 +233,77 @@ function MoverList({
                         <li key={m.tcgId}>
                             {/* The whole row opens the card. It reaches past the tile's padding by 8 px so the
                                 hover tint has room around the picture and the numbers. */}
-                            <AriaButton
-                                onPress={() => onOpen(i)}
-                                aria-label={`${m.name}, ${m.set}: ${m.total > 0 ? "up" : "down"} ${formatPrice(Math.abs(m.total))}`}
-                                className="-mx-2 flex w-[calc(100%+1rem)] pressable cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 text-left outline-focus-ring hover:bg-alpha-black/4 data-focus-visible:outline-2"
-                            >
-                                <div className="relative aspect-card w-9 shrink-0 overflow-hidden rounded-sm bg-quaternary">
-                                    {m.image ? <CardImage src={m.image} alt="" width={72} className="object-cover" /> : null}
-                                </div>
-                                <div className="flex min-w-0 flex-1 flex-col">
-                                    <span className="truncate text-sm font-medium text-primary">{m.name}</span>
-                                    <span className="truncate text-xs text-tertiary">
-                                        {/* The code and number printed on the card and its rarity, as the lists show them (card-label.ts). */}
-                                        {cardLine({
-                                            set_name: m.set,
-                                            set_abbr: m.setAbbr ?? null,
-                                            number: m.number,
-                                            printed_number: m.printedNumber ?? null,
-                                            rarity: m.rarity,
-                                        })}
-                                        {m.copies > 1 ? ` · ×${m.copies}` : ""}
-                                    </span>
-                                    {/* The second line every list has: the printing and the state, "Holo · Near Mint"
+                            {onOpen ? (
+                                <AriaButton
+                                    onPress={() => onOpen(i)}
+                                    aria-label={`${m.name}, ${m.set}: ${m.total > 0 ? "up" : "down"} ${formatPrice(Math.abs(m.total))}`}
+                                    className="-mx-2 flex w-[calc(100%+1rem)] pressable cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 text-left outline-focus-ring hover:bg-alpha-black/4 data-focus-visible:outline-2"
+                                >
+                                    <div className="relative aspect-card w-9 shrink-0 overflow-hidden rounded-sm bg-quaternary">
+                                        {m.image ? <CardImage src={m.image} alt="" width={72} className="object-cover" /> : null}
+                                    </div>
+                                    <div className="flex min-w-0 flex-1 flex-col">
+                                        <span className="truncate text-sm font-medium text-primary">{m.name}</span>
+                                        <span className="truncate text-xs text-tertiary">
+                                            {/* The code and number printed on the card and its rarity, as the lists show them (card-label.ts). */}
+                                            {cardLine({
+                                                set_name: m.set,
+                                                set_abbr: m.setAbbr ?? null,
+                                                number: m.number,
+                                                printed_number: m.printedNumber ?? null,
+                                                rarity: m.rarity,
+                                            })}
+                                            {m.copies > 1 ? ` · ×${m.copies}` : ""}
+                                        </span>
+                                        {/* The second line every list has: the printing and the state, "Holo · Near Mint"
                                         (copyLine). A mover is a card, so the API says it only where every copy held
                                         answers the same (cardorb-api#516); where they differ there is no line. */}
-                                    {moverLine(m) ? <span className="truncate text-xs text-tertiary">{moverLine(m)}</span> : null}
-                                </div>
-                                {/* The price now large, and what it did under it, small: the card's price is
+                                        {moverLine(m) ? <span className="truncate text-xs text-tertiary">{moverLine(m)}</span> : null}
+                                    </div>
+                                    {/* The price now large, and what it did under it, small: the card's price is
                                     what you look for, the move is why it is on the list (Bart, 2026-09-15). */}
-                                <div className="flex shrink-0 flex-col items-end">
-                                    <span className="text-sm font-medium text-primary tabular-nums">{formatPrice(m.now)}</span>
-                                    <span className={cx("text-xs font-medium tabular-nums", m.total > 0 ? "text-success-primary" : "text-error-primary")}>
-                                        {m.total > 0 ? "+" : "−"}
-                                        {formatPrice(Math.abs(m.total))}
-                                    </span>
+                                    <div className="flex shrink-0 flex-col items-end">
+                                        <span className="text-sm font-medium text-primary tabular-nums">{formatPrice(m.now)}</span>
+                                        <span className={cx("text-xs font-medium tabular-nums", m.total > 0 ? "text-success-primary" : "text-error-primary")}>
+                                            {m.total > 0 ? "+" : "−"}
+                                            {formatPrice(Math.abs(m.total))}
+                                        </span>
+                                    </div>
+                                </AriaButton>
+                            ) : (
+                                <div className="flex items-center gap-3 py-1.5">
+                                    <div className="relative aspect-card w-9 shrink-0 overflow-hidden rounded-sm bg-quaternary">
+                                        {m.image ? <CardImage src={m.image} alt="" width={72} className="object-cover" /> : null}
+                                    </div>
+                                    <div className="flex min-w-0 flex-1 flex-col">
+                                        <span className="truncate text-sm font-medium text-primary">{m.name}</span>
+                                        <span className="truncate text-xs text-tertiary">
+                                            {/* The code and number printed on the card and its rarity, as the lists show them (card-label.ts). */}
+                                            {cardLine({
+                                                set_name: m.set,
+                                                set_abbr: m.setAbbr ?? null,
+                                                number: m.number,
+                                                printed_number: m.printedNumber ?? null,
+                                                rarity: m.rarity,
+                                            })}
+                                            {m.copies > 1 ? ` · ×${m.copies}` : ""}
+                                        </span>
+                                        {/* The second line every list has: the printing and the state, "Holo · Near Mint"
+                                        (copyLine). A mover is a card, so the API says it only where every copy held
+                                        answers the same (cardorb-api#516); where they differ there is no line. */}
+                                        {moverLine(m) ? <span className="truncate text-xs text-tertiary">{moverLine(m)}</span> : null}
+                                    </div>
+                                    {/* The price now large, and what it did under it, small: the card's price is
+                                    what you look for, the move is why it is on the list (Bart, 2026-09-15). */}
+                                    <div className="flex shrink-0 flex-col items-end">
+                                        <span className="text-sm font-medium text-primary tabular-nums">{formatPrice(m.now)}</span>
+                                        <span className={cx("text-xs font-medium tabular-nums", m.total > 0 ? "text-success-primary" : "text-error-primary")}>
+                                            {m.total > 0 ? "+" : "−"}
+                                            {formatPrice(Math.abs(m.total))}
+                                        </span>
+                                    </div>
                                 </div>
-                            </AriaButton>
+                            )}
                         </li>
                     ))}
                 </ol>

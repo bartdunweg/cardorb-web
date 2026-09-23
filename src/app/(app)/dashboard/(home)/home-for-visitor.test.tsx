@@ -21,6 +21,10 @@ const reads = vi.hoisted(() => ({
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/dashboard" }));
 vi.mock("@/lib/api", () => ({ session: reads.session }));
+/* The market's movers: real prices, and nobody's, so they may carry figures where the picture above
+   them may not. Null by default, which is the page when the API could not answer. */
+const market = vi.hoisted(() => ({ current: null as null | { up: unknown[]; down: unknown[] } }));
+vi.mock("@/lib/market-movers", () => ({ getMarketMovers: async () => market.current }));
 vi.mock("@/lib/cards", () => ({ getCardStats: reads.getCardStats, getMyCards: reads.getMyCards }));
 vi.mock("@/lib/binders", () => ({ getMyBinders: reads.getMyBinders, isPokedexBinder: vi.fn() }));
 vi.mock("@/lib/profile", () => ({ getMyProfile: reads.getMyProfile, accountFrom: vi.fn() }));
@@ -73,7 +77,40 @@ describe("Home, for somebody with no account", () => {
         expect(drawn.length).toBeGreaterThan(0);
         for (const el of drawn) expect(el.closest("[aria-hidden='true']"), "a drawing outside the hidden decoration").not.toBeNull();
         for (const decoration of container.querySelectorAll("[aria-hidden='true']")) expect(decoration.textContent?.trim()).toBe("");
-        expect(container.textContent).not.toMatch(/[€$]|\d/);
+        // The value and its line say no figure: nothing of a collection nobody has.
+        const preview = [...container.querySelectorAll("section, div")].find((el) => el.textContent?.startsWith("Total value"));
+        expect(preview?.textContent).not.toMatch(/[€$]|\d/);
+    });
+
+    /* The owner's idea: the week's biggest moves across every card, real and nobody's, in the place a
+       reader sees their own. The rows are text, since opening one would read the reader's rows. */
+    it("shows the market's movers with their real prices, as rows that are not buttons", async () => {
+        const move = (name: string, now: number, change: number) => ({
+            tcgId: `x-${name}`,
+            name,
+            number: "4",
+            set: "Base Set",
+            setAbbr: null,
+            printedNumber: "4",
+            rarity: null,
+            image: null,
+            copies: 1,
+            was: now - change,
+            now,
+            change,
+            pct: change / (now - change),
+            total: change,
+            from: "2026-09-16",
+            to: "2026-09-23",
+        });
+        market.current = { up: [move("Charizard", 823.98, 90.51)], down: [move("Blastoise", 200.38, -12)] };
+        await drawHome();
+        expect(screen.getByRole("heading", { name: "Biggest movers this week" })).toBeInTheDocument();
+        expect(screen.getByText("Charizard")).toBeInTheDocument();
+        expect(screen.getByText("Blastoise")).toBeInTheDocument();
+        expect(screen.getByText(/823\.98/)).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /Charizard/ })).not.toBeInTheDocument();
+        market.current = null;
     });
 
     it("reads nothing of a person's, so nothing is asked of an API that would refuse", async () => {
