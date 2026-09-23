@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AppSidebar } from "@/components/app/app-sidebar";
 import { CommandSearchProvider } from "@/components/app/command-search";
+import { KeptPressNotice } from "@/components/app/kept-press-notice";
 import { MobileTabBar } from "@/components/app/mobile-nav";
 import { PageTransition } from "@/components/app/page-transition";
 import { RoutePendingProvider } from "@/components/app/route-pending";
@@ -96,6 +97,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                     the body). Out here it shares the body's stacking context with them and sonner's
                     own z-index puts it on top, whether the dialog that caused it closes or stays. */}
                     <Toasts />
+                    {/* What a visitor's press kept across signing in came to, said once on the page
+                    they land on (kept-press-notice.tsx). Home and every set page sit in this frame. */}
+                    <KeptPressNotice />
                     <RouteProgress />
                     {/* The lists a tab leads to, read while this page is being read (warm-lists.tsx).
                     Only for somebody who has them: each of the three is that person's own list, so
