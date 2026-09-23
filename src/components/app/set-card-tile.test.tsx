@@ -24,7 +24,7 @@ vi.mock("@/lib/reads", () => ({
 }));
 vi.mock("@/components/app/card-memo", () => ({ warmCard: vi.fn() }));
 const refresh = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }), usePathname: () => "/sets/me03" }));
 vi.mock("@/components/app/toast", () => ({ notify: { done: vi.fn(), removed: vi.fn(), failed: vi.fn(), dismiss: vi.fn() } }));
 vi.stubGlobal("matchMedia", () => ({ matches: true, addEventListener() {}, removeEventListener() {} }));
 vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 204 })));
@@ -101,19 +101,33 @@ describe("SetCardTile's Undo after an add", () => {
 
 /*
  * A card of a set read without an account carries no holding: the API was never asked what this
- * person holds. The tile then says nothing about a collection, rather than an empty heart and a
- * plus that read as "you have not got this one".
+ * person holds. The tile claims nothing about a collection, so no mark and no count; the heart and
+ * the plus stay, as links to sign in carrying the page, because hiding them empties the app and
+ * hides the reason to make an account (Bart, 2026-09-22).
  */
 describe("SetCardTile for a reader nobody was asked about", () => {
-    it("shows no mark, no count and no buttons", () => {
+    it("claims no mark and no count, and offers two ways in", async () => {
+        const { addCard } = await import("@/app/(app)/dashboard/cards/actions");
+        vi.mocked(addCard).mockClear();
         render(<SetCardTile card={{ ...card, holding: null }} />);
         expect(screen.getByRole("button", { name: "Spinarak #001" })).toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: /wishlist/ })).toBeNull();
-        expect(screen.queryByRole("button", { name: /collection/ })).toBeNull();
         expect(screen.queryByText(/You hold/)).toBeNull();
         expect(screen.queryByText(/^×/)).toBeNull();
         // The card itself is all there: its name, its number and its price.
         expect(screen.getByText("Spinarak")).toBeInTheDocument();
+
+        // Links, not buttons: a press navigates, and carries the page it was pressed on.
+        const wish = screen.getByRole("link", { name: "Sign in to put Spinarak #001 on your wishlist" });
+        const collect = screen.getByRole("link", { name: "Sign in to add Spinarak #001 to your collection" });
+        for (const control of [wish, collect]) {
+            expect(control).toHaveAttribute("href", "/login?next=%2Fsets%2Fme03");
+            expect(control).not.toHaveAttribute("aria-pressed");
+        }
+        // Nothing here writes, and no press could reach a write.
+        expect(screen.queryByRole("button", { name: /wishlist/ })).toBeNull();
+        expect(screen.queryByRole("button", { name: /collection$/ })).toBeNull();
+        await act(async () => fireEvent.click(collect));
+        expect(addCard).not.toHaveBeenCalled();
     });
 });
 

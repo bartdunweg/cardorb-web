@@ -11,6 +11,7 @@ import { CardPrice } from "@/components/app/card-price";
 import { GotItButton } from "@/components/app/got-it-button";
 import { PriceMove } from "@/components/app/price-change";
 import { editionLabel, printingLabel } from "@/components/app/printing-choices";
+import { useReturnHrefs } from "@/components/app/sign-in-invite";
 import { TileIconButton } from "@/components/app/tile-icon-button";
 import { useCopySteps } from "@/components/app/use-copy-steps";
 import { useWarm } from "@/components/app/use-warm";
@@ -73,10 +74,13 @@ export function SetCardTile({
     const warm = useWarm(onOpen ? () => warmCard(card.tcgId, language) : undefined);
 
     /* Null where nobody was asked what is held, which is every card of a set read without an
-       account. The tile then says nothing about a collection: no mark on the picture, no count
-       beside the price and no buttons, because an empty heart reads as "you have not wished for
-       this" and that is an answer we do not have. */
+       account. The tile then claims nothing about a collection: no mark on the picture and no
+       count beside the price, because an empty heart reads as "you have not wished for this" and
+       that is an answer we do not have. The two controls stay (Bart, 2026-09-22: nothing hidden,
+       nothing greyed out); they are links to sign in, and their names say so. */
     const holding = base.holding;
+    // The way in, carrying the page this tile is on, written the one way it is written anywhere.
+    const { signIn } = useReturnHrefs();
     const oneRow = holding?.itemIds.length === 1;
     const {
         held,
@@ -222,6 +226,24 @@ export function SetCardTile({
                                 label={`Remove ${card.name} #${card.printedNumber ?? card.number} from your wishlist`}
                                 onPress={() => pressWish(false)}
                             />
+                        ) : null}
+                        {/* Nobody was asked what this reader holds, so neither control can write. They stay
+                        where they are and stay pressable, and each says what its press does: sign in,
+                        and this card is what you came for. The name is the whole sentence, because the
+                        icon says nothing to a screen reader and the colour says nothing at all. */}
+                        {state === "unasked" ? (
+                            <>
+                                <TileIconButton
+                                    icon={Heart}
+                                    href={signIn}
+                                    label={`Sign in to put ${card.name} #${card.printedNumber ?? card.number} on your wishlist`}
+                                />
+                                <TileIconButton
+                                    icon={Plus}
+                                    href={signIn}
+                                    label={`Sign in to add ${card.name} #${card.printedNumber ?? card.number} to your collection`}
+                                />
+                            </>
                         ) : null}
                         {state === "missing" ? (
                             <>
