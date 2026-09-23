@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { RECOVERY_COOKIE } from "@/lib/auth-redirect";
+import { applyKeptPress } from "@/lib/kept-press-apply";
 import { safeReturn } from "@/lib/return-to";
 import { createClient } from "@/lib/supabase/server";
 import { usernameFromEmail } from "@/lib/username";
@@ -18,14 +19,30 @@ function parseCredentials(formData: FormData) {
     });
 }
 
+/**
+ * Carry a visitor's kept press through, and never let that stand in the way of signing in.
+ *
+ * A press that fails to carry is told on the page they land on (kept-press-apply.ts). One that
+ * throws is logged and dropped: the person asked to sign in, and they are signed in.
+ */
+async function carryKeptPress(session: { access_token: string; user: { id: string } } | null | undefined) {
+    if (!session) return;
+    try {
+        await applyKeptPress({ token: session.access_token, userId: session.user.id, forget: true });
+    } catch (err) {
+        console.error("A kept press could not be carried through:", err instanceof Error ? err.message : err);
+    }
+}
+
 export async function signIn(_prev: AuthState, formData: FormData): Promise<AuthState> {
     // No floor on the length here: an account made before the floor rose still signs in.
     const parsed = signInSchema.safeParse({ email: formData.get("email"), password: formData.get("password") });
     if (!parsed.success) return { error: parsed.error.issues[0].message };
 
     const supabase = await createClient();
-    const { error } = await supabase.auth.signInWithPassword(parsed.data);
+    const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
     if (error) return { error: error.message };
+    await carryKeptPress(data.session);
 
     // Back where the invitation found them, where one sent them here. Read against the rule a
     // second time: the value went out to the browser and came back in a form, so by now it is a
@@ -55,13 +72,19 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
     // so the password they typed may well be the account's own: try it, and they are in. If it is
     // not, the form says the account is there and points to signing in or a new password.
     if (data.user && data.user.identities?.length === 0) {
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-        if (!signInError) redirect(safeReturn(formData.get("next")) ?? "/dashboard");
+        const { data: signedIn, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (!signInError) {
+            await carryKeptPress(signedIn.session);
+            redirect(safeReturn(formData.get("next")) ?? "/dashboard");
+        }
         return { existing: true };
     }
 
     // Email confirmation off → a session is returned, so go straight in.
-    if (data.session) redirect(safeReturn(formData.get("next")) ?? "/dashboard");
+    if (data.session) {
+        await carryKeptPress(data.session);
+        redirect(safeReturn(formData.get("next")) ?? "/dashboard");
+    }
 
     // The link in that email signs the person in; there is no "then sign in" step.
     return { success: `Open the link we sent to ${email} and you are in.` };

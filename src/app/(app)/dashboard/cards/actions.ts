@@ -192,11 +192,18 @@ export async function addCard(
         reread = true,
         printing,
         edition,
+        token,
     }: {
         reread?: boolean;
         /** The printing pressed in the card's sheet; left out, the API picks the card's default finish. */
         printing?: { finish: Finish; foilPattern: FoilPattern | null };
         edition?: Edition;
+        /**
+         * The reader's token, for the one caller that has it before the request does: signing in
+         * carries a visitor's kept press through (kept-press-apply.ts), and at that moment the new
+         * session is in the answer's cookies and not yet in the request's.
+         */
+        token?: string;
     } = {},
 ): Promise<Result & { id?: string }> {
     const parsed = cardSchema.safeParse(input);
@@ -211,6 +218,7 @@ export async function addCard(
     try {
         const answer = await api("/cards", {
             method: "POST",
+            ...(token ? { token } : {}),
             body: {
                 name: c.name,
                 set: c.set,
