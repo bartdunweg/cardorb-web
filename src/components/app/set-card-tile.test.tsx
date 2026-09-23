@@ -23,6 +23,7 @@ vi.mock("@/lib/reads", () => ({
     isReadFailed: () => false,
 }));
 vi.mock("@/components/app/card-memo", () => ({ warmCard: vi.fn() }));
+vi.mock("@/lib/keep-press-client", () => ({ keepPress: vi.fn() }));
 const refresh = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }), usePathname: () => "/sets/me03" }));
 vi.mock("@/components/app/toast", () => ({ notify: { done: vi.fn(), removed: vi.fn(), failed: vi.fn(), dismiss: vi.fn() } }));
@@ -128,6 +129,27 @@ describe("SetCardTile for a reader nobody was asked about", () => {
         expect(screen.queryByRole("button", { name: /collection$/ })).toBeNull();
         await act(async () => fireEvent.click(collect));
         expect(addCard).not.toHaveBeenCalled();
+    });
+
+    it("keeps the press on the way to signing in, with its target and the card, and lets the link go", async () => {
+        const { keepPress } = await import("@/lib/keep-press-client");
+        vi.mocked(keepPress).mockClear();
+        render(<SetCardTile card={{ ...card, holding: null }} language="ja" />);
+
+        const wish = screen.getByRole("link", { name: "Sign in to put Spinarak #001 on your wishlist" });
+        // fireEvent returns false when a handler called preventDefault: true is a navigation let go.
+        expect(fireEvent.click(wish)).toBe(true);
+        expect(keepPress).toHaveBeenLastCalledWith(
+            "wishlist",
+            expect.objectContaining({ name: "Spinarak", set: "Perfect Order", number: "001", tcgId: "me03-001", language: "ja" }),
+        );
+        expect(wish).toHaveAttribute("href", "/login?next=%2Fsets%2Fme03");
+
+        const collect = screen.getByRole("link", { name: "Sign in to add Spinarak #001 to your collection" });
+        expect(fireEvent.click(collect)).toBe(true);
+        expect(keepPress).toHaveBeenLastCalledWith("collection", expect.objectContaining({ name: "Spinarak", number: "001" }));
+        expect(collect).toHaveAttribute("href", "/login?next=%2Fsets%2Fme03");
+        expect(keepPress).toHaveBeenCalledTimes(2);
     });
 });
 

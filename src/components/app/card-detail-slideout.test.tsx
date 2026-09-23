@@ -39,6 +39,7 @@ vi.mock("@/lib/reads", () => ({
     loadFacets: vi.fn(async () => ({})),
     seriesLogo: vi.fn(async () => null),
 }));
+vi.mock("@/lib/keep-press-client", () => ({ keepPress: vi.fn() }));
 // The memo would carry rows and facts from one test into the next.
 vi.mock("@/components/app/card-memo", () => ({
     knownCardFacts: vi.fn(() => null),
@@ -518,6 +519,23 @@ describe("CardDetailSlideout: a card nobody was asked about", () => {
         // Links, not buttons: nothing here writes, and neither name is offered as one.
         expect(screen.queryByRole("button", { name: "Add to collection" })).not.toBeInTheDocument();
         expect(screen.queryByRole("button", { name: "Add to wishlist" })).not.toBeInTheDocument();
+    });
+
+    it("keeps the press on the way to signing in, with its target and the catalogue card, and lets the link go", async () => {
+        const { keepPress } = await import("@/lib/keep-press-client");
+        vi.mocked(keepPress).mockClear();
+        await visitor();
+        const collection = screen.getByRole("link", { name: "Sign in to add Charizard #4 to your collection" });
+        // fireEvent returns false when a handler called preventDefault: true is a navigation let go.
+        expect(fireEvent.click(collection)).toBe(true);
+        expect(keepPress).toHaveBeenLastCalledWith("collection", expect.objectContaining({ id: "c1", name: "Charizard", set: "Base Set", number: "4" }));
+        expect(collection).toHaveAttribute("href", "/login?next=%2Fsets%2Fbase1");
+
+        const wishlist = screen.getByRole("link", { name: "Sign in to put Charizard #4 on your wishlist" });
+        expect(fireEvent.click(wishlist)).toBe(true);
+        expect(keepPress).toHaveBeenLastCalledWith("wishlist", expect.objectContaining({ name: "Charizard" }));
+        expect(wishlist).toHaveAttribute("href", "/login?next=%2Fsets%2Fbase1");
+        expect(keepPress).toHaveBeenCalledTimes(2);
     });
 
     it("reads nothing of anybody's: no binders, no facets, no copies", async () => {

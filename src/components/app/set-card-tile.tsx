@@ -20,6 +20,7 @@ import type { SetCard } from "@/lib/api-shapes";
 import { cardLine } from "@/lib/card-label";
 import { pokemonCardFromSetCard } from "@/lib/card-shapes";
 import { type CardsSize, TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
+import { keepPress } from "@/lib/keep-press-client";
 import type { Holding } from "@/lib/set-holding";
 
 /**
@@ -233,15 +234,18 @@ export function SetCardTile({
                         icon says nothing to a screen reader and the colour says nothing at all. */}
                         {state === "unasked" ? (
                             <>
+                                {/* The press is kept on the way (keep-press-client.ts), so signing in carries it through. */}
                                 <TileIconButton
                                     icon={Heart}
                                     href={signIn}
                                     label={`Sign in to put ${card.name} #${card.printedNumber ?? card.number} on your wishlist`}
+                                    onPress={() => keepPress("wishlist", pokemonCardFromSetCard(card, language))}
                                 />
                                 <TileIconButton
                                     icon={Plus}
                                     href={signIn}
                                     label={`Sign in to add ${card.name} #${card.printedNumber ?? card.number} to your collection`}
+                                    onPress={() => keepPress("collection", pokemonCardFromSetCard(card, language))}
                                 />
                             </>
                         ) : null}

@@ -23,6 +23,8 @@ import { cx } from "@/utils/cx";
  * no account: the heart and the plus stay where they are and stay pressable, and the press goes to
  * sign in carrying the page. The kit's Button renders a react-aria Link the moment it is given an
  * `href`, so the control announces as a link, keeps the same focus ring and needs no key handler.
+ * `onPress` on a link runs beside the navigation, never instead of it: a visitor's press is kept
+ * there (keep-press-client.ts) and the link goes where it goes.
  */
 export function TileIconButton({
     icon,
@@ -50,8 +52,8 @@ export function TileIconButton({
         "aria-label": label,
         className: on ? MARK_ON[on] : undefined,
     } as const;
-    // A link says nothing about a pressed state and writes nothing: no `aria-pressed`, no handler.
-    if (href) return <Button {...common} href={href} />;
+    // A link says nothing about a pressed state: no `aria-pressed`. Its handler only runs alongside.
+    if (href) return <Button {...common} href={href} onClick={onPress} />;
     return <Button {...common} aria-pressed={on ? true : undefined} isDisabled={pending} onClick={onPress} />;
 }
 

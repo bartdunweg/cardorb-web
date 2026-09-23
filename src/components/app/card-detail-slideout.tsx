@@ -22,6 +22,7 @@ import { Button } from "@/components/base/buttons/button";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
 import type { PokemonCard } from "@/lib/api-shapes";
 import type { Card, PublicCard } from "@/lib/cards";
+import { keepPress } from "@/lib/keep-press-client";
 import { cx } from "@/utils/cx";
 
 /* What a write that never answered (the network dropped, the action threw) lands as: the same
@@ -192,14 +193,15 @@ export function CardDetailSlideout({
        where they were and keep the same order, as links: the kit's Button is a react-aria Link the
        moment it is given an href, so each keeps its focus ring and announces as a link. The name is
        the whole sentence, word for word what the tile's round buttons say, so the two cannot
-       disagree. */
+       disagree. The press is kept on the way (keep-press-client.ts), as the tile keeps it, so
+       signing in carries it through; `addable` is the catalogue card, the one `asked` is read off. */
     const invite =
-        !asked && card ? (
+        !asked && card && addable ? (
             <div className="flex flex-col gap-2">
-                <Button size="md" iconLeading={Plus} className="w-full" href={signIn}>
+                <Button size="md" iconLeading={Plus} className="w-full" href={signIn} onClick={() => keepPress("collection", addable)}>
                     Sign in to add {card.name} #{cardNumber} to your collection
                 </Button>
-                <Button size="md" color="secondary" iconLeading={Heart} className="w-full" href={signIn}>
+                <Button size="md" color="secondary" iconLeading={Heart} className="w-full" href={signIn} onClick={() => keepPress("wishlist", addable)}>
                     Sign in to put {card.name} #{cardNumber} on your wishlist
                 </Button>
             </div>
