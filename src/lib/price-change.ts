@@ -133,6 +133,16 @@ const PRINTING_LABELS: [string, string][] = [
 ];
 
 /** The printings a card has readings for, in reading order, each with its label. */
+/**
+ * One TCGplayer printing's name ("1st-edition-holofoil" is "1st Edition Holo"), the words the sheet
+ * shows over its chart. Null for a printing this list does not know, so a caller shows nothing rather
+ * than a raw key.
+ */
+export function tcgplayerPrintingLabel(key: string | null | undefined): string | null {
+    if (!key) return null;
+    return PRINTING_LABELS.find(([k]) => k === key)?.[1] ?? null;
+}
+
 export function printingsOfLine(points: PriceLinePoint[]): { key: string; label: string }[] {
     const seen = new Set(points.flatMap((p) => Object.keys(p.printings ?? {})));
     return PRINTING_LABELS.filter(([key]) => seen.has(key)).map(([key, label]) => ({ key, label }));

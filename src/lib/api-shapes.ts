@@ -3,6 +3,7 @@ import type { BinderKind, BinderRule, PokedexSetting } from "@/lib/binder-rule";
 import { binderRuleSchema, pokedexSettingSchema } from "@/lib/binder-rule-schema";
 import { EDITIONS, FINISHES, FOIL_PATTERNS, FOIL_PATTERN_LABELS, isReverseFinish, ownImage } from "@/lib/card-shapes";
 import type { Finish, FoilPattern } from "@/lib/card-shapes";
+import { tcgplayerPrintingLabel } from "@/lib/price-change";
 import type { CardHolding, Holding } from "@/lib/set-holding";
 
 // The labels, the vocabularies and the mappers without zod live in card-shapes.ts; every importer of this file still finds them here.
@@ -1070,7 +1071,12 @@ export function moverFromMarket(m: z.infer<typeof marketMoverSchema>): Mover {
         set: m.setName,
         setAbbr: null,
         printedNumber: m.printedNumber ?? null,
-        rarity: null,
+        /*
+         * Which printing moved, in the row's rarity place ("1st Edition Holo"). A card's printings
+         * move apart, and a set tile shows only its headline one, so "Charizard +EUR 90" without it
+         * would be a number the set page does not show for the same card.
+         */
+        rarity: tcgplayerPrintingLabel(m.printing),
         image: m.image,
         copies: 1,
         was: m.was,
