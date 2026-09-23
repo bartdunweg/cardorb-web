@@ -72,6 +72,20 @@ const nextConfig = {
                 destination: "https://cardorb.com/:path*",
                 permanent: true,
             },
+            /*
+             * Browse left /dashboard when it opened to readers with no account: the word has no
+             * business in the address of the page that has to earn a stranger's click.
+             *
+             * Here rather than as a page that redirects, for two reasons. A page under (app) would
+             * be a route, and csp.test.ts walks every route under (app) and demands a nonce, which
+             * a redirect never needs because it renders no document. And these are answered at the
+             * edge, before any of this app runs.
+             *
+             * They stay: the old addresses are in the sitemap, in browser history and in links
+             * shared before today.
+             */
+            { source: "/dashboard/sets", destination: "/sets", permanent: true },
+            { source: "/dashboard/sets/:id", destination: "/sets/:id", permanent: true },
         ];
     },
 };

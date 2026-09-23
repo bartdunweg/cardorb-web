@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { editCopies, removeCard, restoreCard, setCopies, setFavorite } from "@/app/(app)/dashboard/cards/actions";
 import { knownCardFacts, knownPriceHistory, knownPriceListings } from "@/components/app/card-memo";
 import type { Card } from "@/lib/api-shapes";
-import { listCopies, tryListBinders } from "@/lib/reads";
+import { listCopies, loadFacets, tryListBinders } from "@/lib/reads";
 import {
     type Outcome,
     answerLeftovers,
@@ -39,6 +39,7 @@ vi.mock("@/lib/reads", () => ({
     loadFacets: vi.fn(async () => ({})),
     seriesLogo: vi.fn(async () => null),
 }));
+vi.mock("@/lib/keep-press-client", () => ({ keepPress: vi.fn() }));
 // The memo would carry rows and facts from one test into the next.
 vi.mock("@/components/app/card-memo", () => ({
     knownCardFacts: vi.fn(() => null),
@@ -485,5 +486,69 @@ describe("CardDetailSlideout: the star under rapid taps", () => {
         expect(star()).toHaveAttribute("aria-pressed", "false");
         expect(notifyMock.writeFailed).toHaveBeenCalledTimes(1);
         expect(notifyMock.writeFailed).toHaveBeenCalledWith("That card is not a Favorite", { ok: false, error: "No" });
+    });
+});
+
+/*
+ * The sheet a visitor opens from a set page: the card carries no holding (`SetCard.holding` is
+ * null), so nobody was asked what they hold, and the sheet claims nothing about a collection.
+ */
+describe("CardDetailSlideout: a card nobody was asked about", () => {
+    const visitor = async () => {
+        pathname.current = "/sets/base1";
+        const card = makeCard({ id: "c1", name: "Charizard", number: "4", printed_number: "4", owned: false, quantity: 0, tcg_id: "base1-4" });
+        return open(card, {
+            addable: { id: "c1", name: "Charizard", set: "Base Set", number: "4", holding: null, price: 823.98 } as never,
+        });
+    };
+
+    it("says what an account keeps here instead of answering for a collection nobody read", async () => {
+        await visitor();
+        const dialog = screen.getByRole("dialog");
+        expect(screen.getByRole("heading", { name: "Your copies" })).toBeInTheDocument();
+        expect(dialog).not.toHaveTextContent("You do not hold this card yet");
+        expect(dialog).toHaveTextContent("An account keeps your copies of this card here");
+    });
+
+    it("offers the two ways in as links to signing in, carrying the page", async () => {
+        await visitor();
+        const collection = screen.getByRole("link", { name: "Sign in to add Charizard #4 to your collection" });
+        const wishlist = screen.getByRole("link", { name: "Sign in to put Charizard #4 on your wishlist" });
+        expect(collection).toHaveAttribute("href", "/login?next=%2Fsets%2Fbase1");
+        expect(wishlist).toHaveAttribute("href", "/login?next=%2Fsets%2Fbase1");
+        // Links, not buttons: nothing here writes, and neither name is offered as one.
+        expect(screen.queryByRole("button", { name: "Add to collection" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Add to wishlist" })).not.toBeInTheDocument();
+    });
+
+    it("keeps the press on the way to signing in, with its target and the catalogue card, and lets the link go", async () => {
+        const { keepPress } = await import("@/lib/keep-press-client");
+        vi.mocked(keepPress).mockClear();
+        await visitor();
+        const collection = screen.getByRole("link", { name: "Sign in to add Charizard #4 to your collection" });
+        // fireEvent returns false when a handler called preventDefault: true is a navigation let go.
+        expect(fireEvent.click(collection)).toBe(true);
+        expect(keepPress).toHaveBeenLastCalledWith("collection", expect.objectContaining({ id: "c1", name: "Charizard", set: "Base Set", number: "4" }));
+        expect(collection).toHaveAttribute("href", "/login?next=%2Fsets%2Fbase1");
+
+        const wishlist = screen.getByRole("link", { name: "Sign in to put Charizard #4 on your wishlist" });
+        expect(fireEvent.click(wishlist)).toBe(true);
+        expect(keepPress).toHaveBeenLastCalledWith("wishlist", expect.objectContaining({ name: "Charizard" }));
+        expect(wishlist).toHaveAttribute("href", "/login?next=%2Fsets%2Fbase1");
+        expect(keepPress).toHaveBeenCalledTimes(2);
+    });
+
+    it("reads nothing of anybody's: no binders, no facets, no copies", async () => {
+        await visitor();
+        expect(tryListBinders).not.toHaveBeenCalled();
+        expect(loadFacets).not.toHaveBeenCalled();
+        expect(listCopies).not.toHaveBeenCalled();
+    });
+    it("offers no way to take out a card that is in no collection", async () => {
+        // The card arrives with an empty row rather than none, so the menu used to stand and
+        // offer "Remove from collection" for it: a write that can only fail, to anybody.
+        await visitor();
+        expect(screen.queryByRole("button", { name: "More" })).not.toBeInTheDocument();
+        expect(screen.queryByText("Remove from collection")).not.toBeInTheDocument();
     });
 });

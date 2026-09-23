@@ -14,7 +14,14 @@ type Change = Holding & {
     outside: number;
 };
 
-const holdingOf = ({ owned, quantity, wishlist, itemIds }: Holding): Holding => ({ owned, quantity, wishlist, itemIds });
+/**
+ * A holding on its own, and an empty one for a card nobody was asked about.
+ *
+ * A press on such a card is a press by a visitor with no account, which leads to signing in rather
+ * than to a write. Nothing is drawn from this: `live()` hands a card whose holding is null straight
+ * back, so the empty holding never reaches a tile.
+ */
+const holdingOf = (h: Holding | null): Holding => (h === null ? { owned: false, quantity: 0, wishlist: false, itemIds: [] } : { ...h });
 
 type Live = {
     /** The card as its tile shows it now. */
@@ -45,11 +52,14 @@ export function SetLive({ stamp, children }: { stamp: string; children: ReactNod
         (card: SetCard, patch: Partial<Holding>, outside = false) =>
             setState((s) => {
                 const prev = s.changes[card.id];
-                const valid = prev && holdingKey(prev.was) === holdingKey(card) ? prev : undefined;
+                const valid = prev && holdingKey(prev.was) === holdingKey(card.holding) ? prev : undefined;
                 const count = (valid?.outside ?? 0) + (outside ? 1 : 0);
                 return {
                     ...s,
-                    changes: { ...s.changes, [card.id]: { ...holdingOf(valid ?? card), ...patch, was: holdingOf(card), price: card.price, outside: count } },
+                    changes: {
+                        ...s.changes,
+                        [card.id]: { ...holdingOf(valid ?? card.holding), ...patch, was: holdingOf(card.holding), price: card.price, outside: count },
+                    },
                 };
             }),
         [],
@@ -63,15 +73,18 @@ export function useSetLive(): Live {
     const outsideCount = useCallback(
         (card: SetCard) => {
             const change = changes[card.id];
-            return change && holdingKey(change.was) === holdingKey(card) ? change.outside : 0;
+            return change && holdingKey(change.was) === holdingKey(card.holding) ? change.outside : 0;
         },
         [changes],
     );
     const live = useCallback(
         (card: SetCard) => {
             const change = changes[card.id];
-            if (!change || holdingKey(change.was) !== holdingKey(card)) return card;
-            return { ...card, ...holdingOf(change) };
+            // A card nobody was asked about has no holding to move, and a press on it never wrote
+            // one, so it is drawn exactly as the page read it.
+            if (card.holding === null) return card;
+            if (!change || holdingKey(change.was) !== holdingKey(card.holding)) return card;
+            return { ...card, holding: holdingOf(change) };
         },
         [changes],
     );
@@ -85,8 +98,11 @@ export function LiveSetStats(props: { stats: Stats; released: string | null; gal
         let { owned, value } = props.stats;
         for (const change of Object.values(changes)) {
             const by = Number(change.owned) - Number(change.was.owned);
-            owned += by;
-            value += by * (change.price ?? 0);
+            // Nobody was asked what is held, so there is no count to move; null stays null rather
+            // than becoming a number the moment something is pressed. The value beside it is the
+            // same answer, so it stays null too.
+            if (owned !== null) owned += by;
+            if (value !== null) value += by * (change.price ?? 0);
         }
         return { ...props.stats, owned, value };
     }, [changes, props.stats]);

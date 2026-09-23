@@ -12,7 +12,7 @@ import { SET_ID } from "./support";
 test.use({ locale: "nl-NL", viewport: { width: 390, height: 844 } });
 
 test("a set's release date is written the way Browse writes it", async ({ page }) => {
-    await page.goto(`/dashboard/sets/${SET_ID}`);
+    await page.goto(`/sets/${SET_ID}`);
     // The fixture set is released 2023/03/31. Before: "Released 31 Mar 2023", in every browser.
     await expect(page.getByRole("main").getByText(/^Released /)).toHaveText("Released Mar 31, 2023");
 });

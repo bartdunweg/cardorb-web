@@ -21,6 +21,12 @@ export function PublicTopBar({ menu }: { menu?: ReactNode }) {
             </Link>
             {menu ?? (
                 <nav aria-label="Account" className="flex items-center gap-2">
+                    {/* The door into the app, on every page a stranger can arrive on. Without it the
+                        landing page's only way forward was making an account, which is the one thing
+                        somebody who has never heard of us is least willing to do first. */}
+                    <LinkButton href="/sets" color="link-gray" size="md" className="max-sm:hidden">
+                        Browse the sets
+                    </LinkButton>
                     <LinkButton href="/login" color="tertiary" size="md">
                         Sign in
                     </LinkButton>

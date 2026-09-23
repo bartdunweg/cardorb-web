@@ -14,7 +14,7 @@ test("a wished card marked as owned leaves the wishlist and joins the collection
     const c = card(21);
     const wishlist = `/dashboard/wishlist?q=${encodeURIComponent(c.name)}`;
 
-    await page.goto(`/dashboard/sets/${SET_ID}`);
+    await page.goto(`/sets/${SET_ID}`);
     const wished = cacheCleared(page);
     await wishButton(page, c).click();
     await expect(page.getByText(`${c.name} is on your wishlist now`)).toBeVisible();

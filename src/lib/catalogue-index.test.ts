@@ -95,9 +95,9 @@ describe("searchIndex", () => {
             types: ["Fire"],
             series: "Scarlet & Violet",
             image: "https://images.cardorb.com/en/sv/sv03.5/006/low.webp",
-            owned: false,
-            wishlist: false,
-            quantity: 0,
+            // The index is the catalogue alone: nobody has been asked what is held, which is not
+            // the same as an empty collection.
+            holding: null,
             price: null,
         });
         expect(squirtle?.image).toBe("https://images.cardorb.com/tcgdex-elsewhere/007/low.webp");

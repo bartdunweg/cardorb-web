@@ -9,6 +9,7 @@ import {
     seriesShelf,
     shelfCounts,
     shelfFacets,
+    shelfHasHoldings,
     sortShelf,
     yearShelf,
 } from "./browse-query";
@@ -27,6 +28,9 @@ const set = (name: string): SetSummary => ({
     complete: false,
     cardsRecorded: true,
 });
+
+/** A set on a shelf read without a session: the catalogue's own fields and no holdings at all. */
+const unasked = (name: string, total: number): SetSummary => ({ ...set(name), total, owned: null, complete: null });
 
 // As the API hands them: newest series first, newest set first in each.
 const shelf: SetSeries[] = [
@@ -59,11 +63,11 @@ describe("readBrowseQuery", () => {
 describe("browseHref", () => {
     it("keeps the defaults out of the URL", () => {
         const en = { language: "en", sort: "newest", progress: "all", q: undefined, series: [], year: [] } as BrowseQuery;
-        expect(browseHref(en, {})).toBe("/dashboard/sets");
-        expect(browseHref(en, { sort: "oldest" })).toBe("/dashboard/sets?sort=oldest");
-        expect(browseHref(en, { progress: "started" })).toBe("/dashboard/sets?progress=started");
-        expect(browseHref({ ...en, language: "ja", sort: "name" }, { sort: "newest" })).toBe("/dashboard/sets?language=ja");
-        expect(browseHref({ ...en, language: "ja", sort: "name", q: "base" }, {})).toBe("/dashboard/sets?q=base&language=ja&sort=name");
+        expect(browseHref(en, {})).toBe("/sets");
+        expect(browseHref(en, { sort: "oldest" })).toBe("/sets?sort=oldest");
+        expect(browseHref(en, { progress: "started" })).toBe("/sets?progress=started");
+        expect(browseHref({ ...en, language: "ja", sort: "name" }, { sort: "newest" })).toBe("/sets?language=ja");
+        expect(browseHref({ ...en, language: "ja", sort: "name", q: "base" }, {})).toBe("/sets?q=base&language=ja&sort=name");
     });
 });
 
@@ -99,6 +103,20 @@ describe("progressShelf", () => {
         expect(names(progressShelf(mixed, "complete"))).toEqual(["Jungle"]);
         expect(names(progressShelf(mixed, "new"))).toEqual(["Surging Sparks"]);
         expect(progressShelf(mixed, "complete").map((g) => g.name)).toEqual(["Base"]);
+    });
+
+    // Nobody was asked what is held, so there is no progress to narrow by. An empty shelf would
+    // read as "you have started none of these", which is a claim about a collection never read.
+    it("leaves a shelf nobody was asked about whole, whatever the choice", () => {
+        const unmarked: SetSeries[] = [{ name: "Base", sets: [unasked("Jungle", 64), unasked("Base Set", 102)] }];
+        for (const progress of ["started", "complete", "new"] as const) expect(progressShelf(unmarked, progress)).toBe(unmarked);
+    });
+
+    it("offers no progress filter for a shelf nobody was asked about", () => {
+        const unmarked: SetSeries[] = [{ name: "Base", sets: [unasked("Jungle", 64)] }];
+        expect(shelfHasHoldings(unmarked)).toBe(false);
+        expect(shelfFacets(unmarked).holdings).toBe(false);
+        expect(shelfHasHoldings(mixed)).toBe(true);
     });
 });
 
@@ -159,7 +177,7 @@ describe("series and year", () => {
         const query = readBrowseQuery({ series: ["Base", " Base ", "Scarlet & Violet"], year: ["1999", "99", "2024"] });
         expect(query.series).toEqual(["Base", "Scarlet & Violet"]);
         expect(query.year).toEqual(["1999", "2024"]);
-        expect(browseHref(query, {})).toBe("/dashboard/sets?series=Base&series=Scarlet+%26+Violet&year=1999&year=2024");
+        expect(browseHref(query, {})).toBe("/sets?series=Base&series=Scarlet+%26+Violet&year=1999&year=2024");
     });
 
     it("keeps the chosen series, and every series when none is chosen", () => {
@@ -173,7 +191,7 @@ describe("series and year", () => {
     });
 
     it("offers the shelf's series in its order and its years newest first", () => {
-        expect(shelfFacets(years)).toEqual({ series: ["Scarlet & Violet", "Base"], years: ["2024", "2023", "1999"] });
+        expect(shelfFacets(years)).toEqual({ series: ["Scarlet & Violet", "Base"], years: ["2024", "2023", "1999"], holdings: true });
     });
 
     it("counts each series and year with the other filters as they are, not itself", () => {

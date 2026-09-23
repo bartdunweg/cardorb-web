@@ -14,10 +14,11 @@ const LOGO_WIDTH = 96;
  * whole row is the link. Dimmed with nothing in it, like the tile.
  */
 export function SetRow({ set, language }: { set: SetSummary; language: BrowseLanguage }) {
+    // As on the tile: dimmed for a set you hold nothing of, never for one nobody was asked about.
     const empty = set.owned === 0;
     return (
         <HoverPrefetchLink
-            href={`/dashboard/sets/${encodeURIComponent(set.id)}${language === "en" ? "" : `?language=${language}`}`}
+            href={`/sets/${encodeURIComponent(set.id)}${language === "en" ? "" : `?language=${language}`}`}
             // One level in: the set's page comes from the right (page-transition.tsx).
             transitionTypes={["nav-forward"]}
             className={cx(
@@ -39,12 +40,15 @@ export function SetRow({ set, language }: { set: SetSummary; language: BrowseLan
                 <span className="truncate text-sm font-semibold text-primary">{set.name}</span>
                 {set.releaseDate ? <span className="truncate text-xs text-tertiary">{formatDate(set.releaseDate)}</span> : null}
             </span>
-            {set.cardsRecorded ? (
+            {/* The set's size alone where nobody was asked what is held, as on the tile. */}
+            {!set.cardsRecorded ? (
+                <span className="shrink-0 text-xs text-tertiary">No cards yet</span>
+            ) : set.owned === null ? (
+                <span className="shrink-0 text-sm text-tertiary tabular-nums">{formatCount(set.total)} cards</span>
+            ) : (
                 <span className="shrink-0 text-sm text-tertiary tabular-nums">
                     {formatCount(set.owned)} of {formatCount(set.total)}
                 </span>
-            ) : (
-                <span className="shrink-0 text-xs text-tertiary">No cards yet</span>
             )}
         </HoverPrefetchLink>
     );

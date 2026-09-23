@@ -1,12 +1,13 @@
 "use client";
 
 import { type FC, Suspense, use, useState } from "react";
-import { Folder, LayoutLeft, Plus, SearchLg, Star01 } from "@untitledui/icons";
+import { Folder, LayoutLeft, LogIn01, Plus, SearchLg, Star01 } from "@untitledui/icons";
 import Link from "next/link";
 import { AccountMenu } from "@/components/app/account-menu";
 import { BinderModal } from "@/components/app/binder-dialog";
 import { useCommandSearch } from "@/components/app/command-search";
 import { OrbLogo } from "@/components/app/orb-logo";
+import { useReturnHrefs } from "@/components/app/sign-in-invite";
 import { NavButton } from "@/components/application/app-navigation/base-components/nav-button";
 import { useArriveOnce } from "@/hooks/use-arrive-once";
 import { cx } from "@/utils/cx";
@@ -34,11 +35,14 @@ export function SidebarRail({
 }: {
     items: RailItem[];
     activeUrl: string;
-    account: Promise<Account>;
-    binders: Promise<BinderLink[]>;
+    /** Null when nobody is signed in: the rail keeps every row and the account icon becomes the way in. */
+    account: Promise<Account> | null;
+    binders: Promise<BinderLink[]> | null;
     onExpand: () => void;
 }) {
     const { open } = useCommandSearch();
+    // Where signing in leads back to (sign-in-invite.tsx).
+    const back = useReturnHrefs();
 
     return (
         <>
@@ -79,11 +83,19 @@ export function SidebarRail({
                 <li className="py-px">
                     <NavButton icon={Star01} label="Favorites" href="/dashboard/favorites" current={activeUrl === "/dashboard/favorites"} />
                 </li>
-                <Suspense fallback={null}>
-                    <BinderRows activeUrl={activeUrl} binders={binders} />
-                </Suspense>
+                {binders ? (
+                    <Suspense fallback={null}>
+                        <BinderRows activeUrl={activeUrl} binders={binders} />
+                    </Suspense>
+                ) : (
+                    // The row the open sidebar's invitation stands in, folded: what an account adds
+                    // here, named in full so a tooltip is not the only place it is said.
+                    <li className="py-px">
+                        <NavButton icon={Folder} label="Sign in to make binders" href={back.signIn} />
+                    </li>
+                )}
                 <li className="py-px">
-                    <NewBinder />
+                    <NewBinder signInHref={binders ? null : back.signIn} />
                 </li>
             </ul>
 
@@ -92,9 +104,13 @@ export function SidebarRail({
             {/* pb-4.5 (18 px): the avatar's centre lands where the open card's avatar has it. */}
             <div className="mt-auto flex flex-col items-center gap-3 px-4 pt-4 pb-4.5">
                 <NavButton icon={LayoutLeft} label="Expand sidebar" onPress={onExpand} className="size-8" />
-                <Suspense fallback={null}>
-                    <AccountSlot account={account} />
-                </Suspense>
+                {account ? (
+                    <Suspense fallback={null}>
+                        <AccountSlot account={account} />
+                    </Suspense>
+                ) : (
+                    <NavButton icon={LogIn01} label="Sign in" href={back.signIn} />
+                )}
             </div>
         </>
     );
@@ -119,8 +135,10 @@ function BinderRows({ activeUrl, binders }: { activeUrl: string; binders: Promis
 }
 
 // New binder, as an icon: the open sidebar's plus on the Binders heading, a row here where there is no heading.
-function NewBinder() {
+// Without a session it stays, and leads to the door rather than the dialog.
+function NewBinder({ signInHref }: { signInHref: string | null }) {
     const [creating, setCreating] = useState(false);
+    if (signInHref) return <NavButton icon={Plus} label="New binder" href={signInHref} />;
     return (
         <>
             <NavButton icon={Plus} label="New binder" onPress={() => setCreating(true)} />

@@ -13,7 +13,9 @@ const { api, filed } = vi.hoisted(() => ({
     api: vi.fn(),
     filed: [] as { ref: ScopeRef; key: string }[],
 }));
-vi.mock("@/lib/api", () => ({ ApiError: class extends Error {}, api }));
+/* Signed in, because these tests are about the per-person cache key. The road for a reader with
+   no session is a different one and has its own tests. */
+vi.mock("@/lib/api", () => ({ ApiError: class extends Error {}, api, session: async () => ({ userId: "u1", token: "t.o.k.e.n" }) }));
 vi.mock("@/lib/user-cache", () => ({
     perUser: (ref: ScopeRef, key: string, run: (token: string) => unknown) => {
         filed.push({ ref, key });

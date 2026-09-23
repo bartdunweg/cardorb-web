@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AppSidebar } from "@/components/app/app-sidebar";
 import { CommandSearchProvider } from "@/components/app/command-search";
+import { KeptPressNotice } from "@/components/app/kept-press-notice";
 import { MobileTabBar } from "@/components/app/mobile-nav";
 import { PageTransition } from "@/components/app/page-transition";
 import { RoutePendingProvider } from "@/components/app/route-pending";
@@ -11,7 +12,7 @@ import { MAIN_ID, SkipToContent } from "@/components/app/skip-to-content";
 import { Toasts } from "@/components/app/toast";
 import { WarmLists } from "@/components/app/warm-lists";
 import { RememberListQuery } from "@/hooks/use-list-memory";
-import { ApiError } from "@/lib/api";
+import { ApiError, session } from "@/lib/api";
 import { getFavoritesCount, getMyBinders } from "@/lib/binders";
 import { type Account, accountFrom, getMyProfile } from "@/lib/profile";
 import { SIDEBAR_COOKIE } from "@/lib/sidebar-cookie";
@@ -34,13 +35,20 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     // The binders' counts ride along in that one answer; the favorites count is a read of the
     // stats, and the Pokédex's a count of every card, both cached like the binders, so every
     // binder in the sidebar has its number (Bart's call).
-    const me = getMyProfile();
-    const binderRead = getMyBinders();
+    //
+    // Nobody signed in: none of the three is asked at all. Each would answer 401 and SessionGuard
+    // would send the visitor to /login before the page they asked for had begun to render, which
+    // is the reason no page under this frame could ever be open, whatever the API answered.
+    const mine = await session();
+    const me = mine ? getMyProfile() : null;
+    const binderRead = mine ? getMyBinders() : null;
     // What the client components get resolves always: a rejection there would reach the root
     // error boundary and take the frame down with it. The failure itself is judged in SessionGuard.
-    const account = me.then(accountFrom, () => NO_ACCOUNT);
-    const binders = binderRead.catch(() => []);
-    const favoritesCount = getFavoritesCount().catch(() => null);
+    // Null rather than a resolved empty: the sidebar draws an invitation for one and a list for
+    // the other, and "no binders yet" is not the same answer as "we never asked".
+    const account = me ? me.then(accountFrom, () => NO_ACCOUNT) : null;
+    const binders = binderRead ? binderRead.catch(() => []) : null;
+    const favoritesCount = mine ? getFavoritesCount().catch(() => null) : null;
 
     return (
         // Which page a tap is going to, above the router that reports it: the navigation answers a
@@ -48,9 +56,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <RoutePendingProvider>
             <RouteProvider>
                 <CommandSearchProvider>
-                    <Suspense fallback={null}>
-                        <SessionGuard reads={[me, binderRead]} />
-                    </Suspense>
+                    {me && binderRead ? (
+                        <Suspense fallback={null}>
+                            <SessionGuard reads={[me, binderRead]} />
+                        </Suspense>
+                    ) : null}
                     {/* Each list's filters, for the tab or row that leads back to it (use-list-memory.ts). */}
                     <Suspense fallback={null}>
                         <RememberListQuery />
@@ -87,9 +97,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                     the body). Out here it shares the body's stacking context with them and sonner's
                     own z-index puts it on top, whether the dialog that caused it closes or stays. */}
                     <Toasts />
+                    {/* What a visitor's press kept across signing in came to, said once on the page
+                    they land on (kept-press-notice.tsx). Home and every set page sit in this frame. */}
+                    <KeptPressNotice />
                     <RouteProgress />
-                    {/* The lists a tab leads to, read while this page is being read (warm-lists.tsx). */}
-                    <WarmLists />
+                    {/* The lists a tab leads to, read while this page is being read (warm-lists.tsx).
+                    Only for somebody who has them: each of the three is that person's own list, so
+                    for a visitor they were three requests that could only ever answer 401. */}
+                    {mine ? <WarmLists /> : null}
                 </CommandSearchProvider>
             </RouteProvider>
         </RoutePendingProvider>

@@ -191,12 +191,12 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
     }, [isOpen]);
     const writes = useRef<Promise<unknown>>(Promise.resolve());
     const add = (card: PokemonCard, target: "collection" | "wishlist") => {
-        const before = { owned: card.owned, wishlist: card.wishlist, quantity: card.quantity };
+        const before = card.holding;
         update((hits) => takenHit(hits, card.id, target));
         wrote.current = true;
         notify.done(target === "wishlist" ? `${card.name} is on your wishlist now` : `${card.name} is in your collection now`);
         const putBack = (description?: string) => {
-            update((hits) => hits.map((h) => (h.id === card.id ? { ...h, ...before } : h)));
+            update((hits) => hits.map((h) => (h.id === card.id ? { ...h, holding: before } : h)));
             notify.failed(`${card.name} was not added to your ${target}`, description ? { description } : undefined);
         };
         // A write that throws (the network gone) is put back as one that answered no: the mark must not
@@ -314,7 +314,7 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
             {wanted ? (
                 <CardDetailSlideout
                     card={held ?? (viewed ? cardFromPokemonCard(viewed) : null)}
-                    addable={viewed && !viewed.owned && !viewed.wishlist ? viewed : null}
+                    addable={viewed && !viewed.holding?.owned && !viewed.holding?.wishlist ? viewed : null}
                     onClose={closeSheet}
                     /* The hit the card came from says so at once. */
                     onTaken={(card, list) => {

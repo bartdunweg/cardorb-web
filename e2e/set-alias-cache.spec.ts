@@ -36,7 +36,7 @@ const progress = async (page: Page): Promise<number> => {
    otherwise leave this card owned, and the next run would fail for the wrong reason. */
 test.afterAll(async ({ browser }) => {
     const page = await browser.newPage({ storageState: "e2e/.auth/user.json" });
-    await page.goto(`/dashboard/sets/${ALIAS}`);
+    await page.goto(`/sets/${ALIAS}`);
     if (await setTile(page, own, "in your collection").isVisible()) {
         const settled = cacheCleared(page);
         await removeButton(page, own).click();
@@ -46,7 +46,7 @@ test.afterAll(async ({ browser }) => {
 });
 
 test("a set opened under another spelling of its id draws it, takes a press and reads it back", async ({ page }) => {
-    await page.goto(`/dashboard/sets/${ALIAS}`);
+    await page.goto(`/sets/${ALIAS}`);
     // The alias really did resolve: this is the seeded set, under an address it does not name itself by.
     await expect(page.getByRole("heading", { level: 1, name: SET_NAME })).toBeVisible();
     await expect(addButton(page, own)).toBeVisible();

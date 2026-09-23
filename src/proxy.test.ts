@@ -23,7 +23,7 @@ describe("needsSession", () => {
     it("keeps the session for everything that gates on it or redirects", () => {
         // The protected part, the entry paths that send a signed-in person on, and the public
         // profile, which the middleware still refreshes cookies for.
-        for (const path of ["/", "/login", "/signup", "/dashboard", "/dashboard/sets", "/dashboard/sets/base1", "/user/bart"]) {
+        for (const path of ["/", "/login", "/signup", "/dashboard", "/sets", "/sets/base1", "/user/bart"]) {
             expect(needsSession(path), path).toBe(true);
         }
     });

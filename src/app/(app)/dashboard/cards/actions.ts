@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { addCardAs } from "@/lib/add-card";
 import { api } from "@/lib/api";
 import {
     CARD_FACTS_BATCH,
@@ -39,8 +40,6 @@ export type { PokemonCard } from "@/lib/api-shapes";
 export type CardHit = Card;
 
 type Result = { ok: true } | FailedWrite;
-
-const addedAnswer = z.object({ id: z.string().optional() });
 
 const failed = writeFailure;
 
@@ -154,34 +153,15 @@ export async function searchPokemon(query: string, filters: CatalogueFilters = {
         ...(parsed.data.page > 1 ? { page: parsed.data.page } : {}),
     };
 
-    const { cards, total } = await api("/catalog/search", { params, schema: searchAnswer });
+    // Search is open (the app without an account): a visitor's hits come back without marks, a
+    // reader's with theirs, from one route that answers both since cardorb-api#584.
+    const { cards, total } = await api("/catalog/search", { auth: "optional", params, schema: searchAnswer });
     return { items: cards.map((c) => pokemonCardFromBrowse(c, language)), total };
 }
 
-const cardSchema = z.object({
-    name: z.string().trim().min(1),
-    set: z.string().trim().min(1, "That card has no set."),
-    number: z.string().trim(),
-    rarity: z.string().nullable(),
-    types: z.array(z.string()).nullable(),
-    /**
-     * The catalogue's own id, and which catalogue it belongs to.
-     *
-     * Both may be missing or null: everything added before today has neither and the API still
-     * resolves those by set name, and a set tile carries null for what its shelf did not send.
-     * They are how a card from the Japanese shelf is findable at all: those
-     * sets have no English name, so the name the API would look up does not exist. Together they
-     * say "this row is that card, in that catalogue" (cardorb-api#257).
-     *
-     * `nullish`, not `optional`: an English tile sends `language: null`, and `optional` refused
-     * that as "expected string, received null": every add from every set page, since #308.
-     */
-    tcgId: z.string().trim().min(1).nullish(),
-    language: z.string().trim().min(2).max(5).nullish(),
-});
-
-// Adds a catalogue card to the collection or the wishlist. The API matches it against the
-// catalogues, picks the picture and the price; nothing about the card is stored from here.
+// Adds a catalogue card to the collection or the wishlist, as the person asking. The work is
+// addCardAs in lib/add-card.ts; this is the action a page calls, and it takes no token: a server
+// action is callable from any browser, so an argument here is an argument a stranger can fill in.
 //
 // `reread: false` as on setCopies below, for a tile that goes on pressing and re-reads once.
 export async function addCard(
@@ -199,44 +179,9 @@ export async function addCard(
         edition?: Edition;
     } = {},
 ): Promise<Result & { id?: string }> {
-    const parsed = cardSchema.safeParse(input);
-    if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
-
-    const c = parsed.data;
-    const wishlist = target === "wishlist";
-    // The new row's id, so a caller can offer to take the add back. Optional: the API has
-    // answered with it since the route was written, but an add that worked is still an add
-    // without it, just one with no way back.
-    let id: string | undefined;
-    try {
-        const answer = await api("/cards", {
-            method: "POST",
-            body: {
-                name: c.name,
-                set: c.set,
-                number: c.number,
-                ...(c.rarity ? { rarity: c.rarity } : {}),
-                // Only when the card came from another language's shelf. An English card carries
-                // neither and is resolved the way every row before it was.
-                ...(c.tcgId ? { tcgId: c.tcgId } : {}),
-                ...(c.language && c.language !== "en" ? { language: c.language } : {}),
-                types: c.types ?? [],
-                ...(printing && (FINISHES as readonly string[]).includes(printing.finish) ? { finish: printing.finish } : {}),
-                ...(printing?.foilPattern ? { foilPattern: printing.foilPattern } : {}),
-                ...(edition && (EDITIONS as readonly string[]).includes(edition) ? { edition } : {}),
-                collection: !wishlist,
-                // Added from a binder's own page: filed in it at once.
-                ...(collectionId && !wishlist && z.string().uuid().safeParse(collectionId).success ? { collectionId } : {}),
-            },
-            schema: addedAnswer,
-        });
-        id = answer.id;
-    } catch (err) {
-        return failed(err);
-    }
-
-    if (reread) await forgetMine("cards");
-    return { ok: true, id };
+    const added = await addCardAs(input, target, collectionId, { printing, edition });
+    if (added.ok && reread) await forgetMine("cards");
+    return added;
 }
 
 // Sets how many of one copy are held. The API refuses 0: a card you no longer hold is removed.
@@ -401,7 +346,10 @@ export type PriceHistory = { points: PricePoint[]; listings: Record<string, numb
 // the read says the line did not come and the chart offers to ask again (error-path audit).
 export async function cardPriceHistory(tcgId: string): Promise<PriceHistory> {
     try {
-        const { points, listings } = await api(`/cards/${encodeURIComponent(tcgId)}/prices`, { schema: pricePointsAnswer });
+        /* Asked with a token where there is one and without where there is none (`auth: "optional"`):
+           a card's price is the same figure for everybody, the set page prints it beside every tile
+           for a visitor, and the sheet opened over that grid said the line could not be loaded. */
+        const { points, listings } = await api(`/cards/${encodeURIComponent(tcgId)}/prices`, { auth: "optional", schema: pricePointsAnswer });
         return { points, listings: listings ?? {} };
     } catch (err) {
         console.error("Price history unavailable:", err instanceof Error ? err.message : err);
@@ -574,7 +522,9 @@ export async function cardFacts(tcgId: string, language?: string | null): Promis
         /* A Japanese card is asked of the Japanese catalogue: its id is only in that one, and asked of the
            English one it had no printings at all, so its sheet offered nothing to choose (2026-09-15). */
         const params = language === "ja" ? { language: "ja" } : undefined;
-        return factsOf(await api(`/cards/${encodeURIComponent(tcgId)}`, { params, schema: cardFactsAnswer }));
+        // The catalogue's own facts about a printing, the same for everybody, so a visitor's sheet
+        // asks for them too (`auth: "optional"`, as the set page reads its cards).
+        return factsOf(await api(`/cards/${encodeURIComponent(tcgId)}`, { params, auth: "optional", schema: cardFactsAnswer }));
     } catch (err) {
         console.error("Card facts unavailable:", err instanceof Error ? err.message : err);
         return null;
@@ -611,6 +561,9 @@ export async function cardFactsMany(tcgIds: string[], language?: string | null):
     if (!parsed.success) return {};
     try {
         const { cards } = await api("/cards/facts", {
+            // A page of tiles asks this for a visitor too: the facts are the same for everyone,
+            // as the single card's are (cardFacts), so the call is made with or without a token.
+            auth: "optional",
             method: "POST",
             body: { ids: parsed.data, ...(language === "ja" ? { language: "ja" } : {}) },
             schema: cardFactsBatchAnswer,

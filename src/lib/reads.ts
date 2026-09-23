@@ -10,7 +10,7 @@ import type {
     TitleSet,
 } from "@/app/(app)/dashboard/cards/actions";
 import type { BinderChoice } from "@/app/(app)/dashboard/collections/actions";
-import type { ShelfCount } from "@/app/(app)/dashboard/sets/actions";
+import type { ShelfCount } from "@/app/(app)/sets/actions";
 import type { FilterCounts, Mover } from "@/lib/api-shapes";
 import type { Card } from "@/lib/cards";
 import type { PeriodKey } from "@/lib/chart-periods";

@@ -3,6 +3,9 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { RECOVERY_COOKIE } from "@/lib/auth-redirect";
+import { KEPT_PRESS_COOKIE } from "@/lib/kept-press";
+import { applyKeptPress } from "@/lib/kept-press-apply";
+import { safeReturn } from "@/lib/return-to";
 import { createClient } from "@/lib/supabase/server";
 import { usernameFromEmail } from "@/lib/username";
 import { credentialsSchema, emailSchema, newPasswordSchema, signInSchema } from "@/lib/validation/auth";
@@ -17,16 +20,35 @@ function parseCredentials(formData: FormData) {
     });
 }
 
+/**
+ * Carry a visitor's kept press through, and never let that stand in the way of signing in.
+ *
+ * A press that fails to carry is told on the page they land on (kept-press-apply.ts). One that
+ * throws is logged and dropped: the person asked to sign in, and they are signed in.
+ */
+async function carryKeptPress(session: { access_token: string; user: { id: string } } | null | undefined, next: FormDataEntryValue | null) {
+    if (!session) return;
+    try {
+        await applyKeptPress({ token: session.access_token, userId: session.user.id, forget: true, continuing: safeReturn(next) });
+    } catch (err) {
+        console.error("A kept press could not be carried through:", err instanceof Error ? err.message : err);
+    }
+}
+
 export async function signIn(_prev: AuthState, formData: FormData): Promise<AuthState> {
     // No floor on the length here: an account made before the floor rose still signs in.
     const parsed = signInSchema.safeParse({ email: formData.get("email"), password: formData.get("password") });
     if (!parsed.success) return { error: parsed.error.issues[0].message };
 
     const supabase = await createClient();
-    const { error } = await supabase.auth.signInWithPassword(parsed.data);
+    const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
     if (error) return { error: error.message };
+    await carryKeptPress(data.session, formData.get("next"));
 
-    redirect("/dashboard");
+    // Back where the invitation found them, where one sent them here. Read against the rule a
+    // second time: the value went out to the browser and came back in a form, so by now it is a
+    // stranger's, and a redirect that follows it anywhere is this app lending its name to it.
+    redirect(safeReturn(formData.get("next")) ?? "/dashboard");
 }
 
 export async function signUp(_prev: AuthState, formData: FormData): Promise<AuthState> {
@@ -51,13 +73,19 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
     // so the password they typed may well be the account's own: try it, and they are in. If it is
     // not, the form says the account is there and points to signing in or a new password.
     if (data.user && data.user.identities?.length === 0) {
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-        if (!signInError) redirect("/dashboard");
+        const { data: signedIn, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (!signInError) {
+            await carryKeptPress(signedIn.session, formData.get("next"));
+            redirect(safeReturn(formData.get("next")) ?? "/dashboard");
+        }
         return { existing: true };
     }
 
     // Email confirmation off → a session is returned, so go straight in.
-    if (data.session) redirect("/dashboard");
+    if (data.session) {
+        await carryKeptPress(data.session, formData.get("next"));
+        redirect(safeReturn(formData.get("next")) ?? "/dashboard");
+    }
 
     // The link in that email signs the person in; there is no "then sign in" step.
     return { success: `Open the link we sent to ${email} and you are in.` };
@@ -120,5 +148,8 @@ export async function signOut(): Promise<{ error: string } | undefined> {
         console.error("Signing out failed:", error.message);
         return { error: "Signing out did not go through. Try again." };
     }
+    // A press parked in this browser leaves with the person, so the next one to sign in here
+    // cannot inherit it.
+    (await cookies()).delete(KEPT_PRESS_COOKIE);
     redirect("/");
 }

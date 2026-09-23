@@ -10,7 +10,7 @@ import { SET_ID, addButton, cacheCleared, card, setTile, writesLanded } from "./
 const own = card(25);
 
 test("a set's heading drops by one when a tile's last copy is taken", async ({ page }) => {
-    await page.goto(`/dashboard/sets/${SET_ID}`);
+    await page.goto(`/sets/${SET_ID}`);
     await expect(setTile(page, own, "in your collection").or(addButton(page, own))).toBeVisible();
     if (await addButton(page, own).isVisible()) {
         const settled = cacheCleared(page);

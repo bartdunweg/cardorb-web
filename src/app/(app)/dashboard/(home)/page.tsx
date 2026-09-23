@@ -1,14 +1,21 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { HomeBody, HomeListMenu, HomeListName } from "@/app/(app)/dashboard/(home)/home-body";
+// Home's own invitation, the sibling of SignInInvite (sign-in-invite.tsx) that the closed places
+// use: the same way in, in the shape of this page rather than one door in an empty room.
+import { HomeSignInInvite } from "@/components/app/home-sign-in-invite";
 import { PageHeader } from "@/components/app/page-header";
 import { HomeBodyOutline } from "@/components/app/skeletons";
 import { YouLink } from "@/components/app/you-link";
+import { session } from "@/lib/api";
 import { askedList } from "@/lib/home-list";
 
 // The tab's name, which the root layout's template finishes as “… · Cardorb”: without it every
 // tab and every history entry read “Cardorb”. The word is the one the navigation uses for this page.
-export const metadata: Metadata = { title: "Home" };
+//
+// Out of the index, because this page opens for a visitor and what it then holds is three sentences
+// about a collection that is not there: an empty Home in a search result is worse than none.
+export const metadata: Metadata = { title: "Home", robots: { index: false } };
 
 /* Until the binders are read, the list the address asks for, so a wishlist is not called Collection
    first. A binder's name needs that read: its room stands there instead. */
@@ -25,7 +32,23 @@ async function AskedTitle({ searchParams, plain = false }: { searchParams: Promi
 // Home: the value first, big, with its line and the period it moved over; then the counts. The
 // title and the three counts come with the page; the value section and the Pokémon tile stream
 // in behind them, each with an outline in its place.
-export default function DashboardPage({ searchParams }: { searchParams: Promise<{ value?: string }> }) {
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ value?: string }> }) {
+    /* Nobody signed in: Home is its own shape with an explanation in each place, and not one read of
+       a person's is started. It has to be decided here, before the tree is returned, because every
+       read below begins the moment its component is drawn and the API refuses without a token: a
+       visitor would get Home as an error page where an invitation belonged. */
+    const mine = await session();
+    if (!mine) {
+        return (
+            <div className="flex flex-1 flex-col gap-6">
+                {/* The page's own name, and none of the parts that need a read: no list to choose
+                    between, and no picture of a person to link to. */}
+                <PageHeader title="Home" />
+                <HomeSignInInvite />
+            </div>
+        );
+    }
+
     return (
         <div className="flex flex-1 flex-col gap-6">
             <PageHeader

@@ -23,8 +23,9 @@ vi.mock("@/lib/reads", () => ({
     isReadFailed: () => false,
 }));
 vi.mock("@/components/app/card-memo", () => ({ warmCard: vi.fn() }));
+vi.mock("@/lib/keep-press-client", () => ({ keepPress: vi.fn() }));
 const refresh = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }), usePathname: () => "/sets/me03" }));
 vi.mock("@/components/app/toast", () => ({ notify: { done: vi.fn(), removed: vi.fn(), failed: vi.fn(), dismiss: vi.fn() } }));
 vi.stubGlobal("matchMedia", () => ({ matches: true, addEventListener() {}, removeEventListener() {} }));
 vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 204 })));
@@ -42,10 +43,7 @@ const card: SetCard = {
     types: [],
     imageUrl: null,
     imageHighUrl: null,
-    owned: false,
-    wishlist: false,
-    quantity: 0,
-    itemIds: [],
+    holding: { owned: false, wishlist: false, quantity: 0, itemIds: [] },
     price: 0.06,
     tcgId: "me03-001",
 };
@@ -99,6 +97,59 @@ describe("SetCardTile's Undo after an add", () => {
         expect(removeCard).toHaveBeenCalledWith("4f0c1b2a-5d6e-4f70-8a9b-0c1d2e3f4a5b", { reread: false });
         expect(notify.done).toHaveBeenCalledWith("Undone");
         expect(refresh).toHaveBeenCalled();
+    });
+});
+
+/*
+ * A card of a set read without an account carries no holding: the API was never asked what this
+ * person holds. The tile claims nothing about a collection, so no mark and no count; the heart and
+ * the plus stay, as links to sign in carrying the page, because hiding them empties the app and
+ * hides the reason to make an account (Bart, 2026-09-22).
+ */
+describe("SetCardTile for a reader nobody was asked about", () => {
+    it("claims no mark and no count, and offers two ways in", async () => {
+        const { addCard } = await import("@/app/(app)/dashboard/cards/actions");
+        vi.mocked(addCard).mockClear();
+        render(<SetCardTile card={{ ...card, holding: null }} />);
+        expect(screen.getByRole("button", { name: "Spinarak #001" })).toBeInTheDocument();
+        expect(screen.queryByText(/You hold/)).toBeNull();
+        expect(screen.queryByText(/^×/)).toBeNull();
+        // The card itself is all there: its name, its number and its price.
+        expect(screen.getByText("Spinarak")).toBeInTheDocument();
+
+        // Links, not buttons: a press navigates, and carries the page it was pressed on.
+        const wish = screen.getByRole("link", { name: "Sign in to put Spinarak #001 on your wishlist" });
+        const collect = screen.getByRole("link", { name: "Sign in to add Spinarak #001 to your collection" });
+        for (const control of [wish, collect]) {
+            expect(control).toHaveAttribute("href", "/login?next=%2Fsets%2Fme03");
+            expect(control).not.toHaveAttribute("aria-pressed");
+        }
+        // Nothing here writes, and no press could reach a write.
+        expect(screen.queryByRole("button", { name: /wishlist/ })).toBeNull();
+        expect(screen.queryByRole("button", { name: /collection$/ })).toBeNull();
+        await act(async () => fireEvent.click(collect));
+        expect(addCard).not.toHaveBeenCalled();
+    });
+
+    it("keeps the press on the way to signing in, with its target and the card, and lets the link go", async () => {
+        const { keepPress } = await import("@/lib/keep-press-client");
+        vi.mocked(keepPress).mockClear();
+        render(<SetCardTile card={{ ...card, holding: null }} language="ja" />);
+
+        const wish = screen.getByRole("link", { name: "Sign in to put Spinarak #001 on your wishlist" });
+        // fireEvent returns false when a handler called preventDefault: true is a navigation let go.
+        expect(fireEvent.click(wish)).toBe(true);
+        expect(keepPress).toHaveBeenLastCalledWith(
+            "wishlist",
+            expect.objectContaining({ name: "Spinarak", set: "Perfect Order", number: "001", tcgId: "me03-001", language: "ja" }),
+        );
+        expect(wish).toHaveAttribute("href", "/login?next=%2Fsets%2Fme03");
+
+        const collect = screen.getByRole("link", { name: "Sign in to add Spinarak #001 to your collection" });
+        expect(fireEvent.click(collect)).toBe(true);
+        expect(keepPress).toHaveBeenLastCalledWith("collection", expect.objectContaining({ name: "Spinarak", number: "001" }));
+        expect(collect).toHaveAttribute("href", "/login?next=%2Fsets%2Fme03");
+        expect(keepPress).toHaveBeenCalledTimes(2);
     });
 });
 

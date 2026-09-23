@@ -18,6 +18,13 @@ import { cx } from "@/utils/cx";
  * `aria-pressed` too, so the colour is never the only thing that says it.
  *
  * The label is the whole name: the icon says nothing to a screen reader.
+ *
+ * `href` makes it a link instead of a button, which is what the same control is for a reader with
+ * no account: the heart and the plus stay where they are and stay pressable, and the press goes to
+ * sign in carrying the page. The kit's Button renders a react-aria Link the moment it is given an
+ * `href`, so the control announces as a link, keeps the same focus ring and needs no key handler.
+ * `onPress` on a link runs beside the navigation, never instead of it: a visitor's press is kept
+ * there (keep-press-client.ts) and the link goes where it goes.
  */
 export function TileIconButton({
     icon,
@@ -25,6 +32,7 @@ export function TileIconButton({
     pending = false,
     on,
     onPress,
+    href,
 }: {
     icon: FC<{ className?: string; "data-icon"?: string }>;
     /** What it does and to which card: "Add Pikachu #25 to your collection". */
@@ -33,20 +41,20 @@ export function TileIconButton({
     /** The mark this button sets, when it is set. */
     on?: Mark;
     onPress?: () => void;
+    /** Where the press goes, for a control that navigates rather than writes. */
+    href?: string;
 }) {
     const Icon = icon;
-    return (
-        <Button
-            size="xs"
-            color="secondary"
-            iconLeading={on ? <Icon data-icon="leading" className={cx(styles.common.icon, "fill-current")} /> : icon}
-            aria-label={label}
-            aria-pressed={on ? true : undefined}
-            isDisabled={pending}
-            onClick={onPress}
-            className={on ? MARK_ON[on] : undefined}
-        />
-    );
+    const common = {
+        size: "xs",
+        color: "secondary",
+        iconLeading: on ? <Icon data-icon="leading" className={cx(styles.common.icon, "fill-current")} /> : icon,
+        "aria-label": label,
+        className: on ? MARK_ON[on] : undefined,
+    } as const;
+    // A link says nothing about a pressed state: no `aria-pressed`. Its handler only runs alongside.
+    if (href) return <Button {...common} href={href} onClick={onPress} />;
+    return <Button {...common} aria-pressed={on ? true : undefined} isDisabled={pending} onClick={onPress} />;
 }
 
 export type Mark = "wishlist" | "favorite";

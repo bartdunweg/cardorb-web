@@ -1,5 +1,6 @@
-import { ApiError, api } from "@/lib/api";
+import { ApiError, api, session } from "@/lib/api";
 import { type SetCard, catalogueSetsAnswer, ownImage, seriesFromSets, setCardFromBrowse, setPageAnswer } from "@/lib/api-shapes";
+import { CATALOGUE_TAG } from "@/lib/cache-scopes";
 import type { BrowseLanguage } from "@/lib/languages";
 import { logoPaletteMap } from "@/lib/logo-color";
 import { CATALOGUE_NOT_ANSWERING } from "@/lib/read-failure";
@@ -25,12 +26,21 @@ const catalogueDown = (err: unknown) => err instanceof ApiError && err.status ==
 // Without the logos' colours: a tab title, the counts beside Browse's filters, the search sheet and
 // a generation's logo in the card sheet read this and draw no tile. `getSets` is the shelf with them.
 export async function getShelf(language: BrowseLanguage = "en") {
+    const params = language === "en" ? {} : { language };
     try {
-        const sets = await perUser(
-            "sets",
-            `sets:${language}`,
-            async (token) => (await api("/catalog/sets", { token, params: language === "en" ? {} : { language }, schema: catalogueSetsAnswer })).sets,
-        );
+        /*
+         * Two roads, and which one is taken is the session's answer, not the caller's.
+         *
+         * Signed in, the counts on these tiles are this person's, so the entry is theirs: perUser
+         * keys it by them and a write of theirs forgets it. Signed out the answer carries nobody's
+         * counts, so every visitor shares one entry under the catalogue's tag. That is not only
+         * cheaper, it is the only correct filing: an answer with no person in it has no person to
+         * be filed under.
+         */
+        const mine = await session();
+        const sets = mine
+            ? await perUser("sets", `sets:${language}`, async (token) => (await api("/catalog/sets", { token, params, schema: catalogueSetsAnswer })).sets)
+            : (await api("/catalog/sets", { auth: "optional", params, tags: [CATALOGUE_TAG], schema: catalogueSetsAnswer })).sets;
         return seriesFromSets(sets);
     } catch (err) {
         if (catalogueDown(err)) throw new CatalogueUnavailable();
@@ -72,8 +82,8 @@ export type SetDetail = {
     total: number;
     /** The set's gallery, whose cards are part of `total`. */
     gallery: { name: string; total: number } | null;
-    /** Distinct cards held, over the whole set. */
-    owned: number;
+    /** Distinct cards held, over the whole set; null where nobody was asked (a reader without a session). */
+    owned: number | null;
     cards: SetCard[];
 };
 
@@ -94,7 +104,12 @@ export type SetDetail = {
 export async function getSet(id: string, language: BrowseLanguage = "en"): Promise<SetDetail | null> {
     const from = weekAgo();
     try {
-        return await perUser({ scope: "setPages", part: id }, `set:v2:${language}:${from}:${id}`, (token) => readSet(id, language, from, token));
+        // As the shelf above: the reader's own page is filed under them, a visitor's under the
+        // catalogue, because it holds nothing that is anyone's.
+        const mine = await session();
+        return mine
+            ? await perUser({ scope: "setPages", part: id }, `set:v2:${language}:${from}:${id}`, (token) => readSet(id, language, from, token))
+            : await readSet(id, language, from, null);
     } catch (err) {
         if (err instanceof ApiError && err.status === 404) return null;
         if (catalogueDown(err)) throw new CatalogueUnavailable();
@@ -105,10 +120,12 @@ export async function getSet(id: string, language: BrowseLanguage = "en"): Promi
 /** Seven days back, the window a set tile's price change covers (Bart's call, 2026-09-18), as the API's date. */
 const weekAgo = () => new Date(Date.now() - 7 * 86_400_000).toISOString().slice(0, 10);
 
-async function readSet(id: string, language: BrowseLanguage, from: string, token: string): Promise<SetDetail> {
+async function readSet(id: string, language: BrowseLanguage, from: string, token: string | null): Promise<SetDetail> {
     const read = (page: number) =>
         api(`/catalog/sets/${encodeURIComponent(id)}`, {
-            token,
+            // Null is a visitor: the call is made without a token and the API answers the set
+            // without a mark on it (auth "optional" in api.ts).
+            ...(token ? { token } : { auth: "optional" as const, tags: [CATALOGUE_TAG] }),
             params: { pageSize: PAGE, from, ...(page > 1 ? { page } : {}), ...(language === "en" ? {} : { language }) },
             schema: setPageAnswer,
         });
@@ -135,7 +152,7 @@ async function readSet(id: string, language: BrowseLanguage, from: string, token
         // rather than "0 of 0", which says nothing was ever there.
         total: totalCount || set.total,
         gallery: set.gallery ?? null,
-        owned: ownedCount,
+        owned: ownedCount ?? null,
         cards: cards.map((c) => setCardFromBrowse(c, set.abbreviation ?? null)),
     };
 }

@@ -38,7 +38,7 @@ const closeSheet = async (page: Page) => {
 };
 
 test("a card unstarred on Favorites leaves the list without a reload", async ({ page }) => {
-    await page.goto(`/dashboard/sets/${SET_ID}`);
+    await page.goto(`/sets/${SET_ID}`);
     if (await addButton(page, spewpa).isVisible()) {
         // Registered before the click: the set tile writes quietly and ends in /api/forget-mine.
         const added = cacheCleared(page);

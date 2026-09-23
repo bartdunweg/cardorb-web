@@ -87,7 +87,7 @@ async function Set({ params, searchParams }: { params: Promise<{ id: string }>; 
     // What you hold of the set, as this render read it: a new one drops what the tiles held since (SetLive).
     const stamp = holdingStamp(set.cards);
     /* The size as the set pages were left: one memory for all of them (list-memory.ts). */
-    const remembered = await rememberedView(`/dashboard/sets/${id}`);
+    const remembered = await rememberedView(`/sets/${id}`);
 
     return (
         <SetLive stamp={stamp}>
@@ -99,7 +99,7 @@ async function Set({ params, searchParams }: { params: Promise<{ id: string }>; 
                     // The set's own name where the title is a translation: that is what the pack says.
                     subtitle={set.localName ?? undefined}
                     backOnDesktop
-                    back={{ href: language === "en" ? "/dashboard/sets" : `/dashboard/sets?language=${language}`, label: "Browse" }}
+                    back={{ href: language === "en" ? "/sets" : `/sets?language=${language}`, label: "Browse" }}
                     // The set's logo on its own colour, edge to edge over the name. Decoration: the h1 says
                     // which set. No progress bar under the title: the owner's call is that the page
                     // shows the cards, not a meter, so the numbers under the title say the count in words.

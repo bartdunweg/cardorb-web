@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const {
     session,
     cardFacts,
+    cardFactsMany,
+    cardPriceHistory,
     listRows,
     moversFor,
     warmList,
@@ -17,6 +19,8 @@ const {
 } = vi.hoisted(() => ({
     session: vi.fn(),
     cardFacts: vi.fn(),
+    cardFactsMany: vi.fn(),
+    cardPriceHistory: vi.fn(),
     listRows: vi.fn(),
     moversFor: vi.fn(),
     warmList: vi.fn(),
@@ -32,8 +36,8 @@ const {
 vi.mock("@/lib/api", () => ({ session }));
 vi.mock("@/app/(app)/dashboard/cards/actions", () => ({
     cardFacts,
-    cardFactsMany: vi.fn(),
-    cardPriceHistory: vi.fn(),
+    cardFactsMany,
+    cardPriceHistory,
     listRows,
     listSetRows: vi.fn(),
     seriesLogo: vi.fn(),
@@ -45,7 +49,7 @@ vi.mock("@/app/(app)/dashboard/cards/actions", () => ({
 vi.mock("@/app/(app)/dashboard/collections/actions", () => ({ loadFacets: vi.fn() }));
 vi.mock("@/app/(app)/dashboard/(home)/actions", () => ({ moversFor }));
 vi.mock("@/app/(app)/dashboard/list-actions", () => ({ warmList, loadMoreCards, countCards }));
-vi.mock("@/app/(app)/dashboard/sets/actions", () => ({ listSetsShelf, countShelf }));
+vi.mock("@/app/(app)/sets/actions", () => ({ listSetsShelf, countShelf }));
 vi.mock("@/lib/binders", () => ({ getBinderChoices: vi.fn() }));
 
 const { GET } = await import("./route");
@@ -57,6 +61,7 @@ describe("GET /api/read/[what]", () => {
     beforeEach(() => {
         session.mockReset().mockResolvedValue({ userId: "u1", token: "t" });
         cardFacts.mockReset().mockResolvedValue({ illustrator: "Mitsuhiro Arita" });
+        cardPriceHistory.mockReset().mockResolvedValue({ points: [], listings: {} });
         listRows.mockReset().mockResolvedValue([]);
         moversFor.mockReset().mockResolvedValue(null);
         warmList.mockReset().mockResolvedValue(undefined);
@@ -70,10 +75,57 @@ describe("GET /api/read/[what]", () => {
         expect(cardFacts).toHaveBeenCalledWith("base1-4", "ja");
     });
 
-    it("is a 401 without a session, and reads nothing", async () => {
+    /* A card's facts and its price are the catalogue's, not a reader's: the set page prints the
+       same figure beside every tile for a visitor, so the sheet over it answers one too. */
+    it("answers a card's facts and its price without a session", async () => {
         session.mockResolvedValue(null);
-        expect((await get("facts", "?id=base1-4")).status).toBe(401);
-        expect(cardFacts).not.toHaveBeenCalled();
+        const facts = await get("facts", "?id=base1-4");
+        expect(facts.status).toBe(200);
+        expect(await facts.json()).toEqual({ illustrator: "Mitsuhiro Arita" });
+        expect(cardFacts).toHaveBeenCalledWith("base1-4", undefined);
+
+        cardPriceHistory.mockResolvedValue({ points: [{ date: "2026-09-22", market: 823.98 }], listings: {} });
+        const prices = await get("prices", "?id=base1-4");
+        expect(prices.status).toBe(200);
+        expect(await prices.json()).toEqual({ points: [{ date: "2026-09-22", market: 823.98 }], listings: {} });
+        expect(cardPriceHistory).toHaveBeenCalledWith("base1-4");
+        // Not the session's own: nothing here is read per person.
+        expect(session).not.toHaveBeenCalled();
+    });
+
+    /* A set page asks for a whole page of tiles' facts at once. The batch is the single card's
+       facts many times over, so it answers the same caller: a visitor on Browse got a 401 here
+       while the card they opened next was answered. */
+    it("answers a page of cards' facts without a session", async () => {
+        session.mockResolvedValue(null);
+        cardFactsMany.mockResolvedValue({ "base1-4": { illustrator: "Mitsuhiro Arita" } });
+        const many = await get("facts-many", "?id=base1-1&id=base1-4");
+        expect(many.status).toBe(200);
+        expect(cardFactsMany).toHaveBeenCalledWith(["base1-1", "base1-4"], undefined);
+        expect(session).not.toHaveBeenCalled();
+    });
+
+    /* Search is open, the owner's first word on it, and the palette leans on four reads for it:
+       the hits, the shelf behind its Set chip, the counts beside Browse's filters, a series'
+       logo on the sheet. Each is the catalogue alone. A visitor got a 401 for all four. */
+    it("answers a search and the shelf's reads without a session", async () => {
+        session.mockResolvedValue(null);
+        searchPokemon.mockResolvedValue({ items: [], total: 0 });
+        listSetsShelf.mockResolvedValue({ series: [], unavailable: false });
+        expect((await get("sets-shelf")).status).toBe(200);
+        expect(listSetsShelf).toHaveBeenCalled();
+        expect((await get("series-logo", "?series=Base")).status).not.toBe(401);
+        expect(session).not.toHaveBeenCalled();
+    });
+
+    it("is a 401 without a session for a read about the reader, and reads nothing", async () => {
+        session.mockResolvedValue(null);
+        expect((await get("rows", "?name=Charizard&set=Base&number=4")).status).toBe(401);
+        expect(listRows).not.toHaveBeenCalled();
+        expect((await get("folders")).status).toBe(401);
+        expect((await get("warm-list", "?list=wishlist")).status).toBe(401);
+        expect(warmList).not.toHaveBeenCalled();
+        expect((await get("facets")).status).toBe(401);
     });
 
     it("is a 404 for a read it does not have, a prototype's name included", async () => {
@@ -157,9 +209,12 @@ describe("GET /api/read/[what], the list and search reads", () => {
         expect(countShelf).toHaveBeenLastCalledWith({ language: "en", progress: "all", series: [], year: [] });
     });
 
-    it("is a 401 without a session for these too", async () => {
+    // It used to be a 401: search was behind the wall with the rest. The owner opened it on
+    // 2026-09-22, so a visitor's query is answered, and without marks (the route decides that).
+    it("answers a search without a session", async () => {
         session.mockResolvedValue(null);
-        expect((await get("catalogue", input({ q: "charizard", page: 1 }))).status).toBe(401);
-        expect(searchPokemon).not.toHaveBeenCalled();
+        searchPokemon.mockResolvedValue({ items: [], total: 0 });
+        expect((await get("catalogue", input({ q: "charizard", page: 1 }))).status).toBe(200);
+        expect(searchPokemon).toHaveBeenCalled();
     });
 });

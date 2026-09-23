@@ -77,17 +77,20 @@ function CardPreview({ card, onAdd, onView }: { card: PokemonCard; onAdd: (targe
                 the facts scroll under it (Bart's call, 2026-09-12). Owned or wished for, never both. A card
                 you hold closes both buttons; a wish closes its own and leaves the collection open, because
                 taking a wished card is what settles a wish. The hit itself says which it is (takenHit marks
-                it the moment a press lands). */}
+                it the moment a press lands).
+
+                A hit nobody was asked about carries no holding, so both buttons read as the invitation
+                they are and neither claims the card is missing from a collection we never read. */}
             <div className="flex flex-col gap-2">
                 <Button
                     onClick={() => {
                         onAdd("collection");
                         focusField();
                     }}
-                    isDisabled={card.owned}
+                    isDisabled={card.holding?.owned ?? false}
                     className="w-full"
                 >
-                    {card.owned ? "In your collection" : "Add to collection"}
+                    {card.holding?.owned ? "In your collection" : "Add to collection"}
                 </Button>
                 <Button
                     color="secondary"
@@ -95,10 +98,10 @@ function CardPreview({ card, onAdd, onView }: { card: PokemonCard; onAdd: (targe
                         onAdd("wishlist");
                         focusField();
                     }}
-                    isDisabled={card.owned || card.wishlist}
+                    isDisabled={Boolean(card.holding?.owned || card.holding?.wishlist)}
                     className="w-full"
                 >
-                    {card.wishlist ? "On your wishlist" : "Add to wishlist"}
+                    {card.holding?.wishlist ? "On your wishlist" : "Add to wishlist"}
                 </Button>
                 {/* The card in full: the sheet over the palette, with the price line, the copies and the
                     binders the preview has no room for. */}

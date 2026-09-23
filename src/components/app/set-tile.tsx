@@ -62,10 +62,12 @@ export function SetTile({
     /** On screen at load: the first row of the first series, which must not wait for lazy loading. */
     priority?: boolean;
 }) {
+    // Dimmed for a set you hold nothing of. Not for one nobody was asked about: that dims the
+    // whole shelf and says a visitor owns none of it, which is not ours to say.
     const empty = set.owned === 0;
     return (
         <HoverPrefetchLink
-            href={`/dashboard/sets/${encodeURIComponent(set.id)}${language === "en" ? "" : `?language=${language}`}`}
+            href={`/sets/${encodeURIComponent(set.id)}${language === "en" ? "" : `?language=${language}`}`}
             // One level in: the set's page comes from the right (page-transition.tsx).
             transitionTypes={["nav-forward"]}
             className={cx(
@@ -100,12 +102,17 @@ export function SetTile({
                 {/* A set the catalogue has not recorded cards for is not "0 of 60 to go": the count
                     would say the collecting is unstarted where it is the catalogue that is. The tile
                     says so instead, in the words the set's own page uses, and still opens it. */}
-                {set.cardsRecorded ? (
+                {/* Nobody asked who is reading (a shelf without a session): the set's size alone, which is
+                    a catalogue fact. Not "0 of 207", which tells a visitor something false about a
+                    collection they do not have. */}
+                {!set.cardsRecorded ? (
+                    <span className="text-xs text-tertiary">No cards in the catalogue yet</span>
+                ) : set.owned === null ? (
+                    <span className="text-sm text-tertiary tabular-nums">{formatCount(set.total)} cards</span>
+                ) : (
                     <span className="text-sm text-tertiary tabular-nums">
                         {formatCount(set.owned)} of {formatCount(set.total)}
                     </span>
-                ) : (
-                    <span className="text-xs text-tertiary">No cards in the catalogue yet</span>
                 )}
             </div>
         </HoverPrefetchLink>

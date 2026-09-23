@@ -63,6 +63,13 @@ export function BrowseToolbar({
     // A choice in the URL stays offered while the shelf is on its way, or when this shelf lacks it.
     const seriesNames = [...new Set([...arrived.series, ...query.series])];
     const yearNames = [...new Set([...arrived.years, ...query.year])];
+    /* Progress is about the reader's own shelf, so a shelf read without a session has nothing for it
+       to be about: no count, no completeness, and every choice would be a guess about a collection
+       nobody named. The group is then left out of the sheet rather than offered dead, the way the
+       series and the years only offer what the shelf answered with. A `?progress=` already in the
+       address keeps its choice on screen so the row still explains the shelf under it, and
+       `progressShelf` leaves that shelf whole. */
+    const showProgress = arrived.holdings || query.progress !== "all";
     // Per choice, the sets it would leave (the search as typed, the other filters as drafted); the button's total with it.
     const count = useCallback(
         async (v: FilterValues): Promise<FilterAnswer> => {
@@ -128,16 +135,20 @@ export function BrowseToolbar({
                         groups={[
                             { id: "series", label: "Series", multiple: true, options: seriesNames.map((name) => ({ value: name, label: name })) },
                             { id: "year", label: "Year", multiple: true, options: yearNames.map((y) => ({ value: y, label: y })) },
-                            {
-                                id: "progress",
-                                label: "Progress",
-                                all: { value: "all", label: "All sets" },
-                                options: BROWSE_PROGRESS_OPTIONS.filter((o) => o.value !== "all").map((o) => ({
-                                    value: o.value,
-                                    label: o.label,
-                                    icon: <Dot size="md" aria-hidden="true" className={PROGRESS_DOT[o.value]} />,
-                                })),
-                            },
+                            ...(showProgress
+                                ? [
+                                      {
+                                          id: "progress",
+                                          label: "Progress",
+                                          all: { value: "all", label: "All sets" },
+                                          options: BROWSE_PROGRESS_OPTIONS.filter((o) => o.value !== "all").map((o) => ({
+                                              value: o.value,
+                                              label: o.label,
+                                              icon: <Dot size="md" aria-hidden="true" className={PROGRESS_DOT[o.value]} />,
+                                          })),
+                                      },
+                                  ]
+                                : []),
                         ]}
                         values={{ series: query.series, year: query.year, progress: query.progress === "all" ? [] : [query.progress] }}
                         count={count}

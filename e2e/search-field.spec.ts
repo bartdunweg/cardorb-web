@@ -16,7 +16,7 @@ test.describe.configure({ mode: "serial" });
 
 test.beforeAll(async ({ browser }) => {
     const page = await (await browser.newContext({ storageState: "e2e/.auth/user.json" })).newPage();
-    await page.goto(`/dashboard/sets/${SET_ID}`);
+    await page.goto(`/sets/${SET_ID}`);
     for (const c of [toedscool, toedscruel]) {
         // phone-list.spec.ts may have added them already; a card in the collection is left as it is.
         // Wait for the tile either way first: `isVisible` does not wait, and read before the grid was in it said no.
@@ -146,7 +146,7 @@ test("a binder's field offers the titles it holds, and a title chosen is the sea
 
 // A smoke test: the set page writes with the history API, so no answer comes back to race.
 test("a set page keeps the letters typed and narrows its grid", async ({ page }) => {
-    await page.goto(`/dashboard/sets/${SET_ID}`);
+    await page.goto(`/sets/${SET_ID}`);
     const search = await field(page, "Search in Scarlet & Violet");
     await search.click();
     await typeWithPauses(page, ["Toeds", 400, "cr", 400, "uel"]);
@@ -159,7 +159,7 @@ test("a set page keeps the letters typed and narrows its grid", async ({ page })
 
 test("Browse keeps the letters typed and its sets on screen while it narrows", async ({ page }) => {
     await slowAnswers(page);
-    await page.goto("/dashboard/sets");
+    await page.goto("/sets");
     const search = await field(page, "Search in Browse");
     const shelf = page
         .getByRole("main")

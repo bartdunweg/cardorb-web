@@ -1,10 +1,29 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
+import { safeReturn } from "@/lib/return-to";
 import { COOKIE_OPTIONS } from "@/lib/supabase/cookie-options";
 import { elapsed, logTiming } from "@/lib/timing";
 
-// Public by default (landing, login, signup). Only these prefixes require a session.
-const PROTECTED_PREFIXES = ["/dashboard"];
+/**
+ * The pages that still send a visitor away, and there are only three left.
+ *
+ * Everything in the navigation opens instead and says what an account adds there (the app
+ * without an account, 2026-09-23). Pressing Home and being handed a login form is an answer to a
+ * question nobody asked: they asked for Home. A page that opens can show the shape of what it
+ * holds, which is also the only way somebody sees what they would be making an account for.
+ *
+ * These three are not in a visitor's navigation and have nothing to show. Settings and the
+ * profile are reached from the account menu, which for a visitor is the way in; the design page
+ * is a tool for building the app and not a page of it.
+ *
+ * A page that opens must check the session itself. `signed-out-pages.test.tsx` walks every route
+ * under (app) and demands that each one either stands here or renders an invitation, so a new
+ * page cannot join the open set by being forgotten.
+ */
+const PROTECTED_PREFIXES = ["/dashboard/settings", "/dashboard/you", "/dashboard/design"];
+
+/** Whether this address still sends a visitor to the door. Exported so it can be asserted rather than inferred. */
+export const isProtected = (pathname: string) => PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 // A signed-in person has no use for these; they go to the dashboard. Deciding it here keeps the
 // landing page free of any session lookup, so it prerenders.
 const ENTRY_PATHS = ["/", "/login", "/signup"];
@@ -18,7 +37,7 @@ export async function updateSession(request: NextRequest) {
     // protected part closes rather than opens, so a misconfigured deploy cannot show a dashboard.
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
         const { pathname } = request.nextUrl;
-        if (PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
+        if (isProtected(pathname)) {
             const url = request.nextUrl.clone();
             url.pathname = "/login";
             url.search = "";
@@ -60,11 +79,15 @@ export async function updateSession(request: NextRequest) {
     supabaseResponse.headers.set("server-timing", `auth;dur=${authMs}`);
 
     const { pathname } = request.nextUrl;
-    const isProtected = PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+    const protectedHere = isProtected(pathname);
 
-    if (!user && isProtected) {
+    if (!user && protectedHere) {
         const url = request.nextUrl.clone();
         url.pathname = "/login";
+        // Where they were going, so signing in finishes the journey rather than landing them on
+        // Home. The same rule the invitations use, and the form checks it again on the far side.
+        const back = safeReturn(`${pathname}${request.nextUrl.search}`);
+        url.search = back ? `?next=${encodeURIComponent(back)}` : "";
         return NextResponse.redirect(url);
     }
 

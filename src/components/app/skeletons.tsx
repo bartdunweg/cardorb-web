@@ -258,7 +258,7 @@ export function SetSkeleton() {
             <PageHeader
                 title={" "}
                 subtitle={<Line className="h-5 w-40" />}
-                back={{ href: "/dashboard/sets", label: "Browse" }}
+                back={{ href: "/sets", label: "Browse" }}
                 backOnDesktop
                 // The room the band takes (set-hero.tsx), so the title does not move when it lands.
                 hero={<div className="h-28 sm:h-32" />}

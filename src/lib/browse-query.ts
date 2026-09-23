@@ -76,7 +76,7 @@ export function browseHref(current: BrowseQuery, patch: Partial<BrowseQuery>): s
     for (const name of series) p.append("series", name);
     for (const y of year) p.append("year", y);
     const s = p.toString();
-    return s ? `/dashboard/sets?${s}` : "/dashboard/sets";
+    return s ? `/sets?${s}` : "/sets";
 }
 
 /**
@@ -91,11 +91,27 @@ export function searchShelf(series: SetSeries[], q: string | undefined): SetSeri
         .filter((group) => group.sets.length > 0);
 }
 
-/** The shelf narrowed to how far along each set is; a series with none left goes. All is the whole shelf. */
+/**
+ * Whether this shelf carries the reader's own holdings. A shelf read without a session carries
+ * none, and "how far along" then has nobody to be about (`seriesFromSets`).
+ */
+export const shelfHasHoldings = (series: SetSeries[]): boolean => series.some((group) => group.sets.some((s) => s.owned !== null));
+
+/**
+ * The shelf narrowed to how far along each set is; a series with none left goes. All is the whole shelf.
+ *
+ * Nothing marked, so nobody was asked: the shelf comes back whole. Progress is a claim about the
+ * reader, and with no reader every set would fail every choice, which empties the shelf and tells
+ * a visitor their collection is untouched. A filter about you narrows nothing when there is no you.
+ * The filter itself is left out of the row in that case (`browse-toolbar.tsx`), so this holds the
+ * line only for a `?progress=` that arrived in a shared address.
+ */
 export function progressShelf(series: SetSeries[], progress: BrowseProgress): SetSeries[] {
-    if (progress === "all") return series;
+    if (progress === "all" || !shelfHasHoldings(series)) return series;
     const keep = (s: SetSeries["sets"][number]) =>
-        s.total > 0 && (progress === "complete" ? s.owned >= s.total : progress === "started" ? s.owned > 0 && s.owned < s.total : s.owned === 0);
+        s.owned !== null &&
+        s.total > 0 &&
+        (progress === "complete" ? s.owned >= s.total : progress === "started" ? s.owned > 0 && s.owned < s.total : s.owned === 0);
     return series.map((group) => ({ ...group, sets: group.sets.filter(keep) })).filter((group) => group.sets.length > 0);
 }
 
@@ -131,11 +147,11 @@ export function yearShelf(series: SetSeries[], chosen: string[]): SetSeries[] {
     return series.map((group) => ({ ...group, sets: group.sets.filter((s) => chosen.includes(setYear(s) ?? "")) })).filter((group) => group.sets.length > 0);
 }
 
-/** What the Series and Year filters offer. */
-export type ShelfFacets = { series: string[]; years: string[] };
+/** What the Series and Year filters offer, and whether the Progress filter has anything to be about. */
+export type ShelfFacets = { series: string[]; years: string[]; holdings: boolean };
 
 /** Nothing offered yet: the filters show what the URL already names until the shelf answers. */
-export const NO_SHELF_FACETS: ShelfFacets = { series: [], years: [] };
+export const NO_SHELF_FACETS: ShelfFacets = { series: [], years: [], holdings: false };
 
 /** What the Series and Year filters offer for a shelf: its series in the shelf's own order, its years newest first. */
 export function shelfFacets(series: SetSeries[]): ShelfFacets {
@@ -145,7 +161,11 @@ export function shelfFacets(series: SetSeries[]): ShelfFacets {
             const y = setYear(set);
             if (y) years.add(y);
         }
-    return { series: series.map((group) => group.name).filter(Boolean), years: [...years].sort((a, b) => b.localeCompare(a)) };
+    return {
+        series: series.map((group) => group.name).filter(Boolean),
+        years: [...years].sort((a, b) => b.localeCompare(a)),
+        holdings: shelfHasHoldings(series),
+    };
 }
 
 /** Every narrowing Browse's shelf takes after the search, in one place, for the page and for the counts. */

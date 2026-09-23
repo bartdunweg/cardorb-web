@@ -23,7 +23,7 @@ describe("binderFromPath", () => {
 
     it("is nothing on the Binders overview and on other pages with an id", () => {
         expect(binderFromPath("/dashboard/collections", binders)).toBeNull();
-        expect(binderFromPath("/dashboard/sets/aaa", binders)).toBeNull();
+        expect(binderFromPath("/sets/aaa", binders)).toBeNull();
         expect(binderFromPath("/dashboard/cards", binders)).toBeNull();
     });
 });
@@ -32,6 +32,6 @@ describe("isBinderPath", () => {
     it("knows a binder's page before the list has answered", () => {
         expect(isBinderPath("/dashboard/collections/aaa")).toBe(true);
         expect(isBinderPath("/dashboard/collections")).toBe(false);
-        expect(isBinderPath("/dashboard/sets/aaa")).toBe(false);
+        expect(isBinderPath("/sets/aaa")).toBe(false);
     });
 });

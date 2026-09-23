@@ -7,7 +7,7 @@ test("a new account opens on Home", async ({ page }) => {
 });
 
 test("the set page draws the seeded set from our own copy", async ({ page }) => {
-    await page.goto(`/dashboard/sets/${SET_ID}`);
+    await page.goto(`/sets/${SET_ID}`);
     for (const i of [0, 11]) {
         await expect(setTile(page, card(i), "not in your collection")).toBeVisible();
     }

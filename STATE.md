@@ -19,6 +19,16 @@ turns the API's answers into what the screens render, zod at every boundary.
 Card pictures come from our own Cloudflare R2 bucket at `images.cardorb.com` (English cards;
 cardorb-api README, Card pictures), through Vercel's image optimizer (`card-image.tsx`).
 
+**The app is usable without an account** (cardorb-web#775, api#584 to #587). The rule: a
+catalogue card is open, a card you own is not. Browse lives at `/sets` (the old addresses
+answer 308), a set page, the card sheet with its price line, and the command palette all work
+for a stranger. Home, Collection, Wishlist, Binders, Favorites and the Pokedex open and keep
+their shape, saying what an account adds there; only Settings, You and the design page still
+send a visitor to /login. Every write control a visitor sees is a link to signing in that
+returns to the page (`src/lib/return-to.ts`, read twice). A visitor's price lines are read
+through the service role inside the API, never through a grant to anon. Design and decisions:
+`docs/superpowers/specs/2026-09-22-app-without-an-account-design.md`.
+
 Live: landing, Home, Collection, Browse, Binders, Favorites, wishlist, set pages,
 command-palette search, Settings, public profile, and `/dashboard/design`, the design system,
 reachable only by typing the address (see `CLAUDE.md`).
@@ -33,8 +43,12 @@ Pokédex, Settings, You, Browse and the design page at all. Five more are the fl
 holding them: a binder made, filled from the collection and read back on the card's sheet, a binder
 renamed and a binder deleted (`e2e/binders.spec.ts`); a wished card marked as owned, which has to
 leave one list and join the other (`e2e/wishlist.spec.ts`); the Settings switch for the public
-profile, read from a signed-out visitor's browser, which must get a 404 while it is off
-(`e2e/profile.spec.ts`). The command palette is the one flow that cannot be tested here: its hits
+profile, read from a stranger's browser, which must get a 404 while it is off
+(`e2e/profile.spec.ts`). Until 2026-09-23 that "stranger" was signed in: `browser.newContext()`
+inherits the project's storageState, and the test passed only because a private profile answers
+404 to its own owner too. `stranger()` in `e2e/support.ts` is the only way to make nobody.
+`e2e/signed-out.spec.ts` opens the app as that stranger: what is open, what opens with an
+invitation, and above all what stays shut. The command palette is the one flow that cannot be tested here: its hits
 come from the API's `/catalog/search`, which asks TCGdex live, and the CI runner has no way out, so
 the palette can only ever answer "The card service didn't answer." in this stack. The double-press tests caught a set page drawn from before a write
 (`/api/revalidate` used "max"); fixed in web#676 and both run again. The card sheet has its own six

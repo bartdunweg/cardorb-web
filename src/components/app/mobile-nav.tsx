@@ -11,7 +11,7 @@ import { cx } from "@/utils/cx";
 
 const tabs = [
     { label: "Home", href: "/dashboard", icon: HomeLine, match: (p: string) => p === "/dashboard" },
-    { label: "Browse", href: "/dashboard/sets", icon: BookOpen01, match: (p: string) => p.startsWith("/dashboard/sets") },
+    { label: "Browse", href: "/sets", icon: BookOpen01, match: (p: string) => p.startsWith("/sets") },
     // Collection: the cards you own and the wishlist, the two halves of one switch (collection-switch.tsx).
     {
         label: "Collection",

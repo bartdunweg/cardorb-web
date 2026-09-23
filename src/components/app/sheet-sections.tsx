@@ -35,6 +35,11 @@ type Props = {
     card: Card | PublicCard;
     mine: Card | null;
     readOnly: boolean;
+    /**
+     * Whether anybody was asked what this reader holds. False is a visitor with no account: this
+     * section then says what an account keeps here rather than claiming an empty collection.
+     */
+    asked: boolean;
     rowPending: boolean;
     known: CardFacts | null;
     formFacts: CardFacts | null | undefined;
@@ -69,6 +74,7 @@ export function SheetSections({
     card,
     mine,
     readOnly,
+    asked,
     rowPending,
     known,
     formFacts,
@@ -195,11 +201,16 @@ export function SheetSections({
                                                drawn around that reads as a copy with nothing in it. */
                         <div className="flex flex-col gap-3">
                             <p className="text-sm text-tertiary">
-                                {emptied
-                                    ? "That was the last copy; it has left your collection."
-                                    : mine?.wishlist
-                                      ? "On your wishlist; you do not hold it yet."
-                                      : "You do not hold this card yet."}
+                                {/* Nobody was asked, so nothing is claimed about a collection: what an
+                                    account keeps here, in this card's own terms. "You do not hold this
+                                    card yet" was an answer about a collection we never read. */}
+                                {!asked
+                                    ? "An account keeps your copies of this card here: how many you have, the binder they are in, and what they are worth today."
+                                    : emptied
+                                      ? "That was the last copy; it has left your collection."
+                                      : mine?.wishlist
+                                        ? "On your wishlist; you do not hold it yet."
+                                        : "You do not hold this card yet."}
                             </p>
                             {/* On a phone the two buttons are in the bar at the bottom of the
                                                     sheet instead, under the thumb; see `offer`. */}

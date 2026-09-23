@@ -7,6 +7,7 @@ import { MarkOwnedDialog } from "@/components/app/mark-owned-dialog";
 import { SheetActionBar } from "@/components/app/sheet-action-bar";
 import { SheetHeader } from "@/components/app/sheet-header";
 import { SheetSections } from "@/components/app/sheet-sections";
+import { useReturnHrefs } from "@/components/app/sign-in-invite";
 import { useCardArt } from "@/components/app/use-card-art";
 import { useSheetBinders } from "@/components/app/use-sheet-binders";
 import { useSheetCopies } from "@/components/app/use-sheet-copies";
@@ -21,6 +22,7 @@ import { Button } from "@/components/base/buttons/button";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
 import type { PokemonCard } from "@/lib/api-shapes";
 import type { Card, PublicCard } from "@/lib/cards";
+import { keepPress } from "@/lib/keep-press-client";
 import { cx } from "@/utils/cx";
 
 /* What a write that never answered (the network dropped, the action threw) lands as: the same
@@ -120,8 +122,13 @@ export function CardDetailSlideout({
     onStarChanged,
     setId = null,
 }: Props) {
+    /* Whether anybody was asked what this reader holds. A catalogue card carries the answer as
+       `holding`, and null there is a visitor with no account (`SetCard.holding`): the set page and
+       the search hand one in, and every sheet opened on a row of somebody's own has none to hand.
+       The sheet then reads nothing of anybody's and offers the way in instead of two dead writes. */
+    const asked = !(addable && addable.holding === null);
     const { mine, copies, setViewing, showRows, pressedRef, reloadCopies } = useSheetCopies({ card, readOnly });
-    const { binders, setBinders, facets, binder, binderPending, bindersFailed } = useSheetBinders({ card, readOnly });
+    const { binders, setBinders, facets, binder, binderPending, bindersFailed } = useSheetBinders({ card, readOnly, asked });
     const { stepFromRef, step } = useSheetSteps({ onPrev, onNext });
     const { tcgId, genLogo, formFacts, known, points, listings, period, setPeriod, change } = useSheetFacts({ card, mine, addable, opensOn });
     const {
@@ -167,7 +174,7 @@ export function CardDetailSlideout({
     const titleRef = useRef<HTMLHeadingElement>(null);
 
     /* What to do with a card you do not hold, built once: from `sm` up it sits under Your
-       copies, under "You do not hold this card yet", and on a phone in a bar pinned to the bottom of
+       copies, under the line that says so, and on a phone in a bar pinned to the bottom of
        the sheet, so it is reached without scrolling past every detail. One element, so the
        labels and the handlers cannot drift between the two places, and one place at a time, so
        a screen reader never hears "Add to collection" twice. The breakpoint is read before the
@@ -178,8 +185,30 @@ export function CardDetailSlideout({
        becoming a copy; the form asks what the copy is like as it arrives. It used to sit above
        the tabs, the only action not with the copies, and read as part of the title. */
     const sm = useBreakpoint("sm");
+    /* The way in, carrying the page this sheet was opened on, written the one way it is written
+       anywhere (sign-in-invite.tsx). */
+    const { signIn } = useReturnHrefs();
+    const cardNumber = card ? (card.printed_number ?? card.number) : null;
+    /* Nobody was asked what this reader holds, so the sheet writes nothing. The two offers stay
+       where they were and keep the same order, as links: the kit's Button is a react-aria Link the
+       moment it is given an href, so each keeps its focus ring and announces as a link. The name is
+       the whole sentence, word for word what the tile's round buttons say, so the two cannot
+       disagree. The press is kept on the way (keep-press-client.ts), as the tile keeps it, so
+       signing in carries it through; `addable` is the catalogue card, the one `asked` is read off. */
+    const invite =
+        !asked && card && addable ? (
+            <div className="flex flex-col gap-2">
+                <Button size="md" iconLeading={Plus} className="w-full" href={signIn} onClick={() => keepPress("collection", addable)}>
+                    Sign in to add {card.name} #{cardNumber} to your collection
+                </Button>
+                <Button size="md" color="secondary" iconLeading={Heart} className="w-full" href={signIn} onClick={() => keepPress("wishlist", addable)}>
+                    Sign in to put {card.name} #{cardNumber} on your wishlist
+                </Button>
+            </div>
+        ) : null;
     const offer =
-        mine && takeable && !rowPending && (emptied || (!mine.owned && !mine.wishlist)) ? (
+        invite ??
+        (mine && takeable && !rowPending && (emptied || (!mine.owned && !mine.wishlist)) ? (
             <div className="flex flex-col gap-2">
                 <Button size="md" iconLeading={Plus} className="w-full" isDisabled={busy || binderPending} onClick={() => add("collection")}>
                     {binder ? `Add to ${binder.name}` : "Add to collection"}
@@ -202,7 +231,7 @@ export function CardDetailSlideout({
                     Mark as owned
                 </Button>
             </MarkOwnedDialog>
-        ) : null;
+        ) : null);
     const actionBar = !sm && offer;
 
     /* The sheet's page under the header: price, details, your copies. Built here so the print-run tabs
@@ -230,6 +259,7 @@ export function CardDetailSlideout({
             card={card}
             mine={mine}
             readOnly={readOnly}
+            asked={asked}
             rowPending={rowPending}
             known={known}
             formFacts={formFacts}

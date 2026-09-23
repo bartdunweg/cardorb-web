@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { E2E_USER, cacheCleared } from "./support.ts";
+import { E2E_USER, cacheCleared, stranger } from "./support.ts";
 
 /**
  * The switch on Settings that decides whether anyone else can see the collection, read from where
@@ -12,7 +12,7 @@ import { E2E_USER, cacheCleared } from "./support.ts";
  */
 
 test("the public profile follows the Settings switch, off and on", async ({ page, browser }) => {
-    const visitor = await (await browser.newContext()).newPage();
+    const visitor = await stranger(browser);
     const profile = `/user/${E2E_USER.username}`;
 
     // The seed leaves the profile public, so the visitor can read it before anything is pressed.

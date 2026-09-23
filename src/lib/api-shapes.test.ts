@@ -330,7 +330,7 @@ describe("pokemonCardFromBrowse", () => {
             price: null,
             tcgId: null,
         });
-        expect(c).toMatchObject({ set: "Scarlet & Violet", types: null, hp: null, owned: true, price: null });
+        expect(c).toMatchObject({ set: "Scarlet & Violet", types: null, hp: null, holding: { owned: true, wishlist: false, quantity: 1 }, price: null });
         expect(c).not.toHaveProperty("language");
     });
     it("carries the catalogue id and the price with every hit, for the sheet a hit opens", () => {
@@ -397,9 +397,7 @@ describe("cardFromPokemonCard", () => {
             flavorText: null,
             nationalPokedexNumbers: null,
             tcgId: "me05-085",
-            owned: false,
-            wishlist: false,
-            quantity: 0,
+            holding: { owned: false, wishlist: false, quantity: 0 },
             price: 2.46,
         });
         expect(card).toMatchObject({ tcg_id: "me05-085", price: 2.46, set_name: "Pitch Black", owned: false, wishlist: false, quantity: 0 });
@@ -440,12 +438,41 @@ describe("seriesFromSets", () => {
     });
 
     it("counts complete and started sets", () => {
-        const { complete, started, totalSets } = seriesFromSets([
+        const { progress, totalSets } = seriesFromSets([
             set({ id: "a", total: 10, ownedCount: 10 }),
             set({ id: "b", total: 10, ownedCount: 3 }),
             set({ id: "c", total: 10, ownedCount: 0 }),
         ]);
-        expect({ complete, started, totalSets }).toEqual({ complete: 1, started: 2, totalSets: 3 });
+        expect({ ...progress, totalSets }).toEqual({ complete: 1, started: 2, totalSets: 3 });
+    });
+
+    // The API leaves the holding fields out for a reader it was given no credential for. Absent is
+    // not 0: a visitor owning none of a set and nobody having been asked are different answers, and
+    // only one of them may be drawn as a count.
+    it("gives a set no owned count where the answer carries none", () => {
+        const { series } = seriesFromSets([set({ id: "a", total: 10, ownedCount: undefined, wishlistCount: undefined })]);
+        const [only] = series[0].sets;
+        expect(only.owned).toBeNull();
+        expect(only.owned).not.toBe(0);
+        expect(only.complete).toBeNull();
+        expect(only.total).toBe(10);
+    });
+
+    it("keeps the owned count a number where the answer carries one, even at none held", () => {
+        const { series } = seriesFromSets([set({ id: "a", total: 10, ownedCount: 4 }), set({ id: "b", total: 10, ownedCount: 0 })]);
+        expect(series[0].sets[0].owned).toBe(4);
+        expect(series[0].sets[1].owned).toBe(0);
+        expect(series[0].sets[1].owned).not.toBeNull();
+    });
+
+    it("has no shelf progress at all where nobody was asked, rather than none complete and none started", () => {
+        const { progress, totalSets } = seriesFromSets([
+            set({ id: "a", total: 10, ownedCount: undefined, wishlistCount: undefined }),
+            set({ id: "b", total: 10, ownedCount: undefined, wishlistCount: undefined }),
+        ]);
+        expect(progress).toBeNull();
+        // The shelf's size is a catalogue fact and stays a number for everyone.
+        expect(totalSets).toBe(2);
     });
 
     it("reads whether the catalogue has the set's cards, and assumes so from an API that does not say", () => {
@@ -494,10 +521,7 @@ describe("setCardFromBrowse", () => {
             types: ["Grass"],
             imageUrl: "https://images.cardorb.com/p.png",
             imageHighUrl: null,
-            owned: true,
-            wishlist: false,
-            quantity: 2,
-            itemIds: ["row"],
+            holding: { owned: true, wishlist: false, quantity: 2, itemIds: ["row"] },
             price: null,
             listingPrice: null,
             tcgId: null,
@@ -581,6 +605,50 @@ describe("setCardFromBrowse, a card off another shelf", () => {
     });
 });
 
+/*
+ * The API leaves every holding field out of an answer to a reader who carried no credential, so a
+ * client can tell "you hold none of this" from "we never asked". Absent must reach a screen as
+ * null: false would draw an empty heart and 0 an empty count, and both are claims about a
+ * collection nobody read.
+ */
+describe("browseCardSchema without the holding fields", () => {
+    const base = {
+        id: "me03-001",
+        number: "001",
+        name: "Spinarak",
+        setName: "Perfect Order",
+        image: null,
+        imageHigh: null,
+        rarity: "Common",
+        types: [],
+        series: "Mega Evolution",
+        price: null,
+        tcgId: "me03-001",
+    };
+
+    it("parses a card that names none of them, and gives it no holding", () => {
+        const card = setCardFromBrowse(browseCardSchema.parse(base));
+        expect(card.holding).toBeNull();
+        expect(card.holding).not.toBe(false);
+        expect(card.holding).not.toBe(0);
+        // The card itself is all there, which is the whole point of an open catalogue.
+        expect(card).toMatchObject({ id: "me03-001", name: "Spinarak", rarity: "Common" });
+    });
+
+    it("keeps the values where the answer carries them, an explicit none included", () => {
+        const none = setCardFromBrowse(browseCardSchema.parse({ ...base, owned: false, wishlist: false, quantity: 0, itemIds: [] }));
+        expect(none.holding).not.toBeNull();
+        expect(none.holding).toEqual({ owned: false, wishlist: false, quantity: 0, itemIds: [] });
+
+        const held = setCardFromBrowse(browseCardSchema.parse({ ...base, owned: true, wishlist: false, quantity: 3, itemIds: ["row"] }));
+        expect(held.holding).toEqual({ owned: true, wishlist: false, quantity: 3, itemIds: ["row"] });
+    });
+
+    it("gives a search hit off the same answer no holding either", () => {
+        expect(pokemonCardFromBrowse(browseCardSchema.parse(base)).holding).toBeNull();
+    });
+});
+
 describe("setCardFromBrowse, the API's full-art flag", () => {
     it("keeps the flag where the answer sent one, and leaves it out where it did not", () => {
         const base = {
@@ -621,14 +689,19 @@ describe("pokemonCardFromSetCard", () => {
             types: [],
             imageUrl: null,
             imageHighUrl: null,
-            owned: false,
-            wishlist: false,
-            quantity: 0,
-            itemIds: [],
+            holding: { owned: false, wishlist: false, quantity: 0, itemIds: [] },
             price: null,
             tcgId: null,
         });
-        expect(card).toMatchObject({ id: "sv1-1", name: "Sprigatito", set: "Scarlet & Violet", number: "1", rarity: null, types: null, owned: false });
+        expect(card).toMatchObject({
+            id: "sv1-1",
+            name: "Sprigatito",
+            set: "Scarlet & Violet",
+            number: "1",
+            rarity: null,
+            types: null,
+            holding: { owned: false, wishlist: false, quantity: 0 },
+        });
     });
 });
 

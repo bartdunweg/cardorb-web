@@ -14,7 +14,7 @@ import {
 } from "@/app/(app)/dashboard/cards/actions";
 import { loadFacets } from "@/app/(app)/dashboard/collections/actions";
 import { countCards, loadMoreCards, warmList } from "@/app/(app)/dashboard/list-actions";
-import { countShelf, listSetsShelf } from "@/app/(app)/dashboard/sets/actions";
+import { countShelf, listSetsShelf } from "@/app/(app)/sets/actions";
 import { session } from "@/lib/api";
 import { CARD_FACTS_BATCH } from "@/lib/api-shapes";
 import { getBinderChoices } from "@/lib/binders";
@@ -34,11 +34,12 @@ import { loadMoreInput, titleScope } from "@/lib/list-filter-schema";
  * +293 ms in production, 2026-09-16), the sheet took 1.4 s to fill, and a star pressed meanwhile
  * waited behind all of them. Fetches run side by side and hold back no write.
  *
- * Every answer is the caller's own, found from their session; nobody else's id or token is taken
- * from the address. No session is a 401, which the client reads as the same failure the action
- * gave a signed-out visitor: soft for a public profile's sheet, thrown for a search. Nothing here
- * writes, so a GET another site makes a browser send can learn nothing it can read back and change
- * nothing.
+ * Every answer about a person is the caller's own, found from their session; nobody else's id or
+ * token is taken from the address. No session is a 401 for those, which the client reads as the
+ * same failure the action gave a signed-out visitor: soft for a public profile's sheet, thrown for
+ * a search. The catalogue reads (`OPEN`, below) answer anybody, as the set page they are opened
+ * from does. Nothing here writes, so a GET another site makes a browser send can learn nothing it
+ * can read back and change nothing.
  */
 
 /** The single values of an address's query, for a schema to read. */
@@ -174,11 +175,27 @@ const READS: Record<string, (q: URLSearchParams) => Promise<unknown> | null> = {
     },
 };
 
+/**
+ * The two reads that are about a card and not about a reader, so they answer a visitor too.
+ *
+ * A card's facts are the catalogue's own, and its price is public (Bart, 2026-09-22: current price
+ * and history both), which the set page already prints beside every tile. Opened for a visitor, a
+ * sheet on a set page drew "The price history for this card could not be loaded" over a figure
+ * standing in the grid behind it. Every other read here is somebody's own and stays shut.
+ */
+/*
+ * The reads that are the catalogue and nobody's: a card's facts, a page of cards' facts, a card's
+ * price line, a search, the shelf and its counts, a series' logo. Each answers a visitor with the
+ * catalogue alone; the shelf's two pick their own road from the session (getShelf), so a reader
+ * still gets their counts. Everything else here is about a person and needs one.
+ */
+const OPEN = new Set(["facts", "facts-many", "prices", "catalogue", "sets-shelf", "shelf-count", "series-logo"]);
+
 export async function GET(request: Request, { params: route }: { params: Promise<{ what: string }> }) {
     const { what } = await route;
     const read = Object.hasOwn(READS, what) ? READS[what] : undefined;
     if (!read) return new Response(null, { status: 404 });
-    if (!(await session())) return new Response(null, { status: 401 });
+    if (!OPEN.has(what) && !(await session())) return new Response(null, { status: 401 });
     const answer = read(new URL(request.url).searchParams);
     if (!answer) return new Response(null, { status: 400 });
     return Response.json((await answer) ?? null, { headers: { "Cache-Control": "no-store" } });

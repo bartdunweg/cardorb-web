@@ -247,9 +247,9 @@ function hitOf(index: CatalogueIndex, card: CatalogueIndex["cards"][number]): Po
         setPrintedTotal: null,
         flavorText: null,
         nationalPokedexNumbers: null,
-        owned: false,
-        wishlist: false,
-        quantity: 0,
+        // Nobody has been asked yet, which the hit says by carrying no holding at all rather than
+        // an empty one: the lookup that follows is what answers it.
+        holding: null,
         price: null,
     };
 }
