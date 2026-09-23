@@ -83,9 +83,10 @@ describe("periodChange", () => {
         expect(periodChange([], "1m", false, "normal")).toBeNull();
     });
 
-    // Base Set Charizard's Shadowless run: €1,869, then €1,000 for eleven days, then €1,948. The line
-    // holds that dip, so the figure beside the price says what the drawn line says.
-    it("reads the line the chart draws, dip held and all", () => {
+    // Base Set Charizard's Shadowless run: €1,869, then €1,000 for eleven days, then €1,948. The
+    // figure reads the window's first figure against its last, so a dip in between does not move it.
+    // Holding the dip on the drawn line is the API's work since cardorb-api#589.
+    it("reads first against last, whatever the line does in between", () => {
         const shadowless = [
             day(30, 1869, "shadowless-holofoil"),
             day(20, 1869, "shadowless-holofoil"),
