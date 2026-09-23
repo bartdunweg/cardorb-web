@@ -16,7 +16,20 @@ vi.mock("@/lib/api", () => ({ session: () => mine() }));
 const redirect = vi.fn((to: string) => {
     throw new Error(`redirect:${to}`);
 });
-vi.mock("next/navigation", () => ({ redirect: (to: string) => redirect(to), usePathname: () => "/dashboard/pokedex" }));
+vi.mock("next/navigation", () => ({
+    redirect: (to: string) => redirect(to),
+    usePathname: () => "/dashboard/pokedex",
+    useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
+}));
+/* Three Pokémon stand in for the national dex: the catalogue's names, which need no session. */
+vi.mock("@/lib/pokedex", () => ({
+    getDexNames: async () =>
+        new Map([
+            [1, { name: "Bulbasaur", artwork: null }],
+            [4, { name: "Charmander", artwork: null }],
+            [7, { name: "Squirtle", artwork: null }],
+        ]),
+}));
 vi.mock("@/components/app/binder-dialog", () => ({ BinderDialog: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
 vi.mock("@/components/app/page-header", () => ({ PageHeader: ({ title }: { title: string }) => <h1>{title}</h1> }));
 
@@ -51,5 +64,18 @@ describe("the Pokédex address", () => {
         expect(redirect).not.toHaveBeenCalled();
         expect(screen.getByText("The Pokédex comes with an account")).toBeInTheDocument();
         expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login?next=%2Fdashboard%2Fpokedex");
+    });
+
+    /* The best argument the product has, and none of it invented: every Pokémon, drawn as the
+       Pokedex looks before a card is in it, and not one word about holding any of them. */
+    it("shows a visitor every Pokémon, and claims nothing about a collection", async () => {
+        mine.mockResolvedValue(null);
+        render(await PokedexPage());
+        // A positive before the zeros, so an empty page cannot pass.
+        expect(screen.getByText("Bulbasaur")).toBeInTheDocument();
+        expect(screen.getByText("Charmander")).toBeInTheDocument();
+        expect(screen.getByText("Squirtle")).toBeInTheDocument();
+        expect(screen.queryByText(/\d+ of \d+/)).not.toBeInTheDocument();
+        expect(screen.queryByText("Missing")).not.toBeInTheDocument();
     });
 });
