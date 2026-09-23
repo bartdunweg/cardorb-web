@@ -98,3 +98,17 @@ export const makeBinder = async (page: Page, name: string): Promise<string> => {
     expect(href).toMatch(/^\/dashboard\/collections\/.+/);
     return href;
 };
+
+/**
+ * A browser that has never signed in.
+ *
+ * `browser.newContext()` is not one. Playwright Test applies the project's `use` options to every
+ * context a test makes, which is why a relative goto works there, and the app projects carry
+ * `storageState` in `use`. So a context made that way is signed in as the e2e user, and a test
+ * built on it proves nothing about a visitor. signed-out.spec.ts found this by failing; the
+ * profile test had used the same line for weeks and passed, because a private profile answers
+ * 404 to its own owner as well. An empty storage state is the only way to say "nobody".
+ */
+export async function stranger(browser: import("@playwright/test").Browser) {
+    return (await browser.newContext({ storageState: { cookies: [], origins: [] } })).newPage();
+}

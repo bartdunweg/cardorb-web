@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { E2E_USER, SET_ID, addButton, cacheCleared, card, collectionTile, removeButton, setTile } from "./support.ts";
+import { E2E_USER, SET_ID, addButton, cacheCleared, card, collectionTile, removeButton, setTile, stranger } from "./support.ts";
 
 const setPage = `/sets/${SET_ID}`;
 
@@ -59,7 +59,7 @@ test("after a write, Back and a reload show the new state, not the cached one", 
 
 test("the public profile shows an added card and loses a removed one", async ({ page, browser }) => {
     const c = card(6);
-    const visitor = await (await browser.newContext()).newPage();
+    const visitor = await stranger(browser);
     const profile = `/user/${E2E_USER.username}?q=${encodeURIComponent(c.name)}`;
 
     await visitor.goto(profile);

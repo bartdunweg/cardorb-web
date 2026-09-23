@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { SET_ID } from "./support.ts";
+import { SET_ID, stranger } from "./support.ts";
 
 /**
  * The app as somebody with no account sees it.
@@ -10,8 +10,9 @@ import { SET_ID } from "./support.ts";
  * the point of the file and the open list is its control: without the second, a wall that had
  * fallen over would still pass.
  *
- * Every test runs in a fresh context, which is a browser that has never signed in. The suite's
- * other files share the signed-in state from the project config; this one must not.
+ * Every test runs in `stranger()`, a browser with an empty storage state. Not a bare
+ * `browser.newContext()`, which inherits the project's signed-in state: the first run of this file
+ * was signed in throughout, and this file is what caught it.
  */
 
 /** Open to anybody, and each one is a page rather than a redirect. */
@@ -29,7 +30,7 @@ const CLOSED = ["/dashboard/settings", "/dashboard/you", "/dashboard/design"];
 test.describe("a visitor with no account", () => {
     for (const path of OPEN) {
         test(`may read ${path}`, async ({ browser }) => {
-            const visitor = await (await browser.newContext()).newPage();
+            const visitor = await stranger(browser);
             const open = await visitor.goto(path);
             expect(open?.status(), path).toBeLessThan(400);
             await expect(visitor.getByRole("heading", { level: 1 })).toBeVisible();
@@ -39,7 +40,7 @@ test.describe("a visitor with no account", () => {
 
     for (const path of INVITED) {
         test(`is invited rather than turned away at ${path}`, async ({ browser }) => {
-            const visitor = await (await browser.newContext()).newPage();
+            const visitor = await stranger(browser);
             const open = await visitor.goto(path);
             expect(open?.status(), path).toBe(200);
             // The page still says which page it is: one that answers only with a centred block
@@ -56,7 +57,7 @@ test.describe("a visitor with no account", () => {
 
     for (const path of CLOSED) {
         test(`is sent to the door at ${path}`, async ({ browser }) => {
-            const visitor = await (await browser.newContext()).newPage();
+            const visitor = await stranger(browser);
             await visitor.goto(path);
             await expect(visitor).toHaveURL(/\/login/);
             // And the door remembers where they were going, so signing in finishes the journey.
@@ -66,7 +67,7 @@ test.describe("a visitor with no account", () => {
     }
 
     test("a set page shows its cards and nobody's collection", async ({ browser }) => {
-        const visitor = await (await browser.newContext()).newPage();
+        const visitor = await stranger(browser);
         await visitor.goto(`/sets/${SET_ID}`);
         // The cards are there, which is what makes the two absences below mean something.
         await expect(visitor.getByRole("heading", { level: 1 })).toBeVisible();
@@ -78,7 +79,7 @@ test.describe("a visitor with no account", () => {
     });
 
     test("the old Browse address still leads somewhere", async ({ browser }) => {
-        const visitor = await (await browser.newContext()).newPage();
+        const visitor = await stranger(browser);
         await visitor.goto("/dashboard/sets");
         await expect(visitor).toHaveURL(/\/sets$/);
         await visitor.context().close();
