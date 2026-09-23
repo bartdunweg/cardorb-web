@@ -41,8 +41,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     const mine = await session();
     if (!mine) {
         // The market's movers are the one real thing a visitor's Home can show: every card's price
-        // is public, so the week's biggest moves across the catalogue are nobody's to hide.
-        const market = await getMarketMovers();
+        // is public, so the week's biggest moves across the catalogue are nobody's to hide. Started
+        // here and not awaited: the way in draws at once and the movers stream in behind it.
+        const market = getMarketMovers();
         return (
             <div className="flex flex-1 flex-col gap-6">
                 {/* The page's own name, and none of the parts that need a read: no list to choose

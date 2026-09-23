@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /*
@@ -43,7 +43,13 @@ const { default: DashboardPage, metadata } = await import("@/app/(app)/dashboard
 
 /** Home drawn for a visitor, as a Server Component returns it. */
 async function drawHome() {
-    render(await DashboardPage({ searchParams: Promise.resolve({}) }));
+    const page = await DashboardPage({ searchParams: Promise.resolve({}) });
+    // The movers stream in behind a Suspense boundary: an async act lets their read settle.
+    let drawn!: ReturnType<typeof render>;
+    await act(async () => {
+        drawn = render(page);
+    });
+    return drawn;
 }
 
 describe("Home, for somebody with no account", () => {
@@ -72,7 +78,7 @@ describe("Home, for somebody with no account", () => {
        What must stay true is that nothing on the page is a number. The picture is a shape, hidden
        from a screen reader, with no text inside it at all: nothing to read, copy or be read aloud. */
     it("draws its picture as a shape with no figure in it, hidden from a screen reader", async () => {
-        const { container } = render(await DashboardPage({ searchParams: Promise.resolve({}) }));
+        const { container } = await drawHome();
         const drawn = [...container.querySelectorAll("svg, canvas, path")];
         expect(drawn.length).toBeGreaterThan(0);
         for (const el of drawn) expect(el.closest("[aria-hidden='true']"), "a drawing outside the hidden decoration").not.toBeNull();
