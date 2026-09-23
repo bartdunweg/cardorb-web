@@ -3,6 +3,7 @@ import type { BinderKind, BinderRule, PokedexSetting } from "@/lib/binder-rule";
 import { binderRuleSchema, pokedexSettingSchema } from "@/lib/binder-rule-schema";
 import { EDITIONS, FINISHES, FOIL_PATTERNS, FOIL_PATTERN_LABELS, isReverseFinish, ownImage } from "@/lib/card-shapes";
 import type { Finish, FoilPattern } from "@/lib/card-shapes";
+import { tcgplayerPrintingLabel } from "@/lib/price-change";
 import type { CardHolding, Holding } from "@/lib/set-holding";
 
 // The labels, the vocabularies and the mappers without zod live in card-shapes.ts; every importer of this file still finds them here.
@@ -1032,6 +1033,61 @@ const moverSchema = z.object({
 export type Mover = z.infer<typeof moverSchema>;
 
 export const moversAnswer = z.object({ up: z.array(moverSchema), down: z.array(moverSchema) });
+
+// ── GET /v1/catalog/movers ───────────────────────────────────────────────────────────────
+
+/**
+ * One of the week's biggest moves across the whole catalogue (cardorb-api#588), not anybody's
+ * collection: a visitor's Home shows these where a reader sees their own. One copy of one printing,
+ * so there is nothing of a person's in it and no count of copies.
+ */
+const marketMoverSchema = z.object({
+    tcgId: z.string(),
+    printing: z.string(),
+    name: z.string(),
+    setName: z.string(),
+    number: z.string(),
+    printedNumber: nullable(z.string()).optional(),
+    image: nullable(z.string()),
+    was: z.number(),
+    now: z.number(),
+    change: z.number(),
+    pct: z.number(),
+    from: z.string(),
+    to: z.string(),
+});
+export const marketMoversAnswer = z.object({ up: z.array(marketMoverSchema), down: z.array(marketMoverSchema) });
+
+/**
+ * A market move in the shape a reader's movers take, so the two lists are drawn by one component and
+ * look the same. One copy: what it did to "the total" is the change of that copy, and there is no
+ * copy of anybody's to describe, so its state is left out rather than guessed.
+ */
+export function moverFromMarket(m: z.infer<typeof marketMoverSchema>): Mover {
+    return {
+        tcgId: m.tcgId,
+        name: m.name,
+        number: m.number,
+        set: m.setName,
+        setAbbr: null,
+        printedNumber: m.printedNumber ?? null,
+        /*
+         * Which printing moved, in the row's rarity place ("1st Edition Holo"). A card's printings
+         * move apart, and a set tile shows only its headline one, so "Charizard +EUR 90" without it
+         * would be a number the set page does not show for the same card.
+         */
+        rarity: tcgplayerPrintingLabel(m.printing),
+        image: m.image,
+        copies: 1,
+        was: m.was,
+        now: m.now,
+        change: m.change,
+        pct: m.pct,
+        total: m.change,
+        from: m.from,
+        to: m.to,
+    };
+}
 
 export const pricePointsAnswer = z.object({
     // `printings`: every printing's figure that day (normal, holofoil, reverse-holofoil, 1st-edition-holofoil,

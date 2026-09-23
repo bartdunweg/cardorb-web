@@ -9,6 +9,7 @@ import {
     cardFromPokemonCard,
     cardItemSchema,
     listingForCopy,
+    moverFromMarket,
     ownImage,
     pokemonCardFromBrowse,
     pokemonCardFromSetCard,
@@ -745,5 +746,42 @@ describe("cardFactsAnswer patternPrints", () => {
 
     it("is no answer from an API that does not send it", () => {
         expect(cardFactsAnswer.parse(base).patternPrints).toBeUndefined();
+    });
+});
+
+/*
+ * A market move (cardorb-api#588) drawn in a reader's movers list. One copy, nobody's, and it names
+ * the printing that moved, since a card's printings move apart and a set tile shows only one.
+ */
+describe("moverFromMarket", () => {
+    const move = {
+        tcgId: "base1-4",
+        printing: "1st-edition-holofoil",
+        name: "Charizard",
+        setName: "Base Set",
+        number: "4",
+        printedNumber: "4/102",
+        image: null,
+        was: 7000,
+        now: 7400,
+        change: 400,
+        pct: 400 / 7000,
+        from: "2026-09-16",
+        to: "2026-09-23",
+    };
+
+    it("is one copy of nobody's, its effect its own change", () => {
+        const m = moverFromMarket(move);
+        expect(m.copies).toBe(1);
+        expect(m.total).toBe(400);
+        expect(m.set).toBe("Base Set");
+    });
+
+    it("names the printing that moved, in words", () => {
+        expect(moverFromMarket(move).rarity).toBe("1st Edition Holo");
+    });
+
+    it("shows nothing rather than a raw key for a printing it does not know", () => {
+        expect(moverFromMarket({ ...move, printing: "some-future-printing" }).rarity).toBeNull();
     });
 });
