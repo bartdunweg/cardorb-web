@@ -1,6 +1,6 @@
 import { updateTag } from "next/cache";
 import { cookies } from "next/headers";
-import { addCard } from "@/app/(app)/dashboard/cards/actions";
+import { addCardAs } from "@/lib/add-card";
 import type { PokemonCard } from "@/lib/api-shapes";
 import { forgetTags } from "@/lib/cache-scopes";
 import { KEPT_PRESS_COOKIE, KEPT_PRESS_DONE_COOKIE, type KeptPressDone, pageOf, readKeptPress } from "@/lib/kept-press";
@@ -48,7 +48,7 @@ export async function applyKeptPress({
     // The add a tile makes, as this reader. The API matches the card against the catalogues and
     // refuses one that is not a card, so a forged value can only add a real card to this list.
     const card = { ...press.card, id: press.card.tcgId ?? `${press.card.set}-${press.card.number}` } as unknown as PokemonCard;
-    const added = await addCard(card, press.target, undefined, { reread: false, token });
+    const added = await addCardAs(card, press.target, undefined, { token });
     if (added.ok && forget) for (const tag of forgetTags(userId, "cards")) updateTag(tag);
 
     const done: KeptPressDone = { target: press.target, name: press.card.name, ok: added.ok };

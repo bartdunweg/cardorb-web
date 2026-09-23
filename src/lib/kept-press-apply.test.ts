@@ -19,8 +19,8 @@ vi.mock("next/headers", () => ({
 const updateTag = vi.fn();
 vi.mock("next/cache", () => ({ updateTag: (t: string) => updateTag(t) }));
 const addCard = vi.fn();
-vi.mock("@/app/(app)/dashboard/cards/actions", () => ({
-    addCard: (...a: unknown[]) => {
+vi.mock("@/lib/add-card", () => ({
+    addCardAs: (...a: unknown[]) => {
         events.push("write");
         return addCard(...a);
     },
@@ -58,7 +58,7 @@ describe("applyKeptPress", () => {
         expect(card).toMatchObject({ name: "Charizard", set: "Base Set", number: "4", tcgId: "base1-4" });
         expect(target).toBe("wishlist");
         expect(binder).toBeUndefined();
-        expect(options).toMatchObject({ token: "fresh-token", reread: false });
+        expect(options).toMatchObject({ token: "fresh-token" });
     });
 
     it("clears the press before it writes, so it can never apply twice", async () => {
