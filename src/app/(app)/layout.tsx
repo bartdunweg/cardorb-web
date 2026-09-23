@@ -97,8 +97,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                     own z-index puts it on top, whether the dialog that caused it closes or stays. */}
                     <Toasts />
                     <RouteProgress />
-                    {/* The lists a tab leads to, read while this page is being read (warm-lists.tsx). */}
-                    <WarmLists />
+                    {/* The lists a tab leads to, read while this page is being read (warm-lists.tsx).
+                    Only for somebody who has them: each of the three is that person's own list, so
+                    for a visitor they were three requests that could only ever answer 401. */}
+                    {mine ? <WarmLists /> : null}
                 </CommandSearchProvider>
             </RouteProvider>
         </RoutePendingProvider>

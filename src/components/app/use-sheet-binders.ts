@@ -7,10 +7,19 @@ import { binderFromPath, isBinderPath } from "@/lib/binder-from-path";
 import type { Card, Facets, PublicCard } from "@/lib/cards";
 import { isReadFailed, loadFacets, tryListBinders } from "@/lib/reads";
 
-type Params = { card: Card | PublicCard | null; readOnly: boolean };
+type Params = {
+    card: Card | PublicCard | null;
+    readOnly: boolean;
+    /**
+     * Whether anybody was asked what this reader holds (`SetCard.holding`). False is a visitor with
+     * no account: they have no binders and no facets, so neither is asked for. Both would answer
+     * 401, and a sheet opened on a set page made two of those before it had drawn anything.
+     */
+    asked?: boolean;
+};
 
 /** The binders the card sheet files into and names, the facets their rules read, and the binder whose page it is on. */
-export function useSheetBinders({ card, readOnly }: Params) {
+export function useSheetBinders({ card, readOnly, asked = true }: Params) {
     const [binders, setBinders] = useState<BinderChoice[]>([]);
     /** The binder list did not answer, which used to look exactly like a list still on its way. */
     const [failed, setFailed] = useState(false);
@@ -32,11 +41,11 @@ export function useSheetBinders({ card, readOnly }: Params) {
     // to cost two calls on every visit for a sheet nobody had opened.
     const askedForChoices = useRef(false);
     useEffect(() => {
-        if (readOnly || !card || askedForChoices.current) return;
+        if (readOnly || !asked || !card || askedForChoices.current) return;
         askedForChoices.current = true;
         tryListBinders().then((answer) => (isReadFailed(answer) ? setFailed(true) : setBinders(answer)));
         loadFacets().then(setFacets);
-    }, [readOnly, card]);
+    }, [readOnly, asked, card]);
 
     return { binders, setBinders, facets, binder, binderPending, bindersFailed };
 }
