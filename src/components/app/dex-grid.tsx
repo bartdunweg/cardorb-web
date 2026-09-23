@@ -52,7 +52,23 @@ const ART_SIZES = "(min-width: 1280px) 128px, 20vw";
 /** Slots drawn per batch: two to three screens on any width, the rest as the reader scrolls. */
 const DEX_BATCH = 96;
 
-export function DexGrid({ generations, size = "md", linked = true }: { generations: DexGeneration[]; size?: CardsSize; linked?: boolean }) {
+export function DexGrid({
+    generations,
+    size = "md",
+    linked = true,
+    asked = true,
+}: {
+    generations: DexGeneration[];
+    size?: CardsSize;
+    linked?: boolean;
+    /**
+     * False for a reader nobody asked, a visitor on the Pokedex. The slots are drawn as they are,
+     * grey, because that is what the Pokedex looks like before a card is in it. What goes is every
+     * sentence about holding: "0 of 151" over a generation and "Missing" under a slot are claims
+     * about a collection that was never read, as "0 of 207" on a set tile was.
+     */
+    asked?: boolean;
+}) {
     const router = useRouter();
     // A thousand slots is seven hundred pictures' markup, most of it below the fold: drawn a
     // batch at a time, a screen ahead of the sentinel, the way a list of cards is. The slots are
@@ -117,12 +133,12 @@ export function DexGrid({ generations, size = "md", linked = true }: { generatio
                                 {gen.label}
                             </h2>
                             <p className="text-sm text-tertiary tabular-nums">
-                                {formatCount(gen.caught)} of {formatCount(gen.total)}
+                                {asked ? `${formatCount(gen.caught)} of ${formatCount(gen.total)}` : `${formatCount(gen.total)} Pokémon`}
                             </p>
                         </div>
                         <div className={cx("grid gap-4", GRID_COLUMNS[size])}>
                             {gen.slots.slice(0, shown - start).map((slot) => (
-                                <DexTile key={slot.number} slot={slot} size={size} onSelect={linked ? open : undefined} remembers={linked} />
+                                <DexTile key={slot.number} slot={slot} size={size} onSelect={linked ? open : undefined} remembers={linked} asked={asked} />
                             ))}
                         </div>
                     </section>
@@ -176,7 +192,19 @@ export function settleFace(
 
 // `onSelect`: a card opens its sheet; on a public page there is nowhere to go, so the tile is a plain tile.
 // `remembers`: only the owner's own Pokédex writes down the card a swipe settles on.
-function DexTile({ slot, size, onSelect, remembers }: { slot: NamedDexSlot; size: CardsSize; onSelect?: (card: DexCard) => void; remembers: boolean }) {
+function DexTile({
+    slot,
+    size,
+    onSelect,
+    remembers,
+    asked = true,
+}: {
+    slot: NamedDexSlot;
+    size: CardsSize;
+    onSelect?: (card: DexCard) => void;
+    remembers: boolean;
+    asked?: boolean;
+}) {
     const held = slot.cards.length;
     // The card in view. It starts on the slot's first card, which is the one its owner chose
     // (groupByDex hands the face back first), and follows the slider from there.
@@ -205,7 +233,10 @@ function DexTile({ slot, size, onSelect, remembers }: { slot: NamedDexSlot; size
     // prices at nothing leaves the right-hand side empty rather than writing a zero.
     const words =
         held === 0 ? (
-            <span className="truncate text-xs text-tertiary">Missing</span>
+            // "Missing" is yours to be missing. Somebody nobody asked is shown the slot and its name.
+            asked ? (
+                <span className="truncate text-xs text-tertiary">Missing</span>
+            ) : null
         ) : (
             <div className="flex items-baseline justify-between gap-2">
                 <span className="truncate text-xs text-tertiary">{shown?.set ?? ""}</span>

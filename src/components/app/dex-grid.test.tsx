@@ -65,4 +65,12 @@ describe("DexGrid", () => {
         expect(screen.getByText("Missing")).toBeInTheDocument();
         expect(screen.queryByText(/€/)).not.toBeInTheDocument();
     });
+
+    it("says nothing about holding for somebody nobody asked: no count over the chapter, no Missing", () => {
+        render(<DexGrid generations={[generation([slot(1, [], "Bulbasaur"), slot(4, [], "Charmander")])]} linked={false} asked={false} />);
+        expect(screen.getByText("Bulbasaur")).toBeInTheDocument();
+        expect(screen.getByText("2 Pokémon")).toBeInTheDocument();
+        expect(screen.queryByText(/of 2/)).not.toBeInTheDocument();
+        expect(screen.queryByText("Missing")).not.toBeInTheDocument();
+    });
 });

@@ -46,9 +46,36 @@ const INVITES = {
 
 export type ClosedPlace = keyof typeof INVITES;
 
-export function SignInInvite({ place }: { place: ClosedPlace }) {
+export function SignInInvite({ place, compact = false }: { place: ClosedPlace; compact?: boolean }) {
     const invite = INVITES[place];
     const { signIn, signUp } = useReturnHrefs();
+    /*
+     * Compact, for a page that has something real to show under it. The Pokedex draws its 1,025
+     * slots for a visitor, and a full empty state above them would push the thing it describes a
+     * screen down. The same words, the same pair of links, in one band.
+     */
+    if (compact)
+        return (
+            <section
+                aria-labelledby={`invite-${place}`}
+                className="flex flex-col gap-3 rounded-xl bg-secondary p-4 sm:flex-row sm:items-center sm:justify-between"
+            >
+                <div className="flex flex-col gap-1">
+                    <h2 id={`invite-${place}`} className="text-md font-semibold text-primary">
+                        {invite.title}
+                    </h2>
+                    <p className="text-sm text-tertiary">{invite.description}</p>
+                </div>
+                <div className="flex shrink-0 gap-2">
+                    <LinkButton href={signIn} color="tertiary" size="md">
+                        Sign in
+                    </LinkButton>
+                    <LinkButton href={signUp} size="md">
+                        Get started
+                    </LinkButton>
+                </div>
+            </section>
+        );
     return (
         <AppEmptyState icon={invite.icon} title={invite.title} description={invite.description}>
             {/* The same pair, in the same order and the same words, as the bar on every public page
