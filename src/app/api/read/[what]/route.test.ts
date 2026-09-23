@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const {
     session,
     cardFacts,
+    cardPriceHistory,
     listRows,
     moversFor,
     warmList,
@@ -17,6 +18,7 @@ const {
 } = vi.hoisted(() => ({
     session: vi.fn(),
     cardFacts: vi.fn(),
+    cardPriceHistory: vi.fn(),
     listRows: vi.fn(),
     moversFor: vi.fn(),
     warmList: vi.fn(),
@@ -33,7 +35,7 @@ vi.mock("@/lib/api", () => ({ session }));
 vi.mock("@/app/(app)/dashboard/cards/actions", () => ({
     cardFacts,
     cardFactsMany: vi.fn(),
-    cardPriceHistory: vi.fn(),
+    cardPriceHistory,
     listRows,
     listSetRows: vi.fn(),
     seriesLogo: vi.fn(),
@@ -57,6 +59,7 @@ describe("GET /api/read/[what]", () => {
     beforeEach(() => {
         session.mockReset().mockResolvedValue({ userId: "u1", token: "t" });
         cardFacts.mockReset().mockResolvedValue({ illustrator: "Mitsuhiro Arita" });
+        cardPriceHistory.mockReset().mockResolvedValue({ points: [], listings: {} });
         listRows.mockReset().mockResolvedValue([]);
         moversFor.mockReset().mockResolvedValue(null);
         warmList.mockReset().mockResolvedValue(undefined);
@@ -70,10 +73,32 @@ describe("GET /api/read/[what]", () => {
         expect(cardFacts).toHaveBeenCalledWith("base1-4", "ja");
     });
 
-    it("is a 401 without a session, and reads nothing", async () => {
+    /* A card's facts and its price are the catalogue's, not a reader's: the set page prints the
+       same figure beside every tile for a visitor, so the sheet over it answers one too. */
+    it("answers a card's facts and its price without a session", async () => {
         session.mockResolvedValue(null);
-        expect((await get("facts", "?id=base1-4")).status).toBe(401);
-        expect(cardFacts).not.toHaveBeenCalled();
+        const facts = await get("facts", "?id=base1-4");
+        expect(facts.status).toBe(200);
+        expect(await facts.json()).toEqual({ illustrator: "Mitsuhiro Arita" });
+        expect(cardFacts).toHaveBeenCalledWith("base1-4", undefined);
+
+        cardPriceHistory.mockResolvedValue({ points: [{ date: "2026-09-22", market: 823.98 }], listings: {} });
+        const prices = await get("prices", "?id=base1-4");
+        expect(prices.status).toBe(200);
+        expect(await prices.json()).toEqual({ points: [{ date: "2026-09-22", market: 823.98 }], listings: {} });
+        expect(cardPriceHistory).toHaveBeenCalledWith("base1-4");
+        // Not the session's own: nothing here is read per person.
+        expect(session).not.toHaveBeenCalled();
+    });
+
+    it("is a 401 without a session for a read about the reader, and reads nothing", async () => {
+        session.mockResolvedValue(null);
+        expect((await get("rows", "?name=Charizard&set=Base&number=4")).status).toBe(401);
+        expect(listRows).not.toHaveBeenCalled();
+        expect((await get("folders")).status).toBe(401);
+        expect((await get("warm-list", "?list=wishlist")).status).toBe(401);
+        expect(warmList).not.toHaveBeenCalled();
+        expect((await get("facets")).status).toBe(401);
     });
 
     it("is a 404 for a read it does not have, a prototype's name included", async () => {

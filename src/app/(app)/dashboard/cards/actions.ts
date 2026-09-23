@@ -401,7 +401,10 @@ export type PriceHistory = { points: PricePoint[]; listings: Record<string, numb
 // the read says the line did not come and the chart offers to ask again (error-path audit).
 export async function cardPriceHistory(tcgId: string): Promise<PriceHistory> {
     try {
-        const { points, listings } = await api(`/cards/${encodeURIComponent(tcgId)}/prices`, { schema: pricePointsAnswer });
+        /* Asked with a token where there is one and without where there is none (`auth: "optional"`):
+           a card's price is the same figure for everybody, the set page prints it beside every tile
+           for a visitor, and the sheet opened over that grid said the line could not be loaded. */
+        const { points, listings } = await api(`/cards/${encodeURIComponent(tcgId)}/prices`, { auth: "optional", schema: pricePointsAnswer });
         return { points, listings: listings ?? {} };
     } catch (err) {
         console.error("Price history unavailable:", err instanceof Error ? err.message : err);
@@ -574,7 +577,9 @@ export async function cardFacts(tcgId: string, language?: string | null): Promis
         /* A Japanese card is asked of the Japanese catalogue: its id is only in that one, and asked of the
            English one it had no printings at all, so its sheet offered nothing to choose (2026-09-15). */
         const params = language === "ja" ? { language: "ja" } : undefined;
-        return factsOf(await api(`/cards/${encodeURIComponent(tcgId)}`, { params, schema: cardFactsAnswer }));
+        // The catalogue's own facts about a printing, the same for everybody, so a visitor's sheet
+        // asks for them too (`auth: "optional"`, as the set page reads its cards).
+        return factsOf(await api(`/cards/${encodeURIComponent(tcgId)}`, { params, auth: "optional", schema: cardFactsAnswer }));
     } catch (err) {
         console.error("Card facts unavailable:", err instanceof Error ? err.message : err);
         return null;
