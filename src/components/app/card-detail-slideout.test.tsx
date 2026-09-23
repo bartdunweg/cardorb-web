@@ -526,4 +526,11 @@ describe("CardDetailSlideout: a card nobody was asked about", () => {
         expect(loadFacets).not.toHaveBeenCalled();
         expect(listCopies).not.toHaveBeenCalled();
     });
+    it("offers no way to take out a card that is in no collection", async () => {
+        // The card arrives with an empty row rather than none, so the menu used to stand and
+        // offer "Remove from collection" for it: a write that can only fail, to anybody.
+        await visitor();
+        expect(screen.queryByRole("button", { name: "More" })).not.toBeInTheDocument();
+        expect(screen.queryByText("Remove from collection")).not.toBeInTheDocument();
+    });
 });

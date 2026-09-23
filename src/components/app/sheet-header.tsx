@@ -141,26 +141,31 @@ export function SheetHeader({
                                         />
                                     </Tooltip>
                                 ) : null}
-                                {/* What else is done to a card: copies, and taking it out. A wish can be marked owned here too. */}
-                                <Dropdown.Root>
-                                    <Button
-                                        color="tertiary"
-                                        size="lg"
-                                        iconLeading={DotsHorizontal}
-                                        aria-label="More"
-                                        isLoading={busy}
-                                        className="glass text-primary ring-1 ring-glass ring-inset"
-                                    />
-                                    <Dropdown.Popover placement="bottom end" className="w-56">
-                                        <Dropdown.Menu>
-                                            {/* Once the card can follow the phone, the browser has been asked and
+                                {/* What else is done to a card: copies, and taking it out. A wish can be marked owned here too.
+                                    A card nobody holds arrives with an empty row rather than none, so `mine` is
+                                    there and "Remove from collection" was offered for a card that is in no
+                                    collection, to a visitor too. Only a card held or wished can be taken out, and
+                                    a menu with nothing in it is no menu: the button goes with its last item. */}
+                                {canTilt || mine.owned || mine.wishlist ? (
+                                    <Dropdown.Root>
+                                        <Button
+                                            color="tertiary"
+                                            size="lg"
+                                            iconLeading={DotsHorizontal}
+                                            aria-label="More"
+                                            isLoading={busy}
+                                            className="glass text-primary ring-1 ring-glass ring-inset"
+                                        />
+                                        <Dropdown.Popover placement="bottom end" className="w-56">
+                                            <Dropdown.Menu>
+                                                {/* Once the card can follow the phone, the browser has been asked and
                                                 the question does not come back. */}
-                                            {canTilt ? (
-                                                <Dropdown.Item icon={Phone01} onAction={() => void askTilt()}>
-                                                    Tilt with your phone
-                                                </Dropdown.Item>
-                                            ) : null}
-                                            {/* Copies are counted under Your copies, with the rest of what a copy is.
+                                                {canTilt ? (
+                                                    <Dropdown.Item icon={Phone01} onAction={() => void askTilt()}>
+                                                        Tilt with your phone
+                                                    </Dropdown.Item>
+                                                ) : null}
+                                                {/* Copies are counted under Your copies, with the rest of what a copy is.
                                                 Adding and removing one here as well was a second place for the same
                                                 number, and the one that showed no other copy while it did it.
 
@@ -168,12 +173,15 @@ export function SheetHeader({
                                                 strips the flag rather than filtering on it, and the only reader left
                                                 was the latest-pull block, which the profile no longer shows. What
                                                 does keep cards off a public profile is a binder's own switch. */}
-                                            <Dropdown.Item icon={Trash01} onAction={() => removeAndOffer(mine)}>
-                                                {mine.wishlist ? "Remove from wishlist" : "Remove from collection"}
-                                            </Dropdown.Item>
-                                        </Dropdown.Menu>
-                                    </Dropdown.Popover>
-                                </Dropdown.Root>
+                                                {mine.owned || mine.wishlist ? (
+                                                    <Dropdown.Item icon={Trash01} onAction={() => removeAndOffer(mine)}>
+                                                        {mine.wishlist ? "Remove from wishlist" : "Remove from collection"}
+                                                    </Dropdown.Item>
+                                                ) : null}
+                                            </Dropdown.Menu>
+                                        </Dropdown.Popover>
+                                    </Dropdown.Root>
+                                ) : null}
                             </>
                         ) : null}
                     </>
