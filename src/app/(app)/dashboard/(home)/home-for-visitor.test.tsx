@@ -58,15 +58,21 @@ describe("Home, for somebody with no account", () => {
         expect(screen.getByText("The cards that rose and fell most, so you know what moved without checking each one")).toBeInTheDocument();
     });
 
-    it("puts them in the document as headings, in the order they are on screen", async () => {
+    it("puts them in the document as headings, the way in first, in the order they are on screen", async () => {
         await drawHome();
         const said = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
-        expect(said.slice(0, 3)).toEqual(["Total value", "Value over time", "Biggest movers"]);
+        expect(said.slice(0, 4)).toEqual(["Home fills up with your own cards", "Total value", "Value over time", "Biggest movers"]);
     });
 
-    it("draws no chart and no number, because there is no collection to draw one of", async () => {
+    /* Revised 2026-09-23: the value and its line are a blurred picture now, at the owner's word.
+       What must stay true is that nothing on the page is a number. The picture is a shape, hidden
+       from a screen reader, with no text inside it at all: nothing to read, copy or be read aloud. */
+    it("draws its picture as a shape with no figure in it, hidden from a screen reader", async () => {
         const { container } = render(await DashboardPage({ searchParams: Promise.resolve({}) }));
-        expect(container.querySelectorAll("svg, canvas, path")).toHaveLength(0);
+        const drawn = [...container.querySelectorAll("svg, canvas, path")];
+        expect(drawn.length).toBeGreaterThan(0);
+        for (const el of drawn) expect(el.closest("[aria-hidden='true']"), "a drawing outside the hidden decoration").not.toBeNull();
+        for (const decoration of container.querySelectorAll("[aria-hidden='true']")) expect(decoration.textContent?.trim()).toBe("");
         expect(container.textContent).not.toMatch(/[€$]|\d/);
     });
 
@@ -79,7 +85,7 @@ describe("Home, for somebody with no account", () => {
         }
     });
 
-    it("offers one way in, at the end, coming back to Home", async () => {
+    it("offers one way in, at the top, coming back to Home", async () => {
         await drawHome();
         expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login?next=%2Fdashboard");
         expect(screen.getByRole("link", { name: "Get started" })).toHaveAttribute("href", "/signup?next=%2Fdashboard");
