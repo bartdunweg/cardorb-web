@@ -17,11 +17,28 @@ const DOORS = ["/login", "/signup", "/forgot-password", "/reset-password"];
 
 export function safeReturn(from: unknown): string | null {
     if (typeof from !== "string" || from.length === 0 || from.length > 512) return null;
-    if (!from.startsWith("/") || from.startsWith("//") || from.startsWith("/\\")) return null;
-    if (from.includes("\\")) return null;
-    const path = from.split(/[?#]/)[0] ?? "";
+    // Any control character at all. URL parsing strips tabs and line breaks, so "/\t/evil.com"
+    // reads as "//evil.com", a host: it passed every check below until review caught it.
+    if (/[\u0000-\u001F\u007F]/.test(from)) return null;
+    if (!from.startsWith("/") || from.startsWith("//") || from.includes("\\")) return null;
+    /*
+     * Then the check that does not depend on having thought of every trick: resolve it the way a
+     * browser will, against a host of our own, and keep it only if it lands there. What comes back
+     * is the resolved path rather than the string that came in, so what is redirected to is what
+     * was checked.
+     */
+    const base = "https://return.invalid";
+    let resolved: URL;
+    try {
+        resolved = new URL(from, base);
+    } catch {
+        return null;
+    }
+    if (resolved.origin !== base) return null;
+    const path = resolved.pathname;
+    if (path.startsWith("//")) return null;
     if (DOORS.some((door) => path === door || path.startsWith(`${door}/`))) return null;
-    return from;
+    return `${path}${resolved.search}${resolved.hash}`;
 }
 
 /** The address an invitation points at, carrying the page the visitor is on. */
