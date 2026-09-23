@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { RECOVERY_COOKIE } from "@/lib/auth-redirect";
+import { KEPT_PRESS_COOKIE } from "@/lib/kept-press";
 import { applyKeptPress } from "@/lib/kept-press-apply";
 import { safeReturn } from "@/lib/return-to";
 import { createClient } from "@/lib/supabase/server";
@@ -25,10 +26,10 @@ function parseCredentials(formData: FormData) {
  * A press that fails to carry is told on the page they land on (kept-press-apply.ts). One that
  * throws is logged and dropped: the person asked to sign in, and they are signed in.
  */
-async function carryKeptPress(session: { access_token: string; user: { id: string } } | null | undefined) {
+async function carryKeptPress(session: { access_token: string; user: { id: string } } | null | undefined, next: FormDataEntryValue | null) {
     if (!session) return;
     try {
-        await applyKeptPress({ token: session.access_token, userId: session.user.id, forget: true });
+        await applyKeptPress({ token: session.access_token, userId: session.user.id, forget: true, continuing: safeReturn(next) });
     } catch (err) {
         console.error("A kept press could not be carried through:", err instanceof Error ? err.message : err);
     }
@@ -42,7 +43,7 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
     const supabase = await createClient();
     const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
     if (error) return { error: error.message };
-    await carryKeptPress(data.session);
+    await carryKeptPress(data.session, formData.get("next"));
 
     // Back where the invitation found them, where one sent them here. Read against the rule a
     // second time: the value went out to the browser and came back in a form, so by now it is a
@@ -74,7 +75,7 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
     if (data.user && data.user.identities?.length === 0) {
         const { data: signedIn, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (!signInError) {
-            await carryKeptPress(signedIn.session);
+            await carryKeptPress(signedIn.session, formData.get("next"));
             redirect(safeReturn(formData.get("next")) ?? "/dashboard");
         }
         return { existing: true };
@@ -82,7 +83,7 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
 
     // Email confirmation off → a session is returned, so go straight in.
     if (data.session) {
-        await carryKeptPress(data.session);
+        await carryKeptPress(data.session, formData.get("next"));
         redirect(safeReturn(formData.get("next")) ?? "/dashboard");
     }
 
@@ -147,5 +148,8 @@ export async function signOut(): Promise<{ error: string } | undefined> {
         console.error("Signing out failed:", error.message);
         return { error: "Signing out did not go through. Try again." };
     }
+    // A press parked in this browser leaves with the person, so the next one to sign in here
+    // cannot inherit it.
+    (await cookies()).delete(KEPT_PRESS_COOKIE);
     redirect("/");
 }

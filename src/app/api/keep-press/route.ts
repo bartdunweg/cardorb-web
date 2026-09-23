@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { session } from "@/lib/api";
 import { KEPT_PRESS_COOKIE, KEPT_PRESS_MAX_AGE, keepPressRequest, keptPressValue } from "@/lib/kept-press";
+import { safeReturn } from "@/lib/return-to";
 import { COOKIE_OPTIONS } from "@/lib/supabase/cookie-options";
 
 /**
@@ -30,10 +31,13 @@ export async function POST(request: Request) {
     }
     const parsed = keepPressRequest.safeParse(body);
     if (!parsed.success) return new Response(null, { status: 400 });
+    // The page it was made on is a return address, and read against the same rule.
+    const from = safeReturn(parsed.data.from);
+    if (!from) return new Response(null, { status: 400 });
 
     const response = new NextResponse(null, { status: 204 });
     if (await session()) return response;
     // One at a time: setting it replaces whatever was kept before.
-    response.cookies.set(KEPT_PRESS_COOKIE, keptPressValue(parsed.data), { ...COOKIE_OPTIONS, path: "/", maxAge: KEPT_PRESS_MAX_AGE });
+    response.cookies.set(KEPT_PRESS_COOKIE, keptPressValue({ ...parsed.data, from }), { ...COOKIE_OPTIONS, path: "/", maxAge: KEPT_PRESS_MAX_AGE });
     return response;
 }

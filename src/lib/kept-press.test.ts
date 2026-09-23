@@ -9,6 +9,7 @@ import { KEPT_PRESS_MAX_AGE, keepPressRequest, keptPressSentence, keptPressValue
 const PRESS = {
     target: "wishlist" as const,
     card: { name: "Charizard", set: "Base Set", number: "4", rarity: "Holo Rare", types: ["Fire"], tcgId: "base1-4", language: null },
+    from: "/sets/base1",
 };
 const NOW = 1_800_000_000_000;
 

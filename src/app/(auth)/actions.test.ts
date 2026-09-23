@@ -6,16 +6,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * signed in.
  */
 const signInWithPassword = vi.fn();
-vi.mock("@/lib/supabase/server", () => ({ createClient: async () => ({ auth: { signInWithPassword } }) }));
+const signOutOf = vi.fn(async () => ({ error: null }));
+vi.mock("@/lib/supabase/server", () => ({ createClient: async () => ({ auth: { signInWithPassword, signOut: signOutOf } }) }));
 const applyKeptPress = vi.fn();
 vi.mock("@/lib/kept-press-apply", () => ({ applyKeptPress: (...a: unknown[]) => applyKeptPress(...a) }));
-vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined, set: vi.fn(), delete: vi.fn() }) }));
+const deleted: string[] = [];
+vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined, set: vi.fn(), delete: (n: string) => deleted.push(n) }) }));
 const redirect = vi.fn((to: string) => {
     throw new Error(`redirect:${to}`);
 });
 vi.mock("next/navigation", () => ({ redirect: (to: string) => redirect(to) }));
 
-const { signIn } = await import("./actions");
+const { signIn, signOut } = await import("./actions");
+const { KEPT_PRESS_COOKIE } = await import("@/lib/kept-press");
 
 const form = (fields: Record<string, string>) => {
     const f = new FormData();
@@ -37,7 +40,7 @@ describe("signIn and a kept press", () => {
         await expect(signIn(undefined, form({ email: "a@example.com", password: "long-enough-1", next: "/sets/base1" }))).rejects.toThrow(
             "redirect:/sets/base1",
         );
-        expect(applyKeptPress).toHaveBeenCalledWith({ token: "fresh-token", userId: "u1", forget: true });
+        expect(applyKeptPress).toHaveBeenCalledWith({ token: "fresh-token", userId: "u1", forget: true, continuing: "/sets/base1" });
         expect(applyKeptPress.mock.invocationCallOrder[0]).toBeLessThan(redirect.mock.invocationCallOrder[0]!);
     });
 
@@ -52,5 +55,13 @@ describe("signIn and a kept press", () => {
         signInWithPassword.mockResolvedValue({ data: { session: null }, error: { message: "Invalid login credentials" } });
         expect(await signIn(undefined, form({ email: "a@example.com", password: "long-enough-1" }))).toEqual({ error: "Invalid login credentials" });
         expect(applyKeptPress).not.toHaveBeenCalled();
+    });
+});
+
+describe("signOut and a kept press", () => {
+    it("takes any parked press with it, so the next person to sign in here inherits nothing", async () => {
+        deleted.length = 0;
+        await expect(signOut()).rejects.toThrow("redirect:/");
+        expect(deleted).toContain(KEPT_PRESS_COOKIE);
     });
 });

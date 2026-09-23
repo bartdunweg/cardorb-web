@@ -32,6 +32,7 @@ const { KEPT_PRESS_COOKIE, KEPT_PRESS_DONE_COOKIE, keptPressValue } = await impo
 const PRESS = {
     target: "wishlist" as const,
     card: { name: "Charizard", set: "Base Set", number: "4", rarity: "Holo Rare", types: ["Fire"], tcgId: "base1-4", language: null },
+    from: "/sets/base1",
 };
 const AS = { token: "fresh-token", userId: "u1", forget: true };
 
@@ -93,5 +94,30 @@ describe("applyKeptPress", () => {
         jar.set(KEPT_PRESS_COOKIE, keptPressValue(PRESS));
         await applyKeptPress({ ...AS, forget: false });
         expect(updateTag).not.toHaveBeenCalled();
+    });
+
+    /* The shared computer, found in review: A presses and walks away, B signs in there. */
+    it("carries the press only when the sign-in continues from the page it was made on", async () => {
+        jar.set(KEPT_PRESS_COOKIE, keptPressValue(PRESS));
+        expect(await applyKeptPress({ ...AS, continuing: "/sets/base1?language=en" })).toMatchObject({ ok: true });
+        expect(addCard).toHaveBeenCalledTimes(1);
+    });
+
+    it("drops it for a sign-in that is some other journey, and it is gone for good", async () => {
+        jar.set(KEPT_PRESS_COOKIE, keptPressValue(PRESS));
+        expect(await applyKeptPress({ ...AS, continuing: "/dashboard" })).toBeNull();
+        expect(addCard).not.toHaveBeenCalled();
+        expect(jar.has(KEPT_PRESS_COOKIE)).toBe(false);
+    });
+
+    it("drops it for a sign-in that came from nowhere, which is how somebody else signs in", async () => {
+        jar.set(KEPT_PRESS_COOKIE, keptPressValue(PRESS));
+        expect(await applyKeptPress({ ...AS, continuing: null })).toBeNull();
+        expect(addCard).not.toHaveBeenCalled();
+    });
+
+    it("carries it for an account confirmed in this browser, which asks no journey", async () => {
+        jar.set(KEPT_PRESS_COOKIE, keptPressValue(PRESS));
+        expect(await applyKeptPress({ ...AS, forget: false })).toMatchObject({ ok: true });
     });
 });

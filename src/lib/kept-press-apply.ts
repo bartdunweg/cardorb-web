@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { addCard } from "@/app/(app)/dashboard/cards/actions";
 import type { PokemonCard } from "@/lib/api-shapes";
 import { forgetTags } from "@/lib/cache-scopes";
-import { KEPT_PRESS_COOKIE, KEPT_PRESS_DONE_COOKIE, type KeptPressDone, readKeptPress } from "@/lib/kept-press";
+import { KEPT_PRESS_COOKIE, KEPT_PRESS_DONE_COOKIE, type KeptPressDone, pageOf, readKeptPress } from "@/lib/kept-press";
 
 /**
  * Carry a visitor's kept press through, at the moment they become somebody.
@@ -19,7 +19,23 @@ import { KEPT_PRESS_COOKIE, KEPT_PRESS_DONE_COOKIE, type KeptPressDone, readKept
  * Only a server action may do that (updateTag); the confirm route passes false, and needs nothing
  * dropped, because an account made a moment ago has nothing cached.
  */
-export async function applyKeptPress({ token, userId, forget }: { token: string; userId: string; forget: boolean }): Promise<KeptPressDone | null> {
+export async function applyKeptPress({
+    token,
+    userId,
+    forget,
+    continuing,
+}: {
+    token: string;
+    userId: string;
+    forget: boolean;
+    /**
+     * The page this sign-in goes back to, for a sign-in that must continue the press's journey to
+     * carry it. Left out only by the confirm route, where an account made a moment ago in this
+     * browser is the person who pressed. A sign-in with no such page carries nothing, and the
+     * press is gone either way: it was cleared before this was asked.
+     */
+    continuing?: string | null;
+}): Promise<KeptPressDone | null> {
     const store = await cookies();
     const raw = store.get(KEPT_PRESS_COOKIE)?.value;
     if (!raw) return null;
@@ -27,6 +43,7 @@ export async function applyKeptPress({ token, userId, forget }: { token: string;
 
     const press = readKeptPress(raw);
     if (!press) return null;
+    if (continuing !== undefined && (!continuing || pageOf(continuing) !== pageOf(press.from))) return null;
 
     // The add a tile makes, as this reader. The API matches the card against the catalogues and
     // refuses one that is not a card, so a forged value can only add a real card to this list.

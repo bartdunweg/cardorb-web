@@ -29,6 +29,9 @@ export function keepPress(target: KeepPressRequest["target"], card: PokemonCard)
             tcgId: card.tcgId ?? null,
             language: card.language ?? null,
         },
+        // The page the press was made on, the same one the invitation returns to (useReturnHrefs
+        // reads the pathname too), so a sign-in that continues this journey carries the press.
+        from: window.location.pathname,
     };
     try {
         // Fire and forget: a press that was not kept is a press made again after signing in.

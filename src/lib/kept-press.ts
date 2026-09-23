@@ -19,6 +19,9 @@ import { z } from "zod";
  *   list of the person signing in, who can take it off in one press.
  * - Thirty minutes. A press older than that is dropped unapplied: a star that appears long after
  *   the press is a surprise, not a service.
+ * - Only the journey it began. A press is applied when the sign-in continues from the page it was
+ *   made on, and is dropped otherwise. Somebody who presses on a shared computer and walks away
+ *   leaves nothing for the next person, who signs in without that journey (found in review).
  *
  * Not signed with a secret. The one attacker who matters is another site parking a press in a
  * visitor's browser, and that is stopped where the cookie is written (a same-origin POST, see
@@ -46,6 +49,12 @@ const keptCard = z.object({
 export const keepPressRequest = z.object({
     target: z.enum(["collection", "wishlist"]),
     card: keptCard,
+    /**
+     * The page the press was made on, which is also where the invitation sends them back to. A
+     * sign-in applies the press only when it continues that journey (kept-press-apply.ts), so a
+     * press parked on a shared computer is not carried onto the next person who signs in there.
+     */
+    from: z.string().min(1).max(512),
 });
 export type KeepPressRequest = z.infer<typeof keepPressRequest>;
 
@@ -90,4 +99,9 @@ export type KeptPressDone = z.infer<typeof keptPressDone>;
 export function keptPressSentence({ target, name, ok }: KeptPressDone): string {
     if (!ok) return `${name} could not be added. Press it again to try.`;
     return target === "wishlist" ? `${name} is on your wishlist.` : `${name} is in your collection.`;
+}
+
+/** A path's page, without its query or fragment, for telling whether two addresses are one journey. */
+export function pageOf(path: string): string {
+    return path.split(/[?#]/)[0] ?? path;
 }

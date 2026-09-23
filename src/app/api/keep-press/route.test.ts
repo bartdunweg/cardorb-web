@@ -14,6 +14,7 @@ const ORIGIN = "https://cardorb.test";
 const PRESS = {
     target: "wishlist",
     card: { name: "Charizard", set: "Base Set", number: "4", rarity: "Holo Rare", types: ["Fire"], tcgId: "base1-4", language: null },
+    from: "/sets/base1",
 };
 
 function post(body: unknown, headers: Record<string, string> = {}) {
@@ -76,5 +77,11 @@ describe("POST /api/keep-press", () => {
         const res = await post(PRESS);
         expect(res.status).toBe(204);
         expect(keptFrom(res)).toBeUndefined();
+    });
+
+    it("refuses a press whose page is not one of ours, read as a return address", async () => {
+        expect((await post({ ...PRESS, from: "https://evil.example/" })).status).toBe(400);
+        expect((await post({ ...PRESS, from: "/\t/evil.com" })).status).toBe(400);
+        expect((await post({ ...PRESS, from: "/login" })).status).toBe(400);
     });
 });

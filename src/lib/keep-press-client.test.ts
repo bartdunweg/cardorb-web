@@ -55,11 +55,14 @@ describe("keepPress", () => {
 
     it("sends the target and exactly the card fields the route reads, and nothing else", () => {
         vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 204 })));
+        window.history.pushState({}, "", "/sets/base1?language=en");
         keepPress("collection", CARD);
         const { body } = sent();
         expect(body).toEqual({
             target: "collection",
             card: { name: "Charizard", set: "Base Set", number: "4", rarity: "Holo Rare", types: ["Fire"], tcgId: "base1-4", language: null },
+            // The page it was made on, which a sign-in has to continue from to carry it.
+            from: "/sets/base1",
         });
         // What the route will accept, so the shape here and there cannot drift apart unnoticed.
         expect(keepPressRequest.safeParse(body).success).toBe(true);
