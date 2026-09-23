@@ -47,7 +47,7 @@ function changeAgainst(price: number | null | undefined, before: number | null |
  * The figure beside the price used to be the price against its own 30-day average, whatever
  * period the chart under it was drawing, so a card opened from "Biggest movers, in the last 6
  * months" showed a percent nobody could place next to the one that sent them there (Bart,
- * 2026-09-16). It reads the drawn line (chartLine, then forChart: held dips, untrusted stretch,
+ * 2026-09-16). It reads the drawn line (chartLine, then forChart: the API's held dips, untrusted stretch,
  * and under Max the week's average the chart draws instead of the day), so the number and the
  * line it sits over always say the same thing; the API's own movers figure is the raw reading, so
  * the two can differ on a line the chart distrusts.
@@ -66,20 +66,23 @@ export function periodChange(points: PriceLinePoint[], period: PeriodKey, holo: 
 }
 
 /**
- * One printing's line as every reading of it says: its figure each day it has one (valueOf), with a
- * dip that came back held at its level (holdRecoveredDips). What the chart draws from, and what the
- * figure beside the price reads, so the two never apply the rules apart.
+ * One printing's line as every reading of it says: its figure each day it has one (valueOf). What the
+ * chart draws from, and what the figure beside the price reads, so the two never apply the rules apart.
+ *
+ * A dip that came back is held by the API now, in the one place every price line passes through
+ * (cardorb-api#589, daysFromMonths). It used to be held here too, and only here, so the chart drew a
+ * three-day dip flat while the set page, the movers and a collection's value counted it as a rise of
+ * thousands. The rule was removed from this file rather than kept beside the API's: it is not
+ * idempotent, so running it twice could draw a line the number beside it never saw.
  */
 export function priceLine(points: PriceLinePoint[], printing: string | null, holo: boolean): { date: string; value: number }[] {
-    return holdRecoveredDips(
-        points.map((p) => ({ date: p.date, value: valueOf(p, printing, holo) })).filter((p): p is { date: string; value: number } => p.value != null),
-    );
+    return points.map((p) => ({ date: p.date, value: valueOf(p, printing, holo) })).filter((p): p is { date: string; value: number } => p.value != null);
 }
 
 /**
  * The line a card's chart draws: `priceLine`, from its last jump where it contradicts itself
- * (trustedStretch), with the lower bar for a 1st Edition or Shadowless run. A held dip is no jump
- * to start from, so the dips are held first.
+ * (trustedStretch), with the lower bar for a 1st Edition or Shadowless run. A dip that came back
+ * arrives held from the API (cardorb-api#589), so it is no jump to start from here either.
  */
 export function chartLine(points: PriceLinePoint[], printing: string | null, holo: boolean): { date: string; value: number }[] {
     return trustedStretch(priceLine(points, printing, holo), isScarceRun(printing) ? SCARCE_RUN_JUMP_RATIO : undefined);
@@ -172,49 +175,3 @@ export function trustedStretch<T extends { value: number }>(line: T[], ratio = J
 /** A scarce run's key: the 1st Edition and Shadowless printings, which draw from their last doubling. */
 const SCARCE_RUN_JUMP_RATIO = 2;
 const isScarceRun = (printing: string | null | undefined): boolean => !!printing && /^(1st-edition|shadowless)/.test(printing);
-
-/** How far a figure falls (or rises by the inverse) from the level before it to count as a dip. */
-const DIP = 0.6;
-/** How near the level the figure after the dip must come back, either way. */
-const RECOVERED = 0.8;
-/** How long a dip may last, from its first figure to the figure that comes back. */
-const DIP_DAYS = 21;
-
-/**
- * A price line with a dip that comes back held flat over it.
- *
- * A figure 40% or more under the level before it (or 1⅔ times over it), for as long as the figures
- * stay that far off, and followed within three weeks by one back within 20% of that level, is one
- * cheap copy sold or one hopeful sale: the price did not go there. Base Set Charizard's Shadowless run
- * read €1,869, then €1,000 to €1,099 for eleven days from 31 August 2026 while copies in poor shape
- * were listed, then €1,948, and the chart showed a collapse nobody could place (Bart, 2026-09-15).
- * The level is held over it, the same way the line holds a figure until the next sale.
- *
- * A dip at the end of the line has nothing after it to come back to and stays drawn: it may be the
- * new price. On English cards from June to September 2026 this held 2,457 figures in 507 of 35,832
- * lines.
- */
-export function holdRecoveredDips<T extends { date: string; value: number }>(line: T[]): T[] {
-    const time = (p: T) => Date.parse(`${p.date}T00:00:00Z`);
-    let out: T[] | null = null;
-    for (let i = 1; i < line.length; i++) {
-        const level = (out ?? line)[i - 1].value;
-        const off = (v: number) => v < level * DIP || v * DIP > level;
-        if (!(level > 0) || !off(line[i].value)) continue;
-        let j = i;
-        while (j + 1 < line.length && off(line[j + 1].value)) j++;
-        const back = line[j + 1];
-        if (!back || time(back) - time(line[i]) > DIP_DAYS * 86_400_000) {
-            i = j;
-            continue;
-        }
-        if (back.value < level * RECOVERED || back.value * RECOVERED > level) {
-            i = j;
-            continue;
-        }
-        out ??= [...line];
-        for (let k = i; k <= j; k++) out[k] = { ...line[k], value: level };
-        i = j;
-    }
-    return out ?? line;
-}

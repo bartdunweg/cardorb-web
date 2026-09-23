@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { isoDaysAgo } from "./chart-periods";
-import { chartLine, holdRecoveredDips, periodChange, printingsOfLine, trustedStretch } from "./price-change";
+import { chartLine, periodChange, printingsOfLine, trustedStretch } from "./price-change";
 
 /*
  * A day this many days back, since the periods are counted from today, written the way the periods
@@ -151,49 +151,6 @@ describe("trustedStretch", () => {
     it("starts a scarce run's line after its last doubling, given the lower bar", () => {
         const stretch = trustedStretch(line([400, 5266, 3563, 3622, 8480, 8600]), 2);
         expect(stretch.map((p) => p.value)).toEqual([8480, 8600]);
-    });
-});
-
-describe("holdRecoveredDips", () => {
-    const days = (values: [string, number][]) => values.map(([date, value]) => ({ date, value }));
-
-    // Base Set Charizard's Shadowless run: €1,869 on 30 August, €1,000 to €1,099 for eleven days, €1,948 again.
-    it("holds the level over a dip of forty percent or more that comes back within three weeks", () => {
-        const held = holdRecoveredDips(
-            days([
-                ["2026-08-30", 1869],
-                ["2026-08-31", 1099],
-                ["2026-09-05", 1043],
-                ["2026-09-10", 1002],
-                ["2026-09-11", 1948],
-            ]),
-        );
-        expect(held.map((p) => p.value)).toEqual([1869, 1869, 1869, 1869, 1948]);
-    });
-
-    it("holds a spike that falls back the same way", () => {
-        const held = holdRecoveredDips(
-            days([
-                ["2026-01-01", 100],
-                ["2026-01-02", 300],
-                ["2026-01-03", 102],
-            ]),
-        );
-        expect(held.map((p) => p.value)).toEqual([100, 100, 102]);
-    });
-
-    it("keeps a fall that does not come back, or comes back too late, and the line's last days", () => {
-        const stays = days([
-            ["2026-01-01", 100],
-            ["2026-01-02", 50],
-            ["2026-01-30", 100],
-        ]);
-        expect(holdRecoveredDips(stays)).toEqual(stays);
-        const open = days([
-            ["2026-01-01", 100],
-            ["2026-01-02", 50],
-        ]);
-        expect(holdRecoveredDips(open)).toEqual(open);
     });
 });
 
