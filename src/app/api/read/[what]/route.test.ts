@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const {
     session,
     cardFacts,
+    cardFactsMany,
     cardPriceHistory,
     listRows,
     moversFor,
@@ -18,6 +19,7 @@ const {
 } = vi.hoisted(() => ({
     session: vi.fn(),
     cardFacts: vi.fn(),
+    cardFactsMany: vi.fn(),
     cardPriceHistory: vi.fn(),
     listRows: vi.fn(),
     moversFor: vi.fn(),
@@ -34,7 +36,7 @@ const {
 vi.mock("@/lib/api", () => ({ session }));
 vi.mock("@/app/(app)/dashboard/cards/actions", () => ({
     cardFacts,
-    cardFactsMany: vi.fn(),
+    cardFactsMany,
     cardPriceHistory,
     listRows,
     listSetRows: vi.fn(),
@@ -88,6 +90,18 @@ describe("GET /api/read/[what]", () => {
         expect(await prices.json()).toEqual({ points: [{ date: "2026-09-22", market: 823.98 }], listings: {} });
         expect(cardPriceHistory).toHaveBeenCalledWith("base1-4");
         // Not the session's own: nothing here is read per person.
+        expect(session).not.toHaveBeenCalled();
+    });
+
+    /* A set page asks for a whole page of tiles' facts at once. The batch is the single card's
+       facts many times over, so it answers the same caller: a visitor on Browse got a 401 here
+       while the card they opened next was answered. */
+    it("answers a page of cards' facts without a session", async () => {
+        session.mockResolvedValue(null);
+        cardFactsMany.mockResolvedValue({ "base1-4": { illustrator: "Mitsuhiro Arita" } });
+        const many = await get("facts-many", "?id=base1-1&id=base1-4");
+        expect(many.status).toBe(200);
+        expect(cardFactsMany).toHaveBeenCalledWith(["base1-1", "base1-4"], undefined);
         expect(session).not.toHaveBeenCalled();
     });
 

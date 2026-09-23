@@ -616,6 +616,9 @@ export async function cardFactsMany(tcgIds: string[], language?: string | null):
     if (!parsed.success) return {};
     try {
         const { cards } = await api("/cards/facts", {
+            // A page of tiles asks this for a visitor too: the facts are the same for everyone,
+            // as the single card's are (cardFacts), so the call is made with or without a token.
+            auth: "optional",
             method: "POST",
             body: { ids: parsed.data, ...(language === "ja" ? { language: "ja" } : {}) },
             schema: cardFactsBatchAnswer,

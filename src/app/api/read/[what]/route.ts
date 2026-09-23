@@ -37,8 +37,8 @@ import { loadMoreInput, titleScope } from "@/lib/list-filter-schema";
  * Every answer about a person is the caller's own, found from their session; nobody else's id or
  * token is taken from the address. No session is a 401 for those, which the client reads as the
  * same failure the action gave a signed-out visitor: soft for a public profile's sheet, thrown for
- * a search. The two catalogue reads (`OPEN`, below) answer anybody, as the set page they are opened
- * from does. Nothing here writes, so a GET another site makes a browser send can learn nothing it
+ * a search. The three catalogue reads (`OPEN`, below: a card's facts, a page of cards' facts, a
+ * card's price line) answer anybody, as the set page they are opened from does. Nothing here writes, so a GET another site makes a browser send can learn nothing it
  * can read back and change nothing.
  */
 
@@ -183,7 +183,7 @@ const READS: Record<string, (q: URLSearchParams) => Promise<unknown> | null> = {
  * sheet on a set page drew "The price history for this card could not be loaded" over a figure
  * standing in the grid behind it. Every other read here is somebody's own and stays shut.
  */
-const OPEN = new Set(["facts", "prices"]);
+const OPEN = new Set(["facts", "facts-many", "prices"]);
 
 export async function GET(request: Request, { params: route }: { params: Promise<{ what: string }> }) {
     const { what } = await route;
