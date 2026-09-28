@@ -2,7 +2,7 @@
 
 import { startTransition, useActionState } from "react";
 import { type AuthState, signIn } from "@/app/(auth)/actions";
-import { AuthEmailField, AuthShell } from "@/components/app/auth-shell";
+import { AuthEmailField, AuthShell, useAuthBusy } from "@/components/app/auth-shell";
 import { FormError } from "@/components/app/form-error";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
@@ -11,6 +11,7 @@ import { withReturn } from "@/lib/return-to";
 // Clean, single-column sign-in: the form centered in the viewport, no marketing panel.
 export const LoginForm = ({ notice, next }: { notice?: string; next?: string | null }) => {
     const [state, formAction, pending] = useActionState<AuthState, FormData>(signIn, undefined);
+    useAuthBusy(pending);
 
     return (
         <AuthShell

@@ -26,6 +26,8 @@ test("a visitor's heart is kept across signing in and is on the wishlist after",
     await heart.click();
     expect((await kept).status()).toBe(204);
     await expect(visitor).toHaveURL(new RegExp(`/login\\?next=${literal(encodeURIComponent(`/sets/${SET_ID}`))}`));
+    // Over the set page, not instead of it (auth-modal.tsx).
+    await expect(visitor.getByRole("dialog", { name: "Sign in" })).toBeVisible();
 
     // Signing in the way a person does, through the form (auth.setup.ts says why these locators).
     await visitor.getByLabel("Email").fill(E2E_USER.email);
@@ -34,6 +36,8 @@ test("a visitor's heart is kept across signing in and is on the wishlist after",
 
     // Back on the page the heart was pressed on, told by name, with the card where they put it.
     await expect(visitor).toHaveURL(new RegExp(`/sets/${literal(SET_ID)}$`));
+    // And gone once signing in has sent them on: a slot keeps what it showed unless told otherwise.
+    await expect(visitor.getByRole("dialog", { name: "Sign in" })).toHaveCount(0);
     await expect(visitor.getByText(`${c.name} is on your wishlist.`, { exact: true })).toBeVisible();
     const unwish = visitor.getByRole("button", { name: new RegExp(`^Remove ${literal(c.name)} #\\S+ from your wishlist$`) });
     await expect(unwish).toBeVisible();

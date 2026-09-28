@@ -3,7 +3,7 @@
 import { startTransition, useActionState, useEffect, useRef, useState } from "react";
 import { CheckCircle, Circle, Mail01 } from "@untitledui/icons";
 import { type AuthState, signUp } from "@/app/(auth)/actions";
-import { AuthEmailField, AuthShell } from "@/components/app/auth-shell";
+import { AuthEmailField, AuthShell, useAuthBusy } from "@/components/app/auth-shell";
 import { FormError } from "@/components/app/form-error";
 import { Button } from "@/components/base/buttons/button";
 import { HintText } from "@/components/base/input/hint-text";
@@ -20,6 +20,7 @@ export const SignupForm = ({ next }: { next?: string | null }) => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [state, formAction, pending] = useActionState<AuthState, FormData>(signUp, undefined);
+    useAuthBusy(pending);
     const long = password.length >= MIN_PASSWORD;
     const done = useRef<HTMLOutputElement>(null);
     const sent = state !== undefined && "success" in state;

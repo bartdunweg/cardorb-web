@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, createContext, use } from "react";
+import { type ReactNode, createContext, use, useEffect } from "react";
 import Link from "next/link";
 import { Heading as AriaHeading } from "react-aria-components";
 import { Button } from "@/components/base/buttons/button";
@@ -27,6 +27,19 @@ import { Orb } from "./orb";
 /** Where the auth forms are drawn: their own page, or a modal over another. */
 const AuthFrame = createContext<"page" | "modal">("page");
 export const AuthFrameProvider = AuthFrame.Provider;
+
+/** Told while a form is sending, so the modal around it does not close under an answer on its way. */
+const AuthBusy = createContext<(busy: boolean) => void>(() => {});
+export const AuthBusyProvider = AuthBusy.Provider;
+
+/** A form says it is sending (useActionState's `pending`); a no-op on the full page. */
+export function useAuthBusy(pending: boolean) {
+    const tell = use(AuthBusy);
+    useEffect(() => {
+        tell(pending);
+        return () => tell(false);
+    }, [pending, tell]);
+}
 
 export function AuthShell({
     title,

@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { RouteProvider } from "@/providers/router-provider";
-import { router, stubBrowser } from "@/test/press-harness";
+import { pathname, router, stubBrowser } from "@/test/press-harness";
 import { AuthModal } from "./auth-modal";
 import { LoginForm } from "./login-form";
 import { SignupForm } from "./signup-form";
@@ -24,6 +24,7 @@ const draw = (form: React.ReactNode) =>
 beforeEach(() => {
     vi.clearAllMocks();
     stubBrowser();
+    pathname.current = "/login";
 });
 
 describe("AuthModal", () => {
@@ -54,5 +55,11 @@ describe("AuthModal", () => {
             fireEvent.click(screen.getByRole("button", { name: "Close" }));
         });
         expect(router.back).toHaveBeenCalled();
+    });
+
+    it("draws nothing once the address is no longer a form's, as after signing in sends you on", () => {
+        pathname.current = "/sets/sv08";
+        draw(<LoginForm next="/sets/sv08" />);
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
 });

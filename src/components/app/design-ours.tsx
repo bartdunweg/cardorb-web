@@ -11,7 +11,7 @@ import { rarityMark } from "@/lib/rarity-symbol";
 import { CATALOGUE_NOT_ANSWERING } from "@/lib/read-failure";
 import { AcquiredDatePicker } from "./acquired-date-picker";
 import { AppEmptyState } from "./app-empty-state";
-import { AuthEmailField, AuthShell } from "./auth-shell";
+import { AuthEmailField, AuthFrameProvider, AuthShell } from "./auth-shell";
 import { CardBack } from "./card-back";
 import { CardImage } from "./card-image";
 import { CardTile } from "./card-tile";
@@ -141,19 +141,38 @@ export const ourSections: SectionSpec[] = [
         title: "AuthShell",
         from: "components/app/auth-shell",
         ours: true,
-        note: "The frame the four signed-out pages share: the wordmark, a heading, a line under it, then the form, then the one link to the other page. Ours because the kit's sign-in screens are page templates, not a component; the four pages were the same thirteen lines of markup four times. The window's own height and background come from the route's layout, so here it stands on a surface of its own.",
+        note: "The frame the four signed-out pages share: the wordmark, a heading, a line under it, then the form, then the one link to the other page. Ours because the kit's sign-in screens are page templates, not a component; the four pages were the same thirteen lines of markup four times. The window's own height and background come from the route's layout, so here it stands on a surface of its own. Inside AuthModal (components/app/auth-modal), which opens sign in and sign up over the page a visitor is on, the same forms draw the smaller frame on the right: a small orb, no wordmark, the title naming the dialog.",
         render: (
-            <div className="flex min-h-140 flex-col rounded-xl bg-primary ring-1 ring-secondary">
-                <AuthShell
-                    title="Sign in"
-                    subtitle="Welcome back. Enter your details."
-                    footer={{ question: "Don’t have an account?", href: "#auth-shell", label: "Sign up" }}
-                >
-                    <div className="flex flex-col gap-6">
-                        <AuthEmailField />
-                        <Button size="lg">Sign in</Button>
+            <div className="grid gap-4 lg:grid-cols-2">
+                <div className="flex min-h-140 flex-col rounded-xl bg-primary ring-1 ring-secondary">
+                    <AuthShell
+                        title="Sign in"
+                        subtitle="Welcome back. Enter your details."
+                        footer={{ question: "Don’t have an account?", href: "#auth-shell", label: "Sign up" }}
+                    >
+                        <div className="flex flex-col gap-6">
+                            <AuthEmailField />
+                            <Button size="lg">Sign in</Button>
+                        </div>
+                    </AuthShell>
+                </div>
+                {/* The modal frame on the modal's own surface, without the overlay: the dialog itself is a route. */}
+                <div className="flex items-center justify-center rounded-xl bg-secondary p-6">
+                    <div className="w-full max-w-100 rounded-2xl glass-thick p-6 shadow-xl sm:p-8">
+                        <AuthFrameProvider value="modal">
+                            <AuthShell
+                                title="Sign in"
+                                subtitle="Welcome back. Enter your details."
+                                footer={{ question: "Don’t have an account?", href: "#auth-shell", label: "Sign up" }}
+                            >
+                                <div className="flex flex-col gap-6">
+                                    <AuthEmailField />
+                                    <Button size="lg">Sign in</Button>
+                                </div>
+                            </AuthShell>
+                        </AuthFrameProvider>
                     </div>
-                </AuthShell>
+                </div>
             </div>
         ),
     },

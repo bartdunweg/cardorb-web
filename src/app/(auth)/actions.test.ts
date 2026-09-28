@@ -12,10 +12,10 @@ const applyKeptPress = vi.fn();
 vi.mock("@/lib/kept-press-apply", () => ({ applyKeptPress: (...a: unknown[]) => applyKeptPress(...a) }));
 const deleted: string[] = [];
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined, set: vi.fn(), delete: (n: string) => deleted.push(n) }) }));
-const redirect = vi.fn((to: string) => {
+const redirect = vi.fn((to: string, _type?: string) => {
     throw new Error(`redirect:${to}`);
 });
-vi.mock("next/navigation", () => ({ redirect: (to: string) => redirect(to) }));
+vi.mock("next/navigation", () => ({ RedirectType: { push: "push", replace: "replace" }, redirect: (to: string, type?: string) => redirect(to, type) }));
 
 const { signIn, signOut } = await import("./actions");
 const { KEPT_PRESS_COOKIE } = await import("@/lib/kept-press");
@@ -42,6 +42,8 @@ describe("signIn and a kept press", () => {
         );
         expect(applyKeptPress).toHaveBeenCalledWith({ token: "fresh-token", userId: "u1", forget: true, continuing: "/sets/base1" });
         expect(applyKeptPress.mock.invocationCallOrder[0]).toBeLessThan(redirect.mock.invocationCallOrder[0]!);
+        // In the sign-in step's place, so Back from there is not the form again.
+        expect(redirect).toHaveBeenLastCalledWith("/sets/base1", "replace");
     });
 
     it("still signs them in when carrying the press throws", async () => {
