@@ -6,6 +6,7 @@ import { AuthEmailField, AuthShell } from "@/components/app/auth-shell";
 import { FormError } from "@/components/app/form-error";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
+import { withReturn } from "@/lib/return-to";
 
 // Clean, single-column sign-in: the form centered in the viewport, no marketing panel.
 export const LoginForm = ({ notice, next }: { notice?: string; next?: string | null }) => {
@@ -15,7 +16,8 @@ export const LoginForm = ({ notice, next }: { notice?: string; next?: string | n
         <AuthShell
             title="Sign in"
             subtitle="Welcome back. Enter your details."
-            footer={{ question: "Don’t have an account?", href: "/signup", label: "Sign up" }}
+            // The page the visitor came from goes along, so switching forms does not lose the way back.
+            footer={{ question: "Don’t have an account?", href: withReturn("/signup", next ?? ""), label: "Sign up" }}
         >
             {/* A link that could not be verified is a failure, in the colour and role every other
                 failure on these forms has; as grey body text it read as a caption. */}

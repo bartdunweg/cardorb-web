@@ -48,16 +48,16 @@ describe("the sidebar with nobody signed in", () => {
         }
     });
 
-    it("says what binders are for rather than listing none", () => {
-        expect(screen.getByRole("link", { name: "Sign in to make binders" })).toHaveAttribute("href", "/login?next=%2Fsets");
+    it("lists Favorites alone under Binders, with no row asking to sign in", () => {
+        expect(screen.queryByRole("link", { name: "Sign in to make binders" })).not.toBeInTheDocument();
     });
 
     it("draws no number beside Favorites, because nobody was asked what they hold", () => {
         expect(screen.getByRole("link", { name: "Favorites" }).textContent).toBe("Favorites");
     });
 
-    it("keeps New binder, as a link to the door rather than the dialog", () => {
-        expect(screen.getByRole("link", { name: "New binder" })).toHaveAttribute("href", "/login?next=%2Fsets");
+    it("keeps New binder, as a link to making an account rather than the dialog", () => {
+        expect(screen.getByRole("link", { name: "New binder" })).toHaveAttribute("href", "/signup?next=%2Fsets");
     });
 });
 

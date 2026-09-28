@@ -1,5 +1,8 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { type ReactNode, createContext, use } from "react";
 import Link from "next/link";
+import { Heading as AriaHeading } from "react-aria-components";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { Orb } from "./orb";
@@ -13,10 +16,18 @@ import { Orb } from "./orb";
  * lines of markup four times, and a change to the frame had to be made four times or the pages
  * drifted apart.
  *
+ * In a modal (auth-modal.tsx, over the page a visitor was on) the same forms draw in a smaller
+ * frame: a smaller orb and no wordmark, since the app is right behind it, and the title names the
+ * dialog. One set of forms either way, so a change to one reaches both.
+ *
  * `footer` is the one line under the column that sends you to the other page ("Don't have an
  * account? Sign up"). Reset has none: you arrive there from a link in an email, and there is no
  * other page to be on.
  */
+/** Where the auth forms are drawn: their own page, or a modal over another. */
+const AuthFrame = createContext<"page" | "modal">("page");
+export const AuthFrameProvider = AuthFrame.Provider;
+
 export function AuthShell({
     title,
     subtitle,
@@ -28,6 +39,26 @@ export function AuthShell({
     footer?: { question: string; href: string; label: string };
     children: ReactNode;
 }) {
+    const frame = use(AuthFrame);
+    if (frame === "modal") {
+        return (
+            <div className="flex w-full flex-col gap-6">
+                <div className="flex flex-col items-center gap-4 text-center">
+                    <Orb size={64} className="text-primary" />
+                    <div className="flex flex-col gap-1.5">
+                        <AriaHeading slot="title" className="text-lg font-semibold text-primary">
+                            {title}
+                        </AriaHeading>
+                        <p className="text-sm text-tertiary">{subtitle}</p>
+                    </div>
+                </div>
+
+                {children}
+
+                {footer ? <Footer {...footer} replace /> : null}
+            </div>
+        );
+    }
     return (
         // The window's height and its background are the route layout's, so this is the column alone.
         <div className="flex flex-1 items-center justify-center px-4 py-12 md:px-8">
@@ -45,15 +76,20 @@ export function AuthShell({
 
                 {children}
 
-                {footer ? (
-                    <div className="flex justify-center gap-1 text-center">
-                        <span className="text-sm text-tertiary">{footer.question}</span>
-                        <Button href={footer.href} color="link-color" size="md">
-                            {footer.label}
-                        </Button>
-                    </div>
-                ) : null}
+                {footer ? <Footer {...footer} /> : null}
             </div>
+        </div>
+    );
+}
+
+/** `replace`: in the modal the switch to the other form takes this one's place, so closing closes rather than steps back to it. */
+function Footer({ question, href, label, replace = false }: { question: string; href: string; label: string; replace?: boolean }) {
+    return (
+        <div className="flex justify-center gap-1 text-center">
+            <span className="text-sm text-tertiary">{question}</span>
+            <Button href={href} color="link-color" size="md" routerOptions={replace ? { replace: true } : undefined}>
+                {label}
+            </Button>
         </div>
     );
 }

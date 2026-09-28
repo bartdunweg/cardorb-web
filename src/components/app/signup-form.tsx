@@ -10,6 +10,7 @@ import { HintText } from "@/components/base/input/hint-text";
 import { InputBase, TextField } from "@/components/base/input/input";
 import { Label } from "@/components/base/input/label";
 import { FeaturedIcon } from "@/components/foundations/featured-icon/featured-icon";
+import { withReturn } from "@/lib/return-to";
 
 // The floor Supabase enforces; the schema in src/lib/validation/auth.ts says why it is this number.
 const MIN_PASSWORD = 10;
@@ -38,7 +39,7 @@ export const SignupForm = ({ next }: { next?: string | null }) => {
                 subtitle={state.success}
                 // The one place to go from here: whoever confirmed in another tab lands back on this
                 // one, and without the line it had no way out but the wordmark.
-                footer={{ question: "Already confirmed?", href: "/login", label: "Sign in" }}
+                footer={{ question: "Already confirmed?", href: withReturn("/login", next ?? ""), label: "Sign in" }}
             >
                 <output
                     ref={done}
@@ -59,7 +60,7 @@ export const SignupForm = ({ next }: { next?: string | null }) => {
         <AuthShell
             title="Sign up"
             subtitle="Create your account to start managing your collection."
-            footer={{ question: "Already have an account?", href: "/login", label: "Sign in" }}
+            footer={{ question: "Already have an account?", href: withReturn("/login", next ?? ""), label: "Sign in" }}
         >
             {/* Once the page runs, the submit is taken by hand: React resets a form after its action,
                 and the kit's fields listen for that reset and hand their empty start value back
@@ -102,7 +103,7 @@ export const SignupForm = ({ next }: { next?: string | null }) => {
                     <div role="alert" className="flex flex-col gap-2">
                         <p className="text-sm text-error-primary">You already have an account with this email.</p>
                         <div className="flex flex-wrap gap-x-4 gap-y-1">
-                            <Button href="/login" color="link-color" size="md">
+                            <Button href={withReturn("/login", next ?? "")} color="link-color" size="md">
                                 Sign in
                             </Button>
                             <Button href="/forgot-password" color="link-color" size="md">
