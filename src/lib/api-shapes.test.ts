@@ -205,7 +205,21 @@ describe("priceForCopy", () => {
         // A Jungle Scyther holo: TCGplayer prices the holo and the plain rare apart, and the API
         // works out which printing this copy is and sends that figure.
         expect(priceForCopy({ price, printingPrice: printing })).toBe(53.23);
-        expect(priceForCopy({ price, printingPrice: null })).toBe(4);
+        // Sent, a null one included, it is the answer: the API chose along the whole chain already.
+        expect(priceForCopy({ price, printingPrice: null })).toBeNull();
+        // Not sent (an API that chose no printing): the card's own figure.
+        expect(priceForCopy({ price })).toBe(4);
+    });
+
+    /* cardorb-api#591: a 1st Edition whose run has no believable market figure is sent its listing,
+       or null, and never reads the Unlimited's figure in its place (Dark Charizard, 2026-09-28). */
+    it("never prices a 1st Edition copy at the Unlimited's figure when the API sent its run's answer", () => {
+        const unlimited = { market: 334.73 };
+        const runListing = { market: null, lowestListing: 840, basis: "lowest-listing" as const };
+        expect(priceForCopy({ edition: "1st-edition", price: unlimited, printingPrice: runListing })).toBeNull();
+        expect(listingForCopy({ edition: "1st-edition", price: unlimited, printingPrice: runListing })).toBe(840);
+        expect(priceForCopy({ edition: "1st-edition", price: unlimited, printingPrice: null })).toBeNull();
+        expect(listingForCopy({ edition: "1st-edition", price: unlimited, printingPrice: null })).toBeNull();
     });
 
     it("leaves a reverse without its own printing's figure unpriced, never at the card's own", () => {
@@ -231,10 +245,14 @@ describe("listingForCopy", () => {
     });
 
     it("is nothing wherever a market figure is found along the copy's chain", () => {
-        // A printing with only a listing does not hide the card's own market figure.
-        expect(priceForCopy({ price: market, printingPrice: listing })).toBe(3);
-        expect(listingForCopy({ price: market, printingPrice: listing })).toBeNull();
         expect(listingForCopy({ price: market })).toBeNull();
+        expect(listingForCopy({ price: listing, printingPrice: market })).toBeNull();
+    });
+
+    it("reads a sent printingPrice as the answer, a listing included", () => {
+        // The API sends a listing as the printing's answer only where nothing on the chain has a
+        // market figure (copyPricingOf, market first), so a sent listing is the answer as it stands.
+        expect(listingForCopy({ price: market, printingPrice: listing })).toBe(5771.49);
     });
 
     it("keeps a reverse on its own printing", () => {

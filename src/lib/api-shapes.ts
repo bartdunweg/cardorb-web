@@ -301,7 +301,14 @@ export function listingForCopy(
     return null;
 }
 
-/** The prices a copy reads, in order: a reverse its own printing's alone. */
+/**
+ * The prices a copy reads, in order: a reverse its own printing's alone. Where the API sent
+ * `printingPrice` (a null one included), that is its answer and nothing after it is read, as the
+ * API's totals do from cardorb-api#591 (`chosenPrice` in items.ts): it chose the figure along the
+ * whole chain already, and
+ * a 1st Edition whose run has no believable figure is sent null so it never reads the Unlimited's
+ * (cardorb-api#591, the owner's rule that a missing price is unknown, never another printing's).
+ */
 const copyChain = ({
     edition,
     finish,
@@ -309,7 +316,7 @@ const copyChain = ({
     priceFirstEd,
     printingPrice,
 }: Pick<CardItem, "price"> & Partial<Pick<CardItem, "edition" | "finish" | "priceFirstEd" | "printingPrice">>) =>
-    isReverseFinish(finish) ? [printingPrice] : [printingPrice, edition === "1st-edition" ? priceFirstEd : null, price];
+    printingPrice !== undefined || isReverseFinish(finish) ? [printingPrice] : [edition === "1st-edition" ? priceFirstEd : null, price];
 
 /**
  * A binder as `GET /v1/folders` sends it. `kind` and `rule` are optional on the wire: an API from
