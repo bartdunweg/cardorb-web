@@ -128,7 +128,9 @@ export function CardsFilters({
         icon: CONDITION_DOT[c] ? <Dot size="md" aria-hidden="true" className={CONDITION_DOT[c]} /> : undefined,
     });
     // The name's mark, as a row of every era prints it (rarity-symbol.ts); the name is beside it.
-    const rarity = (r: string): FilterOption => rarityOption(r, rarityMarkOfName(r));
+    // One column of marks where any rarity here has one, so the names line up; none where none does.
+    const marked = facets.rarities.some((r) => rarityMarkOfName(r) !== null);
+    const rarity = (r: string): FilterOption => rarityOption(r, rarityMarkOfName(r), marked);
     const finish = (f: string): FilterOption => ({ value: f, label: FINISH_LABELS[f as Finish] ?? f });
     const language = (code: string): FilterOption => ({ value: code, label: languageOf(code).label, icon: <FlagIcon language={code} labelled /> });
     const type = (t: string): FilterOption => ({ value: t, label: t, icon: <TypeIcon type={t} className="size-4" /> });

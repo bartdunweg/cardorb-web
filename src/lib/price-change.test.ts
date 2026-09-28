@@ -186,6 +186,8 @@ describe("sheetPrintingOf", () => {
     it("names the run a stamped or unlimited printing is", () => {
         expect(sheetEditionOf("1st-edition-holofoil")).toBe("1st-edition");
         expect(sheetEditionOf("unlimited")).toBe("unlimited");
+        expect(sheetEditionOf("shadowless-holofoil")).toBe("shadowless");
+        expect(sheetPrintingOf("shadowless-holofoil")).toBe("holo");
         expect(sheetEditionOf("reverse-holofoil")).toBeNull();
     });
 });

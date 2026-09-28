@@ -186,10 +186,11 @@ export function RarityNameOnly({ rarity, text = rarity }: { rarity: string; text
  * A rarity as a filter's choice: its mark before the name, and nothing where it has none. In the
  * list the marks sit in one column so the names line up; a chip or tag takes the mark at its own width.
  */
-export const rarityOption = (rarity: string, mark: RarityMark | null): FilterOption => ({
+export const rarityOption = (rarity: string, mark: RarityMark | null, column = true): FilterOption => ({
     value: rarity,
     label: rarity,
-    // The list keeps the column even without a mark, so a name with none lines up with the rest.
-    listIcon: <RaritySymbol mark={mark} size="md" column />,
+    // The list keeps the column even without a mark, so a name with none lines up with the rest;
+    // a list where nothing has a mark (`column` false) has no column to keep.
+    ...(column ? { listIcon: <RaritySymbol mark={mark} size="md" column /> } : {}),
     ...(mark ? { icon: <RaritySymbol mark={mark} size="md" /> } : {}),
 });

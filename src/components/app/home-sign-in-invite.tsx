@@ -41,6 +41,8 @@ import { cx } from "@/utils/cx";
  */
 type Market = { up: Mover[]; down: Mover[] } | null;
 
+/* The sheet's code, asked for as a pointer or the focus reaches the movers, so a tap does not wait on it. */
+const preloadSheet = () => void import("@/components/app/card-detail-slideout");
 const CardDetailSlideout = dynamic(() => import("@/components/app/card-detail-slideout").then((m) => m.CardDetailSlideout), { ssr: false });
 
 export function HomeSignInInvite({ market = Promise.resolve(null) }: { market?: Promise<Market> }) {
@@ -84,7 +86,7 @@ function MarketMovers({ market }: { market: Promise<Market> }) {
     const step = (by: number) => (at !== null && all[at + by] ? () => setAt(at + by) : null);
     return (
         <Place heading="Biggest movers this week" line="The cards whose price moved most in the last 7 days, across every card there is">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4" onPointerEnter={preloadSheet} onFocus={preloadSheet}>
                 <MoverList title="Up" movers={movers.up} empty="Nothing rose this week." onOpen={openAt} href={null} linkLabel="" />
                 <MoverList
                     title="Down"
@@ -102,6 +104,7 @@ function MarketMovers({ market }: { market: Promise<Market> }) {
                     /* On the printing and the run that moved, so the sheet's price and line are the row's (1st Edition, not Unlimited). */
                     printing={open ? sheetPrintingOf(open.printing) : null}
                     edition={open ? sheetEditionOf(open.printing) : null}
+                    readsRow
                     onClose={() => setAt(null)}
                     onPrev={step(-1)}
                     onNext={step(1)}

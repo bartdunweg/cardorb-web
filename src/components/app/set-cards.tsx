@@ -174,7 +174,15 @@ export function SetCards({
         () =>
             [...new Set(drawnCards.map((c) => c.rarity).filter((r): r is string => Boolean(r)))]
                 .sort()
-                .map((r) => rarityOption(r, rarityMark(r, { setId, language }))),
+                .map((r) => ({ r, mark: rarityMark(r, { setId, language }) }))
+                // One column of marks where any rarity here has one, so the names line up; none where none does.
+                .map(({ r, mark }, _, all) =>
+                    rarityOption(
+                        r,
+                        mark,
+                        all.some((o) => o.mark !== null),
+                    ),
+                ),
         [drawnCards, setId, language],
     );
     /* Whether anybody was asked what is held here. The answer carries a holding for every card of a

@@ -154,7 +154,7 @@ export function sheetPrintingOf(key: string | null | undefined): string | null {
     const pattern = key.match(/^(.+)-reverse-holofoil$/)?.[1];
     if (pattern) return `reverse-holo/${pattern}`;
     if (key === "reverse-holofoil") return "reverse-holo";
-    const finish = key.replace(/^(1st-edition|unlimited)-?/, "");
+    const finish = key.replace(RUN, "");
     if (finish === "holofoil") return "holo";
     if (finish === "" || finish === "normal") return "normal";
     // A foil pattern's own product: "cosmos-holofoil" is the sheet's "holo/cosmos".
@@ -165,8 +165,11 @@ export function sheetPrintingOf(key: string | null | undefined): string | null {
 
 /** The print run a TCGplayer printing is, as the sheet keys its run buttons: "1st-edition-holofoil" is "1st-edition". */
 export function sheetEditionOf(key: string | null | undefined): string | null {
-    return key?.match(/^(1st-edition|unlimited)\b/)?.[1] ?? null;
+    return key?.match(RUN)?.[1] ?? null;
 }
+
+/** A print run's prefix on a TCGplayer printing: every run in EDITIONS. */
+const RUN = /^(1st-edition|shadowless|blue-border|unlimited)-?/;
 
 /** The printings a card has readings for, in reading order, each with its label. */
 export function printingsOfLine(points: PriceLinePoint[]): { key: string; label: string }[] {

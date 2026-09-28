@@ -27,13 +27,32 @@ type Params = {
     tilePrinting?: string | null;
     /** Where the card has no copy: the print run the row that opened it moved in, else the unlimited one. */
     tileEdition?: string | null;
+    /**
+     * The row that opened the sheet named a printing and a run that moved (a market mover): the
+     * price, line and change are read off the history for them from the start, as if pressed.
+     */
+    readsRow?: boolean;
 };
 
 /**
  * The printing or print run on show in the card sheet, the one pressed under the card, and the
  * picture and price that follow it.
  */
-export function useSheetPrinting({ card, mine, readOnly, tcgId, known, points, listings, period, change, stepFromRef, tilePrinting, tileEdition }: Params) {
+export function useSheetPrinting({
+    card,
+    mine,
+    readOnly,
+    tcgId,
+    known,
+    points,
+    listings,
+    period,
+    change,
+    stepFromRef,
+    tilePrinting,
+    tileEdition,
+    readsRow = false,
+}: Params) {
     /*
      * The printing on show, under the card (printing-choices.ts): the copy's own to begin with,
      * and whichever button was pressed after that, until the sheet moves to another card. A
@@ -88,11 +107,10 @@ export function useSheetPrinting({ card, mine, readOnly, tcgId, known, points, l
      * "that printing has none".
      */
     const pressedAway = (printing && printingKey !== openingPrinting) || (editionKey && editionKey !== openingEdition);
-    /* Opened on a run the row moved in (a market mover's 1st Edition): its price, line and change are
-       that run's, as if pressed. Without this the line was the card's default run, Unlimited, beside
+    /* Opened from a row that named what moved: its price, line and change are that printing's and
+       that run's, as if pressed. Without this the line was the card's default one, Unlimited, beside
        the 1st Edition's price (Dark Charizard, 2026-09-28). */
-    const onTileRun = tileEdition != null && editionKey === tileEdition && editionKey !== "unlimited";
-    const readsPressed = Boolean(pressedAway) || onTileRun;
+    const readsPressed = Boolean(pressedAway) || readsRow;
     const patternPrint = printing?.foilPattern
         ? known?.patternPrints?.prints.find((p) => p.finish === printing.finish && p.foilPattern === printing.foilPattern)
         : undefined;
