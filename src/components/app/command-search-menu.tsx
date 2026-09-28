@@ -8,12 +8,14 @@ import { CardImage } from "@/components/app/card-image";
 import type { PaletteFilters } from "@/components/app/command-search";
 import { FilterChip, FilterChipRow, type FilterOption } from "@/components/app/filter-chip";
 import { LanguageSwitch } from "@/components/app/language-switch";
+import { RarityName, markOfCard } from "@/components/app/rarity-symbol";
 import { CommandMenu, CommandMenuContext, type CommandMenuGroupType } from "@/components/application/command-menus/command-menu";
 import { LoadingIndicator } from "@/components/application/loading-indicator/loading-indicator";
 import { Button } from "@/components/base/buttons/button";
 import { CARD_TYPES } from "@/lib/card-types";
 import { formatCardPrice, formatCount, formatDate } from "@/lib/format";
 import { FULL_ART } from "@/lib/full-art";
+import { setIdOf } from "@/lib/rarity-symbol";
 import { CATALOGUE_NOT_ANSWERING } from "@/lib/read-failure";
 import { searchHitDescription } from "@/lib/search-hit";
 import { cx } from "@/utils/cx";
@@ -125,7 +127,10 @@ function CardPreview({ card, onAdd, onView }: { card: PokemonCard; onAdd: (targe
                               : null
                     }
                 />
-                <DetailRow label="Rarity" value={card.rarity} />
+                <DetailRow
+                    label="Rarity"
+                    value={card.rarity ? <RarityName rarity={card.rarity} mark={markOfCard(card, setIdOf(card.tcgId ?? card.id))} /> : null}
+                />
                 <DetailRow label="Type" value={card.types?.length ? card.types.join(", ") : null} />
                 <DetailRow label="Subtypes" value={card.subtypes?.length ? card.subtypes.join(", ") : null} />
                 <DetailRow label="HP" value={card.hp} />

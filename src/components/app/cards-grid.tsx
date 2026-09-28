@@ -5,6 +5,7 @@ import { Minus, Plus } from "@untitledui/icons";
 import { arriveDelay } from "@/components/app/arrive-stagger";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
+import { CardLine } from "@/components/app/card-line";
 import { CardMarks, CardMarksText } from "@/components/app/card-marks";
 import { warmCard } from "@/components/app/card-memo";
 import { CardPrice } from "@/components/app/card-price";
@@ -16,7 +17,7 @@ import { TileIconButton } from "@/components/app/tile-icon-button";
 import { useCopySteps } from "@/components/app/use-copy-steps";
 import { useTileExit } from "@/components/app/use-tile-exit";
 import type { PriceChange } from "@/lib/api-shapes";
-import { cardLine, copyLine } from "@/lib/card-label";
+import { copyLine } from "@/lib/card-label";
 import type { PublicCard } from "@/lib/cards";
 import { type CardsSize, GRID_COLUMNS, TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
 import { cx } from "@/utils/cx";
@@ -234,7 +235,7 @@ const GridCell = memo(function GridCell<T extends GridCard>({
                             {/* A copy in another language wears its flag; English, which nearly every card is, stays plain. */}
                             {"language" in card && typeof card.language === "string" && card.language !== "en" ? <FlagIcon language={card.language} /> : null}
                         </span>
-                        <span className="truncate text-xs text-tertiary">{cardLine(card)}</span>
+                        <CardLine card={card} />
                         {/* Which printing the copy is and what state it is in: "Holo · Near Mint",
                             "1st Edition · Holo · PSA 10" (copyLine). Each kind of copy is a tile of its own, and two
                             of one card looked alike. A wish, with no printing chosen, has no line. */}

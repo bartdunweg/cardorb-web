@@ -5,10 +5,11 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Button as AriaButton } from "react-aria-components";
 import { CardImage } from "@/components/app/card-image";
+import { CardLine } from "@/components/app/card-line";
 import { PERIODS, type PeriodKey } from "@/components/app/chart-periods";
 import { useHomePeriod } from "@/components/app/home-period";
 import { notify } from "@/components/app/toast";
-import { cardLine, copyLine } from "@/lib/card-label";
+import { copyLine } from "@/lib/card-label";
 import type { Card } from "@/lib/cards";
 import { CARDS_CHANGED } from "@/lib/forget-mine";
 import { formatPrice } from "@/lib/format";
@@ -244,17 +245,18 @@ export function MoverList({
                                     </div>
                                     <div className="flex min-w-0 flex-1 flex-col">
                                         <span className="truncate text-sm font-medium text-primary">{m.name}</span>
-                                        <span className="truncate text-xs text-tertiary">
-                                            {/* The code and number printed on the card and its rarity, as the lists show them (card-label.ts). */}
-                                            {cardLine({
+                                        {/* The code and number printed on the card and its rarity, as the lists show them (card-line.tsx). */}
+                                        <CardLine
+                                            card={{
                                                 set_name: m.set,
                                                 set_abbr: m.setAbbr ?? null,
                                                 number: m.number,
                                                 printed_number: m.printedNumber ?? null,
                                                 rarity: m.rarity,
-                                            })}
-                                            {m.copies > 1 ? ` · ×${m.copies}` : ""}
-                                        </span>
+                                                tcgId: m.tcgId,
+                                            }}
+                                            after={m.copies > 1 ? ` · ×${m.copies}` : null}
+                                        />
                                         {/* The second line every list has: the printing and the state, "Holo · Near Mint"
                                         (copyLine). A mover is a card, so the API says it only where every copy held
                                         answers the same (cardorb-api#516); where they differ there is no line. */}
@@ -277,17 +279,18 @@ export function MoverList({
                                     </div>
                                     <div className="flex min-w-0 flex-1 flex-col">
                                         <span className="truncate text-sm font-medium text-primary">{m.name}</span>
-                                        <span className="truncate text-xs text-tertiary">
-                                            {/* The code and number printed on the card and its rarity, as the lists show them (card-label.ts). */}
-                                            {cardLine({
+                                        {/* The code and number printed on the card and its rarity, as the lists show them (card-line.tsx). */}
+                                        <CardLine
+                                            card={{
                                                 set_name: m.set,
                                                 set_abbr: m.setAbbr ?? null,
                                                 number: m.number,
                                                 printed_number: m.printedNumber ?? null,
                                                 rarity: m.rarity,
-                                            })}
-                                            {m.copies > 1 ? ` · ×${m.copies}` : ""}
-                                        </span>
+                                                tcgId: m.tcgId,
+                                            }}
+                                            after={m.copies > 1 ? ` · ×${m.copies}` : null}
+                                        />
                                         {/* The second line every list has: the printing and the state, "Holo · Near Mint"
                                         (copyLine). A mover is a card, so the API says it only where every copy held
                                         answers the same (cardorb-api#516); where they differ there is no line. */}

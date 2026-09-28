@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+import { RarityNameOnly } from "@/components/app/rarity-symbol";
 import { LoadingIndicator } from "@/components/application/loading-indicator/loading-indicator";
 import { Checkbox } from "@/components/base/checkbox/checkbox";
 import { RARITY_SPLITS, SPLIT_RARITY } from "@/lib/binder-rule";
@@ -17,7 +19,7 @@ function CheckPicker({
     isLoading,
 }: {
     label: string;
-    options: { value: string; label: string }[];
+    options: { value: string; label: ReactNode }[];
     selected: string[];
     onChange: (values: string[]) => void;
     /** What none ticked means: "Every card, whatever its rarity." */
@@ -79,8 +81,10 @@ export function RarityPicker({
     return (
         <CheckPicker
             label={label}
-            options={options.flatMap((r) =>
-                r === SPLIT_RARITY ? RARITY_SPLITS.map((k) => ({ value: `${r} / ${k.id}`, label: `${r} · ${k.label}` })) : [{ value: r, label: r }],
+            options={options.flatMap((r): { value: string; label: ReactNode }[] =>
+                r === SPLIT_RARITY
+                    ? RARITY_SPLITS.map((k) => ({ value: `${r} / ${k.id}`, label: `${r} · ${k.label}` }))
+                    : [{ value: r, label: <RarityNameOnly rarity={r} /> }],
             )}
             selected={shown}
             onChange={onChange}

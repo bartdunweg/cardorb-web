@@ -6,6 +6,7 @@ import { Button as AriaButton } from "react-aria-components";
 import { addCard } from "@/app/(app)/dashboard/cards/actions";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
+import { CardLine } from "@/components/app/card-line";
 import { warmCard } from "@/components/app/card-memo";
 import { CardPrice } from "@/components/app/card-price";
 import { GotItButton } from "@/components/app/got-it-button";
@@ -17,7 +18,6 @@ import { useCopySteps } from "@/components/app/use-copy-steps";
 import { useWarm } from "@/components/app/use-warm";
 import { useWishStep } from "@/components/app/use-wish-step";
 import type { SetCard } from "@/lib/api-shapes";
-import { cardLine } from "@/lib/card-label";
 import { pokemonCardFromSetCard } from "@/lib/card-shapes";
 import { type CardsSize, TILE_SIZES, TILE_WIDTH } from "@/lib/cards-view";
 import { keepPress } from "@/lib/keep-press-client";
@@ -190,9 +190,19 @@ export function SetCardTile({
                     everywhere, as printed on the card (cardLabel): the catalogue's number is the printed one.
                     The rarity follows after a bullet, "POR 121 · Rare" (Bart's call, 2026-09-15): on a set
                     page it is what tells two cards of the same Pokémon apart without opening either. */}
-                <span className="truncate text-xs text-tertiary tabular-nums">
-                    {cardLine({ set_name: card.setName, set_abbr: card.setAbbr, number: card.number, printed_number: card.printedNumber, rarity: card.rarity })}
-                </span>
+                <CardLine
+                    card={{
+                        set_name: card.setName,
+                        set_abbr: card.setAbbr,
+                        number: card.number,
+                        printed_number: card.printedNumber,
+                        rarity: card.rarity,
+                        tcgId: card.tcgId ?? card.id,
+                        language,
+                    }}
+                    setId={setId}
+                    className="tabular-nums"
+                />
                 {/* Which printing the price is, "Holo" or "Reverse", on a line of its own as a copy's
                     printing is on the collection's tiles: a Holo Rare's price read as anyone's guess
                     between its printings (Bart, 2026-09-18). The sheet opens on the same one. */}

@@ -7,6 +7,7 @@ import { Button as AriaButton, Heading as AriaHeading } from "react-aria-compone
 import { type CardHit, editCopies } from "@/app/(app)/dashboard/cards/actions";
 import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
+import { CardLine } from "@/components/app/card-line";
 import { useCommandSearch } from "@/components/app/command-search";
 import { notify } from "@/components/app/toast";
 import { LoadingIndicator } from "@/components/application/loading-indicator/loading-indicator";
@@ -18,7 +19,6 @@ import { Checkbox } from "@/components/base/checkbox/checkbox";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Input } from "@/components/base/input/input";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
-import { cardLine } from "@/lib/card-label";
 import { forgetMineThenRefresh } from "@/lib/forget-then-refresh";
 import { formatCount } from "@/lib/format";
 import { CATALOGUE_NOT_ANSWERING } from "@/lib/read-failure";
@@ -186,7 +186,7 @@ function OwnCardsPicker({ binder, close }: { binder: { id: string; name: string 
                                         </span>
                                         <span className="flex min-w-0 flex-col">
                                             <span className="truncate text-sm font-medium text-primary">{card.name}</span>
-                                            <span className="truncate text-xs font-normal text-tertiary">{cardLine(card)}</span>
+                                            <CardLine card={card} className="font-normal" />
                                         </span>
                                     </span>
                                 }
