@@ -24,7 +24,9 @@ const own = card(24);
 
 /** The Progress data point over the set's cards: what the server last read as held, out of the total. */
 const progress = async (page: Page): Promise<number> => {
-    const point = page.locator("dl > div").filter({ has: page.getByText("Progress", { exact: true }) });
+    // The numbers are drawn twice, under the name on a phone and at the row's end from lg, one of
+    // them hidden: the one on screen is the one read.
+    const point = page.locator("dl > div").filter({ has: page.getByText("Progress", { exact: true }), visible: true });
     const said = await point.locator("dd").innerText();
     // Read before it is counted: a locator that matched another data point would otherwise be
     // stripped down to some number and compared against another wrong number.

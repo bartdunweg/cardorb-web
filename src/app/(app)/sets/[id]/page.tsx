@@ -120,11 +120,12 @@ async function Set({ params, searchParams }: { params: Promise<{ id: string }>; 
                 >
                     {set.cards.length > 0 ? (
                         <>
-                            {/* Under the name on a phone; from lg the release line alone stays here and the numbers stand at the row's end. */}
+                            {/* The release line once, under the name at every width; the numbers under it on a phone,
+                                at the row's end from lg (`actions`). */}
+                            {released ? <p className="text-sm text-tertiary">Released {released}</p> : null}
                             <div className="lg:hidden">
-                                <LiveSetStats stats={stats} released={released} gallery={set.gallery} />
+                                <LiveSetStats stats={stats} released={null} gallery={set.gallery} />
                             </div>
-                            {released ? <p className="hidden text-sm text-tertiary lg:block">Released {released}</p> : null}
                         </>
                     ) : null}
                 </PageHeader>
