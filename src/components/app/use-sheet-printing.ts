@@ -25,13 +25,15 @@ type Params = {
     stepFromRef: RefObject<StepFrom>;
     /** Where the card has no copy: the printing the tile that opened it showed, else the first. */
     tilePrinting?: string | null;
+    /** Where the card has no copy: the print run the row that opened it moved in, else the unlimited one. */
+    tileEdition?: string | null;
 };
 
 /**
  * The printing or print run on show in the card sheet, the one pressed under the card, and the
  * picture and price that follow it.
  */
-export function useSheetPrinting({ card, mine, readOnly, tcgId, known, points, listings, period, change, stepFromRef, tilePrinting }: Params) {
+export function useSheetPrinting({ card, mine, readOnly, tcgId, known, points, listings, period, change, stepFromRef, tilePrinting, tileEdition }: Params) {
     /*
      * The printing on show, under the card (printing-choices.ts): the copy's own to begin with,
      * and whichever button was pressed after that, until the sheet moves to another card. A
@@ -64,8 +66,9 @@ export function useSheetPrinting({ card, mine, readOnly, tcgId, known, points, l
     });
     const pickedHere = picked.tcgId === tcgId ? picked : null;
     const openingPrinting = openingChoice(printings, ownPrinting, tilePrinting ?? undefined);
-    // A card you do not hold opens on its unlimited run, not on the 1st Edition's price.
-    const openingEdition = openingChoice(editions, mine?.edition, "unlimited");
+    // A card you do not hold opens on its unlimited run, not on the 1st Edition's price, unless the
+    // row that opened it was the 1st Edition's (a market mover): then its price and its line.
+    const openingEdition = openingChoice(editions, mine?.edition, tileEdition ?? "unlimited");
     const printingKey = pickedHere?.printing ?? openingPrinting;
     const editionKey = pickedHere?.edition ?? openingEdition;
     const printing = printings?.find((p) => p.key === printingKey) ?? null;
@@ -85,6 +88,11 @@ export function useSheetPrinting({ card, mine, readOnly, tcgId, known, points, l
      * "that printing has none".
      */
     const pressedAway = (printing && printingKey !== openingPrinting) || (editionKey && editionKey !== openingEdition);
+    /* Opened on a run the row moved in (a market mover's 1st Edition): its price, line and change are
+       that run's, as if pressed. Without this the line was the card's default run, Unlimited, beside
+       the 1st Edition's price (Dark Charizard, 2026-09-28). */
+    const onTileRun = tileEdition != null && editionKey === tileEdition && editionKey !== "unlimited";
+    const readsPressed = Boolean(pressedAway) || onTileRun;
     const patternPrint = printing?.foilPattern
         ? known?.patternPrints?.prints.find((p) => p.finish === printing.finish && p.foilPattern === printing.foilPattern)
         : undefined;
@@ -98,8 +106,9 @@ export function useSheetPrinting({ card, mine, readOnly, tcgId, known, points, l
         price: pressedPrice,
         listing: pressedListing,
     } = pressedPrinting({
-        pressedAway: !!pressedAway,
-        finish: printing?.finish ?? (mine?.finish as Finish | null) ?? "normal",
+        pressedAway: readsPressed,
+        // A card sold in runs has no finish buttons; the row that opened it still said which finish moved.
+        finish: printing?.finish ?? (mine?.finish as Finish | null) ?? ((tilePrinting?.split("/")[0] as Finish | undefined) || "normal"),
         edition,
         foilPattern: printing?.foilPattern ?? null,
         latest: points.at(-1)?.printings,
@@ -111,7 +120,7 @@ export function useSheetPrinting({ card, mine, readOnly, tcgId, known, points, l
     /* The pressed printing's lowest listing where it has no market figure, under the same rule as
        its price: never where the owner keeps prices private. */
     const shownListing = pricesHidden || pressedPrice !== null ? null : (pressedListing ?? null);
-    const shownChange = pressedAway ? (shownPrice != null && shownSeries ? periodChange(points, period, false, shownSeries) : null) : change;
+    const shownChange = readsPressed ? (shownPrice != null && shownSeries ? periodChange(points, period, false, shownSeries) : null) : change;
     // On a public page the card carries a price only where its owner shows them; that is the figure under the title then.
     const publicPrice = readOnly && card && "price" in card ? (card.price ?? null) : null;
 

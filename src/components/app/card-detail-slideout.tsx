@@ -81,7 +81,7 @@ type Period = { period?: PeriodKey };
  * The printing a set tile showed the price of: a card with no copy opens on it, so the sheet shows
  * the printing and the price the tile did (Bart, 2026-09-18). A copy's own printing still wins.
  */
-type Opening = { printing?: string | null };
+type Opening = { printing?: string | null; edition?: string | null };
 
 /**
  * The star was turned on or off, told on the press and again if the save fails and it goes back.
@@ -119,6 +119,7 @@ export function CardDetailSlideout({
     rowPending = false,
     period: opensOn = "1m",
     printing: tilePrinting = null,
+    edition: tileEdition = null,
     onStarChanged,
     setId = null,
 }: Props) {
@@ -145,7 +146,7 @@ export function CardDetailSlideout({
         shownListing,
         shownChange,
         publicPrice,
-    } = useSheetPrinting({ card, mine, readOnly, tcgId, known, points, listings, period, change, stepFromRef, tilePrinting });
+    } = useSheetPrinting({ card, mine, readOnly, tcgId, known, points, listings, period, change, stepFromRef, tilePrinting, tileEdition });
     const { takeable, emptied, busy, scheduleRefresh, add, fileInBinder, dropCopies, stepUp, stepDown, closeSheet, removeAndOffer } = useSheetWrites({
         card,
         setId,

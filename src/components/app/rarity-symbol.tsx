@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useId } from "react";
 import type { FilterOption } from "@/components/app/filter-chip";
 import { type RarityMark, rarityMark, rarityMarkOfName, setIdOf } from "@/lib/rarity-symbol";
 import { cx } from "@/utils/cx";
@@ -104,12 +104,7 @@ function Drawing({ mark, className }: { mark: RarityMark; className?: string }):
                 </svg>
             );
         case "promo":
-            return (
-                <svg viewBox="0 0 16 16" aria-hidden="true" className={className}>
-                    {/* The band is cut out of the star, so whatever surface it sits on shows through. */}
-                    <path d={`${star(8, 8.5, 7.5)}M3 7.4H13V9.6H3Z`} fillRule="evenodd" className={INK} />
-                </svg>
-            );
+            return <PromoStar className={className} />;
         case "code":
             return (
                 <span
@@ -120,6 +115,20 @@ function Drawing({ mark, className }: { mark: RarityMark; className?: string }):
                 </span>
             );
     }
+}
+
+/** The promo star, its band cut out of the star only, so whatever surface it sits on shows through. */
+function PromoStar({ className }: { className?: string }) {
+    const id = useId();
+    return (
+        <svg viewBox="0 0 16 16" aria-hidden="true" className={className}>
+            <mask id={id}>
+                <rect width="16" height="16" fill="white" />
+                <rect x="0" y="7.4" width="16" height="2.2" fill="black" />
+            </mask>
+            <path d={star(8, 8.5, 7.5)} mask={`url(#${id})`} className={INK} />
+        </svg>
+    );
 }
 
 /**
@@ -180,5 +189,7 @@ export function RarityNameOnly({ rarity, text = rarity }: { rarity: string; text
 export const rarityOption = (rarity: string, mark: RarityMark | null): FilterOption => ({
     value: rarity,
     label: rarity,
-    ...(mark ? { icon: <RaritySymbol mark={mark} size="md" />, listIcon: <RaritySymbol mark={mark} size="md" column /> } : {}),
+    // The list keeps the column even without a mark, so a name with none lines up with the rest.
+    listIcon: <RaritySymbol mark={mark} size="md" column />,
+    ...(mark ? { icon: <RaritySymbol mark={mark} size="md" /> } : {}),
 });

@@ -7,7 +7,7 @@ import { MoverList } from "@/components/app/movers";
 import { useReturnHrefs } from "@/components/app/sign-in-invite";
 import type { Mover, PokemonCard } from "@/lib/api-shapes";
 import { cardFromPokemonCard } from "@/lib/card-shapes";
-import { sheetPrintingOf } from "@/lib/price-change";
+import { sheetEditionOf, sheetPrintingOf } from "@/lib/price-change";
 import { TILE_SURFACE } from "@/lib/tile";
 import { cx } from "@/utils/cx";
 
@@ -71,6 +71,13 @@ export function HomeSignInInvite({ market = Promise.resolve(null) }: { market?: 
 function MarketMovers({ market }: { market: Promise<Market> }) {
     const movers = use(market);
     const [at, setAt] = useState<number | null>(null);
+    /* The sheet is the app's largest client chunk: fetched on the first tap, not with the page, and
+       kept mounted after that so it can close with its animation and hand focus back. */
+    const [wanted, setWanted] = useState(false);
+    const openAt = (i: number) => {
+        setWanted(true);
+        setAt(i);
+    };
     if (!movers) return <MoverFrames />;
     const all = [...movers.up, ...movers.down];
     const open = at === null ? null : (all[at] ?? null);
@@ -78,26 +85,29 @@ function MarketMovers({ market }: { market: Promise<Market> }) {
     return (
         <Place heading="Biggest movers this week" line="The cards whose price moved most in the last 7 days, across every card there is">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-                <MoverList title="Up" movers={movers.up} empty="Nothing rose this week." onOpen={setAt} href={null} linkLabel="" />
+                <MoverList title="Up" movers={movers.up} empty="Nothing rose this week." onOpen={openAt} href={null} linkLabel="" />
                 <MoverList
                     title="Down"
                     movers={movers.down}
                     empty="Nothing fell this week."
-                    onOpen={(i) => setAt(movers.up.length + i)}
+                    onOpen={(i) => openAt(movers.up.length + i)}
                     href={null}
                     linkLabel=""
                 />
             </div>
-            <CardDetailSlideout
-                card={open ? cardFromPokemonCard(catalogueCard(open)) : null}
-                addable={open ? catalogueCard(open) : null}
-                /* On the printing that moved, so the sheet's price is the row's (Reverse Holo, not Normal). */
-                printing={open ? sheetPrintingOf(open.printing) : null}
-                onClose={() => setAt(null)}
-                onPrev={step(-1)}
-                onNext={step(1)}
-                period="7d"
-            />
+            {wanted ? (
+                <CardDetailSlideout
+                    card={open ? cardFromPokemonCard(catalogueCard(open)) : null}
+                    addable={open ? catalogueCard(open) : null}
+                    /* On the printing and the run that moved, so the sheet's price and line are the row's (1st Edition, not Unlimited). */
+                    printing={open ? sheetPrintingOf(open.printing) : null}
+                    edition={open ? sheetEditionOf(open.printing) : null}
+                    onClose={() => setAt(null)}
+                    onPrev={step(-1)}
+                    onNext={step(1)}
+                    period="7d"
+                />
+            ) : null}
         </Place>
     );
 }

@@ -236,7 +236,7 @@ export function MoverList({
                             {onOpen ? (
                                 <AriaButton
                                     onPress={() => onOpen(i)}
-                                    aria-label={`${m.name}, ${m.set}: ${m.total > 0 ? "up" : "down"} ${formatPrice(Math.abs(m.total))}`}
+                                    aria-label={`${m.name}, ${m.set}${m.rarity ? `, ${m.rarity}` : ""}: ${m.total > 0 ? "up" : "down"} ${formatPrice(Math.abs(m.total))}`}
                                     className="-mx-2 flex w-[calc(100%+1rem)] pressable cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 text-left outline-focus-ring hover:bg-alpha-black/4 data-focus-visible:outline-2"
                                 >
                                     <div className="relative aspect-card w-9 shrink-0 overflow-hidden rounded-sm bg-quaternary">

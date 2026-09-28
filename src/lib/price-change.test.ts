@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { isoDaysAgo } from "./chart-periods";
-import { chartLine, periodChange, printingsOfLine, sheetPrintingOf, trustedStretch } from "./price-change";
+import { chartLine, periodChange, printingsOfLine, sheetEditionOf, sheetPrintingOf, trustedStretch } from "./price-change";
 
 /*
  * A day this many days back, since the periods are counted from today, written the way the periods
@@ -177,6 +177,15 @@ describe("sheetPrintingOf", () => {
         expect(sheetPrintingOf("1st-edition-holofoil")).toBe("holo");
         expect(sheetPrintingOf("unlimited")).toBe("normal");
         expect(sheetPrintingOf("normal")).toBe("normal");
+        expect(sheetPrintingOf("cosmos-holofoil")).toBe("holo/cosmos");
+        expect(sheetPrintingOf("cracked-ice-holofoil")).toBe("holo/cracked-ice");
+        expect(sheetPrintingOf("mystery-holofoil")).toBeNull();
         expect(sheetPrintingOf(null)).toBeNull();
+    });
+
+    it("names the run a stamped or unlimited printing is", () => {
+        expect(sheetEditionOf("1st-edition-holofoil")).toBe("1st-edition");
+        expect(sheetEditionOf("unlimited")).toBe("unlimited");
+        expect(sheetEditionOf("reverse-holofoil")).toBeNull();
     });
 });
