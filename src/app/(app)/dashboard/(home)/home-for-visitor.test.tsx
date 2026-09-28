@@ -58,12 +58,11 @@ describe("Home, for somebody with no account", () => {
         reads.session.mockResolvedValue(null);
     });
 
-    it("keeps its three places, each saying what would be there", async () => {
+    /* Revised 2026-09-28 at the owner's word: the way in stands on the picture of the value and its
+       line, and names them itself, so they have no headings of their own any more. */
+    it("says what would be there: the value and its line in the way in, the movers under it", async () => {
         await drawHome();
-        expect(screen.getByRole("heading", { name: "Total value" })).toBeInTheDocument();
-        expect(screen.getByText("What your collection is worth, updated every day")).toBeInTheDocument();
-        expect(screen.getByRole("heading", { name: "Value over time" })).toBeInTheDocument();
-        expect(screen.getByText("See how your collection moved this week, and over the last year")).toBeInTheDocument();
+        expect(screen.getByText("Add one card and the value, the line and the movers are yours from then on.")).toBeInTheDocument();
         expect(screen.getByRole("heading", { name: "Biggest movers" })).toBeInTheDocument();
         expect(screen.getByText("The cards that rose and fell most, so you know what moved without checking each one")).toBeInTheDocument();
     });
@@ -71,7 +70,7 @@ describe("Home, for somebody with no account", () => {
     it("puts them in the document as headings, the way in first, in the order they are on screen", async () => {
         await drawHome();
         const said = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
-        expect(said.slice(0, 4)).toEqual(["Home fills up with your own cards", "Total value", "Value over time", "Biggest movers"]);
+        expect(said.slice(0, 2)).toEqual(["Home fills up with your own cards", "Biggest movers"]);
     });
 
     /* Revised 2026-09-23: the value and its line are a blurred picture now, at the owner's word.
@@ -84,13 +83,13 @@ describe("Home, for somebody with no account", () => {
         for (const el of drawn) expect(el.closest("[aria-hidden='true']"), "a drawing outside the hidden decoration").not.toBeNull();
         for (const decoration of container.querySelectorAll("[aria-hidden='true']")) expect(decoration.textContent?.trim()).toBe("");
         // The value and its line say no figure: nothing of a collection nobody has.
-        const preview = [...container.querySelectorAll("section, div")].find((el) => el.textContent?.startsWith("Total value"));
+        const preview = [...container.querySelectorAll("section, div")].find((el) => el.textContent?.startsWith("Home fills up"));
         expect(preview?.textContent).not.toMatch(/[€$]|\d/);
     });
 
     /* The owner's idea: the week's biggest moves across every card, real and nobody's, in the place a
-       reader sees their own. The rows are text, since opening one would read the reader's rows. */
-    it("shows the market's movers with their real prices, as rows that are not buttons", async () => {
+       reader sees their own. A row opens the card's catalogue sheet, as a set page's tile does. */
+    it("shows the market's movers with their real prices, as rows that open the card", async () => {
         const move = (name: string, now: number, change: number) => ({
             tcgId: `x-${name}`,
             name,
@@ -115,7 +114,7 @@ describe("Home, for somebody with no account", () => {
         expect(screen.getByText("Charizard")).toBeInTheDocument();
         expect(screen.getByText("Blastoise")).toBeInTheDocument();
         expect(screen.getByText(/823\.98/)).toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: /Charizard/ })).not.toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /Charizard/ })).toBeInTheDocument();
         market.current = null;
     });
 

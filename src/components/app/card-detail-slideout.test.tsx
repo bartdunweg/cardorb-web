@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { editCopies, removeCard, restoreCard, setCopies, setFavorite } from "@/app/(app)/dashboard/cards/actions";
-import { knownCardFacts, knownPriceHistory, knownPriceListings } from "@/components/app/card-memo";
+import { knownCardFacts, knownPriceHistory, knownPriceListings, preloadPriceHistory } from "@/components/app/card-memo";
 import type { Card } from "@/lib/api-shapes";
 import { listCopies, loadFacets, tryListBinders } from "@/lib/reads";
 import {
@@ -550,5 +550,52 @@ describe("CardDetailSlideout: a card nobody was asked about", () => {
         await visitor();
         expect(screen.queryByRole("button", { name: "More" })).not.toBeInTheDocument();
         expect(screen.queryByText("Remove from collection")).not.toBeInTheDocument();
+    });
+});
+
+describe("CardDetailSlideout: opened from a row that moved (a market mover)", () => {
+    afterEach(() => {
+        vi.mocked(knownCardFacts).mockReset();
+        vi.mocked(knownPriceHistory).mockReset();
+        vi.mocked(preloadPriceHistory).mockResolvedValue([]);
+    });
+
+    /* Dark Charizard, 2026-09-28: the row was the 1st Edition at €106.94, the sheet opened on the
+       Unlimited run and drew its line (€325 to €335) beside the row's price. */
+    it("reads the price off the run and finish the row named, not the card's default ones", async () => {
+        vi.mocked(knownCardFacts).mockReturnValue({ printings: [], editions: ["1st-edition", "unlimited"] } as never);
+        const history = [
+            { date: "2026-09-20", market: 325.97, holo: 325.97, printings: { "1st-edition-holofoil": 231.96, "unlimited-holofoil": 325.97 } },
+            { date: "2026-09-27", market: 334.73, holo: 334.73, printings: { "1st-edition-holofoil": 106.94, "unlimited-holofoil": 334.73 } },
+        ];
+        vi.mocked(knownPriceHistory).mockReturnValue(history);
+        // The sheet reads the line again once open; the same answer, or the second read empties it.
+        vi.mocked(preloadPriceHistory).mockResolvedValue(history as never);
+        pathname.current = "/dashboard";
+        const card = makeCard({ id: "base5-4", name: "Dark Charizard", tcg_id: "base5-4", finish: null, owned: false, quantity: 0, price: 50 });
+        await open(card, {
+            addable: { id: "base5-4", name: "Dark Charizard", set: "Team Rocket", number: "4", holding: null, price: 50 } as never,
+            edition: "1st-edition",
+            printing: "holo",
+            readsRow: true,
+        });
+        const dialog = screen.getByRole("dialog");
+        expect(dialog).toHaveTextContent("€106.94");
+        expect(dialog).not.toHaveTextContent("€334.73");
+        expect(dialog).not.toHaveTextContent("€50.00");
+    });
+
+    it("says no missing price while the row's history is still on its way", async () => {
+        vi.mocked(knownCardFacts).mockReturnValue({ printings: [], editions: ["1st-edition", "unlimited"] } as never);
+        vi.mocked(knownPriceHistory).mockReturnValue([]);
+        vi.mocked(preloadPriceHistory).mockReturnValue(new Promise(() => {}) as never);
+        const card = makeCard({ id: "base5-4", name: "Dark Charizard", tcg_id: "base5-4", finish: null, owned: false, quantity: 0, price: 106.94 });
+        await open(card, {
+            addable: { id: "base5-4", name: "Dark Charizard", set: "Team Rocket", number: "4", holding: null, price: 106.94 } as never,
+            edition: "1st-edition",
+            printing: "holo",
+            readsRow: true,
+        });
+        expect(screen.getByRole("dialog")).not.toHaveTextContent("No price for this printing");
     });
 });

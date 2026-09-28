@@ -1,3 +1,4 @@
+import { FOIL_PATTERNS } from "@/lib/card-shapes";
 import { type PeriodKey, changeSaid, forChart } from "@/lib/chart-periods";
 import { formatPercent, formatPrice } from "@/lib/format";
 
@@ -141,6 +142,34 @@ export function tcgplayerPrintingLabel(key: string | null | undefined): string |
     if (!key) return null;
     return PRINTING_LABELS.find(([k]) => k === key)?.[1] ?? null;
 }
+
+/**
+ * A TCGplayer printing as the card sheet keys its printing buttons: "reverse-holofoil" is
+ * "reverse-holo", "poke-ball-reverse-holofoil" is "reverse-holo/poke-ball", "cosmos-holofoil" is
+ * "holo/cosmos", a stamped or unlimited run is its finish (the run is the sheet's other row of
+ * buttons, `sheetEditionOf`). Null for one it does not know.
+ */
+export function sheetPrintingOf(key: string | null | undefined): string | null {
+    if (!key) return null;
+    const pattern = key.match(/^(.+)-reverse-holofoil$/)?.[1];
+    if (pattern) return `reverse-holo/${pattern}`;
+    if (key === "reverse-holofoil") return "reverse-holo";
+    const finish = key.replace(RUN, "");
+    if (finish === "holofoil") return "holo";
+    if (finish === "" || finish === "normal") return "normal";
+    // A foil pattern's own product: "cosmos-holofoil" is the sheet's "holo/cosmos".
+    const patterned = finish.match(/^(.+)-(holofoil|normal)$/);
+    if (patterned && (FOIL_PATTERNS as readonly string[]).includes(patterned[1]!)) return `${patterned[2] === "holofoil" ? "holo" : "normal"}/${patterned[1]}`;
+    return null;
+}
+
+/** The print run a TCGplayer printing is, as the sheet keys its run buttons: "1st-edition-holofoil" is "1st-edition". */
+export function sheetEditionOf(key: string | null | undefined): string | null {
+    return key?.match(RUN)?.[1] ?? null;
+}
+
+/** A print run's prefix on a TCGplayer printing: every run in EDITIONS. */
+const RUN = /^(1st-edition|shadowless|blue-border|unlimited)-?/;
 
 /** The printings a card has readings for, in reading order, each with its label. */
 export function printingsOfLine(points: PriceLinePoint[]): { key: string; label: string }[] {

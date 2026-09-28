@@ -7,6 +7,7 @@ import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import type { Card } from "@/lib/api-shapes";
+import { rarityMark } from "@/lib/rarity-symbol";
 import { CATALOGUE_NOT_ANSWERING } from "@/lib/read-failure";
 import { AcquiredDatePicker } from "./acquired-date-picker";
 import { AppEmptyState } from "./app-empty-state";
@@ -25,11 +26,33 @@ import { LinkButton } from "./link-button";
 import { Orb } from "./orb";
 import { OrbLogo } from "./orb-logo";
 import { OrbStill } from "./orb-still";
+import { RaritySymbol } from "./rarity-symbol";
 import { RowButton } from "./row-button";
 import { LIST_ROW, RowSearch } from "./row-search";
 import { SearchTrigger } from "./search-trigger";
 import { SetWash } from "./set-hero";
 import { notify } from "./toast";
+
+const RARITY_SAMPLES = [
+    "Common",
+    "Uncommon",
+    "Rare",
+    "Double Rare",
+    "ACE SPEC Rare",
+    "Ultra Rare",
+    "Illustration Rare",
+    "Special Illustration Rare",
+    "Hyper Rare",
+    "Mega Attack Rare",
+    "Mega Hyper Rare",
+    "Pikachu Rare",
+    "Futuristic Rare",
+    "RGB Rare",
+    "Black White Rare",
+    "Shiny Rare",
+    "Shiny Ultra Rare",
+    "Promo",
+];
 
 /** A picture from our own copy, so CardImage is drawn by the path the app actually uses. */
 const CHARIZARD = "https://images.cardorb.com/en/base/base1/4/high.webp";
@@ -394,6 +417,38 @@ export const ourSections: SectionSpec[] = [
         ours: true,
         note: "A list's filters behind one button: a sheet from the bottom on a phone, a panel from the right from sm. A short filter is the kit's Tags to tap (several, or one with its state as a dot), a long one a row that opens its own list with a field. The choices are a draft until the pinned button, which says how many it will show. With `inline`, from lg each filter is a menu in the row instead. Ours because the kit has the parts and no filter panel.",
         render: <FiltersSheetSample />,
+    },
+    {
+        id: "rarity-symbol",
+        title: "RaritySymbol",
+        from: "components/app/rarity-symbol",
+        ours: true,
+        note: "The mark a card prints in its corner, drawn by us. Always beside the rarity's name, never instead of it. Which mark a card gets is lib/rarity-symbol: today's marks from Scarlet & Violet on, a dot, diamond or star before, letters on a Japanese card.",
+        render: (
+            <Panel>
+                <Group title="Scarlet & Violet and Mega Evolution" cols="tight">
+                    {RARITY_SAMPLES.map((r) => (
+                        <Cell key={r} label={r}>
+                            <RaritySymbol mark={rarityMark(r, { setId: "sv08" })} size="md" />
+                        </Cell>
+                    ))}
+                </Group>
+                <Group title="Before 2023: an Ultra Rare prints one star" cols="tight">
+                    {["Common", "Uncommon", "Holo Rare", "Ultra Rare", "Promo"].map((r) => (
+                        <Cell key={r} label={r}>
+                            <RaritySymbol mark={rarityMark(r, { setId: "sm3" })} size="md" />
+                        </Cell>
+                    ))}
+                </Group>
+                <Group title="Japanese: printed letters" cols="tight">
+                    {["Common", "Double Rare", "Art Rare", "Special Art Rare", "Ultra Rare", "Mega Ultra Rare"].map((r) => (
+                        <Cell key={r} label={r}>
+                            <RaritySymbol mark={rarityMark(r, { setId: "SV4a" })} size="md" />
+                        </Cell>
+                    ))}
+                </Group>
+            </Panel>
+        ),
     },
     {
         id: "flag-icon",

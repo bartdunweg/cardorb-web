@@ -10,8 +10,12 @@ import { useBreakpoint } from "@/hooks/use-breakpoint";
 import { formatCount } from "@/lib/format";
 import { cx } from "@/utils/cx";
 
-/** One choice. `icon` goes before the word: a language's flag, a type's disc, a state's dot. */
-export type FilterOption = { value: string; label: string; hint?: string; icon?: ReactNode };
+/**
+ * One choice. `icon` goes before the word: a language's flag, a type's disc, a state's dot.
+ * `listIcon` stands in for it in the list of choices, where marks of different widths have to
+ * line the words up (a rarity's one star beside its three); a chip or a tag keeps `icon`.
+ */
+export type FilterOption = { value: string; label: string; hint?: string; icon?: ReactNode; listIcon?: ReactNode };
 
 /** Past this many choices the list gets a field to narrow it: a person knows the set's name, not its place in the list. */
 const SEARCHABLE_FROM = 12;
@@ -204,7 +208,7 @@ export function FilterChoices({
                         key={o.value}
                         label={o.label}
                         hint={o.hint}
-                        icon={o.icon}
+                        icon={o.listIcon ?? o.icon}
                         multiple={multiple}
                         // Named only where found: an option missing from a counted group is zero.
                         count={counts ? (counts[o.value] ?? 0) : undefined}

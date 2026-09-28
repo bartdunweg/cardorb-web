@@ -4,6 +4,7 @@ import { type ReactNode, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { type FilterAnswer, type FilterGroup, type FilterOption, type FilterValues, FiltersSheet } from "@/components/app/filters-sheet";
 import { FlagIcon } from "@/components/app/flag-icon";
+import { rarityOption } from "@/components/app/rarity-symbol";
 import { TypeIcon } from "@/components/app/type-icon";
 import { Dot } from "@/components/foundations/dot-icon";
 import { useArrived } from "@/hooks/use-arrived";
@@ -13,6 +14,7 @@ import type { Facets } from "@/lib/cards";
 import { NO_FACETS } from "@/lib/facets";
 import { languageOf } from "@/lib/languages";
 import { type ListQuery, listHref } from "@/lib/list-query";
+import { rarityMarkOfName } from "@/lib/rarity-symbol";
 import { countCards } from "@/lib/reads";
 
 const FULL_ART = "fullArt";
@@ -125,6 +127,10 @@ export function CardsFilters({
         label: c,
         icon: CONDITION_DOT[c] ? <Dot size="md" aria-hidden="true" className={CONDITION_DOT[c]} /> : undefined,
     });
+    // The name's mark, as a row of every era prints it (rarity-symbol.ts); the name is beside it.
+    // One column of marks where any rarity here has one, so the names line up; none where none does.
+    const marked = facets.rarities.some((r) => rarityMarkOfName(r) !== null);
+    const rarity = (r: string): FilterOption => rarityOption(r, rarityMarkOfName(r), marked);
     const finish = (f: string): FilterOption => ({ value: f, label: FINISH_LABELS[f as Finish] ?? f });
     const language = (code: string): FilterOption => ({ value: code, label: languageOf(code).label, icon: <FlagIcon language={code} labelled /> });
     const type = (t: string): FilterOption => ({ value: t, label: t, icon: <TypeIcon type={t} className="size-4" /> });
@@ -144,7 +150,7 @@ export function CardsFilters({
                 plain,
             ),
         },
-        { id: "rarity", label: "Rarity", multiple: true, options: withChosen(facets.rarities.map(plain), query.rarity, plain) },
+        { id: "rarity", label: "Rarity", multiple: true, options: withChosen(facets.rarities.map(rarity), query.rarity, rarity) },
         ...(readOnly
             ? []
             : [

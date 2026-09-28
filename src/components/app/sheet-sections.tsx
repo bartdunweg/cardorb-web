@@ -9,6 +9,7 @@ import { CardPriceChart } from "@/components/app/card-price-chart";
 import type { PeriodKey } from "@/components/app/chart-periods";
 import { CopyCard } from "@/components/app/copy-card";
 import { CopyFormDialog } from "@/components/app/copy-form-dialog";
+import { RarityName, markOfCard } from "@/components/app/rarity-symbol";
 import { TypeIcon } from "@/components/app/type-icon";
 import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
@@ -130,7 +131,7 @@ export function SheetSections({
                 </h3>
 
                 <dl className="flex flex-col divide-y divide-secondary">
-                    <DetailRow label="Rarity" value={card.rarity} />
+                    <DetailRow label="Rarity" value={card.rarity ? <RarityName rarity={card.rarity} mark={markOfCard(card)} /> : null} />
                     {/* From the catalogue, once it answers: who drew it, and the card's own facts. */}
                     {known?.illustrator ? <DetailRow label="Illustrator" value={known.illustrator} late /> : null}
                     {known?.hp != null ? <DetailRow label="HP" value={known.hp} late /> : null}
