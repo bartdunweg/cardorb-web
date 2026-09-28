@@ -584,4 +584,18 @@ describe("CardDetailSlideout: opened from a row that moved (a market mover)", ()
         expect(dialog).not.toHaveTextContent("€334.73");
         expect(dialog).not.toHaveTextContent("€50.00");
     });
+
+    it("says no missing price while the row's history is still on its way", async () => {
+        vi.mocked(knownCardFacts).mockReturnValue({ printings: [], editions: ["1st-edition", "unlimited"] } as never);
+        vi.mocked(knownPriceHistory).mockReturnValue([]);
+        vi.mocked(preloadPriceHistory).mockReturnValue(new Promise(() => {}) as never);
+        const card = makeCard({ id: "base5-4", name: "Dark Charizard", tcg_id: "base5-4", finish: null, owned: false, quantity: 0, price: 106.94 });
+        await open(card, {
+            addable: { id: "base5-4", name: "Dark Charizard", set: "Team Rocket", number: "4", holding: null, price: 106.94 } as never,
+            edition: "1st-edition",
+            printing: "holo",
+            readsRow: true,
+        });
+        expect(screen.getByRole("dialog")).not.toHaveTextContent("No price for this printing");
+    });
 });

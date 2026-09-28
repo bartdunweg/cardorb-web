@@ -110,7 +110,9 @@ export function useSheetPrinting({
     /* Opened from a row that named what moved: its price, line and change are that printing's and
        that run's, as if pressed. Without this the line was the card's default one, Unlimited, beside
        the 1st Edition's price (Dark Charizard, 2026-09-28). */
-    const readsPressed = Boolean(pressedAway) || readsRow;
+    // Only once the history is in: before that there is nothing to read, and "No price for this
+    // printing" flashed on every mover while its line loaded.
+    const readsPressed = Boolean(pressedAway) || (readsRow && points.length > 0);
     const patternPrint = printing?.foilPattern
         ? known?.patternPrints?.prints.find((p) => p.finish === printing.finish && p.foilPattern === printing.foilPattern)
         : undefined;
