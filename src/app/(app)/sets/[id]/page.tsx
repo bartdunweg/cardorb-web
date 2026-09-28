@@ -105,14 +105,9 @@ async function Set({ params, searchParams }: { params: Promise<{ id: string }>; 
                     // shows the cards, not a meter, so the numbers under the title say the count in words.
                     hero={<SetHero name={set.name} logoUrl={set.logoUrl} colors={colors} />}
                     // From lg the logo stands small before the name, and the numbers at the row's end.
-                    media={<SetLogoBeside logoUrl={set.logoUrl} />}
-                    actions={
-                        set.cards.length > 0 ? (
-                            <div className="hidden lg:block">
-                                <LiveSetStats stats={stats} released={released} gallery={set.gallery} compact />
-                            </div>
-                        ) : undefined
-                    }
+                    media={set.logoUrl ? <SetLogoBeside logoUrl={set.logoUrl} /> : undefined}
+                    actionsFromLg
+                    actions={set.cards.length > 0 ? <LiveSetStats stats={stats} released={released} gallery={set.gallery} compact /> : undefined}
                     // On a phone View sits in the bar across from Back; the row under the search is the filters.
                     barActions={
                         set.cards.length > 0 ? (
