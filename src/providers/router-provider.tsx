@@ -8,7 +8,8 @@ import { withListQuery } from "@/hooks/use-list-memory";
 
 declare module "react-aria-components" {
     interface RouterConfig {
-        routerOptions: NonNullable<Parameters<ReturnType<typeof useRouter>["push"]>[1]>;
+        /** `replace`: the step takes the place of this one in the history (the auth modal's switch). */
+        routerOptions: NonNullable<Parameters<ReturnType<typeof useRouter>["push"]>[1]> & { replace?: boolean };
     }
 }
 
@@ -33,7 +34,9 @@ export const RouteProvider = ({ children }: PropsWithChildren) => {
                 // A link to a list alone goes back to the list as it was left (use-list-memory.ts).
                 const href = withListQuery(to);
                 start(href);
-                router.push(href, options);
+                const { replace, ...rest } = options ?? {};
+                if (replace) router.replace(href, rest);
+                else router.push(href, rest);
             }}
         >
             <I18nProvider locale={LOCALE}>{children}</I18nProvider>

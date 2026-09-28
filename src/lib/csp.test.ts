@@ -11,6 +11,9 @@ function routesUnder(group: string): string[] {
     const pages: string[] = [];
     const walk = (dir: string) => {
         for (const entry of readdirSync(dir, { withFileTypes: true })) {
+            // A slot (`@modal`) serves no address of its own: its pages draw /login and /signup, which
+            // are checked under (auth), over whatever page is open.
+            if (entry.isDirectory() && entry.name.startsWith("@")) continue;
             if (entry.isDirectory()) walk(join(dir, entry.name));
             else if (entry.name === "page.tsx") pages.push(dir);
         }

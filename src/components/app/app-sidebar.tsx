@@ -118,9 +118,9 @@ export function AppSidebar({
         // New binder is the plus at the heading's end, on its line (Bart, 2026-09-19): a row at the list's end
         // stood as far from the heading as the list was long.
         // New binder stays, and stays pressable, for a visitor too: hiding it empties the app and
-        // hides the reason to make an account. Without a session it is a link to the door, not the
-        // dialog, and it carries the page the visitor is on.
-        { divider: true, label: "Binders", href: "/dashboard/collections", action: <NewBinderButton signInHref={binders ? null : back.signIn} /> },
+        // hides the reason to make an account. Without a session it opens sign-up over the page
+        // (auth-modal.tsx), not the binder dialog, and carries the page the visitor is on.
+        { divider: true, label: "Binders", href: "/dashboard/collections", action: <NewBinderButton signInHref={binders ? null : back.signUp} /> },
         {
             label: "Favorites",
             href: "/dashboard/favorites",
@@ -157,19 +157,14 @@ export function AppSidebar({
                     search={<SidebarSearchTrigger />}
                     afterItems={
                         <>
+                            {/* A visitor has Favorites alone under the heading, which opens on what it would
+                                hold, and the plus, which opens making an account over the page (Bart,
+                                2026-09-28). A "Sign in to make binders" row said the same thing a third time. */}
                             {binders ? (
                                 <Suspense fallback={null}>
                                     <BinderRows binders={binders} fresh={override?.binders ?? undefined} activeUrl={pathname} />
                                 </Suspense>
-                            ) : (
-                                // One row saying what an account adds here. An empty list would read as
-                                // "you have no binders", which is a different sentence and an untrue one.
-                                <li className="py-px">
-                                    <NavItemBase type="link" icon={Folder} href={back.signIn}>
-                                        Sign in to make binders
-                                    </NavItemBase>
-                                </li>
-                            )}
+                            ) : null}
                         </>
                     }
                     footer={

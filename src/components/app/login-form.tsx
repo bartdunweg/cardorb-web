@@ -2,20 +2,24 @@
 
 import { startTransition, useActionState } from "react";
 import { type AuthState, signIn } from "@/app/(auth)/actions";
-import { AuthEmailField, AuthShell } from "@/components/app/auth-shell";
+import { AuthEmailField, AuthShell, useAuthBusy, useAuthSize } from "@/components/app/auth-shell";
 import { FormError } from "@/components/app/form-error";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
+import { withReturn } from "@/lib/return-to";
 
 // Clean, single-column sign-in: the form centered in the viewport, no marketing panel.
 export const LoginForm = ({ notice, next }: { notice?: string; next?: string | null }) => {
     const [state, formAction, pending] = useActionState<AuthState, FormData>(signIn, undefined);
+    useAuthBusy(pending);
+    const size = useAuthSize();
 
     return (
         <AuthShell
             title="Sign in"
             subtitle="Welcome back. Enter your details."
-            footer={{ question: "Don’t have an account?", href: "/signup", label: "Sign up" }}
+            // The page the visitor came from goes along, so switching forms does not lose the way back.
+            footer={{ question: "Don’t have an account?", href: withReturn("/signup", next ?? ""), label: "Sign up" }}
         >
             {/* A link that could not be verified is a failure, in the colour and role every other
                 failure on these forms has; as grey body text it read as a caption. */}
@@ -42,7 +46,7 @@ export const LoginForm = ({ notice, next }: { notice?: string; next?: string | n
                         type="password"
                         name="password"
                         autoComplete="current-password"
-                        size="lg"
+                        size={size}
                         placeholder="••••••••••••"
                         inputClassName="placeholder:text-placeholder/50"
                     />
@@ -55,7 +59,7 @@ export const LoginForm = ({ notice, next }: { notice?: string; next?: string | n
 
                 {state && "error" in state && <FormError error={state.error} />}
 
-                <Button type="submit" size="lg" isLoading={pending} showTextWhileLoading>
+                <Button type="submit" size={size} isLoading={pending} showTextWhileLoading>
                     {pending ? "Signing in…" : "Sign in"}
                 </Button>
                 {/* kit-drift: nobody sees this one and nobody types in it. It carries where the

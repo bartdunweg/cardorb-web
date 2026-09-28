@@ -22,7 +22,7 @@ import { RouteProvider } from "@/providers/router-provider";
 // menu still opens, Settings and Sign out still work.
 const NO_ACCOUNT: Account = { name: "Account", email: "", avatarUrl: null, publicUrl: null };
 
-export default async function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({ children, modal }: { children: React.ReactNode; modal?: React.ReactNode }) {
     // Whether the sidebar is folded to its rail, read here so the first paint is already right:
     // decided in the browser it would open wide and snap shut after hydration on every page.
     const sidebarCollapsed = (await cookies()).get(SIDEBAR_COOKIE)?.value === "collapsed";
@@ -96,6 +96,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                     likes still painted under a dialog or a slideout (both fixed z-50 in a portal on
                     the body). Out here it shares the body's stacking context with them and sonner's
                     own z-index puts it on top, whether the dialog that caused it closes or stays. */}
+                    {/* Sign in and sign up over the page, where a link inside the app opened them (auth-modal.tsx). */}
+                    {modal}
                     <Toasts />
                     {/* What a visitor's press kept across signing in came to, said once on the page
                     they land on (kept-press-notice.tsx). Home and every set page sit in this frame. */}

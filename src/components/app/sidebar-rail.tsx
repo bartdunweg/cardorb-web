@@ -83,19 +83,14 @@ export function SidebarRail({
                 <li className="py-px">
                     <NavButton icon={Star01} label="Favorites" href="/dashboard/favorites" current={activeUrl === "/dashboard/favorites"} />
                 </li>
+                {/* A visitor has Favorites and the plus, as the open sidebar does. */}
                 {binders ? (
                     <Suspense fallback={null}>
                         <BinderRows activeUrl={activeUrl} binders={binders} />
                     </Suspense>
-                ) : (
-                    // The row the open sidebar's invitation stands in, folded: what an account adds
-                    // here, named in full so a tooltip is not the only place it is said.
-                    <li className="py-px">
-                        <NavButton icon={Folder} label="Sign in to make binders" href={back.signIn} />
-                    </li>
-                )}
+                ) : null}
                 <li className="py-px">
-                    <NewBinder signInHref={binders ? null : back.signIn} />
+                    <NewBinder signInHref={binders ? null : back.signUp} />
                 </li>
             </ul>
 

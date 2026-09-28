@@ -1,7 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { RedirectType, redirect } from "next/navigation";
 import { RECOVERY_COOKIE } from "@/lib/auth-redirect";
 import { KEPT_PRESS_COOKIE } from "@/lib/kept-press";
 import { applyKeptPress } from "@/lib/kept-press-apply";
@@ -45,10 +45,12 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
     if (error) return { error: error.message };
     await carryKeptPress(data.session, formData.get("next"));
 
+    // In the place of the sign-in step, so Back from there is the page before it and not the form
+    // again (over the page, auth-modal.tsx, Back is the gesture a person reaches for).
     // Back where the invitation found them, where one sent them here. Read against the rule a
     // second time: the value went out to the browser and came back in a form, so by now it is a
     // stranger's, and a redirect that follows it anywhere is this app lending its name to it.
-    redirect(safeReturn(formData.get("next")) ?? "/dashboard");
+    redirect(safeReturn(formData.get("next")) ?? "/dashboard", RedirectType.replace);
 }
 
 export async function signUp(_prev: AuthState, formData: FormData): Promise<AuthState> {
@@ -76,7 +78,7 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
         const { data: signedIn, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (!signInError) {
             await carryKeptPress(signedIn.session, formData.get("next"));
-            redirect(safeReturn(formData.get("next")) ?? "/dashboard");
+            redirect(safeReturn(formData.get("next")) ?? "/dashboard", RedirectType.replace);
         }
         return { existing: true };
     }
@@ -84,7 +86,7 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
     // Email confirmation off → a session is returned, so go straight in.
     if (data.session) {
         await carryKeptPress(data.session, formData.get("next"));
-        redirect(safeReturn(formData.get("next")) ?? "/dashboard");
+        redirect(safeReturn(formData.get("next")) ?? "/dashboard", RedirectType.replace);
     }
 
     // The link in that email signs the person in; there is no "then sign in" step.
