@@ -22,6 +22,7 @@ export function SetLogo({
     className,
     boxRatio,
     area = 0.5,
+    align = "center",
 }: {
     src: string;
     /** The widest the logo is drawn, for the optimizer (see CardImage). */
@@ -32,6 +33,8 @@ export function SetLogo({
     boxRatio: number;
     /** How much of the box's area a logo covers, 0 to 1. */
     area?: number;
+    /** Where in its box: centred on a tile or a band, at the start where it stands beside text. */
+    align?: "center" | "start";
 }) {
     const [ratio, setRatio] = useState<number | null>(null);
     let w = 1;
@@ -51,7 +54,7 @@ export function SetLogo({
         }
     }
     return (
-        <div className="flex h-full w-full items-center justify-center">
+        <div className={cx("flex h-full w-full items-center", align === "start" ? "justify-start" : "justify-center")}>
             <div style={{ width: `${w * 100}%`, height: `${h * 100}%` }}>
                 <CardImage
                     src={src}
@@ -59,7 +62,7 @@ export function SetLogo({
                     width={width}
                     ratio="square"
                     priority={priority}
-                    className={cx("object-contain", className)}
+                    className={cx("object-contain", align === "start" && "object-left", className)}
                     onLoad={(img) => {
                         if (img?.naturalWidth && img.naturalHeight) setRatio(img.naturalWidth / img.naturalHeight);
                     }}
