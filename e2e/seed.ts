@@ -87,5 +87,14 @@ const upsert = (table: string, rows: unknown[], onConflict: string) =>
 
 await upsert("catalogue_sets", fixture.sets, "id,language");
 await upsert("catalogue_cards", fixture.cards, "id,language");
-await upsert("tcgplayer_prices", fixture.prices, "product_id,printing");
+// Dated today, whatever the fixture file says: the API counts stored prices as current for seven days
+// (STORED_PRICES_DAYS in cardorb-api collection.ts) and asks TCGdex live past that, which CI cannot
+// reach. The fixture's 2026-09-17 aged out on 2026-09-25 and every collection read after a write
+// failed from then on.
+const today = new Date().toISOString().slice(0, 10);
+await upsert(
+    "tcgplayer_prices",
+    fixture.prices.map((p) => ({ ...p, updated_on: today })),
+    "product_id,printing",
+);
 console.log(`seeded ${fixture.cards.length} cards of ${fixture.sets[0].id}`);
