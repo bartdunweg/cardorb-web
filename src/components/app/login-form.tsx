@@ -2,7 +2,7 @@
 
 import { startTransition, useActionState } from "react";
 import { type AuthState, signIn } from "@/app/(auth)/actions";
-import { AuthEmailField, AuthShell, useAuthBusy } from "@/components/app/auth-shell";
+import { AuthEmailField, AuthShell, useAuthBusy, useAuthSize } from "@/components/app/auth-shell";
 import { FormError } from "@/components/app/form-error";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
@@ -12,6 +12,7 @@ import { withReturn } from "@/lib/return-to";
 export const LoginForm = ({ notice, next }: { notice?: string; next?: string | null }) => {
     const [state, formAction, pending] = useActionState<AuthState, FormData>(signIn, undefined);
     useAuthBusy(pending);
+    const size = useAuthSize();
 
     return (
         <AuthShell
@@ -45,7 +46,7 @@ export const LoginForm = ({ notice, next }: { notice?: string; next?: string | n
                         type="password"
                         name="password"
                         autoComplete="current-password"
-                        size="lg"
+                        size={size}
                         placeholder="••••••••••••"
                         inputClassName="placeholder:text-placeholder/50"
                     />
@@ -58,7 +59,7 @@ export const LoginForm = ({ notice, next }: { notice?: string; next?: string | n
 
                 {state && "error" in state && <FormError error={state.error} />}
 
-                <Button type="submit" size="lg" isLoading={pending} showTextWhileLoading>
+                <Button type="submit" size={size} isLoading={pending} showTextWhileLoading>
                     {pending ? "Signing in…" : "Sign in"}
                 </Button>
                 {/* kit-drift: nobody sees this one and nobody types in it. It carries where the

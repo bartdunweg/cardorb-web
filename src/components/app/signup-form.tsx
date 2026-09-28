@@ -3,7 +3,7 @@
 import { startTransition, useActionState, useEffect, useRef, useState } from "react";
 import { CheckCircle, Circle, Mail01 } from "@untitledui/icons";
 import { type AuthState, signUp } from "@/app/(auth)/actions";
-import { AuthEmailField, AuthShell, useAuthBusy } from "@/components/app/auth-shell";
+import { AuthEmailField, AuthShell, useAuthBusy, useAuthSize } from "@/components/app/auth-shell";
 import { FormError } from "@/components/app/form-error";
 import { Button } from "@/components/base/buttons/button";
 import { HintText } from "@/components/base/input/hint-text";
@@ -21,6 +21,7 @@ export const SignupForm = ({ next }: { next?: string | null }) => {
     const [password, setPassword] = useState("");
     const [state, formAction, pending] = useActionState<AuthState, FormData>(signUp, undefined);
     useAuthBusy(pending);
+    const size = useAuthSize();
     const long = password.length >= MIN_PASSWORD;
     const done = useRef<HTMLOutputElement>(null);
     const sent = state !== undefined && "success" in state;
@@ -79,7 +80,7 @@ export const SignupForm = ({ next }: { next?: string | null }) => {
             >
                 <div className="flex flex-col gap-5">
                     <AuthEmailField value={email} onChange={setEmail} />
-                    <TextField isRequired size="lg" name="password" value={password} onChange={setPassword} minLength={MIN_PASSWORD}>
+                    <TextField isRequired size={size} name="password" value={password} onChange={setPassword} minLength={MIN_PASSWORD}>
                         <Label isRequired={false}>Password</Label>
                         <InputBase type="password" autoComplete="new-password" placeholder="••••••••••••" inputClassName="placeholder:text-placeholder/50" />
                         <HintText className="flex items-center gap-1">
@@ -114,7 +115,7 @@ export const SignupForm = ({ next }: { next?: string | null }) => {
                     </div>
                 )}
 
-                <Button type="submit" size="lg" isLoading={pending} showTextWhileLoading>
+                <Button type="submit" size={size} isLoading={pending} showTextWhileLoading>
                     {pending ? "Creating account…" : "Get started"}
                 </Button>
                 {/* kit-drift: nobody sees this one and nobody types in it. It carries where the

@@ -158,7 +158,7 @@ export const ourSections: SectionSpec[] = [
                 </div>
                 {/* The modal frame on the modal's own surface, without the overlay: the dialog itself is a route. */}
                 <div className="flex items-center justify-center rounded-xl bg-secondary p-6">
-                    <div className="w-full max-w-100 rounded-2xl glass-thick p-6 shadow-xl sm:p-8">
+                    <div className="w-full max-w-100 rounded-2xl bg-primary shadow-xl">
                         <AuthFrameProvider value="modal">
                             <AuthShell
                                 title="Sign in"
