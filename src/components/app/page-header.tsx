@@ -31,6 +31,8 @@ export function PageHeader({
     actions,
     above,
     hero,
+    media,
+    actionsFromLg = false,
     barActions,
     children,
     below,
@@ -66,6 +68,13 @@ export function PageHeader({
      * than a line of text would: the title starts a page of its own under the picture.
      */
     hero?: ReactNode;
+    /**
+     * From `lg`, beside the title and everything under it, as an album page draws its cover beside
+     * the album's name (Spotify, on Mobbin): a set's logo. Under `lg` the hero carries it instead.
+     */
+    media?: ReactNode;
+    /** The actions from `lg` only: a set's numbers, which a phone reads under the title instead. */
+    actionsFromLg?: boolean;
     /** On a phone, at the bar's right end across from Back: a page's settings as a dots button. */
     barActions?: ReactNode;
     /** Anything else that belongs with the title, like a progress bar. */
@@ -335,11 +344,14 @@ export function PageHeader({
                         // stands at one height on every page, with or without buttons or a line under it
                         // (32 or 33 px on desktop, 22 or 27 on a phone, before 2026-09-19).
                         "flex flex-row flex-wrap items-start justify-between gap-3",
+                        // The row still wraps: a long name and long numbers at 1024 px put the numbers under it.
+                        media && "lg:items-center lg:gap-4",
                         !titleOnPhone && "max-lg:sr-only",
                         // On the bar's line, the buttons keep its right end.
                         beside && "max-lg:pr-28",
                     )}
                 >
+                    {media ? <div className="hidden shrink-0 self-center lg:block">{media}</div> : null}
                     {/* The words take what the actions leave, so a long subtitle wraps rather than pushing them under the title. */}
                     <div className={"flex min-w-0 flex-1 basis-48 flex-col gap-1"}>
                         {eyebrow ? <p className="text-sm font-semibold text-tertiary">{eyebrow}</p> : null}
@@ -361,7 +373,7 @@ export function PageHeader({
                         </div>
                         {children}
                     </div>
-                    {actions ? <div className="flex items-center gap-3">{actions}</div> : null}
+                    {actions ? <div className={cx("items-center gap-3", actionsFromLg ? "hidden lg:flex" : "flex")}>{actions}</div> : null}
                 </div>
                 {below}
             </div>

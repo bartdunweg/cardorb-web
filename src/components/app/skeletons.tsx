@@ -261,7 +261,7 @@ export function SetSkeleton() {
                 back={{ href: "/sets", label: "Browse" }}
                 backOnDesktop
                 // The room the band takes (set-hero.tsx), so the title does not move when it lands.
-                hero={<div className="h-28 sm:h-32" />}
+                hero={<div className="h-28 sm:h-32 lg:h-16" />}
             />
             <Outline className={`grid gap-4 ${GRID_COLUMNS.md}`}>
                 {Array.from({ length: 40 }, (_, i) => (

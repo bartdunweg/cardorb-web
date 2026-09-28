@@ -6,7 +6,7 @@ import { BarSearchButton } from "@/components/app/bar-search-button";
 import { BarViewMenu } from "@/components/app/bar-view-menu";
 import { PageHeader } from "@/components/app/page-header";
 import { SetCards } from "@/components/app/set-cards";
-import { SetHero } from "@/components/app/set-hero";
+import { SetHero, SetLogoBeside } from "@/components/app/set-hero";
 import { LiveSetStats, SetLive } from "@/components/app/set-live";
 import { SetSkeleton } from "@/components/app/skeletons";
 import { formatCount, formatDate } from "@/lib/format";
@@ -104,6 +104,10 @@ async function Set({ params, searchParams }: { params: Promise<{ id: string }>; 
                     // which set. No progress bar under the title: the owner's call is that the page
                     // shows the cards, not a meter, so the numbers under the title say the count in words.
                     hero={<SetHero name={set.name} logoUrl={set.logoUrl} colors={colors} />}
+                    // From lg the logo stands small before the name, and the numbers at the row's end.
+                    media={set.logoUrl ? <SetLogoBeside logoUrl={set.logoUrl} /> : undefined}
+                    actionsFromLg
+                    actions={set.cards.length > 0 ? <LiveSetStats stats={stats} released={released} gallery={set.gallery} compact /> : undefined}
                     // On a phone View sits in the bar across from Back; the row under the search is the filters.
                     barActions={
                         set.cards.length > 0 ? (
@@ -114,7 +118,16 @@ async function Set({ params, searchParams }: { params: Promise<{ id: string }>; 
                         ) : undefined
                     }
                 >
-                    {set.cards.length > 0 ? <LiveSetStats stats={stats} released={released} gallery={set.gallery} /> : null}
+                    {set.cards.length > 0 ? (
+                        <>
+                            {/* The release line once, under the name at every width; the numbers under it on a phone,
+                                at the row's end from lg (`actions`). */}
+                            {released ? <p className="text-sm text-tertiary">Released {released}</p> : null}
+                            <div className="lg:hidden">
+                                <LiveSetStats stats={stats} released={null} gallery={set.gallery} />
+                            </div>
+                        </>
+                    ) : null}
                 </PageHeader>
 
                 {set.cards.length === 0 ? (

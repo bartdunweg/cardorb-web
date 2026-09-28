@@ -30,7 +30,7 @@ import { RaritySymbol } from "./rarity-symbol";
 import { RowButton } from "./row-button";
 import { LIST_ROW, RowSearch } from "./row-search";
 import { SearchTrigger } from "./search-trigger";
-import { SetWash } from "./set-hero";
+import { SetLogoBeside, SetWash } from "./set-hero";
 import { notify } from "./toast";
 
 const RARITY_SAMPLES = [
@@ -279,7 +279,7 @@ export const ourSections: SectionSpec[] = [
         title: "SetHero",
         from: "components/app/set-hero",
         ours: true,
-        note: "The top of a set's page: the logo centred on a soft wash of its own two or three colours, read once from the file on the server. The wash (SetWash, shown here in a box) runs across the whole window on the page, behind the sidebar. Grey where no colour can be read; the name's first word where there is no logo. Decoration, the h1 under it says which set.",
+        note: "The top of a set's page: under lg the logo centred on a soft wash of its own two or three colours, read once from the file on the server; from lg the head is compact (SetLogoBeside, OpenSea style): the logo small before the name, the numbers at the row's end, and the band keeps the wash and Back. The wash (SetWash, shown here in a box) runs across the whole window on the page, behind the sidebar. Grey where no colour can be read; the name's first word where there is no logo. Decoration, the h1 under it says which set.",
         render: (
             <Panel>
                 <Group title="Washes" hint="the colours are the logo's own" cols="wide">
@@ -289,6 +289,12 @@ export const ourSections: SectionSpec[] = [
                             <div className="relative h-24 w-56 drop-shadow-xl">
                                 <CardImage src={BASE_SET_LOGO} alt="" width={224} ratio="square" className="object-contain" />
                             </div>
+                        </div>
+                    </Cell>
+                    <Cell label="Beside the name, from lg (SetLogoBeside)">
+                        <div className="flex h-40 items-center gap-4 rounded-lg bg-page px-4">
+                            <SetLogoBeside logoUrl={BASE_SET_LOGO} />
+                            <span className="text-display-sm font-bold tracking-tight text-primary">Base Set</span>
                         </div>
                     </Cell>
                     <Cell label="Three colours">

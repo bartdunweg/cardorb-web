@@ -14,6 +14,11 @@ import { cx } from "@/utils/cx";
  * read (grey, or a catalogue not answering) gets the same wash in the page's quiet grey; a set
  * without a logo gets its name's first word, as the shelf's tile does.
  *
+ * From `lg` the page head is compact, as a collection page's is (OpenSea, Binance NFT on Mobbin): the
+ * logo small before the set's name (`SetLogoBeside`, PageHeader's `media`), the numbers at the row's
+ * right end. Centred alone at the top it floated far from the name it belongs to (Bart, 2026-09-28).
+ * The band keeps the wash and, there, the Back button.
+ *
  * The logo carries a drop shadow because it is drawn on colours picked from itself. Decoration
  * throughout: the h1 under it says which set, so the picture has no alt text and the wash no role.
  */
@@ -54,16 +59,32 @@ export function SetHero({ name, logoUrl, colors }: { name: string; logoUrl: stri
                 stopping with it. It reaches the title and the line under it at a fraction of its own
                 strength; measured there, both stay far above the AA contrast they need. */}
             <SetWash colors={colors} className="inset-x-0 top-0 h-56 sm:h-64" />
-            <div aria-hidden="true" className="flex h-28 w-full items-center justify-center sm:h-32">
-                {logoUrl ? (
-                    <div className="relative h-16 w-48 drop-shadow-lg sm:h-20 sm:w-56">
-                        <SetLogo src={logoUrl} width={LOGO_WIDTH} priority boxRatio={3} area={0.55} />
-                    </div>
-                ) : (
-                    <span className="max-w-full min-w-0 truncate px-6 text-display-xs font-semibold text-tertiary">{firstWord(name)}</span>
-                )}
+            <div aria-hidden="true" className="flex h-28 w-full items-center justify-center sm:h-32 lg:h-16">
+                <div className="contents lg:hidden">
+                    {logoUrl ? (
+                        <div className="relative h-16 w-48 drop-shadow-lg sm:h-20 sm:w-56">
+                            <SetLogo src={logoUrl} width={LOGO_WIDTH} priority boxRatio={3} area={0.55} />
+                        </div>
+                    ) : (
+                        <span className="max-w-full min-w-0 truncate px-6 text-display-xs font-semibold text-tertiary">{firstWord(name)}</span>
+                    )}
+                </div>
             </div>
         </>
+    );
+}
+
+/**
+ * The logo before the set's name from `lg` (PageHeader's `media`), small as a collection's mark is
+ * beside its name (OpenSea, on Mobbin); nothing for a set without one, whose name says it.
+ */
+export function SetLogoBeside({ logoUrl }: { logoUrl: string | null }) {
+    if (!logoUrl) return null;
+    return (
+        <div aria-hidden="true" className="relative h-12 w-32 drop-shadow-md">
+            {/* The band's width, so both ask for one file and the browser fetches it once. */}
+            <SetLogo src={logoUrl} width={LOGO_WIDTH} priority boxRatio={2.8} area={0.8} align="start" />
+        </div>
     );
 }
 

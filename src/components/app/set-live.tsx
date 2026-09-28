@@ -92,7 +92,7 @@ export function useSetLive(): Live {
 }
 
 /** The numbers over the set, moved by every press below them. */
-export function LiveSetStats(props: { stats: Stats; released: string | null; gallery?: { name: string; total: number } | null }) {
+export function LiveSetStats(props: { stats: Stats; released: string | null; gallery?: { name: string; total: number } | null; compact?: boolean }) {
     const { changes } = useContext(LiveContext);
     const stats = useMemo(() => {
         let { owned, value } = props.stats;
