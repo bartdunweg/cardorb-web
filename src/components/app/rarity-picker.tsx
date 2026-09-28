@@ -83,7 +83,7 @@ export function RarityPicker({
             label={label}
             options={options.flatMap((r): { value: string; label: ReactNode }[] =>
                 r === SPLIT_RARITY
-                    ? RARITY_SPLITS.map((k) => ({ value: `${r} / ${k.id}`, label: `${r} · ${k.label}` }))
+                    ? RARITY_SPLITS.map((k) => ({ value: `${r} / ${k.id}`, label: <RarityNameOnly rarity={r} text={`${r} · ${k.label}`} /> }))
                     : [{ value: r, label: <RarityNameOnly rarity={r} /> }],
             )}
             selected={shown}

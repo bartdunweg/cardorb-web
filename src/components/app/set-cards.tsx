@@ -8,7 +8,7 @@ import { AppEmptyState } from "@/components/app/app-empty-state";
 import { arriveDelay } from "@/components/app/arrive-stagger";
 import { awaitRows, knownRows, warmCardFacts, warmSetRows } from "@/components/app/card-memo";
 import { type FilterAnswer, type FilterValues, FiltersSheet } from "@/components/app/filters-sheet";
-import { RaritySymbol } from "@/components/app/rarity-symbol";
+import { rarityOption } from "@/components/app/rarity-symbol";
 import { RowButton } from "@/components/app/row-button";
 import { FILTER_BAR, LIST_ROW, RowSearch } from "@/components/app/row-search";
 import { SetCardTile } from "@/components/app/set-card-tile";
@@ -174,7 +174,7 @@ export function SetCards({
         () =>
             [...new Set(drawnCards.map((c) => c.rarity).filter((r): r is string => Boolean(r)))]
                 .sort()
-                .map((r) => ({ value: r, label: r, icon: <RaritySymbol mark={rarityMark(r, { setId, language })} size="md" column /> })),
+                .map((r) => rarityOption(r, rarityMark(r, { setId, language }))),
         [drawnCards, setId, language],
     );
     /* Whether anybody was asked what is held here. The answer carries a holding for every card of a

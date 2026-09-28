@@ -1019,6 +1019,8 @@ const moverSchema = z.object({
     printedNumber: nullable(z.string()).optional(),
     /** The rarity of the printing held; absent from an API before it sent one. */
     rarity: nullable(z.string()).optional(),
+    /** The TCGplayer printing that moved, on a market mover only ("reverse-holofoil"): the one its sheet opens on. */
+    printing: nullable(z.string()).optional(),
     image: nullable(z.string()),
     ...foldedCopyState,
     copies: z.number(),
@@ -1077,6 +1079,7 @@ export function moverFromMarket(m: z.infer<typeof marketMoverSchema>): Mover {
          * would be a number the set page does not show for the same card.
          */
         rarity: tcgplayerPrintingLabel(m.printing),
+        printing: m.printing,
         image: m.image,
         copies: 1,
         was: m.was,

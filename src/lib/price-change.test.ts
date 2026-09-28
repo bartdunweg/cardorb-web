@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { isoDaysAgo } from "./chart-periods";
-import { chartLine, periodChange, printingsOfLine, trustedStretch } from "./price-change";
+import { chartLine, periodChange, printingsOfLine, sheetPrintingOf, trustedStretch } from "./price-change";
 
 /*
  * A day this many days back, since the periods are counted from today, written the way the periods
@@ -166,5 +166,17 @@ describe("chartLine", () => {
 
     it("keeps any other printing's line whole under the same figures, where only one jump is five times", () => {
         expect(chartLine(points("holofoil", figures), "holofoil", false).map((p) => p.value)).toEqual(figures);
+    });
+});
+
+describe("sheetPrintingOf", () => {
+    it("keys a TCGplayer printing as the sheet's buttons do", () => {
+        expect(sheetPrintingOf("reverse-holofoil")).toBe("reverse-holo");
+        expect(sheetPrintingOf("poke-ball-reverse-holofoil")).toBe("reverse-holo/poke-ball");
+        expect(sheetPrintingOf("holofoil")).toBe("holo");
+        expect(sheetPrintingOf("1st-edition-holofoil")).toBe("holo");
+        expect(sheetPrintingOf("unlimited")).toBe("normal");
+        expect(sheetPrintingOf("normal")).toBe("normal");
+        expect(sheetPrintingOf(null)).toBeNull();
     });
 });

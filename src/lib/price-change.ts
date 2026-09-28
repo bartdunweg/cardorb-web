@@ -142,6 +142,22 @@ export function tcgplayerPrintingLabel(key: string | null | undefined): string |
     return PRINTING_LABELS.find(([k]) => k === key)?.[1] ?? null;
 }
 
+/**
+ * A TCGplayer printing as the card sheet keys its printing buttons: "reverse-holofoil" is
+ * "reverse-holo", "poke-ball-reverse-holofoil" is "reverse-holo/poke-ball", a stamped or unlimited
+ * run is its finish (the run is the sheet's other row of buttons). Null for one it does not know.
+ */
+export function sheetPrintingOf(key: string | null | undefined): string | null {
+    if (!key) return null;
+    const pattern = key.match(/^(.+)-reverse-holofoil$/)?.[1];
+    if (pattern) return `reverse-holo/${pattern}`;
+    if (key === "reverse-holofoil") return "reverse-holo";
+    const finish = key.replace(/^(1st-edition|unlimited)-?/, "");
+    if (finish === "holofoil") return "holo";
+    if (finish === "" || finish === "normal") return "normal";
+    return null;
+}
+
 /** The printings a card has readings for, in reading order, each with its label. */
 export function printingsOfLine(points: PriceLinePoint[]): { key: string; label: string }[] {
     const seen = new Set(points.flatMap((p) => Object.keys(p.printings ?? {})));

@@ -202,9 +202,8 @@ export function MoverList({
     movers: Mover[];
     empty: string;
     /**
-     * Left out, the rows are text and not buttons: the market's movers on a visitor's Home, where
-     * opening a card would read the reader's own rows. A row that looks pressable and does nothing
-     * is worse than one that plainly is not.
+     * Left out, the rows are text and not buttons. A row that looks pressable and does nothing is
+     * worse than one that plainly is not.
      */
     onOpen?: (index: number) => void;
     /** Null where the list's page cannot show them sorted (a Pokédex binder). */

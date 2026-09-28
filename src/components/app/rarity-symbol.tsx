@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { FilterOption } from "@/components/app/filter-chip";
 import { type RarityMark, rarityMark, rarityMarkOfName, setIdOf } from "@/lib/rarity-symbol";
 import { cx } from "@/utils/cx";
 
@@ -105,8 +106,8 @@ function Drawing({ mark, className }: { mark: RarityMark; className?: string }):
         case "promo":
             return (
                 <svg viewBox="0 0 16 16" aria-hidden="true" className={className}>
-                    <path d={star(8, 8.5, 7.5)} className={INK} />
-                    <rect x="3" y="7.4" width="10" height="2.2" rx="0.5" className="fill-bg-primary" />
+                    {/* The band is cut out of the star, so whatever surface it sits on shows through. */}
+                    <path d={`${star(8, 8.5, 7.5)}M3 7.4H13V9.6H3Z`} fillRule="evenodd" className={INK} />
                 </svg>
             );
         case "code":
@@ -140,7 +141,7 @@ export function RaritySymbol({
 }) {
     if (!mark) return column ? <span aria-hidden="true" className="inline-block w-8 shrink-0" /> : null;
     return (
-        <span className={cx("inline-flex shrink-0 items-center align-middle", column && "w-8 justify-center", className)}>
+        <span className={cx("inline-flex h-lh shrink-0 items-center align-top", column && "w-8 justify-center", className)}>
             <Drawing mark={mark} className={cx("w-auto", size === "sm" ? "h-3" : "h-4")} />
         </span>
     );
@@ -163,11 +164,21 @@ export function RarityName({ rarity, mark, size = "md" }: { rarity: string; mark
 }
 
 /** A filter row's or a Pokédex box's rarity: the name's mark, as `rarityMarkOfName` settles it for a row of every era. */
-export function RarityNameOnly({ rarity }: { rarity: string }) {
+export function RarityNameOnly({ rarity, text = rarity }: { rarity: string; text?: string }) {
     return (
         <span className="inline-flex items-center gap-1.5">
             <RaritySymbol mark={rarityMarkOfName(rarity)} size="md" column />
-            {rarity}
+            {text}
         </span>
     );
 }
+
+/**
+ * A rarity as a filter's choice: its mark before the name, and nothing where it has none. In the
+ * list the marks sit in one column so the names line up; a chip or tag takes the mark at its own width.
+ */
+export const rarityOption = (rarity: string, mark: RarityMark | null): FilterOption => ({
+    value: rarity,
+    label: rarity,
+    ...(mark ? { icon: <RaritySymbol mark={mark} size="md" />, listIcon: <RaritySymbol mark={mark} size="md" column /> } : {}),
+});
