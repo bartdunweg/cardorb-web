@@ -247,6 +247,9 @@ describe("listingForCopy", () => {
     it("is nothing wherever a market figure is found along the copy's chain", () => {
         expect(listingForCopy({ price: market })).toBeNull();
         expect(listingForCopy({ price: listing, printingPrice: market })).toBeNull();
+    });
+
+    it("reads a sent printingPrice as the answer, a listing included", () => {
         // The API sends a listing as the printing's answer only where nothing on the chain has a
         // market figure (copyPricingOf, market first), so a sent listing is the answer as it stands.
         expect(listingForCopy({ price: market, printingPrice: listing })).toBe(5771.49);
