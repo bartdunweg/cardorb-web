@@ -103,11 +103,11 @@ export default function OrbStudyPage() {
                     <div className="flex flex-wrap items-center gap-6">
                         <div className="flex items-center gap-6 rounded-2xl bg-primary p-8 ring-1 ring-secondary ring-inset">
                             <OrbMark size={160} label="The mark, light" />
-                            <OrbMark size={28} shadow={false} />
+                            <OrbMark size={28} />
                         </div>
                         <div className="dark-mode flex items-center gap-6 rounded-2xl bg-primary p-8 ring-1 ring-secondary ring-inset">
                             <OrbMark size={160} surface="dark" label="The mark, dark" />
-                            <OrbMark size={28} surface="dark" shadow={false} />
+                            <OrbMark size={28} surface="dark" />
                         </div>
                     </div>
                 </section>
