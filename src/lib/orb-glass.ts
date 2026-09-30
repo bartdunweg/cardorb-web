@@ -24,7 +24,8 @@
  * others (the owner's rule). The number is the order it was made in, oldest first.
  */
 export type OrbGlassFamily = "black" | "violet" | "bubble" | "soap";
-export type OrbGlassMaterial = "black1" | "violet1" | "bubble1" | "bubble2" | "bubble3" | "soap1" | "soap2" | "soap3";
+export type OrbGlassMaterial =
+    "black1" | "black2" | "violet1" | "violet2" | "bubble1" | "bubble2" | "bubble3" | "bubble4" | "soap1" | "soap2" | "soap3" | "soap4";
 
 export const orbGlassFamily = (material: OrbGlassMaterial): OrbGlassFamily => material.replace(/\d+$/, "") as OrbGlassFamily;
 
@@ -38,7 +39,14 @@ export const ORB_GLASS_MATERIAL_INDEX: Record<OrbGlassMaterial, number> = {
     soap2: 5,
     bubble1: 6,
     bubble2: 7,
+    soap4: 8,
+    bubble4: 9,
+    black2: 10,
+    violet2: 11,
 };
+
+/** Versions that keep a light floor under them on a dark page too: the object does not change, only the tile. */
+export const ORB_GLASS_OWN_FLOOR: Partial<Record<OrbGlassMaterial, true>> = { black2: true, violet2: true };
 
 /** Which materials move on their own (a film that flows), so a frame loop knows to keep going. Glass only moves with the lights. */
 export const ORB_GLASS_FLOWS: Record<OrbGlassFamily, boolean> = { black: false, violet: false, bubble: true, soap: true };
@@ -56,7 +64,7 @@ export const ORB_GLASS_FRAGMENT = `#version 300 es
 precision highp float;
 out vec4 O;
 uniform vec2 uRes;
-uniform int uMat;        // ORB_GLASS_MATERIAL_INDEX: 0 black1, 1 violet1, 2 bubble3, 3 soap3, 4 soap1, 5 soap2, 6 bubble1, 7 bubble2
+uniform int uMat;        // ORB_GLASS_MATERIAL_INDEX: 0 black1, 1 violet1, 2 bubble3, 3 soap3, 4 soap1, 5 soap2, 6 bubble1, 7 bubble2, 8 soap4, 9 bubble4, 10 black2, 11 violet2
 uniform vec3 uFloor;     // the colour under and behind the orb, in linear light
 uniform float uFloorMix; // how much of the studio's lower half that colour replaces
 uniform vec2 uTilt;      // where the lights are pulled to, -1..1 each way
@@ -122,6 +130,16 @@ vec4 over(vec3 col, float a) {
     return vec4(col / max(a, 1e-4), a);
 }
 
+// A bubble as the dark icon: the tile seen through the film, a cool haze for a body, the film's
+// reflections, a thin light rim, the softbox white. wash is the family's own colour over it.
+vec4 darkBubble(vec3 refl, vec3 back, vec3 wash, vec3 n, float x, float kdif, float sun, float F1) {
+    vec3 haze = vec3(0.5, 0.62, 0.85) * (0.07 + 0.08 * smoothstep(-0.6, 0.8, n.y)) + wash * 0.08;
+    float rim = pow(x, 3.0);
+    vec3 col = refl * F1 * 2.2 + back * 1.4 + haze + vec3(0.62, 0.72, 0.95) * rim * 0.55 + wash * rim * 0.6 + vec3(sun);
+    float a = clamp(0.22 + F1 * 1.5 + rim * 0.5 + 0.1 * kdif, 0.0, 1.0);
+    return over(pow(soft(col), vec3(1.0 / 2.2)), a);
+}
+
 vec4 shade(vec2 fc) {
     vec2 p = (fc - 0.5 * uRes) / (0.5 * uRes.y);
     vec3 ro = vec3(0.0, 0.42, 6.0);
@@ -145,7 +163,7 @@ vec4 shade(vec2 fc) {
     float kdif = max(dot(n, keyDir()), 0.0);
     float rl = clamp(dot(refl, vec3(0.2126, 0.7152, 0.0722)), 0.0, 2.0);
 
-    if (uMat == 3 || uMat == 4 || uMat == 5) {
+    if (uMat == 3 || uMat == 4 || uMat == 5 || uMat == 8) {
         // The soap bubble: a thin film front and back, the studio's wall seen through both.
         float flow = pos.y * 3.2 + uTime * 0.5 + 1.2 * sin(pos.x * 2.4 + uTime * 0.27 + 0.5) + 0.6 * sin((pos.x + pos.z) * 4.2 - uTime * 0.35);
         float thick = 3.8 + 1.7 * sin(flow) + 1.4 * x;
@@ -177,10 +195,12 @@ vec4 shade(vec2 fc) {
             return vec4(pow(soft(front + back + wall * T + vec3(sun)), vec3(1.0 / 2.2)), 1.0);
         }
         // soap3: one object on every page, a fixed pale wall, a film a shade less saturated.
+        // soap4: the same on light; as the dark icon, glass on the dark tile.
         vec3 R1 = film(cosT, thick + 0.4, 1.33, 1.2) * amp * 1.9;
         vec3 front = refl * R1;
         vec3 R2 = film(cos2, thick + 1.0, 1.33, 1.2) * amp * 1.4;
         vec3 back = env(reflect(rd, n2)) * R2;
+        if (uMat == 8 && uDark > 0.5) return darkBubble(refl, back, film(cosT, thick + 0.4, 1.33, 1.2) * 0.5, n, x, kdif, sun, fresnel(0.02, x));
         // The wall behind the bubble: the studio's own pale wall, the same on every page, so the
         // bubble is one object wherever it sits (the owner's call), not a page seen through a film.
         vec3 wall = vec3(0.84, 0.84, 0.87) * (0.88 + 0.12 * kdif);
@@ -210,9 +230,10 @@ vec4 shade(vec2 fc) {
         return vec4(pow(aces(col), vec3(1.0 / 2.2)), a);
     }
 
-    if (uMat == 2 || uMat == 7) {
+    if (uMat == 2 || uMat == 7 || uMat == 9) {
         // bubble2: broad washes after the reference, blue on top, magenta low left, a hot spot, a double rim.
         // bubble3: the same, and on a dark page no pale body: the page through the film.
+        // bubble4: bubble2 on light; as the dark icon, glass on the dark tile with the washes over it.
         float dark = uMat == 2 ? uDark : 0.0;
         // Broad, slow swaths rather than tight bands: the film varies over the whole ball, not every few degrees.
         float flow = pos.y * 1.3 + uTime * 0.3 + 0.9 * sin(pos.x * 1.1 + uTime * 0.17) + 0.5 * sin((pos.x + pos.z) * 1.8 - uTime * 0.23);
@@ -234,6 +255,12 @@ vec4 shade(vec2 fc) {
         vec3 body = mix(vec3(0.5, 0.76, 1.0), vec3(0.92, 0.42, 0.9), smoothstep(0.55, -0.55, n.y + n.x * 0.45));
         // A pale centre, so the colour sits at the sides and the ball reads as lit from within.
         body = mix(body, vec3(0.92, 0.95, 1.0), (dark > 0.5 ? 0.0 : 0.55) * smoothstep(0.75, 0.2, length(n.xy - vec2(0.15, 0.2))));
+        if (uMat == 9 && uDark > 0.5) {
+            vec3 hot4 = normalize(vec3(-0.12, -0.62, 0.77));
+            float spot4 = pow(max(dot(n, hot4), 0.0), 40.0);
+            float sun4 = spot4 * 1.6;
+            return darkBubble(refl, back, mix(body, wash, 0.5) * 0.9, n, x, kdif, sun4, F1);
+        }
         vec3 milk = mix(body, wash, 0.4) * haze;
         vec3 face = wash * (0.12 + 0.4 * rl) * (1.0 - x) * 0.3;
         // Light that came in at the top leaves low in the ball: a warm hot spot, and a glow along the bottom rim.
@@ -252,14 +279,17 @@ vec4 shade(vec2 fc) {
         return vec4(col, a);
     }
 
-    float F0 = (uMat == 0) ? 0.075 : 0.045;
+    // black1 and violet1; black2 and violet2 are the same glass, and as the dark icon they keep a
+    // light floor under them (ORB_GLASS_OWN_FLOOR) and get a rim light, so the ball stands off the tile.
+    bool blackGlass = uMat == 0 || uMat == 10;
+    float F0 = blackGlass ? 0.075 : 0.045;
     float F = fresnel(F0, x);
     float thick = 3.6 + 0.7 * sin(pos.y * 2.2 + pos.x * 1.3) + 0.35 * cos(pos.x * 3.1 - pos.z * 1.7);
     vec3 irid = film(cosT, thick, 1.35, 2.2);
     float iw = smoothstep(0.34, 0.78, x) * (1.0 - 0.5 * smoothstep(0.94, 1.0, x));
 
     vec3 col;
-    if (uMat == 0) {
+    if (blackGlass) {
         vec3 body = vec3(0.004, 0.004, 0.006);
         vec3 sheen = vec3(0.05, 0.05, 0.06) * pow(kdif, 3.0);
         col = body + sheen + refl * F;
@@ -279,6 +309,11 @@ vec4 shade(vec2 fc) {
         vec3 rim = violet * 2.4 * pow(x, 2.4) * (0.5 + 0.5 * smoothstep(0.3, -0.7, n.y));
         col = (1.0 - F) * (through * T * 1.25 + scatter * 0.9 + rim * 0.7) + refl * F;
         col += irid * iw * F * (0.15 + 0.5 * rl);
+    }
+    if (uMat >= 10 && uDark > 0.5) {
+        // The dark icon's rim light: cool, from behind and above, strongest where the ball turns away.
+        float rimLight = pow(x, 3.5) * (0.6 + 0.4 * smoothstep(-0.4, 0.8, n.y));
+        col += vec3(0.55, 0.65, 0.9) * rimLight * (blackGlass ? 0.9 : 0.5);
     }
     col = pow(aces(col), vec3(1.0 / 2.2));
     return vec4(col, 1.0);

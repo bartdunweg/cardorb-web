@@ -24,6 +24,7 @@ const FAMILIES: { name: string; versions: Version[] }[] = [
     {
         name: "Soap bubble",
         versions: [
+            { name: "v4", material: "soap4" },
             { name: "v3", material: "soap3" },
             { name: "v2", material: "soap2" },
             { name: "v1", material: "soap1" },
@@ -32,13 +33,26 @@ const FAMILIES: { name: string; versions: Version[] }[] = [
     {
         name: "Iridescent bubble",
         versions: [
+            { name: "v4", material: "bubble4" },
             { name: "v3", material: "bubble3" },
             { name: "v2", material: "bubble2" },
             { name: "v1", material: "bubble1" },
         ],
     },
-    { name: "Black glass", versions: [{ name: "v1", material: "black1" }] },
-    { name: "Violet glass", versions: [{ name: "v1", material: "violet1" }] },
+    {
+        name: "Black glass",
+        versions: [
+            { name: "v2", material: "black2" },
+            { name: "v1", material: "black1" },
+        ],
+    },
+    {
+        name: "Violet glass",
+        versions: [
+            { name: "v2", material: "violet2" },
+            { name: "v1", material: "violet1" },
+        ],
+    },
 ];
 
 /**

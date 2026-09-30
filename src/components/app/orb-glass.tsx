@@ -7,6 +7,7 @@ import {
     ORB_GLASS_FLOWS,
     ORB_GLASS_FRAGMENT,
     ORB_GLASS_MATERIAL_INDEX,
+    ORB_GLASS_OWN_FLOOR,
     ORB_GLASS_VERTEX,
     type OrbGlassMaterial,
     orbGlassFamily,
@@ -170,7 +171,7 @@ class Studio {
         gl.viewport(0, 0, gpx, gpx);
         gl.clearColor(0, 0, 0, 0);
         gl.clear(gl.COLOR_BUFFER_BIT);
-        const floor = ORB_GLASS_FLOOR[dark ? "dark" : "light"];
+        const floor = ORB_GLASS_FLOOR[dark && !ORB_GLASS_OWN_FLOOR[it.material] ? "dark" : "light"];
         gl.uniform2f(u.uRes, gpx, gpx);
         gl.uniform1i(u.uMat, ORB_GLASS_MATERIAL_INDEX[it.material]);
         gl.uniform3f(u.uFloor, floor[0], floor[1], floor[2]);
