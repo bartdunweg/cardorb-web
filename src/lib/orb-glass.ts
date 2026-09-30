@@ -42,7 +42,8 @@ export type OrbGlassMaterial =
     | "scene6"
     | "scene7"
     | "scene8"
-    | "scene9";
+    | "scene9"
+    | "scene10";
 
 /** A scene material draws the whole tile (face, shadow, ball) rather than a bare ball; the tile round it is then nothing but a hairline. */
 export const orbGlassIsScene = (material: OrbGlassMaterial): boolean => orbGlassFamily(material) === "scene";
@@ -70,6 +71,7 @@ export const ORB_GLASS_MATERIAL_INDEX: Record<OrbGlassMaterial, number> = {
     scene7: 21,
     scene8: 22,
     scene9: 23,
+    scene10: 24,
 };
 
 /** Which materials move on their own (a film that flows), so a frame loop knows to keep going. Glass only moves with the lights. */
@@ -254,7 +256,10 @@ vec4 sceneShade(vec2 fc) {
     float c = p.z;
     // scene9 is scene8 as a palantir: the film's bands turn about the centre and flow faster, and a
     // cloud inside, coloured by the film, drifts with them, so the ball is seen to move on its own.
-    bool palantir = uMat == 23;
+    // scene10 is scene9 on light, and on dark the same with less colour: the cloud and the film's
+    // reflections held back, the blue haze kept.
+    bool palantir = uMat == 23 || uMat == 24;
+    float hold = (uMat == 24 && uDark > 0.5) ? 0.45 : 1.0;
     vec2 sw = p.xy;
     if (palantir) {
         float ang = uTime * 0.25 + 1.2 * (1.0 - length(p.xy));
@@ -285,7 +290,7 @@ vec4 sceneShade(vec2 fc) {
     vec3 pal = deep ? mix(vec3(0.35, 0.62, 1.0), vec3(0.88, 0.32, 0.86), ph) : mix(vec3(0.55, 0.75, 1.0), vec3(0.92, 0.55, 0.95), ph);
     vec3 f = palette ? pal : saturateS(filmS(th, c, 1.33), pastel ? 1.05 : 1.7);
     float amp = 0.06 + 0.94 * pow(1.0 - c, 2.4);
-    vec3 R = palette ? mix(pal, vec3(1.0), 0.45) * amp * 1.6 : f * amp * (pastel ? 1.5 : 1.8);
+    vec3 R = (palette ? mix(pal, vec3(1.0), 0.45) * amp * 1.6 : f * amp * (pastel ? 1.5 : 1.8)) * mix(1.0, hold, 0.6);
     vec3 r = reflect(d, p);
     vec3 front = envS(r) * R;
     vec3 pb = vec3(p.x, p.y, -p.z);
@@ -304,7 +309,7 @@ vec4 sceneShade(vec2 fc) {
     if (uMat >= 22) T = vec3(dot(T, vec3(0.333)));
     if (palantir) {
         float smoke = 0.5 + 0.5 * sin(sw.x * 2.3 + uTime * 0.7) * sin(sw.y * 1.9 - uTime * 0.5);
-        wash += f * ((dark ? 0.18 : 0.28) * c) * smoke;
+        wash += f * ((dark ? 0.18 : 0.28) * c) * smoke * hold;
     }
     vec3 haze = (dark ? vec3(0.4, 0.5, 0.72) * (0.045 * (0.6 + 0.4 * sm(-0.6, 0.8, p.y)) + 0.02 * c) : vec3(0.0)) + wash;
     vec3 col = front + back + behind * T + haze + vec3(sun);
