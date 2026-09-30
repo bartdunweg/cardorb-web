@@ -24,7 +24,7 @@
  */
 export type OrbGlassFamily = "bubble" | "soap" | "scene";
 export type OrbGlassMaterial =
-    "bubble1" | "bubble2" | "bubble3" | "bubble4" | "bubble5" | "soap1" | "soap2" | "soap3" | "soap4" | "soap5" | "scene1" | "scene2" | "scene3";
+    "bubble1" | "bubble2" | "bubble3" | "bubble4" | "bubble5" | "soap1" | "soap2" | "soap3" | "soap4" | "soap5" | "scene1" | "scene2" | "scene3" | "scene4";
 
 /** A scene material draws the whole tile (face, shadow, ball) rather than a bare ball; the tile round it is then nothing but a hairline. */
 export const orbGlassIsScene = (material: OrbGlassMaterial): boolean => orbGlassFamily(material) === "scene";
@@ -46,6 +46,7 @@ export const ORB_GLASS_MATERIAL_INDEX: Record<OrbGlassMaterial, number> = {
     scene1: 15,
     scene2: 16,
     scene3: 17,
+    scene4: 18,
 };
 
 /** Which materials move on their own (a film that flows), so a frame loop knows to keep going. Glass only moves with the lights. */
@@ -233,8 +234,11 @@ vec4 sceneShade(vec2 fc) {
     // scene1 has the study's film; scene2 the same film in pastel: less saturated, a shade fainter.
     // scene3 drops the spectrum for a palette after the owner's reference: blue running to violet and
     // pink in broad washes over the ball, the rim white glass, more of the colour in the body.
+    // scene4 is scene3 with the colour where the reference has it: the light coming through the ball is
+    // tinted by the palette, as through coloured glass, and the wash in the body is twice as strong.
     bool pastel = uMat == 16;
-    bool palette = uMat == 17;
+    bool palette = uMat == 17 || uMat == 18;
+    bool tinted = uMat == 18;
     float ph = 0.5 + 0.5 * sin(flow * 0.8 + 1.5 * (1.0 - c) - 0.6);
     vec3 pal = mix(vec3(0.55, 0.75, 1.0), vec3(0.92, 0.55, 0.95), ph);
     vec3 f = palette ? pal : saturateS(filmS(th, c, 1.33), pastel ? 1.05 : 1.7);
@@ -250,7 +254,8 @@ vec4 sceneShade(vec2 fc) {
     vec3 T = (1.0 - R) * (1.0 - fb * amp * 1.2);
     float sun = pow(max(0.0, dot(r, sunS())), 700.0) * 22.0;
     vec3 washTint = 0.6 + 0.5 * f;
-    vec3 wash = palette ? pal * ((dark ? 0.09 : 0.3) * c) : vec3(0.75, 0.82, 1.0) * washTint * ((dark ? 0.06 : 0.16) * c);
+    vec3 wash = palette ? pal * ((dark ? (tinted ? 0.22 : 0.09) : (tinted ? 0.55 : 0.3)) * c) : vec3(0.75, 0.82, 1.0) * washTint * ((dark ? 0.06 : 0.16) * c);
+    if (tinted) T *= mix(vec3(1.0), pal, 0.55 * c);
     vec3 haze = (dark ? vec3(0.4, 0.5, 0.72) * (0.045 * (0.6 + 0.4 * sm(-0.6, 0.8, p.y)) + 0.02 * c) : vec3(0.0)) + wash;
     vec3 col = front + back + behind * T + haze + vec3(sun);
     return vec4(pow(softS(col), vec3(1.0 / 2.2)), 1.0);
