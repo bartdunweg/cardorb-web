@@ -7,6 +7,8 @@ type OrbMarkProps = {
     size: number;
     /** The page it sits on; the page's own theme by default. */
     surface?: "light" | "dark";
+    /** The tile's shadow and glow round the ball; off for the logo in the top bar and the sidebar (the owner's call). */
+    shadow?: boolean;
     className?: string;
     /** A name makes it an image; without one it is decoration and a screen reader skips it. */
     label?: string;
@@ -23,13 +25,15 @@ export const ORB_MARK_MATERIAL = "scene20";
 // canvas draws one frame and stands still. The mark keeps moving with no pause control, as the
 // landing page's orb did (#626, the owner's call): WCAG 2.2.2 asks for one on motion past five
 // seconds; reduced motion is the only way to stop it. Do not add a stop or a button without asking.
-export function OrbMark({ size, surface, className, label }: OrbMarkProps) {
+export function OrbMark({ size, surface, shadow = true, className, label }: OrbMarkProps) {
     const a11y = label ? { role: "img" as const, "aria-label": label } : { "aria-hidden": true as const };
+    // The stills are drawn at the scene's first moment, so the canvas's first frame is the still to the pixel.
+    const still = shadow ? "mark" : "mark-plain";
     return (
         <span className={cx("relative inline-block shrink-0", className)} style={{ width: size, height: size }} {...a11y}>
             {/* Which still shows follows the theme's class (globals.css, .orb-mark-still), not a dark: variant. */}
             <Image
-                src="/orb-mark/mark-light.png"
+                src={`/orb-mark/${still}-light.png`}
                 alt=""
                 width={512}
                 height={512}
@@ -38,7 +42,7 @@ export function OrbMark({ size, surface, className, label }: OrbMarkProps) {
                 unoptimized
             />
             <Image
-                src="/orb-mark/mark-dark.png"
+                src={`/orb-mark/${still}-dark.png`}
                 alt=""
                 width={512}
                 height={512}
@@ -46,7 +50,7 @@ export function OrbMark({ size, surface, className, label }: OrbMarkProps) {
                 data-theme="dark"
                 unoptimized
             />
-            <OrbGlass size={size} material={ORB_MARK_MATERIAL} mark surface={surface} className="absolute inset-0" />
+            <OrbGlass size={size} material={ORB_MARK_MATERIAL} mark shadow={shadow} surface={surface} className="absolute inset-0" />
         </span>
     );
 }

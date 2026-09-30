@@ -16,7 +16,7 @@ export function PublicTopBar({ menu }: { menu?: ReactNode }) {
     return (
         <header className="relative z-10 mx-auto flex w-full max-w-container items-center justify-between px-4 py-5 md:px-8">
             <Link href="/" className="flex items-center gap-2.5 text-lg font-semibold text-primary transition hover:opacity-70">
-                <OrbMark size={40} />
+                <OrbMark size={40} shadow={false} />
                 Cardorb
             </Link>
             {menu ?? (
