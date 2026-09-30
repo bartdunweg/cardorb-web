@@ -45,7 +45,8 @@ export type OrbGlassMaterial =
     | "scene9"
     | "scene10"
     | "scene11"
-    | "scene12";
+    | "scene12"
+    | "scene13";
 
 /** A scene material draws the whole tile (face, shadow, ball) rather than a bare ball; the tile round it is then nothing but a hairline. */
 export const orbGlassIsScene = (material: OrbGlassMaterial): boolean => orbGlassFamily(material) === "scene";
@@ -76,6 +77,7 @@ export const ORB_GLASS_MATERIAL_INDEX: Record<OrbGlassMaterial, number> = {
     scene10: 24,
     scene11: 25,
     scene12: 26,
+    scene13: 27,
 };
 
 /** Which materials move on their own (a film that flows), so a frame loop knows to keep going. Glass only moves with the lights. */
@@ -269,6 +271,9 @@ vec4 sceneShade(vec2 fc) {
     // scene12 is scene11 with a dye in the film: green is held back where it leads, and yellow (red
     // and green with no blue) with it, so blue, cyan, red, pink and violet are what the film shows.
     bool dyed = uMat == 26;
+    // scene13 dyes the other way: where red and green lead together (yellow, orange) blue is added,
+    // so it turns pink or pale, and green alone is damped; v12's cut left orange and grey behind.
+    bool dyed2 = uMat == 27;
     float hold = (uMat >= 24 && uDark > 0.5) ? 0.45 : 1.0;
     vec2 sw = p.xy;
     if (palantir) {
@@ -303,6 +308,10 @@ vec4 sceneShade(vec2 fc) {
         f.g -= 0.7 * max(0.0, f.g - max(f.r, f.b));
         f.g *= mix(0.45, 1.0, clamp(f.b, 0.0, 1.0));
     }
+    if (dyed2) {
+        f.b += 0.8 * max(0.0, min(f.r, f.g) - f.b);
+        f.g -= 0.6 * max(0.0, f.g - max(f.r, f.b));
+    }
     float amp = 0.06 + 0.94 * pow(1.0 - c, 2.4);
     vec3 R = (palette ? mix(pal, vec3(1.0), 0.45) * amp * 1.6 : f * amp * (pastel ? 1.5 : 1.8)) * mix(1.0, hold, 0.6);
     vec3 r = reflect(d, p);
@@ -313,6 +322,10 @@ vec4 sceneShade(vec2 fc) {
     if (dyed) {
         fb.g -= 0.7 * max(0.0, fb.g - max(fb.r, fb.b));
         fb.g *= mix(0.45, 1.0, clamp(fb.b, 0.0, 1.0));
+    }
+    if (dyed2) {
+        fb.b += 0.8 * max(0.0, min(fb.r, fb.g) - fb.b);
+        fb.g -= 0.6 * max(0.0, fb.g - max(fb.r, fb.b));
     }
     vec3 back = envS(rb) * fb * amp * 1.2;
     vec3 behind = traceS(pb, d);
