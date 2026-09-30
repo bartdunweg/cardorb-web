@@ -46,7 +46,8 @@ export type OrbGlassMaterial =
     | "scene10"
     | "scene11"
     | "scene12"
-    | "scene13";
+    | "scene13"
+    | "scene14";
 
 /** A scene material draws the whole tile (face, shadow, ball) rather than a bare ball; the tile round it is then nothing but a hairline. */
 export const orbGlassIsScene = (material: OrbGlassMaterial): boolean => orbGlassFamily(material) === "scene";
@@ -78,6 +79,7 @@ export const ORB_GLASS_MATERIAL_INDEX: Record<OrbGlassMaterial, number> = {
     scene11: 25,
     scene12: 26,
     scene13: 27,
+    scene14: 28,
 };
 
 /** Which materials move on their own (a film that flows), so a frame loop knows to keep going. Glass only moves with the lights. */
@@ -273,7 +275,9 @@ vec4 sceneShade(vec2 fc) {
     bool dyed = uMat == 26;
     // scene13 dyes the other way: where red and green lead together (yellow, orange) blue is added,
     // so it turns pink or pale, and green alone is damped; v12's cut left orange and grey behind.
-    bool dyed2 = uMat == 27;
+    bool dyed2 = uMat >= 27;
+    // scene14 is scene13 with the colour turned back up after the dye, which had left it flat.
+    bool vivid = uMat == 28;
     float hold = (uMat >= 24 && uDark > 0.5) ? 0.45 : 1.0;
     vec2 sw = p.xy;
     if (palantir) {
@@ -311,6 +315,7 @@ vec4 sceneShade(vec2 fc) {
     if (dyed2) {
         f.b += 0.8 * max(0.0, min(f.r, f.g) - f.b);
         f.g -= 0.6 * max(0.0, f.g - max(f.r, f.b));
+        if (vivid) f = saturateS(f, 1.5);
     }
     float amp = 0.06 + 0.94 * pow(1.0 - c, 2.4);
     vec3 R = (palette ? mix(pal, vec3(1.0), 0.45) * amp * 1.6 : f * amp * (pastel ? 1.5 : 1.8)) * mix(1.0, hold, 0.6);
@@ -326,6 +331,7 @@ vec4 sceneShade(vec2 fc) {
     if (dyed2) {
         fb.b += 0.8 * max(0.0, min(fb.r, fb.g) - fb.b);
         fb.g -= 0.6 * max(0.0, fb.g - max(fb.r, fb.b));
+        if (vivid) fb = saturateS(fb, 1.5);
     }
     vec3 back = envS(rb) * fb * amp * 1.2;
     vec3 behind = traceS(pb, d);
