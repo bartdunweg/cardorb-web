@@ -23,9 +23,8 @@ import { type FilterGroup, type FilterValues, FiltersSheet } from "./filters-she
 import { FlagIcon } from "./flag-icon";
 import { FormError } from "./form-error";
 import { LinkButton } from "./link-button";
-import { Orb } from "./orb";
-import { OrbLogo } from "./orb-logo";
-import { OrbStill } from "./orb-still";
+import { OrbGlassTile } from "./orb-glass-tile";
+import { OrbMark } from "./orb-mark";
 import { RaritySymbol } from "./rarity-symbol";
 import { RowButton } from "./row-button";
 import { LIST_ROW, RowSearch } from "./row-search";
@@ -207,28 +206,28 @@ export const ourSections: SectionSpec[] = [
     {
         id: "orb",
         title: "Orb",
-        from: "components/app/orb",
+        from: "components/app/orb-mark",
         ours: true,
-        note: "The Card Orb orb: a sash of dotted bands wrapped round a faint sphere, rippling, in the text colour. Orb moves (a canvas); OrbStill is that drawing standing still, what the server sends and reduced motion keeps. OrbLogo is the same orb at rest, round and weighted to hold up small: the wordmark, the sidebar, the favicon and the app icon. Ported from thinking-orbs, MIT.",
+        note: "The Card Orb mark: a soap bubble, live, the page showing through it (OrbMark). A still of the same bubble sits under the canvas, so it is there before script and stays where WebGL or motion is missing. OrbGlassTile draws it as the app icon. Every version it went through is on /orb.",
         render: (
             <Panel>
-                <Group title="Moving and still" cols="wide">
-                    <Cell label="Orb size={160}">
-                        <Orb size={160} className="text-primary" />
+                <Group title="The mark" cols="wide">
+                    <Cell label="OrbMark size={160}">
+                        <OrbMark size={160} />
                     </Cell>
-                    <Cell label="OrbStill size={64}">
-                        <OrbStill size={64} className="text-primary" />
+                    <Cell label="OrbMark size={28}">
+                        <OrbMark size={28} />
+                    </Cell>
+                    <Cell label="OrbMark size={16}">
+                        <OrbMark size={16} />
                     </Cell>
                 </Group>
-                <Group title="Logo" hint="dots weighted for the size" cols="wide">
-                    <Cell label="OrbLogo size={96}">
-                        <OrbLogo size={96} className="text-primary" />
+                <Group title="The icon" cols="wide">
+                    <Cell label="OrbGlassTile light">
+                        <OrbGlassTile size={120} material="scene20" />
                     </Cell>
-                    <Cell label="OrbLogo size={28}">
-                        <OrbLogo size={28} className="text-primary" />
-                    </Cell>
-                    <Cell label="OrbLogo size={16}">
-                        <OrbLogo size={16} className="text-primary" />
+                    <Cell label="OrbGlassTile dark">
+                        <OrbGlassTile size={120} material="scene20" dark />
                     </Cell>
                 </Group>
             </Panel>

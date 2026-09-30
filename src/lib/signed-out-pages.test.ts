@@ -121,7 +121,6 @@ const ROUTES_WITHOUT_A_SESSION: Record<string, string> = {
     "api/forget-mine/route.ts": "forgets through forgetMineLater, which reads the session and does nothing without one",
     "api/revalidate/route.ts": "called by the API, behind a shared secret, and names the account it forgets",
     "auth/confirm/route.ts": "the door itself: it turns a mailed link into a session",
-    "logo/[file]/route.ts": "a public picture, the same for everybody",
 };
 
 describe("every route handler, for somebody with no account", () => {

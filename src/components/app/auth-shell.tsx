@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Heading as AriaHeading } from "react-aria-components";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
-import { Orb } from "./orb";
+import { OrbMark } from "./orb-mark";
 
 /**
  * The frame around every page you are not signed in on: sign in, sign up, forgot and reset.
@@ -64,7 +64,7 @@ export function AuthShell({
             // 20 px of air, then the form and its link, 16 px in on a phone and 24 px from sm.
             <div className="flex w-full flex-col gap-5 px-4 pt-5 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
                 <div className="flex flex-col items-center gap-4 text-center">
-                    <Orb size={32} className="text-primary" />
+                    <OrbMark size={32} />
                     <div className="flex flex-col gap-0.5">
                         <AriaHeading slot="title" className="text-md font-semibold text-primary">
                             {title}
@@ -84,7 +84,7 @@ export function AuthShell({
         <div className="flex flex-1 items-center justify-center px-4 py-12 md:px-8">
             <div className="flex w-full flex-col gap-8 sm:max-w-90">
                 <div className="flex flex-col items-center gap-6 text-center">
-                    <Orb size={160} className="text-primary" />
+                    <OrbMark size={160} />
                     <Link href="/" className="text-lg font-semibold text-primary transition hover:opacity-70">
                         Cardorb
                     </Link>

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { AccountMenu } from "@/components/app/account-menu";
 import { BinderModal } from "@/components/app/binder-dialog";
 import { useCommandSearch } from "@/components/app/command-search";
-import { OrbLogo } from "@/components/app/orb-logo";
+import { OrbMark } from "@/components/app/orb-mark";
 import { useReturnHrefs } from "@/components/app/sign-in-invite";
 import { NavButton } from "@/components/application/app-navigation/base-components/nav-button";
 import { useArriveOnce } from "@/hooks/use-arrive-once";
@@ -56,7 +56,7 @@ export function SidebarRail({
                         aria-label="Cardorb"
                         className="rounded-md outline-focus-ring transition hover:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2"
                     >
-                        <OrbLogo size={28} className="text-primary" />
+                        <OrbMark size={28} />
                     </Link>
                 </div>
 

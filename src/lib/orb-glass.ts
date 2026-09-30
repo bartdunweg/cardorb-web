@@ -232,6 +232,12 @@ vec3 envS(vec3 d) {
 }
 vec3 sunS() { return rotY(-uTilt.x * 0.7) * rotX(uTilt.y * 0.45) * normalize(vec3(-0.38, 0.46, 0.8)); }
 
+// The ball's shadow on the face at (x, y), 0 to 1, and the glow the film throws there. The tile's
+// shadow is broad and the face hides its reach; the mark, alone on a page, gets a contact shadow
+// close under the ball instead.
+float shadowS(float x, float y) { return sm(1.55, 0.45, length(vec2((x - 0.28) / 1.05, (y + 0.42)))); }
+float glowS(float x, float y) { return sm(1.0, 0.0, length(vec2(x / 1.1, (y + 1.02) / 0.32))); }
+
 // The tile's face at (x, y): white or dark, the ball's shadow, the glow the film throws.
 vec3 faceS(float x, float y) {
     bool dark = uDark > 0.5;
