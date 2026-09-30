@@ -10,8 +10,9 @@
  * read as a milky white ball with pastel on it.
  *
  * The studio is fixed: a softbox top left, a strip light on the right, a dim bounce behind, a
- * floor the colour of what the orb sits on. On a dark page a bubble is drawn the other way round:
- * no pale body, the page seen through the film, only the film's own colour and light over it.
+ * floor the colour of what the orb sits on. On a dark page the iridescent bubble is drawn the other
+ * way round: no pale body, the page seen through the film, only the film's own colour and light over
+ * it. The soap bubble stays one object on every page.
  * `tilt` turns the whole studio, so a pointer can
  * carry the lights with it. Everything here is data and text: the component (`OrbGlass`) owns
  * the canvas.
@@ -43,7 +44,7 @@ uniform float uFloorMix; // how much of the studio's lower half that colour repl
 uniform vec2 uTilt;      // where the lights are pulled to, -1..1 each way
 uniform float uTime;     // seconds, for the bubble's film
 uniform float uFill;
-uniform float uDark;     // 1 on a dark page: a bubble lets the page through instead of carrying a pale body
+uniform float uDark;     // 1 on a dark page: the iridescent bubble lets the page through instead of carrying a pale body
 
 const float PI = 3.14159265;
 
@@ -138,15 +139,11 @@ vec4 shade(vec2 fc) {
         float cos2 = clamp(dot(n2, -rd), 0.0, 1.0);
         vec3 R2 = film(cos2, thick + 1.0, 1.33, 1.2) * amp * 1.4;
         vec3 back = env(reflect(rd, n2)) * R2;
-        // The wall behind the bubble: the studio's own pale grey, leaning to the page it sits on.
-        vec3 wall = mix(vec3(0.72, 0.72, 0.75), uFloor, 0.45) * (0.88 + 0.12 * kdif);
+        // The wall behind the bubble: the studio's own pale wall, the same on every page, so the
+        // bubble is one object wherever it sits (the owner's call), not a page seen through a film.
+        vec3 wall = vec3(0.84, 0.84, 0.87) * (0.88 + 0.12 * kdif);
         vec3 T = (1.0 - R1) * (1.0 - R2);
         float sun = pow(max(dot(R, sunDir()), 0.0), 700.0) * 22.0;
-        if (uDark > 0.5) {
-            // The page is the wall: only the film's reflections, a breath of haze, and the sun sit over it.
-            vec3 col = pow(soft(front * 0.8 + back * 0.6 + vec3(0.012) + vec3(sun)), vec3(1.0 / 2.2));
-            return over(col, 1.0 - dot(T, vec3(0.333)) * 0.96);
-        }
         vec3 col = front + back + wall * T + vec3(sun);
         col = pow(soft(col), vec3(1.0 / 2.2));
         return vec4(col, 1.0);

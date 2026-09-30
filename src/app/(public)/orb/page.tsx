@@ -109,7 +109,7 @@ export default function OrbStudyPage() {
                         ))}
                     </div>
                     <div className="dark-mode flex flex-wrap gap-6 rounded-2xl bg-primary p-6 ring-1 ring-secondary ring-inset">
-                        <OrbGlassTile size={288} material="soap" still="/orb-study/bubble-dark.png" dark label="The study's bubble, as the dark app icon" />
+                        <OrbGlassTile size={288} material="soap" still="/orb-study/bubble.png" dark label="The study's bubble, as the dark app icon" />
                         {STUDIES.map((study) => (
                             <OrbGlassTile key={study.title} size={288} material={study.material} dark label={`${study.title}, as the dark app icon`} />
                         ))}
@@ -122,8 +122,7 @@ export default function OrbStudyPage() {
 
 // The study's render as files, laid out as the live rows are, so the two can be judged side by side.
 function StillStage({ dark = false }: { dark?: boolean }) {
-    // The dark page's render shows the dark page through the film, as the live bubbles do there.
-    const src = dark ? "/orb-study/bubble-dark.png" : "/orb-study/bubble.png";
+    const src = "/orb-study/bubble.png";
     const orb = (size: number) => <Image src={src} alt="" width={size} height={size} className="shrink-0" unoptimized />;
     return (
         <div className={cx("flex flex-wrap items-center gap-6 rounded-2xl bg-primary p-6 text-primary ring-1 ring-secondary ring-inset", dark && "dark-mode")}>
