@@ -24,8 +24,8 @@ export const HeroGeometricShapes04 = () => {
             <main className="relative flex flex-1 flex-col pt-16 pb-8 md:pt-24 md:pb-12">
                 <div className="mx-auto flex w-full max-w-container flex-col items-center px-4 md:px-8">
                     <div className="flex w-full max-w-3xl flex-col items-center text-center">
-                        <OrbMark size={160} className="md:hidden" />
-                        <OrbMark size={220} className="hidden md:block" />
+                        <OrbMark size={240} className="md:hidden" />
+                        <OrbMark size={340} className="hidden md:block" />
                         <h1 className="mt-6 text-display-md font-medium text-balance text-primary md:text-display-lg lg:text-display-xl">
                             Organize your trading card collection
                         </h1>

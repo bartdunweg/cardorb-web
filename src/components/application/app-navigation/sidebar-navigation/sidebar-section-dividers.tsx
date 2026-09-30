@@ -79,7 +79,7 @@ export const SidebarNavigationSectionDividers = ({
                         <div className="flex items-center justify-between gap-2">
                             {/* The rail's mark before the wordmark, so folding the sidebar keeps the mark in its place. */}
                             <Link href="/" className="flex items-center gap-3 text-lg font-semibold text-primary transition hover:opacity-70">
-                                <OrbMark size={28} />
+                                <OrbMark size={40} />
                                 Cardorb
                             </Link>
                             {headerAction}

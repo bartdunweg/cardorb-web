@@ -56,7 +56,7 @@ export function SidebarRail({
                         aria-label="Cardorb"
                         className="rounded-md outline-focus-ring transition hover:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2"
                     >
-                        <OrbMark size={28} />
+                        <OrbMark size={40} />
                     </Link>
                 </div>
 
