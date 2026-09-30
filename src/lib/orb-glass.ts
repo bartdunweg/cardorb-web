@@ -365,7 +365,10 @@ vec4 sceneShade(vec2 fc) {
     float amp = nightExact ? 0.04 + 0.96 * pow(1.0 - c, 3.0) : 0.06 + 0.94 * pow(1.0 - c, 2.4);
     vec3 R = (palette ? mix(pal, vec3(1.0), 0.45) * amp * 1.6 : f * amp * (nightStudy ? 1.6 : pastel ? 1.5 : 1.8)) * mix(1.0, hold, 0.6);
     vec3 r = reflect(d, p);
-    vec3 front = envS(r) * R;
+    // A reflection off the rim points back into the tile, and the study's tracer followed it there
+    // (dark on the dark face); the port had sent every reflection to the studio, which lit the rim
+    // up. Fixed for every scene version at once: it was a port fault, not a version's look.
+    vec3 front = traceS(p, r) * R;
     vec3 pb = vec3(p.x, p.y, -p.z);
     vec3 rb = reflect(d, -pb);
     vec3 fb = palette ? mix(pal, vec3(1.0), 0.6) : pastel ? saturateS(filmS(th + 60.0, c, 1.33), 0.7) : filmS(th + (thin ? 20.0 : 60.0), c, 1.33);
@@ -379,7 +382,7 @@ vec4 sceneShade(vec2 fc) {
         if (vivid) fb = saturateS(fb, 1.5);
     }
     if (turned) fb = noGreen(fb);
-    vec3 back = envS(rb) * fb * amp * 1.2;
+    vec3 back = traceS(pb, rb) * fb * amp * 1.2;
     vec3 behind = traceS(pb, d);
     vec3 T = (1.0 - R) * (1.0 - fb * amp * 1.2);
     float sun = pow(max(0.0, dot(r, sunS())), 700.0) * 22.0;
