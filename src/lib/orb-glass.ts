@@ -47,7 +47,8 @@ export type OrbGlassMaterial =
     | "scene11"
     | "scene12"
     | "scene13"
-    | "scene14";
+    | "scene14"
+    | "scene15";
 
 /** A scene material draws the whole tile (face, shadow, ball) rather than a bare ball; the tile round it is then nothing but a hairline. */
 export const orbGlassIsScene = (material: OrbGlassMaterial): boolean => orbGlassFamily(material) === "scene";
@@ -80,6 +81,7 @@ export const ORB_GLASS_MATERIAL_INDEX: Record<OrbGlassMaterial, number> = {
     scene12: 26,
     scene13: 27,
     scene14: 28,
+    scene15: 29,
 };
 
 /** Which materials move on their own (a film that flows), so a frame loop knows to keep going. Glass only moves with the lights. */
@@ -242,6 +244,29 @@ vec3 traceS(vec3 o, vec3 d) {
     }
     return envS(d);
 }
+// Hue, saturation, value and back, for turning one band of hues into another and nothing else.
+vec3 rgb2hsv(vec3 c) {
+    vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+    vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+    vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+    float d = q.x - min(q.w, q.y);
+    float e = 1.0e-10;
+    return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+}
+vec3 hsv2rgb(vec3 c) {
+    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+// scene15's turn: every hue from yellow through green (30 to 170 degrees) moves on by 125 degrees, to
+// cyan through blue; saturation and value stay, so nothing goes grey or orange.
+vec3 noGreen(vec3 c) {
+    vec3 h = rgb2hsv(c);
+    float inBand = sm(0.06, 0.1, h.x) * (1.0 - sm(0.45, 0.49, h.x));
+    h.x = fract(h.x + 0.35 * inBand);
+    return hsv2rgb(h);
+}
+
 // The study's curve: straight to 0.8, then a soft shoulder.
 vec3 softS(vec3 x) { return mix(clamp(x, 0.0, 1.0), 0.8 + 0.2 * (1.0 - exp(-(x - 0.8) / 0.25)), step(0.8, x)); }
 
@@ -275,7 +300,8 @@ vec4 sceneShade(vec2 fc) {
     bool dyed = uMat == 26;
     // scene13 dyes the other way: where red and green lead together (yellow, orange) blue is added,
     // so it turns pink or pale, and green alone is damped; v12's cut left orange and grey behind.
-    bool dyed2 = uMat >= 27;
+    bool dyed2 = uMat == 27 || uMat == 28;
+    bool turned = uMat == 29;
     // scene14 is scene13 with the colour turned back up after the dye, which had left it flat.
     bool vivid = uMat == 28;
     float hold = (uMat >= 24 && uDark > 0.5) ? 0.45 : 1.0;
@@ -317,6 +343,7 @@ vec4 sceneShade(vec2 fc) {
         f.g -= 0.6 * max(0.0, f.g - max(f.r, f.b));
         if (vivid) f = saturateS(f, 1.5);
     }
+    if (turned) f = noGreen(f);
     float amp = 0.06 + 0.94 * pow(1.0 - c, 2.4);
     vec3 R = (palette ? mix(pal, vec3(1.0), 0.45) * amp * 1.6 : f * amp * (pastel ? 1.5 : 1.8)) * mix(1.0, hold, 0.6);
     vec3 r = reflect(d, p);
@@ -333,6 +360,7 @@ vec4 sceneShade(vec2 fc) {
         fb.g -= 0.6 * max(0.0, fb.g - max(fb.r, fb.b));
         if (vivid) fb = saturateS(fb, 1.5);
     }
+    if (turned) fb = noGreen(fb);
     vec3 back = envS(rb) * fb * amp * 1.2;
     vec3 behind = traceS(pb, d);
     vec3 T = (1.0 - R) * (1.0 - fb * amp * 1.2);
