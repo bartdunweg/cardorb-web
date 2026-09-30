@@ -22,7 +22,7 @@ const STUDIES: { material: OrbGlassMaterial; title: string; note: string }[] = [
     {
         material: "bubble",
         title: "Iridescent bubble",
-        note: "A glass bubble after the reference: blue at the top, magenta low left, a warm light low in it, a double rim, and the film's colour laid over it in soft washes that flow.",
+        note: "A glass bubble after the reference: blue at the top, magenta low left, a warm light low in it, a double rim, and the film's color laid over it in soft washes that flow.",
     },
     {
         material: "black",
@@ -32,7 +32,7 @@ const STUDIES: { material: OrbGlassMaterial; title: string; note: string }[] = [
     {
         material: "violet",
         title: "Violet glass",
-        note: "The original mark as a solid. Light enters, is coloured on its way through, and leaves at the bottom rim.",
+        note: "The original mark as a solid. Light enters, is colored on its way through, and leaves at the bottom rim.",
     },
 ];
 
@@ -101,20 +101,15 @@ export default function OrbStudyPage() {
                         <p className="max-w-2xl text-sm text-tertiary">Each tile at 288 px, the size the App Store draws it.</p>
                     </div>
                     <div className="flex flex-wrap gap-6">
-                        <section className="flex flex-col gap-3">
-                            <div className="flex flex-col gap-1">
-                                <h2 className="text-md font-semibold text-primary">Soap bubble, the study&rsquo;s still</h2>
-                                <p className="max-w-2xl text-sm text-tertiary">
-                                    The ray-traced picture from the study, pixel for pixel: the same film and wall, drawn once on the CPU and kept as a file.
-                                    Not live.
-                                </p>
-                            </div>
-                            <div className="grid gap-3 xl:grid-cols-2">
-                                <StillStage />
-                                <StillStage dark />
-                            </div>
-                        </section>
-
+                        <Image
+                            src="/orb-study/bubble-tile.png"
+                            alt="The study&rsquo;s bubble, as the app icon"
+                            width={288}
+                            height={288}
+                            className="shrink-0"
+                            style={{ borderRadius: 64 }}
+                            unoptimized
+                        />
                         {STUDIES.map((study) => (
                             <OrbGlassTile key={study.title} size={288} material={study.material} label={`${study.title}, as the app icon`} />
                         ))}
@@ -152,7 +147,7 @@ function StillStage({ dark = false }: { dark?: boolean }) {
     );
 }
 
-// One material on one page colour: the icon, the bare orb at 64, 32 and 16, and the lockup. The
+// One material on one page color: the icon, the bare orb at 64, 32 and 16, and the lockup. The
 // dark stage carries the theme's own dark-mode class, so it is the app's dark page, not a guess at it.
 function Stage({ material, dark = false }: { material: OrbGlassMaterial; dark?: boolean }) {
     const surface = dark ? "dark" : "light";

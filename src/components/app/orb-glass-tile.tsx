@@ -18,8 +18,9 @@ const GLOW: Record<OrbGlassMaterial, string> = {
 };
 
 // The app icon: a white tile, the orb on it, the light the glass throws on the tile beneath it and
-// its shadow. White on a dark page too, as an icon is, so its colours are written out here rather
-// than taken from the theme. The glass is live (OrbGlass); the tile round it is CSS.
+// its shadow. White on a dark page too, as an icon is, so its face is the theme's white and the glow
+// and shadow are written out here rather than taken from the theme (R-STYLE-001, deliberately: they are
+// the colours the glass throws, not the app's). The glass is live (OrbGlass); the tile round it is CSS.
 export function OrbGlassTile({ size, material, className, label }: OrbGlassTileProps) {
     const orb = size * 0.62;
     const top = (size - orb) / 2;
@@ -28,7 +29,7 @@ export function OrbGlassTile({ size, material, className, label }: OrbGlassTileP
     return (
         <div
             className={cx("relative shrink-0 overflow-hidden", className)}
-            style={{ width: size, height: size, borderRadius: px(0.2237), background: "#fff", boxShadow: "inset 0 0 0 1px rgb(0 0 0 / 0.08)" }}
+            style={{ width: size, height: size, borderRadius: px(0.2237), background: "var(--color-white)", boxShadow: "inset 0 0 0 1px rgb(0 0 0 / 0.08)" }}
             {...(label ? { role: "img", "aria-label": label } : { "aria-hidden": true })}
         >
             <div

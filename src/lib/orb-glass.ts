@@ -1,7 +1,7 @@
 /**
  * The glass orb: a sphere of real material, lit in a small studio, drawn by the GPU.
  *
- * Three materials, one shader. Black glass is Luma's: a near-black body under a clear coat, an
+ * Four materials, one shader. Black glass is Luma's: a near-black body under a clear coat, an
  * oil-slick film where the surface turns away. Violet glass is the original Card Orb mark as a
  * solid: light enters, is coloured on its way through, and leaves. The bubble is a soap film,
  * nothing inside it: the page shows through, and what you see is the film's own colour, which
@@ -18,6 +18,9 @@
 export type OrbGlassMaterial = "black" | "violet" | "bubble" | "soap";
 
 export const ORB_GLASS_MATERIAL_INDEX: Record<OrbGlassMaterial, number> = { black: 0, violet: 1, bubble: 2, soap: 3 };
+
+/** Which materials move on their own (a film that flows), so a frame loop knows to keep going. Glass only moves with the lights. */
+export const ORB_GLASS_FLOWS: Record<OrbGlassMaterial, boolean> = { black: false, violet: false, bubble: true, soap: true };
 
 /** A number a shader can take: the fraction of the canvas the sphere fills, leaving room for antialiasing. */
 export const ORB_GLASS_FILL = 0.96;
@@ -147,7 +150,6 @@ vec4 shade(vec2 fc) {
         float cos2 = clamp(dot(n2, -rd), 0.0, 1.0);
         float F2 = fresnel(0.02, 1.0 - cos2) * (1.0 - F1);
         vec3 back = env(reflect(rd, n2)) * film(cos2, thick + 0.6, 1.33, 1.6) * F2;
-        // A breath of haze inside, so the bubble has a body on white and the film's colour a place to sit.
         // A bright milky body, lit from the top left, with the film's colour laid over it in soft washes.
         float haze = 0.62 + 0.18 * kdif;
         vec3 wash = film(cosT, thick, 1.33, 1.25);

@@ -4,6 +4,7 @@ import { type CSSProperties, useEffect, useRef } from "react";
 import {
     ORB_GLASS_FILL,
     ORB_GLASS_FLOOR,
+    ORB_GLASS_FLOWS,
     ORB_GLASS_FRAGMENT,
     ORB_GLASS_MATERIAL_INDEX,
     ORB_GLASS_VERTEX,
@@ -114,7 +115,6 @@ class Studio {
     /** Draw again, now: for an orb that just came into view or changed size. */
     schedule() {
         if (this.frame || document.hidden) return;
-        this.last = null;
         this.frame = requestAnimationFrame(this.draw);
     }
 
@@ -133,7 +133,8 @@ class Studio {
 
     private readonly draw = (now: number) => {
         this.frame = 0;
-        const step = this.last === null ? 0 : (now - this.last) / 1000;
+        // A pause of any length counts as one short frame, so the film never jumps and the lights never snap.
+        const step = this.last === null ? 1 / 60 : Math.min((now - this.last) / 1000, 1 / 30);
         this.last = now;
         if (this.moving) this.clock += step;
         const dark = document.documentElement.classList.contains("dark-mode");
@@ -146,14 +147,14 @@ class Studio {
                 it.goal = orbGlassTilt(this.pointer[0], this.pointer[1], rect.left + rect.width / 2, rect.top + rect.height / 2, TILT_REACH);
             }
             // The lights ease over, never snap.
-            const ease = step === 0 ? 1 : 1 - Math.exp(-step * 6);
+            const ease = 1 - Math.exp(-step * 6);
             it.tilt = [it.tilt[0] + (it.goal[0] - it.tilt[0]) * ease, it.tilt[1] + (it.goal[1] - it.tilt[1]) * ease];
             if (Math.abs(it.goal[0] - it.tilt[0]) + Math.abs(it.goal[1] - it.tilt[1]) > 0.002) settling = true;
             this.paint(it, (it.surface ?? (dark ? "dark" : "light")) === "dark");
         }
 
-        // The bubble's film flows on its own; glass only moves when the lights do.
-        const flowing = this.moving && [...this.instances].some((it) => it.inView && it.material === "bubble");
+        // A film flows on its own; glass only moves when the lights do.
+        const flowing = this.moving && [...this.instances].some((it) => it.inView && ORB_GLASS_FLOWS[it.material]);
         if ((flowing || settling) && !document.hidden) this.frame = requestAnimationFrame(this.draw);
     };
 

@@ -8,7 +8,7 @@ import { updateSession } from "@/lib/supabase/middleware";
  * claims `updateSession` verifies are thrown away — while a crawler pulling the sitemap still paid
  * for a signature check. They keep the frame rule every page gets; only the session lookup goes.
  */
-const SESSIONLESS_PATHS = new Set(["/robots.txt", "/sitemap.xml", "/opengraph-image", "/icon", "/apple-icon", "/privacy", "/terms", "/docs/api"]);
+const SESSIONLESS_PATHS = new Set(["/robots.txt", "/sitemap.xml", "/opengraph-image", "/icon", "/apple-icon", "/privacy", "/terms", "/docs/api", "/orb"]);
 
 /** Whether this path has any use for the session the proxy would refresh. */
 export function needsSession(pathname: string): boolean {
