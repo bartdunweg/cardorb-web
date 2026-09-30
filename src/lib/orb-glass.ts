@@ -10,7 +10,9 @@
  * read as a milky white ball with pastel on it.
  *
  * The studio is fixed: a softbox top left, a strip light on the right, a dim bounce behind, a
- * floor the colour of what the orb sits on. `tilt` turns the whole studio, so a pointer can
+ * floor the colour of what the orb sits on. On a dark page a bubble is drawn the other way round:
+ * no pale body, the page seen through the film, only the film's own colour and light over it.
+ * `tilt` turns the whole studio, so a pointer can
  * carry the lights with it. Everything here is data and text: the component (`OrbGlass`) owns
  * the canvas.
  */
@@ -41,6 +43,7 @@ uniform float uFloorMix; // how much of the studio's lower half that colour repl
 uniform vec2 uTilt;      // where the lights are pulled to, -1..1 each way
 uniform float uTime;     // seconds, for the bubble's film
 uniform float uFill;
+uniform float uDark;     // 1 on a dark page: a bubble lets the page through instead of carrying a pale body
 
 const float PI = 3.14159265;
 
@@ -93,6 +96,13 @@ vec3 film(float cosT, float thick, float n, float sat) {
 
 float fresnel(float f0, float x) { return f0 + (1.0 - f0) * pow(x, 5.0); }
 
+// Light laid over the page: alpha says how much page is hidden, and is raised to cover the light
+// itself, since a canvas clamps colour to alpha on the copy. Colour comes back un-premultiplied.
+vec4 over(vec3 col, float a) {
+    a = clamp(max(a, max(col.r, max(col.g, col.b))), 0.0, 1.0);
+    return vec4(col / max(a, 1e-4), a);
+}
+
 vec4 shade(vec2 fc) {
     vec2 p = (fc - 0.5 * uRes) / (0.5 * uRes.y);
     vec3 ro = vec3(0.0, 0.42, 6.0);
@@ -132,6 +142,11 @@ vec4 shade(vec2 fc) {
         vec3 wall = mix(vec3(0.72, 0.72, 0.75), uFloor, 0.45) * (0.88 + 0.12 * kdif);
         vec3 T = (1.0 - R1) * (1.0 - R2);
         float sun = pow(max(dot(R, sunDir()), 0.0), 700.0) * 22.0;
+        if (uDark > 0.5) {
+            // The page is the wall: only the film's reflections, a breath of haze, and the sun sit over it.
+            vec3 col = pow(soft(front * 1.3 + back + vec3(0.03) + vec3(sun)), vec3(1.0 / 2.2));
+            return over(col, 1.0 - dot(T, vec3(0.333)) * 0.92);
+        }
         vec3 col = front + back + wall * T + vec3(sun);
         col = pow(soft(col), vec3(1.0 / 2.2));
         return vec4(col, 1.0);
@@ -151,14 +166,14 @@ vec4 shade(vec2 fc) {
         float F2 = fresnel(0.02, 1.0 - cos2) * (1.0 - F1);
         vec3 back = env(reflect(rd, n2)) * film(cos2, thick + 0.6, 1.33, 1.6) * F2;
         // A bright milky body, lit from the top left, with the film's colour laid over it in soft washes.
-        float haze = 0.62 + 0.18 * kdif;
+        float haze = uDark > 0.5 ? 0.1 + 0.06 * kdif : 0.62 + 0.18 * kdif;
         vec3 wash = film(cosT, thick, 1.33, 1.25);
         // The reference leans blue and pink: the film's green is held back, its blue and red let through.
         wash = wash * vec3(1.1, 0.7, 1.3) + vec3(0.02, 0.0, 0.12);
         // The body itself is pale blue at the top and pink low left, as the reference is lit.
         vec3 body = mix(vec3(0.5, 0.76, 1.0), vec3(0.92, 0.42, 0.9), smoothstep(0.55, -0.55, n.y + n.x * 0.45));
         // A pale centre, so the colour sits at the sides and the ball reads as lit from within.
-        body = mix(body, vec3(0.92, 0.95, 1.0), 0.55 * smoothstep(0.75, 0.2, length(n.xy - vec2(0.15, 0.2))));
+        body = mix(body, vec3(0.92, 0.95, 1.0), (uDark > 0.5 ? 0.0 : 0.55) * smoothstep(0.75, 0.2, length(n.xy - vec2(0.15, 0.2))));
         vec3 milk = mix(body, wash, 0.4) * haze;
         vec3 face = wash * (0.12 + 0.4 * rl) * (1.0 - x) * 0.3;
         // Light that came in at the top leaves low in the ball: a warm hot spot, and a glow along the bottom rim.
@@ -173,6 +188,7 @@ vec4 shade(vec2 fc) {
         vec3 col = front * 1.6 + back * 1.2 + milk + face + glowc + vec3(pool) * wash + vec3(rim) * 0.7 + vec3(inner) * 0.18;
         float a = clamp(F1 + F2 + haze + spot * 0.5 + pool * 0.6 + rim * 0.5 + 0.15 * (1.0 - x), 0.0, 1.0);
         col = pow(aces(col), vec3(1.0 / 2.2));
+        if (uDark > 0.5) return over(col, a);
         return vec4(col, a);
     }
 

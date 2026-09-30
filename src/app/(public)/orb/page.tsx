@@ -122,7 +122,9 @@ export default function OrbStudyPage() {
 
 // The study's render as files, laid out as the live rows are, so the two can be judged side by side.
 function StillStage({ dark = false }: { dark?: boolean }) {
-    const orb = (size: number) => <Image src="/orb-study/bubble.png" alt="" width={size} height={size} className="shrink-0" unoptimized />;
+    // The dark page's render shows the dark page through the film, as the live bubbles do there.
+    const src = dark ? "/orb-study/bubble-dark.png" : "/orb-study/bubble.png";
+    const orb = (size: number) => <Image src={src} alt="" width={size} height={size} className="shrink-0" unoptimized />;
     return (
         <div className={cx("flex flex-wrap items-center gap-6 rounded-2xl bg-primary p-6 text-primary ring-1 ring-secondary ring-inset", dark && "dark-mode")}>
             <Image
