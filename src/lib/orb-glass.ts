@@ -22,8 +22,11 @@
  * a change is the next number beside it, so every step stays there to be judged against the
  * others (the owner's rule). The number is the order it was made in, oldest first.
  */
-export type OrbGlassFamily = "bubble" | "soap";
-export type OrbGlassMaterial = "bubble1" | "bubble2" | "bubble3" | "bubble4" | "bubble5" | "soap1" | "soap2" | "soap3" | "soap4" | "soap5";
+export type OrbGlassFamily = "bubble" | "soap" | "scene";
+export type OrbGlassMaterial = "bubble1" | "bubble2" | "bubble3" | "bubble4" | "bubble5" | "soap1" | "soap2" | "soap3" | "soap4" | "soap5" | "scene1";
+
+/** A scene material draws the whole tile (face, shadow, ball) rather than a bare ball; the tile round it is then nothing but a hairline. */
+export const orbGlassIsScene = (material: OrbGlassMaterial): boolean => orbGlassFamily(material) === "scene";
 
 export const orbGlassFamily = (material: OrbGlassMaterial): OrbGlassFamily => material.replace(/\d+$/, "") as OrbGlassFamily;
 
@@ -39,10 +42,11 @@ export const ORB_GLASS_MATERIAL_INDEX: Record<OrbGlassMaterial, number> = {
     bubble4: 9,
     soap5: 12,
     bubble5: 13,
+    scene1: 15,
 };
 
 /** Which materials move on their own (a film that flows), so a frame loop knows to keep going. Glass only moves with the lights. */
-export const ORB_GLASS_FLOWS: Record<OrbGlassFamily, boolean> = { bubble: true, soap: true };
+export const ORB_GLASS_FLOWS: Record<OrbGlassFamily, boolean> = { bubble: true, soap: true, scene: true };
 
 /** A number a shader can take: the fraction of the canvas the sphere fills, leaving room for antialiasing. */
 export const ORB_GLASS_FILL = 0.96;
@@ -63,7 +67,7 @@ uniform float uFloorMix; // how much of the studio's lower half that colour repl
 uniform vec2 uTilt;      // where the lights are pulled to, -1..1 each way
 uniform float uTime;     // seconds, for the bubble's film
 uniform float uFill;
-uniform float uDark;     // 1 on a dark page: the iridescent bubble lets the page through instead of carrying a pale body
+uniform float uDark;     // 1 on a dark page: the iridescent bubble lets the page through instead of carrying a pale body; a scene's dark face
 
 const float PI = 3.14159265;
 
@@ -132,6 +136,114 @@ vec4 darkBubble(vec3 refl, vec3 back, vec3 wash, vec3 n, float x, float kdif, fl
     vec3 col = refl * F1 * (1.4 + 0.8 * level) + back * (0.8 + 0.6 * level) + haze + vec3(0.62, 0.72, 0.95) * rim * 0.55 + wash * rim * 0.6 + vec3(sun);
     float a = clamp(0.1 + 0.12 * level + F1 * 1.5 + rim * 0.5 + 0.1 * kdif * level, 0.0, 1.0);
     return over(pow(soft(col), vec3(1.0 / 2.2)), a);
+}
+
+
+// ---------------------------------------------------------------------------------------------
+// The scene: the study's ray tracer, ported. The whole tile is drawn here, not only the ball:
+// an orthographic camera looks at a bubble in front of the tile's face; what shows through the
+// film is that face, with the ball's shadow on it. Lights and film as the study had them (v5 of
+// the still), with the film flowing in time and the lights following the pointer.
+// ---------------------------------------------------------------------------------------------
+uniform float uScene;    // 1 draws the tile scene instead of the bare ball
+
+const float SCENE_SPAN = 1.62;   // half-width of the view in the ball's radii: the ball is 62 percent of the tile
+const float SCENE_BD = 1.4;      // the face sits this far behind the ball's centre
+
+// smoothstep that allows a > b, as the study's did
+float sm(float a, float b, float x) { float t = clamp((x - a) / (b - a), 0.0, 1.0); return t * t * (3.0 - 2.0 * t); }
+
+// The study's film: no phase flip, thickness in nm.
+vec3 filmS(float d, float c, float n) {
+    float s = sqrt(1.0 - c * c) / n;
+    float ct = sqrt(1.0 - s * s);
+    float opd = 2.0 * n * d * ct;
+    return 0.5 + 0.5 * cos(2.0 * PI * opd / vec3(650.0, 545.0, 460.0));
+}
+vec3 saturateS(vec3 c, float s) { float g = (c.r + c.g + c.b) / 3.0; return clamp(g + (c - g) * s, 0.0, 4.0); }
+
+mat3 frameS(vec3 dir) { vec3 u = normalize(cross(dir, vec3(0.0, 1.0, 0.0))); return mat3(dir, u, cross(u, dir)); }
+float boxS(vec3 d, mat3 F, float hw, float hh, float soft) {
+    float f = dot(d, F[0]);
+    if (f <= 0.0) return 0.0;
+    float u = dot(d, F[1]) / f, v = dot(d, F[2]) / f;
+    return sm(hw + soft, hw - soft, abs(u)) * sm(hh + soft, hh - soft, abs(v));
+}
+// The study's studio, turned by the tilt.
+vec3 envS(vec3 d) {
+    d = rotX(-uTilt.y * 0.45) * rotY(uTilt.x * 0.7) * d;
+    float y = d.y;
+    float b = y > 0.0 ? mix(0.3, 0.72, sm(0.0, 1.0, y)) : mix(0.3, 0.025, sm(0.0, 0.5, -y));
+    vec3 c = vec3(b * 0.93, b * 0.9, b);
+    c *= 1.0 - 0.94 * sm(0.1, 0.8, d.z);
+    float k = boxS(d, frameS(normalize(vec3(-0.5, 0.55, 0.67))), 0.42, 0.3, 0.12) * 6.0;
+    float s = boxS(d, frameS(normalize(vec3(0.78, 0.08, 0.62))), 0.05, 0.75, 0.03) * 3.2;
+    float f = boxS(d, frameS(normalize(vec3(-0.6, -0.5, 0.62))), 0.35, 0.2, 0.2) * 0.5;
+    return vec3(c.r + k + s + f * 1.1, c.g + k + s + f * 0.85, c.b + k * 1.02 + s * 1.05 + f * 0.7);
+}
+vec3 sunS() { return rotY(-uTilt.x * 0.7) * rotX(uTilt.y * 0.45) * normalize(vec3(-0.38, 0.46, 0.8)); }
+
+// The tile's face at (x, y): white or dark, the ball's shadow, the glow the film throws.
+vec3 faceS(float x, float y) {
+    bool dark = uDark > 0.5;
+    float c = dark ? mix(0.016, 0.009, sm(-2.0, 2.0, -y)) : 1.0;
+    vec3 col = dark ? vec3(c * 0.985, c * 0.985, c) : vec3(1.0);
+    float sd = length(vec2((x - 0.28) / 1.05, (y + 0.42)));
+    float sh = sm(1.55, 0.45, sd);
+    col *= 1.0 - (dark ? 0.1 : 0.32) * sh;
+    float gd = length(vec2(x / 1.1, (y + 1.02) / 0.32));
+    float g = sm(1.0, 0.0, gd);
+    col = col * vec3(1.0, 1.0 - 0.1 * g, 1.0) + vec3(0.25, 0.35, 0.6) * g * (dark ? 0.0 : 0.9);
+    return col;
+}
+// What a ray from o along d sees behind the ball: the face, or the studio past the tile's edge.
+vec3 traceS(vec3 o, vec3 d) {
+    if (d.z < -1e-4) {
+        float t = (-SCENE_BD - o.z) / d.z;
+        float x = o.x + d.x * t, y = o.y + d.y * t;
+        if (abs(x) < SCENE_SPAN && abs(y) < SCENE_SPAN) return faceS(x, y);
+    }
+    return envS(d);
+}
+// The study's curve: straight to 0.8, then a soft shoulder.
+vec3 softS(vec3 x) { return mix(clamp(x, 0.0, 1.0), 0.8 + 0.2 * (1.0 - exp(-(x - 0.8) / 0.25)), step(0.8, x)); }
+
+vec4 sceneShade(vec2 fc) {
+    vec2 uv = (fc / uRes) * 2.0 - 1.0;
+    float x = uv.x * SCENE_SPAN, y = uv.y * SCENE_SPAN;
+    // the tile's rounded corners
+    float rad = 0.225 * 2.0 * SCENE_SPAN;
+    vec2 q = max(abs(vec2(x, y)) - (SCENE_SPAN - rad), 0.0);
+    if (length(q) > rad) return vec4(0.0);
+    bool dark = uDark > 0.5;
+    float rr = x * x + y * y;
+    if (rr >= 1.0) {
+        vec3 col = faceS(x, y);
+        // a white face is #fff: it skips the curve; only the ball goes through it
+        return vec4(pow(dark ? softS(col) : clamp(col, 0.0, 1.0), vec3(1.0 / 2.2)), 1.0);
+    }
+    vec3 p = vec3(x, y, sqrt(1.0 - rr));
+    vec3 d = vec3(0.0, 0.0, -1.0);
+    float c = p.z;
+    float flow = p.y * 1.6 + uTime * 0.3 + 1.1 * sin(p.x * 1.3 + 0.5 + uTime * 0.17) + 0.5 * sin((p.x + p.y) * 2.1 - uTime * 0.23);
+    float th = 420.0 + 220.0 * sin(flow) + 160.0 * (1.0 - c);
+    vec3 f = saturateS(filmS(th, c, 1.33), 1.7);
+    float amp = 0.06 + 0.94 * pow(1.0 - c, 2.4);
+    vec3 R = f * amp * 1.8;
+    vec3 r = reflect(d, p);
+    vec3 front = envS(r) * R;
+    vec3 pb = vec3(p.x, p.y, -p.z);
+    vec3 rb = reflect(d, -pb);
+    vec3 fb = filmS(th + 60.0, c, 1.33);
+    vec3 back = envS(rb) * fb * amp * 1.2;
+    vec3 behind = traceS(pb, d);
+    vec3 T = (1.0 - R) * (1.0 - fb * amp * 1.2);
+    float sun = pow(max(0.0, dot(r, sunS())), 700.0) * 22.0;
+    vec3 washTint = 0.6 + 0.5 * f;
+    vec3 wash = vec3(0.75, 0.82, 1.0) * washTint * ((dark ? 0.06 : 0.16) * c);
+    vec3 haze = (dark ? vec3(0.4, 0.5, 0.72) * (0.045 * (0.6 + 0.4 * sm(-0.6, 0.8, p.y)) + 0.02 * c) : vec3(0.0)) + wash;
+    vec3 col = front + back + behind * T + haze + vec3(sun);
+    return vec4(pow(softS(col), vec3(1.0 / 2.2)), 1.0);
 }
 
 vec4 shade(vec2 fc) {
@@ -284,7 +396,7 @@ void main() {
     vec4 acc = vec4(0.0);
     for (int j = 0; j < 2; j++) for (int i = 0; i < 2; i++) {
         vec2 off = vec2(float(i) + 0.5, float(j) + 0.5) * 0.5;
-        acc += shade(gl_FragCoord.xy - 0.5 + off);
+        acc += uScene > 0.5 ? sceneShade(gl_FragCoord.xy - 0.5 + off) : shade(gl_FragCoord.xy - 0.5 + off);
     }
     acc *= 0.25;
     O = vec4(acc.rgb * acc.a, acc.a);

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { type OrbGlassFamily, type OrbGlassMaterial, orbGlassFamily } from "@/lib/orb-glass";
+import { type OrbGlassFamily, type OrbGlassMaterial, orbGlassFamily, orbGlassIsScene } from "@/lib/orb-glass";
 import { cx } from "@/utils/cx";
 import { OrbGlass } from "./orb-glass";
 
@@ -22,6 +22,8 @@ type OrbGlassTileProps = {
 const GLOW: Record<OrbGlassFamily, string> = {
     bubble: "radial-gradient(closest-side, rgb(160 190 255 / 0.4), rgb(255 170 220 / 0.22) 50%, transparent)",
     soap: "radial-gradient(closest-side, rgb(160 190 255 / 0.28), rgb(255 170 220 / 0.14) 50%, transparent)",
+    // A scene draws its own glow; this is never used.
+    scene: "none",
 };
 
 // The app icon: a tile, the orb on it, the light the glass throws on the tile beneath it and its
@@ -33,6 +35,24 @@ export function OrbGlassTile({ size, material, still, whole, dark = false, shado
     const orb = size * 0.62;
     const top = (size - orb) / 2;
     const px = (n: number) => `${(size * n).toFixed(2)}px`;
+
+    // A scene material draws the whole tile itself, live: the face, the shadow and the ball in one pass.
+    // Only the hairline is added round it, as round the pictures.
+    if (orbGlassIsScene(material)) {
+        return (
+            <div
+                className={cx("relative shrink-0 overflow-hidden", className)}
+                style={{ width: size, height: size, borderRadius: px(0.2237) }}
+                {...(label ? { role: "img", "aria-label": label } : { "aria-hidden": true })}
+            >
+                <OrbGlass size={size} material={material} surface={dark ? "dark" : "light"} />
+                <div
+                    className="pointer-events-none absolute inset-0"
+                    style={{ borderRadius: px(0.2237), boxShadow: dark ? "inset 0 0 0 1px rgb(255 255 255 / 0.1)" : "inset 0 0 0 1px rgb(0 0 0 / 0.08)" }}
+                />
+            </div>
+        );
+    }
 
     // The picture is the tile; the hairline round it is the same as the live tile's, so the two sit alike.
     if (whole) {

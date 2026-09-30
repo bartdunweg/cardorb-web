@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { OrbGlassTile } from "@/components/app/orb-glass-tile";
 import { PublicTopBar } from "@/components/app/public-top-bar";
-import type { OrbGlassMaterial } from "@/lib/orb-glass";
+import { type OrbGlassMaterial, orbGlassIsScene } from "@/lib/orb-glass";
 
 export const metadata: Metadata = {
     title: "Orb",
@@ -14,6 +14,11 @@ type Version = { name: string; material: OrbGlassMaterial; still?: string; still
 // Every version of every material, newest first within its family. A version is never edited:
 // a change is the next entry above it, so each step stays here to be judged against the others.
 const FAMILIES: { name: string; versions: Version[] }[] = [
+    {
+        // The study's v5 scene, ported to the GPU: the same tile, live. Film flows, lights follow the pointer.
+        name: "Soap bubble, live scene",
+        versions: [{ name: "v1", material: "scene1" }],
+    },
     {
         name: "Soap bubble, still",
         versions: [
@@ -77,7 +82,12 @@ export default function OrbStudyPage() {
                             <div key={v.name} className="flex flex-wrap items-center gap-4">
                                 <span className="w-8 text-xs text-tertiary">{v.name}</span>
                                 {/* The study's own tile is one picture: no dark or shadowless twin exists. */}
-                                {v.whole ? (
+                                {orbGlassIsScene(v.material) ? (
+                                    <>
+                                        <OrbGlassTile size={120} material={v.material} label={`${family.name} ${v.name}, light`} />
+                                        <OrbGlassTile size={120} material={v.material} dark label={`${family.name} ${v.name}, dark`} />
+                                    </>
+                                ) : v.whole ? (
                                     <>
                                         {v.whole.map((tile) => (
                                             <OrbGlassTile

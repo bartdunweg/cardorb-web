@@ -10,6 +10,7 @@ import {
     ORB_GLASS_VERTEX,
     type OrbGlassMaterial,
     orbGlassFamily,
+    orbGlassIsScene,
     orbGlassTilt,
 } from "@/lib/orb-glass";
 import { cx } from "@/utils/cx";
@@ -75,7 +76,7 @@ class Studio {
         gl.linkProgram(program);
         gl.useProgram(program);
         this.uniforms = Object.fromEntries(
-            ["uRes", "uMat", "uFloor", "uFloorMix", "uTilt", "uTime", "uFill", "uDark"].map((name) => [name, gl.getUniformLocation(program, name)]),
+            ["uRes", "uMat", "uFloor", "uFloorMix", "uTilt", "uTime", "uFill", "uDark", "uScene"].map((name) => [name, gl.getUniformLocation(program, name)]),
         );
         window.addEventListener("pointermove", this.onPointer, { passive: true });
         document.addEventListener("visibilitychange", this.onVisibility);
@@ -179,6 +180,7 @@ class Studio {
         gl.uniform1f(u.uTime, this.clock);
         gl.uniform1f(u.uFill, ORB_GLASS_FILL);
         gl.uniform1f(u.uDark, dark ? 1 : 0);
+        gl.uniform1f(u.uScene, orbGlassIsScene(it.material) ? 1 : 0);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
         it.context.imageSmoothingQuality = "high";
         it.context.clearRect(0, 0, px, px);
