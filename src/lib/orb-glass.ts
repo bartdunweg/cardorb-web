@@ -194,7 +194,8 @@ vec4 darkBubble(vec3 refl, vec3 back, vec3 wash, vec3 n, float x, float kdif, fl
 // film is that face, with the ball's shadow on it. Lights and film as the study had them (v5 of
 // the still), with the film flowing in time and the lights following the pointer.
 // ---------------------------------------------------------------------------------------------
-uniform float uScene;    // 1 draws the tile scene instead of the bare ball
+uniform float uScene;    // 1 draws the tile scene instead of the bare ball; 2 the mark: the scene with no tile, on the page
+uniform float uShadow;   // for the mark: 1 keeps the tile's shadow and glow round the ball, 0 leaves them out
 
 const float SCENE_SPAN = 1.62;   // half-width of the view in the ball's radii: the ball is 62 percent of the tile
 const float SCENE_BD = 1.4;      // the face sits this far behind the ball's centre
@@ -256,6 +257,8 @@ vec3 traceS(vec3 o, vec3 d) {
     if (d.z < -1e-4) {
         float t = (-SCENE_BD - o.z) / d.z;
         float x = o.x + d.x * t, y = o.y + d.y * t;
+        // The mark has the page for a face: white, or the dark page's colour.
+        if (uScene > 1.5) return uDark > 0.5 ? vec3(0.012, 0.013, 0.018) : vec3(1.0);
         if (abs(x) < SCENE_SPAN && abs(y) < SCENE_SPAN) return faceS(x, y);
     }
     return envS(d);
@@ -288,13 +291,22 @@ vec3 softS(vec3 x) { return mix(clamp(x, 0.0, 1.0), 0.8 + 0.2 * (1.0 - exp(-(x -
 
 vec4 sceneShade(vec2 fc) {
     vec2 uv = (fc / uRes) * 2.0 - 1.0;
+    bool mark = uScene > 1.5;
     float x = uv.x * SCENE_SPAN, y = uv.y * SCENE_SPAN;
     // the tile's rounded corners
     float rad = 0.225 * 2.0 * SCENE_SPAN;
     vec2 q = max(abs(vec2(x, y)) - (SCENE_SPAN - rad), 0.0);
-    if (length(q) > rad) return vec4(0.0);
+    if (!mark && length(q) > rad) return vec4(0.0);
     bool dark = uDark > 0.5;
     float rr = x * x + y * y;
+    // The tile's shadow is broad, and its face frames it; on the page it dies away round the ball
+    // instead, so it has no edge. The glow stays as it is.
+    float reach = mark ? sm(1.6, 1.0, length(vec2(x, y))) * uShadow : 1.0;
+    if (mark && rr >= 1.0) {
+        float sh = shadowS(x, y) * (dark ? 0.1 : 0.32) * reach;
+        vec3 glow = vec3(0.25, 0.35, 0.6) * glowS(x, y) * (dark ? 0.0 : 0.9) * uShadow;
+        return over(pow(glow, vec3(1.0 / 2.2)), sh);
+    }
     if (rr >= 1.0) {
         vec3 col = faceS(x, y);
         // a white face is #fff: it skips the curve; only the ball goes through it
@@ -425,6 +437,14 @@ vec4 sceneShade(vec2 fc) {
         haze += vec3(0.62, 0.66, 0.74) * (0.1 + 0.1 * c) * (0.75 + 0.25 * sm(-0.7, 0.7, p.y));
         front *= 0.55;
         back *= 0.55;
+    }
+    if (mark) {
+        // What shows through the film: the page, with the ball's shadow and glow on it as on the tile.
+        float g = glowS(pb.x, pb.y) * uShadow;
+        vec3 page = dark ? vec3(0.012, 0.013, 0.018) : vec3(1.0);
+        page = page * vec3(1.0, 1.0 - 0.1 * g, 1.0) + vec3(0.25, 0.35, 0.6) * g * (dark ? 0.0 : 0.9);
+        page *= 1.0 - (dark ? 0.1 : 0.32) * shadowS(pb.x, pb.y) * sm(1.6, 1.0, length(pb.xy)) * uShadow;
+        return vec4(pow(softS(front + back + page * T + haze + vec3(sun)), vec3(1.0 / 2.2)), 1.0);
     }
     vec3 col = front + back + behind * T + haze + vec3(sun);
     return vec4(pow(softS(col), vec3(1.0 / 2.2)), 1.0);

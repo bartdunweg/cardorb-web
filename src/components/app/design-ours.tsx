@@ -215,11 +215,11 @@ export const ourSections: SectionSpec[] = [
                     <Cell label="OrbMark size={160}">
                         <OrbMark size={160} />
                     </Cell>
-                    <Cell label="OrbMark size={28}">
-                        <OrbMark size={28} />
+                    <Cell label="OrbMark size={28} shadow={false}">
+                        <OrbMark size={28} shadow={false} />
                     </Cell>
-                    <Cell label="OrbMark size={16}">
-                        <OrbMark size={16} />
+                    <Cell label="OrbMark size={16} shadow={false}">
+                        <OrbMark size={16} shadow={false} />
                     </Cell>
                 </Group>
                 <Group title="The icon" cols="wide">

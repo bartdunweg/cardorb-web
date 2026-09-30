@@ -11,7 +11,7 @@ export const contentType = "image/png";
 // CSS variables, and the picture is one static PNG with no light or dark side.
 export default async function OpenGraphImage() {
     // The mark as the dark page draws it, a file, since Satori runs no WebGL.
-    const mark = await readFile(join(process.cwd(), "public", "orb-mark", "dark.png"));
+    const mark = await readFile(join(process.cwd(), "public", "orb-mark", "mark-dark.png"));
     return new ImageResponse(
         <div
             style={{
