@@ -18,6 +18,7 @@ const FAMILIES: { name: string; versions: Version[] }[] = [
         // The study's v5 scene, ported to the GPU: the same tile, live. Film flows, lights follow the pointer.
         name: "Soap bubble, live scene",
         versions: [
+            { name: "v6", material: "scene6" },
             { name: "v5", material: "scene5" },
             { name: "v4", material: "scene4" },
             { name: "v3", material: "scene3" },

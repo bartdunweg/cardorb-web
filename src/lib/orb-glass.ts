@@ -38,7 +38,8 @@ export type OrbGlassMaterial =
     | "scene2"
     | "scene3"
     | "scene4"
-    | "scene5";
+    | "scene5"
+    | "scene6";
 
 /** A scene material draws the whole tile (face, shadow, ball) rather than a bare ball; the tile round it is then nothing but a hairline. */
 export const orbGlassIsScene = (material: OrbGlassMaterial): boolean => orbGlassFamily(material) === "scene";
@@ -62,6 +63,7 @@ export const ORB_GLASS_MATERIAL_INDEX: Record<OrbGlassMaterial, number> = {
     scene3: 17,
     scene4: 18,
     scene5: 19,
+    scene6: 20,
 };
 
 /** Which materials move on their own (a film that flows), so a frame loop knows to keep going. Glass only moves with the lights. */
@@ -245,7 +247,10 @@ vec4 sceneShade(vec2 fc) {
     vec3 d = vec3(0.0, 0.0, -1.0);
     float c = p.z;
     float flow = p.y * 1.6 + uTime * 0.3 + 1.1 * sin(p.x * 1.3 + 0.5 + uTime * 0.17) + 0.5 * sin((p.x + p.y) * 2.1 - uTime * 0.23);
-    float th = 420.0 + 220.0 * sin(flow) + 160.0 * (1.0 - c);
+    // scene6 is scene1 with the film kept thin: 290 to 380 nm, where a film of this kind reflects
+    // magenta, violet and blue and no green or yellow. Nothing else differs.
+    bool thin = uMat == 20;
+    float th = thin ? 335.0 + 25.0 * sin(flow) + 20.0 * (1.0 - c) : 420.0 + 220.0 * sin(flow) + 160.0 * (1.0 - c);
     // scene1 has the study's film; scene2 the same film in pastel: less saturated, a shade fainter.
     // scene3 drops the spectrum for a palette after the owner's reference: blue running to violet and
     // pink in broad washes over the ball, the rim white glass, more of the colour in the body.
@@ -254,8 +259,8 @@ vec4 sceneShade(vec2 fc) {
     // scene5 goes further: a deeper palette laid as the reference has it, blue at the top right running
     // to pink at the bottom left with the flow moving through it, and the light through the ball tinted hard.
     bool pastel = uMat == 16;
-    bool palette = uMat >= 17;
-    bool tinted = uMat >= 18;
+    bool palette = uMat >= 17 && uMat <= 19;
+    bool tinted = uMat == 18 || uMat == 19;
     bool deep = uMat == 19;
     float ph = deep ? clamp(sm(0.7, -0.7, p.y * 0.8 - p.x * 0.5) + 0.25 * sin(flow), 0.0, 1.0) : 0.5 + 0.5 * sin(flow * 0.8 + 1.5 * (1.0 - c) - 0.6);
     vec3 pal = deep ? mix(vec3(0.35, 0.62, 1.0), vec3(0.88, 0.32, 0.86), ph) : mix(vec3(0.55, 0.75, 1.0), vec3(0.92, 0.55, 0.95), ph);
@@ -266,7 +271,7 @@ vec4 sceneShade(vec2 fc) {
     vec3 front = envS(r) * R;
     vec3 pb = vec3(p.x, p.y, -p.z);
     vec3 rb = reflect(d, -pb);
-    vec3 fb = palette ? mix(pal, vec3(1.0), 0.6) : pastel ? saturateS(filmS(th + 60.0, c, 1.33), 0.7) : filmS(th + 60.0, c, 1.33);
+    vec3 fb = palette ? mix(pal, vec3(1.0), 0.6) : pastel ? saturateS(filmS(th + 60.0, c, 1.33), 0.7) : filmS(th + (thin ? 20.0 : 60.0), c, 1.33);
     vec3 back = envS(rb) * fb * amp * 1.2;
     vec3 behind = traceS(pb, d);
     vec3 T = (1.0 - R) * (1.0 - fb * amp * 1.2);
