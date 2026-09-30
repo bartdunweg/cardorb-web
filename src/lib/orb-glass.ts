@@ -44,7 +44,8 @@ export type OrbGlassMaterial =
     | "scene8"
     | "scene9"
     | "scene10"
-    | "scene11";
+    | "scene11"
+    | "scene12";
 
 /** A scene material draws the whole tile (face, shadow, ball) rather than a bare ball; the tile round it is then nothing but a hairline. */
 export const orbGlassIsScene = (material: OrbGlassMaterial): boolean => orbGlassFamily(material) === "scene";
@@ -74,6 +75,7 @@ export const ORB_GLASS_MATERIAL_INDEX: Record<OrbGlassMaterial, number> = {
     scene9: 23,
     scene10: 24,
     scene11: 25,
+    scene12: 26,
 };
 
 /** Which materials move on their own (a film that flows), so a frame loop knows to keep going. Glass only moves with the lights. */
@@ -263,7 +265,10 @@ vec4 sceneShade(vec2 fc) {
     // scene11 is scene10 with the film nearer the still's v5: thicker and more varied, so some green
     // and yellow return beside the blue and magenta, and the light through it only half neutral.
     bool palantir = uMat >= 23;
-    bool richer = uMat == 25;
+    bool richer = uMat >= 25;
+    // scene12 is scene11 with a dye in the film: green is held back where it leads, and yellow (red
+    // and green with no blue) with it, so blue, cyan, red, pink and violet are what the film shows.
+    bool dyed = uMat == 26;
     float hold = (uMat >= 24 && uDark > 0.5) ? 0.45 : 1.0;
     vec2 sw = p.xy;
     if (palantir) {
@@ -294,6 +299,10 @@ vec4 sceneShade(vec2 fc) {
     float ph = deep ? clamp(sm(0.7, -0.7, p.y * 0.8 - p.x * 0.5) + 0.25 * sin(flow), 0.0, 1.0) : 0.5 + 0.5 * sin(flow * 0.8 + 1.5 * (1.0 - c) - 0.6);
     vec3 pal = deep ? mix(vec3(0.35, 0.62, 1.0), vec3(0.88, 0.32, 0.86), ph) : mix(vec3(0.55, 0.75, 1.0), vec3(0.92, 0.55, 0.95), ph);
     vec3 f = palette ? pal : saturateS(filmS(th, c, 1.33), pastel ? 1.05 : 1.7);
+    if (dyed) {
+        f.g -= 0.7 * max(0.0, f.g - max(f.r, f.b));
+        f.g *= mix(0.45, 1.0, clamp(f.b, 0.0, 1.0));
+    }
     float amp = 0.06 + 0.94 * pow(1.0 - c, 2.4);
     vec3 R = (palette ? mix(pal, vec3(1.0), 0.45) * amp * 1.6 : f * amp * (pastel ? 1.5 : 1.8)) * mix(1.0, hold, 0.6);
     vec3 r = reflect(d, p);
@@ -301,6 +310,10 @@ vec4 sceneShade(vec2 fc) {
     vec3 pb = vec3(p.x, p.y, -p.z);
     vec3 rb = reflect(d, -pb);
     vec3 fb = palette ? mix(pal, vec3(1.0), 0.6) : pastel ? saturateS(filmS(th + 60.0, c, 1.33), 0.7) : filmS(th + (thin ? 20.0 : 60.0), c, 1.33);
+    if (dyed) {
+        fb.g -= 0.7 * max(0.0, fb.g - max(fb.r, fb.b));
+        fb.g *= mix(0.45, 1.0, clamp(fb.b, 0.0, 1.0));
+    }
     vec3 back = envS(rb) * fb * amp * 1.2;
     vec3 behind = traceS(pb, d);
     vec3 T = (1.0 - R) * (1.0 - fb * amp * 1.2);
