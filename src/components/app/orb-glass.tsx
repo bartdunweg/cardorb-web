@@ -186,11 +186,13 @@ class Studio {
 
     private paint(it: Instance, dark: boolean) {
         const { gl, canvas, uniforms: u } = this;
-        const scale = Math.min(2, devicePixelRatio || 1);
+        // Without a GPU every sample is CPU time: one pixel per CSS pixel and no extra samples, or a
+        // page with three marks stalls for seconds while they draw their one frame.
+        const scale = this.hardware ? Math.min(2, devicePixelRatio || 1) : 1;
         const px = Math.round(it.size * scale);
         if (it.canvas.width !== px) it.canvas.width = it.canvas.height = px;
         // Drawn at twice the pixels and halved on the copy: four samples per pixel on top of the shader's own four.
-        const gpx = Math.max(64, px * 2);
+        const gpx = this.hardware ? Math.max(64, px * 2) : px;
         if (canvas.width !== gpx) canvas.width = canvas.height = gpx;
         gl.viewport(0, 0, gpx, gpx);
         gl.clearColor(0, 0, 0, 0);
