@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     robots: { index: false },
 };
 
-type Version = { name: string; material: OrbGlassMaterial; still?: string; stillDark?: string; whole?: string[] };
+type Version = { name: string; material: OrbGlassMaterial; still?: string; stillDark?: string; whole?: { src: string; dark?: boolean }[] };
 
 // Every version of every material, newest first within its family. A version is never edited:
 // a change is the next entry above it, so each step stays here to be judged against the others.
@@ -17,12 +17,14 @@ const FAMILIES: { name: string; versions: Version[] }[] = [
     {
         name: "Soap bubble, still",
         versions: [
+            // v4 is v3 with a richer film: more colour, broader bands, a wash of it inside, a warm light low in the ball.
+            { name: "v4", material: "soap3", whole: [{ src: "/orb-study/tile-irid-white.png" }, { src: "/orb-study/tile-irid-dark.png", dark: true }] },
             // v3 is v0's scene, ray-traced, with a white face for the light icon and a dark face for the dark one.
-            { name: "v3", material: "soap3", whole: ["/orb-study/tile-first-white.png", "/orb-study/tile-first-dark.png"] },
+            { name: "v3", material: "soap3", whole: [{ src: "/orb-study/tile-first-white.png" }, { src: "/orb-study/tile-first-dark.png", dark: true }] },
             { name: "v2", material: "soap3", still: "/orb-study/bubble.png" },
             { name: "v1", material: "soap3", still: "/orb-study/bubble-first.png", stillDark: "/orb-study/bubble-first-dark.png" },
             // The study's own tile, ray-traced, with the grey face it had.
-            { name: "v0", material: "soap3", whole: ["/orb-study/tile-first.png"] },
+            { name: "v0", material: "soap3", whole: [{ src: "/orb-study/tile-first.png" }] },
         ],
     },
     {
@@ -75,13 +77,14 @@ export default function OrbStudyPage() {
                                 {/* The study's own tile is one picture: no dark or shadowless twin exists. */}
                                 {v.whole ? (
                                     <>
-                                        {v.whole.map((src) => (
+                                        {v.whole.map((tile) => (
                                             <OrbGlassTile
-                                                key={src}
+                                                key={tile.src}
                                                 size={120}
                                                 material={v.material}
-                                                whole={src}
-                                                label={`${family.name} ${v.name}, the study's tile`}
+                                                whole={tile.src}
+                                                dark={tile.dark}
+                                                label={`${family.name} ${v.name}, the study's tile${tile.dark ? ", dark" : ""}`}
                                             />
                                         ))}
                                     </>
