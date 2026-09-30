@@ -254,9 +254,9 @@ vec3 traceS(vec3 o, vec3 d) {
     if (d.z < -1e-4) {
         float t = (-SCENE_BD - o.z) / d.z;
         float x = o.x + d.x * t, y = o.y + d.y * t;
-        // The mark has the page for a face: white, or the dark page's colour.
-        if (uScene > 1.5) return uDark > 0.5 ? vec3(0.012, 0.013, 0.018) : vec3(1.0);
-        if (abs(x) < SCENE_SPAN && abs(y) < SCENE_SPAN) return faceS(x, y);
+        // The mark has the page for a face: white, or the dark page's colour. Past the tile's reach
+        // a ray sees the studio, for the mark as for the tile, or the rim loses the lights it mirrors.
+        if (abs(x) < SCENE_SPAN && abs(y) < SCENE_SPAN) return uScene > 1.5 ? (uDark > 0.5 ? vec3(0.012, 0.013, 0.018) : vec3(1.0)) : faceS(x, y);
     }
     return envS(d);
 }
