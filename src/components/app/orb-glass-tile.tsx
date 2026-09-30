@@ -1,5 +1,5 @@
 import Image from "next/image";
-import type { OrbGlassMaterial } from "@/lib/orb-glass";
+import { type OrbGlassFamily, type OrbGlassMaterial, orbGlassFamily } from "@/lib/orb-glass";
 import { cx } from "@/utils/cx";
 import { OrbGlass } from "./orb-glass";
 
@@ -17,13 +17,11 @@ type OrbGlassTileProps = {
     label?: string;
 };
 
-const GLOW: Record<OrbGlassMaterial, string> = {
+const GLOW: Record<OrbGlassFamily, string> = {
     black: "radial-gradient(closest-side, rgb(90 120 255 / 0.42), rgb(255 110 190 / 0.18) 45%, transparent)",
     violet: "radial-gradient(closest-side, rgb(120 80 255 / 0.75), rgb(110 70 235 / 0.32) 50%, transparent)",
     bubble: "radial-gradient(closest-side, rgb(160 190 255 / 0.4), rgb(255 170 220 / 0.22) 50%, transparent)",
     soap: "radial-gradient(closest-side, rgb(160 190 255 / 0.28), rgb(255 170 220 / 0.14) 50%, transparent)",
-    soapFirst: "radial-gradient(closest-side, rgb(160 190 255 / 0.28), rgb(255 170 220 / 0.14) 50%, transparent)",
-    soapSecond: "radial-gradient(closest-side, rgb(160 190 255 / 0.28), rgb(255 170 220 / 0.14) 50%, transparent)",
 };
 
 // The app icon: a tile, the orb on it, the light the glass throws on the tile beneath it and its
@@ -56,7 +54,7 @@ export function OrbGlassTile({ size, material, still, dark = false, shadow = tru
                         right: px(0.05),
                         top: top + orb * 0.5,
                         height: orb * 0.75,
-                        background: GLOW[material],
+                        background: GLOW[orbGlassFamily(material)],
                         opacity: dark ? 0.7 : 1,
                         filter: `blur(${px(0.045)})`,
                     }}

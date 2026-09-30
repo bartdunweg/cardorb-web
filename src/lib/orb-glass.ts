@@ -18,13 +18,30 @@
  * the canvas.
  */
 
-export type OrbGlassMaterial = "black" | "violet" | "bubble" | "soap" | "soapFirst" | "soapSecond";
+/**
+ * A material is a family and a version, and a version is never changed once it is on the page:
+ * a change is the next number beside it, so every step stays there to be judged against the
+ * others (the owner's rule). The number is the order it was made in, oldest first.
+ */
+export type OrbGlassFamily = "black" | "violet" | "bubble" | "soap";
+export type OrbGlassMaterial = "black1" | "violet1" | "bubble1" | "bubble2" | "bubble3" | "soap1" | "soap2" | "soap3";
 
-/** soapFirst and soapSecond are the soap bubble as it stood before, kept so the versions can be judged side by side. */
-export const ORB_GLASS_MATERIAL_INDEX: Record<OrbGlassMaterial, number> = { black: 0, violet: 1, bubble: 2, soap: 3, soapFirst: 4, soapSecond: 5 };
+export const orbGlassFamily = (material: OrbGlassMaterial): OrbGlassFamily => material.replace(/\d+$/, "") as OrbGlassFamily;
+
+/** The shader's number for each version. Numbers are given once and never reused. */
+export const ORB_GLASS_MATERIAL_INDEX: Record<OrbGlassMaterial, number> = {
+    black1: 0,
+    violet1: 1,
+    bubble3: 2,
+    soap3: 3,
+    soap1: 4,
+    soap2: 5,
+    bubble1: 6,
+    bubble2: 7,
+};
 
 /** Which materials move on their own (a film that flows), so a frame loop knows to keep going. Glass only moves with the lights. */
-export const ORB_GLASS_FLOWS: Record<OrbGlassMaterial, boolean> = { black: false, violet: false, bubble: true, soap: true, soapFirst: true, soapSecond: true };
+export const ORB_GLASS_FLOWS: Record<OrbGlassFamily, boolean> = { black: false, violet: false, bubble: true, soap: true };
 
 /** A number a shader can take: the fraction of the canvas the sphere fills, leaving room for antialiasing. */
 export const ORB_GLASS_FILL = 0.96;
@@ -39,7 +56,7 @@ export const ORB_GLASS_FRAGMENT = `#version 300 es
 precision highp float;
 out vec4 O;
 uniform vec2 uRes;
-uniform int uMat;        // 0 black glass, 1 violet glass, 2 iridescent bubble, 3 soap bubble, 4 and 5 the soap bubble's earlier versions
+uniform int uMat;        // ORB_GLASS_MATERIAL_INDEX: 0 black1, 1 violet1, 2 bubble3, 3 soap3, 4 soap1, 5 soap2, 6 bubble1, 7 bubble2
 uniform vec3 uFloor;     // the colour under and behind the orb, in linear light
 uniform float uFloorMix; // how much of the studio's lower half that colour replaces
 uniform vec2 uTilt;      // where the lights are pulled to, -1..1 each way
@@ -128,8 +145,8 @@ vec4 shade(vec2 fc) {
     float kdif = max(dot(n, keyDir()), 0.0);
     float rl = clamp(dot(refl, vec3(0.2126, 0.7152, 0.0722)), 0.0, 2.0);
 
-    if (uMat >= 3) {
-        // The study's bubble: a thin film front and back, the studio's wall seen through both.
+    if (uMat == 3 || uMat == 4 || uMat == 5) {
+        // The soap bubble: a thin film front and back, the studio's wall seen through both.
         float flow = pos.y * 3.2 + uTime * 0.5 + 1.2 * sin(pos.x * 2.4 + uTime * 0.27 + 0.5) + 0.6 * sin((pos.x + pos.z) * 4.2 - uTime * 0.35);
         float thick = 3.8 + 1.7 * sin(flow) + 1.4 * x;
         float amp = 0.04 + 0.96 * pow(x, 3.0);
@@ -138,7 +155,7 @@ vec4 shade(vec2 fc) {
         float cos2 = clamp(dot(n2, -rd), 0.0, 1.0);
         float sun = pow(max(dot(R, sunDir()), 0.0), 700.0) * 22.0;
         if (uMat == 4) {
-            // The first: ACES, a grey wall leaning halfway to the page.
+            // soap1: ACES, a grey wall leaning halfway to the page.
             vec3 R1 = film(cosT, thick, 1.33, 1.35) * amp * 1.6;
             vec3 R2 = film(cos2, thick + 0.6, 1.33, 1.35) * amp * 1.2;
             vec3 wall = mix(vec3(0.6, 0.6, 0.63), uFloor, 0.5) * (0.85 + 0.15 * kdif);
@@ -146,7 +163,7 @@ vec4 shade(vec2 fc) {
             return vec4(pow(aces(col), vec3(1.0 / 2.2)), 1.0);
         }
         if (uMat == 5) {
-            // The second: the soft curve, a paler wall, more film; on a dark page the page through the film.
+            // soap2: the soft curve, a paler wall, more film; on a dark page the page through the film.
             vec3 R1 = film(cosT, thick, 1.33, 1.5) * amp * 1.9;
             vec3 R2 = film(cos2, thick + 0.6, 1.33, 1.5) * amp * 1.4;
             vec3 front = refl * R1;
@@ -159,6 +176,7 @@ vec4 shade(vec2 fc) {
             vec3 wall = mix(vec3(0.72, 0.72, 0.75), uFloor, 0.45) * (0.88 + 0.12 * kdif);
             return vec4(pow(soft(front + back + wall * T + vec3(sun)), vec3(1.0 / 2.2)), 1.0);
         }
+        // soap3: one object on every page, a fixed pale wall, a film a shade less saturated.
         vec3 R1 = film(cosT, thick + 0.4, 1.33, 1.2) * amp * 1.9;
         vec3 front = refl * R1;
         vec3 R2 = film(cos2, thick + 1.0, 1.33, 1.2) * amp * 1.4;
@@ -172,8 +190,30 @@ vec4 shade(vec2 fc) {
         return vec4(col, 1.0);
     }
 
-    if (uMat == 2) {
-        // The film's thickness drains downward and flows with time; that alone is the colour.
+    if (uMat == 6) {
+        // bubble1: a soap film and nothing inside it, tight bands, a breath of haze, the page through it.
+        float flow = pos.y * 3.2 + uTime * 0.5 + 1.1 * sin(pos.x * 2.4 + uTime * 0.27) + 0.6 * sin((pos.x + pos.z) * 4.2 - uTime * 0.35);
+        float thick = 3.4 + 1.4 * sin(flow) + 0.9 * (0.5 - 0.5 * pos.y) + 0.5 * x;
+        float F1 = fresnel(0.02, x);
+        vec3 front = refl * film(cosT, thick, 1.33, 1.6) * F1;
+        vec3 p2 = ro + rd * (-b + sqrt(h));
+        vec3 n2 = -normalize(p2);
+        float cos2 = clamp(dot(n2, -rd), 0.0, 1.0);
+        float F2 = fresnel(0.02, 1.0 - cos2) * (1.0 - F1);
+        vec3 back = env(reflect(rd, n2)) * film(cos2, thick + 0.6, 1.33, 1.6) * F2;
+        float haze = 0.2 + 0.1 * kdif;
+        vec3 milk = mix(vec3(1.0), film(cosT, thick, 1.33, 1.3), 0.7) * haze;
+        vec3 face = film(cosT, thick, 1.33, 1.6) * (0.14 + 0.5 * rl) * (1.0 - x) * 0.35;
+        float pool = pow(x, 2.0) * (0.5 + 0.5 * smoothstep(0.3, -0.7, n.y)) * 0.35;
+        vec3 col = front * 2.0 + back * 1.4 + milk + face + vec3(pool) * film(cosT, thick, 1.33, 1.4);
+        float a = clamp(F1 + F2 + haze + pool * 0.6 + 0.12 * (1.0 - x), 0.0, 1.0);
+        return vec4(pow(aces(col), vec3(1.0 / 2.2)), a);
+    }
+
+    if (uMat == 2 || uMat == 7) {
+        // bubble2: broad washes after the reference, blue on top, magenta low left, a hot spot, a double rim.
+        // bubble3: the same, and on a dark page no pale body: the page through the film.
+        float dark = uMat == 2 ? uDark : 0.0;
         // Broad, slow swaths rather than tight bands: the film varies over the whole ball, not every few degrees.
         float flow = pos.y * 1.3 + uTime * 0.3 + 0.9 * sin(pos.x * 1.1 + uTime * 0.17) + 0.5 * sin((pos.x + pos.z) * 1.8 - uTime * 0.23);
         float thick = 2.6 + 0.9 * sin(flow) + 0.5 * (0.5 - 0.5 * pos.y) + 0.8 * x;
@@ -186,14 +226,14 @@ vec4 shade(vec2 fc) {
         float F2 = fresnel(0.02, 1.0 - cos2) * (1.0 - F1);
         vec3 back = env(reflect(rd, n2)) * film(cos2, thick + 0.6, 1.33, 1.6) * F2;
         // A bright milky body, lit from the top left, with the film's colour laid over it in soft washes.
-        float haze = uDark > 0.5 ? 0.1 + 0.06 * kdif : 0.62 + 0.18 * kdif;
+        float haze = dark > 0.5 ? 0.1 + 0.06 * kdif : 0.62 + 0.18 * kdif;
         vec3 wash = film(cosT, thick, 1.33, 1.25);
         // The reference leans blue and pink: the film's green is held back, its blue and red let through.
         wash = wash * vec3(1.1, 0.7, 1.3) + vec3(0.02, 0.0, 0.12);
         // The body itself is pale blue at the top and pink low left, as the reference is lit.
         vec3 body = mix(vec3(0.5, 0.76, 1.0), vec3(0.92, 0.42, 0.9), smoothstep(0.55, -0.55, n.y + n.x * 0.45));
         // A pale centre, so the colour sits at the sides and the ball reads as lit from within.
-        body = mix(body, vec3(0.92, 0.95, 1.0), (uDark > 0.5 ? 0.0 : 0.55) * smoothstep(0.75, 0.2, length(n.xy - vec2(0.15, 0.2))));
+        body = mix(body, vec3(0.92, 0.95, 1.0), (dark > 0.5 ? 0.0 : 0.55) * smoothstep(0.75, 0.2, length(n.xy - vec2(0.15, 0.2))));
         vec3 milk = mix(body, wash, 0.4) * haze;
         vec3 face = wash * (0.12 + 0.4 * rl) * (1.0 - x) * 0.3;
         // Light that came in at the top leaves low in the ball: a warm hot spot, and a glow along the bottom rim.
@@ -208,7 +248,7 @@ vec4 shade(vec2 fc) {
         vec3 col = front * 1.6 + back * 1.2 + milk + face + glowc + vec3(pool) * wash + vec3(rim) * 0.7 + vec3(inner) * 0.18;
         float a = clamp(F1 + F2 + haze + spot * 0.5 + pool * 0.6 + rim * 0.5 + 0.15 * (1.0 - x), 0.0, 1.0);
         col = pow(aces(col), vec3(1.0 / 2.2));
-        if (uDark > 0.5) return over(col, a);
+        if (dark > 0.5) return over(col, a);
         return vec4(col, a);
     }
 

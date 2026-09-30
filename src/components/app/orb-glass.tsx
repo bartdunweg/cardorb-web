@@ -9,6 +9,7 @@ import {
     ORB_GLASS_MATERIAL_INDEX,
     ORB_GLASS_VERTEX,
     type OrbGlassMaterial,
+    orbGlassFamily,
     orbGlassTilt,
 } from "@/lib/orb-glass";
 import { cx } from "@/utils/cx";
@@ -154,7 +155,7 @@ class Studio {
         }
 
         // A film flows on its own; glass only moves when the lights do.
-        const flowing = this.moving && [...this.instances].some((it) => it.inView && ORB_GLASS_FLOWS[it.material]);
+        const flowing = this.moving && [...this.instances].some((it) => it.inView && ORB_GLASS_FLOWS[orbGlassFamily(it.material)]);
         if ((flowing || settling) && !document.hidden) this.frame = requestAnimationFrame(this.draw);
     };
 
