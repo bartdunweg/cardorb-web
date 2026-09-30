@@ -26,30 +26,25 @@ const GLOW: Record<OrbGlassFamily, string> = {
     scene: "none",
 };
 
-// The app icon: a tile, the orb on it, the light the glass throws on the tile beneath it and its
-// shadow. Light or dark by its own prop, as iOS keeps a light and a dark icon, never by the page:
-// its face is the theme's white or its darkest neutral, and the glow and shadow are written out
-// here rather than taken from the theme (R-STYLE-001, deliberately: they are the colours the glass
-// throws, not the app's). The glass is live (OrbGlass) or the study's picture; the tile round it is CSS.
+// The app icon's box, without the face: what stands on /orb is what the logo is (the owner's call,
+// 2026-09-30), so no tile, no hairline. A scene material draws itself as the mark does, with the
+// page for a face; the bare balls keep the glow the glass throws and the shadow, written out here
+// rather than taken from the theme (R-STYLE-001, deliberately: they are the colours the glass
+// throws, not the app's). The glass is live (OrbGlass) or the study's picture.
 export function OrbGlassTile({ size, material, still, whole, dark = false, shadow = true, className, label }: OrbGlassTileProps) {
     const orb = size * 0.62;
     const top = (size - orb) / 2;
     const px = (n: number) => `${(size * n).toFixed(2)}px`;
 
-    // A scene material draws the whole tile itself, live: the face, the shadow and the ball in one pass.
-    // Only the hairline is added round it, as round the pictures.
+    // A scene material draws itself as the mark does: the ball, its shadow and its glow on the page.
     if (orbGlassIsScene(material)) {
         return (
             <div
-                className={cx("relative shrink-0 overflow-hidden", className)}
-                style={{ width: size, height: size, borderRadius: px(0.2237) }}
+                className={cx("relative shrink-0", className)}
+                style={{ width: size, height: size }}
                 {...(label ? { role: "img", "aria-label": label } : { "aria-hidden": true })}
             >
-                <OrbGlass size={size} material={material} surface={dark ? "dark" : "light"} />
-                <div
-                    className="pointer-events-none absolute inset-0"
-                    style={{ borderRadius: px(0.2237), boxShadow: dark ? "inset 0 0 0 1px rgb(255 255 255 / 0.1)" : "inset 0 0 0 1px rgb(0 0 0 / 0.08)" }}
-                />
+                <OrbGlass size={size} material={material} surface={dark ? "dark" : "light"} mark />
             </div>
         );
     }
@@ -73,14 +68,8 @@ export function OrbGlassTile({ size, material, still, whole, dark = false, shado
 
     return (
         <div
-            className={cx("relative shrink-0 overflow-hidden", className)}
-            style={{
-                width: size,
-                height: size,
-                borderRadius: px(0.2237),
-                background: dark ? "var(--color-neutral-900)" : "var(--color-white)",
-                boxShadow: dark ? "inset 0 0 0 1px rgb(255 255 255 / 0.1)" : "inset 0 0 0 1px rgb(0 0 0 / 0.08)",
-            }}
+            className={cx("relative shrink-0", className)}
+            style={{ width: size, height: size }}
             {...(label ? { role: "img", "aria-label": label } : { "aria-hidden": true })}
         >
             {shadow && (

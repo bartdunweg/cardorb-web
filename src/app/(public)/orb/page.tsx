@@ -105,15 +105,18 @@ export default function OrbStudyPage() {
                                 {/* The study's own tile is one picture: no dark or shadowless twin exists. */}
                                 {orbGlassIsScene(v.material) ? (
                                     <>
-                                        <OrbGlassTile size={120} material={v.material} label={`${family.name} ${v.name}, light`} />
-                                        <OrbGlassTile size={120} material={v.material} dark label={`${family.name} ${v.name}, dark`} />
+                                        <OrbGlassTile size={200} material={v.material} label={`${family.name} ${v.name}, light`} />
+                                        {/* The dark one on a dark ground, as the app's dark page is: the theme's own class on a box. */}
+                                        <div className="dark-mode rounded-2xl bg-primary p-2">
+                                            <OrbGlassTile size={200} material={v.material} dark label={`${family.name} ${v.name}, dark`} />
+                                        </div>
                                     </>
                                 ) : v.whole ? (
                                     <>
                                         {v.whole.map((tile) => (
                                             <OrbGlassTile
                                                 key={tile.src}
-                                                size={120}
+                                                size={200}
                                                 material={v.material}
                                                 whole={tile.src}
                                                 dark={tile.dark}
@@ -123,16 +126,18 @@ export default function OrbStudyPage() {
                                     </>
                                 ) : (
                                     <>
-                                        <OrbGlassTile size={120} material={v.material} still={v.still} label={`${family.name} ${v.name}, light icon`} />
-                                        <OrbGlassTile size={120} material={v.material} still={v.still} shadow={false} />
-                                        <OrbGlassTile
-                                            size={120}
-                                            material={v.material}
-                                            still={v.stillDark ?? v.still}
-                                            dark
-                                            label={`${family.name} ${v.name}, dark icon`}
-                                        />
-                                        <OrbGlassTile size={120} material={v.material} still={v.stillDark ?? v.still} dark shadow={false} />
+                                        <OrbGlassTile size={200} material={v.material} still={v.still} label={`${family.name} ${v.name}, light icon`} />
+                                        <OrbGlassTile size={200} material={v.material} still={v.still} shadow={false} />
+                                        <div className="dark-mode flex gap-4 rounded-2xl bg-primary p-2">
+                                            <OrbGlassTile
+                                                size={200}
+                                                material={v.material}
+                                                still={v.stillDark ?? v.still}
+                                                dark
+                                                label={`${family.name} ${v.name}, dark icon`}
+                                            />
+                                            <OrbGlassTile size={200} material={v.material} still={v.stillDark ?? v.still} dark shadow={false} />
+                                        </div>
                                     </>
                                 )}
                             </div>

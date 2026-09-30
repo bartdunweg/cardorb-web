@@ -303,7 +303,9 @@ vec4 sceneShade(vec2 fc) {
     if (mark && rr >= 1.0) {
         vec3 tile = pow(dark ? softS(faceS(x, y)) : clamp(faceS(x, y), 0.0, 1.0), vec3(1.0 / 2.2));
         vec3 page = dark ? pow(vec3(0.012, 0.013, 0.018), vec3(1.0 / 2.2)) : vec3(1.0);
-        vec3 d = (tile - page) * sm(1.62, 1.35, max(abs(x), abs(y)));
+        // The shadow and glow die away round the ball, inside the circle the box holds, so the box
+        // never shows as a square where the tile's edge would have cut them.
+        vec3 d = (tile - page) * sm(1.55, 1.0, length(vec2(x, y)));
         float a = clamp(max(max(max(-d.r / page.r, -d.g / page.g), -d.b / page.b), max(max(d.r, d.g), d.b) / (1.0 - min(min(page.r, page.g), page.b) + 1e-3)), 0.0, 1.0);
         vec3 rgb = max(d + page * a, 0.0);
         // premultiplied already; main() multiplies by alpha, so hand it back un-multiplied
