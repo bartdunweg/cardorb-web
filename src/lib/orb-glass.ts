@@ -195,6 +195,7 @@ vec4 darkBubble(vec3 refl, vec3 back, vec3 wash, vec3 n, float x, float kdif, fl
 // the still), with the film flowing in time and the lights following the pointer.
 // ---------------------------------------------------------------------------------------------
 uniform float uScene;    // 1 draws the tile scene instead of the bare ball; 2 the mark: the tile with its face left out
+uniform float uWeight;   // for the mark: how much of the tile's shadow it carries; 1 from 160 px, less when drawn small
 
 const float SCENE_SPAN = 1.62;   // half-width of the view in the ball's radii: the ball is 62 percent of the tile
 const float SCENE_BD = 1.4;      // the face sits this far behind the ball's centre
@@ -305,7 +306,9 @@ vec4 sceneShade(vec2 fc) {
         vec3 page = dark ? pow(vec3(0.012, 0.013, 0.018), vec3(1.0 / 2.2)) : vec3(1.0);
         // The shadow and glow die away round the ball, inside the circle the box holds, so the box
         // never shows as a square where the tile's edge would have cut them.
-        vec3 d = (tile - page) * sm(1.55, 1.0, length(vec2(x, y)));
+        // A small mark carries less of the shadow: pressed into a few pixels the same shadow reads
+        // as a dark blot, and the glow that balanced it is lost.
+        vec3 d = (tile - page) * sm(1.55, 1.0, length(vec2(x, y))) * uWeight;
         float a = clamp(max(max(max(-d.r / page.r, -d.g / page.g), -d.b / page.b), max(max(d.r, d.g), d.b) / (1.0 - min(min(page.r, page.g), page.b) + 1e-3)), 0.0, 1.0);
         vec3 rgb = max(d + page * a, 0.0);
         // premultiplied already; main() multiplies by alpha, so hand it back un-multiplied
@@ -447,7 +450,7 @@ vec4 sceneShade(vec2 fc) {
         float g = glowS(pb.x, pb.y);
         vec3 page = dark ? vec3(0.012, 0.013, 0.018) : vec3(1.0);
         page = page * vec3(1.0, 1.0 - 0.1 * g, 1.0) + vec3(0.25, 0.35, 0.6) * g * (dark ? 0.0 : 0.9);
-        page *= 1.0 - (dark ? 0.1 : 0.32) * shadowS(pb.x, pb.y);
+        page *= 1.0 - (dark ? 0.1 : 0.32) * shadowS(pb.x, pb.y) * uWeight;
         return vec4(pow(softS(front + back + page * T + haze + vec3(sun)), vec3(1.0 / 2.2)), 1.0);
     }
     vec3 col = front + back + behind * T + haze + vec3(sun);

@@ -79,7 +79,10 @@ class Studio {
         gl.linkProgram(program);
         gl.useProgram(program);
         this.uniforms = Object.fromEntries(
-            ["uRes", "uMat", "uFloor", "uFloorMix", "uTilt", "uTime", "uFill", "uDark", "uScene"].map((name) => [name, gl.getUniformLocation(program, name)]),
+            ["uRes", "uMat", "uFloor", "uFloorMix", "uTilt", "uTime", "uFill", "uDark", "uScene", "uWeight"].map((name) => [
+                name,
+                gl.getUniformLocation(program, name),
+            ]),
         );
         window.addEventListener("pointermove", this.onPointer, { passive: true });
         // A theme switch repaints, so a still mark never keeps the other theme's colours on a page that changed.
@@ -188,6 +191,8 @@ class Studio {
         gl.uniform1f(u.uFill, ORB_GLASS_FILL);
         gl.uniform1f(u.uDark, dark ? 1 : 0);
         gl.uniform1f(u.uScene, orbGlassIsScene(it.material) ? (it.mark ? 2 : 1) : 0);
+        // The mark's shadow eases off below 160 px (the size in CSS px, not device pixels), to 0.4 at 40.
+        gl.uniform1f(u.uWeight, Math.min(1, Math.max(0.4, it.size / 160)));
         gl.drawArrays(gl.TRIANGLES, 0, 3);
         it.context.imageSmoothingQuality = "high";
         it.context.clearRect(0, 0, px, px);
