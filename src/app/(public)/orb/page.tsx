@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { OrbGlassTile } from "@/components/app/orb-glass-tile";
-import { OrbMark } from "@/components/app/orb-mark";
 import { PublicTopBar } from "@/components/app/public-top-bar";
 import { type OrbGlassMaterial, orbGlassIsScene } from "@/lib/orb-glass";
 
@@ -96,21 +95,6 @@ export default function OrbStudyPage() {
                         Every version, as the light and the dark icon, with and without a shadow. Move the pointer: the lights follow it.
                     </p>
                 </div>
-
-                {/* The mark as the app draws it: the chosen version, alone on the page, light and dark. */}
-                <section className="flex flex-col gap-4">
-                    <h2 className="text-md font-semibold text-primary">The mark</h2>
-                    <div className="flex flex-wrap items-center gap-6">
-                        <div className="flex items-center gap-6 rounded-2xl bg-primary p-8 ring-1 ring-secondary ring-inset">
-                            <OrbMark size={160} label="The mark, light" />
-                            <OrbMark size={28} />
-                        </div>
-                        <div className="dark-mode flex items-center gap-6 rounded-2xl bg-primary p-8 ring-1 ring-secondary ring-inset">
-                            <OrbMark size={160} surface="dark" label="The mark, dark" />
-                            <OrbMark size={28} surface="dark" />
-                        </div>
-                    </div>
-                </section>
 
                 {FAMILIES.map((family) => (
                     <section key={family.name} className="flex flex-col gap-4">
