@@ -9,6 +9,8 @@ type OrbGlassTileProps = {
     material: OrbGlassMaterial;
     /** A picture of the orb instead of the live glass: the study's render. Sized to the orb, transparent round it. */
     still?: string;
+    /** A picture of the whole tile, exact: the study's own render of face, shadow and orb. Nothing else is drawn. */
+    whole?: string;
     /** The dark app icon: a near-black face, and a bubble on it lets that face through. */
     dark?: boolean;
     /** Without it, the tile is the face and the orb alone: no glow under the glass, no shadow. */
@@ -29,10 +31,24 @@ const GLOW: Record<OrbGlassFamily, string> = {
 // its face is the theme's white or its darkest neutral, and the glow and shadow are written out
 // here rather than taken from the theme (R-STYLE-001, deliberately: they are the colours the glass
 // throws, not the app's). The glass is live (OrbGlass) or the study's picture; the tile round it is CSS.
-export function OrbGlassTile({ size, material, still, dark = false, shadow = true, className, label }: OrbGlassTileProps) {
+export function OrbGlassTile({ size, material, still, whole, dark = false, shadow = true, className, label }: OrbGlassTileProps) {
     const orb = size * 0.62;
     const top = (size - orb) / 2;
     const px = (n: number) => `${(size * n).toFixed(2)}px`;
+
+    if (whole) {
+        return (
+            <Image
+                src={whole}
+                alt={label ?? ""}
+                width={size}
+                height={size}
+                className={cx("shrink-0", className)}
+                style={{ borderRadius: px(0.2237) }}
+                unoptimized
+            />
+        );
+    }
 
     return (
         <div

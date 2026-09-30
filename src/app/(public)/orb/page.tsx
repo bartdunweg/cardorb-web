@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     robots: { index: false },
 };
 
-type Version = { name: string; material: OrbGlassMaterial; still?: string; stillDark?: string };
+type Version = { name: string; material: OrbGlassMaterial; still?: string; stillDark?: string; whole?: string };
 
 // Every version of every material, newest first within its family. A version is never edited:
 // a change is the next entry above it, so each step stays here to be judged against the others.
@@ -19,11 +19,13 @@ const FAMILIES: { name: string; versions: Version[] }[] = [
         versions: [
             { name: "v2", material: "soap3", still: "/orb-study/bubble.png" },
             { name: "v1", material: "soap3", still: "/orb-study/bubble-first.png", stillDark: "/orb-study/bubble-first-dark.png" },
+            { name: "v0", material: "soap3", whole: "/orb-study/tile-first.png" },
         ],
     },
     {
         name: "Soap bubble",
         versions: [
+            { name: "v5", material: "soap5" },
             { name: "v4", material: "soap4" },
             { name: "v3", material: "soap3" },
             { name: "v2", material: "soap2" },
@@ -33,6 +35,7 @@ const FAMILIES: { name: string; versions: Version[] }[] = [
     {
         name: "Iridescent bubble",
         versions: [
+            { name: "v5", material: "bubble5" },
             { name: "v4", material: "bubble4" },
             { name: "v3", material: "bubble3" },
             { name: "v2", material: "bubble2" },
@@ -42,6 +45,7 @@ const FAMILIES: { name: string; versions: Version[] }[] = [
     {
         name: "Black glass",
         versions: [
+            { name: "v3", material: "black3" },
             { name: "v2", material: "black2" },
             { name: "v1", material: "black1" },
         ],
@@ -80,16 +84,26 @@ export default function OrbStudyPage() {
                         {family.versions.map((v) => (
                             <div key={v.name} className="flex flex-wrap items-center gap-4">
                                 <span className="w-8 text-xs text-tertiary">{v.name}</span>
-                                <OrbGlassTile size={120} material={v.material} still={v.still} label={`${family.name} ${v.name}, light icon`} />
-                                <OrbGlassTile size={120} material={v.material} still={v.still} shadow={false} />
-                                <OrbGlassTile
-                                    size={120}
-                                    material={v.material}
-                                    still={v.stillDark ?? v.still}
-                                    dark
-                                    label={`${family.name} ${v.name}, dark icon`}
-                                />
-                                <OrbGlassTile size={120} material={v.material} still={v.stillDark ?? v.still} dark shadow={false} />
+                                {/* The study's own tile is one picture: no dark or shadowless twin exists. */}
+                                {v.whole ? (
+                                    <>
+                                        <OrbGlassTile size={120} material={v.material} whole={v.whole} label={`${family.name} ${v.name}, the study's tile`} />
+                                        <OrbGlassTile size={288} material={v.material} whole={v.whole} />
+                                    </>
+                                ) : (
+                                    <>
+                                        <OrbGlassTile size={120} material={v.material} still={v.still} label={`${family.name} ${v.name}, light icon`} />
+                                        <OrbGlassTile size={120} material={v.material} still={v.still} shadow={false} />
+                                        <OrbGlassTile
+                                            size={120}
+                                            material={v.material}
+                                            still={v.stillDark ?? v.still}
+                                            dark
+                                            label={`${family.name} ${v.name}, dark icon`}
+                                        />
+                                        <OrbGlassTile size={120} material={v.material} still={v.stillDark ?? v.still} dark shadow={false} />
+                                    </>
+                                )}
                             </div>
                         ))}
                     </section>
