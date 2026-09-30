@@ -310,7 +310,7 @@ vec4 sceneShade(vec2 fc) {
     bool turned = uMat == 29 || (uMat == 30 && !nightPlain);
     // scene14 is scene13 with the colour turned back up after the dye, which had left it flat.
     bool vivid = uMat == 28;
-    float hold = (uMat >= 24 && uDark > 0.5) ? 0.45 : 1.0;
+    float hold = (uMat >= 24 && uMat != 30 && uDark > 0.5) ? 0.45 : 1.0;
     vec2 sw = p.xy;
     if (palantir) {
         float ang = uTime * 0.25 + 1.2 * (1.0 - length(p.xy));
@@ -325,7 +325,7 @@ vec4 sceneShade(vec2 fc) {
     // off the light's path through it, so the colour stays magenta and blue all the way to the edge.
     bool thin = uMat >= 20 && !(uMat == 30 && uDark > 0.5);
     float cosF = sqrt(1.0 - (1.0 - c * c) / (1.33 * 1.33));
-    float th = richer ? (360.0 + 90.0 * sin(flow)) / cosF : uMat >= 21 ? (335.0 + (palantir ? 45.0 : 25.0) * sin(flow)) / cosF : thin ? 335.0 + 25.0 * sin(flow) + 20.0 * (1.0 - c) : 420.0 + 220.0 * sin(flow) + 160.0 * (1.0 - c);
+    float th = richer ? (360.0 + 90.0 * sin(flow)) / cosF : (uMat >= 21 && !nightPlain) ? (335.0 + (palantir ? 45.0 : 25.0) * sin(flow)) / cosF : thin ? 335.0 + 25.0 * sin(flow) + 20.0 * (1.0 - c) : 420.0 + 220.0 * sin(flow) + 160.0 * (1.0 - c);
     // scene1 has the study's film; scene2 the same film in pastel: less saturated, a shade fainter.
     // scene3 drops the spectrum for a palette after the owner's reference: blue running to violet and
     // pink in broad washes over the ball, the rim white glass, more of the colour in the body.
