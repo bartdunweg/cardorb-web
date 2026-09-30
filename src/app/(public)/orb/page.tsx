@@ -43,21 +43,6 @@ const FAMILIES: { name: string; versions: Version[] }[] = [
             { name: "v1", material: "bubble1" },
         ],
     },
-    {
-        name: "Black glass",
-        versions: [
-            { name: "v3", material: "black3" },
-            { name: "v2", material: "black2" },
-            { name: "v1", material: "black1" },
-        ],
-    },
-    {
-        name: "Violet glass",
-        versions: [
-            { name: "v2", material: "violet2" },
-            { name: "v1", material: "violet1" },
-        ],
-    },
 ];
 
 /**

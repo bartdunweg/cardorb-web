@@ -1,13 +1,12 @@
 /**
  * The glass orb: a sphere of real material, lit in a small studio, drawn by the GPU.
  *
- * Four materials, one shader. Black glass is Luma's: a near-black body under a clear coat, an
- * oil-slick film where the surface turns away. Violet glass is the original Card Orb mark as a
- * solid: light enters, is coloured on its way through, and leaves. The bubble is a soap film,
- * nothing inside it: the page shows through, and what you see is the film's own colour, which
- * runs with the film's thickness and flows. The soap bubble is the study's: the same film, softer,
- * with the studio's pale wall showing through it rather than the page, which is what makes it
- * read as a milky white ball with pastel on it.
+ * Two bubbles, one shader, each in every version it has had. The iridescent bubble is a soap
+ * film, nothing inside it: the page shows through, and what you see is the film's own colour,
+ * which runs with the film's thickness and flows. The soap bubble is the study's: the same film,
+ * softer, with the studio's pale wall showing through it rather than the page, which is what
+ * makes it read as a milky white ball with pastel on it. Black and violet glass were here and
+ * were dropped (the owner's call, 2026-09-30).
  *
  * The studio is fixed: a softbox top left, a strip light on the right, a dim bounce behind, a
  * floor the colour of what the orb sits on. On a dark page the iridescent bubble is drawn the other
@@ -23,30 +22,13 @@
  * a change is the next number beside it, so every step stays there to be judged against the
  * others (the owner's rule). The number is the order it was made in, oldest first.
  */
-export type OrbGlassFamily = "black" | "violet" | "bubble" | "soap";
-export type OrbGlassMaterial =
-    | "black1"
-    | "black2"
-    | "black3"
-    | "violet1"
-    | "violet2"
-    | "bubble1"
-    | "bubble2"
-    | "bubble3"
-    | "bubble4"
-    | "bubble5"
-    | "soap1"
-    | "soap2"
-    | "soap3"
-    | "soap4"
-    | "soap5";
+export type OrbGlassFamily = "bubble" | "soap";
+export type OrbGlassMaterial = "bubble1" | "bubble2" | "bubble3" | "bubble4" | "bubble5" | "soap1" | "soap2" | "soap3" | "soap4" | "soap5";
 
 export const orbGlassFamily = (material: OrbGlassMaterial): OrbGlassFamily => material.replace(/\d+$/, "") as OrbGlassFamily;
 
 /** The shader's number for each version. Numbers are given once and never reused. */
 export const ORB_GLASS_MATERIAL_INDEX: Record<OrbGlassMaterial, number> = {
-    black1: 0,
-    violet1: 1,
     bubble3: 2,
     soap3: 3,
     soap1: 4,
@@ -55,18 +37,12 @@ export const ORB_GLASS_MATERIAL_INDEX: Record<OrbGlassMaterial, number> = {
     bubble2: 7,
     soap4: 8,
     bubble4: 9,
-    black2: 10,
-    violet2: 11,
     soap5: 12,
     bubble5: 13,
-    black3: 14,
 };
 
-/** Versions that keep a light floor under them on a dark page too: the object does not change, only the tile. */
-export const ORB_GLASS_OWN_FLOOR: Partial<Record<OrbGlassMaterial, true>> = { black2: true, violet2: true };
-
 /** Which materials move on their own (a film that flows), so a frame loop knows to keep going. Glass only moves with the lights. */
-export const ORB_GLASS_FLOWS: Record<OrbGlassFamily, boolean> = { black: false, violet: false, bubble: true, soap: true };
+export const ORB_GLASS_FLOWS: Record<OrbGlassFamily, boolean> = { bubble: true, soap: true };
 
 /** A number a shader can take: the fraction of the canvas the sphere fills, leaving room for antialiasing. */
 export const ORB_GLASS_FILL = 0.96;
@@ -81,7 +57,7 @@ export const ORB_GLASS_FRAGMENT = `#version 300 es
 precision highp float;
 out vec4 O;
 uniform vec2 uRes;
-uniform int uMat;        // ORB_GLASS_MATERIAL_INDEX: 0 black1, 1 violet1, 2 bubble3, 3 soap3, 4 soap1, 5 soap2, 6 bubble1, 7 bubble2, 8 soap4, 9 bubble4, 10 black2, 11 violet2, 12 soap5, 13 bubble5, 14 black3
+uniform int uMat;        // ORB_GLASS_MATERIAL_INDEX; 0, 1, 10, 11 and 14 were black and violet glass and are not given again
 uniform vec3 uFloor;     // the colour under and behind the orb, in linear light
 uniform float uFloorMix; // how much of the studio's lower half that colour replaces
 uniform vec2 uTilt;      // where the lights are pulled to, -1..1 each way
@@ -301,49 +277,7 @@ vec4 shade(vec2 fc) {
         return vec4(col, a);
     }
 
-    // black1 and violet1; black2 and violet2 are the same glass, and as the dark icon they keep a
-    // light floor under them (ORB_GLASS_OWN_FLOOR) and get a rim light, so the ball stands off the tile.
-    bool blackGlass = uMat == 0 || uMat == 10 || uMat == 14;
-    float F0 = blackGlass ? 0.075 : 0.045;
-    float F = fresnel(F0, x);
-    float thick = 3.6 + 0.7 * sin(pos.y * 2.2 + pos.x * 1.3) + 0.35 * cos(pos.x * 3.1 - pos.z * 1.7);
-    vec3 irid = film(cosT, thick, 1.35, 2.2);
-    float iw = smoothstep(0.34, 0.78, x) * (1.0 - 0.5 * smoothstep(0.94, 1.0, x));
-
-    vec3 col;
-    if (blackGlass) {
-        vec3 body = vec3(0.004, 0.004, 0.006);
-        vec3 sheen = vec3(0.05, 0.05, 0.06) * pow(kdif, 3.0);
-        col = body + sheen + refl * F;
-        col += irid * iw * F * (0.25 + 1.5 * rl);
-        col += irid * iw * 0.11;
-    } else {
-        vec3 rr = refract(rd, n, 1.0 / 1.52);
-        float chord = -2.0 * dot(rr, n);
-        vec3 p2 = pos + rr * chord;
-        vec3 n2 = normalize(p2);
-        vec3 outd = refract(rr, -n2, 1.52);
-        if (dot(outd, outd) < 0.5) outd = reflect(rr, -n2);
-        vec3 through = env(outd);
-        vec3 T = exp(-vec3(0.75, 1.30, 0.12) * chord);
-        vec3 violet = vec3(0.106, 0.031, 0.72);
-        vec3 scatter = violet * (0.22 + 0.45 * kdif);
-        vec3 rim = violet * 2.4 * pow(x, 2.4) * (0.5 + 0.5 * smoothstep(0.3, -0.7, n.y));
-        col = (1.0 - F) * (through * T * 1.25 + scatter * 0.9 + rim * 0.7) + refl * F;
-        col += irid * iw * F * (0.15 + 0.5 * rl);
-    }
-    if ((uMat == 10 || uMat == 11) && uDark > 0.5) {
-        // The dark icon's rim light: cool, from behind and above, strongest where the ball turns away.
-        float rimLight = pow(x, 3.5) * (0.6 + 0.4 * smoothstep(-0.4, 0.8, n.y));
-        col += vec3(0.55, 0.65, 0.9) * rimLight * (blackGlass ? 0.9 : 0.5);
-    }
-    if (uMat == 14 && uDark > 0.5) {
-        // black3: the black core kept, a narrow bright rim so the ball stands off the black tile.
-        float rimLight = pow(x, 7.0) * (0.7 + 0.3 * smoothstep(-0.4, 0.8, n.y));
-        col += vec3(0.75, 0.82, 1.0) * rimLight * 1.4;
-    }
-    col = pow(aces(col), vec3(1.0 / 2.2));
-    return vec4(col, 1.0);
+    return vec4(0.0);
 }
 
 void main() {

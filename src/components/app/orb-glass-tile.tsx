@@ -20,8 +20,6 @@ type OrbGlassTileProps = {
 };
 
 const GLOW: Record<OrbGlassFamily, string> = {
-    black: "radial-gradient(closest-side, rgb(90 120 255 / 0.42), rgb(255 110 190 / 0.18) 45%, transparent)",
-    violet: "radial-gradient(closest-side, rgb(120 80 255 / 0.75), rgb(110 70 235 / 0.32) 50%, transparent)",
     bubble: "radial-gradient(closest-side, rgb(160 190 255 / 0.4), rgb(255 170 220 / 0.22) 50%, transparent)",
     soap: "radial-gradient(closest-side, rgb(160 190 255 / 0.28), rgb(255 170 220 / 0.14) 50%, transparent)",
 };
