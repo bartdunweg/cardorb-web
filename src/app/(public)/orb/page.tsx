@@ -97,9 +97,6 @@ export default function OrbStudyPage() {
                                                 label={`${family.name} ${v.name}, the study's tile`}
                                             />
                                         ))}
-                                        {v.whole.map((src) => (
-                                            <OrbGlassTile key={`${src}-large`} size={288} material={v.material} whole={src} />
-                                        ))}
                                     </>
                                 ) : (
                                     <>
