@@ -8,6 +8,7 @@ import {
     ORB_GLASS_FRAGMENT,
     ORB_GLASS_MATERIAL_INDEX,
     ORB_GLASS_VERTEX,
+    ORB_MARK_SHADOW,
     type OrbGlassMaterial,
     orbGlassFamily,
     orbGlassIsScene,
@@ -194,7 +195,9 @@ class Studio {
         gl.uniform1f(u.uFill, ORB_GLASS_FILL);
         gl.uniform1f(u.uDark, dark ? 1 : 0);
         gl.uniform1f(u.uScene, orbGlassIsScene(it.material) ? (it.mark ? 2 : 1) : 0);
-        gl.uniform1f(u.uShadow, it.shadow ? 1 : 0);
+        // The mark carries 40 percent of the tile's shadow and glow: the tile's own read as too dark
+        // alone on a page (the owner's call, 2026-09-30).
+        gl.uniform1f(u.uShadow, it.shadow ? ORB_MARK_SHADOW : 0);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
         it.context.imageSmoothingQuality = "high";
         it.context.clearRect(0, 0, px, px);

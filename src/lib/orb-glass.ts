@@ -55,6 +55,9 @@ export type OrbGlassMaterial =
     | "scene19"
     | "scene20";
 
+/** How much of the tile's shadow and glow the mark carries: the tile's own read as too dark alone on a page. */
+export const ORB_MARK_SHADOW = 0.4;
+
 /** A scene material draws the whole tile (face, shadow, ball) rather than a bare ball; the tile round it is then nothing but a hairline. */
 export const orbGlassIsScene = (material: OrbGlassMaterial): boolean => orbGlassFamily(material) === "scene";
 
@@ -195,7 +198,7 @@ vec4 darkBubble(vec3 refl, vec3 back, vec3 wash, vec3 n, float x, float kdif, fl
 // the still), with the film flowing in time and the lights following the pointer.
 // ---------------------------------------------------------------------------------------------
 uniform float uScene;    // 1 draws the tile scene instead of the bare ball; 2 the mark: the tile with its face left out
-uniform float uShadow;   // for the mark: 1 carries the tile's shadow and glow, 0 leaves them out (the logo in the bars)
+uniform float uShadow;   // for the mark: how much of the tile's shadow and glow it carries; 0 in the bars
 
 const float SCENE_SPAN = 1.62;   // half-width of the view in the ball's radii: the ball is 62 percent of the tile
 const float SCENE_BD = 1.4;      // the face sits this far behind the ball's centre
