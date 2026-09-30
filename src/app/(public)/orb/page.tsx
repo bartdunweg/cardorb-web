@@ -14,14 +14,14 @@ export const metadata: Metadata = {
 
 const STUDIES: { material: OrbGlassMaterial; title: string; note: string }[] = [
     {
-        material: "bubble",
-        title: "Bubble",
-        note: "A soap film and nothing inside it. The page shows through; the colour is the film's own, and it runs with the film's thickness, which drains and flows.",
+        material: "soap",
+        title: "Soap bubble",
+        note: "The study's bubble: a thin film front and back, the studio's pale wall showing through it, so it reads as a milky ball with pastel on it.",
     },
     {
-        material: "clear",
-        title: "Clear bubble",
-        note: "The same film with nothing in it: see-through where you look straight at it, a ring of colour where it turns away.",
+        material: "bubble",
+        title: "Iridescent bubble",
+        note: "A soap film and nothing inside it. The page shows through; the colour is the film's own, and it runs with the film's thickness, which drains and flows.",
     },
     {
         material: "black",
