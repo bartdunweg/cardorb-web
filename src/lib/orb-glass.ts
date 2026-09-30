@@ -48,7 +48,8 @@ export type OrbGlassMaterial =
     | "scene12"
     | "scene13"
     | "scene14"
-    | "scene15";
+    | "scene15"
+    | "scene16";
 
 /** A scene material draws the whole tile (face, shadow, ball) rather than a bare ball; the tile round it is then nothing but a hairline. */
 export const orbGlassIsScene = (material: OrbGlassMaterial): boolean => orbGlassFamily(material) === "scene";
@@ -82,6 +83,7 @@ export const ORB_GLASS_MATERIAL_INDEX: Record<OrbGlassMaterial, number> = {
     scene13: 27,
     scene14: 28,
     scene15: 29,
+    scene16: 30,
 };
 
 /** Which materials move on their own (a film that flows), so a frame loop knows to keep going. Glass only moves with the lights. */
@@ -294,14 +296,18 @@ vec4 sceneShade(vec2 fc) {
     // scene11 is scene10 with the film nearer the still's v5: thicker and more varied, so some green
     // and yellow return beside the blue and magenta, and the light through it only half neutral.
     bool palantir = uMat >= 23;
-    bool richer = uMat >= 25;
+    bool cloud = palantir && !(uMat == 30 && uDark > 0.5);
+    bool richer = uMat >= 25 && !(uMat == 30 && uDark > 0.5);
     // scene12 is scene11 with a dye in the film: green is held back where it leads, and yellow (red
     // and green with no blue) with it, so blue, cyan, red, pink and violet are what the film shows.
     bool dyed = uMat == 26;
     // scene13 dyes the other way: where red and green lead together (yellow, orange) blue is added,
     // so it turns pink or pale, and green alone is damped; v12's cut left orange and grey behind.
     bool dyed2 = uMat == 27 || uMat == 28;
-    bool turned = uMat == 29;
+    // scene16 is scene15 on light. On dark it is the still's v5 bubble (the film as the study had it,
+    // no cloud, no hue turn), moved only by the swirl: a coloured cloud needs a white face under it.
+    bool nightPlain = uMat == 30 && uDark > 0.5;
+    bool turned = uMat == 29 || (uMat == 30 && !nightPlain);
     // scene14 is scene13 with the colour turned back up after the dye, which had left it flat.
     bool vivid = uMat == 28;
     float hold = (uMat >= 24 && uDark > 0.5) ? 0.45 : 1.0;
@@ -317,7 +323,7 @@ vec4 sceneShade(vec2 fc) {
     // magenta, violet and blue and no green or yellow. Nothing else differs.
     // scene7 is scene6 with the film thicker toward the rim, by exactly what the grazing angle takes
     // off the light's path through it, so the colour stays magenta and blue all the way to the edge.
-    bool thin = uMat >= 20;
+    bool thin = uMat >= 20 && !(uMat == 30 && uDark > 0.5);
     float cosF = sqrt(1.0 - (1.0 - c * c) / (1.33 * 1.33));
     float th = richer ? (360.0 + 90.0 * sin(flow)) / cosF : uMat >= 21 ? (335.0 + (palantir ? 45.0 : 25.0) * sin(flow)) / cosF : thin ? 335.0 + 25.0 * sin(flow) + 20.0 * (1.0 - c) : 420.0 + 220.0 * sin(flow) + 160.0 * (1.0 - c);
     // scene1 has the study's film; scene2 the same film in pastel: less saturated, a shade fainter.
@@ -371,8 +377,8 @@ vec4 sceneShade(vec2 fc) {
     // scene8 is scene7 with the light through the film left neutral: a real film passes the complement
     // of what it reflects, which on a white face turns the rim yellow-green; here it passes grey, so
     // the blue and magenta it reflects are what you see on white too.
-    if (uMat >= 22) T = richer ? mix(T, vec3(dot(T, vec3(0.333))), 0.5) : vec3(dot(T, vec3(0.333)));
-    if (palantir) {
+    if (uMat >= 22 && !nightPlain) T = richer ? mix(T, vec3(dot(T, vec3(0.333))), 0.5) : vec3(dot(T, vec3(0.333)));
+    if (cloud) {
         float smoke = 0.5 + 0.5 * sin(sw.x * 2.3 + uTime * 0.7) * sin(sw.y * 1.9 - uTime * 0.5);
         wash += f * ((dark ? 0.18 : 0.28) * c) * smoke * hold;
     }
