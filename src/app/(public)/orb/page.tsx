@@ -17,10 +17,12 @@ const FAMILIES: { name: string; versions: Version[] }[] = [
     {
         name: "Soap bubble, still",
         versions: [
+            // v3 is v0's scene, ray-traced, with a white face for the light icon and a dark face for the dark one.
+            { name: "v3", material: "soap3", whole: ["/orb-study/tile-first-white.png", "/orb-study/tile-first-dark.png"] },
             { name: "v2", material: "soap3", still: "/orb-study/bubble.png" },
             { name: "v1", material: "soap3", still: "/orb-study/bubble-first.png", stillDark: "/orb-study/bubble-first-dark.png" },
-            // The study's own tile, ray-traced: the grey face it had, a white face, and a dark face.
-            { name: "v0", material: "soap3", whole: ["/orb-study/tile-first.png", "/orb-study/tile-first-white.png", "/orb-study/tile-first-dark.png"] },
+            // The study's own tile, ray-traced, with the grey face it had.
+            { name: "v0", material: "soap3", whole: ["/orb-study/tile-first.png"] },
         ],
     },
     {
