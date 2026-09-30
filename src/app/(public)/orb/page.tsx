@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { OrbGlass } from "@/components/app/orb-glass";
 import { OrbGlassTile } from "@/components/app/orb-glass-tile";
 import { OrbLogo } from "@/components/app/orb-logo";
@@ -21,7 +22,7 @@ const STUDIES: { material: OrbGlassMaterial; title: string; note: string }[] = [
     {
         material: "bubble",
         title: "Iridescent bubble",
-        note: "A soap film and nothing inside it. The page shows through; the colour is the film's own, and it runs with the film's thickness, which drains and flows.",
+        note: "A glass bubble after the reference: blue at the top, magenta low left, a warm light low in it, a double rim, and the film's colour laid over it in soft washes that flow.",
     },
     {
         material: "black",
@@ -51,6 +52,19 @@ export default function OrbStudyPage() {
                     <h1 className="text-display-sm font-semibold text-primary">Orb</h1>
                     <p className="max-w-2xl text-md text-tertiary">The mark as real glass, drawn by the GPU. Move the pointer: the studio lights follow it.</p>
                 </div>
+
+                <section className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-1">
+                        <h2 className="text-md font-semibold text-primary">Soap bubble, the study&rsquo;s still</h2>
+                        <p className="max-w-2xl text-sm text-tertiary">
+                            The ray-traced picture from the study, pixel for pixel: the same film and wall, drawn once on the CPU and kept as a file. Not live.
+                        </p>
+                    </div>
+                    <div className="grid gap-3 xl:grid-cols-2">
+                        <StillStage />
+                        <StillStage dark />
+                    </div>
+                </section>
 
                 {STUDIES.map((study) => (
                     <section key={study.title} className="flex flex-col gap-3">
@@ -87,12 +101,53 @@ export default function OrbStudyPage() {
                         <p className="max-w-2xl text-sm text-tertiary">Each tile at 288 px, the size the App Store draws it.</p>
                     </div>
                     <div className="flex flex-wrap gap-6">
+                        <section className="flex flex-col gap-3">
+                            <div className="flex flex-col gap-1">
+                                <h2 className="text-md font-semibold text-primary">Soap bubble, the study&rsquo;s still</h2>
+                                <p className="max-w-2xl text-sm text-tertiary">
+                                    The ray-traced picture from the study, pixel for pixel: the same film and wall, drawn once on the CPU and kept as a file.
+                                    Not live.
+                                </p>
+                            </div>
+                            <div className="grid gap-3 xl:grid-cols-2">
+                                <StillStage />
+                                <StillStage dark />
+                            </div>
+                        </section>
+
                         {STUDIES.map((study) => (
                             <OrbGlassTile key={study.title} size={288} material={study.material} label={`${study.title}, as the app icon`} />
                         ))}
                     </div>
                 </section>
             </main>
+        </div>
+    );
+}
+
+// The study's render as files, laid out as the live rows are, so the two can be judged side by side.
+function StillStage({ dark = false }: { dark?: boolean }) {
+    const orb = (size: number) => <Image src="/orb-study/bubble.png" alt="" width={size} height={size} className="shrink-0" unoptimized />;
+    return (
+        <div className={cx("flex flex-wrap items-center gap-6 rounded-2xl bg-primary p-6 text-primary ring-1 ring-secondary ring-inset", dark && "dark-mode")}>
+            <Image
+                src="/orb-study/bubble-tile.png"
+                alt="The study's bubble, as the app icon"
+                width={120}
+                height={120}
+                className="shrink-0"
+                style={{ borderRadius: 27 }}
+                unoptimized
+            />
+            <div className="flex items-center gap-4">
+                {orb(64)}
+                {orb(32)}
+                {orb(16)}
+            </div>
+            <span className="flex items-center gap-2 text-lg font-semibold">
+                {orb(24)}
+                Card Orb
+            </span>
         </div>
     );
 }

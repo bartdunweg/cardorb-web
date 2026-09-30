@@ -136,10 +136,11 @@ vec4 shade(vec2 fc) {
 
     if (uMat == 2) {
         // The film's thickness drains downward and flows with time; that alone is the colour.
-        float flow = pos.y * 3.2 + uTime * 0.5 + 1.1 * sin(pos.x * 2.4 + uTime * 0.27) + 0.6 * sin((pos.x + pos.z) * 4.2 - uTime * 0.35);
-        float thick = 3.4 + 1.4 * sin(flow) + 0.9 * (0.5 - 0.5 * pos.y) + 0.5 * x;
+        // Broad, slow swaths rather than tight bands: the film varies over the whole ball, not every few degrees.
+        float flow = pos.y * 1.3 + uTime * 0.3 + 0.9 * sin(pos.x * 1.1 + uTime * 0.17) + 0.5 * sin((pos.x + pos.z) * 1.8 - uTime * 0.23);
+        float thick = 2.6 + 0.9 * sin(flow) + 0.5 * (0.5 - 0.5 * pos.y) + 0.8 * x;
         float F1 = fresnel(0.02, x);
-        vec3 front = refl * film(cosT, thick, 1.33, 1.6) * F1;
+        vec3 front = refl * film(cosT, thick, 1.33, 1.4) * F1;
         // The far side of the shell, seen through the near one, mirrors the studio the other way.
         vec3 p2 = ro + rd * (-b + sqrt(h));
         vec3 n2 = -normalize(p2);
@@ -147,14 +148,28 @@ vec4 shade(vec2 fc) {
         float F2 = fresnel(0.02, 1.0 - cos2) * (1.0 - F1);
         vec3 back = env(reflect(rd, n2)) * film(cos2, thick + 0.6, 1.33, 1.6) * F2;
         // A breath of haze inside, so the bubble has a body on white and the film's colour a place to sit.
-        // A breath of haze inside, so the bubble has a body on white, and bands across the whole face.
-        float haze = 0.2 + 0.1 * kdif;
-        vec3 milk = mix(vec3(1.0), film(cosT, thick, 1.33, 1.3), 0.7) * haze;
-        vec3 face = film(cosT, thick, 1.33, 1.6) * (0.14 + 0.5 * rl) * (1.0 - x) * 0.35;
-        // Light that came in at the top leaves at the bottom rim.
-        float pool = pow(x, 2.0) * (0.5 + 0.5 * smoothstep(0.3, -0.7, n.y)) * 0.35;
-        vec3 col = front * 2.0 + back * 1.4 + milk + face + vec3(pool) * film(cosT, thick, 1.33, 1.4);
-        float a = clamp(F1 + F2 + haze + pool * 0.6 + 0.12 * (1.0 - x), 0.0, 1.0);
+        // A bright milky body, lit from the top left, with the film's colour laid over it in soft washes.
+        float haze = 0.62 + 0.18 * kdif;
+        vec3 wash = film(cosT, thick, 1.33, 1.25);
+        // The reference leans blue and pink: the film's green is held back, its blue and red let through.
+        wash = wash * vec3(1.1, 0.7, 1.3) + vec3(0.02, 0.0, 0.12);
+        // The body itself is pale blue at the top and pink low left, as the reference is lit.
+        vec3 body = mix(vec3(0.5, 0.76, 1.0), vec3(0.92, 0.42, 0.9), smoothstep(0.55, -0.55, n.y + n.x * 0.45));
+        // A pale centre, so the colour sits at the sides and the ball reads as lit from within.
+        body = mix(body, vec3(0.92, 0.95, 1.0), 0.55 * smoothstep(0.75, 0.2, length(n.xy - vec2(0.15, 0.2))));
+        vec3 milk = mix(body, wash, 0.4) * haze;
+        vec3 face = wash * (0.12 + 0.4 * rl) * (1.0 - x) * 0.3;
+        // Light that came in at the top leaves low in the ball: a warm hot spot, and a glow along the bottom rim.
+        vec3 hot = normalize(vec3(-0.12, -0.62, 0.77));
+        float spot = pow(max(dot(n, hot), 0.0), 40.0);
+        vec3 glowc = vec3(1.0, 0.95, 0.85) * spot * 3.0 + vec3(1.0, 0.65, 0.9) * pow(max(dot(n, hot), 0.0), 5.0) * 0.6;
+        float pool = pow(x, 2.0) * (0.5 + 0.5 * smoothstep(0.3, -0.7, n.y)) * 0.3;
+        // The glass rim: a thin bright line where the shell is seen edge-on.
+        float rim = smoothstep(0.86, 0.985, x) * (1.0 - smoothstep(0.985, 1.0, x));
+        // The shell has thickness: a second, fainter contour a little way in, as the reference shows.
+        float inner = smoothstep(0.62, 0.72, x) * (1.0 - smoothstep(0.72, 0.8, x));
+        vec3 col = front * 1.6 + back * 1.2 + milk + face + glowc + vec3(pool) * wash + vec3(rim) * 0.7 + vec3(inner) * 0.18;
+        float a = clamp(F1 + F2 + haze + spot * 0.5 + pool * 0.6 + rim * 0.5 + 0.15 * (1.0 - x), 0.0, 1.0);
         col = pow(aces(col), vec3(1.0 / 2.2));
         return vec4(col, a);
     }
