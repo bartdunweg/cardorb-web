@@ -52,7 +52,8 @@ export type OrbGlassMaterial =
     | "scene16"
     | "scene17"
     | "scene18"
-    | "scene19";
+    | "scene19"
+    | "scene20";
 
 /** A scene material draws the whole tile (face, shadow, ball) rather than a bare ball; the tile round it is then nothing but a hairline. */
 export const orbGlassIsScene = (material: OrbGlassMaterial): boolean => orbGlassFamily(material) === "scene";
@@ -90,6 +91,7 @@ export const ORB_GLASS_MATERIAL_INDEX: Record<OrbGlassMaterial, number> = {
     scene17: 31,
     scene18: 32,
     scene19: 33,
+    scene20: 34,
 };
 
 /** Which materials move on their own (a film that flows), so a frame loop knows to keep going. Glass only moves with the lights. */
@@ -323,6 +325,9 @@ vec4 sceneShade(vec2 fc) {
     // that thins the film's colour. A milky, faintly cool body stands in for it and the film's
     // reflections drop to a bit over half, so dark reads as a dimmer light, not a louder one.
     bool nightSoft = uMat == 33 && uDark > 0.5;
+    // scene20 is scene18 with, on dark, only the colour tempered: the film half as saturated and its
+    // reflections at 70 percent. Nothing added, no milk (the owner's call after v19).
+    bool nightTempered = uMat == 34 && uDark > 0.5;
     bool turned = uMat == 29 || (uMat >= 30 && !nightPlain);
     // scene14 is scene13 with the colour turned back up after the dye, which had left it flat.
     bool vivid = uMat == 28;
@@ -358,6 +363,7 @@ vec4 sceneShade(vec2 fc) {
     float ph = deep ? clamp(sm(0.7, -0.7, p.y * 0.8 - p.x * 0.5) + 0.25 * sin(flow), 0.0, 1.0) : 0.5 + 0.5 * sin(flow * 0.8 + 1.5 * (1.0 - c) - 0.6);
     vec3 pal = deep ? mix(vec3(0.35, 0.62, 1.0), vec3(0.88, 0.32, 0.86), ph) : mix(vec3(0.55, 0.75, 1.0), vec3(0.92, 0.55, 0.95), ph);
     vec3 f = palette ? pal : nightStudy ? filmS(th, c, 1.33) : saturateS(filmS(th, c, 1.33), pastel ? 1.05 : 1.7);
+    if (nightTempered) f = saturateS(f, 0.5);
     if (dyed) {
         f.g -= 0.7 * max(0.0, f.g - max(f.r, f.b));
         f.g *= mix(0.45, 1.0, clamp(f.b, 0.0, 1.0));
@@ -388,6 +394,7 @@ vec4 sceneShade(vec2 fc) {
         if (vivid) fb = saturateS(fb, 1.5);
     }
     if (turned) fb = noGreen(fb);
+    if (nightTempered) fb = saturateS(fb, 0.5);
     vec3 back = traceS(pb, rb) * fb * amp * 1.2;
     vec3 behind = traceS(pb, d);
     vec3 T = (1.0 - R) * (1.0 - fb * amp * 1.2);
@@ -404,6 +411,10 @@ vec4 sceneShade(vec2 fc) {
         wash += f * ((dark ? 0.18 : 0.28) * c) * smoke * hold;
     }
     vec3 haze = (dark ? vec3(0.4, 0.5, 0.72) * (0.045 * (0.6 + 0.4 * sm(-0.6, 0.8, p.y)) + 0.02 * c) : vec3(0.0)) + wash;
+    if (nightTempered) {
+        front *= 0.7;
+        back *= 0.7;
+    }
     if (nightSoft) {
         haze += vec3(0.62, 0.66, 0.74) * (0.1 + 0.1 * c) * (0.75 + 0.25 * sm(-0.7, 0.7, p.y));
         front *= 0.55;
