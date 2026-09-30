@@ -40,7 +40,8 @@ export type OrbGlassMaterial =
     | "scene4"
     | "scene5"
     | "scene6"
-    | "scene7";
+    | "scene7"
+    | "scene8";
 
 /** A scene material draws the whole tile (face, shadow, ball) rather than a bare ball; the tile round it is then nothing but a hairline. */
 export const orbGlassIsScene = (material: OrbGlassMaterial): boolean => orbGlassFamily(material) === "scene";
@@ -66,6 +67,7 @@ export const ORB_GLASS_MATERIAL_INDEX: Record<OrbGlassMaterial, number> = {
     scene5: 19,
     scene6: 20,
     scene7: 21,
+    scene8: 22,
 };
 
 /** Which materials move on their own (a film that flows), so a frame loop knows to keep going. Glass only moves with the lights. */
@@ -253,9 +255,9 @@ vec4 sceneShade(vec2 fc) {
     // magenta, violet and blue and no green or yellow. Nothing else differs.
     // scene7 is scene6 with the film thicker toward the rim, by exactly what the grazing angle takes
     // off the light's path through it, so the colour stays magenta and blue all the way to the edge.
-    bool thin = uMat == 20 || uMat == 21;
+    bool thin = uMat >= 20;
     float cosF = sqrt(1.0 - (1.0 - c * c) / (1.33 * 1.33));
-    float th = uMat == 21 ? (335.0 + 25.0 * sin(flow)) / cosF : thin ? 335.0 + 25.0 * sin(flow) + 20.0 * (1.0 - c) : 420.0 + 220.0 * sin(flow) + 160.0 * (1.0 - c);
+    float th = uMat >= 21 ? (335.0 + 25.0 * sin(flow)) / cosF : thin ? 335.0 + 25.0 * sin(flow) + 20.0 * (1.0 - c) : 420.0 + 220.0 * sin(flow) + 160.0 * (1.0 - c);
     // scene1 has the study's film; scene2 the same film in pastel: less saturated, a shade fainter.
     // scene3 drops the spectrum for a palette after the owner's reference: blue running to violet and
     // pink in broad washes over the ball, the rim white glass, more of the colour in the body.
@@ -284,6 +286,10 @@ vec4 sceneShade(vec2 fc) {
     vec3 washTint = 0.6 + 0.5 * f;
     vec3 wash = palette ? pal * ((dark ? (tinted ? 0.22 : 0.09) : (tinted ? 0.55 : 0.3)) * c) : vec3(0.75, 0.82, 1.0) * washTint * ((dark ? 0.06 : 0.16) * c);
     if (tinted) T *= mix(vec3(1.0), pal, (deep ? 0.85 : 0.55) * c);
+    // scene8 is scene7 with the light through the film left neutral: a real film passes the complement
+    // of what it reflects, which on a white face turns the rim yellow-green; here it passes grey, so
+    // the blue and magenta it reflects are what you see on white too.
+    if (uMat == 22) T = vec3(dot(T, vec3(0.333)));
     vec3 haze = (dark ? vec3(0.4, 0.5, 0.72) * (0.045 * (0.6 + 0.4 * sm(-0.6, 0.8, p.y)) + 0.02 * c) : vec3(0.0)) + wash;
     vec3 col = front + back + behind * T + haze + vec3(sun);
     return vec4(pow(softS(col), vec3(1.0 / 2.2)), 1.0);
