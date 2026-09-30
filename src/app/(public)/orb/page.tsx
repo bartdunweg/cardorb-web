@@ -36,6 +36,16 @@ const STUDIES: { material: OrbGlassMaterial; title: string; note: string }[] = [
     },
 ];
 
+// The soap bubble as it stood at each step, newest first: the still and the live one, each as the
+// light and the dark icon, with and without a shadow. Kept so a step back is a look, not a revert.
+const VERSIONS: { name: string; material: OrbGlassMaterial; still?: string; stillDark?: string }[] = [
+    { name: "Still, now", material: "soap", still: "/orb-study/bubble.png" },
+    { name: "Still, first", material: "soap", still: "/orb-study/bubble-first.png", stillDark: "/orb-study/bubble-first-dark.png" },
+    { name: "Live, now", material: "soap" },
+    { name: "Live, second", material: "soapSecond" },
+    { name: "Live, first", material: "soapFirst" },
+];
+
 /**
  * The orb as glass: studies for the mark, live, at an address anyone can open. Each row is one
  * material on a light and a dark page, as the app icon, bare at the sizes the app draws it, and
@@ -78,6 +88,21 @@ export default function OrbStudyPage() {
                         </div>
                     </section>
                 ))}
+
+                <section className="flex flex-col gap-3">
+                    <h2 className="text-md font-semibold text-primary">The soap bubble, every version</h2>
+                    <div className="flex flex-col gap-4">
+                        {VERSIONS.map((v) => (
+                            <div key={v.name} className="flex flex-wrap items-center gap-4">
+                                <span className="w-24 text-xs text-tertiary">{v.name}</span>
+                                <OrbGlassTile size={120} material={v.material} still={v.still} />
+                                <OrbGlassTile size={120} material={v.material} still={v.still} shadow={false} />
+                                <OrbGlassTile size={120} material={v.material} still={v.stillDark ?? v.still} dark />
+                                <OrbGlassTile size={120} material={v.material} still={v.stillDark ?? v.still} dark shadow={false} />
+                            </div>
+                        ))}
+                    </div>
+                </section>
 
                 <section className="flex flex-col gap-3">
                     <div className="flex flex-col gap-1">

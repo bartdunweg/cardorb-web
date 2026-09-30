@@ -18,12 +18,13 @@
  * the canvas.
  */
 
-export type OrbGlassMaterial = "black" | "violet" | "bubble" | "soap";
+export type OrbGlassMaterial = "black" | "violet" | "bubble" | "soap" | "soapFirst" | "soapSecond";
 
-export const ORB_GLASS_MATERIAL_INDEX: Record<OrbGlassMaterial, number> = { black: 0, violet: 1, bubble: 2, soap: 3 };
+/** soapFirst and soapSecond are the soap bubble as it stood before, kept so the versions can be judged side by side. */
+export const ORB_GLASS_MATERIAL_INDEX: Record<OrbGlassMaterial, number> = { black: 0, violet: 1, bubble: 2, soap: 3, soapFirst: 4, soapSecond: 5 };
 
 /** Which materials move on their own (a film that flows), so a frame loop knows to keep going. Glass only moves with the lights. */
-export const ORB_GLASS_FLOWS: Record<OrbGlassMaterial, boolean> = { black: false, violet: false, bubble: true, soap: true };
+export const ORB_GLASS_FLOWS: Record<OrbGlassMaterial, boolean> = { black: false, violet: false, bubble: true, soap: true, soapFirst: true, soapSecond: true };
 
 /** A number a shader can take: the fraction of the canvas the sphere fills, leaving room for antialiasing. */
 export const ORB_GLASS_FILL = 0.96;
@@ -38,7 +39,7 @@ export const ORB_GLASS_FRAGMENT = `#version 300 es
 precision highp float;
 out vec4 O;
 uniform vec2 uRes;
-uniform int uMat;        // 0 black glass, 1 violet glass, 2 iridescent bubble, 3 soap bubble
+uniform int uMat;        // 0 black glass, 1 violet glass, 2 iridescent bubble, 3 soap bubble, 4 and 5 the soap bubble's earlier versions
 uniform vec3 uFloor;     // the colour under and behind the orb, in linear light
 uniform float uFloorMix; // how much of the studio's lower half that colour replaces
 uniform vec2 uTilt;      // where the lights are pulled to, -1..1 each way
@@ -127,23 +128,45 @@ vec4 shade(vec2 fc) {
     float kdif = max(dot(n, keyDir()), 0.0);
     float rl = clamp(dot(refl, vec3(0.2126, 0.7152, 0.0722)), 0.0, 2.0);
 
-    if (uMat == 3) {
+    if (uMat >= 3) {
         // The study's bubble: a thin film front and back, the studio's wall seen through both.
         float flow = pos.y * 3.2 + uTime * 0.5 + 1.2 * sin(pos.x * 2.4 + uTime * 0.27 + 0.5) + 0.6 * sin((pos.x + pos.z) * 4.2 - uTime * 0.35);
         float thick = 3.8 + 1.7 * sin(flow) + 1.4 * x;
         float amp = 0.04 + 0.96 * pow(x, 3.0);
-        vec3 R1 = film(cosT, thick + 0.4, 1.33, 1.2) * amp * 1.9;
-        vec3 front = refl * R1;
         vec3 p2 = ro + rd * (-b + sqrt(h));
         vec3 n2 = -normalize(p2);
         float cos2 = clamp(dot(n2, -rd), 0.0, 1.0);
+        float sun = pow(max(dot(R, sunDir()), 0.0), 700.0) * 22.0;
+        if (uMat == 4) {
+            // The first: ACES, a grey wall leaning halfway to the page.
+            vec3 R1 = film(cosT, thick, 1.33, 1.35) * amp * 1.6;
+            vec3 R2 = film(cos2, thick + 0.6, 1.33, 1.35) * amp * 1.2;
+            vec3 wall = mix(vec3(0.6, 0.6, 0.63), uFloor, 0.5) * (0.85 + 0.15 * kdif);
+            vec3 col = refl * R1 + env(reflect(rd, n2)) * R2 + wall * (1.0 - R1) * (1.0 - R2) + vec3(sun);
+            return vec4(pow(aces(col), vec3(1.0 / 2.2)), 1.0);
+        }
+        if (uMat == 5) {
+            // The second: the soft curve, a paler wall, more film; on a dark page the page through the film.
+            vec3 R1 = film(cosT, thick, 1.33, 1.5) * amp * 1.9;
+            vec3 R2 = film(cos2, thick + 0.6, 1.33, 1.5) * amp * 1.4;
+            vec3 front = refl * R1;
+            vec3 back = env(reflect(rd, n2)) * R2;
+            vec3 T = (1.0 - R1) * (1.0 - R2);
+            if (uDark > 0.5) {
+                vec3 col = pow(soft(front * 1.3 + back + vec3(0.03) + vec3(sun)), vec3(1.0 / 2.2));
+                return over(col, 1.0 - dot(T, vec3(0.333)) * 0.92);
+            }
+            vec3 wall = mix(vec3(0.72, 0.72, 0.75), uFloor, 0.45) * (0.88 + 0.12 * kdif);
+            return vec4(pow(soft(front + back + wall * T + vec3(sun)), vec3(1.0 / 2.2)), 1.0);
+        }
+        vec3 R1 = film(cosT, thick + 0.4, 1.33, 1.2) * amp * 1.9;
+        vec3 front = refl * R1;
         vec3 R2 = film(cos2, thick + 1.0, 1.33, 1.2) * amp * 1.4;
         vec3 back = env(reflect(rd, n2)) * R2;
         // The wall behind the bubble: the studio's own pale wall, the same on every page, so the
         // bubble is one object wherever it sits (the owner's call), not a page seen through a film.
         vec3 wall = vec3(0.84, 0.84, 0.87) * (0.88 + 0.12 * kdif);
         vec3 T = (1.0 - R1) * (1.0 - R2);
-        float sun = pow(max(dot(R, sunDir()), 0.0), 700.0) * 22.0;
         vec3 col = front + back + wall * T + vec3(sun);
         col = pow(soft(col), vec3(1.0 / 2.2));
         return vec4(col, 1.0);

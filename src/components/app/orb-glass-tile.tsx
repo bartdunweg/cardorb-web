@@ -11,6 +11,8 @@ type OrbGlassTileProps = {
     still?: string;
     /** The dark app icon: a near-black face, and a bubble on it lets that face through. */
     dark?: boolean;
+    /** Without it, the tile is the face and the orb alone: no glow under the glass, no shadow. */
+    shadow?: boolean;
     className?: string;
     label?: string;
 };
@@ -20,6 +22,8 @@ const GLOW: Record<OrbGlassMaterial, string> = {
     violet: "radial-gradient(closest-side, rgb(120 80 255 / 0.75), rgb(110 70 235 / 0.32) 50%, transparent)",
     bubble: "radial-gradient(closest-side, rgb(160 190 255 / 0.4), rgb(255 170 220 / 0.22) 50%, transparent)",
     soap: "radial-gradient(closest-side, rgb(160 190 255 / 0.28), rgb(255 170 220 / 0.14) 50%, transparent)",
+    soapFirst: "radial-gradient(closest-side, rgb(160 190 255 / 0.28), rgb(255 170 220 / 0.14) 50%, transparent)",
+    soapSecond: "radial-gradient(closest-side, rgb(160 190 255 / 0.28), rgb(255 170 220 / 0.14) 50%, transparent)",
 };
 
 // The app icon: a tile, the orb on it, the light the glass throws on the tile beneath it and its
@@ -27,7 +31,7 @@ const GLOW: Record<OrbGlassMaterial, string> = {
 // its face is the theme's white or its darkest neutral, and the glow and shadow are written out
 // here rather than taken from the theme (R-STYLE-001, deliberately: they are the colours the glass
 // throws, not the app's). The glass is live (OrbGlass) or the study's picture; the tile round it is CSS.
-export function OrbGlassTile({ size, material, still, dark = false, className, label }: OrbGlassTileProps) {
+export function OrbGlassTile({ size, material, still, dark = false, shadow = true, className, label }: OrbGlassTileProps) {
     const orb = size * 0.62;
     const top = (size - orb) / 2;
     const px = (n: number) => `${(size * n).toFixed(2)}px`;
@@ -44,19 +48,21 @@ export function OrbGlassTile({ size, material, still, dark = false, className, l
             }}
             {...(label ? { role: "img", "aria-label": label } : { "aria-hidden": true })}
         >
-            <div
-                className="absolute"
-                style={{
-                    left: px(0.05),
-                    right: px(0.05),
-                    top: top + orb * 0.5,
-                    height: orb * 0.75,
-                    background: GLOW[material],
-                    opacity: dark ? 0.7 : 1,
-                    filter: `blur(${px(0.045)})`,
-                }}
-            />
-            {!dark && (
+            {shadow && (
+                <div
+                    className="absolute"
+                    style={{
+                        left: px(0.05),
+                        right: px(0.05),
+                        top: top + orb * 0.5,
+                        height: orb * 0.75,
+                        background: GLOW[material],
+                        opacity: dark ? 0.7 : 1,
+                        filter: `blur(${px(0.045)})`,
+                    }}
+                />
+            )}
+            {shadow && !dark && (
                 <div
                     className="absolute rounded-full"
                     style={{
