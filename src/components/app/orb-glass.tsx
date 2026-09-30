@@ -64,6 +64,13 @@ class Studio {
     private clock = 0;
     private pointer: [number, number] | null = null;
     private moving = true;
+    /**
+     * Whether the GPU is real. A browser with no GPU (CI's Chromium, a locked-down VM) draws WebGL
+     * on the CPU, where one frame of the mark at 240 px takes long enough to hold up the page; the
+     * e2e sign-in never reached /dashboard in time with the loop running (2026-09-30). Such a
+     * machine gets one frame per orb and no loop, the same as reduced motion.
+     */
+    private readonly hardware: boolean;
 
     private constructor(gl: WebGL2RenderingContext, canvas: HTMLCanvasElement) {
         this.gl = gl;
@@ -92,9 +99,12 @@ class Studio {
         // A theme switch repaints, so a still mark never keeps the other theme's colours on a page that changed.
         new MutationObserver(() => this.schedule()).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
         document.addEventListener("visibilitychange", this.onVisibility);
+        const debug = gl.getExtension("WEBGL_debug_renderer_info");
+        const renderer = debug ? String(gl.getParameter(debug.UNMASKED_RENDERER_WEBGL)) : "";
+        this.hardware = !/swiftshader|llvmpipe|software/i.test(renderer);
         const media = matchMedia(REDUCED_MOTION);
         const update = () => {
-            this.moving = !media.matches;
+            this.moving = this.hardware && !media.matches;
             this.pointer = null;
             this.schedule();
         };
