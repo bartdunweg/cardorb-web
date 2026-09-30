@@ -34,17 +34,20 @@ export function OrbGlassTile({ size, material, still, whole, dark = false, shado
     const top = (size - orb) / 2;
     const px = (n: number) => `${(size * n).toFixed(2)}px`;
 
+    // The picture is the tile; the hairline round it is the same as the live tile's, so the two sit alike.
     if (whole) {
         return (
-            <Image
-                src={whole}
-                alt={label ?? ""}
-                width={size}
-                height={size}
-                className={cx("shrink-0", className)}
-                style={{ borderRadius: px(0.2237) }}
-                unoptimized
-            />
+            <div
+                className={cx("relative shrink-0 overflow-hidden", className)}
+                style={{ width: size, height: size, borderRadius: px(0.2237) }}
+                {...(label ? { role: "img", "aria-label": label } : { "aria-hidden": true })}
+            >
+                <Image src={whole} alt="" width={size} height={size} unoptimized />
+                <div
+                    className="pointer-events-none absolute inset-0"
+                    style={{ borderRadius: px(0.2237), boxShadow: dark ? "inset 0 0 0 1px rgb(255 255 255 / 0.1)" : "inset 0 0 0 1px rgb(0 0 0 / 0.08)" }}
+                />
+            </div>
         );
     }
 
