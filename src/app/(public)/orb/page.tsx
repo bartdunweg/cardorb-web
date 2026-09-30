@@ -17,6 +17,8 @@ const FAMILIES: { name: string; versions: Version[] }[] = [
     {
         name: "Soap bubble, still",
         versions: [
+            // v5 is v4 without the warm light low in the ball, which read as a white smudge.
+            { name: "v5", material: "soap3", whole: [{ src: "/orb-study/tile-v5-white.png" }, { src: "/orb-study/tile-v5-dark.png", dark: true }] },
             // v4 is v3 with a richer film: more colour, broader bands, a wash of it inside, a warm light low in the ball.
             { name: "v4", material: "soap3", whole: [{ src: "/orb-study/tile-irid-white.png" }, { src: "/orb-study/tile-irid-dark.png", dark: true }] },
             // v3 is v0's scene, ray-traced, with a white face for the light icon and a dark face for the dark one.
