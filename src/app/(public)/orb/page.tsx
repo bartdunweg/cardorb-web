@@ -98,20 +98,20 @@ export default function OrbStudyPage() {
                 <section className="flex flex-col gap-3">
                     <div className="flex flex-col gap-1">
                         <h2 className="text-md font-semibold text-primary">The icon, large</h2>
-                        <p className="max-w-2xl text-sm text-tertiary">Each tile at 288 px, the size the App Store draws it.</p>
+                        <p className="max-w-2xl text-sm text-tertiary">
+                            Each tile at 288 px, the size the App Store draws it: the light icon, then the dark one.
+                        </p>
                     </div>
                     <div className="flex flex-wrap gap-6">
-                        <Image
-                            src="/orb-study/bubble-tile.png"
-                            alt="The study&rsquo;s bubble, as the app icon"
-                            width={288}
-                            height={288}
-                            className="shrink-0"
-                            style={{ borderRadius: 64 }}
-                            unoptimized
-                        />
+                        <OrbGlassTile size={288} material="soap" still="/orb-study/bubble.png" label="The study's bubble, as the app icon" />
                         {STUDIES.map((study) => (
                             <OrbGlassTile key={study.title} size={288} material={study.material} label={`${study.title}, as the app icon`} />
+                        ))}
+                    </div>
+                    <div className="dark-mode flex flex-wrap gap-6 rounded-2xl bg-primary p-6 ring-1 ring-secondary ring-inset">
+                        <OrbGlassTile size={288} material="soap" still="/orb-study/bubble-dark.png" dark label="The study's bubble, as the dark app icon" />
+                        {STUDIES.map((study) => (
+                            <OrbGlassTile key={study.title} size={288} material={study.material} dark label={`${study.title}, as the dark app icon`} />
                         ))}
                     </div>
                 </section>
@@ -127,15 +127,7 @@ function StillStage({ dark = false }: { dark?: boolean }) {
     const orb = (size: number) => <Image src={src} alt="" width={size} height={size} className="shrink-0" unoptimized />;
     return (
         <div className={cx("flex flex-wrap items-center gap-6 rounded-2xl bg-primary p-6 text-primary ring-1 ring-secondary ring-inset", dark && "dark-mode")}>
-            <Image
-                src="/orb-study/bubble-tile.png"
-                alt="The study's bubble, as the app icon"
-                width={120}
-                height={120}
-                className="shrink-0"
-                style={{ borderRadius: 27 }}
-                unoptimized
-            />
+            <OrbGlassTile size={120} material="soap" still={src} dark={dark} />
             <div className="flex items-center gap-4">
                 {orb(64)}
                 {orb(32)}
@@ -155,7 +147,7 @@ function Stage({ material, dark = false }: { material: OrbGlassMaterial; dark?: 
     const surface = dark ? "dark" : "light";
     return (
         <div className={cx("flex flex-wrap items-center gap-6 rounded-2xl bg-primary p-6 text-primary ring-1 ring-secondary ring-inset", dark && "dark-mode")}>
-            <OrbGlassTile size={120} material={material} />
+            <OrbGlassTile size={120} material={material} dark={dark} />
             <div className="flex items-center gap-4">
                 <OrbGlass size={64} material={material} surface={surface} />
                 <OrbGlass size={32} material={material} surface={surface} />

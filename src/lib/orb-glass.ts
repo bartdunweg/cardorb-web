@@ -131,12 +131,12 @@ vec4 shade(vec2 fc) {
         float flow = pos.y * 3.2 + uTime * 0.5 + 1.2 * sin(pos.x * 2.4 + uTime * 0.27 + 0.5) + 0.6 * sin((pos.x + pos.z) * 4.2 - uTime * 0.35);
         float thick = 3.8 + 1.7 * sin(flow) + 1.4 * x;
         float amp = 0.04 + 0.96 * pow(x, 3.0);
-        vec3 R1 = film(cosT, thick, 1.33, 1.5) * amp * 1.9;
+        vec3 R1 = film(cosT, thick + 0.4, 1.33, 1.2) * amp * 1.9;
         vec3 front = refl * R1;
         vec3 p2 = ro + rd * (-b + sqrt(h));
         vec3 n2 = -normalize(p2);
         float cos2 = clamp(dot(n2, -rd), 0.0, 1.0);
-        vec3 R2 = film(cos2, thick + 0.6, 1.33, 1.5) * amp * 1.4;
+        vec3 R2 = film(cos2, thick + 1.0, 1.33, 1.2) * amp * 1.4;
         vec3 back = env(reflect(rd, n2)) * R2;
         // The wall behind the bubble: the studio's own pale grey, leaning to the page it sits on.
         vec3 wall = mix(vec3(0.72, 0.72, 0.75), uFloor, 0.45) * (0.88 + 0.12 * kdif);
@@ -144,8 +144,8 @@ vec4 shade(vec2 fc) {
         float sun = pow(max(dot(R, sunDir()), 0.0), 700.0) * 22.0;
         if (uDark > 0.5) {
             // The page is the wall: only the film's reflections, a breath of haze, and the sun sit over it.
-            vec3 col = pow(soft(front * 1.3 + back + vec3(0.03) + vec3(sun)), vec3(1.0 / 2.2));
-            return over(col, 1.0 - dot(T, vec3(0.333)) * 0.92);
+            vec3 col = pow(soft(front * 0.8 + back * 0.6 + vec3(0.012) + vec3(sun)), vec3(1.0 / 2.2));
+            return over(col, 1.0 - dot(T, vec3(0.333)) * 0.96);
         }
         vec3 col = front + back + wall * T + vec3(sun);
         col = pow(soft(col), vec3(1.0 / 2.2));
