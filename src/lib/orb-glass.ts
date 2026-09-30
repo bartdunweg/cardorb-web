@@ -51,7 +51,8 @@ export type OrbGlassMaterial =
     | "scene15"
     | "scene16"
     | "scene17"
-    | "scene18";
+    | "scene18"
+    | "scene19";
 
 /** A scene material draws the whole tile (face, shadow, ball) rather than a bare ball; the tile round it is then nothing but a hairline. */
 export const orbGlassIsScene = (material: OrbGlassMaterial): boolean => orbGlassFamily(material) === "scene";
@@ -88,6 +89,7 @@ export const ORB_GLASS_MATERIAL_INDEX: Record<OrbGlassMaterial, number> = {
     scene16: 30,
     scene17: 31,
     scene18: 32,
+    scene19: 33,
 };
 
 /** Which materials move on their own (a film that flows), so a frame loop knows to keep going. Glass only moves with the lights. */
@@ -316,7 +318,11 @@ vec4 sceneShade(vec2 fc) {
     // at the edge (amp to the third power) and the finer flow the study had, the swirl moving it.
     bool nightPlain = uMat >= 30 && uDark > 0.5;
     bool nightStudy = uMat >= 31 && uDark > 0.5;
-    bool nightExact = uMat == 32 && uDark > 0.5;
+    bool nightExact = uMat >= 32 && uDark > 0.5;
+    // scene19 is scene18 with, on dark, what light has for free: the white coming through the ball
+    // that thins the film's colour. A milky, faintly cool body stands in for it and the film's
+    // reflections drop to a bit over half, so dark reads as a dimmer light, not a louder one.
+    bool nightSoft = uMat == 33 && uDark > 0.5;
     bool turned = uMat == 29 || (uMat >= 30 && !nightPlain);
     // scene14 is scene13 with the colour turned back up after the dye, which had left it flat.
     bool vivid = uMat == 28;
@@ -326,7 +332,7 @@ vec4 sceneShade(vec2 fc) {
         float ang = uTime * 0.25 + 1.2 * (1.0 - length(p.xy));
         sw = mat2(cos(ang), -sin(ang), sin(ang), cos(ang)) * p.xy;
     }
-    float flow = (uMat == 32 && uDark > 0.5)
+    float flow = (uMat >= 32 && uDark > 0.5)
         ? sw.y * 3.2 + uTime * 0.6 + 1.2 * sin(sw.x * 2.4 + 0.5 + uTime * 0.4) + 0.6 * sin((sw.x + sw.y) * 4.2 - uTime * 0.5)
         : palantir
         ? sw.y * 1.6 + uTime * 0.6 + 1.1 * sin(sw.x * 1.3 + 0.5 + uTime * 0.4) + 0.5 * sin((sw.x + sw.y) * 2.1 - uTime * 0.5)
@@ -398,6 +404,11 @@ vec4 sceneShade(vec2 fc) {
         wash += f * ((dark ? 0.18 : 0.28) * c) * smoke * hold;
     }
     vec3 haze = (dark ? vec3(0.4, 0.5, 0.72) * (0.045 * (0.6 + 0.4 * sm(-0.6, 0.8, p.y)) + 0.02 * c) : vec3(0.0)) + wash;
+    if (nightSoft) {
+        haze += vec3(0.62, 0.66, 0.74) * (0.1 + 0.1 * c) * (0.75 + 0.25 * sm(-0.7, 0.7, p.y));
+        front *= 0.55;
+        back *= 0.55;
+    }
     vec3 col = front + back + behind * T + haze + vec3(sun);
     return vec4(pow(softS(col), vec3(1.0 / 2.2)), 1.0);
 }
