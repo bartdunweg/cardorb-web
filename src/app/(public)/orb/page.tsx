@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     robots: { index: false },
 };
 
-type Version = { name: string; material: OrbGlassMaterial; still?: string; stillDark?: string; whole?: string };
+type Version = { name: string; material: OrbGlassMaterial; still?: string; stillDark?: string; whole?: string[] };
 
 // Every version of every material, newest first within its family. A version is never edited:
 // a change is the next entry above it, so each step stays here to be judged against the others.
@@ -19,7 +19,8 @@ const FAMILIES: { name: string; versions: Version[] }[] = [
         versions: [
             { name: "v2", material: "soap3", still: "/orb-study/bubble.png" },
             { name: "v1", material: "soap3", still: "/orb-study/bubble-first.png", stillDark: "/orb-study/bubble-first-dark.png" },
-            { name: "v0", material: "soap3", whole: "/orb-study/tile-first.png" },
+            // The study's own tile, ray-traced: the grey face it had, a white face, and a dark face.
+            { name: "v0", material: "soap3", whole: ["/orb-study/tile-first.png", "/orb-study/tile-first-white.png", "/orb-study/tile-first-dark.png"] },
         ],
     },
     {
@@ -87,8 +88,18 @@ export default function OrbStudyPage() {
                                 {/* The study's own tile is one picture: no dark or shadowless twin exists. */}
                                 {v.whole ? (
                                     <>
-                                        <OrbGlassTile size={120} material={v.material} whole={v.whole} label={`${family.name} ${v.name}, the study's tile`} />
-                                        <OrbGlassTile size={288} material={v.material} whole={v.whole} />
+                                        {v.whole.map((src) => (
+                                            <OrbGlassTile
+                                                key={src}
+                                                size={120}
+                                                material={v.material}
+                                                whole={src}
+                                                label={`${family.name} ${v.name}, the study's tile`}
+                                            />
+                                        ))}
+                                        {v.whole.map((src) => (
+                                            <OrbGlassTile key={`${src}-large`} size={288} material={v.material} whole={src} />
+                                        ))}
                                     </>
                                 ) : (
                                     <>
