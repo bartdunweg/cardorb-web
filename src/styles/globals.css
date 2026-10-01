@@ -605,3 +605,14 @@ main[data-view-change] [data-my-cards-tabs] [role="tablist"] + span {
         translate: 8px 0;
     }
 }
+
+/* The mark's still under its canvas: one picture per theme, chosen by the theme's class. */
+.orb-mark-still[data-theme="dark"] {
+    display: none;
+}
+.dark-mode .orb-mark-still[data-theme="light"] {
+    display: none;
+}
+.dark-mode .orb-mark-still[data-theme="dark"] {
+    display: block;
+}

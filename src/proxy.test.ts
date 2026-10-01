@@ -7,7 +7,7 @@ const matcher = new RegExp(`^${config.matcher[0]}$`);
 
 describe("needsSession", () => {
     it("skips the session for the crawler's files, the legal pages and the API reference", () => {
-        for (const path of ["/robots.txt", "/sitemap.xml", "/opengraph-image", "/privacy", "/terms", "/docs/api"]) {
+        for (const path of ["/robots.txt", "/sitemap.xml", "/opengraph-image", "/privacy", "/terms", "/docs/api", "/orb"]) {
             expect(needsSession(path), path).toBe(false);
             // A skipped path must also be one the session is never read for: no nonce, so no
             // per-request render either.

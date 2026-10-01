@@ -16,7 +16,7 @@ import { SET_ID, stranger } from "./support.ts";
  */
 
 /** Open to anybody, and each one is a page rather than a redirect. */
-const OPEN = ["/", "/sets", `/sets/${SET_ID}`, "/login", "/signup", "/privacy", "/terms", "/docs/api"];
+const OPEN = ["/", "/sets", `/sets/${SET_ID}`, "/login", "/signup", "/privacy", "/terms", "/docs/api", "/orb"];
 
 /**
  * Open, and about the reader. Each opens and says what an account adds there rather than handing

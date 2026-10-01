@@ -79,13 +79,19 @@ export const ownedCount = async (page: Page): Promise<number> => {
  * forgetMineQuietly("binders") and refreshes the page only once that has answered, so the tile
  * this reads the address off is drawn after it rather than before.
  */
-export const makeBinder = async (page: Page, name: string): Promise<string> => {
+export const makeBinder = async (page: Page, name: string, { pokedex = false } = {}): Promise<string> => {
     await page.goto("/dashboard/collections");
     await page.getByRole("button", { name: "New binder" }).filter({ visible: true }).first().click();
     const dialog = page.getByRole("dialog");
     // Not getByLabel: the kit's Label renders the required-asterisk span in the DOM whether or not
     // it is shown, so an exact label match can miss where the accessible name does not (auth.setup.ts).
     await dialog.getByRole("textbox", { name: "Name", exact: true }).fill(name);
+    if (pokedex) {
+        // Space, not a click: the kit's Toggle puts its label over the input (profile.spec.ts).
+        const asDex = dialog.getByRole("switch", { name: /^Show as Pokédex/ });
+        await asDex.press("Space");
+        await expect(asDex).toBeChecked();
+    }
     const settled = cacheCleared(page);
     await dialog.getByRole("button", { name: "Create" }).click();
     await expect(page.getByText(`${name} is in your Binders now`)).toBeVisible();

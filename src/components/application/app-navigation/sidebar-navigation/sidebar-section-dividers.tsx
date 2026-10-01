@@ -14,7 +14,7 @@
 import type { ReactNode } from "react";
 import { SearchLg } from "@untitledui/icons";
 import Link from "next/link";
-import { OrbLogo } from "@/components/app/orb-logo";
+import { OrbMark } from "@/components/app/orb-mark";
 import { Input } from "@/components/base/input/input";
 import { MobileNavigationHeader } from "../base-components/mobile-header";
 import { NavAccountCard } from "../base-components/nav-account-card";
@@ -79,7 +79,7 @@ export const SidebarNavigationSectionDividers = ({
                         <div className="flex items-center justify-between gap-2">
                             {/* The rail's mark before the wordmark, so folding the sidebar keeps the mark in its place. */}
                             <Link href="/" className="flex items-center gap-3 text-lg font-semibold text-primary transition hover:opacity-70">
-                                <OrbLogo size={28} className="text-primary" />
+                                <OrbMark size={40} shadow={false} />
                                 Cardorb
                             </Link>
                             {headerAction}

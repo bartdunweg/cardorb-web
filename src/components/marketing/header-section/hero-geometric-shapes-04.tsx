@@ -1,6 +1,5 @@
-import { LandingPreview } from "@/components/app/landing-preview";
 import { LinkButton } from "@/components/app/link-button";
-import { Orb } from "@/components/app/orb";
+import { OrbMark } from "@/components/app/orb-mark";
 import { PublicTopBar } from "@/components/app/public-top-bar";
 
 // Public landing hero for Cardorb. Based on Untitled UI's hero-geometric-shapes-04, with the
@@ -8,11 +7,8 @@ import { PublicTopBar } from "@/components/app/public-top-bar";
 // the page ships no react-aria; the hero carries one call to
 // action, Get started, so it never competes with the bar's pair.
 //
-// The copy stands left and the product beside it, as Origin, Oku and Monarch set a tracking
-// product's hero: five columns of words, seven of picture from md up, four and eight from xl,
-// where the picture's four tiles stand in a row; on a phone the words first and the picture
-// under them, full width. The picture is Home drawn from the app's own parts (LandingPreview),
-// not a screenshot, so it never goes stale.
+// The mark, the words and the two ways in, centered, and nothing under them: the picture of
+// Home that stood there went on the owner's call (2026-09-30).
 export const HeroGeometricShapes04 = () => {
     return (
         <div className="relative flex min-h-dvh flex-col overflow-hidden bg-primary">
@@ -24,8 +20,8 @@ export const HeroGeometricShapes04 = () => {
             <main className="relative flex flex-1 flex-col pt-16 pb-8 md:pt-24 md:pb-12">
                 <div className="mx-auto flex w-full max-w-container flex-col items-center px-4 md:px-8">
                     <div className="flex w-full max-w-3xl flex-col items-center text-center">
-                        <Orb size={160} className="text-primary md:hidden" />
-                        <Orb size={220} className="hidden text-primary md:block" />
+                        <OrbMark size={240} className="md:hidden" />
+                        <OrbMark size={340} className="hidden md:block" />
                         <h1 className="mt-6 text-display-md font-medium text-balance text-primary md:text-display-lg lg:text-display-xl">
                             Organize your trading card collection
                         </h1>
@@ -45,7 +41,6 @@ export const HeroGeometricShapes04 = () => {
                             </LinkButton>
                         </div>
                     </div>
-                    <LandingPreview className="mt-12 w-full max-w-5xl md:mt-16" />
                 </div>
             </main>
 
