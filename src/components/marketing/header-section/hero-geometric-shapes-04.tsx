@@ -45,9 +45,10 @@ export const HeroGeometricShapes04 = () => {
                 </div>
             </main>
 
-            {/* One-row footer: who runs the site, the legal pages and the theme. The API reference is not
-                linked here: the API serves only our own apps, and a visitor cannot get a key. */}
-            <footer className="relative z-10 mx-auto flex w-full max-w-container flex-col-reverse items-center gap-4 px-4 py-6 sm:flex-row md:px-8">
+            {/* One-row footer: who runs the site, the legal pages and the theme, stacked in that order on a
+                phone so Tab goes the way the eye does. The API reference is not linked here: the API
+                serves only our own apps, and a visitor cannot get a key. */}
+            <footer className="relative z-10 mx-auto flex w-full max-w-container flex-col items-center gap-4 px-4 py-6 sm:flex-row md:px-8">
                 <p className="text-sm text-quaternary sm:mr-auto">© {new Date().getFullYear()} BADU Ventures B.V.</p>
                 <nav aria-label="Footer">
                     <ul className="flex items-center gap-6">

@@ -455,7 +455,7 @@ vec4 sceneShade(vec2 fc) {
     // scene21 to scene23 are scene20 on light. On dark the ball is black glass rather than a bubble
     // (the owner's call, 2026-10-01): nothing of the page comes through it, a black body below the
     // page's own dark, the studio mirrored in its gloss and the film over it. scene21 is plain black
-    // glass with the film at the rim as v20 has it; scene22 is an oil slick, the film's colour laid
+    // glass with the film at the rim, at full colour (v20's tempering is not applied); scene22 is an oil slick, the film's colour laid
     // over every reflection; scene23 is scene21 with v20's coloured cloud turning deep inside.
     if (uMat >= 35 && dark) {
         float Fg = 0.04 + 0.96 * pow(1.0 - c, 5.0);
