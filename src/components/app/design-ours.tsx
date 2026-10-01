@@ -18,6 +18,7 @@ import { CardTile } from "./card-tile";
 import { CollectionSwitch } from "./collection-switch";
 import { CopyCard } from "./copy-card";
 import { Cell, Group, Panel, type SectionSpec } from "./design-section";
+import { FilmBand } from "./film-band";
 import { FilterChip, FilterChipRow } from "./filter-chip";
 import { type FilterGroup, type FilterValues, FiltersSheet } from "./filters-sheet";
 import { FlagIcon } from "./flag-icon";
@@ -228,6 +229,22 @@ export const ourSections: SectionSpec[] = [
                     </Cell>
                     <Cell label="OrbGlassTile dark">
                         <OrbGlassTile size={120} material="scene20" dark />
+                    </Cell>
+                </Group>
+            </Panel>
+        ),
+    },
+    {
+        id: "film-band",
+        title: "FilmBand",
+        from: "components/app/film-band",
+        ours: true,
+        note: "The mark's soap film laid flat, as a header: the public profile's cover, with the avatar over its lower edge. The same film as the mark, moved by the domain warp of the radial site's Vesper backdrop. It flows slowly and stands still under reduced motion, out of view and without a GPU; before script a gradient of the same colours stands in.",
+        render: (
+            <Panel>
+                <Group title="As a cover" cols="single">
+                    <Cell label='className="h-40 w-full rounded-2xl sm:h-56"' span="full">
+                        <FilmBand className="h-40 w-full rounded-2xl sm:h-56" />
                     </Cell>
                 </Group>
             </Panel>

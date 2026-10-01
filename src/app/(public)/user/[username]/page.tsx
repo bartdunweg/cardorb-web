@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { AppEmptyState } from "@/components/app/app-empty-state";
 import { BinderBody } from "@/components/app/binder-body";
 import { DashboardLink } from "@/components/app/dashboard-link";
+import { FilmBand } from "@/components/app/film-band";
 import { LinkButton } from "@/components/app/link-button";
 import { PublicTopBar } from "@/components/app/public-top-bar";
 import { ListSkeleton } from "@/components/app/skeletons";
@@ -144,9 +145,12 @@ async function Profile({
             <PublicTopBar menu={viewer ? <DashboardLink account={viewer} /> : undefined} />
 
             <main className="mx-auto flex w-full max-w-container flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
-                {/* Centred, as a profile page is read: the person first, then what they hold, then the ways to act on it. */}
+                {/* Centred, as a profile page is read: the person first, then what they hold, then the ways to act on it.
+                    Over it the mark's soap film as a cover, the avatar half over its lower edge, ringed in the
+                    page's colour so it reads as standing in front of the band. */}
                 <div className="flex flex-col items-center gap-3 text-center">
-                    <Avatar size="2xl" pixels={96} src={profile.avatar_url ?? undefined} alt="" className="size-24" />
+                    <FilmBand className="h-40 w-full rounded-2xl sm:h-56" />
+                    <Avatar size="2xl" pixels={96} src={profile.avatar_url ?? undefined} alt="" className="-mt-15 size-24 ring-4 ring-(--color-bg-page)" />
                     <div className="flex flex-col items-center gap-1">
                         {/* A name of one long word (a username) breaks rather than widening the page on a phone. */}
                         <h1 className="max-w-full text-display-sm font-semibold tracking-tight wrap-anywhere text-primary">{name}</h1>
