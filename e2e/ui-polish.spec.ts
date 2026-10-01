@@ -12,23 +12,39 @@ const DRAWER = "cubic-bezier(0.32, 0.72, 0, 1)";
 type Enter = { tf: string; ty: string; cls: string };
 
 /**
- * Every `enter` animation on every page this test opens, with the timing function and the rise it
- * ran with. An init script, so it is listening before the page's own scripts: a press that lands
- * before hydration is replayed once React is in, and a listener added after `goto` could miss it.
+ * Every element that takes tw-animate's `animate-in` on every page this test opens, with the timing
+ * function and the rise it enters with. An init script, so it is listening before the page's own
+ * scripts: a press that lands before hydration is replayed once React is in, and a listener added
+ * after `goto` could miss it.
+ *
+ * Read when the class arrives, not on `animationstart`. That event waits for the next frame, and
+ * react-aria takes the entering classes off (in a flushSync) as soon as the animation has finished,
+ * which the browser settles before it sends the event. So on a busy runner a frame held up longer
+ * than the animation's 150 ms gave the listener an element with no animation left: "ease", the
+ * default, and a red test on a page that was right (CI, 2026-10-01). A MutationObserver answers
+ * right after React's commit, frames or no frames.
  */
 const recordEnters = (page: Page) =>
     page.addInitScript(() => {
         const w = window as unknown as { __enters: Enter[] };
         w.__enters = [];
-        document.addEventListener(
-            "animationstart",
-            (e) => {
-                if (e.animationName !== "enter" || !(e.target instanceof HTMLElement)) return;
-                const cs = getComputedStyle(e.target);
-                w.__enters.push({ tf: cs.animationTimingFunction, ty: cs.getPropertyValue("--tw-enter-translate-y").trim(), cls: e.target.className });
-            },
-            true,
-        );
+        const seen = new WeakSet<Element>();
+        const take = (el: Element) => {
+            if (!(el instanceof HTMLElement) || seen.has(el) || !el.classList.contains("animate-in")) return;
+            seen.add(el);
+            const cs = getComputedStyle(el);
+            w.__enters.push({ tf: cs.animationTimingFunction, ty: cs.getPropertyValue("--tw-enter-translate-y").trim(), cls: el.className });
+        };
+        new MutationObserver((records) => {
+            for (const r of records) {
+                if (r.type === "attributes") take(r.target as Element);
+                for (const node of r.addedNodes) {
+                    if (!(node instanceof Element)) continue;
+                    take(node);
+                    node.querySelectorAll(".animate-in").forEach(take);
+                }
+            }
+        }).observe(document, { subtree: true, childList: true, attributes: true, attributeFilter: ["class"] });
     });
 const enters = (page: Page) => page.evaluate(() => (window as unknown as { __enters: Enter[] }).__enters);
 /** The first recorded entry whose classes say it is `marker`, waited for rather than read once. */
