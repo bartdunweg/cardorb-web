@@ -53,7 +53,10 @@ export type OrbGlassMaterial =
     | "scene17"
     | "scene18"
     | "scene19"
-    | "scene20";
+    | "scene20"
+    | "scene21"
+    | "scene22"
+    | "scene23";
 
 /** How much of the tile's shadow and glow the mark carries: the tile's own read as too dark alone on a page. */
 export const ORB_MARK_SHADOW = 0.4;
@@ -95,6 +98,9 @@ export const ORB_GLASS_MATERIAL_INDEX: Record<OrbGlassMaterial, number> = {
     scene18: 32,
     scene19: 33,
     scene20: 34,
+    scene21: 35,
+    scene22: 36,
+    scene23: 37,
 };
 
 /** Which materials move on their own (a film that flows), so a frame loop knows to keep going. Glass only moves with the lights. */
@@ -445,6 +451,26 @@ vec4 sceneShade(vec2 fc) {
         haze += vec3(0.62, 0.66, 0.74) * (0.1 + 0.1 * c) * (0.75 + 0.25 * sm(-0.7, 0.7, p.y));
         front *= 0.55;
         back *= 0.55;
+    }
+    // scene21 to scene23 are scene20 on light. On dark the ball is black glass rather than a bubble
+    // (the owner's call, 2026-10-01): nothing of the page comes through it, a black body below the
+    // page's own dark, the studio mirrored in its gloss and the film over it. scene21 is plain black
+    // glass with the film at the rim as v20 has it; scene22 is an oil slick, the film's colour laid
+    // over every reflection; scene23 is scene21 with v20's coloured cloud turning deep inside.
+    if (uMat >= 35 && dark) {
+        float Fg = 0.04 + 0.96 * pow(1.0 - c, 5.0);
+        vec3 seen = traceS(p, r);
+        vec3 body = vec3(0.0025, 0.0027, 0.0038) * (0.5 + 0.5 * sm(-0.9, 0.9, p.y));
+        vec3 col = body + seen * Fg + front * 0.8 + vec3(sun);
+        if (uMat == 36) {
+            vec3 slick = saturateS(f, 1.6);
+            col = body + seen * Fg * (0.35 + 1.4 * slick) + front * 1.2 + slick * vec3(0.5, 0.55, 0.75) * 0.02 * (0.4 + 0.6 * sm(-0.6, 0.8, p.y)) + vec3(sun);
+        }
+        if (uMat == 37) {
+            float smoke = 0.5 + 0.5 * sin(sw.x * 2.3 + uTime * 0.7) * sin(sw.y * 1.9 - uTime * 0.5);
+            col += saturateS(f, 1.4) * smoke * 0.035 * c * c;
+        }
+        return vec4(pow(softS(col), vec3(1.0 / 2.2)), 1.0);
     }
     if (mark) {
         // What shows through the film: the page, with the ball's shadow and glow on it as on the tile.

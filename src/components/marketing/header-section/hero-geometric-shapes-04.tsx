@@ -1,10 +1,11 @@
 import { LinkButton } from "@/components/app/link-button";
 import { OrbMark } from "@/components/app/orb-mark";
 import { PublicTopBar } from "@/components/app/public-top-bar";
+import { ThemeSwitch } from "@/components/app/theme-switch";
 
 // Public landing hero for Cardorb. Based on Untitled UI's hero-geometric-shapes-04, with the
-// heavy marketing Header/nav replaced by the shared PublicTopBar and its buttons by plain links, so
-// the page ships no react-aria; the hero carries one call to
+// heavy marketing Header/nav replaced by the shared PublicTopBar and its buttons by plain links. The
+// one react-aria piece is the theme switch in the footer (the owner's call, 2026-10-01); the hero carries one call to
 // action, Get started, so it never competes with the bar's pair.
 //
 // The mark, the words and the two ways in, centered, and nothing under them: the picture of
@@ -44,10 +45,10 @@ export const HeroGeometricShapes04 = () => {
                 </div>
             </main>
 
-            {/* One-row footer: the legal pages and who runs the site. The API reference is not linked
-                here: the API serves only our own apps, and a visitor cannot get a key. */}
-            <footer className="relative z-10 mx-auto flex w-full max-w-container flex-col-reverse items-center gap-4 px-4 py-6 sm:flex-row sm:justify-between md:px-8">
-                <p className="text-sm text-quaternary">© {new Date().getFullYear()} BADU Ventures B.V.</p>
+            {/* One-row footer: who runs the site, the legal pages and the theme. The API reference is not
+                linked here: the API serves only our own apps, and a visitor cannot get a key. */}
+            <footer className="relative z-10 mx-auto flex w-full max-w-container flex-col-reverse items-center gap-4 px-4 py-6 sm:flex-row md:px-8">
+                <p className="text-sm text-quaternary sm:mr-auto">© {new Date().getFullYear()} BADU Ventures B.V.</p>
                 <nav aria-label="Footer">
                     <ul className="flex items-center gap-6">
                         {[
@@ -62,6 +63,7 @@ export const HeroGeometricShapes04 = () => {
                         ))}
                     </ul>
                 </nav>
+                <ThemeSwitch compact />
             </footer>
         </div>
     );

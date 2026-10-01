@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
-import { Code01, Download01, File02, Lock01, Monitor04, Moon01, Sun, UploadCloud01 } from "@untitledui/icons";
+import { Code01, Download01, File02, Lock01, UploadCloud01 } from "@untitledui/icons";
 import { checkUsername, removeAvatar, updateEmail, updatePassword, updateProfile, uploadAvatar } from "@/app/(app)/dashboard/settings/actions";
 import { signOut } from "@/app/(auth)/actions";
 import { FormError } from "@/components/app/form-error";
@@ -11,16 +11,14 @@ import { PricesPublicRow } from "@/components/app/prices-public-row";
 import { PublicProfileRow, publicUrl } from "@/components/app/public-profile-row";
 import { SettingsGroup, SettingsLinkRow, SettingsRow, SettingsTriggerRow, SheetHeader, settingsLabelClass } from "@/components/app/settings-rows";
 import { SheetDialog } from "@/components/app/sheet-dialog";
+import { ThemeSwitch } from "@/components/app/theme-switch";
 import { notify } from "@/components/app/toast";
 import { Avatar } from "@/components/base/avatar/avatar";
-import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { Toggle } from "@/components/base/toggle/toggle";
 import type { Profile } from "@/lib/profile";
-import { isTheme } from "@/lib/theme-script";
 import { orFailed } from "@/lib/write-outcome";
-import { useTheme } from "@/providers/theme";
 
 type Msg = { type: "ok" | "err"; text: string } | null;
 
@@ -190,11 +188,6 @@ export function SettingsForm({
     const [pw2, setPw2] = useState("");
     const [savingPw, setSavingPw] = useState(false);
     const [pwMsg, setPwMsg] = useState<Msg>(null);
-
-    const { theme, setTheme } = useTheme();
-    // The theme is undefined on the server and first client render alike, so "system" shows on
-    // both until it resolves after hydration: no mount flag, no mismatch.
-    const currentTheme = theme ?? "system";
 
     const saveProfile = async (publicDraft: boolean) => {
         setSavingProfile(true);
@@ -369,25 +362,7 @@ export function SettingsForm({
                 <h2 className={settingsLabelClass}>Preferences</h2>
                 <div className="flex flex-col gap-3 rounded-xl bg-page p-4 shadow-lift-xs ring-1 ring-primary ring-inset">
                     <span className="text-md text-primary">Theme</span>
-                    <ButtonGroup
-                        selectionMode="single"
-                        disallowEmptySelection
-                        selectedKeys={new Set([currentTheme])}
-                        onSelectionChange={(keys) => {
-                            const key = [...keys][0];
-                            if (isTheme(key)) setTheme(key);
-                        }}
-                    >
-                        <ButtonGroupItem id="light" iconLeading={Sun}>
-                            Light
-                        </ButtonGroupItem>
-                        <ButtonGroupItem id="dark" iconLeading={Moon01}>
-                            Dark
-                        </ButtonGroupItem>
-                        <ButtonGroupItem id="system" iconLeading={Monitor04}>
-                            System
-                        </ButtonGroupItem>
-                    </ButtonGroup>
+                    <ThemeSwitch />
                 </div>
             </section>
 
