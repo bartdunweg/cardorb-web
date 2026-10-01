@@ -29,6 +29,11 @@ returns to the page (`src/lib/return-to.ts`, read twice). A visitor's price line
 through the service role inside the API, never through a grant to anon. Design and decisions:
 `docs/superpowers/specs/2026-09-22-app-without-an-account-design.md`.
 
+**The mark is a soap bubble** (#784): v20 of the live scene, drawn by one shared WebGL2 context
+(`orb-glass.tsx`), with a still under it per theme; every version stays on `/orb`. **The public
+profile wears its film as a cover** (#785): `FilmBand`, the same film laid flat and moved by the
+radial site's Vesper warp, the avatar half over its lower edge.
+
 Live: landing, Home, Collection, Browse, Binders, Favorites, wishlist, set pages,
 command-palette search, Settings, public profile, and `/dashboard/design`, the design system,
 reachable only by typing the address (see `CLAUDE.md`).
@@ -73,6 +78,22 @@ A failing check opens one issue labelled `prod-check`, is commented on while it 
 closed by the first run it passes. A private profile is not a finding: those checks stand down.
 
 ## Last session
+
+**2026-10-01, the soap bubble merged and the profile's cover (#784, #785).** The session that made
+the bubble (#784) stopped on the weekly limit with e2e red, everything pushed. Two tests were
+wrong, not the page: the stat-tile test read Home, where "Pokémon collected" stands only beside a
+Pokédex binder the e2e account does not have (it makes one and deletes it now); the motion test
+read a popover's curve on `animationstart`, which arrives after react-aria has taken the entering
+classes off a finished animation, so any frame held up past 150 ms (the orb's software draw in
+CI) read "ease" (it reads the curve when the class arrives now, reproduced in Chromium both
+ways). Merged, the old session archived. Then the cover on `/user/[username]` (#785): the owner
+chose the film, a cover band and slow flow; the film's thickness is held between 409 and 455 nm,
+picked from a drawing of the whole range (thinner turns peach, thicker mint). Seen in Chromium on
+a stand-in page, phone and desktop, light and dark; the movement was not seen (no GPU there).
+React's dev double effect left the band blank while `loseContext()` ran in cleanup; it no longer
+does. Left: the branch of #784 (`claude/logo-orb-luma-style-23b038`) is not deleted (the cloud
+session may push only its own branch); without a GPU the orb still holds a page up while it draws
+its one frame, which only CI sees; prod-check issue #774 is still open.
 
 **2026-09-21/22, what a chart says about itself (#770 to #772, api#569, api#581).** Home's figure
 took its words from the period button, so a collection twelve days old read "+EUR 7,967 in the last
