@@ -466,8 +466,8 @@ vec4 sceneShade(vec2 fc) {
     // over every reflection; scene23 is scene21 with v20's coloured cloud turning deep inside.
     // scene24 is scene21 calmed after the owner's look (2026-10-01): round, no haze, quiet colour. The
     // rim mirrors the studio all the way round instead of the page, so the edge is one even thin line
-    // and the ball keeps its circle at the bottom too; the film is a third as saturated and half as
-    // strong. scene25 is scene24 with the film nearly grey: black glass with a breath of colour.
+    // and the ball keeps its circle at the bottom too; the film is a third as saturated and a
+    // third as strong, the gloss at a third, the sun at 0.8. scene25 is scene24 with the film nearly grey: black glass with a breath of colour.
     if (uMat >= 38 && dark) {
         float Fg = 0.04 + 0.96 * pow(1.0 - c, 5.0);
         vec3 studio = envS(r);
