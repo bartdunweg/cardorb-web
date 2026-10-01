@@ -56,7 +56,9 @@ export type OrbGlassMaterial =
     | "scene20"
     | "scene21"
     | "scene22"
-    | "scene23";
+    | "scene23"
+    | "scene24"
+    | "scene25";
 
 /** How much of the tile's shadow and glow the mark carries: the tile's own read as too dark alone on a page. */
 export const ORB_MARK_SHADOW = 0.4;
@@ -101,6 +103,8 @@ export const ORB_GLASS_MATERIAL_INDEX: Record<OrbGlassMaterial, number> = {
     scene21: 35,
     scene22: 36,
     scene23: 37,
+    scene24: 38,
+    scene25: 39,
 };
 
 /** Which materials move on their own (a film that flows), so a frame loop knows to keep going. Glass only moves with the lights. */
@@ -310,6 +314,9 @@ vec4 sceneShade(vec2 fc) {
     // Each pixel is what the tile would show there, and what goes on the page is the difference
     // from the page's own colour, as light over it (glow) or as a darkening by alpha (shadow),
     // so on the page it is the tile to the pixel; where the face is plain, nothing is drawn.
+    // scene24 and scene25 on dark draw nothing round the ball: the tile's glow and shadow were worked
+    // out against a page lighter and bluer than the dark one, and read as a haze round a black ball.
+    if (mark && rr >= 1.0 && uMat >= 38 && uDark > 0.5) return vec4(0.0);
     if (mark && rr >= 1.0) {
         vec3 tile = pow(dark ? softS(faceS(x, y)) : clamp(faceS(x, y), 0.0, 1.0), vec3(1.0 / 2.2));
         vec3 page = dark ? pow(vec3(0.012, 0.013, 0.018), vec3(1.0 / 2.2)) : vec3(1.0);
@@ -457,6 +464,18 @@ vec4 sceneShade(vec2 fc) {
     // page's own dark, the studio mirrored in its gloss and the film over it. scene21 is plain black
     // glass with the film at the rim, at full colour (v20's tempering is not applied); scene22 is an oil slick, the film's colour laid
     // over every reflection; scene23 is scene21 with v20's coloured cloud turning deep inside.
+    // scene24 is scene21 calmed after the owner's look (2026-10-01): round, no haze, quiet colour. The
+    // rim mirrors the studio all the way round instead of the page, so the edge is one even thin line
+    // and the ball keeps its circle at the bottom too; the film is a third as saturated and half as
+    // strong. scene25 is scene24 with the film nearly grey: black glass with a breath of colour.
+    if (uMat >= 38 && dark) {
+        float Fg = 0.04 + 0.96 * pow(1.0 - c, 5.0);
+        vec3 studio = envS(r);
+        vec3 body = vec3(0.0025, 0.0027, 0.0038) * (0.5 + 0.5 * sm(-0.9, 0.9, p.y));
+        vec3 calm = saturateS(f, uMat == 39 ? 0.12 : 0.35);
+        vec3 col = body + studio * Fg * 0.32 + studio * calm * amp * 0.4 + vec3(sun) * 0.8;
+        return vec4(pow(softS(col), vec3(1.0 / 2.2)), 1.0);
+    }
     if (uMat >= 35 && dark) {
         float Fg = 0.04 + 0.96 * pow(1.0 - c, 5.0);
         vec3 seen = traceS(p, r);
