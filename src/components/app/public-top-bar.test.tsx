@@ -3,17 +3,11 @@ import { describe, expect, it } from "vitest";
 import { PublicTopBar } from "./public-top-bar";
 
 /*
- * The landing page's only way forward used to be making an account, which is the one thing
- * somebody who has never heard of Cardorb is least willing to do first. The door has to stand on
- * every page a stranger can arrive on, not only on the landing.
+ * The bar carries the two doors, Sign in and Get started, and nothing else (the owner's call,
+ * 2026-10-02: Browse the sets left it; the landing page's hero keeps that way in).
  */
 describe("the public top bar", () => {
-    it("offers the way into the app", () => {
-        render(<PublicTopBar />);
-        expect(screen.getByRole("link", { name: /browse the sets/i })).toHaveAttribute("href", "/sets");
-    });
-
-    it("still offers both doors, in the order the rest of the app uses", () => {
+    it("offers both doors, in the order the rest of the app uses", () => {
         render(<PublicTopBar />);
         expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
         expect(screen.getByRole("link", { name: "Get started" })).toHaveAttribute("href", "/signup");
