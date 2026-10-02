@@ -3,8 +3,8 @@
  * own colour, flowing, over the page.
  *
  * The colour is v20's, to the line: `filmS`, `saturateS` and `noGreen` are copied verbatim from
- * `orb-glass.ts` (v20, the mark when this was made, #785). The mark is v26 since 2026-10-02, whose
- * film is muted and keeps every hue; the band keeps v20's until the owner says otherwise. What moves
+ * `orb-glass.ts` (v20, the mark when this was made, #785). The mark is v24 since 2026-10-02, which
+ * on light is v20 to the pixel, so the band and the logo above it still show one film. What moves
  * it is new here: the film's thickness follows Vesper's domain warp, from the backdrop of the
  * owner's radial site (strakzat/radial, `scenes/vesper/shaders.ts`), which flows in broad, slow
  * swirls across a wide shape where the ball's own sines would repeat. The grain of dither at the

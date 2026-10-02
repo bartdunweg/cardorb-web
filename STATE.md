@@ -29,8 +29,8 @@ returns to the page (`src/lib/return-to.ts`, read twice). A visitor's price line
 through the service role inside the API, never through a grant to anon. Design and decisions:
 `docs/superpowers/specs/2026-09-22-app-without-an-account-design.md`.
 
-**The mark is a soap bubble** (#784): v26 of the live scene since #786 (v20 before it), a milky
-bubble on light and black glass on dark, drawn by one shared WebGL2 context
+**The mark is a soap bubble** (#784): v24 of the live scene since #786 (v20 before it): v20's
+bubble on light, black glass on dark, drawn by one shared WebGL2 context
 (`orb-glass.tsx`), with a still under it per theme; every version stays on `/orb`. **The public
 profile wears its film as a cover** (#785): `FilmBand`, the same film laid flat and moved by the
 radial site's Vesper warp, the avatar half over its lower edge.

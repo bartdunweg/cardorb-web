@@ -3,22 +3,22 @@ import { cx } from "@/utils/cx";
 import { OrbGlass } from "./orb-glass";
 
 type OrbMarkProps = {
-    /** Width and height in px, the whole of it: the ball is 62 percent of that, its shadow the rest. */
+    /** Width and height in px, the whole of it: the ball is 62 percent of that, its shadow and glow the rest. */
     size: number;
     /** The page it sits on; the page's own theme by default. */
     surface?: "light" | "dark";
-    /** The tile's shadow round the ball (v26 has no glow, and on dark nothing round it); off for the logo in the top bar and the sidebar (the owner's call). */
+    /** The tile's shadow and glow round the ball on light (on dark v24 draws nothing round it); off for the logo in the top bar and the sidebar (the owner's call). */
     shadow?: boolean;
     className?: string;
     /** A name makes it an image; without one it is decoration and a screen reader skips it. */
     label?: string;
 };
 
-/** The material the mark is: v26 of the live scene on /orb, the owner's pick (2026-10-02; v20 before it). */
-export const ORB_MARK_MATERIAL = "scene26";
+/** The material the mark is: v24 of the live scene on /orb, the owner's pick (2026-10-02; v20 before it). */
+export const ORB_MARK_MATERIAL = "scene24";
 
-// The Card Orb mark: v26 as it stands on /orb under "Soap bubble, live scene", live, with the
-// tile's face left out (it lay over the title, the owner's call): the same bubble and its shadow,
+// The Card Orb mark: v24 as it stands on /orb under "Soap bubble, live scene", live, with the
+// tile's face left out (it lay over the title, the owner's call): the same bubble, its shadow and glow on light,
 // on the page, inside the box the size names, so nothing reaches over what stands next to it.
 // Under the canvas sits a still of the same, one per theme, so the server sends a picture and the
 // mark is there before any script runs; it stays where WebGL2 is missing. Under reduced motion the

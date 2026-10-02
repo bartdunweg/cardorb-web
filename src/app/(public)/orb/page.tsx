@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { OrbGlassTile } from "@/components/app/orb-glass-tile";
+import { ORB_MARK_MATERIAL } from "@/components/app/orb-mark";
 import { PublicTopBar } from "@/components/app/public-top-bar";
 import { type OrbGlassMaterial, orbGlassIsScene } from "@/lib/orb-glass";
 
@@ -110,7 +111,11 @@ export default function OrbStudyPage() {
                         <h2 className="text-md font-semibold text-primary">{family.name}</h2>
                         {family.versions.map((v) => (
                             <div key={v.name} className="flex flex-wrap items-center gap-4">
-                                <span className="w-8 text-xs text-tertiary">{v.name}</span>
+                                {/* The version the logo is carries "(current)", read from the mark itself, so it cannot go stale. */}
+                                <span className="w-24 text-xs text-tertiary">
+                                    {v.name}
+                                    {orbGlassIsScene(v.material) && v.material === ORB_MARK_MATERIAL && " (current)"}
+                                </span>
                                 {/* The study's own tile is one picture: no dark or shadowless twin exists. */}
                                 {orbGlassIsScene(v.material) ? (
                                     <>
