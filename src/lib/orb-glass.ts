@@ -316,7 +316,7 @@ vec4 sceneShade(vec2 fc) {
     // Each pixel is what the tile would show there, and what goes on the page is the difference
     // from the page's own colour, as light over it (glow) or as a darkening by alpha (shadow),
     // so on the page it is the tile to the pixel; where the face is plain, nothing is drawn.
-    // scene24 and scene25 on dark draw nothing round the ball: the tile's glow and shadow were worked
+    // scene24 to scene26 on dark draw nothing round the ball: the tile's glow and shadow were worked
     // out against a page lighter and bluer than the dark one, and read as a haze round a black ball.
     if (mark && rr >= 1.0 && uMat >= 38 && uDark > 0.5) return vec4(0.0);
     // scene26 on light keeps the tile's shadow round the ball and drops its blue glow, the haze.
