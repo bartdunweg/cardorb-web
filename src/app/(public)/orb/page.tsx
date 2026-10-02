@@ -114,7 +114,7 @@ export default function OrbStudyPage() {
                                 {/* The version the logo is carries "(current)", read from the mark itself, so it cannot go stale. */}
                                 <span className="w-24 text-xs text-tertiary">
                                     {v.name}
-                                    {orbGlassIsScene(v.material) && v.material === ORB_MARK_MATERIAL && " (current)"}
+                                    {v.material === ORB_MARK_MATERIAL && " (current)"}
                                 </span>
                                 {/* The study's own tile is one picture: no dark or shadowless twin exists. */}
                                 {orbGlassIsScene(v.material) ? (

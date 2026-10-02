@@ -36,7 +36,7 @@ export function OrbGlassTile({ size, material, still, whole, dark = false, shado
     const top = (size - orb) / 2;
     const px = (n: number) => `${(size * n).toFixed(2)}px`;
 
-    // A scene material draws itself as the mark does: the ball and what it throws on the page (a shadow, and a glow except v26's).
+    // A scene material draws itself as the mark does: the ball and what it throws on the page (a shadow, and a glow except v26's; on dark v24 to v26 draw nothing round it).
     if (orbGlassIsScene(material)) {
         return (
             <div
