@@ -14,10 +14,10 @@ type OrbMarkProps = {
     label?: string;
 };
 
-/** The material the mark is: v20 of the live scene on /orb, the owner's pick (2026-09-30). */
-export const ORB_MARK_MATERIAL = "scene20";
+/** The material the mark is: v26 of the live scene on /orb, the owner's pick (2026-10-02; v20 before it). */
+export const ORB_MARK_MATERIAL = "scene26";
 
-// The Card Orb mark: v20 as it stands on /orb under "Soap bubble, live scene", live, with the
+// The Card Orb mark: v26 as it stands on /orb under "Soap bubble, live scene", live, with the
 // tile's face left out (it lay over the title, the owner's call): the same bubble, shadow and glow,
 // on the page, inside the box the size names, so nothing reaches over what stands next to it.
 // Under the canvas sits a still of the same, one per theme, so the server sends a picture and the

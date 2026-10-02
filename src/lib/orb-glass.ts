@@ -261,7 +261,8 @@ vec3 faceS(float x, float y) {
     vec3 col = dark ? vec3(c * 0.985, c * 0.985, c) : vec3(1.0);
     float sh = shadowS(x, y);
     col *= 1.0 - (dark ? 0.1 : 0.32) * sh;
-    float g = glowS(x, y);
+    // scene26 leaves the glow out, on the tile as on the mark: the owner read it as a haze.
+    float g = uMat == 40 ? 0.0 : glowS(x, y);
     col = col * vec3(1.0, 1.0 - 0.1 * g, 1.0) + vec3(0.25, 0.35, 0.6) * g * (dark ? 0.0 : 0.9);
     return col;
 }
