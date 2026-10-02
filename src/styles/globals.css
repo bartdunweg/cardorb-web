@@ -9,6 +9,10 @@
 @custom-variant dark (&:where(.dark-mode, .dark-mode *));
 @custom-variant label (& [data-label]);
 @custom-variant focus-input-within (&:has(input:focus));
+/* A screen tall enough for the landing page's large orb with everything else still in view. */
+@custom-variant tall (@media (min-height: 56rem));
+/* A screen too low for the landing page at its own sizes: a smaller orb and less air, so it still fits. */
+@custom-variant short (@media (max-height: 46rem));
 
 @utility scrollbar-hide {
     /* For Webkit-based browsers (Chrome, Safari and Opera) */

@@ -15,15 +15,18 @@ export const HeroGeometricShapes04 = () => {
         <div className="relative flex min-h-dvh flex-col overflow-hidden bg-primary">
             <PublicTopBar />
 
-            {/* The words first, centered, then the product under them at full width: the dashboard
-                is what the page is selling, and it sits half under the fold on a laptop so the eye
-                is drawn down into it. The owner's call over the side-by-side layout. */}
-            <main className="relative flex flex-1 flex-col pt-16 pb-8 md:pt-24 md:pb-12">
+            {/* One screen high (the owner's call, 2026-10-02): the mark, the words and the two ways in,
+                centred in what the bar and the footer leave, and the footer in view without a scroll.
+                The orb grows where the screen is tall and shrinks, with the air round it, where it is low. */}
+            <main className="relative flex flex-1 flex-col justify-center py-8 short:py-4">
                 <div className="mx-auto flex w-full max-w-container flex-col items-center px-4 md:px-8">
                     <div className="flex w-full max-w-3xl flex-col items-center text-center">
-                        <OrbMark size={240} className="md:hidden" />
-                        <OrbMark size={340} className="hidden md:block" />
-                        <h1 className="mt-6 text-display-md font-medium text-balance text-primary md:text-display-lg lg:text-display-xl">
+                        <OrbMark size={180} className="md:hidden short:hidden" />
+                        <OrbMark size={120} className="hidden short:block md:short:hidden" />
+                        <OrbMark size={240} className="hidden md:block tall:hidden short:hidden" />
+                        <OrbMark size={140} className="hidden md:short:block" />
+                        <OrbMark size={340} className="hidden md:tall:block" />
+                        <h1 className="mt-6 text-display-sm font-medium text-balance text-primary md:text-display-md lg:text-display-lg short:mt-4">
                             Organize your trading card collection
                         </h1>
                         <p className="mt-4 max-w-120 text-lg text-balance text-tertiary md:mt-6 md:text-xl">
@@ -33,7 +36,7 @@ export const HeroGeometricShapes04 = () => {
                             Get started and needs to see nothing first; the other button is for the one
                             who does not, which is the person this page has to win. Equal weight would
                             make neither read as the answer. */}
-                        <div className="mt-8 flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row md:mt-12">
+                        <div className="mt-8 flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row md:mt-12 short:mt-6">
                             <LinkButton href="/signup" size="xl">
                                 Get started
                             </LinkButton>
@@ -45,26 +48,29 @@ export const HeroGeometricShapes04 = () => {
                 </div>
             </main>
 
-            {/* One-row footer: who runs the site, the legal pages and the theme, stacked in that order on a
-                phone so Tab goes the way the eye does. The API reference is not linked here: the API
-                serves only our own apps, and a visitor cannot get a key. */}
+            {/* One-row footer: who runs the site, then the legal pages with the theme toggle beside them
+                (the owner's call), stacked in that order on a phone so Tab goes the way the eye does. The
+                toggle sits outside the nav: it changes the page, it goes nowhere. The API reference is
+                not linked here: the API serves only our own apps, and a visitor cannot get a key. */}
             <footer className="relative z-10 mx-auto flex w-full max-w-container flex-col items-center gap-4 px-4 py-6 sm:flex-row md:px-8">
                 <p className="text-sm text-quaternary sm:mr-auto">© {new Date().getFullYear()} BADU Ventures B.V.</p>
-                <nav aria-label="Footer">
-                    <ul className="flex items-center gap-6">
-                        {[
-                            { title: "Privacy", href: "/privacy" },
-                            { title: "Terms", href: "/terms" },
-                        ].map((item) => (
-                            <li key={item.title}>
-                                <LinkButton color="link-gray" size="md" href={item.href} className="min-h-6">
-                                    {item.title}
-                                </LinkButton>
-                            </li>
-                        ))}
-                    </ul>
-                </nav>
-                <ThemeToggle />
+                <div className="flex items-center gap-6">
+                    <nav aria-label="Footer">
+                        <ul className="flex items-center gap-6">
+                            {[
+                                { title: "Privacy", href: "/privacy" },
+                                { title: "Terms", href: "/terms" },
+                            ].map((item) => (
+                                <li key={item.title}>
+                                    <LinkButton color="link-gray" size="md" href={item.href} className="min-h-6">
+                                        {item.title}
+                                    </LinkButton>
+                                </li>
+                            ))}
+                        </ul>
+                    </nav>
+                    <ThemeToggle />
+                </div>
             </footer>
         </div>
     );
