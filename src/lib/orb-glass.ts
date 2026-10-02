@@ -53,7 +53,13 @@ export type OrbGlassMaterial =
     | "scene17"
     | "scene18"
     | "scene19"
-    | "scene20";
+    | "scene20"
+    | "scene21"
+    | "scene22"
+    | "scene23"
+    | "scene24"
+    | "scene25"
+    | "scene26";
 
 /** How much of the tile's shadow and glow the mark carries: the tile's own read as too dark alone on a page. */
 export const ORB_MARK_SHADOW = 0.4;
@@ -95,6 +101,12 @@ export const ORB_GLASS_MATERIAL_INDEX: Record<OrbGlassMaterial, number> = {
     scene18: 32,
     scene19: 33,
     scene20: 34,
+    scene21: 35,
+    scene22: 36,
+    scene23: 37,
+    scene24: 38,
+    scene25: 39,
+    scene26: 40,
 };
 
 /** Which materials move on their own (a film that flows), so a frame loop knows to keep going. Glass only moves with the lights. */
@@ -249,7 +261,8 @@ vec3 faceS(float x, float y) {
     vec3 col = dark ? vec3(c * 0.985, c * 0.985, c) : vec3(1.0);
     float sh = shadowS(x, y);
     col *= 1.0 - (dark ? 0.1 : 0.32) * sh;
-    float g = glowS(x, y);
+    // scene26 leaves the glow out, on the tile as on the mark: the owner read it as a haze.
+    float g = uMat == 40 ? 0.0 : glowS(x, y);
     col = col * vec3(1.0, 1.0 - 0.1 * g, 1.0) + vec3(0.25, 0.35, 0.6) * g * (dark ? 0.0 : 0.9);
     return col;
 }
@@ -304,6 +317,11 @@ vec4 sceneShade(vec2 fc) {
     // Each pixel is what the tile would show there, and what goes on the page is the difference
     // from the page's own colour, as light over it (glow) or as a darkening by alpha (shadow),
     // so on the page it is the tile to the pixel; where the face is plain, nothing is drawn.
+    // scene24 to scene26 on dark draw nothing round the ball: the tile's glow and shadow were worked
+    // out against a page lighter and bluer than the dark one, and read as a haze round a black ball.
+    if (mark && rr >= 1.0 && uMat >= 38 && uDark > 0.5) return vec4(0.0);
+    // scene26 on light keeps the tile's shadow round the ball and drops its blue glow, the haze.
+    if (mark && rr >= 1.0 && uMat == 40) return vec4(0.0, 0.0, 0.0, 0.32 * shadowS(x, y) * sm(1.55, 1.0, length(vec2(x, y))) * uShadow);
     if (mark && rr >= 1.0) {
         vec3 tile = pow(dark ? softS(faceS(x, y)) : clamp(faceS(x, y), 0.0, 1.0), vec3(1.0 / 2.2));
         vec3 page = dark ? pow(vec3(0.012, 0.013, 0.018), vec3(1.0 / 2.2)) : vec3(1.0);
@@ -323,6 +341,38 @@ vec4 sceneShade(vec2 fc) {
     vec3 p = vec3(x, y, sqrt(1.0 - rr));
     vec3 d = vec3(0.0, 0.0, -1.0);
     float c = p.z;
+    // scene26 goes back to v0, the study's own tile (2026-10-02), with the owner's notes on v21 to v25
+    // in both themes: round, no haze, quiet colour. Its film is the study's (every hue, no turn away
+    // from green, no swirl), muted to 60 percent. On light the page comes through a milky body, as v0's
+    // grey face did, and an even pale line closes the rim so the ball reads round. On dark it is
+    // v24's black glass carrying v0's film, half as saturated, in its gloss as well as at the rim.
+    if (uMat == 40) {
+        float flow26 = p.y * 3.2 + uTime * 0.6 + 1.2 * sin(p.x * 2.4 + 0.5 + uTime * 0.4) + 0.6 * sin((p.x + p.y) * 4.2 - uTime * 0.5);
+        float th26 = 380.0 + 170.0 * sin(flow26) + 140.0 * (1.0 - c);
+        vec3 f26 = saturateS(filmS(th26, c, 1.33), dark ? 0.5 : 0.6);
+        float amp26 = 0.04 + 0.96 * pow(1.0 - c, 3.0);
+        vec3 r26 = reflect(d, p);
+        float sun26 = pow(max(0.0, dot(r26, sunS())), 700.0) * 22.0;
+        if (dark) {
+            float Fg = 0.04 + 0.96 * pow(1.0 - c, 5.0);
+            vec3 studio = envS(r26);
+            vec3 body = vec3(0.0025, 0.0027, 0.0038) * (0.5 + 0.5 * sm(-0.9, 0.9, p.y));
+            vec3 col = body + studio * Fg * 0.32 * mix(vec3(1.0), 0.4 + f26, 0.6) + studio * f26 * amp26 * 0.5 + vec3(sun26) * 0.8;
+            return vec4(pow(softS(col), vec3(1.0 / 2.2)), 1.0);
+        }
+        vec3 R26 = f26 * amp26 * 1.6;
+        vec3 front26 = traceS(p, r26) * R26;
+        vec3 pb26 = vec3(p.x, p.y, -p.z);
+        vec3 fb26 = saturateS(filmS(th26 + 60.0, c, 1.33), 0.6) * amp26 * 1.2;
+        vec3 back26 = traceS(pb26, reflect(d, -pb26)) * fb26;
+        vec3 T26 = (1.0 - R26) * (1.0 - fb26);
+        T26 = mix(T26, vec3(dot(T26, vec3(0.333))), 0.5);
+        vec3 page26 = mark ? vec3(1.0 - 0.32 * shadowS(pb26.x, pb26.y) * uShadow) : traceS(pb26, d);
+        page26 = mix(page26, vec3(0.86, 0.86, 0.9), 0.3 * (0.6 + 0.4 * c));
+        vec3 col = front26 + back26 + page26 * T26 + vec3(sun26);
+        col = mix(col, vec3(0.8, 0.81, 0.85), sm(0.94, 0.995, sqrt(rr)) * 0.35);
+        return vec4(pow(softS(col), vec3(1.0 / 2.2)), 1.0);
+    }
     // scene9 is scene8 as a palantir: the film's bands turn about the centre and flow faster, and a
     // cloud inside, coloured by the film, drifts with them, so the ball is seen to move on its own.
     // scene10 is scene9 on light, and on dark the same with less colour: the cloud and the film's
@@ -445,6 +495,38 @@ vec4 sceneShade(vec2 fc) {
         haze += vec3(0.62, 0.66, 0.74) * (0.1 + 0.1 * c) * (0.75 + 0.25 * sm(-0.7, 0.7, p.y));
         front *= 0.55;
         back *= 0.55;
+    }
+    // scene21 to scene23 are scene20 on light. On dark the ball is black glass rather than a bubble
+    // (the owner's call, 2026-10-01): nothing of the page comes through it, a black body below the
+    // page's own dark, the studio mirrored in its gloss and the film over it. scene21 is plain black
+    // glass with the film at the rim, at full colour (v20's tempering is not applied); scene22 is an oil slick, the film's colour laid
+    // over every reflection; scene23 is scene21 with v20's coloured cloud turning deep inside.
+    // scene24 is scene21 calmed after the owner's look (2026-10-01): round, no haze, quiet colour. The
+    // rim mirrors the studio all the way round instead of the page, so the edge is one even thin line
+    // and the ball keeps its circle at the bottom too; the film is a third as saturated and a
+    // third as strong, the gloss at a third, the sun at 0.8. scene25 is scene24 with the film nearly grey: black glass with a breath of colour.
+    if (uMat >= 38 && dark) {
+        float Fg = 0.04 + 0.96 * pow(1.0 - c, 5.0);
+        vec3 studio = envS(r);
+        vec3 body = vec3(0.0025, 0.0027, 0.0038) * (0.5 + 0.5 * sm(-0.9, 0.9, p.y));
+        vec3 calm = saturateS(f, uMat == 39 ? 0.12 : 0.35);
+        vec3 col = body + studio * Fg * 0.32 + studio * calm * amp * 0.4 + vec3(sun) * 0.8;
+        return vec4(pow(softS(col), vec3(1.0 / 2.2)), 1.0);
+    }
+    if (uMat >= 35 && dark) {
+        float Fg = 0.04 + 0.96 * pow(1.0 - c, 5.0);
+        vec3 seen = traceS(p, r);
+        vec3 body = vec3(0.0025, 0.0027, 0.0038) * (0.5 + 0.5 * sm(-0.9, 0.9, p.y));
+        vec3 col = body + seen * Fg + front * 0.8 + vec3(sun);
+        if (uMat == 36) {
+            vec3 slick = saturateS(f, 1.6);
+            col = body + seen * Fg * (0.35 + 1.4 * slick) + front * 1.2 + slick * vec3(0.5, 0.55, 0.75) * 0.02 * (0.4 + 0.6 * sm(-0.6, 0.8, p.y)) + vec3(sun);
+        }
+        if (uMat == 37) {
+            float smoke = 0.5 + 0.5 * sin(sw.x * 2.3 + uTime * 0.7) * sin(sw.y * 1.9 - uTime * 0.5);
+            col += saturateS(f, 1.4) * smoke * 0.035 * c * c;
+        }
+        return vec4(pow(softS(col), vec3(1.0 / 2.2)), 1.0);
     }
     if (mark) {
         // What shows through the film: the page, with the ball's shadow and glow on it as on the tile.

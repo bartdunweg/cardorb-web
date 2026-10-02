@@ -16,17 +16,16 @@ export function PublicTopBar({ menu }: { menu?: ReactNode }) {
     return (
         <header className="relative z-10 mx-auto flex w-full max-w-container items-center justify-between px-4 py-5 md:px-8">
             <Link href="/" className="flex items-center gap-2.5 text-lg font-semibold text-primary transition hover:opacity-70">
-                <OrbMark size={40} shadow={false} />
+                {/* A 48 px ball (the owner's call, 2026-10-02): the mark's box is the ball over 0.62, and
+                    the margins take back the empty ring round it, so the bar keeps its height and the
+                    ball its place against the edge. */}
+                <OrbMark size={77} shadow={false} className="-my-5 -mr-2 -ml-3.5" />
                 Cardorb
             </Link>
             {menu ?? (
                 <nav aria-label="Account" className="flex items-center gap-2">
-                    {/* The door into the app, on every page a stranger can arrive on. Without it the
-                        landing page's only way forward was making an account, which is the one thing
-                        somebody who has never heard of us is least willing to do first. */}
-                    <LinkButton href="/sets" color="link-gray" size="md" className="max-sm:hidden">
-                        Browse the sets
-                    </LinkButton>
+                    {/* Only the two doors (the owner's call, 2026-10-02): Browse the sets stood here too
+                        and went; the landing page keeps it as the hero's second button. */}
                     <LinkButton href="/login" color="tertiary" size="md">
                         Sign in
                     </LinkButton>

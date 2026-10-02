@@ -70,11 +70,11 @@ is not the app.
 The landing page has one button today and it goes to `/signup`. There is no way into the app at
 all, so the door has to be built with the rest of this.
 
-| From                                       | To          | How                                                                                                             |
-| ------------------------------------------ | ----------- | --------------------------------------------------------------------------------------------------------------- |
-| The landing                                | The app     | A second button in the hero beside "Get started": "Browse the sets", secondary. The same link in `PublicTopBar` |
-| Legal, the API reference, a public profile | The app     | That same `PublicTopBar` link, so the door stands wherever a stranger arrives                                   |
-| The app, signed out                        | The landing | The logo at the top of the sidebar                                                                              |
+| From                                       | To          | How                                                                                                                                                                   |
+| ------------------------------------------ | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The landing                                | The app     | A second button in the hero beside "Get started": "Browse the sets", secondary. (The same link stood in `PublicTopBar` until 2026-10-02, when the owner took it out.) |
+| Legal, the API reference, a public profile | The app     | Was the `PublicTopBar` link; since 2026-10-02 none in the bar (the owner's call), only the logo to the landing                                                        |
+| The app, signed out                        | The landing | The logo at the top of the sidebar                                                                                                                                    |
 
 One rule holds the last row: **the logo goes to your home.** Signed in that is Home; signed out it
 is the landing page. No "what is this" item inside the app's navigation and no marketing bar

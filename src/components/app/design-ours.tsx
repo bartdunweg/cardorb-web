@@ -25,7 +25,7 @@ import { FlagIcon } from "./flag-icon";
 import { FormError } from "./form-error";
 import { LinkButton } from "./link-button";
 import { OrbGlassTile } from "./orb-glass-tile";
-import { OrbMark } from "./orb-mark";
+import { ORB_MARK_MATERIAL, OrbMark } from "./orb-mark";
 import { RaritySymbol } from "./rarity-symbol";
 import { RowButton } from "./row-button";
 import { LIST_ROW, RowSearch } from "./row-search";
@@ -225,10 +225,10 @@ export const ourSections: SectionSpec[] = [
                 </Group>
                 <Group title="The icon" cols="wide">
                     <Cell label="OrbGlassTile light">
-                        <OrbGlassTile size={120} material="scene20" />
+                        <OrbGlassTile size={120} material={ORB_MARK_MATERIAL} />
                     </Cell>
                     <Cell label="OrbGlassTile dark">
-                        <OrbGlassTile size={120} material="scene20" dark />
+                        <OrbGlassTile size={120} material={ORB_MARK_MATERIAL} dark />
                     </Cell>
                 </Group>
             </Panel>

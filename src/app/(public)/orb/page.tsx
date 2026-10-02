@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { OrbGlassTile } from "@/components/app/orb-glass-tile";
+import { ORB_MARK_MATERIAL } from "@/components/app/orb-mark";
 import { PublicTopBar } from "@/components/app/public-top-bar";
 import { type OrbGlassMaterial, orbGlassIsScene } from "@/lib/orb-glass";
 
@@ -18,6 +19,15 @@ const FAMILIES: { name: string; versions: Version[] }[] = [
         // The study's v5 scene, ported to the GPU: the same tile, live. Film flows, lights follow the pointer.
         name: "Soap bubble, live scene",
         versions: [
+            // v26 goes back to v0 with the notes on v21 to v25, light and dark (2026-10-02).
+            { name: "v26", material: "scene26" },
+            // v24 and v25 are v21 calmed: round, no haze, quiet colour (2026-10-01).
+            { name: "v25", material: "scene25" },
+            { name: "v24", material: "scene24" },
+            // v21 to v23 are v20 on light; on dark a black ball, three ways (2026-10-01).
+            { name: "v23", material: "scene23" },
+            { name: "v22", material: "scene22" },
+            { name: "v21", material: "scene21" },
             { name: "v20", material: "scene20" },
             { name: "v19", material: "scene19" },
             { name: "v18", material: "scene18" },
@@ -101,7 +111,11 @@ export default function OrbStudyPage() {
                         <h2 className="text-md font-semibold text-primary">{family.name}</h2>
                         {family.versions.map((v) => (
                             <div key={v.name} className="flex flex-wrap items-center gap-4">
-                                <span className="w-8 text-xs text-tertiary">{v.name}</span>
+                                {/* The version the logo is carries "(current)", read from the mark itself, so it cannot go stale. */}
+                                <span className="w-24 text-xs text-tertiary">
+                                    {v.name}
+                                    {v.material === ORB_MARK_MATERIAL && " (current)"}
+                                </span>
                                 {/* The study's own tile is one picture: no dark or shadowless twin exists. */}
                                 {orbGlassIsScene(v.material) ? (
                                     <>
