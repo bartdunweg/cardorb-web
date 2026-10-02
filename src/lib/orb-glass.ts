@@ -58,7 +58,8 @@ export type OrbGlassMaterial =
     | "scene22"
     | "scene23"
     | "scene24"
-    | "scene25";
+    | "scene25"
+    | "scene26";
 
 /** How much of the tile's shadow and glow the mark carries: the tile's own read as too dark alone on a page. */
 export const ORB_MARK_SHADOW = 0.4;
@@ -105,6 +106,7 @@ export const ORB_GLASS_MATERIAL_INDEX: Record<OrbGlassMaterial, number> = {
     scene23: 37,
     scene24: 38,
     scene25: 39,
+    scene26: 40,
 };
 
 /** Which materials move on their own (a film that flows), so a frame loop knows to keep going. Glass only moves with the lights. */
@@ -317,6 +319,8 @@ vec4 sceneShade(vec2 fc) {
     // scene24 and scene25 on dark draw nothing round the ball: the tile's glow and shadow were worked
     // out against a page lighter and bluer than the dark one, and read as a haze round a black ball.
     if (mark && rr >= 1.0 && uMat >= 38 && uDark > 0.5) return vec4(0.0);
+    // scene26 on light keeps the tile's shadow round the ball and drops its blue glow, the haze.
+    if (mark && rr >= 1.0 && uMat == 40) return vec4(0.0, 0.0, 0.0, 0.32 * shadowS(x, y) * sm(1.55, 1.0, length(vec2(x, y))) * uShadow);
     if (mark && rr >= 1.0) {
         vec3 tile = pow(dark ? softS(faceS(x, y)) : clamp(faceS(x, y), 0.0, 1.0), vec3(1.0 / 2.2));
         vec3 page = dark ? pow(vec3(0.012, 0.013, 0.018), vec3(1.0 / 2.2)) : vec3(1.0);
@@ -336,6 +340,38 @@ vec4 sceneShade(vec2 fc) {
     vec3 p = vec3(x, y, sqrt(1.0 - rr));
     vec3 d = vec3(0.0, 0.0, -1.0);
     float c = p.z;
+    // scene26 goes back to v0, the study's own tile (2026-10-02), with the owner's notes on v21 to v25
+    // in both themes: round, no haze, quiet colour. Its film is the study's (every hue, no turn away
+    // from green, no swirl), muted to 60 percent. On light the page comes through a milky body, as v0's
+    // grey face did, and an even pale line closes the rim so the ball reads round. On dark it is
+    // v24's black glass carrying v0's film, half as saturated, in its gloss as well as at the rim.
+    if (uMat == 40) {
+        float flow26 = p.y * 3.2 + uTime * 0.6 + 1.2 * sin(p.x * 2.4 + 0.5 + uTime * 0.4) + 0.6 * sin((p.x + p.y) * 4.2 - uTime * 0.5);
+        float th26 = 380.0 + 170.0 * sin(flow26) + 140.0 * (1.0 - c);
+        vec3 f26 = saturateS(filmS(th26, c, 1.33), dark ? 0.5 : 0.6);
+        float amp26 = 0.04 + 0.96 * pow(1.0 - c, 3.0);
+        vec3 r26 = reflect(d, p);
+        float sun26 = pow(max(0.0, dot(r26, sunS())), 700.0) * 22.0;
+        if (dark) {
+            float Fg = 0.04 + 0.96 * pow(1.0 - c, 5.0);
+            vec3 studio = envS(r26);
+            vec3 body = vec3(0.0025, 0.0027, 0.0038) * (0.5 + 0.5 * sm(-0.9, 0.9, p.y));
+            vec3 col = body + studio * Fg * 0.32 * mix(vec3(1.0), 0.4 + f26, 0.6) + studio * f26 * amp26 * 0.5 + vec3(sun26) * 0.8;
+            return vec4(pow(softS(col), vec3(1.0 / 2.2)), 1.0);
+        }
+        vec3 R26 = f26 * amp26 * 1.6;
+        vec3 front26 = traceS(p, r26) * R26;
+        vec3 pb26 = vec3(p.x, p.y, -p.z);
+        vec3 fb26 = saturateS(filmS(th26 + 60.0, c, 1.33), 0.6) * amp26 * 1.2;
+        vec3 back26 = traceS(pb26, reflect(d, -pb26)) * fb26;
+        vec3 T26 = (1.0 - R26) * (1.0 - fb26);
+        T26 = mix(T26, vec3(dot(T26, vec3(0.333))), 0.5);
+        vec3 page26 = mark ? vec3(1.0 - 0.32 * shadowS(pb26.x, pb26.y) * uShadow) : traceS(pb26, d);
+        page26 = mix(page26, vec3(0.86, 0.86, 0.9), 0.3 * (0.6 + 0.4 * c));
+        vec3 col = front26 + back26 + page26 * T26 + vec3(sun26);
+        col = mix(col, vec3(0.8, 0.81, 0.85), sm(0.94, 0.995, sqrt(rr)) * 0.35);
+        return vec4(pow(softS(col), vec3(1.0 / 2.2)), 1.0);
+    }
     // scene9 is scene8 as a palantir: the film's bands turn about the centre and flow faster, and a
     // cloud inside, coloured by the film, drifts with them, so the ball is seen to move on its own.
     // scene10 is scene9 on light, and on dark the same with less colour: the cloud and the film's
