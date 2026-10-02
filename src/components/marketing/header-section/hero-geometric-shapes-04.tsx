@@ -17,7 +17,7 @@ export const HeroGeometricShapes04 = () => {
 
             {/* One screen high (the owner's call, 2026-10-02): the mark, the words and the two ways in,
                 centred in what the bar and the footer leave, and the footer in view without a scroll.
-                The orb grows where the screen is tall and shrinks, with the air round it, where it is low. */}
+                The orb grows where the screen is wide and tall and shrinks, with the air round it, where it is low. */}
             <main className="relative flex flex-1 flex-col justify-center py-8 short:py-4">
                 <div className="mx-auto flex w-full max-w-container flex-col items-center px-4 md:px-8">
                     <div className="flex w-full max-w-3xl flex-col items-center text-center">
