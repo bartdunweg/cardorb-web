@@ -19,7 +19,7 @@ export function PublicTopBar({ menu }: { menu?: ReactNode }) {
                 {/* A 48 px ball (the owner's call, 2026-10-02): the mark's box is the ball over 0.62, and
                     the margins take back the empty ring round it, so the bar keeps its height and the
                     ball its place against the edge. */}
-                <OrbMark size={77} shadow={false} className="-my-4.5 -mr-2 -ml-3.5" />
+                <OrbMark size={77} shadow={false} className="-my-5 -mr-2 -ml-3.5" />
                 Cardorb
             </Link>
             {menu ?? (
