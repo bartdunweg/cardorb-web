@@ -1,11 +1,11 @@
 import { LinkButton } from "@/components/app/link-button";
 import { OrbMark } from "@/components/app/orb-mark";
 import { PublicTopBar } from "@/components/app/public-top-bar";
-import { ThemeSwitch } from "@/components/app/theme-switch";
+import { ThemeToggle } from "@/components/app/theme-switch";
 
 // Public landing hero for Cardorb. Based on Untitled UI's hero-geometric-shapes-04, with the
 // heavy marketing Header/nav replaced by the shared PublicTopBar and its buttons by plain links. The
-// one react-aria piece is the theme switch in the footer (the owner's call, 2026-10-01); the hero carries one call to
+// one react-aria piece is the theme toggle in the footer (the owner's call, 2026-10-01); the hero carries one call to
 // action, Get started, so it never competes with the bar's pair.
 //
 // The mark, the words and the two ways in, centered, and nothing under them: the picture of
@@ -64,7 +64,7 @@ export const HeroGeometricShapes04 = () => {
                         ))}
                     </ul>
                 </nav>
-                <ThemeSwitch compact />
+                <ThemeToggle />
             </footer>
         </div>
     );
