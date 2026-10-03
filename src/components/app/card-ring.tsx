@@ -59,6 +59,9 @@ function Drum() {
 // close and leave the screen. Pure CSS 3D (globals.css, .card-ring), no script; reduced motion
 // stops the turn and leaves the drum standing. Decoration only: hidden from a screen reader,
 // and it takes no pointer, so nothing in the hero is harder to press for it.
+// It keeps turning with no pause control, as the orb does (OrbMark; the owner's call for the ring
+// too, 2026-10-03): WCAG 2.2.2 asks for one past five seconds, and reduced motion is the only way
+// to stop it. Do not add a stop or a button without asking.
 //
 // The orb is a lens (the owner's call): inside the ball's circle a second drum turns, magnified
 // and softened, on the same clock as the first, so what passes behind the ball swells as glass
