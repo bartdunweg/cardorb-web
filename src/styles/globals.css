@@ -632,7 +632,7 @@ main[data-view-change] [data-my-cards-tabs] [role="tablist"] + span {
    front of the eye. Tilted a few degrees so the drum reads as round, not as a row. */
 .card-ring {
     --card-ring-radius: clamp(26rem, 58vw, 56rem);
-    --card-ring-width: clamp(4.5rem, 9vw, 8.5rem);
+    --card-ring-width: clamp(6rem, 13vw, 12rem);
     --card-ring-tilt: 7deg;
     /* The tilt drops the far side; lifted by as much, the card straight ahead passes behind the
        ball's middle, seen through it, not under it. */
