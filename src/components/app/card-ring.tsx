@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { CardImage } from "@/components/app/card-image";
+import { cx } from "@/utils/cx";
 
 /**
  * Cards from every era, from our own bucket: Base Set to Scarlet & Violet. Fixed, not read from
@@ -34,28 +35,49 @@ const RING_CARDS = [
 
 const STEP = 360 / RING_CARDS.length;
 
+function Drum() {
+    return (
+        <div className="card-ring-drum">
+            {RING_CARDS.map((path, i) => (
+                <div key={path} className="card-ring-card" style={{ "--card-angle": `${i * STEP}deg` } as CSSProperties}>
+                    <CardImage
+                        src={`https://images.cardorb.com/en/${path}/high.webp`}
+                        fallbackSrc={`https://images.cardorb.com/en/${path}/low.webp`}
+                        alt=""
+                        width={256}
+                        className="object-cover"
+                    />
+                </div>
+            ))}
+        </div>
+    );
+}
+
 // The landing hero's ring of cards (the owner's call, 2026-10-03, after getlayers' Carousel
 // Spotlight): cards on the inside of a slowly turning drum, seen from its middle, so the one
 // straight ahead is the furthest and passes behind the orb while the ones at the sides come
 // close and leave the screen. Pure CSS 3D (globals.css, .card-ring), no script; reduced motion
 // stops the turn and leaves the drum standing. Decoration only: hidden from a screen reader,
 // and it takes no pointer, so nothing in the hero is harder to press for it.
-export function CardRing({ className }: { className?: string }) {
+//
+// The orb is a lens (the owner's call): inside the ball's circle a second drum turns, magnified
+// and softened, on the same clock as the first, so what passes behind the ball swells as glass
+// would make it. It sits in the box of the orb it stands behind, which must be `relative`.
+type CardRingProps = {
+    className?: string;
+};
+
+export function CardRing({ className }: CardRingProps) {
     return (
-        <div className={`card-ring pointer-events-none ${className ?? ""}`} aria-hidden>
-            <div className="card-ring-drum">
-                {RING_CARDS.map((path, i) => (
-                    <div key={path} className="card-ring-card" style={{ "--card-angle": `${i * STEP}deg` } as CSSProperties}>
-                        <CardImage
-                            src={`https://images.cardorb.com/en/${path}/high.webp`}
-                            fallbackSrc={`https://images.cardorb.com/en/${path}/low.webp`}
-                            alt=""
-                            width={256}
-                            className="object-cover"
-                        />
-                    </div>
-                ))}
+        <>
+            <div className={cx("card-ring pointer-events-none", className)} aria-hidden>
+                <Drum />
             </div>
-        </div>
+            <div className={cx("card-ring-lens pointer-events-none", className)} aria-hidden>
+                <div className="card-ring">
+                    <Drum />
+                </div>
+            </div>
+        </>
     );
 }

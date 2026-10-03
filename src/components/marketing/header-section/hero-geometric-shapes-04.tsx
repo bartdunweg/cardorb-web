@@ -23,7 +23,7 @@ export const HeroGeometricShapes04 = () => {
                 <div className="mx-auto flex w-full max-w-container flex-col items-center px-4 md:px-8">
                     {/* Isolated, so the ring of cards behind the orb stays under the words and the buttons too. */}
                     <div className="relative isolate flex w-full max-w-3xl flex-col items-center text-center">
-                        <div className="relative">
+                        <div className="relative flex">
                             <CardRing className="-z-10" />
                             <OrbMark clear size={180} className="md:hidden short:hidden" />
                             <OrbMark clear size={120} className="hidden short:block md:short:hidden" />
