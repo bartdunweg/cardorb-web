@@ -60,11 +60,13 @@ export function AuthShell({
     const frame = use(AuthFrame);
     if (frame === "modal") {
         return (
-            // Untitled UI PRO's login-modal: the mark at 32 px over a centred title and its line,
-            // 20 px of air, then the form and its link, 16 px in on a phone and 24 px from sm.
+            // Untitled UI PRO's login-modal: the mark over a centred title and its line, 20 px of air,
+            // then the form and its link, 16 px in on a phone and 24 px from sm. The ball is 48 px (the
+            // owner's call, 2026-10-03): its box is the ball over 0.62, and the top margin takes back
+            // the empty ring above it, so the modal's top keeps its air; the ring below holds the shadow.
             <div className="flex w-full flex-col gap-5 px-4 pt-5 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
                 <div className="flex flex-col items-center gap-4 text-center">
-                    <OrbMark size={48} />
+                    <OrbMark size={77} className="-mt-3.5 -mb-2" />
                     <div className="flex flex-col gap-0.5">
                         <AriaHeading slot="title" className="text-md font-semibold text-primary">
                             {title}
