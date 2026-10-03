@@ -211,6 +211,7 @@ vec4 darkBubble(vec3 refl, vec3 back, vec3 wash, vec3 n, float x, float kdif, fl
 // ---------------------------------------------------------------------------------------------
 uniform float uScene;    // 1 draws the tile scene instead of the bare ball; 2 the mark: the tile with its face left out
 uniform float uShadow;   // for the mark: how much of the tile's shadow and glow it carries; 0 in the bars
+uniform float uClear;    // for the mark: 1 lets what stands behind it show through (the landing's ring of cards)
 
 const float SCENE_SPAN = 1.62;   // half-width of the view in the ball's radii: the ball is 62 percent of the tile
 const float SCENE_BD = 1.4;      // the face sits this far behind the ball's centre
@@ -519,6 +520,9 @@ vec4 sceneShade(vec2 fc) {
         vec3 body = vec3(0.0025, 0.0027, 0.0038) * (0.5 + 0.5 * sm(-0.9, 0.9, p.y));
         vec3 calm = saturateS(f, uMat == 39 ? 0.12 : 0.35);
         vec3 col = body + studio * Fg * 0.32 + studio * calm * amp * 0.4 + vec3(sun) * 0.8;
+        // Clear, the black glass is smoked glass instead: what passes behind shows through at half
+        // its light, less toward the rim where the glass mirrors more. The light is laid over it.
+        if (uClear > 0.5 && mark) return over(pow(softS(col), vec3(1.0 / 2.2)), 1.0 - 0.55 * (1.0 - Fg));
         return vec4(pow(softS(col), vec3(1.0 / 2.2)), 1.0);
     }
     if (uMat >= 35 && dark) {
@@ -535,6 +539,14 @@ vec4 sceneShade(vec2 fc) {
             col += saturateS(f, 1.4) * smoke * 0.035 * c * c;
         }
         return vec4(pow(softS(col), vec3(1.0 / 2.2)), 1.0);
+    }
+    if (mark && uClear > 0.5) {
+        // Clear: not the page behind the film but whatever really stands there. What the film lets
+        // through is left uncovered, and its light is what it adds on top, worked out so that on a
+        // white page it is the opaque mark to the pixel.
+        vec3 onWhite = pow(softS(front + back + T + haze + vec3(sun)), vec3(1.0 / 2.2));
+        float through = clamp(dot(T, vec3(0.333)), 0.0, 1.0);
+        return over(max(onWhite - through, 0.0), 1.0 - through);
     }
     if (mark) {
         // What shows through the film: the page, with the ball's shadow and glow on it as on the tile.

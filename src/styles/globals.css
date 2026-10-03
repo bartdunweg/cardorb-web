@@ -620,3 +620,62 @@ main[data-view-change] [data-my-cards-tabs] [role="tablist"] + span {
 .dark-mode .orb-mark-still[data-theme="dark"] {
     display: block;
 }
+/* A clear mark lets what is behind it through, so its still goes once the canvas has drawn. */
+.orb-mark-clear:has(> canvas[data-drawn]) > .orb-mark-still {
+    display: none;
+}
+
+/* The landing hero's ring of cards (card-ring.tsx). A zero-size point at the orb's middle carries
+   the perspective; the drum turns round it, each card stood on the drum's inside, facing in, so
+   the one straight ahead is the furthest away. The radius follows the screen's width so the
+   sides always leave the screen; the perspective a little past the radius keeps every card in
+   front of the eye. Tilted a few degrees so the drum reads as round, not as a row. */
+.card-ring {
+    --card-ring-radius: clamp(26rem, 58vw, 56rem);
+    --card-ring-width: clamp(4.5rem, 9vw, 8.5rem);
+    --card-ring-tilt: 7deg;
+    /* The tilt drops the far side; lifted by as much, the card straight ahead passes behind the
+       ball's middle, seen through it, not under it. */
+    --card-ring-lift: translateY(calc(var(--card-ring-radius) * sin(var(--card-ring-tilt)) * -1));
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    perspective: calc(var(--card-ring-radius) * 1.2);
+}
+
+.card-ring-drum {
+    position: absolute;
+    transform-style: preserve-3d;
+    animation: card-ring-turn 90s linear infinite;
+
+    @media (prefers-reduced-motion: reduce) {
+        animation: none;
+        transform: var(--card-ring-lift) rotateX(var(--card-ring-tilt));
+    }
+}
+
+.card-ring-card {
+    position: absolute;
+    width: var(--card-ring-width);
+    aspect-ratio: 63 / 88;
+    margin-top: calc(var(--card-ring-width) * -88 / 126);
+    margin-left: calc(var(--card-ring-width) / -2);
+    overflow: hidden;
+    border-radius: calc(var(--card-ring-width) * 0.045);
+    /* A card still on its way is a card-shaped tint, not a hole in the ring. */
+    background: var(--color-bg-secondary);
+    box-shadow: 0 12px 32px -8px rgb(0 0 0 / 0.35);
+    backface-visibility: hidden;
+    transform: rotateY(var(--card-angle)) translateZ(calc(var(--card-ring-radius) * -1));
+}
+
+@keyframes card-ring-turn {
+    from {
+        transform: var(--card-ring-lift) rotateX(var(--card-ring-tilt)) rotateY(0deg);
+    }
+    to {
+        transform: var(--card-ring-lift) rotateX(var(--card-ring-tilt)) rotateY(-360deg);
+    }
+}

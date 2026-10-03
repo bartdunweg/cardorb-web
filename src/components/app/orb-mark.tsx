@@ -9,6 +9,8 @@ type OrbMarkProps = {
     surface?: "light" | "dark";
     /** The tile's shadow and glow round the ball on light (on dark v24 draws nothing round it); off for the logo in the top bar and the sidebar (the owner's call). */
     shadow?: boolean;
+    /** Let what stands behind it show through the ball: the landing hero's ring of cards. */
+    clear?: boolean;
     className?: string;
     /** A name makes it an image; without one it is decoration and a screen reader skips it. */
     label?: string;
@@ -25,12 +27,12 @@ export const ORB_MARK_MATERIAL = "scene24";
 // canvas draws one frame and stands still. The mark keeps moving with no pause control, as the
 // landing page's orb did (#626, the owner's call): WCAG 2.2.2 asks for one on motion past five
 // seconds; reduced motion is the only way to stop it. Do not add a stop or a button without asking.
-export function OrbMark({ size, surface, shadow = true, className, label }: OrbMarkProps) {
+export function OrbMark({ size, surface, shadow = true, clear = false, className, label }: OrbMarkProps) {
     const a11y = label ? { role: "img" as const, "aria-label": label } : { "aria-hidden": true as const };
     // The stills are drawn at the scene's first moment, so the canvas's first frame is the still to the pixel.
     const still = shadow ? "mark" : "mark-plain";
     return (
-        <span className={cx("relative inline-block shrink-0", className)} style={{ width: size, height: size }} {...a11y}>
+        <span className={cx("relative inline-block shrink-0", clear && "orb-mark-clear", className)} style={{ width: size, height: size }} {...a11y}>
             {/* Which still shows follows the theme's class (globals.css, .orb-mark-still), not a dark: variant. */}
             <Image
                 src={`/orb-mark/${still}-light.png`}
@@ -50,7 +52,7 @@ export function OrbMark({ size, surface, shadow = true, className, label }: OrbM
                 data-theme="dark"
                 unoptimized
             />
-            <OrbGlass size={size} material={ORB_MARK_MATERIAL} mark shadow={shadow} surface={surface} className="absolute inset-0" />
+            <OrbGlass size={size} material={ORB_MARK_MATERIAL} mark shadow={shadow} clear={clear} surface={surface} className="absolute inset-0" />
         </span>
     );
 }
