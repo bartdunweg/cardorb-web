@@ -214,11 +214,12 @@ uniform float uShadow;   // for the mark: how much of the tile's shadow and glow
 
 const float SCENE_SPAN = 1.62;   // half-width of the view in the ball's radii: the ball is 62 percent of the tile
 const float SCENE_BD = 1.4;      // the face sits this far behind the ball's centre
-// The dark page the mark sits on: neutral-900, #171717, the dark theme's bg-primary, in linear light.
-// It was (0.012, 0.013, 0.018), #222329, lighter and bluer than any dark page, and everything drawn
-// against it read as a haze round the ball. Fixed for every scene version at once (2026-10-03): it
-// was a port fault, not a version's look.
-const vec3 DARK_PAGE = vec3(0.0086);
+// The dark page the mark sits on: neutral-900, #171717, the dark theme's bg-primary, taken back
+// through this shader's own curve (x to the 2.2, as the output is x to the 1/2.2), so it lands on
+// #171717. It was (0.012, 0.013, 0.018), #222329 by the same curve, lighter and bluer than any dark
+// page, and everything drawn against it read as a haze round the ball. Fixed for every scene version
+// at once (2026-10-03): it was a port fault, not a version's look.
+const vec3 DARK_PAGE = vec3(0.0050);
 
 // smoothstep that allows a > b, as the study's did
 float sm(float a, float b, float x) { float t = clamp((x - a) / (b - a), 0.0, 1.0); return t * t * (3.0 - 2.0 * t); }

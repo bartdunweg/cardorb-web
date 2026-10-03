@@ -17,9 +17,9 @@ export function PublicTopBar({ menu }: { menu?: ReactNode }) {
         <header className="relative z-10 mx-auto flex w-full max-w-container items-center justify-between px-4 py-5 md:px-8">
             <Link href="/" className="flex items-center gap-2.5 text-lg font-semibold text-primary transition hover:opacity-70">
                 {/* The ball is 62 percent of its box: the margins take back the empty ring so it sits on
-                    the edge and 10 px from the word, and it drops 2 px onto the middle of the lowercase
+                    the edge and 10 px from the word, and it drops 1 px toward the middle of the lowercase
                     letters, where the word's weight is, instead of the capitals' (the owner's call). */}
-                <OrbMark size={40} shadow={false} className="-mx-2 translate-y-0.5" />
+                <OrbMark size={40} shadow={false} className="-mx-2 translate-y-px" />
                 Cardorb
             </Link>
             {menu ?? (
