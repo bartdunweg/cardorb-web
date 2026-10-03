@@ -214,6 +214,12 @@ uniform float uShadow;   // for the mark: how much of the tile's shadow and glow
 
 const float SCENE_SPAN = 1.62;   // half-width of the view in the ball's radii: the ball is 62 percent of the tile
 const float SCENE_BD = 1.4;      // the face sits this far behind the ball's centre
+// The dark page the mark sits on: neutral-900, #171717, the dark theme's bg-primary, taken back
+// through this shader's own curve (x to the 2.2, as the output is x to the 1/2.2), so it lands on
+// #171717. It was (0.012, 0.013, 0.018), #222329 by the same curve, lighter and bluer than any dark
+// page, and everything drawn against it read as a haze round the ball. Fixed for every scene version
+// at once (2026-10-03): it was a port fault, not a version's look.
+const vec3 DARK_PAGE = vec3(0.0050);
 
 // smoothstep that allows a > b, as the study's did
 float sm(float a, float b, float x) { float t = clamp((x - a) / (b - a), 0.0, 1.0); return t * t * (3.0 - 2.0 * t); }
@@ -273,7 +279,7 @@ vec3 traceS(vec3 o, vec3 d) {
         float x = o.x + d.x * t, y = o.y + d.y * t;
         // The mark has the page for a face: white, or the dark page's colour. Past the tile's reach
         // a ray sees the studio, for the mark as for the tile, or the rim loses the lights it mirrors.
-        if (abs(x) < SCENE_SPAN && abs(y) < SCENE_SPAN) return uScene > 1.5 ? (uDark > 0.5 ? vec3(0.012, 0.013, 0.018) : vec3(1.0)) : faceS(x, y);
+        if (abs(x) < SCENE_SPAN && abs(y) < SCENE_SPAN) return uScene > 1.5 ? (uDark > 0.5 ? DARK_PAGE : vec3(1.0)) : faceS(x, y);
     }
     return envS(d);
 }
@@ -323,8 +329,10 @@ vec4 sceneShade(vec2 fc) {
     // scene26 on light keeps the tile's shadow round the ball and drops its blue glow, the haze.
     if (mark && rr >= 1.0 && uMat == 40) return vec4(0.0, 0.0, 0.0, 0.32 * shadowS(x, y) * sm(1.55, 1.0, length(vec2(x, y))) * uShadow);
     if (mark && rr >= 1.0) {
-        vec3 tile = pow(dark ? softS(faceS(x, y)) : clamp(faceS(x, y), 0.0, 1.0), vec3(1.0 / 2.2));
-        vec3 page = dark ? pow(vec3(0.012, 0.013, 0.018), vec3(1.0 / 2.2)) : vec3(1.0);
+        // On dark the tile's face was its own near-black, lighter than the page at the top; what the
+        // mark carries there is the shadow alone, on the page itself.
+        vec3 tile = pow(dark ? softS(DARK_PAGE * (1.0 - 0.1 * shadowS(x, y))) : clamp(faceS(x, y), 0.0, 1.0), vec3(1.0 / 2.2));
+        vec3 page = dark ? pow(DARK_PAGE, vec3(1.0 / 2.2)) : vec3(1.0);
         // The shadow and glow die away round the ball, inside the circle the box holds, so the box
         // never shows as a square where the tile's edge would have cut them.
         vec3 d = (tile - page) * sm(1.55, 1.0, length(vec2(x, y))) * uShadow;
@@ -531,7 +539,7 @@ vec4 sceneShade(vec2 fc) {
     if (mark) {
         // What shows through the film: the page, with the ball's shadow and glow on it as on the tile.
         float g = glowS(pb.x, pb.y) * uShadow;
-        vec3 page = dark ? vec3(0.012, 0.013, 0.018) : vec3(1.0);
+        vec3 page = dark ? DARK_PAGE : vec3(1.0);
         page = page * vec3(1.0, 1.0 - 0.1 * g, 1.0) + vec3(0.25, 0.35, 0.6) * g * (dark ? 0.0 : 0.9);
         page *= 1.0 - (dark ? 0.1 : 0.32) * shadowS(pb.x, pb.y) * uShadow;
         return vec4(pow(softS(front + back + page * T + haze + vec3(sun)), vec3(1.0 / 2.2)), 1.0);
