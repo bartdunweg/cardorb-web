@@ -625,74 +625,71 @@ main[data-view-change] [data-my-cards-tabs] [role="tablist"] + span {
     display: none;
 }
 
-/* The landing hero's ring of cards (card-ring.tsx). A zero-size point at the orb's middle carries
-   the perspective; the drum turns round it, each card stood on the drum's inside, facing in, so
-   the one straight ahead is the furthest away. The radius follows the screen's width so the
-   sides always leave the screen; the perspective a little past the radius keeps every card in
-   front of the eye. Tilted a few degrees so the drum reads as round, not as a row. */
-.card-ring {
-    --card-ring-radius: clamp(26rem, 58vw, 56rem);
-    --card-ring-width: clamp(6rem, 13vw, 12rem);
-    --card-ring-tilt: 7deg;
-    /* The tilt drops the far side; lifted by as much, the card straight ahead passes behind the
-       ball's middle, seen through it, not under it. */
-    --card-ring-lift: translateY(calc(var(--card-ring-radius) * sin(var(--card-ring-tilt)) * -1));
+/* The landing hero's cloud of cards (card-cloud.tsx). A zero-size point at the orb's middle
+   carries the perspective; each card stands at --x, --y, --z (in radii, worked out by the
+   script and by the server for the first frame) and faces the viewer at its own --lean, at
+   --o opacity. Registered, so the script reads the radius and the width back in px. Hidden
+   until the script has kept the words clear. */
+@property --card-cloud-radius {
+    syntax: "<length>";
+    inherits: true;
+    initial-value: 600px;
+}
+
+@property --card-cloud-width {
+    syntax: "<length>";
+    inherits: true;
+    initial-value: 96px;
+}
+
+.card-cloud {
+    --card-cloud-radius: clamp(22rem, 52vw, 52rem);
+    --card-cloud-width: clamp(4rem, 6.5vw, 7.5rem);
     position: absolute;
     top: 50%;
     left: 50%;
     width: 0;
     height: 0;
-    perspective: calc(var(--card-ring-radius) * 1.2);
-}
+    /* EYE in card-cloud.tsx */
+    perspective: calc(var(--card-cloud-radius) * 1.5);
+    opacity: 0;
+    transition: opacity 600ms var(--ease-enter, ease-out);
 
-.card-ring-drum {
-    position: absolute;
-    transform-style: preserve-3d;
-    animation: card-ring-turn 90s linear infinite;
-
-    @media (prefers-reduced-motion: reduce) {
-        animation: none;
-        transform: var(--card-ring-lift) rotateX(var(--card-ring-tilt));
+    &[data-ready] {
+        opacity: 1;
     }
 }
 
-.card-ring-card {
+.card-cloud-card {
     position: absolute;
-    width: var(--card-ring-width);
+    width: var(--card-cloud-width);
     aspect-ratio: 63 / 88;
-    margin-top: calc(var(--card-ring-width) * -88 / 126);
-    margin-left: calc(var(--card-ring-width) / -2);
+    margin-top: calc(var(--card-cloud-width) * -88 / 126);
+    margin-left: calc(var(--card-cloud-width) / -2);
     overflow: hidden;
-    border-radius: calc(var(--card-ring-width) * 0.045);
-    /* A card still on its way is a card-shaped tint, not a hole in the ring. */
+    border-radius: calc(var(--card-cloud-width) * 0.045);
+    /* A card still on its way is a card-shaped tint, not a hole in the cloud. */
     background: var(--color-bg-secondary);
     box-shadow: var(--shadow-xl);
-    backface-visibility: hidden;
-    transform: rotateY(var(--card-angle)) translateZ(calc(var(--card-ring-radius) * -1));
+    opacity: var(--o);
+    transform: translate3d(calc(var(--x) * var(--card-cloud-radius)), calc(var(--y) * var(--card-cloud-radius)), calc(var(--z) * var(--card-cloud-radius)))
+        var(--lean);
+    will-change: transform, opacity;
 }
 
 /* The lens: the ball's circle (its radius is 0.309 of the orb's box, 1 / 1.62 / 2, orb-glass.ts),
-   filled with the page so the plain drum does not show under it, and a second drum in it,
+   filled with the page so the plain cloud does not show under it, and a second cloud in it,
    magnified round the ball's middle and softened a little. */
-.card-ring-lens {
-    --card-ring-zoom: 1.35;
-    --card-ring-blur: 0.6px;
+.card-cloud-lens {
+    --card-cloud-zoom: 1.35;
+    --card-cloud-blur: 0.6px;
     position: absolute;
     inset: 0;
     clip-path: circle(30.9% at 50% 50%);
     background: var(--color-bg-primary);
 
-    & > .card-ring {
-        scale: var(--card-ring-zoom);
-        filter: blur(var(--card-ring-blur));
-    }
-}
-
-@keyframes card-ring-turn {
-    from {
-        transform: var(--card-ring-lift) rotateX(var(--card-ring-tilt)) rotateY(0deg);
-    }
-    to {
-        transform: var(--card-ring-lift) rotateX(var(--card-ring-tilt)) rotateY(-360deg);
+    & > .card-cloud {
+        scale: var(--card-cloud-zoom);
+        filter: blur(var(--card-cloud-blur));
     }
 }

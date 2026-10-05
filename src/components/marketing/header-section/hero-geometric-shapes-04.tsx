@@ -1,4 +1,4 @@
-import { CardRing } from "@/components/app/card-ring";
+import { CardCloud } from "@/components/app/card-cloud";
 import { LinkButton } from "@/components/app/link-button";
 import { OrbMark } from "@/components/app/orb-mark";
 import { PublicTopBar } from "@/components/app/public-top-bar";
@@ -13,7 +13,7 @@ import { ThemeToggle } from "@/components/app/theme-switch";
 // Home that stood there went on the owner's call (2026-09-30).
 export const HeroGeometricShapes04 = () => {
     return (
-        <div className="relative flex min-h-dvh flex-col overflow-hidden bg-primary">
+        <div className="relative flex min-h-dvh flex-col overflow-hidden bg-primary" data-card-cloud>
             <PublicTopBar />
 
             {/* One screen high (the owner's call, 2026-10-02): the mark, the words and the two ways in,
@@ -21,33 +21,36 @@ export const HeroGeometricShapes04 = () => {
                 The orb grows where the screen is wide and tall and shrinks, with the air round it, where it is low. */}
             <main className="relative flex flex-1 flex-col justify-center py-8 short:py-4">
                 <div className="mx-auto flex w-full max-w-container flex-col items-center px-4 md:px-8">
-                    {/* Isolated, so the ring of cards behind the orb stays under the words and the buttons too. */}
+                    {/* Isolated, so the cloud of cards round the orb stays under the words and the buttons too. */}
                     <div className="relative isolate flex w-full max-w-3xl flex-col items-center text-center">
                         <div className="relative flex">
-                            <CardRing className="-z-10" />
+                            <CardCloud className="-z-10" />
                             <OrbMark clear size={180} className="md:hidden short:hidden" />
                             <OrbMark clear size={120} className="hidden short:block md:short:hidden" />
                             <OrbMark clear size={240} className="hidden md:block tall:hidden short:hidden" />
                             <OrbMark clear size={140} className="hidden md:short:block" />
                             <OrbMark clear size={340} className="hidden md:tall:block" />
                         </div>
-                        <h1 className="mt-6 text-display-sm font-medium text-balance text-primary md:text-display-md lg:text-display-lg short:mt-4">
-                            Organize your trading card collection
-                        </h1>
-                        <p className="mt-4 max-w-120 text-lg text-balance text-tertiary md:mt-6 md:text-xl">
-                            Browse, organize, and manage every card in one place.
-                        </p>
-                        {/* Two ways on, and not the same weight. Somebody who already trusts us presses
+                        {/* What the cloud keeps clear of (card-cloud.tsx). */}
+                        <div className="flex w-full flex-col items-center" data-card-cloud-clear>
+                            <h1 className="mt-6 text-display-sm font-medium text-balance text-primary md:text-display-md lg:text-display-lg short:mt-4">
+                                Organize your trading card collection
+                            </h1>
+                            <p className="mt-4 max-w-120 text-lg text-balance text-tertiary md:mt-6 md:text-xl">
+                                Browse, organize, and manage every card in one place.
+                            </p>
+                            {/* Two ways on, and not the same weight. Somebody who already trusts us presses
                             Get started and needs to see nothing first; the other button is for the one
                             who does not, which is the person this page has to win. Equal weight would
                             make neither read as the answer. */}
-                        <div className="mt-8 flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row md:mt-12 short:mt-6">
-                            <LinkButton href="/signup" size="xl">
-                                Get started
-                            </LinkButton>
-                            <LinkButton href="/sets" color="secondary" size="xl">
-                                Browse the sets
-                            </LinkButton>
+                            <div className="mt-8 flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row md:mt-12 short:mt-6">
+                                <LinkButton href="/signup" size="xl">
+                                    Get started
+                                </LinkButton>
+                                <LinkButton href="/sets" color="secondary" size="xl">
+                                    Browse the sets
+                                </LinkButton>
+                            </div>
                         </div>
                     </div>
                 </div>
