@@ -82,7 +82,7 @@ const smooth = (a: number, b: number, x: number) => {
  * Each card's lane, in order, not at random (the owner's call: tidy, not a scatter). A ring of
  * cards sets out together, evenly round the axis, every ring half a step turned from the one
  * before; the rings leave at even intervals, all at one distance from the axis, wider than tall
- * as a screen is. Each card turns its face a little toward the axis, by its place on the ring.
+ * as a screen is.
  */
 const LANES = Array.from({ length: COUNT }, (_, i) => {
     const ring = Math.floor(i / PER_RING);
@@ -91,7 +91,10 @@ const LANES = Array.from({ length: COUNT }, (_, i) => {
 
 type Place = { x: number; y: number; z: number; opacity: number; order: number; lean: string };
 
-/** Where card i is `time` seconds in, with the tunnel leaned by the pointer, and how much it shows. */
+/**
+ * Where card i is `time` seconds in, with the tunnel turned and leaned by the pointer, and how much
+ * it shows. Each card turns its face a little toward the axis, by its place on the ring.
+ */
 function placeAt(i: number, time: number, sway: number, tilt: number): Place {
     const lane = LANES[i];
     const along = (lane.start + time / TRAVEL) % 1;
@@ -107,7 +110,7 @@ function placeAt(i: number, time: number, sway: number, tilt: number): Place {
     return { x, y: ly * Math.cos(tilt) - z * Math.sin(tilt), z: ly * Math.sin(tilt) + z * Math.cos(tilt), opacity, order: Math.round(along * 1000), lean };
 }
 
-const cardStyle = (i: number, at: Place, opacity = at.opacity) =>
+const cardStyle = (at: Place, opacity = at.opacity) =>
     ({
         "--x": at.x.toFixed(4),
         "--y": at.y.toFixed(4),
@@ -130,7 +133,7 @@ function Cloud({ refs }: { refs: RefObject<(HTMLDivElement | null)[]> }) {
                 refs.current[i] = el;
             }}
             className="card-cloud-card"
-            style={cardStyle(i, placeAt(i, 0, 0, 0))}
+            style={cardStyle(placeAt(i, 0, 0, 0))}
         >
             <CardImage
                 src={`https://images.cardorb.com/en/${CLOUD_CARDS[i % CLOUD_CARDS.length]}/high.webp`}
@@ -152,7 +155,7 @@ type CardCloudProps = {
 // (nothing shows behind the ball itself), flies toward the viewer, grows and opens out while the
 // tunnel turns round its axis, and leaves past the screen's edge to start again; the words, the
 // top bar and the footer are kept clear. The places are worked out here and handed to CSS as
-// numbers (--x, --y, --z in radii, --o), so the server draws the first frame and the script only
+// numbers (--x, --y, --z in radii, --o, --lean), so the server draws the first frame and the script only
 // moves it. Decoration only: hidden from a screen reader, and it takes no pointer.
 // It keeps moving with no pause control, as the orb does (OrbMark; the owner's call, 2026-10-03):
 // WCAG 2.2.2 asks for one past five seconds, and reduced motion is the only way to stop it. Do not
@@ -231,7 +234,7 @@ export function CardCloud({ className }: CardCloudProps) {
                 for (const b of keepClear) opacity *= 0.04 + 0.96 * smooth(0, 110, outside(sx, sy, b) - half);
                 // Nothing shows behind the ball (the owner's call): a card comes into view round its edge.
                 opacity *= smooth(ball, ball * 1.5, Math.hypot(sx, sy) - half);
-                const style = cardStyle(i, at, opacity) as Record<string, string>;
+                const style = cardStyle(at, opacity) as Record<string, string>;
                 const restarted = at.order < along[i];
                 along[i] = at.order;
                 if (restarted) behind -= 1;
