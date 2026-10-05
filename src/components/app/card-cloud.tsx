@@ -63,7 +63,7 @@ const COUNT = RINGS * PER_RING;
 const TRAVEL = 16;
 /** Where a card sets out and where it leaves, in radii from the orb's plane (toward the viewer is +). */
 const FAR = -6;
-const NEAR = 1.1;
+const NEAR = 0.5;
 /** How far the pointer leans the tunnel, in radians each way. */
 const LEAN = 0.035;
 /** The camera's distance in radii; the same number as `perspective` in globals.css (.card-cloud). */
@@ -153,14 +153,14 @@ type CardCloudProps = {
 // The landing hero's cloud of cards (the owner's call, 2026-10-05, after cosmos.so): a tunnel, in
 // order. A ring of cards sets out far behind the orb, comes into view round the ball's edge
 // (nothing shows behind the ball itself), flies toward the viewer, grows and opens out while the
-// tunnel turns round its axis, and leaves past the screen's edge to start again; the words, the
-// top bar and the footer are kept clear. The places are worked out here and handed to CSS as
+// tunnel turns round its axis, and leaves past the screen's edge to start again. It stays at the
+// top of the page: a card is gone before it reaches the words, and the top bar's contents stay clear. The places are worked out here and handed to CSS as
 // numbers (--x, --y, --z in radii, --o, --lean), so the server draws the first frame and the script only
 // moves it. Decoration only: hidden from a screen reader, and it takes no pointer.
 // It keeps moving with no pause control, as the orb does (OrbMark; the owner's call, 2026-10-03):
 // WCAG 2.2.2 asks for one past five seconds, and reduced motion is the only way to stop it. Do not
 // add a stop or a button without asking. It sits in the box of the orb, which must be `relative`,
-// inside an element marked `data-card-cloud` that holds the words, the header and the footer.
+// inside an element marked `data-card-cloud` that holds the header and the words (`data-card-cloud-clear`).
 export function CardCloud({ className }: CardCloudProps) {
     const cloudRef = useRef<HTMLDivElement>(null);
     const cards = useRef<(HTMLDivElement | null)[]>([]);
@@ -172,7 +172,8 @@ export function CardCloud({ className }: CardCloudProps) {
         if (!cloud || !root || !orb) return;
         // What stays clear: the words themselves, not the column they stand in (a heading is a block
         // as wide as the column), and what the top bar and the footer hold, not their whole width.
-        const clear = ["[data-card-cloud-clear]", "header", "footer"].flatMap((selector) =>
+        const words = root.querySelector("[data-card-cloud-clear]");
+        const clear = ["header"].flatMap((selector) =>
             [...(root.querySelector(selector)?.children ?? [])].map((el) => {
                 const range = document.createRange();
                 range.selectNodeContents(el);
@@ -185,6 +186,7 @@ export function CardCloud({ className }: CardCloudProps) {
         let card = 0;
         let ball = 0;
         let keepClear: Box[] = [];
+        let floor = Infinity;
         const measure = () => {
             const o = orb.getBoundingClientRect();
             const midX = o.left + o.width / 2;
@@ -198,6 +200,7 @@ export function CardCloud({ className }: CardCloudProps) {
                 const r = range.getBoundingClientRect();
                 return { left: r.left - midX - 24, top: r.top - midY - 24, right: r.right - midX + 24, bottom: r.bottom - midY + 24 };
             });
+            floor = words ? words.getBoundingClientRect().top - midY - 16 : Infinity;
         };
 
         const reduced = matchMedia("(prefers-reduced-motion: reduce)");
@@ -232,6 +235,9 @@ export function CardCloud({ className }: CardCloudProps) {
                 let opacity = at.opacity;
                 // Words, bar and footer stay clear; a card fades as it nears them.
                 for (const b of keepClear) opacity *= 0.04 + 0.96 * smooth(0, 110, outside(sx, sy, b) - half);
+                // The cloud belongs to the top of the page, round the orb (the owner's call): a card is
+                // gone before it reaches the words.
+                opacity *= smooth(0, 90, floor - sy - half);
                 // Nothing shows behind the ball (the owner's call): a card comes into view round its edge.
                 opacity *= smooth(ball, ball * 1.5, Math.hypot(sx, sy) - half);
                 const style = cardStyle(at, opacity) as Record<string, string>;
@@ -269,7 +275,6 @@ export function CardCloud({ className }: CardCloudProps) {
         // The orb and the words move without the page changing size (a font arriving, a line breaking anew).
         resize.observe(root);
         resize.observe(orb);
-        const words = root.querySelector("[data-card-cloud-clear]");
         if (words) resize.observe(words);
         let gone = false;
         void document.fonts.ready.then(() => {
