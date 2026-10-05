@@ -621,18 +621,19 @@ main[data-view-change] [data-my-cards-tabs] [role="tablist"] + span {
     display: block;
 }
 
-/* The landing hero's cloud of cards (card-cloud.tsx). A zero-size point at the orb's middle
+/* The landing hero's ring of cards (card-cloud.tsx). A zero-size point at the orb's middle
    carries the perspective; each card stands at --x, --y, --z (in radii, worked out by the script
-   and by the server for the first frame) and faces the viewer at its own --lean. */
+   and by the server for the first frame), turned by --lean, with its picture on one face and the
+   card back on the other. */
 .card-cloud {
-    --card-cloud-radius: clamp(22rem, 52vw, 52rem);
-    --card-cloud-width: clamp(4rem, 6.5vw, 7.5rem);
+    --card-cloud-radius: clamp(11rem, 52vw, 52rem);
+    --card-cloud-width: clamp(2.75rem, 6.5vw, 7.5rem);
     position: absolute;
     top: 50%;
     left: 50%;
     width: 0;
     height: 0;
-    perspective: calc(var(--card-cloud-radius) * 1.5);
+    perspective: calc(var(--card-cloud-radius) * 3);
 }
 
 .card-cloud-card {
@@ -641,14 +642,25 @@ main[data-view-change] [data-my-cards-tabs] [role="tablist"] + span {
     aspect-ratio: 63 / 88;
     margin-top: calc(var(--card-cloud-width) * -88 / 126);
     margin-left: calc(var(--card-cloud-width) / -2);
-    overflow: hidden;
-    border-radius: calc(var(--card-cloud-width) * 0.045);
-    /* A card still on its way is a card-shaped tint, not a hole in the cloud. */
-    background: var(--color-bg-secondary);
-    box-shadow: var(--shadow-xl);
+    transform-style: preserve-3d;
     transform: translate3d(calc(var(--x) * var(--card-cloud-radius)), calc(var(--y) * var(--card-cloud-radius)), calc(var(--z) * var(--card-cloud-radius)))
         var(--lean);
     will-change: transform;
+}
+
+.card-cloud-face {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: calc(var(--card-cloud-width) * 0.045);
+    /* A card still on its way is a card-shaped tint, not a hole in the ring. */
+    background: var(--color-bg-secondary);
+    box-shadow: var(--shadow-xl);
+    backface-visibility: hidden;
+}
+
+.card-cloud-back {
+    transform: rotateY(180deg);
 }
 
 /* Where the title begins the cards go: blurred, then into the page's own colour, so none shows

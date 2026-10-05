@@ -57,13 +57,12 @@ export const HeroGeometricShapes04 = () => {
                 </div>
             </main>
 
-            {/* One-row footer: who runs the site, then the legal pages with the theme toggle beside them
-                (the owner's call), stacked in that order on a phone so Tab goes the way the eye does. The
+            {/* One-row footer: the legal pages with the theme toggle beside them (the owner's call; the
+                copyright line went on his call, 2026-10-05), on the right. The
                 toggle sits outside the nav: it changes the page, it goes nowhere. The API reference is
                 not linked here: the API serves only our own apps, and a visitor cannot get a key. */}
             <footer className="relative z-10 mx-auto flex w-full max-w-container flex-col items-center gap-4 px-4 py-6 sm:flex-row md:px-8">
-                <p className="text-sm text-quaternary sm:mr-auto">© {new Date().getFullYear()} BADU Ventures B.V.</p>
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-6 sm:ml-auto">
                     <nav aria-label="Footer">
                         <ul className="flex items-center gap-6">
                             {[
@@ -78,7 +77,9 @@ export const HeroGeometricShapes04 = () => {
                             ))}
                         </ul>
                     </nav>
-                    <ThemeToggle />
+                    {/* Its button's own padding pulled back, so the icon stands 24 px from Terms, as Terms from
+                        Privacy, and ends on the page's edge. */}
+                    <ThemeToggle className="-mx-1.5" />
                 </div>
             </footer>
         </div>

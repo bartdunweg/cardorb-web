@@ -1,6 +1,7 @@
 "use client";
 
-import { type CSSProperties, type RefObject, useEffect, useRef } from "react";
+import { type CSSProperties, useEffect, useRef } from "react";
+import { CardBack } from "@/components/app/card-back";
 import { CardImage } from "@/components/app/card-image";
 import { cx } from "@/utils/cx";
 
@@ -56,50 +57,46 @@ const CLOUD_CARDS = [
 ] as const;
 
 /**
- * The orbits round the orb, inside out: how many cards each holds, its size (in radii, across;
- * wider than tall as a screen is), how far back it lies (toward the viewer is +), and the seconds
- * one turn takes. The inner ones lie further back and turn faster, as orbits do.
+ * The ring round the orb, as Saturn's: two bands, inside out, each with how many cards it holds,
+ * its size (in radii, from the orb's middle) and the seconds one turn takes. The cards stand up
+ * on it, faces out, so the front of the ring shows their pictures and the back their backs.
  */
-const ORBITS = [
-    { count: 10, reach: 0.4, depth: -0.6, period: 40 },
-    { count: 14, reach: 0.56, depth: -0.3, period: 55 },
-    { count: 18, reach: 0.72, depth: 0.15, period: 70 },
+const BANDS = [
+    { count: 18, reach: 0.72, period: 40 },
+    { count: 24, reach: 0.92, period: 52 },
 ] as const;
-/** How far the pointer leans the orbits, in radians each way. */
-const LEAN = 0.035;
-/** How far a card turns its face toward the orb, in degrees. */
-const WALL = 22;
-/** How much of the orbit's turn a card takes on: 1 is a spoke, 0 always upright (the owner: mostly upright). */
-const SPOKE = 0.3;
-
 /**
- * Each card's place, in order, not at random (the owner's call: tidy, not a scatter): evenly
- * round its orbit, every orbit half a step turned from the one inside it.
+ * How far the ring is tipped, in radians: seen a little from below, so its front passes over the
+ * orb, where there is room, and its back under it, behind the ball and into the veil at the title.
  */
-const LANES = ORBITS.flatMap((orbit, o) =>
-    Array.from({ length: orbit.count }, (_, k) => ({ orbit: o, turn: ((k + (o % 2) * 0.5) * 2 * Math.PI) / orbit.count })),
-);
+const TIP = -0.32;
+/** How far the pointer turns and tips the ring, in radians each way. */
+const LEAN = 0.06;
+
+/** Each card's place, in order: evenly round its band, the outer band half a step turned. */
+const LANES = BANDS.flatMap((band, b) => Array.from({ length: band.count }, (_, k) => ({ band: b, turn: ((k + b * 0.5) * 2 * Math.PI) / band.count })));
 const COUNT = LANES.length;
 
-type Place = { x: number; y: number; z: number; order: number; lean: string };
+type Place = { x: number; y: number; z: number; lean: string };
 
-/**
- * Where card i is `time` seconds in, with the orbits leaned by the pointer. Each card leans a
- * little with its orbit, mostly upright, its face turned a little toward the orb.
- */
+/** Where card i stands `time` seconds in, with the ring turned by `sway` and tipped by `tilt`. */
 function placeAt(i: number, time: number, sway: number, tilt: number): Place {
     const lane = LANES[i];
-    const orbit = ORBITS[lane.orbit];
-    const turn = lane.turn + (time / orbit.period) * 2 * Math.PI;
-    const lx = Math.cos(turn) * orbit.reach;
-    const ly = Math.sin(turn) * orbit.reach;
-    // Turned a little with the orbit, as a spoke would be but mostly upright, its face leaned toward the orb.
-    const spoke = (((((turn * 180) / Math.PI + 90) % 360) + 540) % 360) - 180;
-    const lean = `rotateX(${(-Math.sin(turn) * WALL).toFixed(1)}deg) rotateY(${(Math.cos(turn) * WALL).toFixed(1)}deg) rotateZ(${(spoke * SPOKE).toFixed(1)}deg)`;
-    const x = lx * Math.cos(sway) + orbit.depth * Math.sin(sway);
-    const z = -lx * Math.sin(sway) + orbit.depth * Math.cos(sway);
-    return { x, y: ly * Math.cos(tilt) - z * Math.sin(tilt), z: ly * Math.sin(tilt) + z * Math.cos(tilt), order: lane.orbit, lean };
+    const band = BANDS[lane.band];
+    const turn = lane.turn + (time / band.period) * 2 * Math.PI + sway;
+    const tip = TIP + tilt;
+    const toward = Math.sin(turn) * band.reach;
+    return {
+        x: Math.cos(turn) * band.reach,
+        y: toward * Math.sin(tip),
+        z: toward * Math.cos(tip),
+        // Upright on the tipped ring, its face turned out from the orb.
+        lean: `rotateX(${((-tip * 180) / Math.PI).toFixed(2)}deg) rotateY(${(90 - (turn * 180) / Math.PI).toFixed(2)}deg)`,
+    };
 }
+
+/** Nearer cards over further ones: the cards are drawn flat, one by one, so the order is ours to set. */
+const depthOrder = (z: number) => Math.round(z * 1000) + 2000;
 
 const cardStyle = (at: Place) =>
     ({
@@ -107,40 +104,21 @@ const cardStyle = (at: Place) =>
         "--y": at.y.toFixed(4),
         "--z": at.z.toFixed(4),
         "--lean": at.lean,
-        zIndex: at.order,
+        zIndex: depthOrder(at.z),
     }) as CSSProperties;
-
-function Cloud({ refs }: { refs: RefObject<(HTMLDivElement | null)[]> }) {
-    return LANES.map((_, i) => (
-        <div
-            key={i}
-            ref={(el) => {
-                refs.current[i] = el;
-            }}
-            className="card-cloud-card"
-            style={cardStyle(placeAt(i, 0, 0, 0))}
-        >
-            <CardImage
-                src={`https://images.cardorb.com/en/${CLOUD_CARDS[i % CLOUD_CARDS.length]}/high.webp`}
-                fallbackSrc={`https://images.cardorb.com/en/${CLOUD_CARDS[i % CLOUD_CARDS.length]}/low.webp`}
-                alt=""
-                width={192}
-                className="object-cover"
-            />
-        </div>
-    ));
-}
 
 type CardCloudProps = {
     className?: string;
 };
 
-// The landing hero's cloud of cards (the owner's call, 2026-10-05, after cosmos.so): three round
-// orbits of cards turning round the orb, in order, the inner ones further back and faster, each
-// card leaning a little with its orbit. None of them fades: where the title begins a veil blurs
-// them into the page (.card-cloud-veil, in the hero). The places are worked out here and handed to
-// CSS as numbers (--x, --y, --z in radii, --lean), so the server draws the first frame and the
-// script only moves it. Decoration only: hidden from a screen reader, and it takes no pointer.
+// The landing hero's ring of cards (the owner's calls, 2026-10-05, after cosmos.so): a ring round
+// the orb as Saturn's, two bands of cards standing on it, turning. Seen a little from below, the
+// front of the ring passes over the orb with the cards' pictures, the sides show them edge on and
+// the back passes under the orb with their backs (the official back, public/card-back.jpg),
+// behind the ball and into the veil where the title begins (.card-cloud-veil, in the hero). The
+// places are worked out here and handed to CSS as numbers (--x, --y, --z in radii, --lean), so
+// the server draws the first frame and the script only moves it. Decoration only: hidden from a
+// screen reader, and it takes no pointer.
 // It keeps moving with no pause control, as the orb does (OrbMark; the owner's call, 2026-10-03):
 // WCAG 2.2.2 asks for one past five seconds, and reduced motion is the only way to stop it. Do not
 // add a stop or a button without asking. It sits in the box of the orb, which must be `relative`.
@@ -155,6 +133,7 @@ export function CardCloud({ className }: CardCloudProps) {
         let goal: [number, number] = [0, 0];
         let last: number | null = null;
         let frame = 0;
+        const order = LANES.map((_, i) => depthOrder(placeAt(i, 0, 0, 0).z));
 
         const draw = (now: number) => {
             frame = 0;
@@ -167,10 +146,18 @@ export function CardCloud({ className }: CardCloudProps) {
                 tilt += (goal[1] - tilt) * ease;
             }
             for (let i = 0; i < COUNT; i++) {
-                const style = cardStyle(placeAt(i, time, sway, tilt)) as Record<string, string>;
+                const at = placeAt(i, time, sway, tilt);
                 const el = cards.current[i];
                 if (!el) continue;
-                for (const name of ["--x", "--y", "--z", "--lean"]) el.style.setProperty(name, style[name]);
+                el.style.setProperty("--x", at.x.toFixed(4));
+                el.style.setProperty("--y", at.y.toFixed(4));
+                el.style.setProperty("--z", at.z.toFixed(4));
+                el.style.setProperty("--lean", at.lean);
+                const z = depthOrder(at.z);
+                if (z !== order[i]) {
+                    order[i] = z;
+                    el.style.zIndex = String(z);
+                }
             }
             if (!reduced.matches && !document.hidden) frame = requestAnimationFrame(draw);
         };
@@ -200,7 +187,29 @@ export function CardCloud({ className }: CardCloudProps) {
 
     return (
         <div className={cx("card-cloud pointer-events-none", className)} aria-hidden>
-            <Cloud refs={cards} />
+            {LANES.map((_, i) => (
+                <div
+                    key={i}
+                    ref={(el) => {
+                        cards.current[i] = el;
+                    }}
+                    className="card-cloud-card"
+                    style={cardStyle(placeAt(i, 0, 0, 0))}
+                >
+                    <div className="card-cloud-face">
+                        <CardImage
+                            src={`https://images.cardorb.com/en/${CLOUD_CARDS[i % CLOUD_CARDS.length]}/high.webp`}
+                            fallbackSrc={`https://images.cardorb.com/en/${CLOUD_CARDS[i % CLOUD_CARDS.length]}/low.webp`}
+                            alt=""
+                            width={192}
+                            className="object-cover"
+                        />
+                    </div>
+                    <div className="card-cloud-face card-cloud-back">
+                        <CardBack width={192} />
+                    </div>
+                </div>
+            ))}
         </div>
     );
 }
