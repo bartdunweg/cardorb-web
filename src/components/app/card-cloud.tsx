@@ -55,23 +55,22 @@ const CLOUD_CARDS = [
     "base/base4/1",
 ] as const;
 
-/** The cards fly in rings: this many rings in the air at once, of this many cards each. */
-const RINGS = 8;
-const PER_RING = 8;
-const COUNT = RINGS * PER_RING;
-/** One card's flight from far behind the orb to past the viewer, in seconds. */
-const TRAVEL = 16;
-/** Where a card sets out and where it leaves, in radii from the orb's plane (toward the viewer is +). */
-const FAR = -6;
-const NEAR = 0.5;
-/** How far the pointer leans the tunnel, in radians each way. */
+/**
+ * The orbits round the orb, inside out: how many cards each holds, its size (in radii, across;
+ * wider than tall as a screen is), how far back it lies (toward the viewer is +), and the seconds
+ * one turn takes. The inner ones lie further back and turn faster, as orbits do.
+ */
+const ORBITS = [
+    { count: 10, reach: 0.4, depth: -0.6, period: 40 },
+    { count: 14, reach: 0.56, depth: -0.3, period: 55 },
+    { count: 18, reach: 0.72, depth: 0.15, period: 70 },
+] as const;
+/** How far the pointer leans the orbits, in radians each way. */
 const LEAN = 0.035;
 /** The camera's distance in radii; the same number as `perspective` in globals.css (.card-cloud). */
 const EYE = 1.5;
-/** How far a card turns its face toward the axis, as on the wall of a tunnel, in degrees. */
+/** How far a card turns its face toward the orb, in degrees. */
 const WALL = 22;
-/** The tunnel turns round its axis as the rings fly: one turn in this many seconds. */
-const SPIN = 45;
 
 const smooth = (a: number, b: number, x: number) => {
     const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
@@ -79,35 +78,30 @@ const smooth = (a: number, b: number, x: number) => {
 };
 
 /**
- * Each card's lane, in order, not at random (the owner's call: tidy, not a scatter). A ring of
- * cards sets out together, evenly round the axis, every ring half a step turned from the one
- * before; the rings leave at even intervals, all at one distance from the axis, wider than tall
- * as a screen is.
+ * Each card's place, in order, not at random (the owner's call: tidy, not a scatter): evenly
+ * round its orbit, every orbit half a step turned from the one inside it.
  */
-const LANES = Array.from({ length: COUNT }, (_, i) => {
-    const ring = Math.floor(i / PER_RING);
-    return { turn: ((i % PER_RING) + (ring % 2) * 0.5) * ((2 * Math.PI) / PER_RING), start: ring / RINGS };
-});
+const LANES = ORBITS.flatMap((orbit, o) =>
+    Array.from({ length: orbit.count }, (_, k) => ({ orbit: o, turn: ((k + (o % 2) * 0.5) * 2 * Math.PI) / orbit.count })),
+);
+const COUNT = LANES.length;
 
 type Place = { x: number; y: number; z: number; opacity: number; order: number; lean: string };
 
 /**
- * Where card i is `time` seconds in, with the tunnel turned and leaned by the pointer, and how much
- * it shows. Each card turns its face a little toward the axis, by its place on the ring.
+ * Where card i is `time` seconds in, with the orbits leaned by the pointer. Each card faces the
+ * viewer, turned a little toward the orb by its place on the orbit.
  */
 function placeAt(i: number, time: number, sway: number, tilt: number): Place {
     const lane = LANES[i];
-    const along = (lane.start + time / TRAVEL) % 1;
-    const depth = FAR + along * (NEAR - FAR);
-    const turn = lane.turn + (time / SPIN) * 2 * Math.PI;
-    const lx = Math.cos(turn) * 1.1;
-    const ly = Math.sin(turn) * 0.72;
+    const orbit = ORBITS[lane.orbit];
+    const turn = lane.turn + (time / orbit.period) * 2 * Math.PI;
+    const lx = Math.cos(turn) * orbit.reach * 1.25;
+    const ly = Math.sin(turn) * orbit.reach * 0.85;
     const lean = `rotateX(${(-Math.sin(turn) * WALL).toFixed(1)}deg) rotateY(${(Math.cos(turn) * WALL).toFixed(1)}deg)`;
-    const x = lx * Math.cos(sway) + depth * Math.sin(sway);
-    const z = -lx * Math.sin(sway) + depth * Math.cos(sway);
-    // Out of the page far away, into full colour on the way, gone before it fills the screen.
-    const opacity = smooth(0, 0.3, along) * (1 - smooth(0.88, 0.98, along)) * (0.15 + 0.85 * smooth(FAR, FAR * 0.2, depth));
-    return { x, y: ly * Math.cos(tilt) - z * Math.sin(tilt), z: ly * Math.sin(tilt) + z * Math.cos(tilt), opacity, order: Math.round(along * 1000), lean };
+    const x = lx * Math.cos(sway) + orbit.depth * Math.sin(sway);
+    const z = -lx * Math.sin(sway) + orbit.depth * Math.cos(sway);
+    return { x, y: ly * Math.cos(tilt) - z * Math.sin(tilt), z: ly * Math.sin(tilt) + z * Math.cos(tilt), opacity: 1, order: lane.orbit, lean };
 }
 
 const cardStyle = (at: Place, opacity = at.opacity) =>
@@ -150,13 +144,13 @@ type CardCloudProps = {
     className?: string;
 };
 
-// The landing hero's cloud of cards (the owner's call, 2026-10-05, after cosmos.so): a tunnel, in
-// order. A ring of cards sets out far behind the orb, comes into view round the ball's edge
-// (nothing shows behind the ball itself), flies toward the viewer, grows and opens out while the
-// tunnel turns round its axis, and leaves past the screen's edge to start again. It stays at the
-// top of the page: a card is gone before it reaches the words, and the top bar's contents stay clear. The places are worked out here and handed to CSS as
-// numbers (--x, --y, --z in radii, --o, --lean), so the server draws the first frame and the script only
-// moves it. Decoration only: hidden from a screen reader, and it takes no pointer.
+// The landing hero's cloud of cards (the owner's call, 2026-10-05, after cosmos.so): three orbits
+// of cards turning round the orb, in order, the inner ones further back and faster. Nothing shows
+// behind the ball itself, and the cloud stays at the top of the page: a card fades before it
+// reaches the words, and the top bar's contents stay clear. The places are worked out here and
+// handed to CSS as numbers (--x, --y, --z in radii, --o, --lean), so the server draws the first
+// frame and the script only moves it. Decoration only: hidden from a screen reader, and it takes
+// no pointer.
 // It keeps moving with no pause control, as the orb does (OrbMark; the owner's call, 2026-10-03):
 // WCAG 2.2.2 asks for one past five seconds, and reduced motion is the only way to stop it. Do not
 // add a stop or a button without asking. It sits in the box of the orb, which must be `relative`,
@@ -211,10 +205,6 @@ export function CardCloud({ className }: CardCloudProps) {
         let last: number | null = null;
         let frame = 0;
         let shown = false;
-        // Every card flies at one speed, so the order front to back changes only when one starts
-        // again; it then goes behind every card in the air. Written then, not every frame.
-        const along = LANES.map((_, i) => placeAt(i, 0, 0, 0).order);
-        let behind = 0;
 
         const draw = (now: number) => {
             frame = 0;
@@ -241,13 +231,9 @@ export function CardCloud({ className }: CardCloudProps) {
                 // Nothing shows behind the ball (the owner's call): a card comes into view round its edge.
                 opacity *= smooth(ball, ball * 1.5, Math.hypot(sx, sy) - half);
                 const style = cardStyle(at, opacity) as Record<string, string>;
-                const restarted = at.order < along[i];
-                along[i] = at.order;
-                if (restarted) behind -= 1;
                 const el = cards.current[i];
                 if (!el) continue;
                 for (const name of ["--x", "--y", "--z", "--o", "--lean"]) el.style.setProperty(name, style[name]);
-                if (restarted) el.style.zIndex = String(behind);
             }
             // Shown once the words are kept clear, never before (globals.css).
             if (!shown) {
