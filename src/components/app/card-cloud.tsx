@@ -89,8 +89,8 @@ const COUNT = LANES.length;
 type Place = { x: number; y: number; z: number; opacity: number; order: number; lean: string };
 
 /**
- * Where card i is `time` seconds in, with the orbits leaned by the pointer. Each card faces the
- * viewer, turned a little toward the orb by its place on the orbit.
+ * Where card i is `time` seconds in, with the orbits leaned by the pointer. Each card turns with
+ * its orbit, its top pointing away from the orb, its face leaned a little toward it.
  */
 function placeAt(i: number, time: number, sway: number, tilt: number): Place {
     const lane = LANES[i];
@@ -98,7 +98,8 @@ function placeAt(i: number, time: number, sway: number, tilt: number): Place {
     const turn = lane.turn + (time / orbit.period) * 2 * Math.PI;
     const lx = Math.cos(turn) * orbit.reach * 1.25;
     const ly = Math.sin(turn) * orbit.reach * 0.85;
-    const lean = `rotateX(${(-Math.sin(turn) * WALL).toFixed(1)}deg) rotateY(${(Math.cos(turn) * WALL).toFixed(1)}deg)`;
+    // Turned with the orbit, its top away from the orb like a spoke, and its face leaned toward it.
+    const lean = `rotateZ(${((turn * 180) / Math.PI + 90).toFixed(1)}deg) rotateX(${WALL}deg)`;
     const x = lx * Math.cos(sway) + orbit.depth * Math.sin(sway);
     const z = -lx * Math.sin(sway) + orbit.depth * Math.cos(sway);
     return { x, y: ly * Math.cos(tilt) - z * Math.sin(tilt), z: ly * Math.sin(tilt) + z * Math.cos(tilt), opacity: 1, order: lane.orbit, lean };
