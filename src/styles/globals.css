@@ -653,7 +653,7 @@ main[data-view-change] [data-my-cards-tabs] [role="tablist"] + span {
     /* EYE in card-cloud.tsx */
     perspective: calc(var(--card-cloud-radius) * 1.5);
     opacity: 0;
-    transition: opacity 600ms var(--ease-enter, ease-out);
+    transition: opacity var(--duration-draw) var(--ease-enter);
 
     &[data-ready] {
         opacity: 1;

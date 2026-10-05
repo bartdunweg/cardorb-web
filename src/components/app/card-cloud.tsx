@@ -55,8 +55,10 @@ const CLOUD_CARDS = [
     "base/base4/1",
 ] as const;
 
-/** Cards in the air at once; each picture flies more than one lane. */
-const COUNT = 64;
+/** The cards fly in rings: this many rings in the air at once, of this many cards each. */
+const RINGS = 8;
+const PER_RING = 8;
+const COUNT = RINGS * PER_RING;
 /** One card's flight from far behind the orb to past the viewer, in seconds. */
 const TRAVEL = 16;
 /** Where a card sets out and where it leaves, in radii from the orb's plane (toward the viewer is +). */
@@ -66,12 +68,8 @@ const NEAR = 1.1;
 const LEAN = 0.035;
 /** The camera's distance in radii; the same number as `perspective` in globals.css (.card-cloud). */
 const EYE = 1.5;
-
-/** A stable scatter: the same cloud on the server, in the first frame and on every visit. */
-const noise = (i: number, salt: number) => {
-    const s = Math.sin(i * 127.1 + salt * 311.7) * 43758.5453;
-    return s - Math.floor(s);
-};
+/** How far a card turns its face toward the axis, as on the wall of a tunnel, in degrees. */
+const WALL = 22;
 
 const smooth = (a: number, b: number, x: number) => {
     const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
@@ -79,20 +77,21 @@ const smooth = (a: number, b: number, x: number) => {
 };
 
 /**
- * Each card's lane: a direction round the axis (the golden angle, so none bunch up), a distance
- * from it that keeps the middle open, wider than tall as a screen is, how far along its flight
- * it is at the start, and its own lean.
+ * Each card's lane, in order, not at random (the owner's call: tidy, not a scatter). A ring of
+ * cards sets out together, evenly round the axis, every ring half a step turned from the one
+ * before; the rings leave at even intervals, all at one distance from the axis, wider than tall
+ * as a screen is. Each card turns its face a little toward the axis, by its place on the ring.
  */
 const LANES = Array.from({ length: COUNT }, (_, i) => {
-    const turn = i * Math.PI * (3 - Math.sqrt(5)) + noise(i, 5);
-    const reach = 0.45 + 0.7 * noise(i, 4);
+    const ring = Math.floor(i / PER_RING);
+    const turn = ((i % PER_RING) + (ring % 2) * 0.5) * ((2 * Math.PI) / PER_RING);
+    const x = Math.cos(turn) * 1.1;
+    const y = Math.sin(turn) * 0.72;
     return {
-        x: Math.cos(turn) * reach * 1.25,
-        // Further down than up: the orb stands high on the page, so the screen reaches further below it.
-        y: Math.sin(turn) * reach * (Math.sin(turn) > 0 ? 1.15 : 0.6),
-        // Its own scatter, not the golden angle's: tied to the direction, every far card stood on one side.
-        start: (noise(i, 6) + i / COUNT) % 1,
-        lean: `rotateX(${((noise(i, 1) - 0.5) * 50).toFixed(1)}deg) rotateY(${((noise(i, 2) - 0.5) * 60).toFixed(1)}deg) rotateZ(${((noise(i, 3) - 0.5) * 36).toFixed(1)}deg)`,
+        x,
+        y,
+        start: ring / RINGS,
+        lean: `rotateX(${(-Math.sin(turn) * WALL).toFixed(1)}deg) rotateY(${(Math.cos(turn) * WALL).toFixed(1)}deg)`,
     };
 });
 
@@ -150,15 +149,15 @@ type CardCloudProps = {
     className?: string;
 };
 
-// The landing hero's cloud of cards (the owner's call, 2026-10-05, after cosmos.so): a tunnel. Each
-// card sets out small and pale far behind the orb, flies toward the viewer down its own lane round
-// the axis, grows and fans out, and leaves past the screen's edge to start again; the middle stays
+// The landing hero's cloud of cards (the owner's call, 2026-10-05, after cosmos.so): a tunnel, in
+// order. A ring of cards sets out small and pale far behind the orb, flies toward the viewer,
+// grows and opens out, and leaves past the screen's edge to start again; the middle stays
 // open, and the words, the top bar and the footer are kept clear. While a card is far it is behind
 // the ball and shows through it, magnified: inside the ball's circle a second cloud flies on the
 // same clock (the lens, .card-cloud-lens). The places are worked out here and handed to CSS as
 // numbers (--x, --y, --z in radii, --o), so the server draws the first frame and the script only
 // moves it. Decoration only: hidden from a screen reader, and it takes no pointer.
-// It keeps turning with no pause control, as the orb does (OrbMark; the owner's call, 2026-10-03):
+// It keeps moving with no pause control, as the orb does (OrbMark; the owner's call, 2026-10-03):
 // WCAG 2.2.2 asks for one past five seconds, and reduced motion is the only way to stop it. Do not
 // add a stop or a button without asking. It sits in the box of the orb, which must be `relative`,
 // inside an element marked `data-card-cloud` that holds the words, the header and the footer.
@@ -190,8 +189,8 @@ export function CardCloud({ className }: CardCloudProps) {
         let keepClear: Box[] = [];
         const measure = () => {
             const o = orb.getBoundingClientRect();
-            const cx = o.left + o.width / 2;
-            const cy = o.top + o.height / 2;
+            const midX = o.left + o.width / 2;
+            const midY = o.top + o.height / 2;
             const style = getComputedStyle(cloud);
             radius = parseFloat(style.getPropertyValue("--card-cloud-radius")) || 600;
             card = parseFloat(style.getPropertyValue("--card-cloud-width")) || 96;
@@ -199,7 +198,7 @@ export function CardCloud({ className }: CardCloudProps) {
             ball = o.width * 0.309;
             keepClear = clear.map((range) => {
                 const r = range.getBoundingClientRect();
-                return { left: r.left - cx - 24, top: r.top - cy - 24, right: r.right - cx + 24, bottom: r.bottom - cy + 24 };
+                return { left: r.left - midX - 24, top: r.top - midY - 24, right: r.right - midX + 24, bottom: r.bottom - midY + 24 };
             });
         };
 
@@ -210,6 +209,11 @@ export function CardCloud({ className }: CardCloudProps) {
         let goal: [number, number] = [0, 0];
         let last: number | null = null;
         let frame = 0;
+        let shown = false;
+        // Every card flies at one speed, so the order front to back changes only when one starts
+        // again; it then goes behind every card in the air. Written then, not every frame.
+        const along = LANES.map((_, i) => placeAt(i, 0, 0, 0).order);
+        let behind = 0;
 
         const draw = (now: number) => {
             frame = 0;
@@ -233,15 +237,21 @@ export function CardCloud({ className }: CardCloudProps) {
                 // A card in front of the ball steps aside for it.
                 if (at.z > 0) opacity *= smooth(ball * 0.9, ball * 1.9, Math.hypot(sx, sy) - half * 0.5);
                 const style = cardStyle(i, at, opacity) as Record<string, string>;
+                const restarted = at.order < along[i];
+                along[i] = at.order;
+                if (restarted) behind -= 1;
                 for (const el of [cards.current[i], lensCards.current[i]]) {
                     if (!el) continue;
                     for (const name of ["--x", "--y", "--z", "--o"]) el.style.setProperty(name, style[name]);
-                    el.style.zIndex = String(at.order);
+                    if (restarted) el.style.zIndex = String(behind);
                 }
             }
             // Shown once the words are kept clear, never before (globals.css).
-            cloud.dataset.ready = "";
-            if (lensRef.current) lensRef.current.dataset.ready = "";
+            if (!shown) {
+                shown = true;
+                cloud.dataset.ready = "";
+                if (lensRef.current) lensRef.current.dataset.ready = "";
+            }
             if (!reduced.matches && !document.hidden) frame = requestAnimationFrame(draw);
         };
         const schedule = () => {
@@ -260,13 +270,24 @@ export function CardCloud({ className }: CardCloudProps) {
             measure();
             schedule();
         });
+        // The orb and the words move without the page changing size (a font arriving, a line breaking anew).
         resize.observe(root);
+        resize.observe(orb);
+        const words = root.querySelector("[data-card-cloud-clear]");
+        if (words) resize.observe(words);
+        let gone = false;
+        void document.fonts.ready.then(() => {
+            if (gone) return;
+            measure();
+            schedule();
+        });
         measure();
         schedule();
         window.addEventListener("pointermove", onPointer, { passive: true });
         document.addEventListener("visibilitychange", onVisibility);
         reduced.addEventListener("change", schedule);
         return () => {
+            gone = true;
             cancelAnimationFrame(frame);
             resize.disconnect();
             window.removeEventListener("pointermove", onPointer);
