@@ -66,10 +66,10 @@ const BANDS = [
     { count: 24, reach: 0.92, period: 52 },
 ] as const;
 /**
- * How far the ring is tipped, in radians: seen a little from below, so its front passes over the
- * orb, where there is room, and its back under it, behind the ball and into the veil at the title.
+ * How far the ring is tipped, in radians: seen from above (the owner's call), so its back passes
+ * over the orb with the cards' backs and its front under it, with their pictures, round the title.
  */
-const TIP = -0.32;
+const TIP = 0.6;
 /** How far the pointer turns and tips the ring, in radians each way. */
 const LEAN = 0.06;
 
@@ -112,10 +112,10 @@ type CardCloudProps = {
 };
 
 // The landing hero's ring of cards (the owner's calls, 2026-10-05, after cosmos.so): a ring round
-// the orb as Saturn's, two bands of cards standing on it, turning. Seen a little from below, the
-// front of the ring passes over the orb with the cards' pictures, the sides show them edge on and
-// the back passes under the orb with their backs (the official back, public/card-back.jpg),
-// behind the ball and into the veil where the title begins (.card-cloud-veil, in the hero). The
+// the orb as Saturn's, two bands of cards standing on it, turning. Seen from above, the back
+// of the ring passes over the orb with the cards' backs (the official back, public/card-back.jpg),
+// the sides turn them, and the front passes under it with their pictures, round the title: a veil
+// as wide as the title blurs them away behind the words (.card-cloud-veil, in the hero). The
 // places are worked out here and handed to CSS as numbers (--x, --y, --z in radii, --lean), so
 // the server draws the first frame and the script only moves it. Decoration only: hidden from a
 // screen reader, and it takes no pointer.
