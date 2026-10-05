@@ -43,7 +43,7 @@ export function ThemeSwitch({ className }: { className?: string }) {
 
 /**
  * The appearance mark iOS uses: a circle, its left half filled. Drawn as the kit's line icons are
- * (24 grid, 2 px stroke, currentColor), since the set has none like it.
+ * (24 grid, 2 px stroke, currentColor): the kit's Contrast02 outlines its half, iOS fills it.
  */
 function CircleHalfFilled(props: SVGProps<SVGSVGElement>) {
     return (

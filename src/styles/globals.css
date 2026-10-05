@@ -680,4 +680,8 @@ main[data-view-change] [data-my-cards-tabs] [role="tablist"] + span {
     mask-image: linear-gradient(to bottom, transparent, black 4rem), linear-gradient(to right, transparent, black 8rem, black calc(100% - 8rem), transparent);
     mask-composite: intersect;
     pointer-events: none;
+
+    @media (prefers-reduced-transparency: reduce) {
+        backdrop-filter: none;
+    }
 }

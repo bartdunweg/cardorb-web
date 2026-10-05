@@ -52,8 +52,6 @@ const CLOUD_CARDS = [
     "dp/dp3/1",
     "xy/xy7/1",
     "sm/sm9/1",
-    "swsh/swsh1/1",
-    "base/base4/1",
 ] as const;
 
 /**
@@ -198,8 +196,8 @@ export function CardCloud({ className }: CardCloudProps) {
                 >
                     <div className="card-cloud-face">
                         <CardImage
-                            src={`https://images.cardorb.com/en/${CLOUD_CARDS[i % CLOUD_CARDS.length]}/high.webp`}
-                            fallbackSrc={`https://images.cardorb.com/en/${CLOUD_CARDS[i % CLOUD_CARDS.length]}/low.webp`}
+                            src={`https://images.cardorb.com/en/${CLOUD_CARDS[i]}/high.webp`}
+                            fallbackSrc={`https://images.cardorb.com/en/${CLOUD_CARDS[i]}/low.webp`}
                             alt=""
                             width={192}
                             className="object-cover"

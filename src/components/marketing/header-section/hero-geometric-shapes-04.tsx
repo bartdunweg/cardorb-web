@@ -58,11 +58,11 @@ export const HeroGeometricShapes04 = () => {
             </main>
 
             {/* One-row footer: the legal pages with the theme toggle beside them (the owner's call; the
-                copyright line went on his call, 2026-10-05), on the right. The
+                copyright line went on his call, 2026-10-05), on the right from sm, centred on a phone. The
                 toggle sits outside the nav: it changes the page, it goes nowhere. The API reference is
                 not linked here: the API serves only our own apps, and a visitor cannot get a key. */}
-            <footer className="relative z-10 mx-auto flex w-full max-w-container flex-col items-center gap-4 px-4 py-6 sm:flex-row md:px-8">
-                <div className="flex items-center gap-6 sm:ml-auto">
+            <footer className="relative z-10 mx-auto flex w-full max-w-container justify-center px-4 py-6 sm:justify-end md:px-8">
+                <div className="flex items-center gap-6">
                     <nav aria-label="Footer">
                         <ul className="flex items-center gap-6">
                             {[
