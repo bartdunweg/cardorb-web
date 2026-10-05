@@ -13,7 +13,7 @@ import { ThemeToggle } from "@/components/app/theme-switch";
 // Home that stood there went on the owner's call (2026-09-30).
 export const HeroGeometricShapes04 = () => {
     return (
-        <div className="relative flex min-h-dvh flex-col overflow-hidden bg-primary" data-card-cloud>
+        <div className="relative flex min-h-dvh flex-col overflow-hidden bg-primary">
             <PublicTopBar />
 
             {/* One screen high (the owner's call, 2026-10-02): the mark, the words and the two ways in,
@@ -31,8 +31,9 @@ export const HeroGeometricShapes04 = () => {
                             <OrbMark size={140} className="hidden md:short:block" />
                             <OrbMark size={340} className="hidden md:tall:block" />
                         </div>
-                        {/* What the cloud keeps clear of (card-cloud.tsx). */}
-                        <div className="flex w-full flex-col items-center" data-card-cloud-clear>
+                        {/* The words, with the veil the cards go into behind them (globals.css, .card-cloud-veil). */}
+                        <div className="relative flex w-full flex-col items-center">
+                            <div className="card-cloud-veil" aria-hidden />
                             <h1 className="mt-6 text-display-sm font-medium text-balance text-primary md:text-display-md lg:text-display-lg short:mt-4">
                                 Organize your trading card collection
                             </h1>

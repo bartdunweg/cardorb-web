@@ -1,5 +1,6 @@
 "use client";
 
+import type { SVGProps } from "react";
 import { Monitor04, Moon01, Sun } from "@untitledui/icons";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
@@ -41,10 +42,23 @@ export function ThemeSwitch({ className }: { className?: string }) {
 }
 
 /**
- * Ours, from the kit's ButtonUtility at its smallest: one icon that shows where a tap goes, a moon
- * on light and a sun on dark, as a theme toggle is read everywhere (the owner's call, 2026-10-02:
- * three choices were too big for the landing page's footer). A tap sets that theme outright.
- * Until the theme resolves after hydration it shows the moon, the same on server and client.
+ * The appearance mark iOS uses: a circle, its left half filled. Drawn as the kit's line icons are
+ * (24 grid, 2 px stroke, currentColor), since the set has none like it.
+ */
+function CircleHalfFilled(props: SVGProps<SVGSVGElement>) {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden {...props}>
+            <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+            <path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor" />
+        </svg>
+    );
+}
+
+/**
+ * Ours, from the kit's ButtonUtility at its smallest: one icon, the half-filled circle iOS shows
+ * for appearance (the owner's call, 2026-10-05; a moon or a sun before it, and three choices before
+ * that, too big for the landing page's footer). A tap sets the other theme outright; the tooltip
+ * says which.
  */
 export function ThemeToggle({ className }: { className?: string }) {
     const { resolvedTheme, setTheme } = useTheme();
@@ -53,7 +67,7 @@ export function ThemeToggle({ className }: { className?: string }) {
         <ButtonUtility
             size="xs"
             color="tertiary"
-            icon={toDark ? Moon01 : Sun}
+            icon={CircleHalfFilled}
             tooltip={toDark ? "Switch to dark mode" : "Switch to light mode"}
             onClick={() => setTheme(toDark ? "dark" : "light")}
             // A step darker than the kit's fg-quaternary (2.6:1 on white): alone, the icon carries the meaning and needs 3:1.
