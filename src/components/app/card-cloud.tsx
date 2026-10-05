@@ -70,6 +70,8 @@ const LEAN = 0.035;
 const EYE = 1.5;
 /** How far a card turns its face toward the axis, as on the wall of a tunnel, in degrees. */
 const WALL = 22;
+/** The tunnel turns round its axis as the rings fly: one turn in this many seconds. */
+const SPIN = 45;
 
 const smooth = (a: number, b: number, x: number) => {
     const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
@@ -84,29 +86,25 @@ const smooth = (a: number, b: number, x: number) => {
  */
 const LANES = Array.from({ length: COUNT }, (_, i) => {
     const ring = Math.floor(i / PER_RING);
-    const turn = ((i % PER_RING) + (ring % 2) * 0.5) * ((2 * Math.PI) / PER_RING);
-    const x = Math.cos(turn) * 1.1;
-    const y = Math.sin(turn) * 0.72;
-    return {
-        x,
-        y,
-        start: ring / RINGS,
-        lean: `rotateX(${(-Math.sin(turn) * WALL).toFixed(1)}deg) rotateY(${(Math.cos(turn) * WALL).toFixed(1)}deg)`,
-    };
+    return { turn: ((i % PER_RING) + (ring % 2) * 0.5) * ((2 * Math.PI) / PER_RING), start: ring / RINGS };
 });
 
-type Place = { x: number; y: number; z: number; opacity: number; order: number };
+type Place = { x: number; y: number; z: number; opacity: number; order: number; lean: string };
 
 /** Where card i is `time` seconds in, with the tunnel leaned by the pointer, and how much it shows. */
 function placeAt(i: number, time: number, sway: number, tilt: number): Place {
     const lane = LANES[i];
     const along = (lane.start + time / TRAVEL) % 1;
     const depth = FAR + along * (NEAR - FAR);
-    const x = lane.x * Math.cos(sway) + depth * Math.sin(sway);
-    const z = -lane.x * Math.sin(sway) + depth * Math.cos(sway);
+    const turn = lane.turn + (time / SPIN) * 2 * Math.PI;
+    const lx = Math.cos(turn) * 1.1;
+    const ly = Math.sin(turn) * 0.72;
+    const lean = `rotateX(${(-Math.sin(turn) * WALL).toFixed(1)}deg) rotateY(${(Math.cos(turn) * WALL).toFixed(1)}deg)`;
+    const x = lx * Math.cos(sway) + depth * Math.sin(sway);
+    const z = -lx * Math.sin(sway) + depth * Math.cos(sway);
     // Out of the page far away, into full colour on the way, gone before it fills the screen.
     const opacity = smooth(0, 0.3, along) * (1 - smooth(0.88, 0.98, along)) * (0.15 + 0.85 * smooth(FAR, FAR * 0.2, depth));
-    return { x, y: lane.y * Math.cos(tilt) - z * Math.sin(tilt), z: lane.y * Math.sin(tilt) + z * Math.cos(tilt), opacity, order: Math.round(along * 1000) };
+    return { x, y: ly * Math.cos(tilt) - z * Math.sin(tilt), z: ly * Math.sin(tilt) + z * Math.cos(tilt), opacity, order: Math.round(along * 1000), lean };
 }
 
 const cardStyle = (i: number, at: Place, opacity = at.opacity) =>
@@ -115,7 +113,7 @@ const cardStyle = (i: number, at: Place, opacity = at.opacity) =>
         "--y": at.y.toFixed(4),
         "--z": at.z.toFixed(4),
         "--o": opacity.toFixed(3),
-        "--lean": LANES[i].lean,
+        "--lean": at.lean,
         zIndex: at.order,
     }) as CSSProperties;
 
@@ -150,11 +148,10 @@ type CardCloudProps = {
 };
 
 // The landing hero's cloud of cards (the owner's call, 2026-10-05, after cosmos.so): a tunnel, in
-// order. A ring of cards sets out small and pale far behind the orb, flies toward the viewer,
-// grows and opens out, and leaves past the screen's edge to start again; the middle stays
-// open, and the words, the top bar and the footer are kept clear. While a card is far it is behind
-// the ball and shows through it, magnified: inside the ball's circle a second cloud flies on the
-// same clock (the lens, .card-cloud-lens). The places are worked out here and handed to CSS as
+// order. A ring of cards sets out far behind the orb, comes into view round the ball's edge
+// (nothing shows behind the ball itself), flies toward the viewer, grows and opens out while the
+// tunnel turns round its axis, and leaves past the screen's edge to start again; the words, the
+// top bar and the footer are kept clear. The places are worked out here and handed to CSS as
 // numbers (--x, --y, --z in radii, --o), so the server draws the first frame and the script only
 // moves it. Decoration only: hidden from a screen reader, and it takes no pointer.
 // It keeps moving with no pause control, as the orb does (OrbMark; the owner's call, 2026-10-03):
@@ -163,9 +160,7 @@ type CardCloudProps = {
 // inside an element marked `data-card-cloud` that holds the words, the header and the footer.
 export function CardCloud({ className }: CardCloudProps) {
     const cloudRef = useRef<HTMLDivElement>(null);
-    const lensRef = useRef<HTMLDivElement>(null);
     const cards = useRef<(HTMLDivElement | null)[]>([]);
-    const lensCards = useRef<(HTMLDivElement | null)[]>([]);
 
     useEffect(() => {
         const cloud = cloudRef.current;
@@ -234,23 +229,21 @@ export function CardCloud({ className }: CardCloudProps) {
                 let opacity = at.opacity;
                 // Words, bar and footer stay clear; a card fades as it nears them.
                 for (const b of keepClear) opacity *= 0.04 + 0.96 * smooth(0, 110, outside(sx, sy, b) - half);
-                // A card in front of the ball steps aside for it.
-                if (at.z > 0) opacity *= smooth(ball * 0.9, ball * 1.9, Math.hypot(sx, sy) - half * 0.5);
+                // Nothing shows behind the ball (the owner's call): a card comes into view round its edge.
+                opacity *= smooth(ball, ball * 1.5, Math.hypot(sx, sy) - half);
                 const style = cardStyle(i, at, opacity) as Record<string, string>;
                 const restarted = at.order < along[i];
                 along[i] = at.order;
                 if (restarted) behind -= 1;
-                for (const el of [cards.current[i], lensCards.current[i]]) {
-                    if (!el) continue;
-                    for (const name of ["--x", "--y", "--z", "--o"]) el.style.setProperty(name, style[name]);
-                    if (restarted) el.style.zIndex = String(behind);
-                }
+                const el = cards.current[i];
+                if (!el) continue;
+                for (const name of ["--x", "--y", "--z", "--o", "--lean"]) el.style.setProperty(name, style[name]);
+                if (restarted) el.style.zIndex = String(behind);
             }
             // Shown once the words are kept clear, never before (globals.css).
             if (!shown) {
                 shown = true;
                 cloud.dataset.ready = "";
-                if (lensRef.current) lensRef.current.dataset.ready = "";
             }
             if (!reduced.matches && !document.hidden) frame = requestAnimationFrame(draw);
         };
@@ -297,15 +290,8 @@ export function CardCloud({ className }: CardCloudProps) {
     }, []);
 
     return (
-        <>
-            <div ref={cloudRef} className={cx("card-cloud pointer-events-none", className)} aria-hidden>
-                <Cloud refs={cards} />
-            </div>
-            <div className={cx("card-cloud-lens pointer-events-none", className)} aria-hidden>
-                <div ref={lensRef} className="card-cloud">
-                    <Cloud refs={lensCards} />
-                </div>
-            </div>
-        </>
+        <div ref={cloudRef} className={cx("card-cloud pointer-events-none", className)} aria-hidden>
+            <Cloud refs={cards} />
+        </div>
     );
 }

@@ -26,8 +26,6 @@ type OrbGlassProps = {
     mark?: boolean;
     /** For the mark: without it, no shadow and no glow round the ball (the logo in the bars). */
     shadow?: boolean;
-    /** For the mark: let what stands behind it show through the ball, instead of the page. */
-    clear?: boolean;
     className?: string;
     style?: CSSProperties;
     /** A name makes it an image; without one it is decoration and a screen reader skips it. */
@@ -45,7 +43,6 @@ type Instance = {
     surface?: "light" | "dark";
     mark: boolean;
     shadow: boolean;
-    clear: boolean;
     inView: boolean;
     tilt: [number, number];
     goal: [number, number];
@@ -93,7 +90,7 @@ class Studio {
         gl.linkProgram(program);
         gl.useProgram(program);
         this.uniforms = Object.fromEntries(
-            ["uRes", "uMat", "uFloor", "uFloorMix", "uTilt", "uTime", "uFill", "uDark", "uScene", "uShadow", "uClear"].map((name) => [
+            ["uRes", "uMat", "uFloor", "uFloorMix", "uTilt", "uTime", "uFill", "uDark", "uScene", "uShadow"].map((name) => [
                 name,
                 gl.getUniformLocation(program, name),
             ]),
@@ -213,20 +210,17 @@ class Studio {
         // The mark carries 40 percent of the tile's shadow and glow: the tile's own read as too dark
         // alone on a page (the owner's call, 2026-09-30).
         gl.uniform1f(u.uShadow, it.shadow ? ORB_MARK_SHADOW : 0);
-        gl.uniform1f(u.uClear, it.clear ? 1 : 0);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
         it.context.imageSmoothingQuality = "high";
         it.context.clearRect(0, 0, px, px);
         it.context.drawImage(canvas, 0, 0, px, px);
-        // The still under a clear mark would show through it; once drawn, the canvas stands alone (globals.css).
-        it.canvas.dataset.drawn = "";
     }
 }
 
 // A glass orb, live. The GPU draws it (one shared context, see Studio), the lights lean toward the
 // pointer, and a bubble's film flows; both stop under reduced motion, out of view and in a hidden
 // tab. Where there is no WebGL2 the canvas stays blank and, if it has a name, still says it.
-export function OrbGlass({ size, material, surface, mark = false, shadow = true, clear = false, className, style, label }: OrbGlassProps) {
+export function OrbGlass({ size, material, surface, mark = false, shadow = true, className, style, label }: OrbGlassProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
     useEffect(() => {
@@ -234,7 +228,7 @@ export function OrbGlass({ size, material, surface, mark = false, shadow = true,
         const context = canvas?.getContext("2d");
         const studio = Studio.get();
         if (!canvas || !context || !studio) return;
-        const instance: Instance = { canvas, context, size, material, surface, mark, shadow, clear, inView: false, tilt: [0, 0], goal: [0, 0] };
+        const instance: Instance = { canvas, context, size, material, surface, mark, shadow, inView: false, tilt: [0, 0], goal: [0, 0] };
         const observer = new IntersectionObserver(([entry]) => {
             instance.inView = entry.isIntersecting;
             if (instance.inView) studio.schedule();
@@ -245,7 +239,7 @@ export function OrbGlass({ size, material, surface, mark = false, shadow = true,
             observer.disconnect();
             studio.remove(instance);
         };
-    }, [size, material, surface, mark, shadow, clear]);
+    }, [size, material, surface, mark, shadow]);
 
     const a11y = label ? { role: "img", "aria-label": label } : { "aria-hidden": true };
 

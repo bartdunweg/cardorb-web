@@ -25,11 +25,11 @@ export const HeroGeometricShapes04 = () => {
                     <div className="relative isolate flex w-full max-w-3xl flex-col items-center text-center">
                         <div className="relative flex">
                             <CardCloud className="-z-10" />
-                            <OrbMark clear size={180} className="md:hidden short:hidden" />
-                            <OrbMark clear size={120} className="hidden short:block md:short:hidden" />
-                            <OrbMark clear size={240} className="hidden md:block tall:hidden short:hidden" />
-                            <OrbMark clear size={140} className="hidden md:short:block" />
-                            <OrbMark clear size={340} className="hidden md:tall:block" />
+                            <OrbMark size={180} className="md:hidden short:hidden" />
+                            <OrbMark size={120} className="hidden short:block md:short:hidden" />
+                            <OrbMark size={240} className="hidden md:block tall:hidden short:hidden" />
+                            <OrbMark size={140} className="hidden md:short:block" />
+                            <OrbMark size={340} className="hidden md:tall:block" />
                         </div>
                         {/* What the cloud keeps clear of (card-cloud.tsx). */}
                         <div className="flex w-full flex-col items-center" data-card-cloud-clear>

@@ -620,10 +620,6 @@ main[data-view-change] [data-my-cards-tabs] [role="tablist"] + span {
 .dark-mode .orb-mark-still[data-theme="dark"] {
     display: block;
 }
-/* A clear mark lets what is behind it through, so its still goes once the canvas has drawn. */
-.orb-mark-clear:has(> canvas[data-drawn]) > .orb-mark-still {
-    display: none;
-}
 
 /* The landing hero's cloud of cards (card-cloud.tsx). A zero-size point at the orb's middle
    carries the perspective; each card stands at --x, --y, --z (in radii, worked out by the
@@ -675,21 +671,4 @@ main[data-view-change] [data-my-cards-tabs] [role="tablist"] + span {
     transform: translate3d(calc(var(--x) * var(--card-cloud-radius)), calc(var(--y) * var(--card-cloud-radius)), calc(var(--z) * var(--card-cloud-radius)))
         var(--lean);
     will-change: transform, opacity;
-}
-
-/* The lens: the ball's circle (its radius is 0.309 of the orb's box, 1 / 1.62 / 2, orb-glass.ts),
-   filled with the page so the plain cloud does not show under it, and a second cloud in it,
-   magnified round the ball's middle and softened a little. */
-.card-cloud-lens {
-    --card-cloud-zoom: 1.35;
-    --card-cloud-blur: 0.6px;
-    position: absolute;
-    inset: 0;
-    clip-path: circle(30.9% at 50% 50%);
-    background: var(--color-bg-primary);
-
-    & > .card-cloud {
-        scale: var(--card-cloud-zoom);
-        filter: blur(var(--card-cloud-blur));
-    }
 }
