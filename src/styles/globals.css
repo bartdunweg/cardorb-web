@@ -664,21 +664,19 @@ main[data-view-change] [data-my-cards-tabs] [role="tablist"] + span {
 }
 
 /* Where the title begins the cards go: blurred, then into the page's own colour, so none shows
-   behind the words (the owner's call). Laid over the cloud and under the words, from a little
-   above the title to the bottom, about as wide as the title, its sides soft, so the front of the
-   ring shows again beside the words. */
+   behind the words (the owner's call). Laid over the cloud and under the words, the full width
+   of the page, from a little above the title to the bottom. */
 .card-cloud-veil {
     position: absolute;
     z-index: -1;
     top: -7rem;
     bottom: -100vh;
     left: 50%;
-    width: min(100vw, 52rem);
+    width: 100vw;
     translate: -50% 0;
     background: linear-gradient(to bottom, transparent, var(--color-bg-primary) 6rem);
     backdrop-filter: blur(12px);
-    mask-image: linear-gradient(to bottom, transparent, black 4rem), linear-gradient(to right, transparent, black 8rem, black calc(100% - 8rem), transparent);
-    mask-composite: intersect;
+    mask-image: linear-gradient(to bottom, transparent, black 4rem);
     pointer-events: none;
 
     @media (prefers-reduced-transparency: reduce) {

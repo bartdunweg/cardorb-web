@@ -115,7 +115,7 @@ type CardCloudProps = {
 // the orb as Saturn's, two bands of cards standing on it, turning. The cards face the orb.
 // Seen from above, the back of the ring passes over the orb with their pictures, the sides turn
 // them, and the front passes under it with their backs (the official back, public/card-back.jpg),
-// round the title: a veil as wide as the title blurs them away behind the words (.card-cloud-veil, in the hero). The
+// round the title: a veil across the page blurs them away from where the title begins (.card-cloud-veil, in the hero). The
 // places are worked out here and handed to CSS as numbers (--x, --y, --z in radii, --lean), so
 // the server draws the first frame and the script only moves it. Decoration only: hidden from a
 // screen reader, and it takes no pointer.
