@@ -61,37 +61,35 @@ const CLOUD_CARDS = [
  * front their backs.
  */
 const BANDS = [
-    { count: 14, reach: 0.56, period: 40 },
-    { count: 19, reach: 0.72, period: 52 },
+    { count: 12, reach: 0.62, period: 40 },
+    { count: 16, reach: 0.8, period: 52 },
 ] as const;
-/**
- * How far the ring is tipped, in radians: seen from above (the owner's call), so its back passes
- * over the orb with the cards' pictures toward the viewer and its front under it, round the title,
- * with their backs.
- */
-const TIP = 0.6;
-/** How far the pointer turns and tips the ring, in radians each way. */
+/** How far the pointer turns the ring and tips the cards, in radians each way. */
 const LEAN = 0.06;
 
 /** Each card's place, in order: evenly round its band, the outer band half a step turned. */
 const LANES = BANDS.flatMap((band, b) => Array.from({ length: band.count }, (_, k) => ({ band: b, turn: ((k + b * 0.5) * 2 * Math.PI) / band.count })));
 const COUNT = LANES.length;
 
-type Place = { x: number; y: number; z: number; lean: string };
+type Place = { x: number; y: number; z: number; depth: number; lean: string };
 
-/** Where card i stands `time` seconds in, with the ring turned by `sway` and tipped by `tilt`. */
+/**
+ * Where card i stands `time` seconds in, with the ring turned by `sway` and the cards tipped by
+ * `tilt`. The ring is a true circle round the orb's middle, the orb's own round only larger (the
+ * owner's call); the cards turn on their own upright axis as they go, as if the ring were seen
+ * from above: the picture at the top, edge on at the sides, the back at the bottom.
+ */
 function placeAt(i: number, time: number, sway: number, tilt: number): Place {
     const lane = LANES[i];
     const band = BANDS[lane.band];
     const turn = lane.turn + (time / band.period) * 2 * Math.PI + sway;
-    const tip = TIP + tilt;
-    const toward = Math.sin(turn) * band.reach;
     return {
         x: Math.cos(turn) * band.reach,
-        y: toward * Math.sin(tip),
-        z: toward * Math.cos(tip),
-        // Upright on the tipped ring, its face turned in, to the orb.
-        lean: `rotateX(${((-tip * 180) / Math.PI).toFixed(2)}deg) rotateY(${(-90 - (turn * 180) / Math.PI).toFixed(2)}deg)`,
+        y: Math.sin(turn) * band.reach,
+        // Flat on the page, so the circle stays round; the depth only says which card is in front.
+        z: 0,
+        depth: Math.sin(turn),
+        lean: `rotateX(${((tilt * 180) / Math.PI).toFixed(2)}deg) rotateY(${(-90 - (turn * 180) / Math.PI).toFixed(2)}deg)`,
     };
 }
 
@@ -104,7 +102,7 @@ const cardStyle = (at: Place) =>
         "--y": at.y.toFixed(4),
         "--z": at.z.toFixed(4),
         "--lean": at.lean,
-        zIndex: depthOrder(at.z),
+        zIndex: depthOrder(at.depth),
     }) as CSSProperties;
 
 type CardCloudProps = {
@@ -133,7 +131,7 @@ export function CardCloud({ className }: CardCloudProps) {
         let goal: [number, number] = [0, 0];
         let last: number | null = null;
         let frame = 0;
-        const order = LANES.map((_, i) => depthOrder(placeAt(i, 0, 0, 0).z));
+        const order = LANES.map((_, i) => depthOrder(placeAt(i, 0, 0, 0).depth));
 
         const draw = (now: number) => {
             frame = 0;
@@ -153,7 +151,7 @@ export function CardCloud({ className }: CardCloudProps) {
                 el.style.setProperty("--y", at.y.toFixed(4));
                 el.style.setProperty("--z", at.z.toFixed(4));
                 el.style.setProperty("--lean", at.lean);
-                const z = depthOrder(at.z);
+                const z = depthOrder(at.depth);
                 if (z !== order[i]) {
                     order[i] = z;
                     el.style.zIndex = String(z);
@@ -194,6 +192,7 @@ export function CardCloud({ className }: CardCloudProps) {
                         cards.current[i] = el;
                     }}
                     className="card-cloud-card"
+                    data-band={LANES[i].band}
                     style={cardStyle(placeAt(i, 0, 0, 0))}
                 >
                     <div className="card-cloud-face">

@@ -15,21 +15,23 @@ export const HeroGeometricShapes04 = () => {
     return (
         <div className="relative flex min-h-dvh flex-col overflow-hidden bg-primary">
             <PublicTopBar />
+            {/* Under the bar the cards go into the page, so its words never stand on a card (globals.css). */}
+            <div className="card-cloud-veil-top" aria-hidden />
 
             {/* One screen high (the owner's call, 2026-10-02): the mark, the words and the two ways in,
                 centred in what the bar and the footer leave, and the footer in view without a scroll.
                 The orb grows where the screen is wide and tall and shrinks, with the air round it, where it is low. */}
-            <main className="relative flex flex-1 flex-col justify-center py-8 short:py-4">
+            <main className="relative flex flex-1 flex-col justify-center py-2">
                 <div className="mx-auto flex w-full max-w-container flex-col items-center px-4 md:px-8">
                     {/* Isolated, so the cloud of cards round the orb stays under the words and the buttons too. */}
                     <div className="relative isolate flex w-full max-w-3xl flex-col items-center text-center">
-                        <div className="relative flex">
+                        <div className="card-cloud-room relative flex">
                             <CardCloud className="-z-10" />
                             <OrbMark size={180} className="md:hidden short:hidden" />
                             <OrbMark size={120} className="hidden short:block md:short:hidden" />
-                            <OrbMark size={240} className="hidden md:block tall:hidden short:hidden" />
-                            <OrbMark size={140} className="hidden md:short:block" />
-                            <OrbMark size={340} className="hidden md:tall:block" />
+                            <OrbMark size={160} className="hidden md:block tall:hidden short:hidden" />
+                            <OrbMark size={110} className="hidden md:short:block" />
+                            <OrbMark size={220} className="hidden md:tall:block" />
                         </div>
                         {/* The words, with the veil the cards go into behind them (globals.css, .card-cloud-veil). */}
                         <div className="relative flex w-full flex-col items-center">
