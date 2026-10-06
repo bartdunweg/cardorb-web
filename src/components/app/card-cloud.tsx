@@ -57,15 +57,17 @@ const CLOUD_CARDS = [
 /**
  * The ring round the orb, as Saturn's: two bands, inside out, each with how many cards it holds,
  * its size (in radii, from the orb's middle) and the seconds one turn takes. The cards stand up
- * on it, faces out, so the front of the ring shows their pictures and the back their backs.
+ * on it facing the orb (the owner's call), so the back of the ring shows their pictures and the
+ * front their backs.
  */
 const BANDS = [
-    { count: 18, reach: 0.72, period: 40 },
-    { count: 24, reach: 0.92, period: 52 },
+    { count: 14, reach: 0.56, period: 40 },
+    { count: 19, reach: 0.72, period: 52 },
 ] as const;
 /**
  * How far the ring is tipped, in radians: seen from above (the owner's call), so its back passes
- * over the orb with the cards' backs and its front under it, with their pictures, round the title.
+ * over the orb with the cards' pictures toward the viewer and its front under it, round the title,
+ * with their backs.
  */
 const TIP = 0.6;
 /** How far the pointer turns and tips the ring, in radians each way. */
@@ -88,8 +90,8 @@ function placeAt(i: number, time: number, sway: number, tilt: number): Place {
         x: Math.cos(turn) * band.reach,
         y: toward * Math.sin(tip),
         z: toward * Math.cos(tip),
-        // Upright on the tipped ring, its face turned out from the orb.
-        lean: `rotateX(${((-tip * 180) / Math.PI).toFixed(2)}deg) rotateY(${(90 - (turn * 180) / Math.PI).toFixed(2)}deg)`,
+        // Upright on the tipped ring, its face turned in, to the orb.
+        lean: `rotateX(${((-tip * 180) / Math.PI).toFixed(2)}deg) rotateY(${(-90 - (turn * 180) / Math.PI).toFixed(2)}deg)`,
     };
 }
 
@@ -110,10 +112,10 @@ type CardCloudProps = {
 };
 
 // The landing hero's ring of cards (the owner's calls, 2026-10-05, after cosmos.so): a ring round
-// the orb as Saturn's, two bands of cards standing on it, turning. Seen from above, the back
-// of the ring passes over the orb with the cards' backs (the official back, public/card-back.jpg),
-// the sides turn them, and the front passes under it with their pictures, round the title: a veil
-// as wide as the title blurs them away behind the words (.card-cloud-veil, in the hero). The
+// the orb as Saturn's, two bands of cards standing on it, turning. The cards face the orb.
+// Seen from above, the back of the ring passes over the orb with their pictures, the sides turn
+// them, and the front passes under it with their backs (the official back, public/card-back.jpg),
+// round the title: a veil as wide as the title blurs them away behind the words (.card-cloud-veil, in the hero). The
 // places are worked out here and handed to CSS as numbers (--x, --y, --z in radii, --lean), so
 // the server draws the first frame and the script only moves it. Decoration only: hidden from a
 // screen reader, and it takes no pointer.

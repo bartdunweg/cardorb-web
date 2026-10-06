@@ -78,8 +78,9 @@ export const HeroGeometricShapes04 = () => {
                         </ul>
                     </nav>
                     {/* Its button's own padding pulled back, so the icon stands 24 px from Terms, as Terms from
-                        Privacy, and ends on the page's edge. */}
-                    <ThemeToggle className="-mx-1.5" />
+                        Privacy, and ends on the page's edge; a pixel down,
+                        so it sits on the words' line (the owner's eye). */}
+                    <ThemeToggle className="-mx-1.5 translate-y-px" />
                 </div>
             </footer>
         </div>
