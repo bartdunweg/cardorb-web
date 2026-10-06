@@ -630,7 +630,7 @@ main[data-view-change] [data-my-cards-tabs] [role="tablist"] + span {
    were, with one ring round it. */
 .card-cloud-room {
     --card-cloud-orb: 180px;
-    --card-cloud-reach: 1.05;
+    --card-cloud-reach: 1.15;
     --card-cloud-radius: calc(var(--card-cloud-orb) * var(--card-cloud-reach));
     --card-cloud-width: 3rem;
 
@@ -638,10 +638,10 @@ main[data-view-change] [data-my-cards-tabs] [role="tablist"] + span {
         --card-cloud-orb: 120px;
     }
     @media (min-width: 48rem) {
-        --card-cloud-orb: 160px;
-        --card-cloud-reach: 1.35;
-        --card-cloud-width: calc(var(--card-cloud-radius) * 0.3);
-        /* The outer band is 0.8 radii out (card-cloud.tsx, BANDS), and a card stands about 0.7
+        --card-cloud-orb: 150px;
+        --card-cloud-reach: 1.6;
+        --card-cloud-width: calc(var(--card-cloud-radius) * 0.23);
+        /* The ring is 0.8 radii out (card-cloud.tsx, BANDS), and a card stands about 0.7
            widths above it; 0.6 lets its top run a little under the bar's veil. */
         margin-top: calc(var(--card-cloud-radius) * 0.8 - var(--card-cloud-orb) / 2 + var(--card-cloud-width) * 0.6);
     }
@@ -649,15 +649,7 @@ main[data-view-change] [data-my-cards-tabs] [role="tablist"] + span {
         --card-cloud-orb: 110px;
     }
     @media (min-width: 48rem) and (min-height: 56rem) {
-        --card-cloud-orb: 220px;
-    }
-}
-
-/* On a phone one ring is enough (the owner's call): the outer band, its top half round the orb
-   between the bar and the title. */
-@media (width < 48rem) {
-    .card-cloud-card[data-band="0"] {
-        display: none;
+        --card-cloud-orb: 200px;
     }
 }
 

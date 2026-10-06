@@ -55,19 +55,16 @@ const CLOUD_CARDS = [
 ] as const;
 
 /**
- * The ring round the orb, as Saturn's: two bands, inside out, each with how many cards it holds,
- * its size (in radii, from the orb's middle) and the seconds one turn takes. The cards stand up
- * on it facing the orb (the owner's call), so the back of the ring shows their pictures and the
- * front their backs.
+ * The ring round the orb: how many cards it holds, its size (in radii, from the orb's middle) and
+ * the seconds one turn takes. One ring, few enough cards that there is always room between them:
+ * two bands, turning at their own speeds, ran through each other (the owner's call). The cards
+ * face the orb, so the back of the ring shows their pictures and the front their backs.
  */
-const BANDS = [
-    { count: 12, reach: 0.62, period: 40 },
-    { count: 16, reach: 0.8, period: 52 },
-] as const;
+const BANDS = [{ count: 13, reach: 0.8, period: 48 }] as const;
 /** How far the pointer turns the ring and tips the cards, in radians each way. */
 const LEAN = 0.06;
 
-/** Each card's place, in order: evenly round its band, the outer band half a step turned. */
+/** Each card's place, in order: evenly round the ring. */
 const LANES = BANDS.flatMap((band, b) => Array.from({ length: band.count }, (_, k) => ({ band: b, turn: ((k + b * 0.5) * 2 * Math.PI) / band.count })));
 const COUNT = LANES.length;
 
@@ -110,7 +107,7 @@ type CardCloudProps = {
 };
 
 // The landing hero's ring of cards (the owner's calls, 2026-10-05, after cosmos.so): a ring round
-// the orb as Saturn's, two bands of cards standing on it, turning. The cards face the orb.
+// the orb, one ring of cards standing on it, turning. The cards face the orb.
 // Seen from above, the back of the ring passes over the orb with their pictures, the sides turn
 // them, and the front passes under it with their backs (the official back, public/card-back.jpg),
 // round the title: a veil across the page blurs them away from where the title begins (.card-cloud-veil, in the hero). The
@@ -192,7 +189,6 @@ export function CardCloud({ className }: CardCloudProps) {
                         cards.current[i] = el;
                     }}
                     className="card-cloud-card"
-                    data-band={LANES[i].band}
                     style={cardStyle(placeAt(i, 0, 0, 0))}
                 >
                     <div className="card-cloud-face">

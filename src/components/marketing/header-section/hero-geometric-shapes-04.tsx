@@ -29,9 +29,9 @@ export const HeroGeometricShapes04 = () => {
                             <CardCloud className="-z-10" />
                             <OrbMark size={180} className="md:hidden short:hidden" />
                             <OrbMark size={120} className="hidden short:block md:short:hidden" />
-                            <OrbMark size={160} className="hidden md:block tall:hidden short:hidden" />
+                            <OrbMark size={150} className="hidden md:block tall:hidden short:hidden" />
                             <OrbMark size={110} className="hidden md:short:block" />
-                            <OrbMark size={220} className="hidden md:tall:block" />
+                            <OrbMark size={200} className="hidden md:tall:block" />
                         </div>
                         {/* The words, with the veil the cards go into behind them (globals.css, .card-cloud-veil). */}
                         <div className="relative flex w-full flex-col items-center">
