@@ -620,3 +620,108 @@ main[data-view-change] [data-my-cards-tabs] [role="tablist"] + span {
 .dark-mode .orb-mark-still[data-theme="dark"] {
     display: block;
 }
+
+/* The box of the orb the ring turns round (the hero's orb wrapper). It knows the orb's size per
+   screen, as the hero sets it (hero-geometric-shapes-04.tsx), and the ring is drawn from it: a
+   circle round the orb's middle, so it keeps the orb's round and no card ever stands behind the
+   ball. On a desktop the orb is smaller, the cards are sized from the ring, and above the orb is
+   room for the whole ring, the title lower for it (the owner's call); below, none, as the ring's
+   back runs into the veil at the title anyway. On a phone the orb and the page stay as they
+   were, with one ring round it. */
+.card-cloud-room {
+    --card-cloud-orb: 180px;
+    --card-cloud-reach: 1.15;
+    --card-cloud-radius: calc(var(--card-cloud-orb) * var(--card-cloud-reach));
+    --card-cloud-width: 3rem;
+
+    @media (max-height: 46rem) {
+        --card-cloud-orb: 120px;
+    }
+    @media (min-width: 48rem) {
+        --card-cloud-orb: 150px;
+        --card-cloud-reach: 1.6;
+        --card-cloud-width: calc(var(--card-cloud-radius) * 0.23);
+        /* The ring is 0.8 radii out (card-cloud.tsx, BANDS), and a card stands about 0.7
+           widths above it; 0.6 lets its top run a little under the bar's veil. */
+        margin-top: calc(var(--card-cloud-radius) * 0.8 - var(--card-cloud-orb) / 2 + var(--card-cloud-width) * 0.6);
+    }
+    @media (min-width: 48rem) and (max-height: 46rem) {
+        --card-cloud-orb: 110px;
+    }
+    @media (min-width: 48rem) and (min-height: 56rem) {
+        --card-cloud-orb: 200px;
+    }
+}
+
+/* The landing hero's ring of cards (card-cloud.tsx). A zero-size point at the orb's middle
+   carries the perspective; each card stands at --x, --y, --z (in radii, worked out by the script
+   and by the server for the first frame), turned by --lean, with its picture on one face and the
+   card back on the other. */
+.card-cloud {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    perspective: calc(var(--card-cloud-radius) * 3);
+}
+
+.card-cloud-card {
+    position: absolute;
+    width: var(--card-cloud-width);
+    aspect-ratio: 63 / 88;
+    margin-top: calc(var(--card-cloud-width) * -88 / 126);
+    margin-left: calc(var(--card-cloud-width) / -2);
+    transform-style: preserve-3d;
+    transform: translate3d(calc(var(--x) * var(--card-cloud-radius)), calc(var(--y) * var(--card-cloud-radius)), calc(var(--z) * var(--card-cloud-radius)))
+        var(--lean);
+    will-change: transform;
+}
+
+.card-cloud-face {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: calc(var(--card-cloud-width) * 0.045);
+    /* A card still on its way is a card-shaped tint, not a hole in the ring. */
+    background: var(--color-bg-secondary);
+    box-shadow: var(--shadow-xl);
+    backface-visibility: hidden;
+}
+
+.card-cloud-back {
+    transform: rotateY(180deg);
+}
+
+/* Where the title begins the cards go: blurred, then into the page's own colour, so none shows
+   behind the words (the owner's call). Laid over the cloud and under the words, the full width
+   of the page, from a little above the title to the bottom. */
+/* The same at the top: under the top bar the cards go into the page, so its words never stand on
+   a card. Over the cloud, under the bar, which is z-10. */
+.card-cloud-veil-top {
+    position: absolute;
+    z-index: 5;
+    inset-inline: 0;
+    top: 0;
+    height: 7rem;
+    background: linear-gradient(to bottom, var(--color-bg-primary) 3.5rem, transparent);
+    pointer-events: none;
+}
+
+.card-cloud-veil {
+    position: absolute;
+    z-index: -1;
+    top: -7rem;
+    bottom: -100vh;
+    left: 50%;
+    width: 100vw;
+    translate: -50% 0;
+    background: linear-gradient(to bottom, transparent, var(--color-bg-primary) 6rem);
+    backdrop-filter: blur(12px);
+    mask-image: linear-gradient(to bottom, transparent, black 4rem);
+    pointer-events: none;
+
+    @media (prefers-reduced-transparency: reduce) {
+        backdrop-filter: none;
+    }
+}
